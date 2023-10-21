@@ -1,3 +1,6 @@
+import fs from 'fs';
+import yaml from 'yaml';
+
 import {print, T} from '../utils.js'
 import {BaseError, NotImplemented} from '../errors.js'
 import {Item} from '../item.js'
@@ -5,6 +8,13 @@ import {RecordChange} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
 
 // import { Kafka } from 'kafkajs'
+
+
+function createFileIfNotExists(filename) {
+    /* Create an empty file if it doesn't exist yet. Do nothing otherwise. */
+    try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }
+    catch(ex) {}
+}
 
 
 /**********************************************************************************************************************
@@ -147,14 +157,6 @@ export class DataBlock extends Block {
     }
 }
 
-export class YamlDataBlock extends DataBlock {
-
-    constructor(ring, filename) {
-        super(ring)
-        this.storage = new YamlDataStorage(filename, ring, this)
-    }
-}
-
 export class MemoryBlock extends Block {
 
     constructor(ring) {
@@ -208,6 +210,20 @@ export class MemoryStorage extends Storage {
     }
 }
 
+/**********************************************************************************************************************
+ **
+ **  YAML DATA
+ **
+ */
+
+export class YamlDataBlock extends DataBlock {
+
+    constructor(ring, filename) {
+        super(ring)
+        this.storage = new YamlDataStorage(filename, ring, this)
+    }
+}
+
 export class YamlDataStorage extends MemoryStorage {
     /* Items stored in a YAML file. For use during development only. */
 
@@ -223,15 +239,10 @@ export class YamlDataStorage extends MemoryStorage {
     async open() {
         /* Load records from this.filename file into this.records. */
 
-        // create an empty file if it doesn't exist yet
-        let fs = this._mod_fs = await import('fs')
-        try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }
-        catch(ex) {}
+        createFileIfNotExists(this.filename)
 
-        this._mod_YAML = (await import('yaml')).default
-
-        let file = this._mod_fs.readFileSync(this.filename, 'utf8')
-        let records = this._mod_YAML.parse(file) || []
+        let content = fs.readFileSync(this.filename, 'utf8')
+        let records = yaml.parse(content) || []
 
         let max_id = 0
         this.records.clear()
@@ -259,10 +270,67 @@ export class YamlDataStorage extends MemoryStorage {
         let recs = flat.map(([key, data_json]) => {
             let __id = this.ring.data.schema.decode_key(key)[0]
             let data = JSON.parse(data_json)
-                return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
-            })
-        let out = this._mod_YAML.stringify(recs)
-        this._mod_fs.writeFileSync(this.filename, out, 'utf8')
+            return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
+        })
+        let out = yaml.stringify(recs)
+        fs.writeFileSync(this.filename, out, 'utf8')
+    }
+}
+
+/**********************************************************************************************************************
+ **
+ **  YAML INDEX
+ **
+ */
+
+export class YamlIndexBlock extends MemoryBlock {
+
+    constructor(ring, filename) {
+        super(ring)
+        this.storage = new YamlIndexStorage(filename, ring, this)
+    }
+}
+
+export class YamlIndexStorage extends MemoryStorage {
+    /* Items stored in a YAML file. For use during development only. */
+
+    filename
+
+    constructor(filename, ring) {
+        super()
+        this.filename = filename
+        this.ring = ring
+    }
+
+    async open() {
+        /* Load records from this.filename file into this.records. */
+
+        createFileIfNotExists(this.filename)
+
+        let content = fs.readFileSync(this.filename, 'utf8')
+        let lines = content.split('\n').filter(line => line.trim().length > 0)
+        let records = lines.map(line => JSON.parse(line))
+
+        this.records.clear()
+
+        for (let [key, value] of records)
+            this.records.set(Uint8Array.from(key), JSON.stringify(value))
+    }
+
+    async flush() {
+        /* Save the entire database (this.records) to a file. */
+        print(`YamlIndexStorage flushing ${this.records.size} records to ${this.filename}...`)
+
+        let lines = [...this.records.entries()].map(([binary_key, json_value]) => {
+            let key = Array.from(binary_key)
+            return json_value ? `[${key}, ${json_value}]` : `[${key}]`
+        })
+
+        // let recs = [...this.records.entries()].map(([binary_key, json_value]) => [Array.from(binary_key), JSON.parse(json_value)])
+        // let lines = recs.map(rec => JSON.stringify(rec) + '\n')
+        // let lines = recs.map(([key, value]) => `key, value\n`)
+
+        fs.appendFileSync(this.filename, lines.join(''), 'utf8')
     }
 }
 
