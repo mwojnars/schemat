@@ -217,7 +217,7 @@ export class MemoryStorage extends Storage {
 
 /**********************************************************************************************************************
  **
- **  YAML DATA
+ **  YAML DATA BLOCK
  **
  */
 
@@ -284,7 +284,7 @@ export class YamlDataStorage extends MemoryStorage {
 
 /**********************************************************************************************************************
  **
- **  YAML INDEX
+ **  JSON INDEX BLOCK
  **
  */
 
@@ -329,11 +329,6 @@ export class JsonIndexStorage extends MemoryStorage {
             let key = JSON.stringify(Array.from(binary_key))
             return json_value ? `[${key}, ${json_value}]` : `[${key}]`
         })
-
-        // let recs = [...this.records.entries()].map(([binary_key, json_value]) => [Array.from(binary_key), JSON.parse(json_value)])
-        // let lines = recs.map(rec => JSON.stringify(rec) + '\n')
-        // let lines = recs.map(([key, value]) => `key, value\n`)
-
         fs.writeFileSync(this.filename, lines.join('\n'), 'utf8')
     }
 }
