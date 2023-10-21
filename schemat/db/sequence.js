@@ -24,6 +24,7 @@ export class Sequence {    // Series?
     schema          // SequenceSchema that defines this sequence's key and value
     splits          // array of split points between blocks
     blocks          // array of Blocks that make up this sequence
+    derived = []    // array of derived sequences (indexes) that must be updated when this sequence changes
 
     _find_block(binary_key)     { return this.blocks[0] }
 
@@ -50,6 +51,12 @@ export class Sequence {    // Series?
 
         for await (let [key, value] of block.scan({start, stop}))
             yield new BinaryRecord(this.schema, key, value)
+    }
+
+    propagate(change /*RecordChange*/) {
+        /* Propagate a change in this sequence to all derived sequences. */
+        for (const sequence of this.derived)
+            sequence.apply(change)                      // no need to await, the result is not used
     }
 }
 

@@ -1,7 +1,12 @@
+import {assert, T} from "../utils.js";
+
 
 /**********************************************************************************************************************/
 
-import {assert, T} from "../utils.js";
+export class RequestStep {
+    type                // type of the object, e.g., 'db', 'ring', 'data', 'index', 'block'
+    object              // object that the request is being sent to, e.g., a database, ring, sequence, or block
+}
 
 export class DataRequest {
     /* Internal network request for data access/modification. Sent from an edge node, through the database,
@@ -22,6 +27,8 @@ export class DataRequest {
 
     response            // ??
 
+    path                // array of RequestStep(s) that the request has gone through so far
+
 
     constructor({origin, ident, database, ring, sequence, block} = {}) {
         this.origin = origin
@@ -33,6 +40,10 @@ export class DataRequest {
     }
 
     clone()     { return T.clone(this) }
+
+    next(...steps) {
+        /* Append `steps` to the request path and return the request object. */
+    }
 
     append_path(path = {}) {
         // copy all properties from `path` to this request object

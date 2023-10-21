@@ -59,8 +59,10 @@ export class Ring extends Item {
             ['idx_category_item', new IndexByCategory(this, this.data, filename)],      // index of item IDs sorted by parent category ID
         ])
 
-        for (let index of this.indexes.values())
+        for (let index of this.indexes.values()) {
             await index.open()
+            index.derived.push(this.data)           // make connection: data > index, for change propagation
+        }
 
         // for await (let record /*ItemRecord*/ of this.scan_all()) {
         //     for (let index of this.indexes.values()) {
