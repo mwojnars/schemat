@@ -13,8 +13,8 @@ export class Actor {
     static role
 }
 
-export class RequestStep {
-    actor           // object that processed the request at this step: a database, ring, sequence, block, ...
+export class ProcessingStep {
+    actor           // object that processed the request: a database, ring, sequence, block, ...
     role            // type of the actor: 'app', 'db', 'ring', 'data', 'index', 'block', ... or undefined
 
     command         // (optional) command name, e.g.: 'select', 'update', 'delete', 'insert', ...
@@ -42,9 +42,9 @@ export class DataRequest {
     // ident               // identifier of the request, local to the origin node; for matching incoming responses with requests
     // debug               // true if detailed debugging information should be logged for this request
 
-    path = []              // array of RequestStep(s) that the request has gone through so far
+    path = []              // array of ProcessingStep(s) that the request has gone through so far
 
-    command                 // the most recent `command` on the path that's not null
+    command                 // the most recent not-null `command` on the path
     args                    // array of arguments that accompany the `command` in its corresponding step
 
     // `current_[ROLE]` properties contain the last actor on the `path` of a given type;
@@ -69,7 +69,7 @@ export class DataRequest {
 
     make_step(actor, command = null, ...args) {
         /* Append a new step to the request path and return this object. */
-        const step = new RequestStep(actor, command, args)
+        const step = new ProcessingStep(actor, command, args)
         this.path.push(step)
 
         if (step.role) this[`current_${step.role}`] = actor

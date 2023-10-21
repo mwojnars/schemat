@@ -22,7 +22,7 @@ export class Index extends Sequence {
     /* Sequence of records consisting of a binary `key` and a json `value`. The sequence is sorted by the key and
        allows to retrieve the value for a given key or range of keys.
      */
-    static role = 'index'       // for use in RequestStep and DataRequest
+    static role = 'index'       // for use in ProcessingStep and DataRequest
 
     source                      // Sequence that this index is derived from
 

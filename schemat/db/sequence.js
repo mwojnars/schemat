@@ -64,7 +64,7 @@ export class DataSequence extends Sequence {
     /* Data sequence. The main sequence in the database. Consists of item records, {key: item-id, value: item-data}.
        Supports direct inserts (of new items) with auto-assignment and autoincrement of ID.
      */
-    static role = 'data'        // for use in RequestStep and DataRequest
+    static role = 'data'        // for use in ProcessingStep and DataRequest
 
     schema = new SequenceSchema(
         new Map([['id', new INTEGER()]]),

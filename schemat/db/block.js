@@ -27,7 +27,7 @@ export class Block extends Item {
     /* A continuous subrange of records of a data/index sequence, physically located on a single machine.
        Records are arranged by key according to byte order. Unit of data replication and distribution (TODO).
      */
-    static role = 'block'   // for use in RequestStep and DataRequest
+    static role = 'block'   // for use in ProcessingStep and DataRequest
 
     FLUSH_TIMEOUT = 1       // todo: make the timeout configurable and 0 by default
     autoincrement = 0       // current maximum IID; a new record is assigned iid=autoincrement+1
