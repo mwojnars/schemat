@@ -114,7 +114,7 @@ export class DataBlock extends Block {
     async select(req, id) {
         let key = req.encode_id(id)
         let data = await this.storage.get(key)
-        return data !== undefined ? data : req.forward_select()
+        return data !== undefined ? data : req.forward_down()
     }
 
     async insert(req, id, data) {
@@ -146,7 +146,7 @@ export class DataBlock extends Block {
          */
         let key = req.encode_id(id)
         let data = await this.storage.get(key)
-        if (data === undefined) return req.forward_update()
+        if (data === undefined) return req.forward_down()
 
         for (const edit of edits)
             data = edit.process(data)
@@ -166,18 +166,20 @@ export class DataBlock extends Block {
         // in a read-only ring no delete can be done: check if the record exists and either forward or throw an error
         if (req.current_ring.readonly)
             if (data === undefined)
-                return req.forward_delete()
+                return req.forward_down()
             else
                 req.current_ring.throwReadOnly({id})
 
         // perform the delete
         let done = this.storage.del(key)
         if (done instanceof Promise) done = await done
-        if (done) this.dirty = true
-        this.flush()
-
-        await this.propagate(req, key, data)
-        return done ? done : req.forward_delete()
+        if (done) {
+            this.dirty = true
+            this.flush()
+            await this.propagate(req, key, data)
+            return done
+        }
+        return req.forward_down()
     }
 }
 

@@ -90,9 +90,7 @@ export class DataRequest {
         return this.current_ring.data.schema.encode_key([id])
     }
 
-    forward_select()                { return this.current_db.forward_select(this) }
-    forward_update()                { return this.current_db.forward_update(this) }
-    forward_save(id, data)              { return this.current_db.forward_save(this.current_ring, id, data) }
-    forward_delete()                { return this.current_db.forward_delete(this) }
+    forward_down()              { return this.current_db.forward_down(this) }
+    forward_save(id, data)      { return this.current_db.forward_save(this.current_ring, id, data) }
 }
 

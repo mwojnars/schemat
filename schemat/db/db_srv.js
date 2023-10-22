@@ -126,10 +126,6 @@ export class Ring extends Item {
         return this.writable(id) ? this.data.put(REQ(this), id, data) : this.db.forward_save(this, id, data)
     }
 
-    // async delete(req) {
-    //     return this.data.delete(req.make_step(this), ...req.args)
-    // }
-
 
     /***  Indexes and Transforms  ***/
 
@@ -250,7 +246,7 @@ export class ServerDB extends Database {
 
     async select(id) {
         // returns a json string (`data`) or undefined
-        return this.forward_select(new DataRequest(this, 'select', id))
+        return this.forward_down(new DataRequest(this, 'select', id))
     }
 
     async update(id, ...edits) {
@@ -258,7 +254,7 @@ export class ServerDB extends Database {
            FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
          */
         assert(edits.length, 'missing edits')
-        return this.forward_update(new DataRequest(this, 'update', id, ...edits))
+        return this.forward_down(new DataRequest(this, 'update', id, ...edits))
     }
 
     async update_full(item) {
@@ -284,7 +280,7 @@ export class ServerDB extends Database {
            Return true on success, or false if the ID was not found (no modifications are done in such case).
          */
         let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.id
-        return this.forward_delete(new DataRequest(this, 'delete', id))
+        return this.forward_down(new DataRequest(this, 'delete', id))
     }
 
     async *scan_all() {
@@ -304,20 +300,23 @@ export class ServerDB extends Database {
 
     /***  CRUD forwarding to other rings  ***/
 
-    forward_select(req) {
-        // print(`forward_select(${req.command}, ${req.args})`)
+    forward_down(req) {
+        /* Forward the request to a lower ring, for select/update/delete operations.
+           It is assumed that args[0] is the item ID.
+         */
+        // print(`forward_down(${req.command}, ${req.args})`)
         let ring = this._prev(req.current_ring)
         if (ring) return ring.handle(req)
         throw new ItemNotFound({id: req.args[0]})
     }
 
-    forward_update(req) {
-        /* Forward an update(id, edits) operation to a lower ring; called during the top-down search phase,
-           if the current `ring` doesn't contain the requested `id`. */
-        let ring = this._prev(req.current_ring)
-        if (ring) return ring.handle(req)
-        throw new ItemNotFound({id: req.args[0]})
-    }
+    // forward_update(req) {
+    //     /* Forward an update(id, edits) operation to a lower ring; called during the top-down search phase,
+    //        if the current `ring` doesn't contain the requested `id`. */
+    //     let ring = this._prev(req.current_ring)
+    //     if (ring) return ring.handle(req)
+    //     throw new ItemNotFound({id: req.args[0]})
+    // }
 
     forward_save(ring, id, data) {
         /* Forward a save(id, data) operation to a higher ring; called when the current ring is not allowed to save the update. */
@@ -328,10 +327,10 @@ export class ServerDB extends Database {
         throw new ServerDB.InvalidID({id})
     }
 
-    forward_delete(req) {
-        let ring = this._prev(req.current_ring)
-        if (ring) return ring.handle(req)
-        throw new ItemNotFound({id: req.args[0]})
-    }
+    // forward_delete(req) {
+    //     let ring = this._prev(req.current_ring)
+    //     if (ring) return ring.handle(req)
+    //     throw new ItemNotFound({id: req.args[0]})
+    // }
 }
 
