@@ -23,7 +23,7 @@ export class ProcessingStep {
 
     constructor(actor, command, args) {
         this.actor = actor
-        this.role = actor.constructor.role
+        this.role = actor?.constructor?.role
         this.command = command
         this.args = args
     }
@@ -45,7 +45,7 @@ export class DataRequest {
     path = []              // array of ProcessingStep(s) that the request has gone through so far
 
     command                 // the most recent not-null `command` on the path
-    args                    // array of arguments that accompany the `command` in its corresponding step
+    args                    // the most recent non-empty array of arguments for a command (possibly from a different step than `command`!)
 
     // `current_[ROLE]` properties contain the last actor on the `path` of a given type;
     // they are updated automatically when a new step is added to the path; these properties include:
@@ -58,7 +58,7 @@ export class DataRequest {
 
 
     constructor(actor = null, command = null, ...args) {
-        if (actor) this.make_step(actor, command, ...args)
+        if (actor || command) this.make_step(actor, command, ...args)
     }
 
     clone() {
@@ -73,10 +73,9 @@ export class DataRequest {
         this.path.push(step)
 
         if (step.role) this[`current_${step.role}`] = actor
-        if (command) {
-            this.command = command
-            this.args = args
-        }
+        if (command) this.command = command
+        if (args.length) this.args = args
+
         return this
     }
 
