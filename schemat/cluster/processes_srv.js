@@ -167,12 +167,14 @@ export class AdminProcess extends BackendProcess {
             let ids = records.map(rec => rec.id)
 
             for (const id of ids) {
-                let data = await ring.select(id)          // the record might have been modified during this loop - must re-read
+                // the record might have been modified during this loop - must re-read ("select")
+                let data = await ring.process(req.remake_step(null, 'select', id))
+
                 // let item = await globalThis.registry.makeItem(new ItemRecord(id, data))
                 let item = await Item.from_record(new ItemRecord(id, data))
 
                 print(`reinserting item [${id}]...`)
-                item.id = await ring.insert(req.clone().make_step(null, 'insert', null, item.dumpData()))
+                item.id = await ring.insert(req.remake_step(null, 'insert', null, item.dumpData()))
 
                 print(`...new id=[${item.id}]`)
                 await this._update_references(id, item)

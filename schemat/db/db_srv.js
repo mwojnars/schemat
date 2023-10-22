@@ -101,17 +101,29 @@ export class Ring extends Item {
 
     /***  Data access & modification (CRUD operations)  ***/
 
+    async process(req) {
+        /* Process a DataRequest by passing it to an appropriate methods of this.data. */
+        const COMMANDS = ['select', 'insert', 'update', 'delete']
+        let {command, args} = req
+        let method = this.data[command]
+
+        assert(method, `unknown command: ${command}`)
+        assert(COMMANDS.includes(command), `command not allowed: ${command}`)
+
+        return method.call(this.data, req.make_step(this), ...args)
+    }
+
     async select_local(req) {
         /* Read item's data from this ring, no forward to a lower ring. Return undefined if `id` not found. */
         return this.data.get(req.make_step(this), ...req.args)
     }
 
-    async select(req) {
-        /* Find the top-most occurrence of an item in the database starting at this ring.
-           If found, return a JSON-encoded data; otherwise throw ItemNotFound.
-         */
-        return this.data.select(req.make_step(this), ...req.args)
-    }
+    // async select(req) {
+    //     /* Find the top-most occurrence of an item in the database starting at this ring.
+    //        If found, return a JSON-encoded data; otherwise throw ItemNotFound.
+    //      */
+    //     return this.data.select(req.make_step(this), ...req.args)
+    // }
 
     async insert(req) {
         return this.data.insert(req.make_step(this), ...req.args)
@@ -291,7 +303,7 @@ export class ServerDB extends Database {
         let req = new DataRequest(this, 'insert', id, item.dumpData())
 
         for (const ring of this.reversed)
-            if (ring.writable(id)) return item.id = await ring.insert(req)
+            if (ring.writable(id)) return item.id = await ring.process(req)
 
         throw new ServerDB.NotInsertable({id})
     }
@@ -321,7 +333,7 @@ export class ServerDB extends Database {
     forward_select(req) {
         // print(`forward_select(${req.command}, ${req.args})`)
         let prev = this._prev(req.current_ring)
-        if (prev) return prev.select(req)
+        if (prev) return prev.process(req)
         throw new ItemNotFound({id: req.args[0]})
     }
 
@@ -329,7 +341,7 @@ export class ServerDB extends Database {
         /* Forward an update(id, edits) operation to a lower ring; called during the top-down search phase,
            if the current `ring` doesn't contain the requested `id`. */
         let prev = this._prev(req.current_ring)
-        if (prev) return prev.update(req)
+        if (prev) return prev.process(req)
         throw new ItemNotFound({id: req.args[0]})
     }
 
@@ -344,7 +356,7 @@ export class ServerDB extends Database {
 
     forward_delete(req) {
         let prev = this._prev(req.current_ring)
-        if (prev) return prev.delete(req)
+        if (prev) return prev.process(req)
         throw new ItemNotFound({id: req.args[0]})
     }
 }

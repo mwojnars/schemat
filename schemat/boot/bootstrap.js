@@ -285,7 +285,7 @@ export async function bootstrap(registry, ring, request /*DataRequest*/) {
 
     // insert to DB and assign IIDs if missing
     for (let item of [Category, ...Object.values(cats), ...Object.values(items)]) {
-        let req = request.clone().make_step(null, 'insert', item.id, item.dumpData())
+        let req = request.remake_step(null, 'insert', item.id, item.dumpData())
         item.id = await ring.insert(req)
     }
     await ring.data.flush()
