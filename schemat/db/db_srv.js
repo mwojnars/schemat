@@ -118,17 +118,9 @@ export class Ring extends Item {
         return this.data.get(req.make_step(this), ...req.args)
     }
 
-    // async insert(req) {
-    //     return this.data.insert(req.make_step(this), ...req.args)
+    // async update(req) {
+    //     return this.data.update(req.make_step(this), ...req.args)
     // }
-
-    async update(req) {
-        /* Apply `edits` to an item's data and store under the `id` in this ring, or any higher one that allows
-           writing this particular `id`. The `id` is searched for in the current ring and below.
-           FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
-         */
-        return this.data.update(req.make_step(this), ...req.args)
-    }
 
     async save(id, data) {
         /* 2nd phase of update: save updated item's `data` under the `id`. Forward to a higher ring if needed.
@@ -279,6 +271,9 @@ export class ServerDB extends Database {
     }
 
     async update(id, ...edits) {
+        /* Apply `edits` to an item's data and store under the `id` in top-most ring that allows writing this particular `id`.
+           FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
+         */
         assert(edits.length, 'missing edits')
         return this.forward_update(new DataRequest(this, 'update', id, ...edits))
     }
