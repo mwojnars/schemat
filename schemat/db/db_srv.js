@@ -113,8 +113,8 @@ export class Ring extends Item {
         return this.data.select(req.make_step(this), ...req.args)
     }
 
-    async insert(item) {
-        item.id = await this.data.insert(REQ(this), item.id, item.dumpData())
+    async insert(req) {
+        return this.data.insert(req.make_step(this), ...req.args)
     }
 
     async update(req) {
@@ -288,8 +288,10 @@ export class ServerDB extends Database {
            it is written to item.id.
          */
         let id = item.id
+        let req = new DataRequest(this, 'insert', id, item.dumpData())
+
         for (const ring of this.reversed)
-            if (ring.writable(id)) return ring.insert(item)
+            if (ring.writable(id)) return item.id = await ring.insert(req)
 
         throw new ServerDB.NotInsertable({id})
     }

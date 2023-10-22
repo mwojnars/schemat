@@ -119,8 +119,10 @@ export class DataBlock extends Block {
 
     async insert(req, id, data) {
         // calculate the `id` if not provided, update `autoincrement`, and write the data
-        if (id !== undefined) await this.assertUniqueID(id)                 // the uniqueness check is only needed when the ID came from the caller;
-        else id = Math.max(this.autoincrement + 1, req.current_ring.start_iid)      // use the next available ID
+        if (id === undefined || id === null)
+            id = Math.max(this.autoincrement + 1, req.current_ring.start_iid)      // no ID? use autoincrement with the next available ID
+        else
+            await this.assertUniqueID(id)           // fixed ID provided by the caller? perform a uniqueness check
 
         req.current_ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 

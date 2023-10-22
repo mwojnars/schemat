@@ -11,6 +11,7 @@ import {Ring} from "../db/db_srv.js";
 import {SchematProcess} from "../processes.js";
 import {ServerRegistry} from "../registry_srv.js";
 import {ItemRecord} from "../db/records.js";
+import {DataRequest} from "../db/data_request.js";
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
 const __dirname  = path.dirname(__filename) + '/..'
@@ -59,6 +60,7 @@ export class WorkerProcess extends BackendProcess {
 
 export class AdminProcess extends BackendProcess {
     /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from the command line. */
+    static role = 'admin_process'
 
     async CLI_build({path_db_boot}) {
         /* Generate the core system items anew and save. */
@@ -66,13 +68,14 @@ export class AdminProcess extends BackendProcess {
 
         let file = path_db_boot || (DB_ROOT + '/db-boot.yaml')
         let ring = new Ring({file})
+        let req  = new DataRequest(this, 'bootstrap')
 
         await ring.open()
         await ring.erase()
 
         print(`Starting full RESET of DB, core items will be created anew in: ${file}`)
 
-        return bootstrap(this.registry, ring)
+        return bootstrap(this.registry, ring, req)
     }
 
     async CLI_move({id, newid, bottom, ring: ringName}) {
@@ -156,6 +159,8 @@ export class AdminProcess extends BackendProcess {
     async _reinsert_all() {
         /* Re-insert every item so that it receives a new ID. Update references in other items. */
         let db = this.db
+        let req = new DataRequest(this, 'reinsert_all')
+
         for (let ring of db.rings) {
             if (ring.readonly) continue
             let records = await T.arrayFromAsync(ring.scan_all())
@@ -165,9 +170,10 @@ export class AdminProcess extends BackendProcess {
                 let data = await ring.select(id)          // the record might have been modified during this loop - must re-read
                 // let item = await globalThis.registry.makeItem(new ItemRecord(id, data))
                 let item = await Item.from_record(new ItemRecord(id, data))
+
                 print(`reinserting item [${id}]...`)
-                item.id = undefined
-                await ring.insert(item)
+                item.id = await ring.insert(req.clone().make_step(null, 'insert', null, item.dumpData()))
+
                 print(`...new id=[${item.id}]`)
                 await this._update_references(id, item)
                 await ring.delete(id)
