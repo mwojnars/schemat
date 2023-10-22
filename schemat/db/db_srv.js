@@ -301,22 +301,14 @@ export class ServerDB extends Database {
     /***  CRUD forwarding to other rings  ***/
 
     forward_down(req) {
-        /* Forward the request to a lower ring, for select/update/delete operations.
-           It is assumed that args[0] is the item ID.
+        /* Forward the request to a lower ring if the current_ring doesn't contain the requested item ID - during
+           select/update/delete operations. It is assumed that args[0] is the item ID.
          */
         // print(`forward_down(${req.command}, ${req.args})`)
         let ring = this._prev(req.current_ring)
         if (ring) return ring.handle(req)
         throw new ItemNotFound({id: req.args[0]})
     }
-
-    // forward_update(req) {
-    //     /* Forward an update(id, edits) operation to a lower ring; called during the top-down search phase,
-    //        if the current `ring` doesn't contain the requested `id`. */
-    //     let ring = this._prev(req.current_ring)
-    //     if (ring) return ring.handle(req)
-    //     throw new ItemNotFound({id: req.args[0]})
-    // }
 
     forward_save(ring, id, data) {
         /* Forward a save(id, data) operation to a higher ring; called when the current ring is not allowed to save the update. */
@@ -326,11 +318,5 @@ export class ServerDB extends Database {
         assert(!ring.validIID(id))
         throw new ServerDB.InvalidID({id})
     }
-
-    // forward_delete(req) {
-    //     let ring = this._prev(req.current_ring)
-    //     if (ring) return ring.handle(req)
-    //     throw new ItemNotFound({id: req.args[0]})
-    // }
 }
 
