@@ -131,6 +131,8 @@ export class DataBlock extends Block {
         let key = req.encode_id(id)
         await this.put(req, key, data)
 
+        // TODO: propagate()
+
         // TODO: auto-increment `key` not `id`, then decode
         // id = this.schema.decode_key(new_key)[0]
 
@@ -149,18 +151,32 @@ export class DataBlock extends Block {
         for (const edit of edits)
             data = edit.process(data)
 
+        // TODO: propagate()
+
         return req.current_ring.writable() ? this.put(req, key, data) : req.forward_save(id, data)
     }
 
     async delete(req, id) {
-        /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
+        /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
+           Log an error if the ring is read-only and the `id` is present here.
+         */
         let key = req.encode_id(id)
-        let data_old = await this.storage.get(key)
+        let data = await this.storage.get(key)
+
+        // in a read-only ring no delete can be done: check if the record exists and either forward or throw an error
+        if (req.current_ring.readonly)
+            if (data === undefined)
+                return req.forward_delete()
+            else
+                req.current_ring.throwReadOnly({id})
+
+        // perform the delete
         let done = this.storage.del(key)
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
         this.flush()
-        await this.propagate(req, key, data_old)
+
+        await this.propagate(req, key, data)
         return done ? done : req.forward_delete()
     }
 }
