@@ -103,7 +103,7 @@ export class Ring extends Item {
 
     async handle(req) {
         /* Handle a DataRequest by passing it to an appropriate method of this.data. */
-        const COMMANDS = ['select', 'insert', 'update', 'delete']
+        const COMMANDS = ['select', 'insert', 'update']
         let {command, args} = req
         let method = this.data[command]
 
@@ -118,10 +118,6 @@ export class Ring extends Item {
         return this.data.get(req.make_step(this), ...req.args)
     }
 
-    // async update(req) {
-    //     return this.data.update(req.make_step(this), ...req.args)
-    // }
-
     async save(id, data) {
         /* 2nd phase of update: save updated item's `data` under the `id`. Forward to a higher ring if needed.
            This is called after the 1st phase which consisted of top-down search for the `id` in the stack of rings.
@@ -135,7 +131,6 @@ export class Ring extends Item {
            Return true on success, or false if the `id` was not found (no modifications done then).
          */
         let id = req.args[0]
-        req = req.make_step(this)
 
         // in a read-only ring no delete can be done: check if the `id` exists and either forward or throw an error
         if (this.readonly)
@@ -144,7 +139,7 @@ export class Ring extends Item {
             else
                 return this.db.forward_delete(req)
 
-        return this.data.delete(req, ...req.args)
+        return this.data.delete(req.make_step(this), ...req.args)
     }
 
 
@@ -320,16 +315,16 @@ export class ServerDB extends Database {
 
     forward_select(req) {
         // print(`forward_select(${req.command}, ${req.args})`)
-        let prev = this._prev(req.current_ring)
-        if (prev) return prev.handle(req)
+        let ring = this._prev(req.current_ring)
+        if (ring) return ring.handle(req)
         throw new ItemNotFound({id: req.args[0]})
     }
 
     forward_update(req) {
         /* Forward an update(id, edits) operation to a lower ring; called during the top-down search phase,
            if the current `ring` doesn't contain the requested `id`. */
-        let prev = this._prev(req.current_ring)
-        if (prev) return prev.handle(req)
+        let ring = this._prev(req.current_ring)
+        if (ring) return ring.handle(req)
         throw new ItemNotFound({id: req.args[0]})
     }
 
@@ -343,8 +338,8 @@ export class ServerDB extends Database {
     }
 
     forward_delete(req) {
-        let prev = this._prev(req.current_ring)
-        if (prev) return prev.handle(req)
+        let ring = this._prev(req.current_ring)
+        if (ring) return ring.delete(req)
         throw new ItemNotFound({id: req.args[0]})
     }
 }
