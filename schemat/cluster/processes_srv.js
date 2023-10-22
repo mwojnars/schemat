@@ -91,6 +91,7 @@ export class AdminProcess extends BackendProcess {
 
         let db = this.db
         let sameID = (id === newid)
+        let req = new DataRequest(this, 'CLI_move')
 
         // let [cid, iid] = id
         // let [new_cid, new_iid] = newid
@@ -115,7 +116,7 @@ export class AdminProcess extends BackendProcess {
         print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 
         // load the item from its current ID; save a copy under the new ID, this will propagate to a higher ring if `id` can't be stored in `target`
-        let data = await source.select(id)
+        let data = await source.handle(req.remake_step(null, 'select', id))
         await target.save(newid, data)
 
         if (!sameID) {
@@ -139,7 +140,7 @@ export class AdminProcess extends BackendProcess {
         }
 
         // remove the old item from DB
-        try { await source.delete(id) }
+        try { await source.handle(req.remake_step(null, 'delete', id)) }
         catch (ex) {
             if (ex instanceof Ring.ReadOnly) print('WARNING: could not delete the old item as the ring is read-only')
         }
@@ -178,7 +179,7 @@ export class AdminProcess extends BackendProcess {
 
                 print(`...new id=[${item.id}]`)
                 await this._update_references(id, item)
-                await ring.delete(id)
+                await ring.handle(req.remake_step(null, 'delete', id))
                 await ring.data.flush()
             }
         }

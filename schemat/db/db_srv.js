@@ -126,21 +126,9 @@ export class Ring extends Item {
         return this.writable(id) ? this.data.put(REQ(this), id, data) : this.db.forward_save(this, id, data)
     }
 
-    async delete(req) {
-        /* Find and delete the top-most occurrence of the item's ID in this Ring or a lower Ring in the stack (through .prevDB).
-           Return true on success, or false if the `id` was not found (no modifications done then).
-         */
-        // let id = req.args[0]
-        //
-        // // in a read-only ring no delete can be done: check if the `id` exists and either forward or throw an error
-        // if (this.readonly)
-        //     if (await this.select_local(req))
-        //         this.throwReadOnly({id})
-        //     else
-        //         return this.db.forward_delete(req)
-
-        return this.data.delete(req.make_step(this), ...req.args)
-    }
+    // async delete(req) {
+    //     return this.data.delete(req.make_step(this), ...req.args)
+    // }
 
 
     /***  Indexes and Transforms  ***/
@@ -292,6 +280,9 @@ export class ServerDB extends Database {
     }
 
     async delete(item_or_id) {
+        /* Find and delete the top-most occurrence of the item or ID.
+           Return true on success, or false if the ID was not found (no modifications are done in such case).
+         */
         let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.id
         return this.forward_delete(new DataRequest(this, 'delete', id))
     }
