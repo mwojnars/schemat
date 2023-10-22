@@ -101,9 +101,9 @@ export class Ring extends Item {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select_local(id) {
+    async select_local(req) {
         /* Read item's data from this ring, no forward to a lower ring. Return undefined if `id` not found. */
-        return this.data.get(REQ(this), id)
+        return this.data.get(req.make_step(this), ...req.args)
     }
 
     async select(req) {
@@ -142,7 +142,7 @@ export class Ring extends Item {
 
         // in a read-only ring no delete can be done: check if the `id` exists and either forward or throw an error
         if (this.readonly)
-            if (await this.select_local(req, ...req.args))
+            if (await this.select_local(req))
                 this.throwReadOnly({id})
             else
                 return this.db.forward_delete(req)
@@ -235,10 +235,11 @@ export class ServerDB extends Database {
         /* Return the top-most ring that contains a given item's ID (`item`), or has a given ring name (`name`).
            Return undefined if not found. Can be called to check if an item ID or a ring name exists.
          */
+        let req = new DataRequest(this, 'find_ring', item)
         for (const ring of this.reversed) {
             if (name && ring.name === name) return ring
             if (item) {
-                let data = await ring.select_local(item)
+                let data = await ring.select_local(req.clone())
                 if (data !== undefined) return ring
             }
         }
