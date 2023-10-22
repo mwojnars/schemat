@@ -133,19 +133,21 @@ export class Ring extends Item {
         return this.writable(id) ? this.data.put(REQ(this), id, data) : this.db.forward_save(this, id, data)
     }
 
-    async delete(id) {
+    async delete(req) {
         /* Find and delete the top-most occurrence of the item's ID in this Ring or a lower Ring in the stack (through .prevDB).
            Return true on success, or false if the `id` was not found (no modifications done then).
          */
+        let id = req.args[0]
+        req = req.make_step(this)
 
         // in a read-only ring no delete can be done: check if the `id` exists and either forward or throw an error
         if (this.readonly)
-            if (await this.select_local(REQ(this), id))
+            if (await this.select_local(req, ...req.args))
                 this.throwReadOnly({id})
             else
-                return this.db.forward_delete(this, id)
+                return this.db.forward_delete(req)
 
-        return this.data.delete(REQ(this), id)
+        return this.data.delete(req, ...req.args)
     }
 
 
@@ -293,7 +295,7 @@ export class ServerDB extends Database {
 
     async delete(item_or_id) {
         let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.id
-        return this.forward_delete(null, id)
+        return this.forward_delete(new DataRequest(this, 'delete', id))
     }
 
     async *scan_all() {
@@ -337,10 +339,10 @@ export class ServerDB extends Database {
         throw new ServerDB.InvalidID({id})
     }
 
-    forward_delete(ring, id) {
-        let prev = this._prev(ring)
-        if (prev) return prev.delete(id)
-        throw new ItemNotFound({id})
+    forward_delete(req) {
+        let prev = this._prev(req.current_ring)
+        if (prev) return prev.delete(req)
+        throw new ItemNotFound({id: req.args[0]})
     }
 }
 

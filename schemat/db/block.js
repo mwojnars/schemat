@@ -159,7 +159,7 @@ export class DataBlock extends Block {
         if (done) this.dirty = true
         this.flush()
         await this.propagate(req, key, data_old)
-        return done ? done : req.forward_delete(id)
+        return done ? done : req.forward_delete()
     }
 }
 
