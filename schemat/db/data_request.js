@@ -45,7 +45,7 @@ export class DataRequest {
     path = []              // array of ProcessingStep(s) that the request has gone through so far
 
     command                 // the most recent not-null `command` on the path
-    args                    // the most recent non-empty array of arguments for a command (possibly from a different step than `command`!)
+    args                    // the most recent non-empty array of arguments for a command, possibly from a different step than `command` (!)
 
     // `current_[ROLE]` properties contain the last actor on the `path` of a given type;
     // they are updated automatically when a new step is added to the path; these properties include:
@@ -77,6 +77,11 @@ export class DataRequest {
         if (args.length) this.args = args
 
         return this
+    }
+
+    remake_step(actor, command = null, ...args) {
+        /* Like make_step(), but first clones the request object to allow its reuse in another (parallel) step. */
+        return this.clone().make_step(actor, command, ...args)
     }
 
     encode_id(id) {
