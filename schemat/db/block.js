@@ -120,7 +120,7 @@ export class DataBlock extends Block {
 
     async insert(req) {
         // calculate the `id` if not provided, update `autoincrement`, and write the data
-        let {id} = req.args
+        let {id, data} = req.args
 
         if (id === undefined || id === null)
             id = Math.max(this.autoincrement + 1, req.current_ring.start_iid)      // no ID? use autoincrement with the next available ID
@@ -130,13 +130,12 @@ export class DataBlock extends Block {
         req.current_ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
         this.autoincrement = Math.max(id, this.autoincrement)
-
-        // let key = req.encode_id(id)
         let key = req.current_data.schema.encode_key([id])
+
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
 
-        req.make_step(this, null, {...req.args, key})
+        req.make_step(this, null, {key, data})
         await this.put(req)                         // change propagation is done here inside put()
 
         return id
