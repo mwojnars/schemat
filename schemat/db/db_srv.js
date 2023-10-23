@@ -105,14 +105,10 @@ export class Ring extends Item {
         let cmd = command || req.command
         assert(this.constructor.COMMANDS.includes(cmd), `command not allowed: ${cmd}`)
 
-        // let method = this.data[cmd]
-        // assert(method, `missing command: ${cmd}`)
-
         if (cmd === req.command)            // don't overwrite the command if it is same as in the previous step
             cmd = null
 
         return this.data.handle(req.make_step(this, cmd))
-        // return method.call(this.data, req.make_step(this, cmd))
     }
 
 

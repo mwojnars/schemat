@@ -1,4 +1,4 @@
-import {BinaryRecord, ItemRecord, SequenceSchema} from "./records.js";
+import {BinaryRecord, SequenceSchema} from "./records.js";
 import {INTEGER} from "../type.js";
 import {assert} from "../utils.js";
 import {YamlDataBlock} from "./block.js";
@@ -101,27 +101,6 @@ export class DataSequence extends Sequence {
         return block[req.command].call(block, req)
     }
 
-    /***  low-level API (no request forwarding)  ***/
-
-    // async get(req) {
-    //     /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
-    //     let block = this._prepare(req)
-    //     return block.get(req)
-    // }
-    //
-    // async put(req) {
-    //     let block = this._prepare(req)
-    //     return block.put(req)
-    // }
-
     erase()     { return Promise.all(this.blocks.map(b => b.erase())) }
     flush()     { return Promise.all(this.blocks.map(b => b.flush())) }
-
-
-    /***  high-level API (with request forwarding)  ***/
-
-    // async select(req) { return this.handle(req) }
-    // async insert(req) { return this.handle(req) }
-    // async update(req) { return this.handle(req) }
-    // async delete(req) { return this.handle(req) }
 }
