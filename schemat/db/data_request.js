@@ -80,7 +80,7 @@ export class DataRequest {
     }
 
     remake_step(actor, command = null, args = null) {
-        /* Like make_step(), but first clones the request object to allow its reuse in another (parallel) step. */
+        /* Like make_step(), but first the request object is cloned to allow its reuse in another (parallel) step. */
         return this.clone().make_step(actor, command, args)
     }
 

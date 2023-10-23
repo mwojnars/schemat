@@ -98,19 +98,19 @@ export class Ring extends Item {
 
     /***  Data access & modification  ***/
 
-    async handle(req, new_command = null) {
+    async handle(req, command = null) {
         /* Handle a DataRequest by passing it to an appropriate method of this.data. */
         const COMMANDS = ['select', 'insert', 'update', 'delete', 'get', 'put']
-        let command = new_command || req.command
-        let method = this.data[command]
+        let comm = command || req.command
+        let method = this.data[comm]
 
-        assert(COMMANDS.includes(command), `command not allowed: ${command}`)
-        assert(method, `missing command: ${command}`)
+        assert(COMMANDS.includes(comm), `command not allowed: ${comm}`)
+        assert(method, `missing command: ${comm}`)
 
-        if (command === req.command)        // don't overwrite the command if it was the same in the previous step
-            command = null
+        if (comm === req.command)           // don't overwrite the command if it is same as in the previous step
+            comm = null
 
-        return method.call(this.data, req.make_step(this, command), req.args)
+        return method.call(this.data, req.make_step(this, comm), req.args)
     }
 
 
