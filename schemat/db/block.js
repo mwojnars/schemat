@@ -114,12 +114,6 @@ export class DataBlock extends Block {
         if (await this.storage.get(key)) throw new DataBlock.ItemExists(msg, {id})
     }
 
-    async put(req) {
-        // rename 'data' to 'value' in the request for compatibility with low-level put/del methods
-        let {key, data} = req.args
-        return super.put(req.make_step(this, null, {key, value: data}))
-    }
-
     async select(req) {
         let data = await this.storage.get(req.args.key)
         return data !== undefined ? data : req.forward_down()
@@ -142,7 +136,7 @@ export class DataBlock extends Block {
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
 
-        req = req.make_step(this, null, {key, data})
+        req = req.make_step(this, null, {key, value: data})
         await this.put(req)                         // change propagation is done here inside put()
 
         return id
@@ -160,7 +154,7 @@ export class DataBlock extends Block {
         for (const edit of edits)
             data = edit.process(data)
 
-        req = req.make_step(this, 'save', {id, key, data})
+        req = req.make_step(this, 'save', {id, key, value: data})
 
         if (req.current_ring.readonly)              // can't write the update here in this ring? forward to a higher ring
             return req.forward_save()
