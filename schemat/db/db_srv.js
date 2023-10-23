@@ -99,7 +99,7 @@ export class Ring extends Item {
     }
 
 
-    /***  Data access & modification (CRUD operations)  ***/
+    /***  Data access & modification  ***/
 
     async handle(req, new_command = null) {
         /* Handle a DataRequest by passing it to an appropriate method of this.data. */
@@ -118,13 +118,8 @@ export class Ring extends Item {
         return this.data.get(req.make_step(this), ...req.args)
     }
 
-    // async save(req) {
-    //     let id = req.args[0]
-    //     return this.writable(id) ? this.data.put(req.make_step(this), ...req.args) : this.db.forward_save(req)
-    // }
 
-
-    /***  Indexes and Transforms  ***/
+    /***  Indexes and Transforms. Change propagation.  ***/
 
     async* scan_all() {
         /* Yield all items of this ring as ItemRecord objects. */
@@ -141,8 +136,6 @@ export class Ring extends Item {
         let index = this.indexes.get(name)      // Index object
         yield* index.scan({start, stop, limit, reverse, batch_size})
     }
-
-    /***  Change propagation  ***/
 
     propagate(change) {
         /* Propagate a change in an item's data to all indexes in this ring. Insertion/deletion is indicated by
@@ -295,7 +288,7 @@ export class ServerDB extends Database {
     }
 
 
-    /***  CRUD forwarding to other rings  ***/
+    /***  Forwarding to other rings  ***/
 
     forward_down(req) {
         /* Forward the request to a lower ring if the current ring doesn't contain the requested item ID - during
@@ -306,16 +299,6 @@ export class ServerDB extends Database {
         if (ring) return ring.handle(req)
         throw new ItemNotFound({id: req.args[0]})
     }
-
-    // forward_save(req) {
-    //     /* Forward a save(id, data) operation to a higher ring; called when the current ring is not allowed to save the update. */
-    //     let ring = req.current_ring
-    //     let next = this._next(ring)
-    //     if (next) return next.save(req)
-    //     if (ring.readonly) throw new ServerDB.RingReadOnly({id})
-    //     assert(!ring.validIID(id))
-    //     throw new ServerDB.InvalidID({id})
-    // }
 
     save(req) {
         /* Save an item update (args = [id,data]) to the lowest ring starting at current_ring that's writable and allows this ID.
