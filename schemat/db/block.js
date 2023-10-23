@@ -48,27 +48,29 @@ export class Block extends Item {
 
     /***  low-level API (no request forwarding)  ***/
 
-    async get(req, key)     { return this.storage.get(key) }
+    async get(req)      { return this.storage.get(req.args.key) }
 
-    async put(req, key, data) {
+    async put(req) {
         /* Write the `data` here in this block under the `id` and propagate the change to indexes.
            No forward of the request to another ring/block.
          */
+        let {key, data} = req.args                  // handle 'value' arg instead of 'data'?
         let data_old = await this.storage.get(key) || null
         await this.storage.put(key, data)
         this.dirty = true
         this.flush()
-        if (req) await this.propagate(req, key, data_old, data)     // TODO: drop "if"
+        if (req.current_ring) await this.propagate(req, key, data_old, data)     // TODO: drop "if"
     }
 
-    async del(req, key) {
+    async del(req) {
+        let {key} = req.args
         let data = await this.storage.get(key)
         if (data === undefined) return false        // TODO: inside index, notify about data inconsistency (there should no missing records)
 
         let deleted = this.storage.del(key)
         this.dirty = true
         this.flush()
-        if (req) await this.propagate(req, key, data)               // TODO: drop "if"
+        if (req.current_ring) await this.propagate(req, key, data)               // TODO: drop "if"
 
         return deleted
     }
@@ -120,7 +122,7 @@ export class DataBlock extends Block {
 
     async insert(req) {
         // calculate the `id` if not provided, update `autoincrement`, and write the data
-        let {id, data} = req.args
+        let {id} = req.args
 
         if (id === undefined || id === null)
             id = Math.max(this.autoincrement + 1, req.current_ring.start_iid)      // no ID? use autoincrement with the next available ID
@@ -132,7 +134,9 @@ export class DataBlock extends Block {
         this.autoincrement = Math.max(id, this.autoincrement)
 
         let key = req.encode_id(id)
-        await this.put(req, key, data)              // change propagation is done here inside put()
+        req.make_step(this, null, {...req.args, id, key})
+
+        await this.put(req)                         // change propagation is done here inside put()
 
         // TODO: auto-increment `key` not `id`, then decode
         // id = this.schema.decode_key(new_key)[0]
@@ -145,21 +149,22 @@ export class DataBlock extends Block {
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
-        let {id, edits} = req.args
-        let key = req.encode_id(id)
+        let {key, edits} = req.args
         let data = await this.storage.get(key)
         if (data === undefined) return req.forward_down()
 
         for (const edit of edits)
             data = edit.process(data)
 
+        req = req.make_step(this, 'save', {key, data})
+
         if (req.current_ring.readonly)              // can't write the update here in this ring? forward to a higher ring
-            return req.make_step(this, 'save', {id, data}).forward_save()
+            return req.forward_save()
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-        return this.put(req, key, data)             // change propagation is done here inside put()
+        return this.put(req)                        // change propagation is done here inside put()
     }
 
     async delete(req) {
@@ -316,7 +321,7 @@ export class YamlDataStorage extends MemoryStorage {
  **
  */
 
-export class JsonlIndexBlock extends MemoryBlock {
+export class JsonIndexBlock extends MemoryBlock {
 
     constructor(ring, filename) {
         super(ring)

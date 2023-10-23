@@ -85,7 +85,7 @@ export class DataSequence extends Sequence {
     _prepare(req) {
         let key = this._make_key(req.args.id)
         let block = this._find_block(key)
-        req.make_step(this)
+        req.make_step(this, null, {...req.args, key})
         return [key, block]
     }
 
@@ -101,12 +101,12 @@ export class DataSequence extends Sequence {
         /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
         assert(false, "this method seems to be not used (or maybe only with an Item ring?)")
         let [key, block] = this._prepare(req)
-        return block.get(req, key)
+        return block.get(req)
     }
 
     async put(req, {data}) {
         let [key, block] = this._prepare(req)
-        return block.put(req, key, data)
+        return block.put(req)
     }
 
     erase()     { return Promise.all(this.blocks.map(b => b.erase())) }
@@ -119,24 +119,4 @@ export class DataSequence extends Sequence {
     async insert(req) { return this.handle(req) }
     async update(req) { return this.handle(req) }
     async delete(req) { return this.handle(req) }
-
-    // async select(req) {
-    //     let [key, block] = this._prepare(req)
-    //     return block.select(req)
-    // }
-    //
-    // async insert(req) {
-    //     let [key, block] = this._prepare(req)
-    //     return block.insert(req)
-    // }
-    //
-    // async update(req) {
-    //     let [key, block] = this._prepare(req)
-    //     return block.update(req)
-    // }
-    //
-    // async delete(req) {
-    //     let [key, block] = this._prepare(req)
-    //     return block.delete(req)
-    // }
 }

@@ -3,8 +3,9 @@ import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
-import {MemoryBlock, JsonlIndexBlock} from "./block.js";
+import {MemoryBlock, JsonIndexBlock} from "./block.js";
 import {Sequence} from "./sequence.js";
+import {DataRequest} from "./data_request.js";
 
 
 // Section, Block, Partition
@@ -29,7 +30,7 @@ export class Index extends Sequence {
     constructor(ring, source, filename) {
         super()
         this.source = source
-        this.blocks = [new JsonlIndexBlock(ring, filename)]
+        this.blocks = [new JsonIndexBlock(ring, filename)]
         // this.blocks = [new MemoryBlock()]
         assert(source instanceof Sequence)
     }
@@ -40,18 +41,19 @@ export class Index extends Sequence {
         // const {key, value_old, value_new} = change
         // print(`apply(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
 
+        // TODO: request object, only used when another propagation step is to be done
+        let req = new DataRequest(this, 'apply', {change})
+
         // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
         const [del_records, put_records] = await this._make_plan(change)
 
-        let req = null      // TODO: request object, only used when another propagation step is to be done
-
         // delete old records
         for (let [key, value] of del_records || [])
-            this._find_block(key).del(req, key) //|| print(`deleted [${key}]`)
+            this._find_block(key).del(req.remake_step(null, 'del', {key})) //|| print(`deleted [${key}]`)
 
         // (over)write new records
         for (let [key, value] of put_records || [])
-            this._find_block(key).put(req, key, value) //|| print(`put [${key}]`)
+            this._find_block(key).put(req.remake_step(null, 'put', {key, data: value})) //|| print(`put [${key}]`)
     }
 
     async *map_record(input_record) {
