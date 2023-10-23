@@ -1,11 +1,11 @@
 import path from 'path'
-import {BaseError, ItemNotFound} from "../errors.js"
+import {BaseError, DatabaseError, ItemNotFound} from "../errors.js"
 import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory} from "./index.js";
-import {RecordChange, Record, ItemRecord} from "./records.js";
+import {Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
 
@@ -154,9 +154,9 @@ export class ServerDB extends Database {
     /***  Errors & internal checks  ***/
 
     static RingUnknown = class extends Database.Error   { static message = "reference ring not found in this database" }
-    static RingReadOnly = class extends Database.Error  { static message = "the ring is read-only" }
-    static InvalidID = class extends Database.Error     { static message = "item ID is outside of the valid range for the ring(s)" }
-    static NotInsertable = class extends Ring.Error     { static message = "item cannot be inserted, the ring(s) is either read-only or the ID is outside of the valid range" }
+    // static RingReadOnly = class extends Database.Error  { static message = "the ring is read-only" }
+    // static InvalidID = class extends Database.Error     { static message = "item ID is outside of the valid range for the ring(s)" }
+    // static NotInsertable = class extends Ring.Error     { static message = "item cannot be inserted, the ring(s) is either read-only or the ID is outside of the valid range" }
 
 
     /***  Rings manipulation  ***/
@@ -249,7 +249,12 @@ export class ServerDB extends Database {
         for (const ring of this.reversed)
             if (ring.writable(id)) return item.id = await ring.handle(req)
 
-        throw new ServerDB.NotInsertable({id})
+        // throw new ServerDB.NotInsertable({id})
+
+        req.error_not_writable(id === undefined ?
+            "item cannot be inserted, the ring(s) are read-only" :
+            "item cannot be inserted, either the ring(s) are read-only or the ID is outside a ring's valid ID range"
+        )
     }
 
     async delete(item_or_id) {
@@ -299,7 +304,7 @@ export class ServerDB extends Database {
             ring = this._next(ring)
 
         if (ring) return ring.handle(req, 'put')
-        throw new Database.Error(`can't save an updated item, either the rings are read-only or the ID is outside of a ring's valid range`, {id})
+        throw new DatabaseError(`can't save an updated item, either the ring(s) are read-only or the ID is outside a ring's valid ID range`, {id})
     }
 }
 
