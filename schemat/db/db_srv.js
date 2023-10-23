@@ -101,16 +101,16 @@ export class Ring extends Item {
     async handle(req, command = null) {
         /* Handle a DataRequest by passing it to an appropriate method of this.data. */
         const COMMANDS = ['select', 'insert', 'update', 'delete', 'get', 'put']
-        let comm = command || req.command
-        let method = this.data[comm]
+        let cmd = command || req.command
+        let method = this.data[cmd]
 
-        assert(COMMANDS.includes(comm), `command not allowed: ${comm}`)
-        assert(method, `missing command: ${comm}`)
+        assert(COMMANDS.includes(cmd), `command not allowed: ${cmd}`)
+        assert(method, `missing command: ${cmd}`)
 
-        if (comm === req.command)           // don't overwrite the command if it is same as in the previous step
-            comm = null
+        if (cmd === req.command)            // don't overwrite the command if it is same as in the previous step
+            cmd = null
 
-        return method.call(this.data, req.make_step(this, comm), req.args)
+        return method.call(this.data, req.make_step(this, cmd))
     }
 
 
@@ -292,15 +292,15 @@ export class ServerDB extends Database {
         // print(`forward_down(${req.command}, ${req.args})`)
         let ring = this._prev(req.current_ring)
         if (ring) return ring.handle(req)
-        throw new ItemNotFound({id: req.args[0]})
+        throw new ItemNotFound({id: req.args.id})
     }
 
     save(req) {
-        /* Save an item update (args = [id,data]) to the lowest ring starting at current_ring that's writable and allows this ID.
+        /* Save an item update (args = {id,key,value}) to the lowest ring starting at current_ring that's writable and allows this ID.
            Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
          */
         let ring = req.current_ring || this.bottom
-        let id = req.args[0]
+        let id = req.args.id
 
         // find the ring that's writable and allows this ID
         while (ring && !ring.writable(id))

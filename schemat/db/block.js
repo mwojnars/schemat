@@ -137,12 +137,12 @@ export class DataBlock extends Block {
         req.current_ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
         this.autoincrement = Math.max(id, this.autoincrement)
-        let key = req.current_data.schema.encode_key([id])
+        let key = req.current_data._make_key(id)
 
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
 
-        req.make_step(this, null, {key, data})
+        req = req.make_step(this, null, {key, data})
         await this.put(req)                         // change propagation is done here inside put()
 
         return id
@@ -153,14 +153,14 @@ export class DataBlock extends Block {
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
-        let {key, edits} = req.args
+        let {id, key, edits} = req.args
         let data = await this.storage.get(key)
         if (data === undefined) return req.forward_down()
 
         for (const edit of edits)
             data = edit.process(data)
 
-        req.make_step(this, 'save', {key, data})
+        req = req.make_step(this, 'save', {id, key, data})
 
         if (req.current_ring.readonly)              // can't write the update here in this ring? forward to a higher ring
             return req.forward_save()
@@ -186,7 +186,7 @@ export class DataBlock extends Block {
                 req.current_ring.throwReadOnly({id})
 
         // perform the delete
-        req.make_step(this, null, {key, value: data})
+        req = req.make_step(this, null, {key, value: data})
         return this.del(req)
     }
 }

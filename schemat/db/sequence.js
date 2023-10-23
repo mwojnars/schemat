@@ -83,15 +83,20 @@ export class DataSequence extends Sequence {
     _make_key(id)   { return id !== undefined ? this.schema.encode_key([id]) : undefined }
 
     _prepare(req) {
-        let key = this._make_key(req.args.id)
-        let block = this._find_block(key)
-        req.make_step(this, null, {...req.args, key})
-        return [key, block]
+        let {id, key} = req.args
+        if (key === undefined) {
+            key = this._make_key(id)
+            req.make_step(this, null, {...req.args, key})
+        }
+        else
+            req.make_step(this)
+
+        return this._find_block(key)
     }
 
     handle(req) {
         /* Handle a request for data access/modification. */
-        let [key, block] = this._prepare(req)
+        let block = this._prepare(req)
         return block[req.command].call(block, req)
     }
 
@@ -100,12 +105,12 @@ export class DataSequence extends Sequence {
     async get(req) {
         /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
         assert(false, "this method seems to be not used (or maybe only with an Item ring?)")
-        let [key, block] = this._prepare(req)
+        let block = this._prepare(req)
         return block.get(req)
     }
 
-    async put(req, {data}) {
-        let [key, block] = this._prepare(req)
+    async put(req) {
+        let block = this._prepare(req)
         return block.put(req)
     }
 
