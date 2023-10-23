@@ -131,13 +131,13 @@ export class DataBlock extends Block {
 
         this.autoincrement = Math.max(id, this.autoincrement)
 
-        let key = req.encode_id(id)
-        req.make_step(this, null, {...req.args, id, key})
-        
-        await this.put(req)                         // change propagation is done here inside put()
-
-        // TODO: auto-increment `key` not `id`, then decode
+        // let key = req.encode_id(id)
+        let key = req.current_data.schema.encode_key([id])
+        // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
+
+        req.make_step(this, null, {...req.args, key})
+        await this.put(req)                         // change propagation is done here inside put()
 
         return id
     }

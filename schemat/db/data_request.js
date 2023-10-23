@@ -84,12 +84,6 @@ export class DataRequest {
         return this.clone().make_step(actor, command, args)
     }
 
-    encode_id(id) {
-        /* Use the ring's data schema to encode item ID as a binary key. */
-        if (id === undefined) return undefined
-        return this.current_ring.data.schema.encode_key([id])
-    }
-
     forward_down()              { return this.current_db.forward_down(this) }
     forward_save()              { return this.current_db.save(this) }
 }
