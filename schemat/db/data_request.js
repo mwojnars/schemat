@@ -42,19 +42,19 @@ export class DataRequest {
     // ident               // identifier of the request, local to the origin node; for matching incoming responses with requests
     // debug               // true if detailed debugging information should be logged for this request
 
-    path = []              // array of ProcessingStep(s) that the request has gone through so far
+    trace = []             // array of ProcessingStep(s) that the request has gone through so far
 
-    command                 // the most recent not-null `command` on the path
-    args                    // the most recent non-empty array of arguments for a command, possibly from a different step than `command` (!)
+    command                // the most recent not-null `command` in the trace
+    args                   // the most recent non-empty array of arguments for a command, possibly from a different step than `command` (!)
 
-    // `current_[ROLE]` properties contain the last actor on the `path` of a given type;
-    // they are updated automatically when a new step is added to the path; these properties include:
+    // `current_[ROLE]` properties contain the last actor of a given type in the `trace`;
+    // they are updated automatically when a new step is added to the trace; these properties include:
     current_db
     current_ring
     current_data
     current_index
     current_block
-    // etc... (whatever roles are defined for actors on the path)
+    // etc... (whatever roles are defined for actors on the trace)
 
 
     constructor(actor = null, command = null, ...args) {
@@ -63,14 +63,14 @@ export class DataRequest {
 
     clone() {
         let dup = T.clone(this)
-        dup.path = [...this.path]           // individual steps are NOT cloned!
+        dup.trace = [...this.trace]             // individual steps are NOT cloned!
         return dup
     }
 
     make_step(actor, command = null, ...args) {
         /* Append a new step to the request path and return this object. */
         const step = new ProcessingStep(actor, command, args)
-        this.path.push(step)
+        this.trace.push(step)
 
         if (step.role) this[`current_${step.role}`] = actor
         if (command) this.command = command
