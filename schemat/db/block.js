@@ -51,15 +51,15 @@ export class Block extends Item {
     async get(req)      { return this.storage.get(req.args.key) }
 
     async put(req) {
-        /* Write the `data` here in this block under the `id` and propagate the change to indexes.
-           No forward of the request to another ring/block.
+        /* Write the `data` here in this block under the `id` and propagate the change to derived indexes.
+           No forward of the request to another ring.
          */
-        let {key, data} = req.args                  // handle 'value' arg instead of 'data'?
-        let data_old = await this.storage.get(key) || null
-        await this.storage.put(key, data)
+        let {key, value} = req.args                  // handle 'value' arg instead of 'data'?
+        let value_old = await this.storage.get(key) || null
+        await this.storage.put(key, value)
         this.dirty = true
         this.flush()
-        if (req.current_ring) await this.propagate(req, key, data_old, data)     // TODO: drop "if"
+        if (req.current_ring) await this.propagate(req, key, value_old, value)     // TODO: drop "if"
     }
 
     async del(req) {
@@ -96,9 +96,9 @@ export class Block extends Item {
         setTimeout(() => this.flush(0), timeout_sec * 1000)
     }
 
-    async propagate(req, key, data_old = null, data_new = null) {
+    async propagate(req, key, value_old = null, value_new = null) {
         /* Propagate a change in this block to derived Sequences in the same ring. */
-        const change = new RecordChange(key, data_old, data_new)
+        const change = new RecordChange(key, value_old, value_new)
         return req.current_ring.propagate(change)
     }
 }
@@ -112,6 +112,12 @@ export class DataBlock extends Block {
     async assertUniqueID(id, msg) {
         let key = this.ring.data._make_key(id)
         if (await this.storage.get(key)) throw new DataBlock.ItemExists(msg, {id})
+    }
+
+    async put(req) {
+        // rename 'data' to 'value' in the request for compatibility with low-level put/del methods
+        let {key, data} = req.args
+        return super.put(req.make_step(this, null, {key, value: data}))
     }
 
     async select(req) {
@@ -182,16 +188,6 @@ export class DataBlock extends Block {
         // perform the delete
         req.make_step(this, null, {key, value: data})
         return this.del(req)
-        
-        // let done = this.storage.del(key)
-        // if (done instanceof Promise) done = await done
-        // if (done) {
-        //     this.dirty = true
-        //     this.flush()
-        //     await this.propagate(req, key, data)
-        //     return done
-        // }
-        // return req.forward_down()
     }
 }
 

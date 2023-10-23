@@ -53,7 +53,7 @@ export class Index extends Sequence {
 
         // (over)write new records
         for (let [key, value] of put_records || [])
-            this._find_block(key).put(req.remake_step(null, 'put', {key, data: value})) //|| print(`put [${key}]`)
+            this._find_block(key).put(req.remake_step(null, 'put', {key, value})) //|| print(`put [${key}]`)
     }
 
     async *map_record(input_record) {
