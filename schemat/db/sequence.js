@@ -89,6 +89,12 @@ export class DataSequence extends Sequence {
         return [key, block]
     }
 
+    handle(req) {
+        /* Handle a request for data access/modification. */
+        let [key, block] = this._prepare(req)
+        return block[req.command].call(block, req)
+    }
+
     /***  low-level API (no request forwarding)  ***/
 
     async get(req) {
@@ -109,23 +115,28 @@ export class DataSequence extends Sequence {
 
     /***  high-level API (with request forwarding)  ***/
 
-    async select(req) {
-        let [key, block] = this._prepare(req)
-        return block.select(req)
-    }
+    async select(req) { return this.handle(req) }
+    async insert(req) { return this.handle(req) }
+    async update(req) { return this.handle(req) }
+    async delete(req) { return this.handle(req) }
 
-    async insert(req) {
-        let [key, block] = this._prepare(req)
-        return block.insert(req)
-    }
-
-    async update(req) {
-        let [key, block] = this._prepare(req)
-        return block.update(req)
-    }
-
-    async delete(req) {
-        let [key, block] = this._prepare(req)
-        return block.delete(req)
-    }
+    // async select(req) {
+    //     let [key, block] = this._prepare(req)
+    //     return block.select(req)
+    // }
+    //
+    // async insert(req) {
+    //     let [key, block] = this._prepare(req)
+    //     return block.insert(req)
+    // }
+    //
+    // async update(req) {
+    //     let [key, block] = this._prepare(req)
+    //     return block.update(req)
+    // }
+    //
+    // async delete(req) {
+    //     let [key, block] = this._prepare(req)
+    //     return block.delete(req)
+    // }
 }
