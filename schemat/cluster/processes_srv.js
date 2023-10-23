@@ -116,8 +116,8 @@ export class AdminProcess extends BackendProcess {
         print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 
         // load the item from its current ID; save a copy under the new ID, this will propagate to a higher ring if `id` can't be stored in `target`
-        let data = await source.handle(req.remake_step(null, 'select', id))
-        await db.save(req.remake_step(target, 'save', newid, data))
+        let data = await source.handle(req.remake_step(null, 'select', {id}))
+        await db.save(req.remake_step(target, 'save', {id: newid, data}))
 
         if (!sameID) {
             // // update children of a category item: change their CID to `new_iid`
@@ -140,7 +140,7 @@ export class AdminProcess extends BackendProcess {
         }
 
         // remove the old item from DB
-        try { await source.handle(req.remake_step(null, 'delete', id)) }
+        try { await source.handle(req.remake_step(null, 'delete', {id})) }
         catch (ex) {
             if (ex instanceof Ring.ReadOnly) print('WARNING: could not delete the old item as the ring is read-only')
         }
@@ -169,17 +169,17 @@ export class AdminProcess extends BackendProcess {
 
             for (const id of ids) {
                 // the record might have been modified during this loop - must re-read ("select")
-                let data = await ring.handle(req.remake_step(null, 'select', id))
+                let data = await ring.handle(req.remake_step(null, 'select', {id}))
 
                 // let item = await globalThis.registry.makeItem(new ItemRecord(id, data))
                 let item = await Item.from_record(new ItemRecord(id, data))
 
                 print(`reinserting item [${id}]...`)
-                item.id = await ring.handle(req.remake_step(null, 'insert', null, item.dumpData()))
+                item.id = await ring.handle(req.remake_step(null, 'insert', {data: item.dumpData()}))
 
                 print(`...new id=[${item.id}]`)
                 await this._update_references(id, item)
-                await ring.handle(req.remake_step(null, 'delete', id))
+                await ring.handle(req.remake_step(null, 'delete', {id}))
                 await ring.data.flush()
             }
         }

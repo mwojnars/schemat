@@ -18,7 +18,7 @@ export class ProcessingStep {
     role            // type of the actor: 'app', 'db', 'ring', 'data', 'index', 'block', ... or undefined
 
     command         // (optional) command name, e.g.: 'select', 'update', 'delete', 'insert', ...
-    args            // (optional) command arguments, e.g. [id, data] for 'save' command
+    args            // (optional) command arguments as args={arg1, arg2, ...}
     // response     // (optional) response from the actor after the step is completed
 
     constructor(actor, command, args) {
@@ -57,8 +57,8 @@ export class DataRequest {
     // etc... (whatever roles are defined for actors on the trace)
 
 
-    constructor(actor = null, command = null, ...args) {
-        if (actor || command) this.make_step(actor, command, ...args)
+    constructor(actor = null, command = null, args = null) {
+        if (actor || command) this.make_step(actor, command, args)
     }
 
     clone() {
@@ -67,21 +67,21 @@ export class DataRequest {
         return dup
     }
 
-    make_step(actor, command = null, ...args) {
+    make_step(actor, command = null, args = null) {
         /* Append a new step to the request path and return this object. */
         const step = new ProcessingStep(actor, command, args)
         this.trace.push(step)
 
         if (step.role) this[`current_${step.role}`] = actor
         if (command) this.command = command
-        if (args.length) this.args = args
+        if (args) this.args = args
 
         return this
     }
 
-    remake_step(actor, command = null, ...args) {
+    remake_step(actor, command = null, args = null) {
         /* Like make_step(), but first clones the request object to allow its reuse in another (parallel) step. */
-        return this.clone().make_step(actor, command, ...args)
+        return this.clone().make_step(actor, command, args)
     }
 
     encode_id(id) {

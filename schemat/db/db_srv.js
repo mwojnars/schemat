@@ -110,7 +110,7 @@ export class Ring extends Item {
         if (command === req.command)        // don't overwrite the command if it was the same in the previous step
             command = null
 
-        return method.call(this.data, req.make_step(this, command), ...req.args)
+        return method.call(this.data, req.make_step(this, command), req.args)
     }
 
 
@@ -196,7 +196,7 @@ export class ServerDB extends Database {
         /* Return the top-most ring that contains a given item's ID (`item`), or has a given ring name (`name`).
            Return undefined if not found. Can be called to check if an item ID or a ring name exists.
          */
-        let req = new DataRequest(this, 'find_ring', item)
+        let req = new DataRequest(this, 'find_ring', {id: item})
         for (const ring of this.reversed) {
             if (name && ring.name === name) return ring
             if (item) {
@@ -231,7 +231,7 @@ export class ServerDB extends Database {
 
     async select(id) {
         // returns a json string (`data`) or undefined
-        return this.forward_down(new DataRequest(this, 'select', id))
+        return this.forward_down(new DataRequest(this, 'select', {id}))
     }
 
     async update(id, ...edits) {
@@ -239,7 +239,7 @@ export class ServerDB extends Database {
            FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
          */
         assert(edits.length, 'missing edits')
-        return this.forward_down(new DataRequest(this, 'update', id, edits))
+        return this.forward_down(new DataRequest(this, 'update', {id, edits}))
     }
 
     async update_full(item) {
@@ -252,7 +252,7 @@ export class ServerDB extends Database {
            it is written to item.id.
          */
         let id = item.id
-        let req = new DataRequest(this, 'insert', id, item.dumpData())
+        let req = new DataRequest(this, 'insert', {id, data: item.dumpData()})
 
         for (const ring of this.reversed)
             if (ring.writable(id)) return item.id = await ring.handle(req)
@@ -265,7 +265,7 @@ export class ServerDB extends Database {
            Return true on success, or false if the ID was not found (no modifications are done in such case).
          */
         let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.id
-        return this.forward_down(new DataRequest(this, 'delete', id))
+        return this.forward_down(new DataRequest(this, 'delete', {id}))
     }
 
     async *scan_all() {

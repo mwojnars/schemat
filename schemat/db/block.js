@@ -150,7 +150,7 @@ export class DataBlock extends Block {
             data = edit.process(data)
 
         if (req.current_ring.readonly)              // can't write the update here in this ring? forward to a higher ring
-            return req.make_step(this, 'save', id, data).forward_save()
+            return req.make_step(this, 'save', {id, data}).forward_save()
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
