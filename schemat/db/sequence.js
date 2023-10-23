@@ -85,10 +85,15 @@ export class DataSequence extends Sequence {
         return this.schema.encode_key([id])
     }
 
+    static COMMANDS = ['get', 'put', 'select', 'insert', 'update', 'delete']
+
     handle(req /*DataRequest*/) {
         /* Handle a request for data access/modification. The call is redirected to [req.command] method
            of the block containing a given item ID or record key.
          */
+        let command = req.command
+        assert(this.constructor.COMMANDS.includes(command), `unknown command: ${command}`)
+
         let {id, key} = req.args
 
         if (key === undefined && id !== undefined && id !== null) {
@@ -100,7 +105,7 @@ export class DataSequence extends Sequence {
 
         let block = this._find_block(key)
 
-        return block[req.command].call(block, req)
+        return block[command].call(block, req)
     }
 
     erase()     { return Promise.all(this.blocks.map(b => b.erase())) }

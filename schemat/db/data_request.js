@@ -41,6 +41,7 @@ export class DataRequest {
     // uuid                // unique identifier of the request, global across the cluster; for logging and debugging
     // ident               // identifier of the request, local to the origin node; for matching incoming responses with requests
     // debug               // true if detailed debugging information should be logged for this request
+    // parent              // parent request that led to the creation of this one (if any)
 
     trace = []             // array of ProcessingStep(s) that the request has gone through so far
 
