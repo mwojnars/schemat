@@ -151,12 +151,7 @@ export class ServerDB extends Database {
     rings = []              // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
 
 
-    /***  Errors & internal checks  ***/
-
-    static RingUnknown = class extends Database.Error   { static message = "reference ring not found in this database" }
-    // static RingReadOnly = class extends Database.Error  { static message = "the ring is read-only" }
-    // static InvalidID = class extends Database.Error     { static message = "item ID is outside of the valid range for the ring(s)" }
-    // static NotInsertable = class extends Ring.Error     { static message = "item cannot be inserted, the ring(s) is either read-only or the ID is outside of the valid range" }
+    static RingUnknown = class extends DatabaseError { static message = "reference ring not found in this database" }
 
 
     /***  Rings manipulation  ***/

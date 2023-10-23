@@ -1,4 +1,4 @@
-import {BaseError, NotImplemented} from "../errors.js"
+import {NotImplemented} from "../errors.js"
 import {assert, print} from "../utils.js"
 
 
@@ -6,8 +6,6 @@ import {assert, print} from "../utils.js"
 
 export class Database {
     /* Common interface for server-side and client-side database layers alike. */
-
-    static Error = class extends BaseError {}
 
     async select(id)    { throw new NotImplemented() }
     async *scan(cid)    { throw new NotImplemented() }
