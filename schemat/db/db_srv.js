@@ -103,19 +103,17 @@ export class Ring extends Item {
 
     async handle(req, new_command = null) {
         /* Handle a DataRequest by passing it to an appropriate method of this.data. */
-        const COMMANDS = ['select', 'insert', 'update', 'delete', 'put']
+        const COMMANDS = ['select', 'insert', 'update', 'delete', 'get', 'put']
         let command = new_command || req.command
         let method = this.data[command]
 
-        assert(method, `missing command: ${command}`)
         assert(COMMANDS.includes(command), `command not allowed: ${command}`)
+        assert(method, `missing command: ${command}`)
+
+        if (command === req.command)        // don't overwrite the command if it was the same in the previous step
+            command = null
 
         return method.call(this.data, req.make_step(this, command), ...req.args)
-    }
-
-    async select_local(req) {
-        /* Read item's data from this ring, no forward to a lower ring. Return undefined if `id` not found. */
-        return this.data.get(req.make_step(this), ...req.args)
     }
 
 
@@ -205,7 +203,7 @@ export class ServerDB extends Database {
         for (const ring of this.reversed) {
             if (name && ring.name === name) return ring
             if (item) {
-                let data = await ring.select_local(req.clone())
+                let data = await ring.handle(req.clone(), 'put')
                 if (data !== undefined) return ring
             }
         }
