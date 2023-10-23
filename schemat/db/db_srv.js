@@ -16,9 +16,6 @@ import {DataSequence} from "./sequence.js";
  **
  */
 
-function REQ(ring) { return new DataRequest(ring.db).make_step(ring) }
-
-
 export class Ring extends Item {
 
     static role = 'ring'    // for use in ProcessingStep and DataRequest
@@ -203,7 +200,7 @@ export class ServerDB extends Database {
         for (const ring of this.reversed) {
             if (name && ring.name === name) return ring
             if (item) {
-                let data = await ring.handle(req.clone(), 'put')
+                let data = await ring.handle(req.clone(), 'get')
                 if (data !== undefined) return ring
             }
         }
