@@ -101,16 +101,16 @@ export class Ring extends Item {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async handle(req) {
+    async handle(req, new_command = null) {
         /* Handle a DataRequest by passing it to an appropriate method of this.data. */
-        const COMMANDS = ['select', 'insert', 'update', 'delete']
-        let {command, args} = req
+        const COMMANDS = ['select', 'insert', 'update', 'delete', 'put']
+        let command = new_command || req.command
         let method = this.data[command]
 
-        assert(method, `unknown command: ${command}`)
+        assert(method, `missing command: ${command}`)
         assert(COMMANDS.includes(command), `command not allowed: ${command}`)
 
-        return method.call(this.data, req.make_step(this), ...args)
+        return method.call(this.data, req.make_step(this, command), ...req.args)
     }
 
     async select_local(req) {
@@ -118,14 +118,10 @@ export class Ring extends Item {
         return this.data.get(req.make_step(this), ...req.args)
     }
 
-    async save(req) {
-        /* 2nd phase of update: save updated item's `data` under the `id`. Forward to a higher ring if needed.
-           This is called after the 1st phase which consisted of top-down search for the `id` in the stack of rings.
-           `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
-         */
-        let id = req.args[0]
-        return this.writable(id) ? this.data.put(req.make_step(this), ...req.args) : this.db.forward_save(req)
-    }
+    // async save(req) {
+    //     let id = req.args[0]
+    //     return this.writable(id) ? this.data.put(req.make_step(this), ...req.args) : this.db.forward_save(req)
+    // }
 
 
     /***  Indexes and Transforms  ***/
@@ -302,7 +298,7 @@ export class ServerDB extends Database {
     /***  CRUD forwarding to other rings  ***/
 
     forward_down(req) {
-        /* Forward the request to a lower ring if the current_ring doesn't contain the requested item ID - during
+        /* Forward the request to a lower ring if the current ring doesn't contain the requested item ID - during
            select/update/delete operations. It is assumed that args[0] is the item ID.
          */
         // print(`forward_down(${req.command}, ${req.args})`)
@@ -311,14 +307,29 @@ export class ServerDB extends Database {
         throw new ItemNotFound({id: req.args[0]})
     }
 
-    forward_save(req) {
-        /* Forward a save(id, data) operation to a higher ring; called when the current ring is not allowed to save the update. */
-        let ring = req.current_ring
-        let next = this._next(ring)
-        if (next) return next.save(req)
-        if (ring.readonly) throw new ServerDB.RingReadOnly({id})
-        assert(!ring.validIID(id))
-        throw new ServerDB.InvalidID({id})
+    // forward_save(req) {
+    //     /* Forward a save(id, data) operation to a higher ring; called when the current ring is not allowed to save the update. */
+    //     let ring = req.current_ring
+    //     let next = this._next(ring)
+    //     if (next) return next.save(req)
+    //     if (ring.readonly) throw new ServerDB.RingReadOnly({id})
+    //     assert(!ring.validIID(id))
+    //     throw new ServerDB.InvalidID({id})
+    // }
+
+    save(req) {
+        /* Save an item update (args = [id,data]) to the lowest ring starting at current_ring that's writable and allows this ID.
+           Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
+         */
+        let ring = req.current_ring || this.bottom
+        let id = req.args[0]
+
+        // find the ring that's writable and allows this ID
+        while (ring && !ring.writable(id))
+            ring = this._next(ring)
+
+        if (ring) return ring.handle(req, 'put')
+        throw new Database.Error(`can't save an updated item, either the rings are read-only or the ID is outside of a ring's valid range`, {id})
     }
 }
 

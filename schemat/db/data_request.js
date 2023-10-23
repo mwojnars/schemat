@@ -91,6 +91,6 @@ export class DataRequest {
     }
 
     forward_down()              { return this.current_db.forward_down(this) }
-    forward_save()              { return this.current_db.forward_save(this) }
+    forward_save()              { return this.current_db.save(this) }
 }
 
