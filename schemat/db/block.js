@@ -148,12 +148,13 @@ export class DataBlock extends Block {
         let data = await this.storage.get(key)
         if (data === undefined) return req.forward_down()
 
+        if (req.current_ring.readonly)
+            req.forward_save()
+
         for (const edit of edits)
             data = edit.process(data)
-
+        return this.put(req, key, data)
         // TODO: propagate()
-
-        return req.current_ring.writable() ? this.put(req, key, data) : req.forward_save(id, data)
     }
 
     async delete(req, id) {
