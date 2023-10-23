@@ -82,7 +82,10 @@ export class DataSequence extends Sequence {
 
     _make_key(id)   { assert(id !== undefined); return this.schema.encode_key([id]) }
 
-    _prepare(req) {
+    handle(req /*DataRequest*/) {
+        /* Handle a request for data access/modification. The call is redirected to [req.command] method
+           of the block containing a given item ID or record key.
+         */
         let {id, key} = req.args
 
         if (key === undefined && id !== undefined && id !== null) {
@@ -92,12 +95,8 @@ export class DataSequence extends Sequence {
         else
             req.make_step(this)
 
-        return this._find_block(key)
-    }
+        let block = this._find_block(key)
 
-    handle(req) {
-        /* Handle a request for data access/modification. */
-        let block = this._prepare(req)
         return block[req.command].call(block, req)
     }
 
