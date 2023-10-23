@@ -82,8 +82,8 @@ export class DataSequence extends Sequence {
 
     _make_key(id)   { return id !== undefined ? this.schema.encode_key([id]) : undefined }
 
-    _prepare(req, id) {
-        let key = this._make_key(id)
+    _prepare(req) {
+        let key = this._make_key(req.args.id)
         let block = this._find_block(key)
         req.make_step(this)
         return [key, block]
@@ -91,15 +91,15 @@ export class DataSequence extends Sequence {
 
     /***  low-level API (no request forwarding)  ***/
 
-    async get(req, {id}) {
+    async get(req) {
         /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
         assert(false, "this method seems to be not used (or maybe only with an Item ring?)")
-        let [key, block] = this._prepare(req, id)
+        let [key, block] = this._prepare(req)
         return block.get(req, key)
     }
 
-    async put(req, {id, data}) {
-        let [key, block] = this._prepare(req, id)
+    async put(req, {data}) {
+        let [key, block] = this._prepare(req)
         return block.put(req, key, data)
     }
 
@@ -109,23 +109,23 @@ export class DataSequence extends Sequence {
 
     /***  high-level API (with request forwarding)  ***/
 
-    async select(req, {id}) {
-        let [key, block] = this._prepare(req, id)
-        return block.select(req, id)
+    async select(req) {
+        let [key, block] = this._prepare(req)
+        return block.select(req)
     }
 
-    async insert(req, {id, data}) {
-        let [key, block] = this._prepare(req, id)
-        return block.insert(req, id, data)
+    async insert(req) {
+        let [key, block] = this._prepare(req)
+        return block.insert(req)
     }
 
-    async update(req, {id, edits}) {
-        let [key, block] = this._prepare(req, id)
-        return block.update(req, id, edits)
+    async update(req) {
+        let [key, block] = this._prepare(req)
+        return block.update(req)
     }
 
-    async delete(req, {id}) {
-        let [key, block] = this._prepare(req, id)
-        return block.delete(req, id)
+    async delete(req) {
+        let [key, block] = this._prepare(req)
+        return block.delete(req)
     }
 }

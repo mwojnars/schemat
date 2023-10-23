@@ -111,14 +111,17 @@ export class DataBlock extends Block {
         if (await this.storage.get(key)) throw new DataBlock.ItemExists(msg, {id})
     }
 
-    async select(req, id) {
+    async select(req) {
+        let {id} = req.args
         let key = req.encode_id(id)
         let data = await this.storage.get(key)
         return data !== undefined ? data : req.forward_down()
     }
 
-    async insert(req, id, data) {
+    async insert(req) {
         // calculate the `id` if not provided, update `autoincrement`, and write the data
+        let {id, data} = req.args
+
         if (id === undefined || id === null)
             id = Math.max(this.autoincrement + 1, req.current_ring.start_iid)      // no ID? use autoincrement with the next available ID
         else
@@ -137,11 +140,12 @@ export class DataBlock extends Block {
         return id
     }
 
-    async update(req, id, edits) {
+    async update(req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
+        let {id, edits} = req.args
         let key = req.encode_id(id)
         let data = await this.storage.get(key)
         if (data === undefined) return req.forward_down()
@@ -158,10 +162,11 @@ export class DataBlock extends Block {
         return this.put(req, key, data)             // change propagation is done here inside put()
     }
 
-    async delete(req, id) {
+    async delete(req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
+        let {id} = req.args
         let key = req.encode_id(id)
         let data = await this.storage.get(key)
 
