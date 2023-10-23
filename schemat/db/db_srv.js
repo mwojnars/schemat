@@ -151,9 +151,6 @@ export class ServerDB extends Database {
     rings = []              // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
 
 
-    static RingUnknown = class extends DatabaseError { static message = "reference ring not found in this database" }
-
-
     /***  Rings manipulation  ***/
 
     get top()       { return this.rings.at(-1) }
@@ -199,7 +196,7 @@ export class ServerDB extends Database {
          */
         if (!ring) return this.top
         let pos = this.rings.indexOf(ring)
-        if (pos < 0) throw new ServerDB.RingUnknown()
+        if (pos < 0) throw new DatabaseError(`reference ring not found in the database`)
         if (pos > 0) return this.rings[pos-1]
     }
 
@@ -209,7 +206,7 @@ export class ServerDB extends Database {
          */
         if (!ring) return this.bottom
         let pos = this.rings.indexOf(ring)
-        if (pos < 0) throw new ServerDB.RingUnknown()
+        if (pos < 0) throw new DatabaseError(`reference ring not found in the database`)
         if (pos < this.rings.length-1) return this.rings[pos+1]
     }
 
