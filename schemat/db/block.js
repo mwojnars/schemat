@@ -110,7 +110,7 @@ export class DataBlock extends Block {
     static ItemExists = class extends DataBlock.Error   { static message = "item with this ID already exists" }
 
     async assertUniqueID(id, msg) {
-        let key = this.ring.data._make_key(id)
+        let key = this.ring.data.make_key(id)
         if (await this.storage.get(key)) throw new DataBlock.ItemExists(msg, {id})
     }
 
@@ -131,7 +131,7 @@ export class DataBlock extends Block {
         req.current_ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
         this.autoincrement = Math.max(id, this.autoincrement)
-        let key = req.current_data._make_key(id)
+        let key = req.current_data.make_key(id)
 
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]

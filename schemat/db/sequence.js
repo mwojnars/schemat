@@ -80,7 +80,10 @@ export class DataSequence extends Sequence {
         this.blocks = [block]
     }
 
-    _make_key(id)   { assert(id !== undefined); return this.schema.encode_key([id]) }
+    make_key(id) {
+        assert(id !== undefined)
+        return this.schema.encode_key([id])
+    }
 
     handle(req /*DataRequest*/) {
         /* Handle a request for data access/modification. The call is redirected to [req.command] method
@@ -89,7 +92,7 @@ export class DataSequence extends Sequence {
         let {id, key} = req.args
 
         if (key === undefined && id !== undefined && id !== null) {
-            key = this._make_key(id)
+            key = this.make_key(id)
             req.make_step(this, null, {...req.args, key})
         }
         else
