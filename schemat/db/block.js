@@ -114,9 +114,7 @@ export class DataBlock extends Block {
     }
 
     async select(req) {
-        let {id} = req.args
-        let key = req.encode_id(id)
-        let data = await this.storage.get(key)
+        let data = await this.storage.get(req.args.key)
         return data !== undefined ? data : req.forward_down()
     }
 
@@ -135,7 +133,7 @@ export class DataBlock extends Block {
 
         let key = req.encode_id(id)
         req.make_step(this, null, {...req.args, id, key})
-
+        
         await this.put(req)                         // change propagation is done here inside put()
 
         // TODO: auto-increment `key` not `id`, then decode
@@ -156,7 +154,7 @@ export class DataBlock extends Block {
         for (const edit of edits)
             data = edit.process(data)
 
-        req = req.make_step(this, 'save', {key, data})
+        req.make_step(this, 'save', {key, data})
 
         if (req.current_ring.readonly)              // can't write the update here in this ring? forward to a higher ring
             return req.forward_save()
@@ -171,8 +169,7 @@ export class DataBlock extends Block {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
-        let {id} = req.args
-        let key = req.encode_id(id)
+        let {id, key} = req.args
         let data = await this.storage.get(key)
 
         // in a read-only ring no delete can be done: check if the record exists and either forward or throw an error
