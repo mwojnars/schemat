@@ -241,11 +241,9 @@ export class ServerDB extends Database {
         for (const ring of this.reversed)
             if (ring.writable(id)) return item.id = await ring.handle(req)
 
-        // throw new ServerDB.NotInsertable({id})
-
-        req.error_not_writable(id === undefined ?
+        req.error(id === undefined ?
             "item cannot be inserted, the ring(s) are read-only" :
-            "item cannot be inserted, either the ring(s) are read-only or the ID is outside a ring's valid ID range"
+            "item cannot be inserted, either the ring(s) are read-only or the ID is outside the ring's valid ID range"
         )
     }
 
@@ -296,7 +294,7 @@ export class ServerDB extends Database {
             ring = this._next(ring)
 
         if (ring) return ring.handle(req, 'put')
-        throw new DatabaseError(`can't save an updated item, either the ring(s) are read-only or the ID is outside a ring's valid ID range`, {id})
+        throw new DatabaseError(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`, {id})
     }
 }
 

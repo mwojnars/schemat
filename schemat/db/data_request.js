@@ -89,6 +89,6 @@ export class DataRequest {
     forward_down()              { return this.current_db.forward_down(this) }
     forward_save()              { return this.current_db.save(this) }
 
-    error_not_writable(msg)     { throw new DatabaseError(msg, {id: this.args.id}) }
+    error(msg)                  { throw new DatabaseError(msg, {id: this.args.id}) }
 }
 
