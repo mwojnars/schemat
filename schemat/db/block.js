@@ -63,14 +63,15 @@ export class Block extends Item {
     }
 
     async del(req) {
-        let {key} = req.args
-        let data = await this.storage.get(key)
-        if (data === undefined) return false        // TODO: inside index, notify about data inconsistency (there should no missing records)
+        let {key, value} = req.args
+
+        if (value === undefined) value = await this.storage.get(key)
+        if (value === undefined) return false        // TODO: notify about data inconsistency (there should no missing records)
 
         let deleted = this.storage.del(key)
         this.dirty = true
         this.flush()
-        if (req.current_ring) await this.propagate(req, key, data)               // TODO: drop "if"
+        if (req.current_ring) await this.propagate(req, key, value)               // TODO: drop "if"
 
         return deleted
     }
@@ -179,15 +180,18 @@ export class DataBlock extends Block {
                 req.current_ring.throwReadOnly({id})
 
         // perform the delete
-        let done = this.storage.del(key)
-        if (done instanceof Promise) done = await done
-        if (done) {
-            this.dirty = true
-            this.flush()
-            await this.propagate(req, key, data)
-            return done
-        }
-        return req.forward_down()
+        req.make_step(this, null, {key, value: data})
+        return this.del(req)
+        
+        // let done = this.storage.del(key)
+        // if (done instanceof Promise) done = await done
+        // if (done) {
+        //     this.dirty = true
+        //     this.flush()
+        //     await this.propagate(req, key, data)
+        //     return done
+        // }
+        // return req.forward_down()
     }
 }
 
