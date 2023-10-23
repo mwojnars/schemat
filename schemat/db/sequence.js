@@ -80,11 +80,12 @@ export class DataSequence extends Sequence {
         this.blocks = [block]
     }
 
-    _make_key(id)   { return id !== undefined ? this.schema.encode_key([id]) : undefined }
+    _make_key(id)   { assert(id !== undefined); return this.schema.encode_key([id]) }
 
     _prepare(req) {
         let {id, key} = req.args
-        if (key === undefined) {
+
+        if (key === undefined && id !== undefined && id !== null) {
             key = this._make_key(id)
             req.make_step(this, null, {...req.args, key})
         }
@@ -102,17 +103,16 @@ export class DataSequence extends Sequence {
 
     /***  low-level API (no request forwarding)  ***/
 
-    async get(req) {
-        /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
-        assert(false, "this method seems to be not used (or maybe only with an Item ring?)")
-        let block = this._prepare(req)
-        return block.get(req)
-    }
-
-    async put(req) {
-        let block = this._prepare(req)
-        return block.put(req)
-    }
+    // async get(req) {
+    //     /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
+    //     let block = this._prepare(req)
+    //     return block.get(req)
+    // }
+    //
+    // async put(req) {
+    //     let block = this._prepare(req)
+    //     return block.put(req)
+    // }
 
     erase()     { return Promise.all(this.blocks.map(b => b.erase())) }
     flush()     { return Promise.all(this.blocks.map(b => b.flush())) }
@@ -120,8 +120,8 @@ export class DataSequence extends Sequence {
 
     /***  high-level API (with request forwarding)  ***/
 
-    async select(req) { return this.handle(req) }
-    async insert(req) { return this.handle(req) }
-    async update(req) { return this.handle(req) }
-    async delete(req) { return this.handle(req) }
+    // async select(req) { return this.handle(req) }
+    // async insert(req) { return this.handle(req) }
+    // async update(req) { return this.handle(req) }
+    // async delete(req) { return this.handle(req) }
 }
