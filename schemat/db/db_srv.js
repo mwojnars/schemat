@@ -242,7 +242,7 @@ export class ServerDB extends Database {
            FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
          */
         assert(edits.length, 'missing edits')
-        return this.forward_down(new DataRequest(this, 'update', id, ...edits))
+        return this.forward_down(new DataRequest(this, 'update', id, edits))
     }
 
     async update_full(item) {

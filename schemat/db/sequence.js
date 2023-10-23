@@ -85,7 +85,7 @@ export class DataSequence extends Sequence {
     _prepare(req, id) {
         let key = this._make_key(id)
         let block = this._find_block(key)
-        req.make_step(this).make_step(block)
+        req.make_step(this)
         return [key, block]
     }
 
@@ -119,9 +119,9 @@ export class DataSequence extends Sequence {
         return block.insert(req, id, data)
     }
 
-    async update(req, id, ...edits) {
+    async update(req, id, edits) {
         let [key, block] = this._prepare(req, id)
-        return block.update(req, id, ...edits)
+        return block.update(req, id, edits)
     }
 
     async delete(req, id) {

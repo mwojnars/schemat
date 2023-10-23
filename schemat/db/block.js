@@ -137,7 +137,7 @@ export class DataBlock extends Block {
         return id
     }
 
-    async update(req, id, ...edits) {
+    async update(req, id, edits) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
@@ -156,9 +156,6 @@ export class DataBlock extends Block {
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
         return this.put(req, key, data)             // change propagation is done here inside put()
-    }
-
-    async save(req, id, ...edits) {
     }
 
     async delete(req, id) {
