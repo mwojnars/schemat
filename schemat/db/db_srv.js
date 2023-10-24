@@ -48,18 +48,19 @@ export class Ring extends Item {
     async open(req, db = null) {
         this.db = db
         this.data = new DataSequence(this, this.opts)
-        return this.data.open(req)
+        return this.data.open(req.make_step(this, 'open'))
     }
 
-    async _init_indexes() {
+    async _init_indexes(req) {
         let filename = this.file.replace(/\.yaml$/, '.idx_category_item.jl')
+        req = req.remake_step(this)
 
         this.indexes = new Map([
             ['idx_category_item', new IndexByCategory(this, this.data, filename)],      // index of item IDs sorted by parent category ID
         ])
 
         for (let index of this.indexes.values()) {
-            await index.open()
+            await index.open(req.clone())
             index.derived.push(this.data)           // make connection: data > index, for change propagation
         }
 
@@ -74,7 +75,6 @@ export class Ring extends Item {
 
     async erase(req) {
         /* Remove all records from this ring; open() should be called first. */
-        // if (this.readonly) throw new DataAccessError("the ring is read-only")
         return !this.readonly
             ? this.data.erase()
             : req.error_access("the ring is read-only and cannot be erased")
@@ -86,7 +86,7 @@ export class Ring extends Item {
     writable(id)                { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be written here
     valid_id(id)                { return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
 
-    assertValidID(id, msg) {
+    assert_valid_id(id, msg) {
         if (!this.valid_id(id)) throw new DataAccessError(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
     }
 
@@ -162,7 +162,7 @@ export class ServerDB extends Database {
             await ring.open(req.clone(), this)
             this.append(ring)
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
-            await ring._init_indexes()              // TODO: temporary
+            await ring._init_indexes(req.clone())   // TODO: temporary
         }
     }
 

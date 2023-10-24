@@ -28,10 +28,10 @@ export class Sequence {    // Series?
 
     _find_block(binary_key)     { return this.blocks[0] }
 
-    async open() {
+    async open(req) {
         for (let block of this.blocks) {
             await block
-            await block.open()
+            await block.open(req.make_step(this))
             block.setExpiry('never')            // prevent eviction of this item from Registry's cache (!)
         }
     }

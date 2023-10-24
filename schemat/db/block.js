@@ -36,14 +36,15 @@ export class Block extends Item {
     dirty                   // true when the block contains unsaved modifications
     storage                 // storage for this block's records
 
-    constructor(ring) {
-        super()
-        this.ring = ring
-    }
+    // constructor(ring) {
+    //     super()
+    //     this.ring = ring
+    // }
 
-    async open() {
+    async open(req) {
         this.dirty = false
-        this.autoincrement = await this.storage.open(this.ring, this)
+        this.ring = req.current_ring
+        this.autoincrement = await this.storage.open(req.make_step(this))
     }
 
     /***  low-level API (no request forwarding)  ***/
@@ -128,6 +129,8 @@ export class DataBlock extends Block {
         else
             await this.assertUniqueID(id)           // fixed ID provided by the caller? perform a uniqueness check
 
+        req.current_ring.assert_valid_id(id, `candidate ID for a new item is outside of the valid range for this ring`)
+
         this.autoincrement = Math.max(id, this.autoincrement)
         let key = req.current_data.make_key(id)
 
@@ -135,7 +138,6 @@ export class DataBlock extends Block {
         // id = this.schema.decode_key(new_key)[0]
 
         req = req.make_step(this, null, {id, key, value: data})
-        req.assert_valid_id(`candidate ID for a new item is outside of the valid range for this ring`)
 
         await this.put(req)                         // change propagation is done here inside put()
         return id
@@ -247,7 +249,7 @@ export class YamlDataBlock extends DataBlock {
 
     constructor(ring, filename) {
         super(ring)
-        this.storage = new YamlDataStorage(filename, ring, this)
+        this.storage = new YamlDataStorage(filename)
     }
 }
 
@@ -256,15 +258,16 @@ export class YamlDataStorage extends MemoryStorage {
 
     filename
 
-    constructor(filename, ring, block) {
+    constructor(filename) {
         super()
         this.filename = filename
-        this.ring = ring
-        this.block = block
     }
 
-    async open() {
+    async open(req) {
         /* Load records from this.filename file into this.records. */
+
+        this.ring = req.current_ring
+        this.block = req.current_block
 
         createFileIfNotExists(this.filename)
 
@@ -277,7 +280,7 @@ export class YamlDataStorage extends MemoryStorage {
         for (let record of records) {
             let id = T.pop(record, '__id')
 
-            this.ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
+            this.ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.block.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
 
             max_id = Math.max(max_id, id)
