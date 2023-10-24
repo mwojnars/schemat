@@ -1,5 +1,5 @@
 import {assert, T} from "../utils.js";
-import {DataAccessError} from "../errors.js";
+import {DataAccessError, ItemNotFound} from "../errors.js";
 
 
 /**********************************************************************************************************************/
@@ -89,6 +89,7 @@ export class DataRequest {
     forward_down()              { return this.current_db.forward_down(this) }
     forward_save()              { return this.current_db.save(this) }
 
-    error(msg)                  { throw new DataAccessError(msg, {id: this.args.id}) }
+    error_access(msg)           { throw new DataAccessError(msg, {id: this.args.id}) }
+    error_item_not_found(msg)   { throw new ItemNotFound(msg, {id: this.args.id}) }
 }
 

@@ -1,5 +1,5 @@
 import path from 'path'
-import {BaseError, DatabaseError, ItemNotFound} from "../errors.js"
+import {BaseError, DatabaseError} from "../errors.js"
 import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
 import {Database} from "./db.js"
@@ -241,7 +241,7 @@ export class ServerDB extends Database {
         for (const ring of this.reversed)
             if (ring.writable(id)) return item.id = await ring.handle(req)
 
-        return req.error(id === undefined ?
+        return req.error_access(id === undefined ?
             "cannot insert the item, the ring(s) are read-only" :
             "cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range"
         )
@@ -279,7 +279,7 @@ export class ServerDB extends Database {
         // print(`forward_down(${req.command}, ${req.args})`)
         let ring = this._prev(req.current_ring)
         if (ring) return ring.handle(req)
-        throw new ItemNotFound({id: req.args.id})
+        return req.error_item_not_found()
     }
 
     save(req) {

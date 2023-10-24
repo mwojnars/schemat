@@ -177,7 +177,7 @@ export class DataBlock extends Block {
             if (data === undefined)
                 return req.forward_down()
             else
-                return req.error("cannot remove the item, the ring is read-only")
+                return req.error_access("cannot remove the item, the ring is read-only")
 
         // perform the delete
         req = req.make_step(this, null, {key, value: data})
