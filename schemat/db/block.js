@@ -106,7 +106,7 @@ export class DataBlock extends Block {
     static ItemExists = class extends DataBlock.Error   { static message = "item with this ID already exists" }
 
     async assertUniqueID(id, msg) {
-        let key = this.ring.data.make_key(id)
+        let key = this.ring.data.encode_key(id)
         if (await this.storage.get(key)) throw new DataBlock.ItemExists(msg, {id})
     }
 
@@ -127,7 +127,7 @@ export class DataBlock extends Block {
         req.current_ring.assert_valid_id(id, `candidate ID for a new item is outside of the valid range for this ring`)
 
         this.autoincrement = Math.max(id, this.autoincrement)
-        let key = req.current_data.make_key(id)
+        let key = req.current_data.encode_key(id)
 
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
@@ -261,8 +261,9 @@ export class YamlDataStorage extends MemoryStorage {
     async open(req) {
         /* Load records from this.filename file into this.records. */
 
-        this.ring = req.current_ring
-        this.block = req.current_block
+        let ring = req.current_ring
+        let block = req.current_block
+        this.data_sequence = req.current_data
 
         createFileIfNotExists(this.filename)
 
@@ -275,13 +276,13 @@ export class YamlDataStorage extends MemoryStorage {
         for (let record of records) {
             let id = T.pop(record, '__id')
 
-            this.ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
-            await this.block.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
+            ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
+            await block.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
 
             max_id = Math.max(max_id, id)
 
             let data = '__data' in record ? record.__data : record
-            let key = req.current_data.make_key(id)
+            let key = req.current_data.encode_key(id)
 
             this.records.set(key, JSON.stringify(data))
         }
@@ -293,7 +294,7 @@ export class YamlDataStorage extends MemoryStorage {
         print(`YamlDataStorage flushing ${this.records.size} items to ${this.filename}...`)
         let flat = [...this.records.entries()]
         let recs = flat.map(([key, data_json]) => {
-            let __id = this.ring.data.schema.decode_key(key)[0]
+            let __id = this.data_sequence.decode_key(key)
             let data = JSON.parse(data_json)
             return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
         })

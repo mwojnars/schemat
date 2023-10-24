@@ -79,9 +79,12 @@ export class DataSequence extends Sequence {
         this.blocks = [block]
     }
 
-    make_key(id) {
+    encode_key(id) {
         assert(id !== undefined)
         return this.schema.encode_key([id])
+    }
+    decode_key(key) {
+        return this.schema.decode_key(key)[0]
     }
 
     static COMMANDS = ['get', 'put', 'select', 'insert', 'update', 'delete']
@@ -97,7 +100,7 @@ export class DataSequence extends Sequence {
 
         // calculate a `key` from `id` if missing in args
         if (key === undefined && id !== undefined && id !== null) {
-            key = this.make_key(id)
+            key = this.encode_key(id)
             req.make_step(this, null, {...req.args, key})
         }
         else
