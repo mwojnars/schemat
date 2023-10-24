@@ -74,7 +74,7 @@ export class Ring extends Item {
 
     async erase() {
         /* Remove all records from this ring; open() should be called first. */
-        if (this.readonly) this.throwReadOnly()
+        if (this.readonly) throw new DataAccessError("the ring is read-only")
         return this.data.erase()
     }
 
@@ -83,8 +83,6 @@ export class Ring extends Item {
 
     static Error = class extends BaseError        {}
     static InvalidIID = class extends Ring.Error  { static message = "IID is outside the range" }
-
-    throwReadOnly(msg, args)    { throw new DataAccessError(msg || "the ring is read-only", args) }
 
     writable(id)                { return !this.readonly && (id === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
     validIID(id)                { return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
