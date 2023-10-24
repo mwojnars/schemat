@@ -65,6 +65,7 @@ export class DataSequence extends Sequence {
        Supports direct inserts (of new items) with auto-assignment and autoincrement of ID.
      */
     static role = 'data'        // for use in ProcessingStep and DataRequest
+    static COMMANDS = ['get', 'put', 'select', 'insert', 'update', 'delete']
 
     schema = new SequenceSchema(
         new Map([['id', new INTEGER()]]),
@@ -86,8 +87,6 @@ export class DataSequence extends Sequence {
     decode_key(key) {
         return this.schema.decode_key(key)[0]
     }
-
-    static COMMANDS = ['get', 'put', 'select', 'insert', 'update', 'delete']
 
     handle(req /*DataRequest*/) {
         /* Handle a request for data access/modification. The call is redirected to [req.command] method

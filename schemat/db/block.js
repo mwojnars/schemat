@@ -2,7 +2,7 @@ import fs from 'fs';
 import yaml from 'yaml';
 
 import {print, T} from '../utils.js'
-import {BaseError, NotImplemented} from '../errors.js'
+import {DataConsistencyError, NotImplemented} from '../errors.js'
 import {Item} from '../item.js'
 import {RecordChange} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
@@ -102,12 +102,10 @@ export class Block extends Item {
 export class DataBlock extends Block {
     /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
 
-    static Error = class extends BaseError {}
-    static ItemExists = class extends DataBlock.Error   { static message = "item with this ID already exists" }
-
     async assertUniqueID(id, msg) {
         let key = this.ring.data.encode_key(id)
-        if (await this.storage.get(key)) throw new DataBlock.ItemExists(msg, {id})
+        if (await this.storage.get(key))
+            throw new DataConsistencyError(msg || "item with this ID already exists", {id})
     }
 
     async select(req) {
