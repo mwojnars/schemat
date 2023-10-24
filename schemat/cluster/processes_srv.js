@@ -140,10 +140,10 @@ export class AdminProcess extends BackendProcess {
         }
 
         // remove the old item from DB
-        try { await source.handle(req.remake_step(null, 'delete', {id})) }
-        catch (ex) {
-            if (ex instanceof Ring.ReadOnly) print('WARNING: could not delete the old item as the ring is read-only')
+        try {
+            await source.handle(req.remake_step(null, 'delete', {id}))
         }
+        catch (ex) { print("WARNING:", ex) }
 
         print('move: done')
     }

@@ -1,5 +1,5 @@
 import path from 'path'
-import {BaseError, DatabaseError} from "../errors.js"
+import {BaseError, DataAccessError, DatabaseError} from "../errors.js"
 import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
 import {Database} from "./db.js"
@@ -82,11 +82,9 @@ export class Ring extends Item {
     /***  Errors & internal checks  ***/
 
     static Error = class extends BaseError        {}
-    static ReadOnly = class extends Ring.Error    { static message = "the ring is read-only" }
     static InvalidIID = class extends Ring.Error  { static message = "IID is outside the range" }
 
-    // throwNotFound(msg, args)    { throw new ItemNotFound(msg, args) }
-    throwReadOnly(msg, args)    { throw new Ring.ReadOnly(msg, args) }
+    throwReadOnly(msg, args)    { throw new DataAccessError(msg || "the ring is read-only", args) }
 
     writable(id)                { return !this.readonly && (id === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
     validIID(id)                { return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
@@ -191,7 +189,7 @@ export class ServerDB extends Database {
     }
 
     _prev(ring) {
-        /* Find a ring that directly preceeds `ring` in this.rings. Return the top ring if `ring` if undefined,
+        /* Find a ring that directly precedes `ring` in this.rings. Return the top ring if `ring` if undefined,
            or undefined if `ring` has no predecessor, or throw RingUnknown if `ring` cannot be found.
          */
         if (!ring) return this.top
@@ -293,8 +291,8 @@ export class ServerDB extends Database {
         while (ring && !ring.writable(id))
             ring = this._next(ring)
 
-        if (ring) return ring.handle(req, 'put')
-        throw new DatabaseError(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`, {id})
+        return ring ? ring.handle(req, 'put')
+            : req.error_access(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
     }
 }
 
