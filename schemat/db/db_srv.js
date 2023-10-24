@@ -47,7 +47,7 @@ export class Ring extends Item {
 
     async open(req, db = null) {
         this.db = db
-        this.data = new DataSequence(this, this.opts)
+        this.data = new DataSequence(this.opts)
         return this.data.open(req.make_step(this, 'open'))
     }
 

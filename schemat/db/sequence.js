@@ -71,12 +71,11 @@ export class DataSequence extends Sequence {
         // value encoding is handled outside schema: through method overloading
     );
 
-    constructor(ring, {file, item} = {}) {
+    constructor({file, item} = {}) {
         super()
-        this.ring = ring
 
         // block is a local file, or an item that must be loaded from a lower ring
-        let block = file ? new YamlDataBlock(ring, file) : globalThis.registry.getLoaded(item)
+        let block = file ? new YamlDataBlock(file) : globalThis.registry.getLoaded(item)
         this.blocks = [block]
     }
 

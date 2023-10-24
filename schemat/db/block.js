@@ -36,11 +36,6 @@ export class Block extends Item {
     dirty                   // true when the block contains unsaved modifications
     storage                 // storage for this block's records
 
-    // constructor(ring) {
-    //     super()
-    //     this.ring = ring
-    // }
-
     async open(req) {
         this.dirty = false
         this.ring = req.current_ring
@@ -247,8 +242,8 @@ export class MemoryStorage extends Storage {
 
 export class YamlDataBlock extends DataBlock {
 
-    constructor(ring, filename) {
-        super(ring)
+    constructor(filename) {
+        super()
         this.storage = new YamlDataStorage(filename)
     }
 }
@@ -286,7 +281,7 @@ export class YamlDataStorage extends MemoryStorage {
             max_id = Math.max(max_id, id)
 
             let data = '__data' in record ? record.__data : record
-            let key = this.ring.data.schema.encode_key([id])
+            let key = req.current_data.make_key(id)
 
             this.records.set(key, JSON.stringify(data))
         }
