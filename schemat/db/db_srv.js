@@ -1,5 +1,5 @@
 import path from 'path'
-import {BaseError, DataAccessError, DatabaseError} from "../errors.js"
+import {DataAccessError, DatabaseError} from "../errors.js"
 import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
 import {Database} from "./db.js"
@@ -45,10 +45,10 @@ export class Ring extends Item {
         this.stop_iid = stop_iid
     }
 
-    async open(db) {
+    async open(req, db = null) {
         this.db = db
         this.data = new DataSequence(this, this.opts)
-        return this.data.open()
+        return this.data.open(req)
     }
 
     async _init_indexes() {
@@ -72,20 +72,22 @@ export class Ring extends Item {
         // }
     }
 
-    async erase() {
+    async erase(req) {
         /* Remove all records from this ring; open() should be called first. */
-        if (this.readonly) throw new DataAccessError("the ring is read-only")
-        return this.data.erase()
+        // if (this.readonly) throw new DataAccessError("the ring is read-only")
+        return !this.readonly
+            ? this.data.erase()
+            : req.error_access("the ring is read-only and cannot be erased")
     }
 
 
     /***  Errors & internal checks  ***/
 
-    writable(id)                { return !this.readonly && (id === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
-    validIID(id)                { return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
+    writable(id)                { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be written here
+    valid_id(id)                { return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
 
     assertValidID(id, msg) {
-        if (!this.validIID(id)) throw new DataAccessError(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
+        if (!this.valid_id(id)) throw new DataAccessError(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
     }
 
 
@@ -154,9 +156,10 @@ export class ServerDB extends Database {
         /* Set and load rings for self while updating the global registry, so that subsequent ring objects (items)
            can be loaded from lower rings.
          */
+        let req = new DataRequest(this, 'open')
         for (const spec of rings) {
             let ring = new Ring(spec)
-            await ring.open(this)
+            await ring.open(req.clone(), this)
             this.append(ring)
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
             await ring._init_indexes()              // TODO: temporary

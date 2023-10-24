@@ -128,17 +128,16 @@ export class DataBlock extends Block {
         else
             await this.assertUniqueID(id)           // fixed ID provided by the caller? perform a uniqueness check
 
-        req.current_ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
-
         this.autoincrement = Math.max(id, this.autoincrement)
         let key = req.current_data.make_key(id)
 
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
 
-        req = req.make_step(this, null, {key, value: data})
-        await this.put(req)                         // change propagation is done here inside put()
+        req = req.make_step(this, null, {id, key, value: data})
+        req.assert_valid_id(`candidate ID for a new item is outside of the valid range for this ring`)
 
+        await this.put(req)                         // change propagation is done here inside put()
         return id
     }
 

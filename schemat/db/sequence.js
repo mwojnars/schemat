@@ -96,6 +96,7 @@ export class DataSequence extends Sequence {
 
         let {id, key} = req.args
 
+        // calculate a `key` from `id` if missing in args
         if (key === undefined && id !== undefined && id !== null) {
             key = this.make_key(id)
             req.make_step(this, null, {...req.args, key})

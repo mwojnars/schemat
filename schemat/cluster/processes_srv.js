@@ -68,14 +68,14 @@ export class AdminProcess extends BackendProcess {
 
         let file = path_db_boot || (DB_ROOT + '/db-boot.yaml')
         let ring = new Ring({file})
-        let req  = new DataRequest(this, 'bootstrap')
+        let req  = new DataRequest(this, 'build')
 
-        await ring.open()
-        await ring.erase()
+        await ring.open(req.clone())
+        await ring.erase(req.clone())
 
         print(`Starting full RESET of DB, core items will be created anew in: ${file}`)
 
-        return bootstrap(this.registry, ring, req)
+        return bootstrap(this.registry, ring, req.clone())
     }
 
     async CLI_move({id, newid, bottom, ring: ringName}) {

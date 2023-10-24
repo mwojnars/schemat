@@ -89,7 +89,9 @@ export class DataRequest {
     forward_down()              { return this.current_db.forward_down(this) }
     forward_save()              { return this.current_db.save(this) }
 
-    error_access(msg)           { throw new DataAccessError(msg, {id: this.args.id}) }
-    error_item_not_found(msg)   { throw new ItemNotFound(msg, {id: this.args.id}) }
+    assert_valid_id(msg)        { return this.current_ring.assertValidID(this.args?.id, msg || `item ID is outside of the valid range for the ring`) }
+
+    error_access(msg)           { throw new DataAccessError(msg, {id: this.args?.id}) }
+    error_item_not_found(msg)   { throw new ItemNotFound(msg, {id: this.args?.id}) }
 }
 
