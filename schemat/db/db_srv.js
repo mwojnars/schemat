@@ -85,7 +85,7 @@ export class Ring extends Item {
     static ReadOnly = class extends Ring.Error    { static message = "the ring is read-only" }
     static InvalidIID = class extends Ring.Error  { static message = "IID is outside the range" }
 
-    throwNotFound(msg, args)    { throw new ItemNotFound(msg, args) }
+    // throwNotFound(msg, args)    { throw new ItemNotFound(msg, args) }
     throwReadOnly(msg, args)    { throw new Ring.ReadOnly(msg, args) }
 
     writable(id)                { return !this.readonly && (id === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
@@ -241,9 +241,9 @@ export class ServerDB extends Database {
         for (const ring of this.reversed)
             if (ring.writable(id)) return item.id = await ring.handle(req)
 
-        req.error(id === undefined ?
-            "item cannot be inserted, the ring(s) are read-only" :
-            "item cannot be inserted, either the ring(s) are read-only or the ID is outside the ring's valid ID range"
+        return req.error(id === undefined ?
+            "cannot insert the item, the ring(s) are read-only" :
+            "cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range"
         )
     }
 

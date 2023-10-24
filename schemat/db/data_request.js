@@ -1,5 +1,5 @@
 import {assert, T} from "../utils.js";
-import {DatabaseError} from "../errors.js";
+import {DataAccessError} from "../errors.js";
 
 
 /**********************************************************************************************************************/
@@ -89,6 +89,6 @@ export class DataRequest {
     forward_down()              { return this.current_db.forward_down(this) }
     forward_save()              { return this.current_db.save(this) }
 
-    error(msg)                  { throw new DatabaseError(msg, {id: this.args.id}) }
+    error(msg)                  { throw new DataAccessError(msg, {id: this.args.id}) }
 }
 

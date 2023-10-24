@@ -40,9 +40,8 @@ export class BaseError extends Error {
 }
 
 
-export class DatabaseError extends BaseError {
-    static message = "database error"
-}
+export class DatabaseError extends BaseError { static message = "database error" }
+export class DataAccessError extends DatabaseError { static message = "data access error" }
 
 export class ItemNotFound extends DatabaseError {
     static message = "item ID not found in the database"
