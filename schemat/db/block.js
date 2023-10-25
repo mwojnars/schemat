@@ -32,13 +32,11 @@ export class Block extends Item {
     FLUSH_TIMEOUT = 1       // todo: make the timeout configurable and 0 by default
     autoincrement = 0       // current maximum IID; a new record is assigned iid=autoincrement+1
 
-    ring                    // the ring this block belongs to
     dirty                   // true when the block contains unsaved modifications
-    storage                 // storage for this block's records
+    storage                 // Storage for this block's records
 
     async open(req) {
         this.dirty = false
-        this.ring = req.current_ring
         this.autoincrement = await this.storage.open(req.make_step(this))
     }
 
