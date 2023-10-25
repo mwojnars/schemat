@@ -1,6 +1,6 @@
 /*
     Low-level representation of items and index records, for storage and transmission from/to the database.
-    Instances of Record, ItemRecord, RecordChange - should be used as IMMUTABLE objects, i.e., once created,
+    Instances of Record, ItemRecord, ChangeRequest - should be used as IMMUTABLE objects, i.e., once created,
     they should not be modified (except for lazy internal calculation of missing derived fields).
  */
 
@@ -194,7 +194,7 @@ export class ItemRecord {
 
 /**********************************************************************************************************************/
 
-export class RecordChange {
+export class ChangeRequest {
     /* Data change in a binary record of a Sequence, to be propagated to derived sequences.
        `key` should be a Uint8Array; `value_*` should be json strings.
        For value_old and value_new, null means the corresponding old/new record is missing  (which represents

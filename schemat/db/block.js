@@ -4,7 +4,7 @@ import yaml from 'yaml';
 import {print, T} from '../utils.js'
 import {DataConsistencyError, NotImplemented} from '../errors.js'
 import {Item} from '../item.js'
-import {RecordChange} from "./records.js";
+import {ChangeRequest} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
 
 // import { Kafka } from 'kafkajs'
@@ -94,7 +94,7 @@ export class Block extends Item {
 
     async propagate(req, key, value_old = null, value_new = null) {
         /* Propagate a change in this block to all derived Sequences of the parent sequence. */
-        const change = new RecordChange(key, value_old, value_new)
+        const change = new ChangeRequest(key, value_old, value_new)
         return this.sequence.propagate(req, change)
     }
 }

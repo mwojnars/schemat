@@ -67,7 +67,7 @@ export class Ring extends Item {
         // for await (let record /*ItemRecord*/ of this.scan_all()) {
         //     for (let index of this.indexes.values()) {
         //         const binary_key = this.data.schema.encode_key([record.id])
-        //         const change = new RecordChange(binary_key, null, record.data_json)
+        //         const change = new ChangeRequest(binary_key, null, record.data_json)
         //         await index.apply(change)
         //     }
         // }

@@ -58,7 +58,7 @@ export class Sequence {    // Series?
         this.derived.push(sequence)
     }
 
-    propagate(req, change /*RecordChange*/) {
+    propagate(req, change /*ChangeRequest*/) {
         /* Propagate a change in this sequence, as submitted by a child block, to all derived sequences. */
         for (const sequence of this.derived)
             sequence.apply(change)                      // no need to await, the result is not used
