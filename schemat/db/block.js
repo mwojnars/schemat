@@ -34,9 +34,11 @@ export class Block extends Item {
 
     dirty                   // true when the block contains unsaved modifications
     storage                 // Storage for this block's records
+    sequence                // parent Sequence (data or index) that this block belongs to
 
-    async open(req) {
+    async open(req, sequence) {
         this.dirty = false
+        this.sequence = sequence
         this.autoincrement = await this.storage.open(req.make_step(this))
     }
 
@@ -91,9 +93,9 @@ export class Block extends Item {
     }
 
     async propagate(req, key, value_old = null, value_new = null) {
-        /* Propagate a change in this block to derived Sequences in the same ring. */
+        /* Propagate a change in this block to all derived Sequences of the parent sequence. */
         const change = new RecordChange(key, value_old, value_new)
-        return req.current_ring.propagate(change)
+        return this.sequence.propagate(req, change)
     }
 }
 

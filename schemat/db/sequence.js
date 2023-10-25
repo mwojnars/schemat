@@ -31,7 +31,7 @@ export class Sequence {    // Series?
     async open(req) {
         for (let block of this.blocks) {
             await block
-            await block.open(req.make_step(this))
+            await block.open(req.make_step(this), this)
             block.setExpiry('never')            // prevent eviction of this item from Registry's cache (!)
         }
     }
@@ -53,8 +53,13 @@ export class Sequence {    // Series?
             yield new BinaryRecord(this.schema, key, value)
     }
 
-    propagate(change /*RecordChange*/) {
-        /* Propagate a change in this sequence to all derived sequences. */
+    add_derived(sequence) {
+        /* Add a derived sequence (index) that must be updated when this sequence changes. */
+        this.derived.push(sequence)
+    }
+
+    propagate(req, change /*RecordChange*/) {
+        /* Propagate a change in this sequence, as submitted by a child block, to all derived sequences. */
         for (const sequence of this.derived)
             sequence.apply(change)                      // no need to await, the result is not used
     }

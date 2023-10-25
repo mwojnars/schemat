@@ -61,7 +61,7 @@ export class Ring extends Item {
 
         for (let index of this.indexes.values()) {
             await index.open(req.clone())
-            index.derived.push(this.data)           // make connection: data > index, for change propagation
+            this.data.add_derived(index)            // make connection: data > index, for change propagation
         }
 
         // for await (let record /*ItemRecord*/ of this.scan_all()) {
@@ -118,15 +118,6 @@ export class Ring extends Item {
         let index = this.indexes.get(name)      // Index object
         yield* index.scan({start, stop, limit, reverse, batch_size})
     }
-
-    propagate(change) {
-        /* Propagate a change in an item's data to all indexes in this ring. Insertion/deletion is indicated by
-           null in `data_old` or `data_new`, respectively.
-         */
-        for (const index of this.indexes.values())
-            index.apply(change)                         // no need to await, the result is not used
-    }
-
 }
 
 
