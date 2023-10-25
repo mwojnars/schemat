@@ -44,6 +44,8 @@ export class DataRequest {
     // debug               // true if detailed debugging information should be logged for this request
     // parent              // parent request that led to the creation of this one (if any)
 
+    // user                // user that initiated the request (if any), to check for permissions, user-specific config etc.
+
     trace = []             // array of ProcessingStep(s) that the request has gone through so far
 
     command                // the most recent not-null `command` in the trace

@@ -102,8 +102,7 @@ export class Block extends Item {
 export class DataBlock extends Block {
     /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
 
-    async assertUniqueID(id, msg) {
-        let key = this.ring.data.encode_key(id)
+    async assert_unique(key, id, msg) {
         if (await this.storage.get(key))
             throw new DataConsistencyError(msg || "item with this ID already exists", {id})
     }
@@ -115,17 +114,16 @@ export class DataBlock extends Block {
 
     async insert(req) {
         // calculate the `id` if not provided, update `autoincrement`, and write the data
-        let {id, data} = req.args
+        let {id, key, data} = req.args
 
-        if (id === undefined || id === null)
+        if (id === undefined || id === null) {
             id = Math.max(this.autoincrement + 1, req.current_ring.start_iid)      // no ID? use autoincrement with the next available ID
-        else
-            await this.assertUniqueID(id)           // fixed ID provided by the caller? perform a uniqueness check
+            key = req.current_data.encode_key(id)
+        }
+        else await this.assert_unique(key, id)                  // fixed ID provided by the caller? perform a uniqueness check
 
         req.current_ring.assert_valid_id(id, `candidate ID for a new item is outside of the valid range for this ring`)
-
         this.autoincrement = Math.max(id, this.autoincrement)
-        let key = req.current_data.encode_key(id)
 
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
@@ -273,14 +271,14 @@ export class YamlDataStorage extends MemoryStorage {
 
         for (let record of records) {
             let id = T.pop(record, '__id')
+            let key = req.current_data.encode_key(id)
 
             ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
-            await block.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
+            await block.assert_unique(key, id, `duplicate item ID loaded from ${this.filename}`)
 
             max_id = Math.max(max_id, id)
 
             let data = '__data' in record ? record.__data : record
-            let key = req.current_data.encode_key(id)
 
             this.records.set(key, JSON.stringify(data))
         }
