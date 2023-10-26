@@ -334,6 +334,9 @@ export class Item {
             if (category && !category.isLoaded && category !== this)
                 await category.load()
 
+            // if(category && !(category instanceof Category))
+            //     assert(false)
+
             await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
             this._initNetwork()
 
@@ -416,6 +419,14 @@ export class Item {
     /***  Dynamic loading of source code  ***/
 
     async getClass()    { return this.category?.getItemClass() }
+
+    // async getClass()    {
+    //     if (this.category && !this.category.getItemClass) {
+    //         print('this.category:', this.category)
+    //         print('getItemClass:', this.category.getItemClass)
+    //     }
+    //     return this.category?.getItemClass()
+    // }
 
     // getClass() {
     //     /* Create/parse/load a JS class for this item. If `custom_class` property is true, the item may receive

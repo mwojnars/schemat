@@ -8,6 +8,8 @@ import {IndexByCategory} from "./index.js";
 import {Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
+import {JSONx} from "../serialize.js";
+import {Data} from "../data.js";
 
 
 /**********************************************************************************************************************
@@ -243,21 +245,21 @@ export class ServerDB extends Database {
          */
         let req = new DataRequest(this, 'insert_many')
         let rings = this.reversed
+        // let empty_data = JSONx.stringify(new Data())     // empty data
 
         // 1st phase: insert stubs, each stub is inserted to the highest possible ring
-        for (const item of items) {
+        for (let item of items) {
             let id = item.id
-            let req2 = req.safe_step(null, 'insert', {id})
+            let req2 = req.safe_step(null, 'insert', {id, data: ''})     // insert stubs with empty data
+            // let req2 = req.safe_step(null, 'insert', {id, data: id > 0 ? empty_data : item.dumpData()})     // insert stubs with empty data
             let ring = rings.find(r => r.writable(id))
             if (!ring) return req2.error_access(`cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
             item.id = await ring.handle(req2)
         }
 
         // 2nd phase: update items with actual data
-        for (const item of items) {
-            let req2 = req.safe_step(null, 'update', {id: item.id, edits: [new EditData(item.dumpData())]})
-            await rings[0].handle(req2)
-        }
+        for (let item of items)
+            await this.update_full(item)
     }
 
     async delete(item_or_id) {
