@@ -152,6 +152,10 @@ export class ServerDB extends Database {
             this.append(ring)
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
             await ring._init_indexes(req.clone())   // TODO: temporary
+
+            // // if `spec` describes a new ring, insert `ring` as an item to the previous ring in the database
+            // if (spec.item) continue
+            // let item = await Item.from_record(new ItemRecord(null, ring.dumpData()))
         }
     }
 
