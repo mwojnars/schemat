@@ -25,7 +25,7 @@ function createFileIfNotExists(filename) {
 
 export class Block extends Item {
     /* A continuous subrange of records of a data/index sequence, physically located on a single machine.
-       Records are arranged by key according to byte order. Unit of data replication and distribution (TODO).
+       Records are arranged by key using byte order. Unit of data replication and distribution (TODO).
      */
     static role = 'block'   // for use in ProcessingStep and DataRequest
 
@@ -47,10 +47,9 @@ export class Block extends Item {
     }
 
     async open(req) {
-        // infer the storage type from the filename extension
-        // this.filename = filename
         let extension = this.filename.split('.').pop()
 
+        // infer the storage type from the filename extension
         if (extension === 'yaml') {
             this.storage_type = 'data-yaml'
             this._storage = new YamlDataStorage(this.filename)
