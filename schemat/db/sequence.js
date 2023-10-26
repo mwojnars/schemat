@@ -21,10 +21,12 @@ export class Sequence {    // Series?
            Database > Ring > Data/Index Sequence > Block > Storage > Record
      */
 
-    schema          // SequenceSchema that defines this sequence's key and value
-    splits          // array of split points between blocks
-    blocks          // array of Blocks that make up this sequence
-    derived = []    // array of derived sequences (indexes) that must be updated when this sequence changes
+    schema              // SequenceSchema that defines this sequence's key and value
+    splits              // array of split points between blocks
+    blocks              // array of Blocks that make up this sequence
+    derived = []        // array of derived sequences (indexes) that must be updated when this sequence changes
+    flush_delay = 1.0   // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
+
 
     _find_block(binary_key)     { return this.blocks[0] }
 

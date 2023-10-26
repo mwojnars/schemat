@@ -34,10 +34,9 @@ export class Block extends Item {
 
     // worker               // worker node that contains the block's file; only at this node the block runs in the "server" mode
     
-    flush_delay = 1.0       // delay (in seconds) before flushing the block's updates to disk (to combine multiple consecutive updates in one write)
-
     _storage                // Storage for this block's records
-    _dirty = false          // true when the block contains unsaved modifications (with delayed flush())
+    // _dirty = false          // true when the block contains unsaved modifications (with delayed flush())
+    _pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
 
     constructor(filename) {
@@ -72,7 +71,7 @@ export class Block extends Item {
         let {key, value} = req.args                  // handle 'value' arg instead of 'data'?
         let value_old = await this._storage.get(key) || null
         await this._storage.put(key, value)
-        this._dirty = true
+        // this._dirty = true
         this._flush(req)
         if (req.current_ring) await this.propagate(req, key, value_old, value)     // TODO: drop "if"
     }
@@ -84,7 +83,7 @@ export class Block extends Item {
         if (value === undefined) return false        // TODO: notify about data inconsistency (there should no missing records)
 
         let deleted = this._storage.del(key)
-        this._dirty = true
+        // this._dirty = true
         this._flush(req)
         if (req.current_ring) await this.propagate(req, key, value)               // TODO: drop "if"
 
@@ -99,16 +98,32 @@ export class Block extends Item {
         return this._flush(req)
     }
 
-    _flush(req, delay = this.flush_delay) {
-        /* The flushing is only executed if this._dirty=true. The operation can be delayed by `delay` seconds
-           to combine multiple consecutive updates in one write - in such case you do NOT want to await it. */
-        if (!this._dirty) return
-        if (delay === 0) {
-            this._dirty = false
-            return this._storage.flush()
+    _flush(req, with_delay = true) {
+        /* Flush all unsaved modifications to disk. If with_delay=true, the operation is delayed by `flush_delay`
+           seconds (configured in the parent sequence) to combine multiple consecutive updates in one write
+           - in such case you do NOT want to await the result.
+         */
+        let delay = req.current_sequence.flush_delay
+
+        if (with_delay && delay) {
+            if (this._pending_flush) return
+            this._pending_flush = true
+            return setTimeout(() => this._flush(req, false), delay * 1000)
         }
-        setTimeout(() => this._flush(req, 0), delay * 1000)
+        this._pending_flush = false
+        return this._storage.flush()
     }
+
+    // _flush(req, delay = this.flush_delay) {
+    //     /* The flushing is only executed if this._dirty=true. The operation can be delayed by `delay` seconds
+    //        to combine multiple consecutive updates in one write - in such case you do NOT want to await it. */
+    //     if (!this._dirty) return
+    //     if (delay === 0) {
+    //         this._dirty = false
+    //         return this._storage.flush()
+    //     }
+    //     setTimeout(() => this._flush(req, 0), delay * 1000)
+    // }
 
     async propagate(req, key, value_old = null, value_new = null) {
         /* Propagate a change in this block to all derived Sequences of the parent sequence. */
