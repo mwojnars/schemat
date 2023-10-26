@@ -236,6 +236,30 @@ export class ServerDB extends Database {
         )
     }
 
+    async insert_many(...items) {
+        /* Insert multiple interconnected items that reference each other and can't be inserted one by one.
+           The insertion proceeds in two phases: 1) the items are inserted with empty data, to obtain their IDs;
+           2) the items are updated with their actual data, with all references (incl. bidirectional) correctly replaced with IDs.
+         */
+        let req = new DataRequest(this, 'insert_many')
+        let rings = this.reversed
+
+        // 1st phase: insert stubs, each stub is inserted to the highest possible ring
+        for (const item of items) {
+            let id = item.id
+            let req2 = req.safe_step(null, 'insert', {id})
+            let ring = rings.find(r => r.writable(id))
+            if (!ring) return req2.error_access(`cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
+            item.id = await ring.handle(req2)
+        }
+
+        // 2nd phase: update items with actual data
+        for (const item of items) {
+            let req2 = req.safe_step(null, 'update', {id: item.id, edits: [new EditData(item.dumpData())]})
+            await rings[0].handle(req2)
+        }
+    }
+
     async delete(item_or_id) {
         /* Find and delete the top-most occurrence of the item or ID.
            Return true on success, or false if the ID was not found (no modifications are done in such case).
