@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from "path";
 import {fileURLToPath} from "url";
 
@@ -7,7 +8,7 @@ import {Item} from "../item.js";
 import {JSONx} from "../serialize.js";
 import {EditData} from "../db/edits.js";
 import {DataServer, WebServer} from "./servers.js";
-import {Ring} from "../db/db_srv.js";
+import {Ring, ServerDB} from "../db/db_srv.js";
 import {SchematProcess} from "../processes.js";
 import {ServerRegistry} from "../registry_srv.js";
 import {ItemRecord} from "../db/records.js";
@@ -64,18 +65,32 @@ export class AdminProcess extends BackendProcess {
 
     async CLI_build({path_db_boot}) {
         /* Generate the core system items anew and save. */
+
         let {bootstrap} = await import('../boot/bootstrap.js')
 
         let file = path_db_boot || (DB_ROOT + '/db-boot.yaml')
         let ring = new Ring({file})
         let req  = new DataRequest(this, 'build')
 
+        // erase the content of the data file
         await ring.open(req.clone())
         await ring.erase(req.clone())
 
+        // // remove `file` if it exists
+        // try { fs.unlinkSync(file) }
+        // catch(ex) {}
+
+        // // here, the ring is re-opened again
+        // let db = new ServerDB()
+        // await db.init_as_cluster_database([{file}])
+
+        await this.cluster.startup()
+        let db = this.cluster.db
+        db.append(ring)
+
         print(`Starting full RESET of DB, core items will be created anew in: ${file}`)
 
-        return bootstrap(this.registry, ring, req.clone())
+        return bootstrap(db, this.registry)  // ring, req.clone())
     }
 
     async CLI_move({id, newid, bottom, ring: ringName}) {

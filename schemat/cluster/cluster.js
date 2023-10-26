@@ -35,9 +35,9 @@ export class Cluster extends Item {
            which should replace the db object with the ultimate one (TODO).
          */
 
-        let db = this.db = new ServerDB()
+        this.db = new ServerDB()
         let rings = this.prop('rings')
-        return db.init_as_cluster_database(rings)
+        return this.db.init_as_cluster_database(rings)
 
         // // load the cluster's full and ultimate data from the bootstrap DB;
         // // this may override the db property with the ultimate DB object
