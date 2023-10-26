@@ -51,11 +51,11 @@ export class Index extends Sequence {
 
         // delete old records
         for (let [key, value] of del_records || [])
-            this._find_block(key).del(req.remake_step(null, 'del', {key})) //|| print(`deleted [${key}]`)
+            this._find_block(key).del(req.safe_step(null, 'del', {key})) //|| print(`deleted [${key}]`)
 
         // (over)write new records
         for (let [key, value] of put_records || [])
-            this._find_block(key).put(req.remake_step(null, 'put', {key, value})) //|| print(`put [${key}]`)
+            this._find_block(key).put(req.safe_step(null, 'put', {key, value})) //|| print(`put [${key}]`)
     }
 
     async *map_record(input_record) {

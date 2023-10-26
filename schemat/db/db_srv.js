@@ -51,7 +51,7 @@ export class Ring extends Item {
 
     async _init_indexes(req) {
         let filename = this.file.replace(/\.yaml$/, '.idx_category_item.jl')
-        req = req.remake_step(this)
+        req = req.safe_step(this)
 
         this.indexes = new Map([
             ['idx_category_item', new IndexByCategory(this.data, filename)],    // index of item IDs sorted by parent category ID
