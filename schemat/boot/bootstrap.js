@@ -288,6 +288,5 @@ export async function bootstrap(registry, ring, request /*DataRequest*/) {
         let req = request.remake_step(null, 'insert', {id: item.id, data: item.dumpData()})
         item.id = await ring.handle(req)
     }
-    await ring.flush()
 }
 

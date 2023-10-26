@@ -52,7 +52,7 @@ export class Block extends Item {
         let value_old = await this.storage.get(key) || null
         await this.storage.put(key, value)
         this.dirty = true
-        this.flush()
+        this._flush()
         if (req.current_ring) await this.propagate(req, key, value_old, value)     // TODO: drop "if"
     }
 
@@ -64,7 +64,7 @@ export class Block extends Item {
 
         let deleted = this.storage.del(key)
         this.dirty = true
-        this.flush()
+        this._flush()
         if (req.current_ring) await this.propagate(req, key, value)               // TODO: drop "if"
 
         return deleted
@@ -76,10 +76,10 @@ export class Block extends Item {
         /* Remove all records from this sequence; open() should be called first. */
         this.autoincrement = 0
         await this.storage.erase()
-        return this.flush()
+        return this._flush()
     }
 
-    flush(timeout_sec = this.FLUSH_TIMEOUT) {
+    _flush(timeout_sec = this.FLUSH_TIMEOUT) {
         /* The flushing is only executed if this.dirty=true. The operation can be delayed by `timeout_sec` seconds
            to combine multiple consecutive updates in one write - in such case you do NOT want to await it. */
         if (!this.dirty) return
@@ -87,7 +87,7 @@ export class Block extends Item {
             this.dirty = false
             return this.storage.flush()
         }
-        setTimeout(() => this.flush(0), timeout_sec * 1000)
+        setTimeout(() => this._flush(0), timeout_sec * 1000)
     }
 
     async propagate(req, key, value_old = null, value_new = null) {
