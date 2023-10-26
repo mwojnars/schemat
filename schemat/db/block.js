@@ -179,8 +179,8 @@ export class DataBlock extends Block {
 
 export class MemoryBlock extends Block {
 
-    constructor(ring) {
-        super(ring)
+    constructor() {
+        super()
         this.storage = new MemoryStorage()
     }
 }
@@ -307,8 +307,8 @@ export class YamlDataStorage extends MemoryStorage {
 
 export class JsonIndexBlock extends MemoryBlock {
 
-    constructor(ring, filename) {
-        super(ring)
+    constructor(filename) {
+        super()
         this.storage = new JsonIndexStorage(filename)
     }
 }
@@ -318,7 +318,7 @@ export class JsonIndexStorage extends MemoryStorage {
 
     filename
 
-    constructor(filename, ring) {
+    constructor(filename) {
         super()
         this.filename = filename
     }

@@ -56,7 +56,7 @@ export class Ring extends Item {
         req = req.remake_step(this)
 
         this.indexes = new Map([
-            ['idx_category_item', new IndexByCategory(this, this.data, filename)],      // index of item IDs sorted by parent category ID
+            ['idx_category_item', new IndexByCategory(this.data, filename)],    // index of item IDs sorted by parent category ID
         ])
 
         for (let index of this.indexes.values()) {

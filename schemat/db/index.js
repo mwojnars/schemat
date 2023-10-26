@@ -27,11 +27,10 @@ export class Index extends Sequence {
 
     source                      // Sequence that this index is derived from
 
-    constructor(ring, source, filename) {
+    constructor(source, filename) {
         super()
         this.source = source
-        this.blocks = [new JsonIndexBlock(ring, filename)]
-        // this.blocks = [new MemoryBlock()]
+        this.blocks = [new JsonIndexBlock(filename)]
         assert(source instanceof Sequence)
     }
 
