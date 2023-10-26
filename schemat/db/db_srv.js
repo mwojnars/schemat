@@ -80,6 +80,8 @@ export class Ring extends Item {
             : req.error_access("the ring is read-only and cannot be erased")
     }
 
+    async flush() { return this.data.flush() }
+
 
     /***  Errors & internal checks  ***/
 

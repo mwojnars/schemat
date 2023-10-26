@@ -115,6 +115,6 @@ export class DataSequence extends Sequence {
         return block[command].call(block, req)
     }
 
-    erase()     { return Promise.all(this.blocks.map(b => b.erase())) }
-    flush()     { return Promise.all(this.blocks.map(b => b.flush())) }
+    async erase()   { return Promise.all(this.blocks.map(b => b.erase())) }
+    async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
 }
