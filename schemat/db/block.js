@@ -29,29 +29,23 @@ export class Block extends Item {
      */
     static role = 'block'   // for use in ProcessingStep and DataRequest
 
-    FLUSH_TIMEOUT = 1       // todo: make the timeout configurable and 0 by default
-    autoincrement = 0       // current maximum IID; a new record is assigned iid=autoincrement+1
+    flush_timeout = 1       // todo: make the timeout configurable and 0 by default
 
-    storage                 // Storage for this block's records
-    dirty                   // true when the block contains unsaved modifications (with delayed flush())
+    _storage                // Storage for this block's records
+    _dirty = false          // true when the block contains unsaved modifications (with delayed flush())
 
-    async open(req) {
-        this.dirty = false
-        this.autoincrement = await this.storage.open(req.make_step(this))
-    }
 
-    /***  low-level API (no request forwarding)  ***/
-
-    async get(req)      { return this.storage.get(req.args.key) }
+    async open(req)     { return this._storage.open(req.make_step(this)) }
+    async get(req)      { return this._storage.get(req.args.key) }
 
     async put(req) {
         /* Write the `data` here in this block under the `id` and propagate the change to derived indexes.
            No forward of the request to another ring.
          */
         let {key, value} = req.args                  // handle 'value' arg instead of 'data'?
-        let value_old = await this.storage.get(key) || null
-        await this.storage.put(key, value)
-        this.dirty = true
+        let value_old = await this._storage.get(key) || null
+        await this._storage.put(key, value)
+        this._dirty = true
         this._flush()
         if (req.current_ring) await this.propagate(req, key, value_old, value)     // TODO: drop "if"
     }
@@ -59,33 +53,32 @@ export class Block extends Item {
     async del(req) {
         let {key, value} = req.args
 
-        if (value === undefined) value = await this.storage.get(key)
+        if (value === undefined) value = await this._storage.get(key)
         if (value === undefined) return false        // TODO: notify about data inconsistency (there should no missing records)
 
-        let deleted = this.storage.del(key)
-        this.dirty = true
+        let deleted = this._storage.del(key)
+        this._dirty = true
         this._flush()
         if (req.current_ring) await this.propagate(req, key, value)               // TODO: drop "if"
 
         return deleted
     }
 
-    async *scan(opts = {}) { yield* this.storage.scan(opts) }
+    async *scan(opts = {}) { yield* this._storage.scan(opts) }
 
     async erase() {
         /* Remove all records from this sequence; open() should be called first. */
-        this.autoincrement = 0
-        await this.storage.erase()
+        await this._storage.erase()
         return this._flush()
     }
 
-    _flush(timeout_sec = this.FLUSH_TIMEOUT) {
-        /* The flushing is only executed if this.dirty=true. The operation can be delayed by `timeout_sec` seconds
+    _flush(timeout_sec = this.flush_timeout) {
+        /* The flushing is only executed if this._dirty=true. The operation can be delayed by `timeout_sec` seconds
            to combine multiple consecutive updates in one write - in such case you do NOT want to await it. */
-        if (!this.dirty) return
+        if (!this._dirty) return
         if (timeout_sec === 0) {
-            this.dirty = false
-            return this.storage.flush()
+            this._dirty = false
+            return this._storage.flush()
         }
         setTimeout(() => this._flush(0), timeout_sec * 1000)
     }
@@ -100,18 +93,24 @@ export class Block extends Item {
 export class DataBlock extends Block {
     /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
 
+    autoincrement = 0       // current maximum item ID; a new record is assigned id=autoincrement+1
+
+    async open(req) {
+        this.autoincrement = await this._storage.open(req.make_step(this))
+    }
+
     async assert_unique(key, id, msg) {
-        if (await this.storage.get(key))
+        if (await this._storage.get(key))
             throw new DataConsistencyError(msg || "item with this ID already exists", {id})
     }
 
     async select(req) {
-        let data = await this.storage.get(req.args.key)
+        let data = await this._storage.get(req.args.key)
         return data !== undefined ? data : req.forward_down()
     }
 
     async insert(req) {
-        // calculate the `id` if not provided, update `autoincrement`, and write the data
+        // calculate the `id` if not provided, update autoincrement and write the data
         let {id, key, data} = req.args
 
         if (id === undefined || id === null) {
@@ -138,7 +137,7 @@ export class DataBlock extends Block {
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
         let {id, key, edits} = req.args
-        let data = await this.storage.get(key)
+        let data = await this._storage.get(key)
         if (data === undefined) return req.forward_down()
 
         for (const edit of edits)
@@ -160,7 +159,7 @@ export class DataBlock extends Block {
            Log an error if the ring is read-only and the `id` is present here.
          */
         let {key} = req.args
-        let data = await this.storage.get(key)
+        let data = await this._storage.get(key)
 
         // in a read-only ring no delete can be done: check if the record exists and either forward or throw an error
         if (req.current_ring.readonly)
@@ -173,13 +172,19 @@ export class DataBlock extends Block {
         req = req.make_step(this, null, {key, value: data})
         return this.del(req)
     }
+
+    async erase() {
+        /* Remove all records from this sequence; open() should be called first. */
+        this.autoincrement = 0
+        return super.erase()
+    }
 }
 
 export class MemoryBlock extends Block {
 
     constructor() {
         super()
-        this.storage = new MemoryStorage()
+        this._storage = new MemoryStorage()
     }
 }
 
@@ -238,7 +243,7 @@ export class YamlDataBlock extends DataBlock {
 
     constructor(filename) {
         super()
-        this.storage = new YamlDataStorage(filename)
+        this._storage = new YamlDataStorage(filename)
     }
 }
 
@@ -307,7 +312,7 @@ export class JsonIndexBlock extends MemoryBlock {
 
     constructor(filename) {
         super()
-        this.storage = new JsonIndexStorage(filename)
+        this._storage = new JsonIndexStorage(filename)
     }
 }
 

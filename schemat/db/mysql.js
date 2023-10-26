@@ -1,6 +1,6 @@
 // import mysql from 'mysql2'
 import { assert, print } from '../utils.js'
-import { Block } from './block.js'
+import { DataBlock } from './block.js'
 
 //let db = mysql.createConnection(srv)
 //db.connect()
@@ -11,7 +11,7 @@ import { Block } from './block.js'
 // let [rows, fields] = await db.execute('SELECT id, pid, title FROM pap_papers_view WHERE id>=9035 AND id < 9050')
 
 
-export class MySQL extends Block {
+export class MySQL extends DataBlock {
 
     _sqlTables              // array of SQL table names
     _categories             // array of Category items corresponding to SQL tables; TODO: enable reload of category items
