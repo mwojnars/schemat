@@ -207,7 +207,7 @@ export class Storage {
 }
 
 export class MemoryStorage extends Storage {
-    /* All records stored in a Map in memory. Possibly synchronized with a plain file on disk (implemented in subclasses). */
+    /* All records stored in a Map in memory. Possibly synchronized with a file on disk (implemented in subclasses). */
 
     records = new BinaryMap()       // preloaded records, {binary-key: json-data}
 

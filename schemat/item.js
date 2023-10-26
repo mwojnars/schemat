@@ -172,6 +172,10 @@ export class Item {
     >> meta fields are accessible through this.get('#FIELD') or '.FIELD' ?
     >> item.getName() uses a predefined data field (name/title...) but falls back to '#name' when the former is missing
     - ver      -- current version 1,2,3,...; increased +1 after each modification of the item; null if no versioning
+    - last_update -- [UUID of the last "update request" message + set of output changes]; ensures idempotency of updates within kafka transactions:
+                     when a transaction is aborted, but the update was already written (without change propagation to derived indexes),
+                     the resumed transaction only sends out all change requests without rewriting the same update;
+                     after successful commit, the item record is re-written with the `last_update` field removed
     - cver     -- version of the category that encoded this item's data; the exact same version must perform decoding
     - sum      -- checksum of `data` (or of full item with `sum` value excluded) to detect corruption due to disk i/o errors etc.
     - itime, utime -- "inserted" timestamp, last "updated" timestamp
