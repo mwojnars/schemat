@@ -209,24 +209,24 @@ export class Storage {
 export class MemoryStorage extends Storage {
     /* All records stored in a Map in memory. Possibly synchronized with a file on disk (implemented in subclasses). */
 
-    records = new BinaryMap()       // preloaded records, {binary-key: json-data}
+    _records = new BinaryMap()       // preloaded records, {binary-key: json-data}
 
-    get(key)            { return this.records.get(key) }
-    put(key, value)     { this.records.set(key, value) }
-    del(key)            { return this.records.delete(key) }
+    get(key)            { return this._records.get(key) }
+    put(key, value)     { this._records.set(key, value) }
+    del(key)            { return this._records.delete(key) }
 
-    erase()             { this.records.clear() }
-    size()              { return this.records.size }
+    erase()             { this._records.clear() }
+    size()              { return this._records.size }
 
     *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
            are binary keys (Uint8Array).
          */
-        let sorted_keys = [...this.records.keys()].sort(compareUint8Arrays)
+        let sorted_keys = [...this._records.keys()].sort(compareUint8Arrays)
         let start_index = start ? sorted_keys.findIndex(key => compareUint8Arrays(key, start) >= 0) : 0
         let stop_index = stop ? sorted_keys.findIndex(key => compareUint8Arrays(key, stop) >= 0) : sorted_keys.length
         for (let key of sorted_keys.slice(start_index, stop_index))
-            yield [key, this.records.get(key)]
+            yield [key, this._records.get(key)]
     }
 }
 
@@ -267,7 +267,7 @@ export class YamlDataStorage extends MemoryStorage {
         let records = yaml.parse(content) || []
 
         let max_id = 0
-        this.records.clear()
+        this._records.clear()
 
         for (let record of records) {
             let id = T.pop(record, '__id')
@@ -280,15 +280,15 @@ export class YamlDataStorage extends MemoryStorage {
 
             let data = '__data' in record ? record.__data : record
 
-            this.records.set(key, JSON.stringify(data))
+            this._records.set(key, JSON.stringify(data))
         }
         return max_id
     }
 
     async flush() {
         /* Save the entire database (this.records) to a file. */
-        print(`YamlDataStorage flushing ${this.records.size} items to ${this.filename}...`)
-        let flat = [...this.records.entries()]
+        print(`YamlDataStorage flushing ${this._records.size} items to ${this.filename}...`)
+        let flat = [...this._records.entries()]
         let recs = flat.map(([key, data_json]) => {
             let __id = this.data_sequence.decode_key(key)
             let data = JSON.parse(data_json)
@@ -332,17 +332,17 @@ export class JsonIndexStorage extends MemoryStorage {
         let lines = content.split('\n').filter(line => line.trim().length > 0)
         let records = lines.map(line => JSON.parse(line))
 
-        this.records.clear()
+        this._records.clear()
 
         for (let [key, value] of records)
-            this.records.set(Uint8Array.from(key), value ? JSON.stringify(value) : '')
+            this._records.set(Uint8Array.from(key), value ? JSON.stringify(value) : '')
     }
 
     async flush() {
         /* Save the entire database (this.records) to a file. */
-        print(`YamlIndexStorage flushing ${this.records.size} records to ${this.filename}...`)
+        print(`YamlIndexStorage flushing ${this._records.size} records to ${this.filename}...`)
 
-        let lines = [...this.records.entries()].map(([binary_key, json_value]) => {
+        let lines = [...this._records.entries()].map(([binary_key, json_value]) => {
             let key = JSON.stringify(Array.from(binary_key))
             return json_value ? `[${key}, ${json_value}]` : `[${key}]`
         })
