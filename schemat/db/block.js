@@ -12,7 +12,7 @@ import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
 
 function createFileIfNotExists(filename) {
     /* Create an empty file if it doesn't exist yet. Do nothing otherwise. */
-    try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }
+    try { fs.writeFileSync(filename, '', {flag: 'wx'}) }
     catch(ex) {}
 }
 
@@ -29,6 +29,12 @@ export class Block extends Item {
      */
     static role = 'block'   // for use in ProcessingStep and DataRequest
 
+    filename
+    storage_file            // local file path on the worker node where this block is stored
+    storage_type            // type of storage, e.g. "yaml" or "json"
+    
+    // worker               // worker node that contains the block's file; only at this node the block runs in the "server" mode
+    
     flush_timeout = 1       // todo: make the timeout configurable and 0 by default
 
     _storage                // Storage for this block's records
@@ -180,13 +186,7 @@ export class DataBlock extends Block {
     }
 }
 
-export class MemoryBlock extends Block {
-
-    constructor() {
-        super()
-        this._storage = new MemoryStorage()
-    }
-}
+export class IndexBlock extends Block {}
 
 
 /**********************************************************************************************************************
@@ -258,7 +258,7 @@ export class YamlDataStorage extends MemoryStorage {
     }
 
     async open(req) {
-        /* Load records from this.filename file into this.records. */
+        /* Load records from this block's file. */
 
         let ring = req.current_ring
         let block = req.current_block
@@ -308,7 +308,7 @@ export class YamlDataStorage extends MemoryStorage {
  **
  */
 
-export class JsonIndexBlock extends MemoryBlock {
+export class JsonIndexBlock extends IndexBlock {
 
     constructor(filename) {
         super()

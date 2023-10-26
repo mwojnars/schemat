@@ -3,7 +3,7 @@ import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
-import {MemoryBlock, JsonIndexBlock} from "./block.js";
+import {JsonIndexBlock} from "./block.js";
 import {Sequence} from "./sequence.js";
 import {DataRequest} from "./data_request.js";
 
