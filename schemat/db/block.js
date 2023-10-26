@@ -31,7 +31,7 @@ export class Block extends Item {
 
     filename
     storage_file            // local file path on the worker node where this block is stored
-    storage_type            // type of storage, e.g. "yaml" or "json"
+    storage_type            // type of storage, e.g. "data-yaml" or "index-jl"
     
     // worker               // worker node that contains the block's file; only at this node the block runs in the "server" mode
     
@@ -40,6 +40,25 @@ export class Block extends Item {
     _storage                // Storage for this block's records
     _dirty = false          // true when the block contains unsaved modifications (with delayed flush())
 
+
+    constructor(filename) {
+        super()
+
+        // infer the storage type from the filename extension
+        this.filename = filename
+        let extension = filename.split('.').pop()
+
+        if (extension === 'yaml') {
+            this.storage_type = 'data-yaml'
+            this._storage = new YamlDataStorage(filename)
+        }
+        else if (extension === 'jl') {
+            this.storage_type = 'index-jl'
+            this._storage = new JsonIndexStorage(filename)
+        }
+        else
+            throw new Error(`unsupported storage type: '${this.storage_type || extension}'`)
+    }
 
     async open(req)     { return this._storage.open(req.make_step(this)) }
     async get(req)      { return this._storage.get(req.args.key) }
@@ -241,10 +260,10 @@ export class MemoryStorage extends Storage {
 
 export class YamlDataBlock extends DataBlock {
 
-    constructor(filename) {
-        super()
-        this._storage = new YamlDataStorage(filename)
-    }
+    // constructor(filename) {
+    //     super()
+    //     this._storage = new YamlDataStorage(filename)
+    // }
 }
 
 export class YamlDataStorage extends MemoryStorage {
@@ -310,10 +329,10 @@ export class YamlDataStorage extends MemoryStorage {
 
 export class JsonIndexBlock extends IndexBlock {
 
-    constructor(filename) {
-        super()
-        this._storage = new JsonIndexStorage(filename)
-    }
+    // constructor(filename) {
+    //     super()
+    //     this._storage = new JsonIndexStorage(filename)
+    // }
 }
 
 export class JsonIndexStorage extends MemoryStorage {
