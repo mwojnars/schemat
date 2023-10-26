@@ -2,6 +2,7 @@ import {BinaryRecord, SequenceSchema} from "./records.js";
 import {INTEGER} from "../type.js";
 import {assert} from "../utils.js";
 import {DataBlock} from "./block.js";
+import {Item} from "../item.js";
 
 
 /**********************************************************************************************************************
@@ -10,7 +11,7 @@ import {DataBlock} from "./block.js";
  **
  */
 
-export class Sequence {    // Series?
+export class Sequence extends Item {    // Series?
     /* Ordered sequence of key-value records, possibly distributed and/or replicated (TODO).
        Keys and values (payload) can be composite.
        May consist of multiple - possibly overlapping (replicated) - Blocks. TODO
