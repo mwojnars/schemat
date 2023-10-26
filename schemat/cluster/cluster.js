@@ -30,13 +30,13 @@ export class Cluster extends Item {
         // {item: 1015, name: 'mysql', readonly: true},
     ]
 
-    async startup() {
+    async startup(rings = this.rings) {
         /* Load the bootstrap database & create the registry, then load this cluster's complete data from DB,
            which should replace the db object with the ultimate one (TODO).
          */
 
         this.db = new ServerDB()
-        let rings = this.prop('rings')
+        // let rings = this.prop('rings')
         return this.db.init_as_cluster_database(rings)
 
         // // load the cluster's full and ultimate data from the bootstrap DB;

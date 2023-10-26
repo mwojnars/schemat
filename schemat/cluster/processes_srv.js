@@ -69,28 +69,24 @@ export class AdminProcess extends BackendProcess {
         let {bootstrap} = await import('../boot/bootstrap.js')
 
         let file = path_db_boot || (DB_ROOT + '/db-boot.yaml')
-        let ring = new Ring({file})
-        let req  = new DataRequest(this, 'build')
+        // let ring = new Ring({file})
+        // let req  = new DataRequest(this, 'build')
 
-        // erase the content of the data file
-        await ring.open(req.clone())
-        await ring.erase(req.clone())
+        // // erase the content of the data file
+        // await ring.open(req.clone())
+        // await ring.erase(req.clone())
 
-        // // remove `file` if it exists
-        // try { fs.unlinkSync(file) }
-        // catch(ex) {}
+        // remove `file` if it exists
+        try { fs.unlinkSync(file) }
+        catch(ex) {}
 
-        // // here, the ring is re-opened again
-        // let db = new ServerDB()
-        // await db.init_as_cluster_database([{file}])
-
-        await this.cluster.startup()
+        await this.cluster.startup([{file}])
         let db = this.cluster.db
-        db.append(ring)
+        // db.append(ring)
 
         print(`Starting full RESET of DB, core items will be created anew in: ${file}`)
 
-        return bootstrap(db, this.registry)  // ring, req.clone())
+        return bootstrap(db, this.registry)
     }
 
     async CLI_move({id, newid, bottom, ring: ringName}) {
