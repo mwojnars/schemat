@@ -60,6 +60,11 @@ export class DataRequest {
     current_block
     // etc... (whatever roles are defined for actors on the trace)
 
+    get current_sequence() {
+        /* most recent data or index Sequence */
+        return this.current_data || this.current_index
+    }
+
 
     constructor(actor = null, command = null, args = null) {
         if (actor || command) this.make_step(actor, command, args)

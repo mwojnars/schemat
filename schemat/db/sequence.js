@@ -31,7 +31,7 @@ export class Sequence {    // Series?
     async open(req) {
         for (let block of this.blocks) {
             await block
-            await block.open(req.make_step(this), this)
+            await block.open(req.make_step(this))
             block.setExpiry('never')            // prevent eviction of this item from Registry's cache (!)
         }
     }
