@@ -254,17 +254,9 @@ export class MemoryStorage extends Storage {
 
 /**********************************************************************************************************************
  **
- **  YAML DATA BLOCK
+ **  YAML DATA
  **
  */
-
-export class YamlDataBlock extends DataBlock {
-
-    // constructor(filename) {
-    //     super()
-    //     this._storage = new YamlDataStorage(filename)
-    // }
-}
 
 export class YamlDataStorage extends MemoryStorage {
     /* Items stored in a YAML file. For use during development only. */
@@ -323,17 +315,9 @@ export class YamlDataStorage extends MemoryStorage {
 
 /**********************************************************************************************************************
  **
- **  JSON INDEX BLOCK
+ **  JSON INDEX
  **
  */
-
-export class JsonIndexBlock extends IndexBlock {
-
-    // constructor(filename) {
-    //     super()
-    //     this._storage = new JsonIndexStorage(filename)
-    // }
-}
 
 export class JsonIndexStorage extends MemoryStorage {
     /* Items stored in a YAML file. For use during development only. */

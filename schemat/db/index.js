@@ -3,7 +3,7 @@ import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
-import {JsonIndexBlock} from "./block.js";
+import {IndexBlock} from "./block.js";
 import {Sequence} from "./sequence.js";
 import {DataRequest} from "./data_request.js";
 
@@ -29,8 +29,9 @@ export class Index extends Sequence {
 
     constructor(source, filename) {
         super()
+        assert(filename.endsWith('.jl'))
         this.source = source
-        this.blocks = [new JsonIndexBlock(filename)]
+        this.blocks = [new IndexBlock(filename)]
         assert(source instanceof Sequence)
     }
 

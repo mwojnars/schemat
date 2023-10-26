@@ -1,7 +1,7 @@
 import {BinaryRecord, SequenceSchema} from "./records.js";
 import {INTEGER} from "../type.js";
 import {assert} from "../utils.js";
-import {YamlDataBlock} from "./block.js";
+import {DataBlock} from "./block.js";
 
 
 /**********************************************************************************************************************
@@ -81,7 +81,7 @@ export class DataSequence extends Sequence {
         super()
 
         // block is a local file, or an item that must be loaded from a lower ring
-        let block = file ? new YamlDataBlock(file) : globalThis.registry.getLoaded(item)
+        let block = file ? new DataBlock(file) : globalThis.registry.getLoaded(item)
         this.blocks = [block]
     }
 
