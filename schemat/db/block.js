@@ -29,13 +29,12 @@ export class Block extends Item {
      */
     static role = 'block'   // for use in ProcessingStep and DataRequest
 
-    filename
-    storage_file            // local file path on the worker node where this block is stored
-    storage_type            // type of storage, e.g. "data-yaml" or "index-jl"
-    
+    filename                // path to a local file or folder on the worker node where this block is stored
+    format                  // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
+
     // worker               // worker node that contains the block's file; only at this node the block runs in the "server" mode
     
-    flush_timeout = 1       // todo: make the timeout configurable and 0 by default
+    flush_delay = 1.0       // delay (in seconds) before flushing the block's updates to disk (to combine multiple consecutive updates in one write)
 
     _storage                // Storage for this block's records
     _dirty = false          // true when the block contains unsaved modifications (with delayed flush())
@@ -51,15 +50,15 @@ export class Block extends Item {
 
         // infer the storage type from the filename extension
         if (extension === 'yaml') {
-            this.storage_type = 'data-yaml'
+            this.format = 'data-yaml'
             this._storage = new YamlDataStorage(this.filename)
         }
         else if (extension === 'jl') {
-            this.storage_type = 'index-jl'
+            this.format = 'index-jl'
             this._storage = new JsonIndexStorage(this.filename)
         }
         else
-            throw new Error(`unsupported storage type, '${this.storage_type || extension}', for ${this.filename}`)
+            throw new Error(`unsupported storage type, '${this.format || extension}', for ${this.filename}`)
 
         return this._storage.open(req.make_step(this))
     }
@@ -74,7 +73,7 @@ export class Block extends Item {
         let value_old = await this._storage.get(key) || null
         await this._storage.put(key, value)
         this._dirty = true
-        this._flush()
+        this._flush(req)
         if (req.current_ring) await this.propagate(req, key, value_old, value)     // TODO: drop "if"
     }
 
@@ -86,7 +85,7 @@ export class Block extends Item {
 
         let deleted = this._storage.del(key)
         this._dirty = true
-        this._flush()
+        this._flush(req)
         if (req.current_ring) await this.propagate(req, key, value)               // TODO: drop "if"
 
         return deleted
@@ -94,21 +93,21 @@ export class Block extends Item {
 
     async *scan(opts = {}) { yield* this._storage.scan(opts) }
 
-    async erase() {
+    async erase(req) {
         /* Remove all records from this sequence; open() should be called first. */
         await this._storage.erase()
-        return this._flush()
+        return this._flush(req)
     }
 
-    _flush(timeout_sec = this.flush_timeout) {
-        /* The flushing is only executed if this._dirty=true. The operation can be delayed by `timeout_sec` seconds
+    _flush(req, delay = this.flush_delay) {
+        /* The flushing is only executed if this._dirty=true. The operation can be delayed by `delay` seconds
            to combine multiple consecutive updates in one write - in such case you do NOT want to await it. */
         if (!this._dirty) return
-        if (timeout_sec === 0) {
+        if (delay === 0) {
             this._dirty = false
             return this._storage.flush()
         }
-        setTimeout(() => this._flush(0), timeout_sec * 1000)
+        setTimeout(() => this._flush(req, 0), delay * 1000)
     }
 
     async propagate(req, key, value_old = null, value_new = null) {
@@ -201,10 +200,10 @@ export class DataBlock extends Block {
         return this.del(req)
     }
 
-    async erase() {
+    async erase(req) {
         /* Remove all records from this sequence; open() should be called first. */
         this.autoincrement = 0
-        return super.erase()
+        return super.erase(req)
     }
 }
 

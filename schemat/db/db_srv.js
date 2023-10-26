@@ -76,7 +76,7 @@ export class Ring extends Item {
     async erase(req) {
         /* Remove all records from this ring; open() should be called first. */
         return !this.readonly
-            ? this.data.erase()
+            ? this.data.erase(req)
             : req.error_access("the ring is read-only and cannot be erased")
     }
 
