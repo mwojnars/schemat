@@ -43,24 +43,28 @@ export class Block extends Item {
 
     constructor(filename) {
         super()
-
-        // infer the storage type from the filename extension
         this.filename = filename
-        let extension = filename.split('.').pop()
+    }
+
+    async open(req) {
+        // infer the storage type from the filename extension
+        // this.filename = filename
+        let extension = this.filename.split('.').pop()
 
         if (extension === 'yaml') {
             this.storage_type = 'data-yaml'
-            this._storage = new YamlDataStorage(filename)
+            this._storage = new YamlDataStorage(this.filename)
         }
         else if (extension === 'jl') {
             this.storage_type = 'index-jl'
-            this._storage = new JsonIndexStorage(filename)
+            this._storage = new JsonIndexStorage(this.filename)
         }
         else
-            throw new Error(`unsupported storage type: '${this.storage_type || extension}'`)
+            throw new Error(`unsupported storage type, '${this.storage_type || extension}', for ${this.filename}`)
+
+        return this._storage.open(req.make_step(this))
     }
 
-    async open(req)     { return this._storage.open(req.make_step(this)) }
     async get(req)      { return this._storage.get(req.args.key) }
 
     async put(req) {
@@ -121,7 +125,7 @@ export class DataBlock extends Block {
     autoincrement = 0       // current maximum item ID; a new record is assigned id=autoincrement+1
 
     async open(req) {
-        this.autoincrement = await this._storage.open(req.make_step(this))
+        this.autoincrement = await super.open(req)
     }
 
     async assert_unique(key, id, msg) {
