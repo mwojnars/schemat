@@ -276,7 +276,7 @@ async function create_items(cat, Category) {
  **
  */
 
-export async function bootstrap(db, registry, request /*DataRequest*/) {
+export async function bootstrap(db, registry) {
     /* Create core items and store in DB. All existing items in DB are removed! */
     
     let Category = registry.root
@@ -284,10 +284,7 @@ export async function bootstrap(db, registry, request /*DataRequest*/) {
     let items = await create_items(cats, Category)
 
     // insert to DB and assign item IDs if missing
-    for (let item of [Category, ...Object.values(cats), ...Object.values(items)]) {
-        // let req = request.safe_step(null, 'insert', {id: item.id, data: item.dumpData()})
-        // item.id = await ring.handle(req)
+    for (let item of [Category, ...Object.values(cats), ...Object.values(items)])
         item.id = await db.insert(item)
-    }
 }
 

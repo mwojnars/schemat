@@ -36,7 +36,6 @@ export class Cluster extends Item {
          */
 
         this.db = new ServerDB()
-        // let rings = this.prop('rings')
         return this.db.init_as_cluster_database(rings)
 
         // // load the cluster's full and ultimate data from the bootstrap DB;

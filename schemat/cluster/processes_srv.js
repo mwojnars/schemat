@@ -66,15 +66,7 @@ export class AdminProcess extends BackendProcess {
     async CLI_build({path_db_boot}) {
         /* Generate the core system items anew and save. */
 
-        let {bootstrap} = await import('../boot/bootstrap.js')
-
         let file = path_db_boot || (DB_ROOT + '/db-boot.yaml')
-        // let ring = new Ring({file})
-        // let req  = new DataRequest(this, 'build')
-
-        // // erase the content of the data file
-        // await ring.open(req.clone())
-        // await ring.erase(req.clone())
 
         // remove `file` if it exists
         try { fs.unlinkSync(file) }
@@ -82,10 +74,10 @@ export class AdminProcess extends BackendProcess {
 
         await this.cluster.startup([{file}])
         let db = this.cluster.db
-        // db.append(ring)
 
         print(`Starting full RESET of DB, core items will be created anew in: ${file}`)
 
+        let {bootstrap} = await import('../boot/bootstrap.js')
         return bootstrap(db, this.registry)
     }
 
