@@ -33,7 +33,7 @@ export class Block extends Item {
     autoincrement = 0       // current maximum IID; a new record is assigned iid=autoincrement+1
 
     storage                 // Storage for this block's records
-    dirty                   // true when the block contains unsaved modifications
+    dirty                   // true when the block contains unsaved modifications (with delayed flush())
 
     async open(req) {
         this.dirty = false
@@ -79,7 +79,7 @@ export class Block extends Item {
         return this.flush()
     }
 
-    async flush(timeout_sec = this.FLUSH_TIMEOUT) {
+    flush(timeout_sec = this.FLUSH_TIMEOUT) {
         /* The flushing is only executed if this.dirty=true. The operation can be delayed by `timeout_sec` seconds
            to combine multiple consecutive updates in one write - in such case you do NOT want to await it. */
         if (!this.dirty) return
@@ -201,7 +201,7 @@ export class Storage {
     *scan(opts)         { throw new NotImplemented() }      // generator of [binary-key, json-value] pairs
     erase()             { throw new NotImplemented() }
     flush()             { }
-    get size()          { }                                 // number of records in this storage, or undefined if not implemented
+    // get size()          { }                                 // number of records in this storage, or undefined if not implemented
 }
 
 export class MemoryStorage extends Storage {
@@ -214,7 +214,7 @@ export class MemoryStorage extends Storage {
     del(key)            { return this._records.delete(key) }
 
     erase()             { this._records.clear() }
-    size()              { return this._records.size }
+    // get size()       { return this._records.size }
 
     *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
