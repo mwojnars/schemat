@@ -32,7 +32,9 @@ export class Index extends Sequence {
         assert(filename.endsWith('.jl'))
         this.source = source
         this.blocks = [new IndexBlock(filename)]
+
         assert(source instanceof Sequence)
+        source.add_derived(this)                // make connection: data > index, for change propagation
     }
 
     async apply(change) {

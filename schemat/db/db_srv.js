@@ -20,8 +20,8 @@ export class Ring extends Item {
 
     static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
 
-    data                    // DataSequence with all items of this ring
-    indexes = new Map()     // {name: Index} map of all indexes in this ring
+    data                    // the main DataSequence containing all primary data of this ring
+    indexes = new Map()     // {name: Index} map of all derived indexes of this ring
 
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
@@ -57,10 +57,8 @@ export class Ring extends Item {
             ['idx_category_item', new IndexByCategory(this.data, filename)],    // index of item IDs sorted by parent category ID
         ])
 
-        for (let index of this.indexes.values()) {
+        for (let index of this.indexes.values())
             await index.open(req.clone())
-            this.data.add_derived(index)            // make connection: data > index, for change propagation
-        }
 
         // for await (let record /*ItemRecord*/ of this.scan_all()) {
         //     for (let index of this.indexes.values()) {
