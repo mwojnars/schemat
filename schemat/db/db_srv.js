@@ -18,18 +18,17 @@ import {DataSequence} from "./sequence.js";
 
 export class Ring extends Item {
 
-    static role = 'ring'    // for use in ProcessingStep and DataRequest
+    static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
 
     data                    // DataSequence with all items of this ring
-
-    db                      // the Database this ring belongs to
+    indexes = new Map()     // {name: Index} map of all indexes in this ring
 
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
     start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different rings stacked together
     stop_iid                // (optional) maximum IID of all items
-    indexes = new Map()     // {name: Index} of all indexes in this ring
+
 
     constructor({name, ...opts}) {
         super(globalThis.registry)
@@ -45,8 +44,7 @@ export class Ring extends Item {
         this.stop_iid = stop_iid
     }
 
-    async open(req, db = null) {
-        this.db = db
+    async open(req) {
         this.data = new DataSequence(this.opts)
         return this.data.open(req.make_step(this, 'open'))
     }
@@ -152,7 +150,7 @@ export class ServerDB extends Database {
         let req = new DataRequest(this, 'open')
         for (const spec of rings) {
             let ring = new Ring(spec)
-            await ring.open(req.clone(), this)
+            await ring.open(req.clone())
             this.append(ring)
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
             await ring._init_indexes(req.clone())   // TODO: temporary
