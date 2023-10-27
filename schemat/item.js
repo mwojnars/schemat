@@ -220,8 +220,6 @@ export class Item {
 
     //meta          // system properties: current version, category's version, status etc.
 
-    get db() { return globalThis.schemat.db }
-
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
