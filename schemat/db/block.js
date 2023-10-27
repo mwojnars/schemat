@@ -45,7 +45,7 @@ export class Block extends Item {
         this.filename = filename
     }
 
-    async open(req) {
+    async open() {
         let extension = this.filename.split('.').pop()
 
         // infer the storage type from the filename extension
@@ -60,7 +60,7 @@ export class Block extends Item {
         else
             throw new Error(`unsupported storage type, '${this.format || extension}', for ${this.filename}`)
 
-        return this._storage.open(req.make_step(this))
+        return this._storage.open()
     }
 
     async get(req)      { return this._storage.get(req.args.key) }
