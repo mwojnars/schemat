@@ -192,14 +192,13 @@ export class ServerDB extends Database {
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
             await ring._init_indexes(req.clone())   // TODO: temporary
         }
-        for (let ring of this.rings.slice(2)) {
-            // if `spec` describes a new ring, insert `ring` as an item to the cluster_ring
+        for (let ring of this.rings.slice(2))
             if (cluster_ring && !ring.id) {
+                // if `ring` is newly created, insert it as an item to the `cluster_ring`, together with its sequences and blocks
                 let sequences = [...ring.indexes.values(), ring.data_sequence]
                 let blocks = sequences.map(seq => seq.blocks[0])
                 await cluster_ring.insert_many(ring, ...sequences, ...blocks)
             }
-        }
     }
 
     append(ring) {
