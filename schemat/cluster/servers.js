@@ -58,7 +58,7 @@ export class WebServer extends Server {
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
         print(`Server.handle() worker ${process.pid}:`, req.path)
 
-        let session = new Session(this.registry, req, res)
+        let session = new Session(req, res)
         await session.start()
 
         try {

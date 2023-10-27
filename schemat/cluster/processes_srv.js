@@ -29,7 +29,7 @@ export class BackendProcess extends SchematProcess {
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
 
-        this.cluster = new Cluster(this.registry)
+        this.cluster = new Cluster()
         return this[method](opts)
     }
 }
@@ -77,7 +77,7 @@ export class AdminProcess extends BackendProcess {
         print(`Starting full RESET of DB, core items will be created anew in: ${file}`)
 
         let {bootstrap} = await import('../boot/bootstrap.js')
-        return bootstrap(db, this.registry)
+        return bootstrap(db)
     }
 
     async CLI_move({id, newid, bottom, ring: ringName}) {

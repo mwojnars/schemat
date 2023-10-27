@@ -276,7 +276,7 @@ async function create_items(cat, Category) {
  **
  */
 
-export async function bootstrap(db, registry) {
+export async function bootstrap(db) {
     /* Create core items and store in DB. All existing items in DB are removed! */
     
     let Category = registry.root
