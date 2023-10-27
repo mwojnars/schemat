@@ -195,10 +195,10 @@ export class Item {
 
     // static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
-    _id             // Item ID (IID) of this item; globally unique (for a persisted item) or undefined (for a newly created item)
+    _id_            // database ID of this item; globally unique (for a persisted item) or undefined (for a newly created item)
 
-    get id()        { return this._id }
-    set id(id)      { assert(!this._id || this._id === id); this._id = id; if (this._record) this._record.id = id }
+    get id()        { return this._id_ }
+    set id(id)      { assert(!this._id_ || this._id_ === id); this._id_ = id; if (this._record) this._record.id = id }
 
     _data_          // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
