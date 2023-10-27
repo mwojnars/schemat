@@ -45,6 +45,19 @@ export class Block extends Item {
         this.filename = filename
     }
 
+    async init() {
+        let storage_class
+        print(`Block.init() for ${this.filename}...`)
+
+        if      (this.format === 'data-yaml') storage_class = YamlDataStorage
+        else if (this.format === 'index-jl')  storage_class = JsonIndexStorage
+        else
+            throw new Error(`unsupported storage type, '${this.format}', for ${this.filename}`)
+
+        this._storage = new storage_class(this.filename, this)
+        return this._storage.open()
+    }
+
     async open() {
         let extension = this.filename.split('.').pop()
 
