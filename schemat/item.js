@@ -208,7 +208,12 @@ export class Item {
     _mutable_ = false   // true if this item's data can be modified through .edit(); editable item may contain uncommitted
                         // changes and must be EXCLUDED from Registry
 
-    _loading_       // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
+    // _loading_           // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
+
+    _manage_ = {            // Schemat-related special properties of this object and methods to operate on it...
+        object: this,       // the parent object itself
+        loading: false,     // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
+    }
 
     // _db          // the origin database of this item; undefined in newborn items
     // _ring        // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -239,7 +244,7 @@ export class Item {
     get id_str()    { return `[${this.id}]` }
     get category()  { return this.prop('__category__', {schemaless: true}) }
 
-    get isLoaded()      { return this._data_ && !this._loading_ }         // false if still loading, even if data has already been created (but not fully initialized)
+    get isLoaded()      { return this._data_ && !this._manage_.loading }         // false if still loading, even if data has already been created (but not fully initialized)
     get isCategory()    { return this.instanceof(this.registry.root) }
 
     is(item) {
@@ -309,8 +314,8 @@ export class Item {
            If you want to refresh the data, create a new instance or use refresh() instead.
          */
         if (this.isLoaded) return assert(!record) && this
-        if (this._loading_) return assert(!record) && this._loading_    // wait for a previous load to complete instead of starting a new one
-        return this._loading_ = this._load(record)                      // keep a Promise that will eventually load this item's data to avoid race conditions
+        if (this._manage_.loading) return assert(!record) && this._manage_.loading    // wait for a previous load to complete instead of starting a new one
+        return this._manage_.loading = this._load(record)                      // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
     async _load(record = null /*ItemRecord*/) {
@@ -349,7 +354,7 @@ export class Item {
             return this
 
         } finally {
-            this._loading_ = false                              // cleanup to allow another load attempt, even after an error
+            this._manage_.loading = false                              // cleanup to allow another load attempt, even after an error
         }
     }
 

@@ -21,7 +21,7 @@ export function object_to_item_data(obj) {
     let entries = Object.entries(obj).filter(([k, v]) =>
         (v !== undefined) &&
         !k.startsWith('_') &&
-        !['registry','net','expiry','action','_loading_'].includes(k))
+        !['registry','net','expiry','action','_manage_.loading'].includes(k))
 
     // if `obj` has a class, and it's not Item, store it in the _class_ attribute
     if (obj.constructor !== Object && obj.constructor !== Item)
