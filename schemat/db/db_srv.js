@@ -12,6 +12,27 @@ import {JSONx} from "../serialize.js";
 import {Data} from "../data.js";
 
 
+/**********************************************************************************************************************/
+
+export function object_to_item_data(obj) {
+    /* Convert a plain object to a Data instance that can be assigned to item's _data_. */
+
+    // filter out undefined values, private props (starting with '_'), and Item's special attributes
+    let entries = Object.entries(obj).filter(([k, v]) =>
+        (v !== undefined) &&
+        !k.startsWith('_') &&
+        !['registry','net','mutable','expiry','action','isLoading'].includes(k))
+
+    // if `obj` has a class, and it's not Item, store it in the _class_ attribute
+    if (obj.constructor !== Object && obj.constructor !== Item)
+        entries.push(['_class_', obj.constructor])
+
+    // print(`object_to_item_data(${obj}) =>`, entries)
+
+    return new Data(Object.fromEntries(entries))
+}
+
+
 /**********************************************************************************************************************
  **
  **  Data RING
@@ -124,13 +145,15 @@ export class Ring extends Item {
 
         // 2nd phase: update items with actual data
         for (let item of items) {
-            // if item has no _data_, impute it from the object's properties; skip private props (starting with '_')
-            if (!item._data_) {
-                let entries = Object.entries(item).filter(([k, v]) =>
-                    !k.startsWith('_') && (v !== undefined) &&
-                    !['registry','net','mutable','expiry','action','isLoading'].includes(k))
-                item._data_ = new Data(Object.fromEntries(entries))
-            }
+            if (!item._data_)                       // if item has no _data_, create it from the object's properties
+                item._data_ = object_to_item_data(item)
+
+            // if (!item._data_) {
+            //     let entries = Object.entries(item).filter(([k, v]) =>
+            //         !k.startsWith('_') && (v !== undefined) &&
+            //         !['registry','net','mutable','expiry','action','isLoading'].includes(k))
+            //     item._data_ = new Data(Object.fromEntries(entries))
+            // }
             await this._update(item)
         }
     }

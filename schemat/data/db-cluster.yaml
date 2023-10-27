@@ -9,8 +9,13 @@
   readonly: false
   start_iid: 1000
   stop_iid: null
+  _class_:
+    =: db.Ring
+    "@": class
   "@": Data
 - __id: 201
+  ring:
+    "@": 200
   schema:
     fields:
       cid:
@@ -27,8 +32,13 @@
   flush_delay: 1
   source:
     "@": 202
+  _class_:
+    =: db.IndexByCategory
+    "@": class
   "@": Data
 - __id: 202
+  ring:
+    "@": 200
   schema:
     fields:
       id:
@@ -43,15 +53,28 @@
   derived:
     - "@": 201
   flush_delay: 1
+  _class_:
+    =: db.DataSequence
+    "@": class
   "@": Data
 - __id: 203
+  sequence:
+    "@": 201
   filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../../app-demo/data/db-paperity.idx_category_item.jl
   format: index-jl
+  _class_:
+    =: db.IndexBlock
+    "@": class
   "@": Data
 - __id: 204
+  sequence:
+    "@": 202
   filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../../app-demo/data/db-paperity.yaml
   format: data-yaml
   autoincrement: 1015
+  _class_:
+    =: db.DataBlock
+    "@": class
   "@": Data
 - __id: 205
   data_sequence:
@@ -64,8 +87,13 @@
   readonly: false
   start_iid: 1000
   stop_iid: null
+  _class_:
+    =: db.Ring
+    "@": class
   "@": Data
 - __id: 206
+  ring:
+    "@": 205
   schema:
     fields:
       cid:
@@ -82,8 +110,13 @@
   flush_delay: 1
   source:
     "@": 207
+  _class_:
+    =: db.IndexByCategory
+    "@": class
   "@": Data
 - __id: 207
+  ring:
+    "@": 205
   schema:
     fields:
       id:
@@ -98,13 +131,26 @@
   derived:
     - "@": 206
   flush_delay: 1
+  _class_:
+    =: db.DataSequence
+    "@": class
   "@": Data
 - __id: 208
+  sequence:
+    "@": 206
   filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../data/db-demo.idx_category_item.jl
   format: index-jl
+  _class_:
+    =: db.IndexBlock
+    "@": class
   "@": Data
 - __id: 209
+  sequence:
+    "@": 207
   filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../data/db-demo.yaml
   format: data-yaml
   autoincrement: 1018
+  _class_:
+    =: db.DataBlock
+    "@": class
   "@": Data
