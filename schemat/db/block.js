@@ -147,7 +147,9 @@ export class DataBlock extends Block {
         }
         else await this.assert_unique(key, id)                  // fixed ID provided by the caller? perform a uniqueness check
 
-        req.current_ring.assert_valid_id(id, `candidate ID for a new item is outside of the valid range for this ring`)
+        req.current_ring.assert_valid_id(id, `candidate ID=${id} for a new item is outside of the valid range for this ring`)
+        req.current_ring.assert_writable(id, `cannot write ID=${id} in this ring`)
+
         this.autoincrement = Math.max(id, this.autoincrement)
 
         // TODO: auto-increment `key` not `id`, then decode up in the sequence

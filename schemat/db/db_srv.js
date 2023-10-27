@@ -86,9 +86,8 @@ export class Ring extends Item {
     writable(id)    { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be written here
     valid_id(id)    { return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
 
-    assert_valid_id(id, msg) {
-        if (!this.valid_id(id)) throw new DataAccessError(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
-    }
+    assert_valid_id(id, msg) { if (!this.valid_id(id)) throw new DataAccessError(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
+    assert_writable(id, msg) { if (!this.writable(id)) throw new DataAccessError(msg, {id}) }
 
 
     /***  Data access & modification  ***/
@@ -98,6 +97,11 @@ export class Ring extends Item {
         if (command === req.command)            // don't overwrite the command if it already occurred in the previous step
             command = null
         return this.data_sequence.handle(req.make_step(this, command))
+    }
+
+    async _insert(id, data) {
+        /* Insert a new item into this ring. No forward to a lower ring. */
+        return this.handle(new DataRequest(this, 'insert', {id, data}))
     }
 
 
@@ -156,8 +160,9 @@ export class ServerDB extends Database {
             await ring._init_indexes(req.clone())   // TODO: temporary
 
             // // if `spec` describes a new ring, insert `ring` as an item to the previous ring in the database
-            // if (spec.item) continue
-            // let item = await Item.from_record(new ItemRecord(null, ring.dumpData()))
+            // if (spec.file) {
+            //     await this.insert_many(null, ring)
+            // }
         }
     }
 
@@ -238,28 +243,41 @@ export class ServerDB extends Database {
         )
     }
 
-    async insert_many(...items) {
+    async insert_many(target_ring = null, ...items) {
         /* Insert multiple interconnected items that reference each other and can't be inserted one by one.
            The insertion proceeds in two phases: 1) the items are inserted with empty data, to obtain their IDs;
            2) the items are updated with their actual data, with all references (incl. bidirectional) correctly replaced with IDs.
          */
         let req = new DataRequest(this, 'insert_many')
         let rings = this.reversed
-        // let empty_data = JSONx.stringify(new Data())     // empty data
+        let empty_data = JSONx.stringify(new Data({_status_: 'draft'}))     // empty data
+
+        if (target_ring) {
+            let pos = rings.indexOf(target_ring)
+            if (pos < 0) return req.error_access(`target ring not found in the database`)
+            rings = rings.slice(pos)
+        }
 
         // 1st phase: insert stubs, each stub is inserted to the highest possible ring
         for (let item of items) {
             let id = item.id
-            let req2 = req.safe_step(null, 'insert', {id, data: ''})     // insert stubs with empty data
-            // let req2 = req.safe_step(null, 'insert', {id, data: id > 0 ? empty_data : item.dumpData()})     // insert stubs with empty data
+            let data = ''  // id > 0 ? empty_data : item.dumpData()
+            let req2 = req.safe_step(null, 'insert', {id, data})     // insert stubs with empty data
             let ring = rings.find(r => r.writable(id))
             if (!ring) return req2.error_access(`cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
             item.id = await ring.handle(req2)
         }
 
         // 2nd phase: update items with actual data
-        for (let item of items)
+        for (let item of items) {
+            // if item has no _data_, impute it from the object's properties; skip private props (starting with '_')
+            if (!item._data_) {
+                let entries = Object.entries(item).filter(([k]) => !k.startsWith('_'))
+                item._data_ = new Data(entries)
+                print(`imputed data for item [${item.id}]:`, entries)
+            }
             await this.update_full(item)
+        }
     }
 
     async delete(item_or_id) {
