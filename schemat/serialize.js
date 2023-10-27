@@ -66,8 +66,9 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
         }
 
-        if (obj instanceof Item && obj.has_id())
-            return {[JSONx.ATTR_CLASS]: obj.id}
+        if (obj instanceof Item)
+            if(obj.has_id()) return {[JSONx.ATTR_CLASS]: obj.id}
+            else throw new Error(`Can't encode an unlinked item: ${obj}`)
 
         if (T.isClass(obj)) {
             state = registry.getPath(obj)

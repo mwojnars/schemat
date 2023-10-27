@@ -197,9 +197,6 @@ export class Item {
 
     _id_            // database ID of this item; globally unique (for a persisted item) or undefined (for a newly created item)
 
-    get id()        { return this._id_ }
-    set id(id)      { assert(!this._id_ || this._id_ === id); this._id_ = id; if (this._record_) this._record_.id = id }
-
     _data_          // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
 
@@ -234,6 +231,9 @@ export class Item {
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
 
     static __transient__ = ['_methodCache']
+
+    get id()        { return this._id_ }
+    set id(id)      { assert(!this._id_ || this._id_ === id); this._id_ = id; if (this._record_) this._record_.id = id }
 
     get id_str()    { return `[${this.id}]` }
     get category()  { return this.prop('__category__', {schemaless: true}) }
