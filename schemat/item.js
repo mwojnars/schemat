@@ -203,16 +203,12 @@ export class Item {
     _data_          // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
 
-    _record_        // ItemRecord object that contains this item's data as loaded from DB during last load(); undefined in a newborn item
-
-    _mutable_ = false   // true if this item's data can be modified through .edit(); editable item may contain uncommitted
-                        // changes and must be EXCLUDED from Registry
-
-    // _loading_           // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
+    _record_        // ItemRecord that contains this item's data as loaded from DB during last load(); undefined in a newborn item
 
     _manage_ = {                // Schemat-related special properties of this object and methods to operate on it...
-        object:  this,          // the parent object itself
+        object:  this,          // the main object itself
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
+        mutable: false,         // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
         expiry:  undefined,     // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
     }
 
@@ -812,7 +808,7 @@ export class Item {
     make_editable() {
         /* Mark this item as editable and remove it from the Registry. */
         this.registry.unregister(this)
-        this._mutable_ = true
+        this._manage_.mutable = true
         return this
     }
 
