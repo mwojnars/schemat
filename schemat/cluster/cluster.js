@@ -3,7 +3,8 @@ import {fileURLToPath} from "url"
 
 import {print, T} from "../utils.js"
 import {Item} from "../item.js"
-import {ServerDB} from "../db/db_srv.js"
+import {Ring, ServerDB} from "../db/db_srv.js"
+import {DataRequest} from "../db/data_request.js";
 
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
@@ -35,8 +36,12 @@ export class Cluster extends Item {
            which should replace the db object with the ultimate one (TODO).
          */
 
+        let req = new DataRequest(this, 'startup')
+        let cluster_ring = new Ring({file: DB_ROOT + '/db-cluster.yaml', start_iid: 50, stop_iid: 100})
+        await cluster_ring.open(req)
+
         this.db = new ServerDB()
-        return this.db.init_as_cluster_database(rings)
+        return this.db.init_as_cluster_database(rings, cluster_ring)
 
         // // load the cluster's full and ultimate data from the bootstrap DB;
         // // this may override the db property with the ultimate DB object

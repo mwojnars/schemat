@@ -410,6 +410,8 @@ export class Catalog {
 
     _clean(entry) {
         /* Validate and clean up the new entry's properties. */
+        if(entry.value === undefined)
+            assert(false)
         assert(entry.value !== undefined)
         assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
         if (T.isMissing(entry.key)) delete entry.key
