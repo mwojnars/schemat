@@ -210,9 +210,10 @@ export class Item {
 
     // _loading_           // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
 
-    _manage_ = {            // Schemat-related special properties of this object and methods to operate on it...
-        object: this,       // the parent object itself
-        loading: false,     // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
+    _manage_ = {                // Schemat-related special properties of this object and methods to operate on it...
+        object:  this,          // the parent object itself
+        loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
+        expiry:  undefined,     // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
     }
 
     // _db          // the origin database of this item; undefined in newborn items
@@ -221,7 +222,6 @@ export class Item {
     //meta          // system properties: current version, category's version, status etc.
 
     registry        // Registry that manages access to this item
-    expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
     net             // Network adapter that connects this item to its network API as defined in this.constructor.api
     action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
@@ -365,10 +365,12 @@ export class Item {
 
     setExpiry(ttl) {
         /* Time To Live (ttl) is expressed in seconds. */
-        if (ttl === undefined) return                           // leave the expiry date unchanged
-        if (ttl === 'never' || ttl < 0) this.expiry = 0         // never evict
-        else if (ttl === 0) delete this.expiry                  // immediate eviction at the end of web session
-        else this.expiry = Date.now() + ttl * 1000
+        let expiry
+        if (ttl === undefined) return                       // leave the expiry date unchanged
+        if (ttl === 'never' || ttl < 0) expiry = 0          // never evict
+        else if (ttl === 0) expiry = undefined              // immediate eviction at the end of web session
+        else expiry = Date.now() + ttl * 1000
+        this._manage_.expiry = expiry
     }
 
     initPrototypes() {

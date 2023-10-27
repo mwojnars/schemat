@@ -87,7 +87,7 @@ export class ItemsCache extends Map {
      */
 
     // set(id, item, ttl) {
-    //     // if (ttl_ms) item.expiry = Date.now() + ttl_ms
+    //     // if (ttl_ms) item._manage_.expiry = Date.now() + ttl_ms
     //     item.setExpiry(ttl)
     //     super.set(id, item)
     // }
@@ -95,14 +95,16 @@ export class ItemsCache extends Map {
     evict() {
         let now  = Date.now()
         let ends = []
-        for (let [id, item] of this.entries())
-            if (item.expiry === undefined || (0 < item.expiry && item.expiry <= now)) {
+        for (let [id, item] of this.entries()) {
+            let expiry = item._manage_.expiry
+            if (expiry === undefined || (0 < expiry && expiry <= now)) {
                 let deleted = this.delete(id)
                 // if (deleted) print('item evicted:', id, item.isLoaded ? '' : '(stub)' )     // TODO: comment out
                 // else print('item not found for eviction:', id, item.isLoaded ? '' : '(stub)' )
                 let end = item.cleanup()            // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
                 if (end instanceof Promise) ends.push(end)
             }
+        }
         if (ends.length) return Promise.all(ends)
     }
 }
