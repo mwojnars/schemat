@@ -130,9 +130,7 @@ export class Ring extends Item {
                 let entries = Object.entries(item).filter(([k, v]) =>
                     !k.startsWith('_') && (v !== undefined) &&
                     !['registry','net','mutable','expiry','action','isLoading'].includes(k))
-                let obj = Object.fromEntries(entries)
-                item._data_ = new Data(obj)
-                print(`imputed data for item [${item.id}]:`, entries)
+                item._data_ = new Data(Object.fromEntries(entries))
             }
             await this._update(item)
         }
