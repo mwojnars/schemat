@@ -22,7 +22,7 @@ export class Ring extends Item {
 
     static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
 
-    data                    // the main DataSequence containing all primary data of this ring
+    data_sequence           // the main DataSequence containing all primary data of this ring
     indexes = new Map()     // {name: Index} map of all derived indexes of this ring
 
     name                    // human-readable name of this ring for find_ring()
@@ -47,8 +47,8 @@ export class Ring extends Item {
     }
 
     async open(req) {
-        this.data = new DataSequence(this.opts)
-        return this.data.open(req.make_step(this, 'open'))
+        this.data_sequence = new DataSequence(this.opts)
+        return this.data_sequence.open(req.make_step(this, 'open'))
     }
 
     async _init_indexes(req) {
@@ -56,7 +56,7 @@ export class Ring extends Item {
         req = req.safe_step(this)
 
         this.indexes = new Map([
-            ['idx_category_item', new IndexByCategory(this.data, filename)],    // index of item IDs sorted by parent category ID
+            ['idx_category_item', new IndexByCategory(this.data_sequence, filename)],    // index of item IDs sorted by parent category ID
         ])
 
         for (let index of this.indexes.values())
@@ -74,7 +74,7 @@ export class Ring extends Item {
     async erase(req) {
         /* Remove all records from this ring; open() should be called first. */
         return !this.readonly
-            ? this.data.erase(req)
+            ? this.data_sequence.erase(req)
             : req.error_access("the ring is read-only and cannot be erased")
     }
 
@@ -83,8 +83,8 @@ export class Ring extends Item {
 
     /***  Errors & internal checks  ***/
 
-    writable(id)                { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be written here
-    valid_id(id)                { return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
+    writable(id)    { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be written here
+    valid_id(id)    { return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
 
     assert_valid_id(id, msg) {
         if (!this.valid_id(id)) throw new DataAccessError(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
@@ -97,7 +97,7 @@ export class Ring extends Item {
         /* Handle a DataRequest by passing it to an appropriate method of this.data sequence. */
         if (command === req.command)            // don't overwrite the command if it already occurred in the previous step
             command = null
-        return this.data.handle(req.make_step(this, command))
+        return this.data_sequence.handle(req.make_step(this, command))
     }
 
 
@@ -105,7 +105,7 @@ export class Ring extends Item {
 
     async* scan_all() {
         /* Yield all items of this ring as ItemRecord objects. */
-        for await (let record of this.data.scan())
+        for await (let record of this.data_sequence.scan())
             yield ItemRecord.from_binary(record)
     }
 

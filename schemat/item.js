@@ -203,9 +203,6 @@ export class Item {
     _data_          // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
 
-    // get data()      { return this._data_ }
-    // set data(d)     { this._data_ = d }
-
     _record         // ItemRecord object that contains this item's data as loaded from DB during last load(); undefined in a newborn item
 
     mutable = false // true if this item's data can be modified through .edit(); editable item may contain uncommitted
