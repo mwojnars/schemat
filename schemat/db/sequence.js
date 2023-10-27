@@ -80,12 +80,13 @@ export class DataSequence extends Sequence {
         // value encoding is handled outside schema: through method overloading
     );
 
-    constructor({file, item} = {}) {
+    constructor(filename) {
         super()
+        this.blocks = [new DataBlock(filename)]
 
-        // block is a local file, or an item that must be loaded from a lower ring
-        let block = file ? new DataBlock(file) : globalThis.registry.getLoaded(item)
-        this.blocks = [block]
+        // // block is a local file, or an item that must be loaded from a lower ring
+        // let block = file ? new DataBlock(file) : globalThis.registry.getLoaded(item)
+        // this.blocks = [block]
     }
 
     encode_key(id) {

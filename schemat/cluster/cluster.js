@@ -29,10 +29,12 @@ export class Cluster extends Item {
     static ring_specs = [
         {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
         {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
-        // Cluster.prototype.cluster_ring_spec,
-        // {file: DB_ROOT + '/db-cluster.yaml', start_iid: 50, stop_iid:  100, readonly: false},
+        Cluster.cluster_ring_spec,
+        // {item: 200, readonly: false},
+        // {item: 205, readonly: false},
         {file: __dirname + '/../app-demo/data/db-paperity.yaml', start_iid: 1000, stop_iid: null, readonly: false},
         {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
+
         // {item: 1015, name: 'mysql', readonly: true},
     ]
 
@@ -43,14 +45,14 @@ export class Cluster extends Item {
 
         let req = new DataRequest(this, 'startup')
 
-        let cluster_ring_spec = this.constructor.cluster_ring_spec
-        try { fs.unlinkSync(cluster_ring_spec.file) } catch(ex) {}
-
-        let cluster_ring = new Ring(cluster_ring_spec)
-        await cluster_ring.open(req)
+        // let cluster_ring_spec = this.constructor.cluster_ring_spec
+        // try { fs.unlinkSync(cluster_ring_spec.file) } catch(ex) {}
+        //
+        // let cluster_ring = new Ring(cluster_ring_spec)
+        // await cluster_ring.open(req)
 
         this.db = new ServerDB()
-        return this.db.init_as_cluster_database(rings, cluster_ring)
+        return this.db.init_as_cluster_database(rings) // cluster_ring)
 
         // // load the cluster's full and ultimate data from the bootstrap DB;
         // // this may override the db property with the ultimate DB object

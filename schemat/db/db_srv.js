@@ -36,7 +36,7 @@ export class Ring extends Item {
         super()
 
         let {file} = opts
-        this._opts = opts
+        // this._opts = opts
         this._file = file
         this.name = name || (file && path.basename(file, path.extname(file)))
 
@@ -47,7 +47,7 @@ export class Ring extends Item {
     }
 
     async open(req) {
-        this.data_sequence = new DataSequence(this._opts)
+        this.data_sequence = new DataSequence(this._file)
         return this.data_sequence.open(req.make_step(this, 'open'))
     }
 
