@@ -223,7 +223,7 @@ export class Registry {
         // a stub has no expiry date until filled with data
         let item = this._cache.get(id) || this.register(new Item(id))
 
-        assert(!item.mutable)
+        assert(!item._mutable_)
         return item
     }
 

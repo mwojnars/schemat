@@ -205,8 +205,8 @@ export class Item {
 
     _record_        // ItemRecord object that contains this item's data as loaded from DB during last load(); undefined in a newborn item
 
-    mutable = false // true if this item's data can be modified through .edit(); editable item may contain uncommitted
-                    // changes and must be EXCLUDED from Registry
+    _mutable_ = false   // true if this item's data can be modified through .edit(); editable item may contain uncommitted
+                        // changes and must be EXCLUDED from Registry
 
     // _db          // the origin database of this item; undefined in newborn items
     // _ring        // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -806,7 +806,7 @@ export class Item {
     make_editable() {
         /* Mark this item as editable and remove it from the Registry. */
         this.registry.unregister(this)
-        this.mutable = true
+        this._mutable_ = true
         return this
     }
 
