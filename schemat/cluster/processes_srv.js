@@ -69,8 +69,7 @@ export class AdminProcess extends BackendProcess {
         let file = path_db_boot || (DB_ROOT + '/db-boot.yaml')
 
         // remove `file` if it exists
-        try { fs.unlinkSync(file) }
-        catch(ex) {}
+        try { fs.unlinkSync(file) } catch(ex) {}
 
         await this.cluster.startup([{file}])
         let db = this.cluster.db

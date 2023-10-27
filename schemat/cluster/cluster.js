@@ -5,6 +5,7 @@ import {print, T} from "../utils.js"
 import {Item} from "../item.js"
 import {Ring, ServerDB} from "../db/db_srv.js"
 import {DataRequest} from "../db/data_request.js";
+import fs from "fs";
 
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
@@ -22,22 +23,30 @@ export class Cluster extends Item {
 
     // get db() { return this.prop('db') }
 
-    rings = [
+    static cluster_ring_spec =
+        {file: DB_ROOT + '/db-cluster.yaml', start_iid: 200, stop_iid: 300}
+
+    static ring_specs = [
         {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
-        // {file: DB_ROOT + '/db-cluster.yaml', start_iid: 0, stop_iid:  100, readonly: false},
         {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
+        // Cluster.prototype.cluster_ring_spec,
+        // {file: DB_ROOT + '/db-cluster.yaml', start_iid: 50, stop_iid:  100, readonly: false},
         {file: __dirname + '/../app-demo/data/db-paperity.yaml', start_iid: 1000, stop_iid: null, readonly: false},
         {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
         // {item: 1015, name: 'mysql', readonly: true},
     ]
 
-    async startup(rings = this.rings) {
+    async startup(rings = this.constructor.ring_specs) {
         /* Load the bootstrap database & create the registry, then load this cluster's complete data from DB,
            which should replace the db object with the ultimate one (TODO).
          */
 
         let req = new DataRequest(this, 'startup')
-        let cluster_ring = new Ring({file: DB_ROOT + '/db-cluster.yaml', start_iid: 50, stop_iid: 100})
+
+        let cluster_ring_spec = this.constructor.cluster_ring_spec
+        try { fs.unlinkSync(cluster_ring_spec.file) } catch(ex) {}
+
+        let cluster_ring = new Ring(cluster_ring_spec)
         await cluster_ring.open(req)
 
         this.db = new ServerDB()

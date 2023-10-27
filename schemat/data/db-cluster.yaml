@@ -1,0 +1,110 @@
+- __id: 200
+  data_sequence:
+    "@": 202
+  indexes:
+    idx_category_item:
+      "@": 201
+    "@": Map
+  name: db-paperity
+  readonly: false
+  start_iid: 1000
+  stop_iid: null
+  "@": Data
+- __id: 201
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": INTEGER
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    "@": SequenceSchema
+  blocks:
+    - "@": 203
+  derived: []
+  flush_delay: 1
+  source:
+    "@": 202
+  "@": Data
+- __id: 202
+  schema:
+    fields:
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    _field_types:
+      - "@": INTEGER
+    "@": SequenceSchema
+  blocks:
+    - "@": 204
+  derived:
+    - "@": 201
+  flush_delay: 1
+  "@": Data
+- __id: 203
+  filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../../app-demo/data/db-paperity.idx_category_item.jl
+  format: index-jl
+  "@": Data
+- __id: 204
+  filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../../app-demo/data/db-paperity.yaml
+  format: data-yaml
+  autoincrement: 1015
+  "@": Data
+- __id: 205
+  data_sequence:
+    "@": 207
+  indexes:
+    idx_category_item:
+      "@": 206
+    "@": Map
+  name: db-demo
+  readonly: false
+  start_iid: 1000
+  stop_iid: null
+  "@": Data
+- __id: 206
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": INTEGER
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    "@": SequenceSchema
+  blocks:
+    - "@": 208
+  derived: []
+  flush_delay: 1
+  source:
+    "@": 207
+  "@": Data
+- __id: 207
+  schema:
+    fields:
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    _field_types:
+      - "@": INTEGER
+    "@": SequenceSchema
+  blocks:
+    - "@": 209
+  derived:
+    - "@": 206
+  flush_delay: 1
+  "@": Data
+- __id: 208
+  filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../data/db-demo.idx_category_item.jl
+  format: index-jl
+  "@": Data
+- __id: 209
+  filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../data/db-demo.yaml
+  format: data-yaml
+  autoincrement: 1018
+  "@": Data
