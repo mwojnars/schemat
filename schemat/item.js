@@ -198,12 +198,12 @@ export class Item {
     _id_            // database ID of this item; globally unique (for a persisted item) or undefined (for a newly created item)
 
     get id()        { return this._id_ }
-    set id(id)      { assert(!this._id_ || this._id_ === id); this._id_ = id; if (this._record) this._record.id = id }
+    set id(id)      { assert(!this._id_ || this._id_ === id); this._id_ = id; if (this._record_) this._record_.id = id }
 
     _data_          // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
 
-    _record         // ItemRecord object that contains this item's data as loaded from DB during last load(); undefined in a newborn item
+    _record_        // ItemRecord object that contains this item's data as loaded from DB during last load(); undefined in a newborn item
 
     mutable = false // true if this item's data can be modified through .edit(); editable item may contain uncommitted
                     // changes and must be EXCLUDED from Registry
@@ -253,7 +253,7 @@ export class Item {
         /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly later on. */
         assert(this.has_id())
         assert(this.isLoaded)
-        return this._record || (this._record = new ItemRecord(this.id, this._data_))
+        return this._record_ || (this._record_ = new ItemRecord(this.id, this._data_))
     }
 
     assertData()    { if (!this._data_) throw new ItemDataNotLoaded(this) }   // check that data is loaded, but maybe not fully initialized yet
@@ -319,7 +319,7 @@ export class Item {
             assert(record instanceof ItemRecord)
 
             this._data_ = record.data
-            this._record = record
+            this._record_ = record
 
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
