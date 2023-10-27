@@ -28,7 +28,6 @@ export function object_to_item_data(obj) {
         entries.push(['_class_', obj.constructor])
 
     // print(`object_to_item_data(${obj}) =>`, entries)
-
     return new Data(Object.fromEntries(entries))
 }
 
@@ -145,15 +144,8 @@ export class Ring extends Item {
 
         // 2nd phase: update items with actual data
         for (let item of items) {
-            if (!item._data_)                       // if item has no _data_, create it from the object's properties
-                item._data_ = object_to_item_data(item)
-
-            // if (!item._data_) {
-            //     let entries = Object.entries(item).filter(([k, v]) =>
-            //         !k.startsWith('_') && (v !== undefined) &&
-            //         !['registry','net','mutable','expiry','action','isLoading'].includes(k))
-            //     item._data_ = new Data(Object.fromEntries(entries))
-            // }
+            // if item has no _data_, create it from the object's properties
+            item._data_ = item._data_ || object_to_item_data(item)
             await this._update(item)
         }
     }
