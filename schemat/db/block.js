@@ -1,7 +1,7 @@
 import fs from 'fs';
 import yaml from 'yaml';
 
-import {print, T} from '../utils.js'
+import {assert, print, T} from '../utils.js'
 import {DataConsistencyError, NotImplemented} from '../errors.js'
 import {Item} from '../item.js'
 import {ChangeRequest} from "./records.js";
@@ -29,6 +29,7 @@ export class Block extends Item {
      */
     static role = 'block'   // for use in ProcessingStep and DataRequest
 
+    sequence                // parent sequence
     filename                // path to a local file or folder on the worker node where this block is stored
     format                  // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
 
@@ -38,8 +39,9 @@ export class Block extends Item {
     _pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
 
-    constructor(filename) {
+    constructor(sequence, filename) {
         super()
+        this.sequence = sequence
         this.filename = filename
     }
 
@@ -49,11 +51,11 @@ export class Block extends Item {
         // infer the storage type from the filename extension
         if (extension === 'yaml') {
             this.format = 'data-yaml'
-            this._storage = new YamlDataStorage(this.filename)
+            this._storage = new YamlDataStorage(this.filename, this)
         }
         else if (extension === 'jl') {
             this.format = 'index-jl'
-            this._storage = new JsonIndexStorage(this.filename)
+            this._storage = new JsonIndexStorage(this.filename, this)
         }
         else
             throw new Error(`unsupported storage type, '${this.format || extension}', for ${this.filename}`)
@@ -221,6 +223,15 @@ export class IndexBlock extends Block {}
 
 export class Storage {
 
+    block
+
+    constructor(block) {
+        this.block = block
+        assert(this.block)
+        assert(this.block.sequence)
+        assert(this.block.sequence.ring)
+    }
+
     // all the methods below can be ASYNC in subclasses... (!)
     
     get(key)            { throw new NotImplemented() }      // return JSON string stored under the binary `key`, or undefined
@@ -268,8 +279,8 @@ export class YamlDataStorage extends MemoryStorage {
 
     filename
 
-    constructor(filename) {
-        super()
+    constructor(filename, block) {
+        super(block)
         this.filename = filename
     }
 
@@ -329,8 +340,8 @@ export class JsonIndexStorage extends MemoryStorage {
 
     filename
 
-    constructor(filename) {
-        super()
+    constructor(filename, block) {
+        super(block)
         this.filename = filename
     }
 

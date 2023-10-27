@@ -36,7 +36,6 @@ export class Ring extends Item {
         super()
 
         let {file} = opts
-        // this._opts = opts
         this._file = file
         this.name = name || (file && path.basename(file, path.extname(file)))
 
@@ -47,7 +46,7 @@ export class Ring extends Item {
     }
 
     async open(req) {
-        this.data_sequence = new DataSequence(this._file)
+        this.data_sequence = new DataSequence(this, this._file)
         return this.data_sequence.open(req.make_step(this, 'open'))
     }
 
@@ -56,7 +55,7 @@ export class Ring extends Item {
         req = req.safe_step(this)
 
         this.indexes = new Map([
-            ['idx_category_item', new IndexByCategory(this.data_sequence, filename)],    // index of item IDs sorted by parent category ID
+            ['idx_category_item', new IndexByCategory(this, this.data_sequence, filename)],    // index of item IDs sorted by parent category ID
         ])
 
         for (let index of this.indexes.values())
@@ -184,7 +183,8 @@ export class ServerDB extends Database {
          */
         let req = new DataRequest(this, 'open')
         for (const spec of rings) {
-            let ring = spec instanceof Ring ? spec : new Ring(spec)
+            let ring = spec.item ? await globalThis.registry.getLoaded(spec.item) : spec instanceof Ring ? spec : new Ring(spec)
+
             await ring.open(req.clone())
             this.append(ring)
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added

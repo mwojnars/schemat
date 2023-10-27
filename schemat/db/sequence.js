@@ -22,12 +22,18 @@ export class Sequence extends Item {    // Series?
            Database > Ring > Data/Index Sequence > Block > Storage > Record
      */
 
+    ring                // Ring that this sequence belongs to
     schema              // SequenceSchema that defines this sequence's key and value
     splits              // array of split points between blocks
     blocks              // array of Blocks that make up this sequence
     derived = []        // array of derived sequences (indexes) that must be updated when this sequence changes
     flush_delay = 1.0   // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
 
+
+    constructor(ring) {
+        super()
+        this.ring = ring
+    }
 
     _find_block(binary_key)     { return this.blocks[0] }
 
@@ -80,13 +86,9 @@ export class DataSequence extends Sequence {
         // value encoding is handled outside schema: through method overloading
     );
 
-    constructor(filename) {
-        super()
-        this.blocks = [new DataBlock(filename)]
-
-        // // block is a local file, or an item that must be loaded from a lower ring
-        // let block = file ? new DataBlock(file) : globalThis.registry.getLoaded(item)
-        // this.blocks = [block]
+    constructor(ring, filename) {
+        super(ring)
+        this.blocks = [new DataBlock(this, filename)]
     }
 
     encode_key(id) {
