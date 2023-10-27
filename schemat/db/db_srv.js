@@ -93,17 +93,47 @@ export class Ring extends Item {
     /***  Data access & modification  ***/
 
     async handle(req, command = null) {
-        /* Handle a DataRequest by passing it to an appropriate method of this.data sequence. */
+        /* Handle a DataRequest by passing it to an appropriate method of this.data sequence.
+           This is the method that should be used for all standard operations: select/update/delete.
+         */
         if (command === req.command)            // don't overwrite the command if it already occurred in the previous step
             command = null
         return this.data_sequence.handle(req.make_step(this, command))
     }
 
     async _insert(id, data) {
-        /* Insert a new item into this ring. No forward to a lower ring. */
+        /* For internal use when a ring needs to be accessed directly without a database. */
         return this.handle(new DataRequest(this, 'insert', {id, data}))
     }
 
+    async _update(item) {
+        /* For internal use when a ring needs to be accessed directly without a database. */
+        let edits = [new EditData(item.dumpData())]
+        return this.handle(new DataRequest(this, 'update', {id: item.id, edits}))
+    }
+
+    async insert_many(...items) {
+        /* Insert multiple interconnected items that reference each other and can't be inserted one by one.
+           The insertion proceeds in two phases: 1) the items are inserted with empty data, to obtain their IDs if missing;
+           2) the items are updated with their actual data, with all references (incl. bidirectional) correctly replaced with IDs.
+         */
+        let empty_data = JSONx.stringify(new Data({_status_: 'draft'}))     // empty data
+
+        // 1st phase: insert stubs
+        for (let item of items)
+            item.id = await this._insert(item.id, empty_data)
+
+        // 2nd phase: update items with actual data
+        for (let item of items) {
+            // if item has no _data_, impute it from the object's properties; skip private props (starting with '_')
+            if (!item._data_) {
+                let entries = Object.entries(item).filter(([k]) => !k.startsWith('_'))
+                item._data_ = new Data(entries)
+                print(`imputed data for item [${item.id}]:`, entries)
+            }
+            await this._update(item)
+        }
+    }
 
     /***  Indexes and Transforms. Change propagation.  ***/
 
