@@ -413,7 +413,7 @@ export class ClientRegistry extends Registry {
     }
 
     async insert(item) {
-        let data = item.data.__getstate__()
+        let data = item._data_.__getstate__()
         delete data['__category__']
 
         let category = item.category

@@ -1382,7 +1382,7 @@ export class DATA extends CATALOG {
         return fields.sort()
     }
 
-    displayTable(props)     { return super.displayTable({...props, value: props.item.data, start_color: 1}) }
+    displayTable(props)     { return super.displayTable({...props, value: props.item._data_, start_color: 1}) }
 }
 
 export class DATA_GENERIC extends DATA {

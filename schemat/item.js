@@ -200,8 +200,11 @@ export class Item {
     get id()        { return this._id }
     set id(id)      { assert(!this._id || this._id === id); this._id = id; if (this._record) this._record.id = id }
 
-    data            // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
+    _data_          // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
+
+    // get data()      { return this._data_ }
+    // set data(d)     { this._data_ = d }
 
     _record         // ItemRecord object that contains this item's data as loaded from DB during last load(); undefined in a newborn item
 
@@ -223,7 +226,7 @@ export class Item {
 
 
     _dataAll = new Map()        // map of computed entries per field, {field: array_of_entries}; for repeated fields,
-                                // each array consists of own data (from item.data) + inherited from ancestors, or schema default / imputed;
+                                // each array consists of own data (from _data_) + inherited from ancestors, or schema default / imputed;
                                 // for non-repeated fields, the arrays are singletons
                                 // each field is computed and cached separately, lazily upon request;
 
@@ -238,7 +241,7 @@ export class Item {
     get category()  { return this.prop('__category__', {schemaless: true}) }
 
     isLoading           // the Promise created at the start of reload() and fulfilled when load() completes; indicates that the item is currently loading
-    get isLoaded()      { return this.data && !this.isLoading }         // false if still loading, even if .data has already been created (but not fully initialized)
+    get isLoaded()      { return this._data_ && !this.isLoading }         // false if still loading, even if data has already been created (but not fully initialized)
     get isCategory()    { return this.instanceof(this.registry.root) }
 
     is(item) {
@@ -253,14 +256,14 @@ export class Item {
         /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly later on. */
         assert(this.has_id())
         assert(this.isLoaded)
-        return this._record || (this._record = new ItemRecord(this.id, this.data))
+        return this._record || (this._record = new ItemRecord(this.id, this._data_))
     }
 
-    assertData()    { if (!this.data) throw new ItemDataNotLoaded(this) }   // check that .data is loaded, but maybe not fully initialized yet
+    assertData()    { if (!this._data_) throw new ItemDataNotLoaded(this) }   // check that data is loaded, but maybe not fully initialized yet
     assertLoaded()  { if (!this.isLoaded) throw new ItemNotLoaded(this) }
 
     // get newborn()   { return this.iid === null }
-    // has_data()      { return !!this.data }
+    // has_data()      { return !!this._data_ }
 
     static orderAscID(item1, item2) {
         /* Ordering function that can be passed to array.sort() to sort items, stubs, or {id, ...} records by ascending ID. */
@@ -268,7 +271,7 @@ export class Item {
     }
 
     constructor(id = undefined) {
-        /* Creates an item stub, `id` can be undefined. To set this.data, load() or reload() must be called afterwards. */
+        /* Creates an item stub, `id` can be undefined. To set this._data_, load() or reload() must be called afterwards. */
         this.registry = globalThis.registry
         if (id !== undefined) this.id = id
     }
@@ -281,7 +284,7 @@ export class Item {
     static async from_record(record /*ItemRecord*/, use_registry = true) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no ID yet);
            or an instance loaded from DB and filled out with data from `record` (an ItemRecord).
-           In any case, the item returned is *booted* (this.data is initialized).
+           In any case, the item returned is *booted* (this._data_ is initialized).
          */
         // TODO: if the record is already cached in binary registry, return the cached item...
         // TODO: otherwise, create a new item and cache it in binary registry
@@ -313,12 +316,12 @@ export class Item {
     }
 
     async _load(record = null /*ItemRecord*/) {
-        /* Load this.data from `record` or DB. Set up the class and prototypes. Call init(). */
+        /* Load this._data_ from `record` or DB. Set up the class and prototypes. Call init(). */
         try {
             record = record || await this._load_record()
             assert(record instanceof ItemRecord)
 
-            this.data = record.data
+            this._data_ = record.data
             this._record = record
 
             let proto = this.initPrototypes()                   // load prototypes
@@ -328,7 +331,7 @@ export class Item {
             // when instantiating temporary items from data records (so new Item() is called, not new RootCategory())
             if (record.id === ROOT_ID) T.setClass(this, RootCategory)
 
-            // this.data is already loaded, so __category__ should be available IF defined (except non-categorized objects)
+            // this._data_ is already loaded, so __category__ should be available IF defined (except non-categorized objects)
             let category = this.category
 
             if (category && !category.isLoaded && category !== this)
@@ -341,7 +344,7 @@ export class Item {
             this._initNetwork()
 
             let init = this.init()                              // optional custom initialization after the data is loaded
-            if (init instanceof Promise) await init             // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
+            if (init instanceof Promise) await init             // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
 
             this.setExpiry(category?.prop('cache_ttl'))
 
@@ -371,7 +374,7 @@ export class Item {
         /* Load all prototypes and check that they belong to the same category (exactly) as this item,
            otherwise the schema of some fields may be incompatible or missing.
          */
-        let prototypes = this.data.getValues('prototype')
+        let prototypes = this._data_.getValues('prototype')
         // for (const p of prototypes)        // TODO: update the code below to verify .category instead of CIDs
             // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
         prototypes = prototypes.filter(p => !p.isLoaded)
@@ -394,7 +397,7 @@ export class Item {
     }
 
     init() {}
-        /* Optional item-specific initialization after this.data is loaded.
+        /* Optional item-specific initialization after this._data_ is loaded.
            Subclasses may override this method as either sync or async.
          */
     cleanup() {}
@@ -488,19 +491,19 @@ export class Item {
     // entries(prop) -- stream of entries for a given property
 
     prop(path, opts = {}) {
-        /* Read the item's property either from this.data using get(), or (if missing) from this POJO's regular attribute
+        /* Read the item's property either from this._data_ using get(), or (if missing) from this POJO's regular attribute
            - this allows defining attributes either through DB or item's class constructor.
            If there are multiple values for 'path', the first one is returned.
            `opts` are {default, schemaless}.
          */
-        if (this.data) {
-            // this.data: a property can be read before the loading completes (!), e.g., for use inside init();
+        if (this._data_) {
+            // this._data_: a property can be read before the loading completes (!), e.g., for use inside init();
             // a "shadow" item doesn't map to a DB record, so its props can't be read with this.props() below
             let value = this.props(path, opts).next().value
             if (value !== undefined) return value
 
             // before falling back to a default value stored in a POJO attribute,
-            // check that 'path' is valid according to schema, to block access to system fields like .data etc
+            // check that 'path' is valid according to schema, to block access to system fields like ._data_ etc
             if (!opts.schemaless) {
                 let schema = this.getSchema()
                 let [prop] = Path.split(path)
@@ -553,7 +556,7 @@ export class Item {
         if (entries) yield* entries
 
         // below, `this` is included at the 1st position among ancestors;
-        // `streams` is a function so its evaluation can be omitted if a non-repeated value is already available in this.data
+        // `streams` is a function so its evaluation can be omitted if a non-repeated value is already available in this._data_
         let streams = () => this.getAncestors().map(proto => proto.entriesRaw(prop))
 
         if (schemaless) entries = concat(streams().map(stream => [...stream]))
@@ -561,8 +564,8 @@ export class Item {
             let type = this.getSchema().get(prop)
             if (!type) throw new Error(`not in schema: '${prop}'`)
 
-            if (!type.isRepeated() && !type.isCompound() && this.data.has(prop))
-                entries = [this.data.getEntry(prop)]                        // non-repeated value is present in `this`, can skip inheritance to speed up
+            if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))
+                entries = [this._data_.getEntry(prop)]                        // non-repeated value is present in `this`, can skip inheritance to speed up
             else
                 entries = type.combineStreams(streams(), this)            // `default` or `impute` property of the schema may be applied here
 
@@ -572,20 +575,20 @@ export class Item {
     }
 
     *entriesRaw(prop = undefined) {
-        /* Generate a stream of own entries (from this.data) for a given property(s). No inherited/imputed entries.
+        /* Generate a stream of own entries (from this._data_) for a given property(s). No inherited/imputed entries.
            `prop` can be a string, or an array of strings, or undefined. The entries preserve their original order.
          */
         this.assertData()
-        yield* this.data.readEntries(prop)
+        yield* this._data_.readEntries(prop)
     }
 
     object(first = true) {
-        /* Return this.data converted to a plain object. For repeated keys, only one value is included:
+        /* Return this._data_ converted to a plain object. For repeated keys, only one value is included:
            the first one if first=true (default), or the last one, otherwise.
            TODO: for repeated keys, return a sub-object: {first, last, all} - configurable in schema settings
           */
         this.assertLoaded()
-        let obj = this.data.object(first)
+        let obj = this._data_.object(first)
         obj.__item__ = this
         return obj
     }
@@ -600,7 +603,7 @@ export class Item {
         return [this, ...unique(concat(ancestors))]
     }
 
-    getPrototypes()     { return this.data.getValues('prototype') }
+    getPrototypes()     { return this._data_.getValues('prototype') }
 
 
     getName() { return this.prop('name') || '' }
@@ -647,7 +650,7 @@ export class Item {
     //     assert(false, 'getSchema() is never used with an argument')
     //
     //     this.assertLoaded()
-    //     let keys = [], data = this.data
+    //     let keys = [], data = this._data_
     //
     //     // convert numeric indices in `path` to keys
     //     for (let step of path) {
@@ -671,8 +674,8 @@ export class Item {
     }
 
     dumpData() {
-        /* Dump this.data to a JSONx string with encoding of nested values. */
-        return JSONx.stringify(this.data)
+        /* Dump this._data_ to a JSONx string with encoding of nested values. */
+        return JSONx.stringify(this._data_)
     }
 
 
@@ -767,7 +770,7 @@ export class Item {
         // // route into `data` if there's still a path to be consumed
         // // TODO: check for "GET" privilege of request.client to this item
         // await this.load()
-        // ;[entry, subpath] = this.data.route(request.path)
+        // ;[entry, subpath] = this._data_.route(request.path)
         // if (subpath) throw new Error(`path not found: ${subpath}`)
         //     // if (entry.value instanceof Item) return entry.value.handle(request.move(subpath), session)
         //     // else throw new Error(`path not found: ${subpath}`)
@@ -886,13 +889,13 @@ Item.createAPI(
                 // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.make_editable()
-                this.data.insert(path, pos, entry)
+                this._data_.insert(path, pos, entry)
                 return this.registry.db.update_full(this)
             },
 
             delete_field(request, path) {
                 this.make_editable()
-                this.data.delete(path)
+                this._data_.delete(path)
                 return this.registry.db.update_full(this)
             },
 
@@ -900,13 +903,13 @@ Item.createAPI(
                 // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.make_editable()
-                this.data.update(path, entry)
+                this._data_.update(path, entry)
                 return this.registry.db.update_full(this)
             },
 
             move_field(request, path, pos1, pos2) {
                 this.make_editable()
-                this.data.move(path, pos1, pos2)
+                this._data_.move(path, pos1, pos2)
                 return this.registry.db.update_full(this)
             },
 
@@ -1209,10 +1212,10 @@ export class RootCategory extends Category {
         /* In RootCategory, this == this.category, and to avoid infinite recursion we must perform
            schema inheritance manually (without this.prop()).
          */
-        let root_fields = this.data.get('fields')
+        let root_fields = this._data_.get('fields')
         let default_fields = root_fields.get('fields').props.default
         let fields = new Catalog(root_fields, default_fields)
-        let custom = this.data.get('allow_custom_fields')
+        let custom = this._data_.get('allow_custom_fields')
         return new DATA({fields: fields.object(), strict: custom !== true})
     }
 }

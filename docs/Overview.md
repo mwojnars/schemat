@@ -20,7 +20,7 @@
 
 ### Item
 
-- Properties (.data)
+- Properties (_data_)
 - Prototypes (on items)
 - Inheritance (via prototypes on categories)
 - VIEW_*() methods CANNOT be "async". Any async initialization
