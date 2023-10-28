@@ -269,14 +269,13 @@ export class Item {
 
     constructor(_fail_ = true) {
         /* Creates an item stub, `id` can be undefined. To set this._data_, .load() must be called afterwards. */
-        assert(!_fail_, 'Item should be instantiated through Item.create() instead of new Item()')
+        if(_fail_) throw new Error('item should be instantiated through Item.create() instead of new Item()')
         this.registry = globalThis.registry
-        // if (id !== undefined) this.id = id
     }
 
     __create__(...args) {
-        /* Called by the constructor to initialize the data of a newborn item (not from DB).
-           Override in subclasses. Must be a synchronous function, async code can be placed in __init__(). */
+        /* Override in subclasses to initialize the data of a newborn item (not from DB) created by Item.create().
+           Must be a synchronous function, async code can be placed in __init__(). */
     }
 
     static create(...args) {
