@@ -162,6 +162,17 @@ export class Request {
  **
  */
 
+
+const item_proxy_handler = {
+    get(target, prop, receiver) {
+        if (prop in target) return Reflect.get(target, prop, receiver)
+        let data = target._data_
+        if (data?.has(prop)) return data.get(prop)
+        // // return target.prop(prop, {schemaless: true})
+    }
+}
+
+
 export class Item {
 
     /*
@@ -268,13 +279,13 @@ export class Item {
     }
 
     constructor(_fail_ = true) {
-        /* Creates an item stub, `id` can be undefined. To set this._data_, .load() must be called afterwards. */
+        /* For internal use! Always call Item.create() instead of `new Item()`. */
         if(_fail_) throw new Error('item should be instantiated through Item.create() instead of new Item()')
         this.registry = globalThis.registry
     }
 
     __create__(...args) {
-        /* Override in subclasses to initialize the data of a newborn item (not from DB) created by Item.create().
+        /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by Item.create().
            Must be a synchronous function, async code can be placed in __init__(). */
     }
 
@@ -282,13 +293,14 @@ export class Item {
         /* Create an empty newborn item, no ID, and execute its __create__(...args).
            This function, or create_stub(id), should be used instead of the constructor.
          */
-        let item = new this(false)
+        let core = new this(false)
+        let item = new Proxy(core, item_proxy_handler)
         item.__create__(...args)
         return item
     }
 
     static create_stub(id) {
-        /* Create a stub: an empty item with `id` assigned. */
+        /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
         let item = new this(false)
         item._id_ = id
         return item
@@ -511,7 +523,7 @@ export class Item {
     // entries(prop) -- stream of entries for a given property
 
     prop(path, opts = {}) {
-        /* Read the item's property either from this._data_ using get(), or (if missing) from this POJO's regular attribute
+        /* Read the item's property either from this._data_, or (if missing) from this POJO's regular attribute
            - this allows defining attributes either through DB or item's class constructor.
            If there are multiple values for 'path', the first one is returned.
            `opts` are {default, schemaless}.
