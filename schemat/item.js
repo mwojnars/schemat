@@ -285,8 +285,7 @@ export class Item {
     }
 
     __create__(...args) {
-        /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by Item.create().
-           Must be a synchronous function, async code can be placed in __init__(). */
+        /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by Item.create(). */
     }
 
     static create(...args) {
@@ -295,7 +294,8 @@ export class Item {
          */
         let core = new this(false)
         let item = new Proxy(core, item_proxy_handler)
-        item.__create__(...args)
+        let created = item.__create__(...args)
+        if (created instanceof Promise) return created.then(() => item)
         return item
     }
 
@@ -340,9 +340,10 @@ export class Item {
            The data can only be loaded ONCE for a given Item instance due to item's immutability.
            If you want to refresh the data, create a new instance or use refresh() instead.
          */
-        if (this.isLoaded) return assert(!record) && this
+        if (this.isLoaded) { assert(!record); return this }
         if (this._manage_.loading) return assert(!record) && this._manage_.loading    // wait for a previous load to complete instead of starting a new one
-        return this._manage_.loading = this._load(record)                      // keep a Promise that will eventually load this item's data to avoid race conditions
+        if (!this.has_id() && !record) return this                  // newborn item with no ID and no data to load? do nothing
+        return this._manage_.loading = this._load(record)           // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
     async _load(record = null /*ItemRecord*/) {
@@ -359,7 +360,7 @@ export class Item {
 
             // root category's class must be set here in a special way - this is particularly needed inside DB blocks,
             // when instantiating temporary items from data records (so new Item() is called, not new RootCategory())
-            if (record.id === ROOT_ID) T.setClass(this, RootCategory)
+            if (this.id === ROOT_ID) T.setClass(this, RootCategory)
 
             // this._data_ is already loaded, so __category__ should be available IF defined (except non-categorized objects)
             let category = this.category
@@ -386,6 +387,7 @@ export class Item {
     }
 
     async _load_record() {
+        // if (!this.has_id()) return null
         if (!this.has_id()) throw new Error(`trying to load item's data with missing or incomplete ID: ${this.id_str}`)
         let json = await this.registry.loadData(this.id)
         assert(typeof json === 'string', json)
