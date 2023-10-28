@@ -292,8 +292,9 @@ export class Item {
         /* Create an empty newborn item, no ID, and execute its __create__(...args).
            This function, or create_stub(id), should be used instead of the constructor.
          */
-        let core = new this(false)
-        let item = new Proxy(core, item_proxy_handler)
+        // let core = new this(false)
+        // let item = new Proxy(core, item_proxy_handler)
+        let item = this.create_stub()
         let created = item.__create__(...args)
         if (created instanceof Promise) return created.then(() => item)
         return item
@@ -301,8 +302,9 @@ export class Item {
 
     static create_stub(id) {
         /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
-        let item = new this(false)
-        item._id_ = id
+        let core = new this(false)
+        let item = new Proxy(core, item_proxy_handler)
+        if (id !== undefined) core._id_ = id
         return item
     }
 
