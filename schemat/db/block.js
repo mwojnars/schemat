@@ -39,11 +39,9 @@ export class Block extends Item {
     _pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
 
-    init_block(sequence, filename) {
-        // super()
+    __create__(sequence, filename) {
         this.sequence = sequence
         this.filename = filename
-        return this
     }
 
     async init() {

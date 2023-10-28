@@ -87,8 +87,7 @@ export class DataSequence extends Sequence {
 
     __create__(ring, filename) {
         super.__create__(ring)
-        // this.blocks = [new DataBlock(this, filename)]
-        this.blocks = [DataBlock.create().init_block(this, filename)]
+        this.blocks = [DataBlock.create(this, filename)]
     }
 
     encode_key(id) {
