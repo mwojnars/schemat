@@ -29,7 +29,7 @@ export class BackendProcess extends SchematProcess {
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
 
-        this.cluster = new Cluster()
+        this.cluster = Cluster.create() //new Cluster()
         return this[method](opts)
     }
 }

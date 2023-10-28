@@ -52,9 +52,20 @@ export class Ring extends Item {
     stop_iid                // (optional) maximum IID of all items
 
 
-    constructor({name, ...opts}) {
-        super()
+    // constructor({name, ...opts}) {
+    //     super()
+    //
+    //     let {file} = opts
+    //     this._file = file
+    //     this.name = name || (file && path.basename(file, path.extname(file)))
+    //
+    //     let {readonly = false, start_iid = 0, stop_iid} = opts
+    //     this.readonly = readonly
+    //     this.start_iid = start_iid
+    //     this.stop_iid = stop_iid
+    // }
 
+    init_ring({name, ...opts}) {
         let {file} = opts
         this._file = file
         this.name = name || (file && path.basename(file, path.extname(file)))
@@ -63,10 +74,13 @@ export class Ring extends Item {
         this.readonly = readonly
         this.start_iid = start_iid
         this.stop_iid = stop_iid
+
+        return this
     }
 
     async open(req) {
-        this.data_sequence = new DataSequence(this, this._file)
+        // this.data_sequence = new DataSequence(this, this._file)
+        this.data_sequence = DataSequence.create().init_sequence(this, this._file)
         return this.data_sequence.open(req.make_step(this, 'open'))
     }
 
@@ -75,7 +89,8 @@ export class Ring extends Item {
         req = req.safe_step(this)
 
         this.indexes = new Map([
-            ['idx_category_item', new IndexByCategory(this, this.data_sequence, filename)],    // index of item IDs sorted by parent category ID
+            // ['idx_category_item', new IndexByCategory(this, this.data_sequence, filename)],    // index of item IDs sorted by parent category ID
+            ['idx_category_item', IndexByCategory.create().init_sequence(this, this.data_sequence, filename)],    // index of item IDs sorted by parent category ID
         ])
 
         for (let index of this.indexes.values())
@@ -198,7 +213,9 @@ export class ServerDB extends Database {
          */
         let req = new DataRequest(this, 'open')
         for (const spec of rings) {
-            let ring = spec.item ? await globalThis.registry.getLoaded(spec.item) : spec instanceof Ring ? spec : new Ring(spec)
+            let ring = spec.item ?
+                await globalThis.registry.getLoaded(spec.item) :
+                spec instanceof Ring ? spec : Ring.create().init_ring(spec)   //new Ring(spec)
 
             await ring.open(req.clone())
             this.append(ring)
