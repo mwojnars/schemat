@@ -221,7 +221,7 @@ export class Registry {
 
         // ID requested was already loaded/created? return the existing instance, or create a stub (empty item) otherwise;
         // a stub has no expiry date until filled with data
-        let item = this._cache.get(id) || this.register(Item.create(id))   //new Item(id))
+        let item = this._cache.get(id) || this.register(Item.create_stub(id))   //new Item(id))
 
         assert(!item._manage_.mutable)
         return item

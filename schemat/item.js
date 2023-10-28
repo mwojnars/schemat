@@ -267,16 +267,23 @@ export class Item {
         return item1.id - item2.id
     }
 
-    constructor(id = undefined, _fail_ = true) {
+    constructor(_fail_ = true) {
         /* Creates an item stub, `id` can be undefined. To set this._data_, .load() must be called afterwards. */
         assert(!_fail_, 'Item should be instantiated through Item.create() instead of new Item()')
         this.registry = globalThis.registry
-        if (id !== undefined) this.id = id
+        // if (id !== undefined) this.id = id
     }
 
-    static create(id = undefined) {
-        /* Create an empty item (a stub). This function should be used instead of the constructor. */
-        return new this(id, false)
+    static create() {
+        /* Create an empty item, no ID. This function or create_stub() should be used instead of the constructor. */
+        return new this(false)
+    }
+
+    static create_stub(id) {
+        /* Create a stub: an empty item with `id` assigned. */
+        let item = new this(false)
+        item._id_ = id
+        return item
     }
 
     static async from_binary(binary_record /*Record*/) {
@@ -291,7 +298,7 @@ export class Item {
          */
         // TODO: if the record is already cached in binary registry, return the cached item...
         // TODO: otherwise, create a new item and cache it in binary registry
-        let item = Item.create(record.id)  //new Item(record.id)
+        let item = Item.create_stub(record.id)  //new Item(record.id)
         return item.load(record)
     }
 

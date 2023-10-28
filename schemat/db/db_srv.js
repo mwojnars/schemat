@@ -52,18 +52,9 @@ export class Ring extends Item {
     stop_iid                // (optional) maximum IID of all items
 
 
-    // constructor({name, ...opts}) {
-    //     super()
-    //
-    //     let {file} = opts
-    //     this._file = file
-    //     this.name = name || (file && path.basename(file, path.extname(file)))
-    //
-    //     let {readonly = false, start_iid = 0, stop_iid} = opts
-    //     this.readonly = readonly
-    //     this.start_iid = start_iid
-    //     this.stop_iid = stop_iid
-    // }
+    static create(...args) {
+        return super.create().init_ring(...args)
+    }
 
     init_ring({name, ...opts}) {
         let {file} = opts
@@ -215,7 +206,7 @@ export class ServerDB extends Database {
         for (const spec of rings) {
             let ring = spec.item ?
                 await globalThis.registry.getLoaded(spec.item) :
-                spec instanceof Ring ? spec : Ring.create().init_ring(spec)   //new Ring(spec)
+                spec instanceof Ring ? spec : Ring.create(spec)   //new Ring(spec)
 
             await ring.open(req.clone())
             this.append(ring)

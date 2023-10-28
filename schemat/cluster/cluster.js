@@ -48,7 +48,7 @@ export class Cluster extends Item {
         let cluster_ring_spec = this.constructor.cluster_ring_spec
         try { fs.unlinkSync(cluster_ring_spec.file) } catch(ex) {}
 
-        let cluster_ring = Ring.create().init_ring(cluster_ring_spec)  //new Ring(cluster_ring_spec)
+        let cluster_ring = Ring.create(cluster_ring_spec)  //new Ring(cluster_ring_spec)
         await cluster_ring.open(req)
 
         this.db = new ServerDB()
