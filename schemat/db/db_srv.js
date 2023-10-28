@@ -203,11 +203,15 @@ export class ServerDB extends Database {
          */
         let req = new DataRequest(this, 'open')
         for (const spec of rings) {
-            let ring = spec.item ?
-                await globalThis.registry.getLoaded(spec.item) :
-                spec instanceof Ring ? spec : Ring.create(spec)
+            let ring
 
-            await ring.open()
+            if (spec.item) ring = await globalThis.registry.getLoaded(spec.item)
+            else if (spec instanceof Ring) ring = spec
+            else {
+                ring = Ring.create(spec)
+                await ring.open()
+            }
+
             this.append(ring)
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
             await ring._init_indexes(req.clone())   // TODO: temporary
