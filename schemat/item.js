@@ -274,9 +274,18 @@ export class Item {
         // if (id !== undefined) this.id = id
     }
 
-    static create() {
-        /* Create an empty item, no ID. This function or create_stub() should be used instead of the constructor. */
-        return new this(false)
+    __create__(...args) {
+        /* Called by the constructor to initialize the data of a newborn item (not from DB).
+           Override in subclasses. Must be a synchronous function, async code can be placed in __init__(). */
+    }
+
+    static create(...args) {
+        /* Create an empty newborn item, no ID, and execute its __create__(...args).
+           This function, or create_stub(id), should be used instead of the constructor.
+         */
+        let item = new this(false)
+        item.__create__(...args)
+        return item
     }
 
     static create_stub(id) {
@@ -298,7 +307,7 @@ export class Item {
          */
         // TODO: if the record is already cached in binary registry, return the cached item...
         // TODO: otherwise, create a new item and cache it in binary registry
-        let item = Item.create_stub(record.id)  //new Item(record.id)
+        let item = Item.create_stub(record.id)
         return item.load(record)
     }
 

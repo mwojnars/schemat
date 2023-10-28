@@ -152,7 +152,7 @@ export class Registry {
         /* Create the RootCategory object, ID=0, and load its contents either from the DB (if present there)
            or from the predefined `root_data`.
          */
-        let root = this.root = RootCategory.create()  // new RootCategory()
+        let root = this.root = RootCategory.create()
         this.register(root)
 
         // try loading `root` from the DB first...
@@ -221,7 +221,7 @@ export class Registry {
 
         // ID requested was already loaded/created? return the existing instance, or create a stub (empty item) otherwise;
         // a stub has no expiry date until filled with data
-        let item = this._cache.get(id) || this.register(Item.create_stub(id))   //new Item(id))
+        let item = this._cache.get(id) || this.register(Item.create_stub(id))
 
         assert(!item._manage_.mutable)
         return item
