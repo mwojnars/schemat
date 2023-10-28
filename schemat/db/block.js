@@ -137,8 +137,8 @@ export class DataBlock extends Block {
 
     autoincrement = 0       // current maximum item ID; a new record is assigned id=autoincrement+1
 
-    async open(req) {
-        this.autoincrement = await super.open(req)
+    async open() {
+        this.autoincrement = await super.open()
     }
 
     async assert_unique(key, id, msg) {

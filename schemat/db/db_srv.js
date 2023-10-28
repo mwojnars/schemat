@@ -63,9 +63,16 @@ export class Ring extends Item {
         this.stop_iid = stop_iid
     }
 
-    async open(req) {
+    async open() {
         this.data_sequence = DataSequence.create(this, this._file)
-        return this.data_sequence.open(req.make_step(this, 'open'))
+        return this.data_sequence.open()
+    }
+
+    async init() {
+        /* Initialize the ring after it's been loaded from DB. */
+        await this.data_sequence.load()
+        for (let index of this.indexes.values())
+            await index.load()
     }
 
     async _init_indexes(req) {
@@ -200,7 +207,7 @@ export class ServerDB extends Database {
                 await globalThis.registry.getLoaded(spec.item) :
                 spec instanceof Ring ? spec : Ring.create(spec)
 
-            await ring.open(req.clone())
+            await ring.open()
             this.append(ring)
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
             await ring._init_indexes(req.clone())   // TODO: temporary

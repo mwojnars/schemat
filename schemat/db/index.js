@@ -50,12 +50,18 @@ export class Index extends Sequence {
         const [del_records, put_records] = await this._make_plan(change)
 
         // delete old records
-        for (let [key, value] of del_records || [])
-            this._find_block(key).del(req.safe_step(null, 'del', {key})) //|| print(`deleted [${key}]`)
+        for (let [key, value] of del_records || []) {
+            let block = this._find_block(key)
+            if (!block.isLoaded) block = await block.load()
+            block.del(req.safe_step(null, 'del', {key})) //|| print(`deleted [${key}]`)
+        }
 
         // (over)write new records
-        for (let [key, value] of put_records || [])
-            this._find_block(key).put(req.safe_step(null, 'put', {key, value})) //|| print(`put [${key}]`)
+        for (let [key, value] of put_records || []) {
+            let block = this._find_block(key)
+            if (!block.isLoaded) block = await block.load()
+            block.put(req.safe_step(null, 'put', {key, value})) //|| print(`put [${key}]`)
+        }
     }
 
     async *map_record(input_record) {

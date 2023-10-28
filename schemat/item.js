@@ -342,7 +342,7 @@ export class Item {
          */
         if (this.isLoaded) { assert(!record); return this }
         if (this._manage_.loading) return assert(!record) && this._manage_.loading    // wait for a previous load to complete instead of starting a new one
-        if (!this.has_id() && !record) return this                  // newborn item with no ID and no data to load? do nothing
+        if (!this.has_id() && !record) return this                  // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
         return this._manage_.loading = this._load(record)           // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 

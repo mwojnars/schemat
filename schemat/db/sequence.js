@@ -1,6 +1,6 @@
 import {BinaryRecord, SequenceSchema} from "./records.js";
 import {INTEGER} from "../type.js";
-import {assert} from "../utils.js";
+import {assert, print} from "../utils.js";
 import {DataBlock} from "./block.js";
 import {Item} from "../item.js";
 
@@ -36,10 +36,10 @@ export class Sequence extends Item {    // Series?
 
     _find_block(binary_key)     { return this.blocks[0] }
 
-    async open(req) {
+    async open() {
         for (let block of this.blocks) {
             await block
-            await block.open(req.make_step(this))
+            await block.open()
             block.setExpiry('never')            // prevent eviction of this item from Registry's cache (!)
         }
     }
@@ -56,6 +56,7 @@ export class Sequence extends Item {    // Series?
         stop = stop && this.schema.encode_key(stop)
 
         let block = this._find_block(start)
+        if (!block.isLoaded) block = await block.load()
 
         for await (let [key, value] of block.scan({start, stop}))
             yield new BinaryRecord(this.schema, key, value)
@@ -98,7 +99,7 @@ export class DataSequence extends Sequence {
         return this.schema.decode_key(key)[0]
     }
 
-    handle(req /*DataRequest*/) {
+    async handle(req /*DataRequest*/) {
         /* Handle a request for data access/modification. The call is redirected to [req.command] method
            of the block containing a given item ID or record key.
          */
@@ -116,10 +117,11 @@ export class DataSequence extends Sequence {
             req.make_step(this)
 
         let block = this._find_block(key)
+        if (!block.isLoaded) block = await block.load()
 
         return block[command].call(block, req)
     }
 
-    async erase(req)   { return Promise.all(this.blocks.map(b => b.erase(req.make_step(this)))) }
+    async erase(req)   { return Promise.all(this.blocks.map(async b => (await b.load()).erase(req.make_step(this)))) }
     // async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
 }
