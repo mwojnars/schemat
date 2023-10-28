@@ -214,7 +214,9 @@ export class ServerDB extends Database {
 
             this.append(ring)
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
-            await ring._init_indexes(req.clone())   // TODO: temporary
+
+            if (!ring.has_id())
+                await ring._init_indexes(req.clone())   // TODO: temporary
         }
         for (let ring of this.rings.slice(2))
             if (cluster_ring && !ring.id) {

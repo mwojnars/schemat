@@ -34,6 +34,12 @@ export class Sequence extends Item {    // Series?
         this.ring = ring
     }
 
+    // TODO: drop init() and perform lazy loading of blocks
+    //  (block.load() must only use lower rings to search for the block, otherwise infinite recursion occurs)
+    async init() {
+        return this.blocks[0].load()
+    }
+
     _find_block(binary_key)     { return this.blocks[0] }
 
     async open() {
