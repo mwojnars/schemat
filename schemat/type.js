@@ -741,6 +741,16 @@ export class TYPE extends GENERIC {
     }
 }
 
+export class CLASS extends GENERIC {
+    /* Accept objects that represent classes to be encoded through Classpath. */
+
+    validate(cls) {
+        if ((cls = super.validate(cls)) === null) return cls
+        if (!T.isClass(cls)) throw new ValueError(`expected a class, got ${cls} instead`)
+        return cls
+    }
+}
+
 // export class FIELD extends TYPE {
 //
 //     unique          // if true (default), the field cannot be repeated (max. one value allowed) ...single

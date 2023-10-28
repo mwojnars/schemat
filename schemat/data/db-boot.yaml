@@ -69,6 +69,10 @@
             attributes. Each category should be an item of the Root Category
             (IID=0).
           "@": ITEM
+        _class_:
+          info: Javascript class to be assigned to the item after loading to provide
+            custom methods for the item.
+          "@": CLASS
         schema:
           info: The DATA schema for this item. A virtual (non-editable) field
             automatically imputed from this item's category(ies).

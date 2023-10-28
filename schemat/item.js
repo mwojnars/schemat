@@ -420,7 +420,7 @@ export class Item {
 
     /***  Dynamic loading of source code  ***/
 
-    async getClass()    { return this.category?.getItemClass() }
+    async getClass()    { return this.prop('_class_') || this.category?.getItemClass() }
 
     // async getClass()    {
     //     if (this.category && !this.category.getItemClass) {

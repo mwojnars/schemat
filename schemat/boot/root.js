@@ -1,5 +1,5 @@
 import {Catalog, Data} from "../data.js"
-import {CATALOG, CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN, ITEM_SCHEMA, OWN_SCHEMA} from "../type.js"
+import {CATALOG, CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN, ITEM_SCHEMA, OWN_SCHEMA, CLASS} from "../type.js"
 
 
 /**********************************************************************************************************************
@@ -11,6 +11,7 @@ import {CATALOG, CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN, ITEM_SCH
 // global-default fields shared by all item types
 let default_fields = new Catalog({
     __category__: new ITEM({info: "Category of this item. Determines item's behavior and the schema of its attributes. Each category should be an item of the Root Category (IID=0)."}),
+    _class_     : new CLASS({info: "Javascript class to be assigned to the item after loading to provide custom methods for the item."}),
     schema      : new OWN_SCHEMA({info: "The DATA schema for this item. A virtual (non-editable) field automatically imputed from this item's category(ies)."}),
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
     path        : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If `path` is configured, callers can only import this item's code through the `path`, so that the code is always interpreted the same and can be cached after parsing."}),
