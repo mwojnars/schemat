@@ -58,7 +58,7 @@ export class JSONx {
 
         if (obj === undefined)      throw new Error("Can't encode an undefined value")
         if (T.isPrimitiveObj(obj))  return obj
-        if (T.isArray(obj))         return this.encode_list(obj)
+        if (T.isArray(obj))         return this.encode_array(obj)
 
         if (T.isDict(obj)) {
             obj = this.encode_object(obj)
@@ -75,7 +75,7 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
         }
         else if (obj instanceof Set)
-            state = this.encode_list(Array.from(obj))
+            state = this.encode_array(Array.from(obj))
         else if (obj instanceof Map)
             state = this.encode_object(Object.fromEntries(obj.entries()))
         else {
@@ -142,9 +142,9 @@ export class JSONx {
 
         // instantiate the output object; special handling for standard JSON types and Item
         if (T.isPrimitiveCls(cls))  return state
-        if (cls === Array)          return this.decode_list(state)
+        if (cls === Array)          return this.decode_array(state)
         if (cls === Object)         return this.decode_object(state)
-        if (cls === Set)            return new Set(this.decode_list(state))
+        if (cls === Set)            return new Set(this.decode_array(state))
         if (cls === Map)
             return new Map(Object.entries(this.decode_object(state)))
 
@@ -159,12 +159,12 @@ export class JSONx {
     // static encdec(obj)   { return this.decode(this.encode(obj))   }       // for testing purposes
     // static decenc(state) { return this.encode(this.decode(state)) }       // for testing purposes
 
-    encode_list(values) {
-        /* Encode recursively all non-primitive objects inside a list. */
+    encode_array(values) {
+        /* Encode recursively all non-primitive objects inside an array. */
         return values.map(v => this.encode(v))
     }
-    decode_list(state) {
-        /* Decode recursively all non-primitive objects inside a list. */
+    decode_array(state) {
+        /* Decode recursively all non-primitive objects inside an array. */
         return state.map(v => this.decode(v))
     }
     encode_object(obj) {
