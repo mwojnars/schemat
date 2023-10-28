@@ -1168,7 +1168,10 @@ CATALOG.Table = class extends Component {
            `entry.value` and `schema` can be undefined for a newly created entry, then no value widget is displayed.
            If value is undefined, but schema is present, the value is displayed as "missing".
          */
-        let [value, setValue] = useState(entry.value)
+        // useState() treats function arguments in a special way, that's why we have to wrap up classes and functions with an array
+        let wrap = (T.isClass(entry.value) || T.isFunction(entry.value))
+
+        let [value, setValue] = useState(wrap ? [entry.value] : entry.value)
         let isnew = (value === undefined) || entry.saveNew
 
         const save = async (newValue) => {
@@ -1179,7 +1182,7 @@ CATALOG.Table = class extends Component {
         }
         let [flash, flashBox] = this.flash()            // components for value editing; for key editing created in key() instead
         let [error, errorBox] = this.error()
-        let props = {value,
+        let props = {value: wrap && T.isArray(value) ? value[0] : value,
                      editing: isnew,                    // a newly created entry (no value) starts in edit mode
                      save, flash, error}
 
