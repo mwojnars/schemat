@@ -30,9 +30,8 @@ export class Sequence extends Item {    // Series?
     flush_delay = 1.0   // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
 
 
-    init_sequence(ring) {
+    __create__(ring) {
         this.ring = ring
-        return this
     }
 
     _find_block(binary_key)     { return this.blocks[0] }
@@ -86,12 +85,10 @@ export class DataSequence extends Sequence {
         // value encoding is handled outside schema: through method overloading
     );
 
-    init_sequence(ring, filename) {
-        // super(ring)
-        super.init_sequence(ring)
+    __create__(ring, filename) {
+        super.__create__(ring)
         // this.blocks = [new DataBlock(this, filename)]
         this.blocks = [DataBlock.create().init_block(this, filename)]
-        return this
     }
 
     encode_key(id) {

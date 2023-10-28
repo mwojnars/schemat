@@ -27,9 +27,8 @@ export class Index extends Sequence {
 
     source                      // Sequence that this index is derived from
 
-    init_sequence(ring, source, filename) {
-        // super(ring)
-        super.init_sequence(ring)
+    __create__(ring, source, filename) {
+        super.__create__(ring)
         assert(filename.endsWith('.jl'))
         this.source = source
         this.blocks = [IndexBlock.create().init_block(this, filename)]
@@ -37,7 +36,6 @@ export class Index extends Sequence {
 
         assert(source instanceof Sequence)
         source.add_derived(this)                // make connection: data > index, for change propagation
-        return this
     }
 
     async apply(change) {

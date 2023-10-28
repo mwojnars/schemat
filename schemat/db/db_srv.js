@@ -64,8 +64,7 @@ export class Ring extends Item {
     }
 
     async open(req) {
-        // this.data_sequence = new DataSequence(this, this._file)
-        this.data_sequence = DataSequence.create().init_sequence(this, this._file)
+        this.data_sequence = DataSequence.create(this, this._file)
         return this.data_sequence.open(req.make_step(this, 'open'))
     }
 
@@ -74,8 +73,7 @@ export class Ring extends Item {
         req = req.safe_step(this)
 
         this.indexes = new Map([
-            // ['idx_category_item', new IndexByCategory(this, this.data_sequence, filename)],    // index of item IDs sorted by parent category ID
-            ['idx_category_item', IndexByCategory.create().init_sequence(this, this.data_sequence, filename)],    // index of item IDs sorted by parent category ID
+            ['idx_category_item', IndexByCategory.create(this, this.data_sequence, filename)],    // index of item IDs sorted by parent category ID
         ])
 
         for (let index of this.indexes.values())
