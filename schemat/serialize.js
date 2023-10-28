@@ -61,7 +61,7 @@ export class JSONx {
         if (T.isArray(obj))         return this.encode_list(obj)
 
         if (T.isDict(obj)) {
-            obj = this.encode_dict(obj)
+            obj = this.encode_object(obj)
             if (!(JSONx.ATTR_CLASS in obj)) return obj
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
         }
@@ -77,10 +77,10 @@ export class JSONx {
         else if (obj instanceof Set)
             state = this.encode_list(Array.from(obj))
         else if (obj instanceof Map)
-            state = this.encode_dict(Object.fromEntries(obj.entries()))
+            state = this.encode_object(Object.fromEntries(obj.entries()))
         else {
             state = T.getstate(obj)
-            state = obj !== state ? this.encode(state) : this.encode_dict(state)
+            state = obj !== state ? this.encode(state) : this.encode_object(state)
             if (JSONx.ATTR_CLASS in state)
                 throw new Error(`Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key`)
         }
@@ -110,7 +110,7 @@ export class JSONx {
         if (isdict && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_WRAP)) {
             if (JSONx.ATTR_STATE in state)
                 state = state[JSONx.ATTR_STATE]
-            return this.decode_dict(state)
+            return this.decode_object(state)
         }
 
         // decoding of a class object
@@ -143,10 +143,10 @@ export class JSONx {
         // instantiate the output object; special handling for standard JSON types and Item
         if (T.isPrimitiveCls(cls))  return state
         if (cls === Array)          return this.decode_list(state)
-        if (cls === Object)         return this.decode_dict(state)
+        if (cls === Object)         return this.decode_object(state)
         if (cls === Set)            return new Set(this.decode_list(state))
         if (cls === Map)
-            return new Map(Object.entries(this.decode_dict(state)))
+            return new Map(Object.entries(this.decode_object(state)))
 
         if (T.isSubclass(cls, Item) && state instanceof Array)      // all Item instances except unlinked ones are created/loaded through Registry
             return registry.getItem(state)
@@ -167,7 +167,7 @@ export class JSONx {
         /* Decode recursively all non-primitive objects inside a list. */
         return state.map(v => this.decode(v))
     }
-    encode_dict(obj) {
+    encode_object(obj) {
         /* Encode recursively all properties of a plain object and return as a new object (`obj` stays untouched).
            Skip properties with `undefined` value.
          */
@@ -184,7 +184,7 @@ export class JSONx {
         return out
         // return T.mapDict(obj, (k, v) => [k, this.encode(v)])
     }
-    decode_dict(state) {
+    decode_object(state) {
         /* Decode recursively all non-primitive objects inside `state` dictionary. */
         return T.mapDict(state, (k, v) => [k, this.decode(v)])
     }
