@@ -11,7 +11,7 @@
   stop_iid: null
   _class_:
     =: db.Ring
-    "@": class
+    "@": (class)
   "@": Data
 - __id: 201
   ring:
@@ -34,7 +34,7 @@
     "@": 202
   _class_:
     =: db.IndexByCategory
-    "@": class
+    "@": (class)
   "@": Data
 - __id: 202
   ring:
@@ -55,7 +55,7 @@
   flush_delay: 1
   _class_:
     =: db.DataSequence
-    "@": class
+    "@": (class)
   "@": Data
 - __id: 203
   sequence:
@@ -64,7 +64,7 @@
   format: index-jl
   _class_:
     =: db.IndexBlock
-    "@": class
+    "@": (class)
   "@": Data
 - __id: 204
   sequence:
@@ -74,7 +74,7 @@
   autoincrement: 1015
   _class_:
     =: db.DataBlock
-    "@": class
+    "@": (class)
   "@": Data
 - __id: 205
   data_sequence:
@@ -89,7 +89,7 @@
   stop_iid: null
   _class_:
     =: db.Ring
-    "@": class
+    "@": (class)
   "@": Data
 - __id: 206
   ring:
@@ -112,7 +112,7 @@
     "@": 207
   _class_:
     =: db.IndexByCategory
-    "@": class
+    "@": (class)
   "@": Data
 - __id: 207
   ring:
@@ -133,7 +133,7 @@
   flush_delay: 1
   _class_:
     =: db.DataSequence
-    "@": class
+    "@": (class)
   "@": Data
 - __id: 208
   sequence:
@@ -142,7 +142,7 @@
   format: index-jl
   _class_:
     =: db.IndexBlock
-    "@": class
+    "@": (class)
   "@": Data
 - __id: 209
   sequence:
@@ -152,5 +152,5 @@
   autoincrement: 1018
   _class_:
     =: db.DataBlock
-    "@": class
+    "@": (class)
   "@": Data

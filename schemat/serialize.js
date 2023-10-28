@@ -11,8 +11,8 @@ export class JSONx {
     Dump & load arbitrary objects to/from JSON strings.
     Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
     */
-    static FLAG_TYPE  = "class"         // special value of ATTR_CLASS that informs the value is a class rather than an instance
-    static FLAG_DICT  = "Object"        // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
+    static FLAG_TYPE  = "(class)"       // special value of ATTR_CLASS that informs the value is a class rather than an instance
+    static FLAG_WRAP  = "(object)"      // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
     static ATTR_CLASS = "@"             // special attribute appended to object state to store a class name (with package) of the object being encoded
     static ATTR_STATE = "="             // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
 
@@ -63,7 +63,7 @@ export class JSONx {
         if (T.isDict(obj)) {
             obj = this.encode_dict(obj)
             if (!(JSONx.ATTR_CLASS in obj)) return obj
-            return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
+            return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
         }
 
         if (obj instanceof Item)
@@ -106,11 +106,17 @@ export class JSONx {
         let isdict = T.isDict(state)
         let cls
 
-        // decoding of a wrapped-up dict that contained a pre-existing '@' key
-        if (isdict && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_DICT)) {
+        // decoding of a wrapped-up object that contained a pre-existing '@' key
+        if (isdict && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_WRAP)) {
             if (JSONx.ATTR_STATE in state)
                 state = state[JSONx.ATTR_STATE]
             return this.decode_dict(state)
+        }
+
+        // decoding of a class object
+        if (isdict && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_TYPE)) {
+            let classname = state[JSONx.ATTR_STATE]
+            return registry.getClass(classname)
         }
 
         // determine the expected class (constructor function) for the output object
@@ -162,7 +168,9 @@ export class JSONx {
         return state.map(v => this.decode(v))
     }
     encode_dict(obj) {
-        /* Encode recursively all non-primitive objects inside `obj`. Skip properties with `undefined` value. */
+        /* Encode recursively all properties of a plain object and return as a new object (`obj` stays untouched).
+           Skip properties with `undefined` value.
+         */
         let out = {...obj}
 
         for (let [key, value] of Object.entries(out))
