@@ -23,8 +23,8 @@ export class TypeItem extends Item {
         this.type_class = await this.registry.import(path, name || 'default')
         assert(T.isClass(this.type_class))
 
-        let schema = new this.type_class()
-        return Object.assign(schema, props)
+        let type = new this.type_class()
+        return Object.assign(type, props)
     }
 
     _split_classpath(path) { return splitLast(path || '', ':') }   // [path, name]
