@@ -167,9 +167,13 @@ export class Request {
 const item_proxy_handler = {
     get(target, prop, receiver) {
         if (prop in target) return Reflect.get(target, prop, receiver)
-        let data = target._data_
-        if (data?.has(prop)) return data.get(prop)
-        // // return target.prop(prop, {schemaless: true})
+        if (target._data_) {
+            let stream = target.props(prop, {silent: true})
+            return stream.next().value
+        }
+        // return target.prop(prop, {schemaless: true})
+        // let data = target._data_
+        // if (data?.has(prop)) return data.get(prop)
     }
 }
 
@@ -577,7 +581,7 @@ export class Item {
     propsList(path)         { return [...this.props(path)] }
     propsReversed(path)     { return [...this.props(path)].reverse() }
 
-    *_scan_entries(prop, {schemaless= false} = {}) {
+    *_scan_entries(prop, {schemaless=false, silent=false} = {}) {
         /* Generate a stream of valid entries for a given property: own entries followed by inherited ones;
            or the default entry (if own/inherited are missing), or an imputed entry.
            If the schema doesn't allow multiple entries for `prop`, the first one is yielded (for atomic types),
@@ -596,7 +600,9 @@ export class Item {
         if (schemaless) entries = concat(streams().map(stream => [...stream]))
         else {
             let type = this.getSchema().get(prop)
-            if (!type) throw new Error(`not in schema: '${prop}'`)
+            if (!type)
+                if (!silent) throw new Error(`not in schema: '${prop}'`)
+                else return
 
             if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))
                 entries = [this._data_.getEntry(prop)]                        // non-repeated value is present in `this`, can skip inheritance to speed up
