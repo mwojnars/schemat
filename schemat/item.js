@@ -614,16 +614,16 @@ export class Item {
         yield* this._data_.readEntries(prop)
     }
 
-    object(first = true) {
-        /* Return this._data_ converted to a plain object. For repeated keys, only one value is included:
-           the first one if first=true (default), or the last one, otherwise.
-           TODO: for repeated keys, return a sub-object: {first, last, all} - configurable in schema settings
-          */
-        this.assertLoaded()
-        let obj = this._data_.object(first)
-        obj.__item__ = this
-        return obj
-    }
+    // object(first = true) {
+    //     /* Return this._data_ converted to a plain object. For repeated keys, only one value is included:
+    //        the first one if first=true (default), or the last one, otherwise.
+    //        TODO: for repeated keys, return a sub-object: {first, last, all} - configurable in schema settings
+    //       */
+    //     this.assertLoaded()
+    //     let obj = this._data_.object(first)
+    //     obj.__item__ = this
+    //     return obj
+    // }
 
     getAncestors() {
         /* Linearized list of all ancestors, with `this` at the first position.
