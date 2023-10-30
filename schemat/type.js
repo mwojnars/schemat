@@ -1479,27 +1479,27 @@ export class TypeWrapper extends Type {
      */
 
     static defaultProps = {
-        prototype:  undefined,          // item of the Type category (instance of TypeItem) implementing this.real_type
-        properties: {},                 // properties to be passed to `prototype` to create this.real_type
+        type_item:  undefined,          // item of the Type category (instance of TypeItem) implementing this.real_type
+        properties: {},                 // properties to be passed to `type_item` to create this.real_type
     }
 
-    real_type                           // the actual Type instance to be used for encode/decode, provided by `prototype` during init()
+    real_type                           // the actual Type instance provided by `type_item` during init()
     
     async init() {
         if (this.real_type) return
-        let {prototype, properties} = this.props
-        await prototype.load()
+        let {type_item, properties} = this.props
+        await type_item.load()
         let {TypeItem} = await import('./type_item.js')
-        assert(prototype instanceof TypeItem)
-        this.real_type = await prototype.create_real_type(properties)
+        assert(type_item instanceof TypeItem)
+        this.real_type = await type_item.create_real_type(properties)
     }
     instanceof(cls)     { return this.real_type instanceof cls }
     validate(obj)       { return this.real_type.validate(obj) }
     display(props)      { return this.real_type.display(props) }
 
-    __getstate__()          { return [this.props.prototype, this.props.properties] }
+    __getstate__()          { return [this.props.type_item, this.props.properties] }
     __setstate__(state)     {
-        [this.__props.prototype, this.__props.properties] = state
+        [this.__props.type_item, this.__props.properties] = state
         this.initProps()
         return this
     }
