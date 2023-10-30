@@ -231,11 +231,11 @@ export class Registry {
 
     // async findItem(path) { return this.site.findItem(path) }
 
-    async loadData(id) {
-        /* Load item's full data record from server-side DB and return as an object: {id, data}. */
-        this.session?.countLoaded(id)
-        return this.db.select(id)
-    }
+    // async loadData(id) {
+    //     /* Load item's full data record from server-side DB and return as an object: {id, data}. */
+    //     this.session?.countLoaded(id)
+    //     return this.db.select(id)
+    // }
 
     async *scan_all({limit} = {}) {
         /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
@@ -348,7 +348,7 @@ export class Session {
     releaseMutex        // release function for registry.sessionMutex to be called at the end of this session
 
     itemsRequested = new Counter()       // for each item ID: no. of times the item was requested through registry.getItem() during this session
-    itemsLoaded    = new Counter()       // for each item ID: no. of times the item data was loaded through registry.loadData()
+    itemsLoaded    = new Counter()       // for each item ID: no. of times the item data was attempted to be loaded from DB
 
     constructor(req, res) {
         this.req = req

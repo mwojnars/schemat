@@ -384,9 +384,10 @@ export class Item {
     }
 
     async _load_record() {
-        // if (!this.has_id()) return null
         if (!this.has_id()) throw new Error(`trying to load item's data with missing or incomplete ID: ${this.id_str}`)
-        let json = await this.registry.loadData(this.id)
+        // let json = await this.registry.loadData(this.id)
+        schemat.registry.session?.countLoaded(this.id)
+        let json = await schemat.db.select(this.id)
         assert(typeof json === 'string', json)
         return new ItemRecord(this.id, json)
     }
