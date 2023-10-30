@@ -272,7 +272,6 @@ export class ServerDB {
     async select(req) {
         // returns a json string (`data`) or undefined
         return this.forward_down(req.make_step(this, 'select'))
-        // return this.forward_down(new DataRequest(this, 'select', {id}))
     }
 
     async update(id, ...edits) {
