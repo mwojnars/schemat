@@ -4,6 +4,7 @@ import { NotFound, ItemDataNotLoaded, ItemNotLoaded } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_type} from "./type.js"
+import {root_fields} from './boot/root.js'
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 import {CategoryAdminPage, ItemAdminPage} from "./pages.js";
 import {ItemRecord} from "./db/records.js";
@@ -1243,6 +1244,8 @@ export class RootCategory extends Category {
 
     id = ROOT_ID
     expiry = 0                                  // never evict from Registry
+
+    _schema_ = new DATA({fields: root_fields.object(), strict: true})
 
     get category() { return this }              // root category is a category for itself
 
