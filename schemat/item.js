@@ -213,7 +213,7 @@ export class Item {
 
     _record_        // ItemRecord that contains this item's data as loaded from DB during last load(); undefined in a newborn item
 
-    _manage_ = {                // Schemat-related special properties of this object and methods to operate on it...
+    _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
         object:  this,          // the main object itself
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
         mutable: false,         // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
@@ -247,7 +247,7 @@ export class Item {
     get id_str()    { return `[${this.id}]` }
     get category()  { return this.prop('__category__', {schemaless: true}) }
 
-    get isLoaded()      { return this._data_ && !this._manage_.loading }         // false if still loading, even if data has already been created (but not fully initialized)
+    get isLoaded()      { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
     get isCategory()    { return this.instanceof(this.registry.root) }
 
     is(item) {
@@ -341,9 +341,9 @@ export class Item {
            If you want to refresh the data, create a new instance or use refresh() instead.
          */
         if (this.isLoaded) { assert(!record); return this }
-        if (this._manage_.loading) return assert(!record) && this._manage_.loading    // wait for a previous load to complete instead of starting a new one
-        if (!this.has_id() && !record) return this                  // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
-        return this._manage_.loading = this._load(record)           // keep a Promise that will eventually load this item's data to avoid race conditions
+        if (this._meta_.loading) return assert(!record) && this._meta_.loading    // wait for a previous load to complete instead of starting a new one
+        if (!this.has_id() && !record) return this              // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
+        return this._meta_.loading = this._load(record)         // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
     async _load(record = null /*ItemRecord*/) {
@@ -379,7 +379,7 @@ export class Item {
             return this
 
         } finally {
-            this._manage_.loading = false                              // cleanup to allow another load attempt, even after an error
+            this._meta_.loading = false                         // cleanup to allow another load attempt, even after an error
         }
     }
 
@@ -398,7 +398,7 @@ export class Item {
         if (ttl === 'never' || ttl < 0) expiry = 0          // never evict
         else if (ttl === 0) expiry = undefined              // immediate eviction at the end of web session
         else expiry = Date.now() + ttl * 1000
-        this._manage_.expiry = expiry
+        this._meta_.expiry = expiry
     }
 
     initPrototypes() {
@@ -838,7 +838,7 @@ export class Item {
     make_editable() {
         /* Mark this item as editable and remove it from the Registry. */
         this.registry.unregister(this)
-        this._manage_.mutable = true
+        this._meta_.mutable = true
         return this
     }
 

@@ -87,7 +87,7 @@ export class ItemsCache extends Map {
      */
 
     // set(id, item, ttl) {
-    //     // if (ttl_ms) item._manage_.expiry = Date.now() + ttl_ms
+    //     // if (ttl_ms) item._meta_.expiry = Date.now() + ttl_ms
     //     item.setExpiry(ttl)
     //     super.set(id, item)
     // }
@@ -96,7 +96,7 @@ export class ItemsCache extends Map {
         let now  = Date.now()
         let ends = []
         for (let [id, item] of this.entries()) {
-            let expiry = item._manage_.expiry
+            let expiry = item._meta_.expiry
             if (expiry === undefined || (0 < expiry && expiry <= now)) {
                 let deleted = this.delete(id)
                 // if (deleted) print('item evicted:', id, item.isLoaded ? '' : '(stub)' )     // TODO: comment out
