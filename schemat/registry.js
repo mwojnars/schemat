@@ -240,7 +240,6 @@ export class Registry {
 
         for await (const record of records) {                   // stream of ItemRecords
             if (limit !== undefined && count++ >= limit) break
-            // if (!this._checkCategory(record, cid)) continue     // skip if category doesn't match
             let item = await Item.from_record(record)
             yield this.register(item)
         }
@@ -257,11 +256,6 @@ export class Registry {
             assert(target_cid === undefined || target_cid === cid)
             yield this.getLoaded(id)
         }
-    }
-
-    _checkCategory(record, cid) {
-        /* Check if a given ItemRecord belongs to a given category. */
-        return cid === undefined || cid === record.data.get('__category__')?.id
     }
 
 
