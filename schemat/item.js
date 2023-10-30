@@ -223,7 +223,7 @@ export class Item {
     _schema_        // schema of this item's data, as a DATA object; calculated as an imputed property
 
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
-        object:  this,          // the main object itself
+        target:  this,          // the target object itself
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
         mutable: false,         // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
         expiry:  undefined,     // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
@@ -550,17 +550,17 @@ export class Item {
         return opts.default
     }
 
-    propObject(...paths) {
-        /* Read multiple prop(path) properties and combine the result into a single POJO object {path_k: value_k}.
-           The result may include a default or POJO value if defined for a particular field.
-         */
-        let subset = {}
-        for (let path of paths) {
-            let value = this.prop(path)
-            if (value !== undefined) subset[path] = value
-        }
-        return subset
-    }
+    // propObject(...paths) {
+    //     /* Read multiple prop(path) properties and combine the result into a single POJO object {path_k: value_k}.
+    //        The result may include a default or POJO value if defined for a particular field.
+    //      */
+    //     let subset = {}
+    //     for (let path of paths) {
+    //         let value = this.prop(path)
+    //         if (value !== undefined) subset[path] = value
+    //     }
+    //     return subset
+    // }
 
     *props(path, opts) {
         /* Generate a stream of all (sub)property values that match a given `path`. The path should start with

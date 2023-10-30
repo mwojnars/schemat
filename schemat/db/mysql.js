@@ -1,5 +1,5 @@
 // import mysql from 'mysql2'
-import { assert, print } from '../utils.js'
+import {assert, print, T} from '../utils.js'
 import { DataBlock } from './block.js'
 
 //let db = mysql.createConnection(srv)
@@ -31,7 +31,7 @@ export class MySQL extends DataBlock {
     async _connect() {
         let opts = {dateStrings: true}              // also of use if dateStrings=false: timezone='Z' means UTC, 'local' means take server's timezone
         let conn = this.prop('connection') || {}
-        let args = this.propObject('host', 'port', 'user', 'database', 'password')
+        let args = T.subset(this, 'host', 'port', 'user', 'database', 'password')
         return this._mod_mysql.createConnection({...opts, ...conn, ...args})      // individual parameters, if defined, override the 'connection' object
     }
 

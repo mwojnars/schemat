@@ -143,7 +143,7 @@ export class BasicIndex extends Index {
            If undefined is returned, the record will consist of a key only.
          */
         if (this.schema.empty_value()) return undefined
-        return item.propObject(...this.schema.properties)
+        return T.subset(item, ...this.schema.properties)
     }
 
     *generate_keys(item) {
