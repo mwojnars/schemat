@@ -227,6 +227,7 @@ export class Item {
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
         mutable: false,         // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
         expiry:  undefined,     // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
+        props_cache: new Map(), // cache of computed properties, {prop: array_of_entries}; each array consists of own data + inherited, or just schema default / imputed
     }
 
     // _db          // the origin database of this item; undefined in newborn items
@@ -238,10 +239,10 @@ export class Item {
     action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
 
 
-    _dataAll = new Map()        // map of computed entries per field, {field: array_of_entries}; for repeated fields,
-                                // each array consists of own data (from _data_) + inherited from ancestors, or schema default / imputed;
-                                // for non-repeated fields, the arrays are singletons
-                                // each field is computed and cached separately, lazily upon request;
+    // _dataAll = new Map()        // map of computed entries per field, {field: array_of_entries}; for repeated fields,
+    //                             // each array consists of own data (from _data_) + inherited from ancestors, or schema default / imputed;
+    //                             // for non-repeated fields, the arrays are singleton;
+    //                             // each field is computed and cached separately, lazily upon request;
 
     _methodCache = new Map()    // cache of outputs of the methods wrapped up in Item.setCaching(); values can be Promises!
 
@@ -588,11 +589,11 @@ export class Item {
            or the default entry (if own/inherited are missing), or an imputed entry.
            If the schema doesn't allow multiple entries for `prop`, the first one is yielded (for atomic types),
            or the objects (own, inherited & default) get merged into one (for "mergeable" types like CATALOG).
-           Once computed, the list of entries is cached in this._dataAll for future use.
+           Once computed, the list of entries is cached for future use.
            If schemaless=true, a concatenated stream of all matching entries is returned without caching -
            for system properties, like _category_, which are processed when the schema is not yet available.
          */
-        let entries = this._dataAll.get(prop)                               // array of entries, or undefined
+        let entries = this._meta_.props_cache.get(prop)                         // array of entries, or undefined
         if (entries) yield* entries
 
         // below, `this` is included at the 1st position among ancestors;
@@ -614,7 +615,7 @@ export class Item {
             else
                 entries = type.combineStreams(streams(), this)            // `default` or `impute` property of the schema may be applied here
 
-            this._dataAll.set(prop, entries)
+            this._meta_.props_cache.set(prop, entries)
         }
         yield* entries
     }
