@@ -228,6 +228,7 @@ export class Item {
         mutable: false,         // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
         expiry:  undefined,     // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
         props_cache: new Map(), // cache of computed properties, {prop: array_of_entries}; each array consists of own data + inherited, or just schema default / imputed
+        calls_cache: new Map(), // cache of method calls, {method: value}, of no-arg calls of methods registered thru setCaching(); values can be Promises!
     }
 
     // _db          // the origin database of this item; undefined in newborn items
@@ -238,18 +239,8 @@ export class Item {
     net             // Network adapter that connects this item to its network API as defined in this.constructor.api
     action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
 
-
-    // _dataAll = new Map()        // map of computed entries per field, {field: array_of_entries}; for repeated fields,
-    //                             // each array consists of own data (from _data_) + inherited from ancestors, or schema default / imputed;
-    //                             // for non-repeated fields, the arrays are singleton;
-    //                             // each field is computed and cached separately, lazily upon request;
-
-    _methodCache = new Map()    // cache of outputs of the methods wrapped up in Item.setCaching(); values can be Promises!
-
     static api        = null    // API instance that defines this item's endpoints and protocols
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
-
-    static __transient__ = ['_methodCache']
 
     get id()        { return this._id_ }
     set id(id)      { assert(!this._id_ || this._id_ === id); this._id_ = id; if (this._record_) this._record_.id = id }
@@ -868,15 +859,21 @@ export class Item {
 
         const cached = (name, fun) => {
             function wrapper(...args) {
-                let cache = this._methodCache                       // here, `this` is an Item instance
                 while (args.length && args[args.length-1] === undefined)
                     args.pop()                                      // drop trailing `undefined` arguments
                 if (args.length) return fun.call(this, ...args)     // here and below, `this` is an Item instance
+
+                let cache = this._meta_.calls_cache                 // here, `this` is an Item instance
                 if (cache.has(name)) return cache.get(name)         // print(`${name}() from _methodCache`)
 
                 let value = fun.call(this)
                 if (value instanceof Promise)                       // for async methods store the final value when available
                     value.then(v => cache.set(name, v))             // to speed up subsequent access (no waiting for promise)
+
+                // Object.defineProperty(this, name, {enumerable: false, value: function(...args_) {
+                //     // TODO: call the original fun if multiple args are passed
+                //     return value
+                // }})
 
                 cache.set(name, value)                              // may store a promise (!)
                 return value                                        // may return a promise (!), the caller should be aware
