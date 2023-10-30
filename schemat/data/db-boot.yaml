@@ -73,7 +73,7 @@
           info: Javascript class to be assigned to the item after loading to provide
             custom methods for the item.
           "@": CLASS
-        schema:
+        _schema_:
           info: The DATA schema for this item. Non-editable, automatically imputed from
             this item's category(ies).
           "@": OWN_SCHEMA
