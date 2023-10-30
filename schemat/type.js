@@ -205,7 +205,7 @@ export class Type {
     }
 
     display(props) {
-        return e(this.constructor.Widget, {...props, schema: this})
+        return e(this.constructor.Widget, {...props, type: this})
     }
 }
 
@@ -217,7 +217,7 @@ Type.Widget = class extends Widget {
     static scope = 'Type'
 
     static defaultProps = {
-        schema: undefined,      // parent Type object
+        type:   undefined,      // parent Type object
         value:  undefined,      // value object to be displayed by render()
         save:   undefined,      // callback save(newValue), called after `value` was edited by user
         flash:  undefined,      // callback flash(message, positive) for displaying confirmation messages after edits
@@ -227,7 +227,7 @@ Type.Widget = class extends Widget {
     constructor(props) {
         super(props)
         this.initial = undefined        // in edit mode: initial value (encoded) that came through props, stored for change detection
-        this.default = undefined        // in edit mode: default value the editor should start with; if this.initial is missing, schema.default is used
+        this.default = undefined        // in edit mode: default value the editor should start with; if this.initial is missing, type.default is used
         this.input   = createRef()
         this.state   = {...this.state,
             editing: props.editing,
@@ -275,9 +275,9 @@ Type.Widget = class extends Widget {
         let [value, changed] = this.read()
         if (!changed) return this.close()
         try {
-            let {schema, flash, save} = this.props
+            let {type, flash, save} = this.props
             value = this.decode(value)
-            value = schema.validate(value)      // validate and normalize the decoded value; exception is raised on error
+            value = type.validate(value)        // validate and normalize the decoded value; exception is raised on error
             flash("SAVING...")
             await save(value)                   // push the new decoded value to the parent
             flash("SAVED")
@@ -293,10 +293,10 @@ Type.Widget = class extends Widget {
     }
 
     render() {
-        let {schema, value} = this.props
+        let {type, value} = this.props
         if (!this.state.editing) return this.viewer()
         this.initial = (value !== undefined) ? this.encode(value) : undefined
-        this.default = (this.initial !== undefined) ? this.initial : schema.getInitial()
+        this.default = (this.initial !== undefined) ? this.initial : type.getInitial()
         return this.editor()
     }
 }
@@ -966,7 +966,7 @@ export class CATALOG extends Type {
         //       through combine() of props.values type
     }
 
-    displayTable(props) { return e(this.constructor.Table, {...props, path: [], schema: this}) }
+    displayTable(props) { return e(this.constructor.Table, {...props, path: [], type: this}) }
 
     static KeyWidget = class extends STRING.Widget {
         /* A special type of STRING widget for displaying keys in a catalog. */
@@ -1149,7 +1149,7 @@ CATALOG.Table = class extends Component {
 
         let {initKey, keyNames} = ops
         let widget = (entry.id === 'new') ? CATALOG.NewKeyWidget : CATALOG.KeyWidget
-        let props  = {value: current, flash, error, save: initKey || save, keyNames, schema: generic_string}
+        let props  = {value: current, flash, error, save: initKey || save, keyNames, type: generic_string}
 
         return FRAGMENT(
                     this.move(ops.moveup, ops.movedown),
@@ -1162,11 +1162,11 @@ CATALOG.Table = class extends Component {
         )
     }
 
-    EntryAtomic({item, path, entry, schema, ops}) {
+    EntryAtomic({item, path, entry, type, ops}) {
         /* A table row containing an atomic entry: a key and its value (not a subcatalog).
            The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
-           `entry.value` and `schema` can be undefined for a newly created entry, then no value widget is displayed.
-           If value is undefined, but schema is present, the value is displayed as "missing".
+           `entry.value` and `type` can be undefined for a newly created entry, then no value widget is displayed.
+           If value is undefined, but type is present, the value is displayed as "missing".
          */
         // useState() treats function arguments in a special way, that's why we have to wrap up classes and functions with an array
         let wrap = (T.isClass(entry.value) || T.isFunction(entry.value))
@@ -1175,7 +1175,7 @@ CATALOG.Table = class extends Component {
         let isnew = (value === undefined) || entry.saveNew
 
         const save = async (newValue) => {
-            // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
+            // print(`save: path [${path}], value ${newValue}, type ${type}`)
             let action = entry.saveNew || ops.updateValue       // saveNew: an entire entry is saved for the first time
             await action(newValue)
             setValue(newValue)
@@ -1187,18 +1187,18 @@ CATALOG.Table = class extends Component {
                      save, flash, error}
 
         return DIV(cl('entry-head'),
-                  DIV(cl('cell cell-key'),   this.key(entry, schema?.props.info, ops)),
-                  DIV(cl('cell cell-value'), schema && this.embed(schema.display(props)), flashBox, errorBox),
+                  DIV(cl('cell cell-key'),   this.key(entry, type?.props.info, ops)),
+                  DIV(cl('cell cell-value'), type && this.embed(type.display(props)), flashBox, errorBox),
                )
     }
 
-    EntrySubcat({item, path, entry, schema, color, ops}) {
+    EntrySubcat({item, path, entry, type, color, ops}) {
         let [folded, setFolded] = useState(false)
         let subcat = entry.value
         let empty  = false //!subcat.length   -- this becomes INVALID when entries are inserted/deleted inside `subcat`
         let toggle = () => !empty && setFolded(f => !f)
         let expand = {state: empty && 'empty' || folded && 'folded' || 'expanded', toggle}
-        let key    = this.key(entry, schema?.props.info, ops, expand)
+        let key    = this.key(entry, type?.props.info, ops, expand)
 
         return FRAGMENT(
             DIV(cl('entry-head'), {key: 'head'},
@@ -1206,7 +1206,7 @@ CATALOG.Table = class extends Component {
                 DIV(cl('cell cell-value'))
             ),
             DIV({key: 'cat'}, folded && st({display: 'none'}),
-                e(this.Catalog, {item, path, value: subcat, schema, color})),
+                e(this.Catalog, {item, path, value: subcat, type, color})),
         )
     }
     EntryAddNew({hide = true, insert}) {
@@ -1219,13 +1219,13 @@ CATALOG.Table = class extends Component {
         )
     }
 
-    // validKey(pos, key, entries, schema) {
+    // validKey(pos, key, entries, type) {
     //     /* Check that the key name at position `pos` in `entries` is allowed to be changed to `key`
-    //        according to the `schema`; return true, or alert the user and raise an exception. */
-    //     // verify that a `key` name is allowed by the catalog's schema
-    //     let subtype = trycatch(() => schema.subtype(key))
+    //        according to the `type`; return true, or alert the user and raise an exception. */
+    //     // verify that a `key` name is allowed by the catalog's type
+    //     let subtype = trycatch(() => type.subtype(key))
     //     if (!subtype) {
-    //         let msg = `The name "${key}" for a key is not permitted by the schema.`
+    //         let msg = `The name "${key}" for a key is not permitted by the type.`
     //         alert(msg); throw new Error(msg)
     //     }
     //     // check against duplicate names, if duplicates are not allowed
@@ -1269,8 +1269,8 @@ CATALOG.Table = class extends Component {
                `catalogSchema` is a DATA schema of a parent catalog, for checking if `key` is valid or not.
              */
 
-            let schema = trycatch(() => catalogSchema.subtype(key))
-            if (key !== undefined && !schema) {                  // verify if `key` name is allowed by the parent catalog
+            let type = trycatch(() => catalogSchema.subtype(key))
+            if (key !== undefined && !type) {                  // verify if `key` name is allowed by the parent catalog
                 alert(`The name "${key}" for a key is not permitted.`)
                 key = undefined
             }
@@ -1284,12 +1284,12 @@ CATALOG.Table = class extends Component {
                 assert(prev[pos].id === 'new')
                 if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
 
-                let value = schema.getInitial()
+                let value = type.getInitial()
                 let ids = [-1, ...prev.map(e => e.id)]
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (schema.isCatalog()) item.action.insert_field(path, pos, {key, value: JSONx.encode(value) })
+                if (type.isCatalog()) item.action.insert_field(path, pos, {key, value: JSONx.encode(value) })
                 else prev[pos].saveNew = (value) =>
                     item.action.insert_field(path, pos, {key, value: JSONx.encode(value)}).then(() => unnew())
 
@@ -1304,15 +1304,15 @@ CATALOG.Table = class extends Component {
             // return item.server.update_field()
             // return item.server.update({field: ...})
         },
-        updateValue: (pos, newValue, schema) => {
+        updateValue: (pos, newValue, type) => {
             return item.action.update_field([...path, pos], {value: JSONx.encode(newValue)})
         }
     }}
 
-    Catalog({item, value, schema, path, color, start_color}) {
+    Catalog({item, value, type, path, color, start_color}) {
         /* If `start_color` is undefined, the same `color` is used for all rows. */
         assert(value  instanceof Catalog)
-        assert(schema.instanceof(CATALOG))
+        assert(type.instanceof(CATALOG))
 
         let catalog  = value
         let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
@@ -1321,14 +1321,14 @@ CATALOG.Table = class extends Component {
         let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
         let run = this.actions({item, path, setEntries})
 
-        let keyNames = schema.getValidKeys()
+        let keyNames = type.getValidKeys()
         let N = entries.length
 
         let rows = entries.map((entry, pos) =>
         {
             let {key}   = entry
             let isnew   = (entry.id === 'new')
-            let vschema = isnew ? undefined : schema.subtype(key)
+            let vschema = isnew ? undefined : type.subtype(key)
             let color   = getColor(pos)
 
             // insert `pos` as the 1st arg in all actions of `run`
@@ -1337,11 +1337,11 @@ CATALOG.Table = class extends Component {
             // some actions in `ops` must be defined separately
             ops.moveup   = pos > 0   ? () => run.move(pos,-1) : null        // moveup() is only present if there is a position available above
             ops.movedown = pos < N-1 ? () => run.move(pos,+1) : null        // similar for movedown()
-            ops.initKey  = isnew ? key => run.initKey(pos, key, schema) : null
+            ops.initKey  = isnew ? key => run.initKey(pos, key, type) : null
             ops.keyNames = keyNames
             ops.updateValue = val => run.updateValue(pos, val, vschema)
 
-            let props   = {item, path: [...path, pos], entry, schema: vschema, color, ops}
+            let props   = {item, path: [...path, pos], entry, type: vschema, color, ops}
             let row     = e(vschema?.isCatalog() ? this.EntrySubcat : this.EntryAtomic, props)
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
         })
