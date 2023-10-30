@@ -543,9 +543,9 @@ export class Item {
             // before falling back to a default value stored in a POJO attribute,
             // check that 'path' is valid according to schema, to block access to system fields like ._data_ etc
             if (!opts.schemaless) {
-                let schema = this.getSchema()
+                let schema = this._schema_  //getSchema()
                 let [prop] = Path.split(path)
-                if (!schema.isValidKey(prop)) throw new Error(`not in schema: ${prop}`)
+                if (schema && !schema.isValidKey(prop)) throw new Error(`not in schema: ${prop}`)
             }
         }
 

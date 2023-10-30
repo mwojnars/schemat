@@ -226,7 +226,7 @@ export class ItemAdminPage extends ReactPage {
         html_head() {
             /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
             let globalAssets = Resources.clientAssets
-            let staticAssets = this.getSchema().getAssets().renderAll()
+            let staticAssets = this._schema_.getAssets().renderAll()
             let customAssets = this.category?.prop('html_assets')
             let assets = [globalAssets, staticAssets, customAssets]
             return assets .filter(a => a && a.trim()) .join('\n')
@@ -260,7 +260,7 @@ export class ItemAdminPage extends ReactPage {
             /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
             // let changes = new Changes(this)
             return FRAGMENT(
-                    this.getSchema().displayTable({item: this}),
+                    this._schema_.displayTable({item: this}),
                     // e(changes.Buttons.bind(changes)),
                 )
         },
