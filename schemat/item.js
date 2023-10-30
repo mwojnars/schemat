@@ -589,7 +589,7 @@ export class Item {
 
         // below, `this` is included at the 1st position among ancestors;
         // `streams` is a function so its evaluation can be omitted if a non-repeated value is already available in this._data_
-        let streams = () => this.getAncestors().map(proto => proto.entriesRaw(prop))
+        let streams = () => this.getAncestors().map(proto => proto._raw_entries(prop))
 
         if (schemaless) entries = concat(streams().map(stream => [...stream]))
         else {
@@ -606,7 +606,7 @@ export class Item {
         yield* entries
     }
 
-    *entriesRaw(prop = undefined) {
+    *_raw_entries(prop = undefined) {
         /* Generate a stream of own entries (from this._data_) for a given property(s). No inherited/imputed entries.
            `prop` can be a string, or an array of strings, or undefined. The entries preserve their original order.
          */
@@ -978,7 +978,7 @@ export class Category extends Item {
         // TODO: move initialization somewhere else; here, we don't have a guarantee that the
         //       initialized type object won't get replaced with a new one at some point
 
-        for (const entry of this.entriesRaw('fields')) {
+        for (const entry of this._raw_entries('fields')) {
             let fields = entry.value
             let calls  = fields.map(({value: type}) => type.init()).filter(res => res instanceof Promise)
             if (calls.length) await Promise.all(calls)
