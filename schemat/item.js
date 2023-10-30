@@ -600,7 +600,10 @@ export class Item {
 
         if (schemaless) entries = concat(streams().map(stream => [...stream]))
         else {
-            let type = this.getSchema().get(prop)
+            // let schema = this.getSchema()
+            // let schema = this._schema_     // doesn't work here due to circular deps on properties
+            let schema = this.category?.getItemSchema() || new DATA_GENERIC()
+            let type = schema.get(prop)
             if (!type)
                 if (!silent) throw new Error(`not in schema: '${prop}'`)
                 else return
@@ -675,12 +678,10 @@ export class Item {
         return `[${stamp}]`
     }
 
-    getSchema() {
-        /* Return schema of this item (instance of DATA), or of a particular `field`. */
-        // return this.prop('schema')
-        return this.category?.getItemSchema() || new DATA_GENERIC()
-        // return field !== undefined ? schema.get(field) : schema
-    }
+    // getSchema() {
+    //     /* Return schema of this item (instance of DATA), or of a particular `field`. */
+    //     return this.category?.getItemSchema() || new DATA_GENERIC()
+    // }
 
     // getSchema(path = null) {
     //     /* Return schema of this item (instance of DATA), or of a given `path` inside nested catalogs,
@@ -1244,8 +1245,6 @@ export class RootCategory extends Category {
 
     id = ROOT_ID
     expiry = 0                                  // never evict from Registry
-
-    _schema_ = new DATA({fields: root_fields.object(), strict: true})
 
     get category() { return this }              // root category is a category for itself
 
