@@ -7,6 +7,7 @@ import {DATA, DATA_GENERIC, generic_type} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 import {CategoryAdminPage, ItemAdminPage} from "./pages.js";
 import {ItemRecord} from "./db/records.js";
+import {DataRequest} from "./db/data_request.js";
 
 export const ROOT_ID = 0
 export const SITE_CATEGORY_ID = 1
@@ -385,9 +386,10 @@ export class Item {
 
     async _load_record() {
         if (!this.has_id()) throw new Error(`trying to load item's data with missing or incomplete ID: ${this.id_str}`)
-        // let json = await this.registry.loadData(this.id)
         schemat.registry.session?.countLoaded(this.id)
-        let json = await schemat.db.select(this.id)
+
+        let req = new DataRequest(this, 'load', {id: this.id})
+        let json = await schemat.db.select(req)
         assert(typeof json === 'string', json)
         return new ItemRecord(this.id, json)
     }

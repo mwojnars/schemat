@@ -2,7 +2,6 @@ import path from 'path'
 import {DataAccessError, DatabaseError} from "../errors.js"
 import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
-import {Database} from "./db.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory} from "./index.js";
 import {Record, ItemRecord} from "./records.js";
@@ -181,7 +180,7 @@ export class Ring extends Item {
  **
  */
 
-export class ServerDB extends Database {
+export class ServerDB {
     /* Container for a number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
        ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
        If ItemNotFound/ReadOnly is caught, the next ring is tried.
@@ -270,9 +269,10 @@ export class ServerDB extends Database {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select(id) {
+    async select(req) {
         // returns a json string (`data`) or undefined
-        return this.forward_down(new DataRequest(this, 'select', {id}))
+        return this.forward_down(req.make_step(this, 'select'))
+        // return this.forward_down(new DataRequest(this, 'select', {id}))
     }
 
     async update(id, ...edits) {

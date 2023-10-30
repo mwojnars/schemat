@@ -231,12 +231,6 @@ export class Registry {
 
     // async findItem(path) { return this.site.findItem(path) }
 
-    // async loadData(id) {
-    //     /* Load item's full data record from server-side DB and return as an object: {id, data}. */
-    //     this.session?.countLoaded(id)
-    //     return this.db.select(id)
-    // }
-
     async *scan_all({limit} = {}) {
         /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
         // if (category) category.assertLoaded()

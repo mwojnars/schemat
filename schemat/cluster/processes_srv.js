@@ -93,7 +93,7 @@ export class AdminProcess extends BackendProcess {
 
         let db = this.db
         let sameID = (id === newid)
-        let req = new DataRequest(this, 'CLI_move')
+        let req = new DataRequest(this, 'CLI_move', {id})
 
         // let [cid, iid] = id
         // let [new_cid, new_iid] = newid
@@ -102,7 +102,8 @@ export class AdminProcess extends BackendProcess {
         // if ((cid === ROOT_ID || new_cid === ROOT_ID) && cid !== new_cid)
         //     throw new Error(`cannot change a category item (CID=${ROOT_ID}) to a non-category (CID=${cid || new_cid}) or back`)
 
-        if (!sameID && await db.select(newid)) throw new Error(`target ID already exists: [${newid}]`)
+        if (!sameID && await db.select(req.safe_step(null, 'check-not-exists', {id: newid})))
+            throw new Error(`target ID already exists: [${newid}]`)
 
         // identify the source ring
         let source = await db.find_ring({item: id})

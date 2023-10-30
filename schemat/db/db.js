@@ -4,17 +4,17 @@ import {assert, print} from "../utils.js"
 
 /**********************************************************************************************************************/
 
-export class Database {
-    /* Common interface for server-side and client-side database layers alike. */
-
-    async select(id)    { throw new NotImplemented() }
-    async *scan(cid)    { throw new NotImplemented() }
-}
+// export class Database {
+//     /* Common interface for server-side and client-side database layers alike. */
+//
+//     async select(id)    { throw new NotImplemented() }
+//     async *scan(cid)    { throw new NotImplemented() }
+// }
 
 
 /**********************************************************************************************************************/
 
-export class ClientDB extends Database {
+export class ClientDB {
     /* Client-side DB that communicates with the server via AJAX calls.
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
@@ -26,7 +26,6 @@ export class ClientDB extends Database {
     get _url() { return globalThis.registry.site.systemURL() }
 
     constructor(records = []) {
-        super()
         this.cache(...records)
     }
 
@@ -40,8 +39,9 @@ export class ClientDB extends Database {
         }
     }
 
-    async select(id) {
+    async select(req /*DataRequest*/) {
         /* Look up this._cache for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
+        let id = req.args.id
         if (!this._cache.has(id)) this.cache(await this._from_ajax(id))
         return this._cache.get(id)
     }
