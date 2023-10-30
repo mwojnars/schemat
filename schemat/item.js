@@ -214,6 +214,8 @@ export class Item {
 
     _record_        // ItemRecord that contains this item's data as loaded from DB during last load(); undefined in a newborn item
 
+    // _schema_
+
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
         object:  this,          // the main object itself
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB

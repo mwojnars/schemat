@@ -1271,7 +1271,7 @@ CATALOG.Table = class extends Component {
 
             let schema = trycatch(() => catalogSchema.subtype(key))
             if (key !== undefined && !schema) {                  // verify if `key` name is allowed by the parent catalog
-                alert(`The name "${key}" for a key is not permitted by the schema.`)
+                alert(`The name "${key}" for a key is not permitted.`)
                 key = undefined
             }
             let unnew = () => setEntries(prev => {
@@ -1383,7 +1383,7 @@ export class DATA extends CATALOG {
         return fields[key] || this.props.values
     }
     collect(assets) {
-        for (let type of this._all_subtypes())  //Object.values(this.props.fields))
+        for (let type of this._all_subtypes())
             type.collect(assets)
         this.constructor.Table.collect(assets)
     }
