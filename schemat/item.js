@@ -223,8 +223,6 @@ export class Item {
     // _db          // the origin database of this item; undefined in newborn items
     // _ring        // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
 
-    //meta          // system properties: current version, category's version, status etc.
-
     registry        // Registry that manages access to this item
 
     net             // Network adapter that connects this item to its network API as defined in this.constructor.api
@@ -360,18 +358,15 @@ export class Item {
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
 
-            // root category's class must be set here in a special way - this is particularly needed inside DB blocks,
-            // when instantiating temporary items from data records (so new Item() is called, not new RootCategory())
-            if (this.id === ROOT_ID) T.setClass(this, RootCategory)
+            // // root category's class must be set here in a special way - this is particularly needed inside DB blocks,
+            // // while instantiating temporary items from data records (so new Item() is called, not new RootCategory())
+            // if (this.id === ROOT_ID) T.setClass(this, RootCategory)
 
             // this._data_ is already loaded, so __category__ should be available IF defined (except non-categorized objects)
             let category = this.category
 
             if (category && !category.isLoaded && category !== this)
                 await category.load()
-
-            // if(category && !(category instanceof Category))
-            //     assert(false)
 
             await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
             this._initNetwork()
@@ -407,9 +402,7 @@ export class Item {
     }
 
     initPrototypes() {
-        /* Load all prototypes and check that they belong to the same category (exactly) as this item,
-           otherwise the schema of some fields may be incompatible or missing.
-         */
+        /* Load all Schemat prototypes of this object. */
         let prototypes = this._data_.getValues('prototype')
         // for (const p of prototypes)        // TODO: update the code below to verify .category instead of CIDs
             // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
