@@ -167,7 +167,8 @@ export class Request {
 
 const item_proxy_handler = {
     get(target, prop, receiver) {
-        if (prop in target) return Reflect.get(target, prop, receiver)
+        let value = Reflect.get(target, prop, receiver)
+        if (value !== undefined) return value
         if (target._data_) {
             let stream = target.props(prop, {silent: true})
             return stream.next().value
@@ -219,7 +220,7 @@ export class Item {
 
     _record_        // ItemRecord that contains this item's data as loaded from DB during last load(); undefined in a newborn item
 
-    // _schema_
+    _schema_        // schema of this item's data, as a DATA object; calculated as an imputed property
 
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
         object:  this,          // the main object itself
