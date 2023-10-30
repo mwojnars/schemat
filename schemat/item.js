@@ -349,7 +349,7 @@ export class Item {
     }
 
     async _load(record = null /*ItemRecord*/) {
-        /* Load this._data_ from `record` or DB. Set up the class and prototypes. Call init(). */
+        /* Load this._data_ from `record` or DB. Set up the class and prototypes. Call __init__(). */
         try {
             record = record || await this._load_record()
             assert(record instanceof ItemRecord)
@@ -376,7 +376,7 @@ export class Item {
             await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
             this._initNetwork()
 
-            let init = this.init()                              // optional custom initialization after the data is loaded
+            let init = this.__init__()                          // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init             // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
 
             this.setExpiry(category?.prop('cache_ttl'))
@@ -432,7 +432,7 @@ export class Item {
         this.action = this.net.createActionTriggers(this.constructor.actions)
     }
 
-    init() {}
+    __init__() {}
         /* Optional item-specific initialization after this._data_ is loaded.
            Subclasses may override this method as either sync or async.
          */
@@ -533,7 +533,7 @@ export class Item {
            `opts` are {default, schemaless}.
          */
         if (this._data_) {
-            // this._data_: a property can be read before the loading completes (!), e.g., for use inside init();
+            // this._data_: a property can be read before the loading completes (!), e.g., for use inside __init__();
             // a "shadow" item doesn't map to a DB record, so its props can't be read with this.props() below
             let value = this.props(path, opts).next().value
             if (value !== undefined) return value
@@ -973,7 +973,7 @@ export class Category extends Item {
     also acts as a manager that controls access to and creation of new items within category.
     */
 
-    init() { return this._initSchema() }
+    __init__() { return this._initSchema() }
 
     async _initSchema() {
         // initialize schema objects inside `fields`; in particular, TypeWrapper class requires

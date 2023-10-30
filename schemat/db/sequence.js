@@ -34,9 +34,9 @@ export class Sequence extends Item {    // Series?
         this.ring = ring
     }
 
-    // TODO: drop init() and perform lazy loading of blocks
+    // TODO: drop __init__() and perform lazy loading of blocks
     //  (block.load() must only use lower rings to search for the block, otherwise infinite recursion occurs)
-    async init() {
+    async __init__() {
         return this.blocks[0].load()
     }
 

@@ -76,7 +76,7 @@ File.createAPI({        // endpoints...
 
 
 export class FileLocal extends File {
-    async init()   { if (this.registry.onServer) this._mod_fs = await import('fs') }
+    async __init__()  { if (this.registry.onServer) this._mod_fs = await import('fs') }
 
     content(encoding) {
         let path = this.prop('path')
@@ -105,7 +105,7 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
-    async init() {
+    async __init__() {
         if (this.registry.onServer) {
             this._mod_fs = await import('fs')
             this._mod_path = await import('path')        // to avoid awaiting in handlePartial()

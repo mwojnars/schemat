@@ -44,9 +44,9 @@ export class Block extends Item {
         this.filename = filename
     }
 
-    async init() {
+    async __init__() {
         let storage_class
-        print(`Block.init() for ${this.filename}...`)
+        // print(`Block.__init__() for ${this.filename}...`)
 
         if      (this.format === 'data-yaml') storage_class = YamlDataStorage
         else if (this.format === 'index-jl')  storage_class = JsonIndexStorage

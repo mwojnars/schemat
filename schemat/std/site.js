@@ -54,7 +54,7 @@ export class Site extends Router {
     static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
-    async init()   { if (this.registry.onServer) this._vm = await import('vm') }
+    async __init__()   { if (this.registry.onServer) this._vm = await import('vm') }
 
     async findItem(path) {
         /* URL-call that requests and returns an item pointed to by `path`.
