@@ -64,7 +64,7 @@
         "@": TYPE
       info: Fields must have unique names.
       default:
-        __category__:
+        _category_:
           info: Category of this item. Determines item's behavior and the schema of its
             attributes. Each category should be an item of the Root Category
             (IID=0).
@@ -140,7 +140,7 @@
         slashes.
       "@": CATALOG
     "@": Catalog
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 2
@@ -155,7 +155,7 @@
       "@": CATALOG
     "@": Catalog
   class_path: /system/local/std/site.js:Router
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 3
@@ -178,7 +178,7 @@
       default: true
       "@": BOOLEAN
     "@": Catalog
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 4
@@ -191,7 +191,7 @@
     path:
       "@": STRING
     "@": Catalog
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 5
@@ -208,7 +208,7 @@
       default: true
       "@": BOOLEAN
     "@": Catalog
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 6
@@ -223,7 +223,7 @@
     path:
       "@": STRING
     "@": Catalog
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 7
@@ -231,7 +231,7 @@
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
   class_path: /system/local/std/apps.js:Application
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 8
@@ -246,7 +246,7 @@
       info: Optional category(ies) of items handled by this application.
       "@": ITEM
     "@": Catalog
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 9
@@ -264,7 +264,7 @@
       "@": CATALOG
     "@": Catalog
   cached_methods: spacesRev
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 10
@@ -289,7 +289,7 @@
         "@": TYPE
       "@": CATALOG
     "@": Catalog
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 11
@@ -297,13 +297,13 @@
   info: Base category for items that represent data rings (stackable database
     layers).
   allow_custom_fields: true
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 12
   name: /local
   path: .
-  __category__:
+  _category_:
     "@": 6
   "@": Data
 - __id: 13
@@ -320,6 +320,6 @@
     Site:
       "@": 1
     "@": Catalog
-  __category__:
+  _category_:
     "@": 5
   "@": Data

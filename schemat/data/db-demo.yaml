@@ -10,7 +10,7 @@
     title:
       "@": STRING
     "@": Catalog
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 1001
@@ -58,7 +58,7 @@
         this.utils = utils
         console.log('this.utils #1:', this.utils)
     }
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 1004
@@ -80,12 +80,12 @@
       - - null
         - "@": 1014
     "@": Catalog
-  __category__:
+  _category_:
     "@": 1
   "@": Data
 - __id: 1005
   content: export let print = console.log
-  __category__:
+  _category_:
     "@": 3
   "@": Data
 - __id: 1006
@@ -94,18 +94,18 @@
     export function check() { print('called widgets.js:check()') } 
     //let fs = await importLocal('fs')
     //print('fs:',fs)
-  __category__:
+  _category_:
     "@": 3
   "@": Data
 - __id: 1007
   name: favicon.ico
   path: ./assets/favicon.ico
-  __category__:
+  _category_:
     "@": 4
   "@": Data
 - __id: 1008
   name: /demo
-  __category__:
+  _category_:
     "@": 5
   "@": Data
 - __id: 1009
@@ -116,7 +116,7 @@
     paperity:
       "@": 1012
     "@": Catalog
-  __category__:
+  _category_:
     "@": 5
   "@": Data
 - __id: 1010
@@ -127,7 +127,7 @@
     widgets.js:
       "@": 1006
     "@": Catalog
-  __category__:
+  _category_:
     "@": 5
   "@": Data
 - __id: 1011
@@ -138,12 +138,12 @@
     favicon.ico:
       "@": 1007
     "@": Catalog
-  __category__:
+  _category_:
     "@": 5
   "@": Data
 - __id: 1013
   name: /$
-  __category__:
+  _category_:
     "@": 8
   "@": Data
 - __id: 1014
@@ -158,12 +158,12 @@
     sys.file:
       "@": 3
     "@": Catalog
-  __category__:
+  _category_:
     "@": 9
   "@": Data
 - __id: 1016
   title: Ala ma kota Sierściucha i psa Kłapoucha.
-  __category__:
+  _category_:
     "@": 1000
   "@": Data
 - __id: 1017
@@ -172,6 +172,6 @@
 - __id: 1018
   name: Post A
   text: Ala ma kota
-  __category__:
+  _category_:
     "@": 1001
   "@": Data

@@ -7,7 +7,7 @@
     filename:
       "@": STRING
     "@": Catalog
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 101
@@ -39,30 +39,30 @@
     readonly:
       "@": BOOLEAN
     "@": Catalog
-  __category__:
+  _category_:
     "@": 0
   "@": Data
 - __id: 102
   name: STRING
   class_path: /system/local/type.js:STRING
-  __category__:
+  _category_:
     "@": 10
   "@": Data
 - __id: 103
   name: NUMBER
   class_path: /system/local/type.js:NUMBER
-  __category__:
+  _category_:
     "@": 10
   "@": Data
 - __id: 104
   name: INTEGER
   class_path: /system/local/type.js:INTEGER
-  __category__:
+  _category_:
     "@": 10
   "@": Data
 - __id: 105
   name: URL
   class_path: /system/local/type.js:URL
-  __category__:
+  _category_:
     "@": 10
   "@": Data

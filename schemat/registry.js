@@ -407,7 +407,7 @@ export class ClientRegistry extends Registry {
 
     async insert(item) {
         let data = item._data_.__getstate__()
-        delete data['__category__']
+        delete data['_category_']
 
         let category = item.category
         assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items

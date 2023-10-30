@@ -246,7 +246,7 @@ export class Item {
     set id(id)      { assert(!this._id_ || this._id_ === id); this._id_ = id; if (this._record_) this._record_.id = id }
 
     get id_str()    { return `[${this.id}]` }
-    get category()  { return this.prop('__category__', {schemaless: true}) }
+    get category()  { return this.prop('_category_', {schemaless: true}) }
 
     get isLoaded()      { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
     get isCategory()    { return this.instanceof(this.registry.root) }
@@ -363,7 +363,7 @@ export class Item {
             // // while instantiating temporary items from data records (so new Item() is called, not new RootCategory())
             // if (this.id === ROOT_ID) T.setClass(this, RootCategory)
 
-            // this._data_ is already loaded, so __category__ should be available IF defined (except non-categorized objects)
+            // this._data_ is already loaded, so _category_ should be available IF defined (except non-categorized objects)
             let category = this.category
 
             if (category && !category.isLoaded && category !== this)
@@ -582,7 +582,7 @@ export class Item {
            or the objects (own, inherited & default) get merged into one (for "mergeable" types like CATALOG).
            Once computed, the list of entries is cached in this._dataAll for future use.
            If schemaless=true, a concatenated stream of all matching entries is returned without caching -
-           for system properties, like __category__, which are processed when the schema is not yet available.
+           for system properties, like _category_, which are processed when the schema is not yet available.
          */
         let entries = this._dataAll.get(prop)                               // array of entries, or undefined
         if (entries) yield* entries
@@ -992,7 +992,7 @@ export class Category extends Item {
         if (typeof data === 'number') [data, id] = [id, data]
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
-        data.set('__category__', this)
+        data.set('_category_', this)
         return Item.from_record(new ItemRecord(id, data))
     }
 
