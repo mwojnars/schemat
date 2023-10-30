@@ -568,14 +568,14 @@ export class Item {
            can be an array of subsequent property names, or positions (in a nested array or Catalog).
          */
         let [prop, tail] = Path.splitAll(path)
-        for (const entry of this.entries(prop, opts))       // find all the entries for a given `prop`
-            yield* Path.walk(entry.value, tail)             // walk down the `tail` path of nested objects
+        for (const entry of this._scan_entries(prop, opts))     // find all the entries for a given `prop`
+            yield* Path.walk(entry.value, tail)                 // walk down the `tail` path of nested objects
     }
 
     propsList(path)         { return [...this.props(path)] }
     propsReversed(path)     { return [...this.props(path)].reverse() }
 
-    *entries(prop, {schemaless= false} = {}) {
+    *_scan_entries(prop, {schemaless= false} = {}) {
         /* Generate a stream of valid entries for a given property: own entries followed by inherited ones;
            or the default entry (if own/inherited are missing), or an imputed entry.
            If the schema doesn't allow multiple entries for `prop`, the first one is yielded (for atomic types),
