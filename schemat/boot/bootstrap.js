@@ -33,7 +33,7 @@ async function create_categories(Category) {
         info        : "Top-level URL routing + global configuration of applications, servers, startup.",
         class_path  : '/system/local/std/site.js:Site',
         // _boot_class : 'schemat.item.Site',
-        // prototype   : cat.Router,
+        // extends     : cat.Router,
         fields      : C({
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             path_internal   : new PATH({info: "URL route of an internal application for default/admin web access to items. The application should handle all items."}),
@@ -81,7 +81,7 @@ async function create_categories(Category) {
     cat.FileLocal = await Category.new(4, {
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
-        prototype   : cat.File,
+        extends   : cat.File,
         class_path  : '/system/local/std/files.js:FileLocal',
         // _boot_class : 'schemat.item.FileLocal',
         fields      : C({
@@ -102,7 +102,7 @@ async function create_categories(Category) {
     cat.FolderLocal = await Category.new(6, {
         name        : "FolderLocal",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
-        prototype   : cat.Folder,
+        extends     : cat.Folder,
         class_path  : '/system/local/std/files.js:FolderLocal',
         // _boot_class : 'schemat.item.FolderLocal',
         fields      : C({path: new STRING()}),
@@ -152,7 +152,7 @@ async function create_categories(Category) {
 
     // cat.STRING = await Category.new(12, {
     //     name        : "STRING",
-    //     prototype   : cat.Type,
+    //     extends     : cat.Type,
     //     class_path  : '/system/local/type.js:STRING',
     // })
 

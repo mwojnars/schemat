@@ -406,7 +406,7 @@ export class Item {
 
     initPrototypes() {
         /* Load all Schemat prototypes of this object. */
-        let prototypes = this._data_.getValues('prototype')
+        let prototypes = this._data_.getValues('extends')
         // for (const p of prototypes)        // TODO: update the code below to verify .category instead of CIDs
             // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
         prototypes = prototypes.filter(p => !p.isLoaded)
@@ -635,7 +635,7 @@ export class Item {
         return [this, ...unique(concat(ancestors))]
     }
 
-    getPrototypes()     { return this._data_.getValues('prototype') }
+    getPrototypes()     { return this._data_.getValues('extends') }
 
 
     getName() { return this.prop('name') || '' }

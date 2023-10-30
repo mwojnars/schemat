@@ -91,7 +91,7 @@
         info:
           info: Description of the item.
           "@": TEXT
-        prototype:
+        extends:
           info: An item that serves as a prototype for this one, that is, provides default
             values for missing properties of this item. Multiple prototypes are
             allowed, the first one has priority over subsequent ones. Prototypes
@@ -184,7 +184,7 @@
 - __id: 4
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
-  prototype:
+  extends:
     "@": 3
   class_path: /system/local/std/files.js:FileLocal
   fields:
@@ -216,7 +216,7 @@
   info: |-
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
-  prototype:
+  extends:
     "@": 5
   class_path: /system/local/std/files.js:FolderLocal
   fields:
