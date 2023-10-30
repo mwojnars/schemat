@@ -251,7 +251,6 @@ export class Types {
         return x
     }
     static subset       = (obj, ...props) => Object.fromEntries(props.map(p => [p, obj[p]]))    // return a new object with a subset of properties
-    // static subset       = (obj, ...props) => { let sub = {}; props.forEach(p => {sub[p] = obj[p]}); return sub }
 
     static getPrototype = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj)
     static getClassName = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor.name

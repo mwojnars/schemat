@@ -550,18 +550,6 @@ export class Item {
         return opts.default
     }
 
-    // propObject(...paths) {
-    //     /* Read multiple prop(path) properties and combine the result into a single POJO object {path_k: value_k}.
-    //        The result may include a default or POJO value if defined for a particular field.
-    //      */
-    //     let subset = {}
-    //     for (let path of paths) {
-    //         let value = this.prop(path)
-    //         if (value !== undefined) subset[path] = value
-    //     }
-    //     return subset
-    // }
-
     *props(path, opts) {
         /* Generate a stream of all (sub)property values that match a given `path`. The path should start with
            a top-level property name, followed by subproperties separated by '/'. Alternatively, the path
