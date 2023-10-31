@@ -1,3 +1,5 @@
+'use strict'
+
 import { print, assert, T, escape_html, splitLast, concat, unique } from './utils.js'
 import { NotFound, ItemDataNotLoaded, ItemNotLoaded } from './errors.js'
 
@@ -230,7 +232,14 @@ export class Item {
 
     // static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
-    _id_            // database ID of this item; globally unique (for a persisted item) or undefined (for a newly created item)
+
+    // _id_: database ID of this item; globally unique (for a persisted item) or undefined (for a newly created item);
+    //       should never be changed for an existing item, hence the property is set to read-only after the first assignment
+    get _id_()   { return undefined }
+    set _id_(id) {
+        if (id === undefined) return
+        Object.defineProperty(this, '_id_', {value: id, writable: false})
+    }
 
     _data_          // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
@@ -1251,10 +1260,9 @@ Category.createAPI(
 
 export class RootCategory extends Category {
 
-    _id_ = ROOT_ID
-
     constructor(_fail_) {
         super(_fail_)
+        this._id_ = ROOT_ID
         this._meta_.expiry = 0                  // never evict from Registry
     }
 

@@ -285,7 +285,7 @@ export async function bootstrap(db) {
 
     // insert to DB and assign item IDs if missing
     for (let item of [Category, ...Object.values(cats), ...Object.values(items)])
-        item._id_ = await db.insert(item)
+        await db.insert(item)
 
     // await db.insert_many(Category, ...Object.values(cats), ...Object.values(items))
 }

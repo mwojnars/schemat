@@ -144,7 +144,7 @@ export class Ring extends Item {
 
         // 1st phase: insert stubs
         for (let item of items)
-            item.id = await this._insert(item._id_, empty_data)
+            item._id_ = await this._insert(item._id_, empty_data)
 
         // 2nd phase: update items with actual data
         for (let item of items) {
@@ -289,13 +289,18 @@ export class ServerDB {
 
     async insert(item) {
         /* Find the top-most ring where the item's ID is writable and insert there. If a new ID is assigned,
-           it is written to item.id.
+           it is written to item._id_.
          */
-        let id = item.id
+        let id = item._id_
         let req = new DataRequest(this, 'insert', {id, data: item.dumpData()})
 
         for (const ring of this.reversed)
-            if (ring.writable(id)) return item.id = await ring.handle(req)
+            if (ring.writable(id)) {
+                let id = await ring.handle(req)
+                if (item._id_ !== undefined) assert(item._id_ === id, `item's ID changed during insert`)
+                else item._id_ = id
+                return id
+            }
 
         return req.error_access(id === undefined ?
             "cannot insert the item, the ring(s) are read-only" :
