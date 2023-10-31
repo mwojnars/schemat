@@ -298,9 +298,6 @@ export class ServerDB {
             if (ring.writable(id)) {
                 let id = await ring.handle(req)
                 return item._meta_.set_id(id)
-                // if (item._id_ !== undefined) assert(item._id_ === id, `item's ID changed during insert`)
-                // else item._id_ = id
-                // return id
             }
 
         return req.error_access(id === undefined ?

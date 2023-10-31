@@ -257,6 +257,7 @@ export class Item {
         calls_cache: new Map(), // cache of method calls, {method: value}, of no-arg calls of methods registered thru setCaching(); values can be Promises!
 
         set_id(id) {
+            /* Like obj._id_ = id, but allows re-setting with the same ID value. */
             let prev = this.target._id_
             if (prev !== undefined) assert(prev === id, `ID is read-only and can't be changed from ${prev} to ${id}`)
             else this.target._id_ = id
