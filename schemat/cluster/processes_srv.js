@@ -178,9 +178,10 @@ export class AdminProcess extends BackendProcess {
                 let item = await Item.from_record(new ItemRecord(id, data))
 
                 print(`reinserting item [${id}]...`)
-                item.id = await ring.handle(req.safe_step(null, 'insert', {data: item.dumpData()}))
+                let new_id = await ring.handle(req.safe_step(null, 'insert', {data: item.dumpData()}))
+                item = await Item.from_record(new ItemRecord(new_id, data))
 
-                print(`...new id=[${item._id_}]`)
+                print(`...new id=[${new_id}]`)
                 await this._update_references(id, item)
                 await ring.handle(req.safe_step(null, 'delete', {id}))
                 // await ring.flush()

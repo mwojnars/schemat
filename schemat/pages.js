@@ -340,7 +340,7 @@ export class CategoryAdminPage extends ItemAdminPage {
             let name = item.getName() || item.getStamp({html:false})
             let url  = item.url()
             return TR(
-                TD(`${item.id} ${NBSP}`),
+                TD(`${item._id_} ${NBSP}`),
                 TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
                 TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
             )

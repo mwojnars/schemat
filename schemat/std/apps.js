@@ -63,7 +63,7 @@ export class AppBasic extends Application {
 
     urlPath(item) {
         assert(item.has_id())
-        return `${item.id}`
+        return `${item._id_}`
     }
     findRoute(request) {
         /* Extract item ID from a raw URL path. */
@@ -88,12 +88,12 @@ export class AppSpaces extends Application {
 
     urlPath(item) {
         let spaces_rev = this.spacesRev()
-        let space = spaces_rev.get(item.category.id)
-        if (space) return `${space}:${item.id}`
+        let space = spaces_rev.get(item.category._id_)
+        if (space) return `${space}:${item._id_}`
     }
     spacesRev() {
         let catalog = this.prop('spaces')
-        return new Map(catalog.map(({key, value:item}) => [item.id, key]))
+        return new Map(catalog.map(({key, value:item}) => [item._id_, key]))
     }
 
     findRoute(request) {

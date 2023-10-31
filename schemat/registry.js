@@ -202,15 +202,15 @@ export class Registry {
 
     register(item) {
         /* Add `item` to the cache. This may override an existing item instance with the same ID. */
-        assert(item.id !== undefined, `cannot register an item without an ID: ${item}`)
-        this._cache.set(item.id, item)
+        assert(item._id_ !== undefined, `cannot register an item without an ID: ${item}`)
+        this._cache.set(item._id_, item)
         return item
     }
 
     unregister(item) {
         /* Remove an item with a given ID from the cache, if only this exact item is still there. */
-        if (this._cache.get(item.id) === item)
-            this._cache.delete(item.id)
+        if (this._cache.get(item._id_) === item)
+            this._cache.delete(item._id_)
     }
 
     getItem(id, {version = null} = {}) {
@@ -246,7 +246,7 @@ export class Registry {
     }
 
     async *scan_category(category) {
-        let target_cid = category?.id
+        let target_cid = category?._id_
         let start = category ? [target_cid] : null
         let stop = category ? [target_cid + 1] : null
         let records = this.db.scan_index('idx_category_item', {start, stop})        // stream of plain Records
@@ -368,7 +368,7 @@ export class Session {
         let {app, item} = this
         let session = {app, item}                               // truncated representation of the current session
 
-        return {site_id: site.id, session: JSONx.encode(session), items: records}
+        return {site_id: site._id_, session: JSONx.encode(session), items: records}
     }
 
     static load(sessionData) {

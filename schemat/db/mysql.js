@@ -107,9 +107,9 @@ export class MySQL extends DataBlock {
             let category = await this._categories[table_id].refresh()
 
             for (let row of rows) {
-                let iid = this.iidFromSQL(table_id, row.id)
-                if (iid === undefined || iid <= 0) continue
-                let item = {id: iid, data: this._convert(row, category)}
+                let id = this.iidFromSQL(table_id, row.id)
+                if (id === undefined || id <= 0) continue
+                let item = {id, data: this._convert(row, category)}
                 items.push(item)
             }
         }
