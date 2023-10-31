@@ -297,11 +297,6 @@ export class Item {
 
     assertLoaded()  { if (!this.isLoaded) throw new ItemNotLoaded(this) }
 
-    static orderAscID(item1, item2) {
-        /* Ordering function that can be passed to array.sort() to sort items, stubs, or {id, ...} records by ascending ID. */
-        return item1._id_ - item2._id_
-    }
-
     constructor(_fail_ = true) {
         /* For internal use! Always call Item.create() instead of `new Item()`. */
         if(_fail_) throw new Error('item should be instantiated through Item.create() instead of new Item()')

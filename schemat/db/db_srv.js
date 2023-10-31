@@ -353,8 +353,9 @@ export class ServerDB {
 
     async *scan_all() {
         /* Scan each ring and merge the sorted streams of entries. */
+        // TODO: remove duplicates while merging
         let streams = this.rings.map(r => r.scan_all())
-        yield* merge(Item.orderAscID, ...streams)
+        yield* merge(compare_by_id, ...streams)
     }
 
     async *scan_index(name, opts) {
@@ -394,3 +395,7 @@ export class ServerDB {
     }
 }
 
+function compare_by_id(obj1, obj2) {
+    /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
+    return obj1._id_ - obj2._id_
+}
