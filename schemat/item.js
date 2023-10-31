@@ -164,19 +164,36 @@ export class Request {
  **
  */
 
+// these props can never be found inside item's schema, and should always be accessed as regular object attributes
+const _proxy_reserved_props = ['_id_', '_data_', '_record_']
 
 const item_proxy_handler = {
     get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
         if (value !== undefined) return value
+
+        // there are many queries for 'then' because after a promise resolves, its result is checked for .then to see if it's another promise
+        if (prop === 'then') return undefined
+
+        // if (prop.length >= 2 && prop[0] === '_' && prop[prop.length - 1] === '_')    // _***_ props are reserved for internal use
+        if (_proxy_reserved_props.includes(prop))
+            return undefined
+
+        // console.log('get', prop)
+
         if (target._data_) {
-            let stream = target.props(prop, {silent: true})
-            return stream.next().value
+            let stream = target._scan_entries(prop, {silent: true})
+            let entry = stream.next().value
+            if (entry) return entry.value
         }
         // return target.prop(prop, {schemaless: true})
         // let data = target._data_
         // if (data?.has(prop)) return data.get(prop)
-    }
+    },
+    // set(target, prop, value, receiver) {
+    //     // console.log('set', prop)
+    //     return Reflect.set(target, prop, value, receiver)
+    // },
 }
 
 
@@ -595,6 +612,10 @@ export class Item {
                 entries = type.combineStreams(streams(), this)            // `default` or `impute` property of the schema may be applied here
 
             this._meta_.props_cache.set(prop, entries)
+            if(entries.length === 1) {
+                // console.log('prop:', prop, entries)
+                this[prop] = entries[0].value
+            }
         }
         yield* entries
     }
