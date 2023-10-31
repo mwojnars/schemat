@@ -136,7 +136,7 @@ export class AdminProcess extends BackendProcess {
                 ref._data_.transform({value: item => (item._id_ !== undefined && item._id_ === id) ? newItem : item})
                 let new_json = JSONx.stringify(ref._data_)
                 if (new_json !== prev_json) {
-                    print(`move: updating reference(s) in item ${ref.id_str}`)
+                    print(`move: updating reference(s) in ID=${ref._id_}`)
                     await db.update(ref)
                 }
             }

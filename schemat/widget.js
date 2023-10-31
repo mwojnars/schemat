@@ -236,7 +236,7 @@ export class Page {
          */
         let {item} = props
         item.assertLoaded()
-        if (!targetElement) print(`SSR render() of ${item.id_str}`)
+        if (!targetElement) print(`SSR render() of ID=${item._id_}`)
         let view = e(this.view.bind(item), props)
         return targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)

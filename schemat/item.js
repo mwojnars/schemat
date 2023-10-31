@@ -274,7 +274,6 @@ export class Item {
     static api        = null    // API instance that defines this item's endpoints and protocols
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
 
-    get id_str()    { return `[${this._id_}]` }
     get category()  { return this.prop('_category_', {schemaless: true}) }
 
     get isLoaded()      { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
@@ -398,7 +397,7 @@ export class Item {
     }
 
     async _load_record() {
-        if (!this.has_id()) throw new Error(`trying to load item's data with missing or incomplete ID: ${this.id_str}`)
+        if (!this.has_id()) throw new Error(`trying to load data when missing ID: ${this._id_}`)
         schemat.registry.session?.countLoaded(this._id_)
 
         let req = new DataRequest(this, 'load', {id: this._id_})
@@ -1039,8 +1038,8 @@ export class Category extends Item {
 
         if (!site) {
             // when booting up, a couple of core items must be created before registry.site becomes available
-            if (!classPath) throw new Error(`missing 'class_path' property for a core category: ${this.id_str}`)
-            if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a core category: ${this.id_str}`)
+            if (!classPath) throw new Error(`missing 'class_path' property for a core category, ID=${this._id_}`)
+            if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a core category, ID=${this._id_}`)
             return {Class: await this.getDefaultClass(classPath, name)}
         }
 
@@ -1053,7 +1052,7 @@ export class Category extends Item {
             )
         }
         catch (ex) {
-            print(`ERROR when parsing dynamic code for category ${this.id_str}, will use a default class instead. Cause:\n`, ex)
+            print(`ERROR when parsing dynamic code for category ID=${this._id_}, will use a default class instead. Cause:\n`, ex)
             return {Class: await this.getDefaultClass(classPath, name)}
         }
     }

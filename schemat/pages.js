@@ -180,7 +180,7 @@ export class ReactPage extends RenderedPage {
 
         render_server() {
             this.assertLoaded()
-            print(`SSR render('${this.context.request.endpoint}') of ${this.id_str}`)
+            print(`SSR render('${this.context.request.endpoint}') of ID=${this._id_}`)
             let view = e(this.component)
             return ReactDOM.renderToString(view)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
