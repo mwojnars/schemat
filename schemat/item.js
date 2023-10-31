@@ -280,7 +280,7 @@ export class Item {
         /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly later on. */
         assert(this.has_id())
         assert(this.isLoaded)
-        return this._record_ || (this._record_ = new ItemRecord(this.id, this._data_))
+        return this._record_ || (this._record_ = new ItemRecord(this._id_, this._data_))
     }
 
     assertData()    { if (!this._data_) throw new ItemDataNotLoaded(this) }   // check that data is loaded, but maybe not fully initialized yet
@@ -1251,7 +1251,7 @@ Category.createAPI(
 
 export class RootCategory extends Category {
 
-    id = ROOT_ID
+    _id_ = ROOT_ID
     expiry = 0                                  // never evict from Registry
 
     get category() { return this }              // root category is a category for itself

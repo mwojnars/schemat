@@ -180,7 +180,7 @@ export class AdminProcess extends BackendProcess {
                 print(`reinserting item [${id}]...`)
                 item.id = await ring.handle(req.safe_step(null, 'insert', {data: item.dumpData()}))
 
-                print(`...new id=[${item.id}]`)
+                print(`...new id=[${item._id_}]`)
                 await this._update_references(id, item)
                 await ring.handle(req.safe_step(null, 'delete', {id}))
                 // await ring.flush()
@@ -193,7 +193,7 @@ export class AdminProcess extends BackendProcess {
         let db = this.db
 
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with `item` if so
-        let transform = (it => it instanceof Item && it.id === old_id ? item : it)
+        let transform = (it => it._id_ === old_id ? item : it)
 
         for (let ring of db.rings) {
             for await (const record of ring.scan_all()) {        // search for references to `old_id` in a referrer item, `ref`
@@ -203,7 +203,7 @@ export class AdminProcess extends BackendProcess {
                 if (data === record.data) continue          // no changes? don't update the `ref` item
 
                 if (ring.readonly)
-                    print(`...WARNING: cannot update a reference [${old_id}] > [${item.id}] in item [${id}], the ring is read-only`)
+                    print(`...WARNING: cannot update a reference [${old_id}] > [${item._id_}] in item [${id}], the ring is read-only`)
                 else {
                     print(`...updating reference(s) in item [${id}]`)
                     await db.update(id, new EditData(data))

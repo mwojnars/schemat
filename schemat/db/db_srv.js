@@ -132,7 +132,7 @@ export class Ring extends Item {
     async _update(item) {
         /* For internal use when a ring needs to be accessed directly without a database. */
         let edits = [new EditData(item.dumpData())]
-        return this.handle(new DataRequest(this, 'update', {id: item.id, edits}))
+        return this.handle(new DataRequest(this, 'update', {id: item._id_, edits}))
     }
 
     async insert_many(...items) {
@@ -144,7 +144,7 @@ export class Ring extends Item {
 
         // 1st phase: insert stubs
         for (let item of items)
-            item.id = await this._insert(item.id, empty_data)
+            item.id = await this._insert(item._id_, empty_data)
 
         // 2nd phase: update items with actual data
         for (let item of items) {
@@ -218,7 +218,7 @@ export class ServerDB {
                 await ring._init_indexes(req.clone())   // TODO: temporary
         }
         for (let ring of this.rings.slice(2))
-            if (cluster_ring && !ring.id) {
+            if (cluster_ring && !ring._id_) {
                 // if `ring` is newly created, insert it as an item to the `cluster_ring`, together with its sequences and blocks
                 let sequences = [...ring.indexes.values(), ring.data_sequence]
                 let blocks = sequences.map(seq => seq.blocks[0])
@@ -284,7 +284,7 @@ export class ServerDB {
 
     async update_full(item) {
         /* Replace all data inside the item's record in DB with item.data. */
-        return this.update(item.id, new EditData(item.dumpData()))
+        return this.update(item._id_, new EditData(item.dumpData()))
     }
 
     async insert(item) {
@@ -344,7 +344,7 @@ export class ServerDB {
         /* Find and delete the top-most occurrence of the item or ID.
            Return true on success, or false if the ID was not found (no modifications are done in such case).
          */
-        let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.id
+        let id = T.isNumber(item_or_id) ? item_or_id : item_or_id._id_
         return this.forward_down(new DataRequest(this, 'delete', {id}))
     }
 
