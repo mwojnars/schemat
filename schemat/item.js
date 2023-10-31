@@ -279,18 +279,18 @@ export class Item {
     get id()        { return this._id_ }
     set id(id)      { assert(!this._id_ || this._id_ === id); this._id_ = id; assert(!this._record_ || this._record_.id === id) }
 
-    get id_str()    { return `[${this.id}]` }
+    get id_str()    { return `[${this._id_}]` }
     get category()  { return this.prop('_category_', {schemaless: true}) }
 
     get isLoaded()      { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
     get isCategory()    { return this.instanceof(this.registry.root) }
 
     is(item) {
-        return this.id !== undefined && this.id === item.id
+        return this._id_ !== undefined && this._id_ === item._id_
     }
 
     has_id(id = null) {
-        return id !== null ? id === this.id : this.id !== undefined
+        return id !== null ? id === this._id_ : this._id_ !== undefined
     }
 
     get record() {
@@ -308,7 +308,7 @@ export class Item {
 
     static orderAscID(item1, item2) {
         /* Ordering function that can be passed to array.sort() to sort items, stubs, or {id, ...} records by ascending ID. */
-        return item1.id - item2.id
+        return item1._id_ - item2._id_
     }
 
     constructor(_fail_ = true) {
@@ -367,7 +367,7 @@ export class Item {
 
     async refresh() {
         /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
-        return this.registry.getItem(this.id).load()
+        return this.registry.getItem(this._id_).load()
     }
 
     async load(record = null /*ItemRecord*/) {
@@ -395,7 +395,7 @@ export class Item {
 
             // // root category's class must be set here in a special way - this is particularly needed inside DB blocks,
             // // while instantiating temporary items from data records (so new Item() is called, not new RootCategory())
-            // if (this.id === ROOT_ID) T.setClass(this, RootCategory)
+            // if (this._id_ === ROOT_ID) T.setClass(this, RootCategory)
 
             // this._data_ is already loaded, so _category_ should be available IF defined (except non-categorized objects)
             let category = this.category
@@ -420,12 +420,12 @@ export class Item {
 
     async _load_record() {
         if (!this.has_id()) throw new Error(`trying to load item's data with missing or incomplete ID: ${this.id_str}`)
-        schemat.registry.session?.countLoaded(this.id)
+        schemat.registry.session?.countLoaded(this._id_)
 
-        let req = new DataRequest(this, 'load', {id: this.id})
+        let req = new DataRequest(this, 'load', {id: this._id_})
         let json = await schemat.db.select(req)
         assert(typeof json === 'string', json)
-        return new ItemRecord(this.id, json)
+        return new ItemRecord(this._id_, json)
     }
 
     setExpiry(ttl) {
@@ -479,7 +479,7 @@ export class Item {
         /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
            True if parent==this. All comparisons by item ID.
          */
-        if (this.has_id(parent.id)) return true
+        if (this.has_id(parent._id_)) return true
         for (const proto of this.getPrototypes())
             if (proto.inherits(parent)) return true
         return false
@@ -692,7 +692,7 @@ export class Item {
             let url = this.category?.url()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
-        let stamp = cat ? `${cat}:${this.id}` : `${this.id}`
+        let stamp = cat ? `${cat}:${this._id_}` : `${this._id_}`
         if (!brackets) return stamp
         return `[${stamp}]`
     }
@@ -1101,7 +1101,7 @@ export class Category extends Item {
         /* Combine all code snippets of this category, including inherited ones, into a module source code.
            Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
-        let name = this.prop('class_name') || `Class_${this.id}`
+        let name = this.prop('class_name') || `Class_${this._id_}`
         let base = this._codeBaseClass()
         let init = this._codeInit()
         let code = this._codeClass(name)
@@ -1154,7 +1154,7 @@ export class Category extends Item {
     // _codeHandlers() {
     //     let entries = this.prop('handlers')
     //     if (!entries?.length) return
-    //     let className = (name) => `Handler_${this.id}_${name}`
+    //     let className = (name) => `Handler_${this._id_}_${name}`
     //     let handlers = entries.map(({key: name, value: code}) =>
     //         `  ${name}: new class ${className(name)} extends Item.Handler {\n${indent(code, '    ')}\n  }`
     //     )
