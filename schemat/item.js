@@ -233,8 +233,8 @@ export class Item {
     // static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
 
-    // _id_: database ID of this item; globally unique (for a persisted item) or undefined (for a newly created item);
-    //       should never be changed for an existing item, hence the property is set to read-only after the first assignment
+    // _id_ = database ID of the object, globally unique; undefined for a newly created item; should never be changed
+    //        for an existing item, that's why the property is set to read-only after first assignment
     get _id_()   { return undefined }
     set _id_(id) {
         if (id === undefined) return
@@ -275,9 +275,6 @@ export class Item {
 
     static api        = null    // API instance that defines this item's endpoints and protocols
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
-
-    get id()        { return this._id_ }
-    set id(id)      { assert(!this._id_ || this._id_ === id); this._id_ = id; assert(!this._record_ || this._record_.id === id) }
 
     get id_str()    { return `[${this._id_}]` }
     get category()  { return this.prop('_category_', {schemaless: true}) }
