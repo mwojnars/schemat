@@ -260,7 +260,7 @@ export class Item {
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
 
     get id()        { return this._id_ }
-    set id(id)      { assert(!this._id_ || this._id_ === id); this._id_ = id; if (this._record_) this._record_.id = id }
+    set id(id)      { assert(!this._id_ || this._id_ === id); this._id_ = id; assert(!this._record_ || this._record_.id === id) }
 
     get id_str()    { return `[${this.id}]` }
     get category()  { return this.prop('_category_', {schemaless: true}) }
@@ -371,7 +371,7 @@ export class Item {
             assert(record instanceof ItemRecord)
 
             this._data_ = record.data
-            this._record_ = record
+            if (record.id !== undefined) this._record_ = record     // don't keep a record without ID, it's useless
 
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
@@ -1252,7 +1252,11 @@ Category.createAPI(
 export class RootCategory extends Category {
 
     _id_ = ROOT_ID
-    expiry = 0                                  // never evict from Registry
+
+    constructor(_fail_) {
+        super(_fail_)
+        this._meta_.expiry = 0                  // never evict from Registry
+    }
 
     get category() { return this }              // root category is a category for itself
 
