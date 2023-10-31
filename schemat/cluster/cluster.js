@@ -56,7 +56,7 @@ export class Cluster extends Item {
 
         // // load the cluster's full and ultimate data from the bootstrap DB;
         // // this may override the db property with the ultimate DB object
-        // this.id = CLUSTER_IID
+        // this._id_ = CLUSTER_ID
         // this.load()
         // registry.setDB(this.prop('db'))
         // await schemat.registry.boot()   // reload `root` and `site`

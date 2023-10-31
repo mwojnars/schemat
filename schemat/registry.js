@@ -194,7 +194,7 @@ export class Registry {
     //     let scan = this.scan(Site, {limit: 1})
     //     let ret  = await scan.next()
     //     if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
-    //     return ret.value.id
+    //     return ret.value._id_
     // }
 
 
@@ -233,8 +233,6 @@ export class Registry {
 
     async *scan_all({limit} = {}) {
         /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
-        // if (category) category.assertLoaded()
-        // let cid = category?.id
         let count = 0
         let records = this.db.scan_all()
 

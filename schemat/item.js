@@ -297,9 +297,6 @@ export class Item {
 
     assertLoaded()  { if (!this.isLoaded) throw new ItemNotLoaded(this) }
 
-    // get newborn()   { return this.iid === null }
-    // has_data()      { return !!this._data_ }
-
     static orderAscID(item1, item2) {
         /* Ordering function that can be passed to array.sort() to sort items, stubs, or {id, ...} records by ascending ID. */
         return item1._id_ - item2._id_

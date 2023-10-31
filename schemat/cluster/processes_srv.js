@@ -36,9 +36,9 @@ export class BackendProcess extends SchematProcess {
 
 export class WorkerProcess extends BackendProcess {
 
-    // async startCluster(boot_db, cluster_iid) {
+    // async startCluster(boot_db, cluster_id) {
     //     let cluster = new Cluster()
-    //     cluster.id = cluster_iid
+    //     cluster._id_ = cluster_id
     //     cluster.db = boot_db
     //     await cluster.startup()
     //     return cluster

@@ -323,12 +323,12 @@ export class ServerDB {
     //
     //     // 1st phase: insert stubs, each stub is inserted to the highest possible ring
     //     for (let item of items) {
-    //         let id = item.id
+    //         let id = item._id_
     //         let data = ''  // id > 0 ? empty_data : item.dumpData()
     //         let req2 = req.safe_step(null, 'insert', {id, data})     // insert stubs with empty data
     //         let ring = rings.find(r => r.writable(id))
     //         if (!ring) return req2.error_access(`cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
-    //         item.id = await ring.handle(req2)
+    //         item._meta_.set_id(await ring.handle(req2))
     //     }
     //
     //     // 2nd phase: update items with actual data
@@ -337,7 +337,7 @@ export class ServerDB {
     //         if (!item._data_) {
     //             let entries = Object.entries(item).filter(([k]) => !k.startsWith('_'))
     //             item._data_ = new Data(entries)
-    //             print(`imputed data for item [${item.id}]:`, entries)
+    //             print(`imputed data for item [${item._id_}]:`, entries)
     //         }
     //         await this.update_full(item)
     //     }
