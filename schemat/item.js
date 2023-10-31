@@ -279,8 +279,8 @@ export class Item {
 
     get isLoaded()      { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
 
-    is(item)            { return this._id_ !== undefined && this._id_ === item._id_ }
-    has_id(id = null)   { return id !== null ? id === this._id_ : this._id_ !== undefined }
+    is(obj)             { return this._id_ !== undefined && this._id_ === obj._id_ }    // true if `this` and `obj` are equivalent by ID; they still MAY be different instances AND contain different data (!)
+    has_id()            { return this._id_ !== undefined }
 
     get record() {
         /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly. */
@@ -459,7 +459,7 @@ export class Item {
         /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
            True if parent==this. All comparisons by item ID.
          */
-        if (this.has_id(parent._id_)) return true
+        if (this.is(parent)) return true
         for (const proto of this.getPrototypes())
             if (proto.inherits(parent)) return true
         return false
