@@ -166,7 +166,7 @@ export class Request {
  */
 
 // these props can never be found inside item's schema, and should always be accessed as regular object attributes
-const _proxy_reserved_props = ['_id_', '_data_', '_record_']
+const _proxy_reserved_props = ['_id_', '_meta_', '_data_', '_record_']
 
 const item_proxy_handler = {
     get(target, prop, receiver) {
@@ -278,15 +278,9 @@ export class Item {
     get category()  { return this.prop('_category_', {schemaless: true}) }
 
     get isLoaded()      { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
-    get isCategory()    { return this.instanceof(this.registry.root) }
 
-    is(item) {
-        return this._id_ !== undefined && this._id_ === item._id_
-    }
-
-    has_id(id = null) {
-        return id !== null ? id === this._id_ : this._id_ !== undefined
-    }
+    is(item)            { return this._id_ !== undefined && this._id_ === item._id_ }
+    has_id(id = null)   { return id !== null ? id === this._id_ : this._id_ !== undefined }
 
     get record() {
         /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly later on. */
