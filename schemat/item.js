@@ -1,12 +1,11 @@
 'use strict'
 
 import { print, assert, T, escape_html, splitLast, concat, unique } from './utils.js'
-import { NotFound, ItemDataNotLoaded, ItemNotLoaded } from './errors.js'
+import { NotFound, ItemNotLoaded } from './errors.js'
 
 import { JSONx } from './serialize.js'
 import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_type} from "./type.js"
-import {root_fields} from './boot/root.js'
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 import {CategoryAdminPage, ItemAdminPage} from "./pages.js";
 import {ItemRecord} from "./db/records.js";
@@ -241,8 +240,7 @@ export class Item {
         Object.defineProperty(this, '_id_', {value: id, writable: false})
     }
 
-    _data_          // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
-                    // or accessed after await load(), or through item.get()
+    _data_          // data fields of this item, as a Data object; created during .load()
 
     _record_        // ItemRecord that contains this item's data as loaded from DB during last load(); undefined in a newborn item
 
@@ -297,7 +295,6 @@ export class Item {
         return this._record_ || (this._record_ = new ItemRecord(this._id_, this._data_))
     }
 
-    assertData()    { if (!this._data_) throw new ItemDataNotLoaded(this) }   // check that data is loaded, but maybe not fully initialized yet
     assertLoaded()  { if (!this.isLoaded) throw new ItemNotLoaded(this) }
 
     // get newborn()   { return this.iid === null }
@@ -638,7 +635,7 @@ export class Item {
         /* Generate a stream of own entries (from this._data_) for a given property(s). No inherited/imputed entries.
            `prop` can be a string, or an array of strings, or undefined. The entries preserve their original order.
          */
-        this.assertData()
+        if (!this._data_) throw new ItemNotLoaded(this)
         yield* this._data_.readEntries(prop)
     }
 

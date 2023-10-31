@@ -60,9 +60,6 @@ export class NotImplemented extends BaseError {
 export class DataError extends BaseError {}
 export class ValueError extends DataError {}
 
-export class ItemDataNotLoaded extends BaseError {
-    constructor(item) { super(`item.data is not loaded yet, call 'await item.load()' first: ${item}`) }
-}
 export class ItemNotLoaded extends BaseError {
     constructor(item) { super(`item is not loaded yet, call 'await item.load()' first: ${item}`) }
 }
