@@ -144,7 +144,7 @@ export class Ring extends Item {
 
         // 1st phase: insert stubs
         for (let item of items)
-            item._id_ = await this._insert(item._id_, empty_data)
+            item._meta_.set_id(await this._insert(item._id_, empty_data))
 
         // 2nd phase: update items with actual data
         for (let item of items) {
@@ -297,9 +297,10 @@ export class ServerDB {
         for (const ring of this.reversed)
             if (ring.writable(id)) {
                 let id = await ring.handle(req)
-                if (item._id_ !== undefined) assert(item._id_ === id, `item's ID changed during insert`)
-                else item._id_ = id
-                return id
+                return item._meta_.set_id(id)
+                // if (item._id_ !== undefined) assert(item._id_ === id, `item's ID changed during insert`)
+                // else item._id_ = id
+                // return id
             }
 
         return req.error_access(id === undefined ?

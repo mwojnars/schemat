@@ -255,6 +255,13 @@ export class Item {
         expiry:  undefined,     // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
         props_cache: new Map(), // cache of computed properties, {prop: array_of_entries}; each array consists of own data + inherited, or just schema default / imputed
         calls_cache: new Map(), // cache of method calls, {method: value}, of no-arg calls of methods registered thru setCaching(); values can be Promises!
+
+        set_id(id) {
+            let prev = this.target._id_
+            if (prev !== undefined) assert(prev === id, `ID is read-only and can't be changed from ${prev} to ${id}`)
+            else this.target._id_ = id
+            return id
+        },
     }
 
     // _db          // the origin database of this item; undefined in newborn items
