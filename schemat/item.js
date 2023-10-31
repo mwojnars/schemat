@@ -280,7 +280,6 @@ export class Item {
     get isLoaded()      { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
 
     has_id()            { return this._id_ !== undefined }
-    // is(obj)          { return this._id_ !== undefined && this._id_ === obj._id_ }    // true if `this` and `obj` are equivalent by ID; they still MAY be different instances AND contain different data (!)
 
     get record() {
         /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly. */
@@ -446,7 +445,7 @@ export class Item {
         /* Optional item-specific initialization after this._data_ is loaded.
            Subclasses may override this method as either sync or async.
          */
-    cleanup() {}
+    __done__() {}
         /* Custom clean up to be executed after the item was evicted from the Registry cache. Can be async. */
 
     instanceof(category) {
