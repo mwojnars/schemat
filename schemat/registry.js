@@ -159,7 +159,7 @@ export class Registry {
         if (this.db)
             try {
                 await root.load()
-                assert(root.isLoaded)
+                root.assertLoaded()
                 // print("root category loaded from DB")
             } catch (ex) {
                 if (!(ex instanceof ItemNotFound)) throw ex

@@ -283,9 +283,9 @@ export class Item {
     has_id(id = null)   { return id !== null ? id === this._id_ : this._id_ !== undefined }
 
     get record() {
-        /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly later on. */
+        /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly. */
         assert(this.has_id())
-        assert(this.isLoaded)
+        this.assertLoaded()
         return this._record_ || (this._record_ = new ItemRecord(this._id_, this._data_))
     }
 
