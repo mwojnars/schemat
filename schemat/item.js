@@ -201,9 +201,8 @@ const item_proxy_handler = {
 export class Item {
 
     /*
-    An item is an object that lives in a database, is potentially accessible by a URL and maps to
-    a Javascript object (can be loaded, used, modified, saved in JS code).
-    All items of a cluster form an "item space".
+    An application object that is persisted in a database, has a unique ID, is potentially accessible by a URL,
+    and can communicate with its own instances on other machines.
 
     >> meta fields are accessible through this.get('#FIELD') or '.FIELD' ?
     >> item.getName() uses a predefined data field (name/title...) but falls back to '#name' when the former is missing
@@ -232,20 +231,22 @@ export class Item {
     // static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
 
-    // _id_:
-    //    database ID of the object, globally unique; undefined in a newly created item; should never be changed
-    //    for an existing item, that's why the property is set to read-only after the first assignment
-    //
+    /*** Special properties ***/
+
+    /* _id_:
+          database ID of the object, globally unique; undefined in a newly created item; should never be changed
+          for an existing item, that's why the property is set to read-only after the first assignment
+    */
     get _id_()   { return undefined }
     set _id_(id) {
         if (id === undefined) return
         Object.defineProperty(this, '_id_', {value: id, writable: false})
     }
 
-    // _record_:
-    //    ItemRecord that contains this item's {id, data} as loaded from DB during last load() or assigned directly;
-    //    undefined in a newborn item; immutable after the first assignment
-    //
+    /* _record_:
+          ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
+          undefined in a newborn item; immutable after the first assignment
+    */
     get _record_() {
         assert(this.has_id())
         this.assertLoaded()
@@ -292,13 +293,6 @@ export class Item {
     get category()  { return this.prop('_category_', {schemaless: true}) }
     get isLoaded()  { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
     has_id()        { return this._id_ !== undefined }
-
-    // get record() {
-    //     /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly. */
-    //     assert(this.has_id())
-    //     this.assertLoaded()
-    //     return this._record_ || (this._record_ = new ItemRecord(this._id_, this._data_))
-    // }
 
     assertLoaded()  { if (!this.isLoaded) throw new ItemNotLoaded(this) }
 
