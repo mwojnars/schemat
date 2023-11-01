@@ -132,7 +132,7 @@ export class AdminProcess extends BackendProcess {
             let newItem = globalThis.registry.getItem(newid)
             for await (let ref of globalThis.registry.scan_all()) {           // search for references to `id` in a referrer item, `ref`
                 await ref.load()
-                let prev_json = ref.record.data_json
+                let prev_json = ref._record_.data_json
                 ref._data_.transform({value: item => (item._id_ !== undefined && item._id_ === id) ? newItem : item})
                 let new_json = JSONx.stringify(ref._data_)
                 if (new_json !== prev_json) {

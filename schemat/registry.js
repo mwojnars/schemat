@@ -361,7 +361,7 @@ export class Session {
         let site  = registry.site
         let items = [this.item, this.item.category, registry.root, site, site.category, this.app]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
-        let records = items.map(it => it.record.encoded())
+        let records = items.map(it => it._record_.encoded())
 
         let {app, item} = this
         let session = {app, item}                               // truncated representation of the current session

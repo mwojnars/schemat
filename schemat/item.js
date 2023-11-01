@@ -233,7 +233,7 @@ export class Item {
 
 
     // _id_:
-    //    database ID of the object, globally unique, undefined in a newly created item; should never be changed
+    //    database ID of the object, globally unique; undefined in a newly created item; should never be changed
     //    for an existing item, that's why the property is set to read-only after the first assignment
     //
     get _id_()   { return undefined }
@@ -253,6 +253,7 @@ export class Item {
     }
     set _record_(record) {
         assert(record)
+        assert(record.id === this._id_)
         Object.defineProperty(this, '_record_', {value: record, writable: false})
     }
 
@@ -292,12 +293,12 @@ export class Item {
     get isLoaded()  { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
     has_id()        { return this._id_ !== undefined }
 
-    get record() {
-        /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly. */
-        assert(this.has_id())
-        this.assertLoaded()
-        return this._record_ || (this._record_ = new ItemRecord(this._id_, this._data_))
-    }
+    // get record() {
+    //     /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly. */
+    //     assert(this.has_id())
+    //     this.assertLoaded()
+    //     return this._record_ || (this._record_ = new ItemRecord(this._id_, this._data_))
+    // }
 
     assertLoaded()  { if (!this.isLoaded) throw new ItemNotLoaded(this) }
 
@@ -934,7 +935,7 @@ Item.createAPI(
 
         'CALL/default': new InternalService(function() { return this }),
         'CALL/item':    new InternalService(function() { return this }),
-        'GET/json':     new JsonService(function() { return this.record.encoded() }),
+        'GET/json':     new JsonService(function() { return this._record_.encoded() }),
 
         // item's edit actions for use in the admin interface...
         'POST/edit':  new TaskService({
@@ -1216,7 +1217,7 @@ Category.createAPI(
                         await item.load()
                         items.push(item)
                     }
-                    return items.map(item => item.record.encoded())
+                    return items.map(item => item._record_.encoded())
                 },
                 finalize(records) {
                     /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
@@ -1241,7 +1242,7 @@ Category.createAPI(
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)
                 await this.registry.db.insert(item)
-                return item.record.encoded()
+                return item._record_.encoded()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },
         }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
