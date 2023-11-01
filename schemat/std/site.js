@@ -181,7 +181,7 @@ export class Site extends Router {
     }
     systemPath(item) {
         /* Default absolute URL path ("system path") of the item. No domain. */
-        assert(item.is_linked())
+        item.assert_linked()
         return this.prop('path_internal') + `/${item._id_}`
     }
 

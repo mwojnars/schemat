@@ -1,7 +1,7 @@
 'use strict'
 
 import { print, assert, T, escape_html, splitLast, concat, unique } from './utils.js'
-import { NotFound, NotLoaded } from './errors.js'
+import {NotFound, NotLinked, NotLoaded} from './errors.js'
 
 import { JSONx } from './serialize.js'
 import { Path, Catalog, Data } from './data.js'
@@ -248,7 +248,7 @@ export class Item {
        undefined in a newborn item; immutable after the first assignment
     */
     get _record_() {
-        assert(this.is_linked())
+        this.assert_linked()
         this.assert_loaded()
         return this._record_ = new ItemRecord(this._id_, this._data_)
     }
@@ -295,6 +295,7 @@ export class Item {
     is_linked()     { return this._id_ !== undefined }                  // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized
 
+    assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
 
     constructor(_fail_ = true) {
@@ -406,7 +407,7 @@ export class Item {
     }
 
     async _load_record() {
-        if (!this.is_linked()) throw new Error(`trying to load data when missing ID: ${this._id_}`)
+        this.assert_linked()
         schemat.registry.session?.countLoaded(this._id_)
 
         let req = new DataRequest(this, 'load', {id: this._id_})

@@ -62,7 +62,7 @@ export class AppBasic extends Application {
     // view/action       -- what @view to use for rendering the items when a view is not specified in the URL
 
     urlPath(item) {
-        assert(item.is_linked())
+        item.assert_linked()
         return `${item._id_}`
     }
     findRoute(request) {
