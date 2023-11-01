@@ -234,8 +234,8 @@ export class Item {
     /*** Special properties ***/
 
     /* _id_:
-          database ID of the object, globally unique; undefined in a newly created item; should never be changed
-          for an existing item, that's why the property is set to read-only after the first assignment
+       database ID of the object, globally unique; undefined in a newly created item; should never be changed
+       for an existing item, that's why the property is set to read-only after the first assignment
     */
     get _id_()   { return undefined }
     set _id_(id) {
@@ -244,8 +244,8 @@ export class Item {
     }
 
     /* _record_:
-          ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
-          undefined in a newborn item; immutable after the first assignment
+       ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
+       undefined in a newborn item; immutable after the first assignment
     */
     get _record_() {
         assert(this.has_id())
@@ -279,12 +279,12 @@ export class Item {
         },
     }
 
-    // _db          // the origin database of this item; undefined in newborn items
-    // _ring        // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
+    // _db_         // the origin database of this item; undefined in newborn items
+    // _ring_       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
 
     registry        // Registry that manages access to this item
 
-    net             // Network adapter that connects this item to its network API as defined in this.constructor.api
+    _net_           // Network adapter that connects this item to its network API as defined in this.constructor.api
     action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
 
     static api        = null    // API instance that defines this item's endpoints and protocols
@@ -444,8 +444,8 @@ export class Item {
     _initNetwork() {
         /* Create a .net connector and .action triggers for this item's network API. */
         let role = this.registry.onServer ? 'server' : 'client'
-        this.net = new Network(this, role, this.constructor.api)
-        this.action = this.net.createActionTriggers(this.constructor.actions)
+        this._net_ = new Network(this, role, this.constructor.api)
+        this.action = this._net_.createActionTriggers(this.constructor.actions)
     }
 
     __init__() {}
@@ -843,7 +843,7 @@ export class Item {
         }
 
         for (let endpoint of endpoints) {
-            let service = this.net.resolve(endpoint)
+            let service = this._net_.resolve(endpoint)
             if (service) {
                 request.settleEndpoint(endpoint)
                 return service.server(this, request)

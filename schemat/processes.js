@@ -68,7 +68,7 @@ export class ClientProcess extends SchematProcess {
         // return item.net.render(view, root)
 
         let endpoint = data.endpoint
-        let page = item.net.api.services[endpoint]
+        let page = item._net_.api.services[endpoint]
         return page.render(item, root)
         // check()
     }
