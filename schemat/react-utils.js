@@ -1,5 +1,5 @@
 import { assert, print, tryimport, T } from './utils.js'
-import { ItemNotLoaded } from './errors.js'
+import { NotLoaded } from './errors.js'
 import { React, ReactDOM } from './resources.js'
 export { React, ReactDOM }
 
@@ -281,7 +281,7 @@ export function useItemLoading(raise = false) {
     /* A hook that returns a function, assert_loaded(item), that checks whether an `item` is already loaded, and if not,
        schedules its loading to be executed after the current render completes, then requests re-rendering.
        If raise=false, assert_loaded(item) returns true if the `item` is loaded, false otherwise;
-       if raise=true, an ItemNotLoaded exception is raised in the latter case. The assert_loaded() function
+       if raise=true, an NotLoaded exception is raised in the latter case. The assert_loaded() function
        can be called multiple times during a single render: with the same or different item as an argument.
      */
     let [missingItems, setMissingItems] = useState([])
@@ -296,7 +296,7 @@ export function useItemLoading(raise = false) {
         if (item.is_loaded()) return true
         if (!missingItems.includes(item))
             setMissingItems(prev => [...prev, item])
-        if (raise) throw new ItemNotLoaded()
+        if (raise) throw new NotLoaded()
         return false
     }
     return assert_loaded
@@ -326,7 +326,7 @@ export const ItemLoadingHOC = (classComponent, config = {raise: false}) =>
                     setTimeout(() => this.setState((prev) => ({missingItems: [...prev.missingItems, item]})))
                     // NOTE: setState() calls must be delayed until after render(), otherwise a React warning is produced:
                     // Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state.
-                if (config.raise) throw new ItemNotLoaded()
+                if (config.raise) throw new NotLoaded()
                 return false
             }
             return e(classComponent, {loaded, ...this.props})

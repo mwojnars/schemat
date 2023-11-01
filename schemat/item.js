@@ -1,7 +1,7 @@
 'use strict'
 
 import { print, assert, T, escape_html, splitLast, concat, unique } from './utils.js'
-import { NotFound, ItemNotLoaded } from './errors.js'
+import { NotFound, NotLoaded } from './errors.js'
 
 import { JSONx } from './serialize.js'
 import { Path, Catalog, Data } from './data.js'
@@ -292,9 +292,10 @@ export class Item {
 
     get category()  { return this.prop('_category_', {schemaless: true}) }
 
-    is_linked()     { return this._id_ !== undefined }      // object is "linked" when it has an ID assigned, which means it's persisted in DB, or is a stub of an object to be loaded from DB
+    is_linked()     { return this._id_ !== undefined }                  // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized
-    assert_loaded() { if (!this.is_loaded()) throw new ItemNotLoaded(this) }
+
+    assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
 
     constructor(_fail_ = true) {
         /* For internal use! Always call Item.create() instead of `new Item()`. */
@@ -627,7 +628,7 @@ export class Item {
         /* Generate a stream of own entries (from this._data_) for a given property(s). No inherited/imputed entries.
            `prop` can be a string, or an array of strings, or undefined. The entries preserve their original order.
          */
-        if (!this._data_) throw new ItemNotLoaded(this)
+        if (!this._data_) throw new NotLoaded(this)
         yield* this._data_.readEntries(prop)
     }
 
