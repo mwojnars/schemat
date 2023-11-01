@@ -67,7 +67,7 @@ export class JSONx {
         }
 
         if (obj instanceof Item)
-            if(obj.has_id()) return {[JSONx.ATTR_CLASS]: obj._id_}
+            if(obj.is_linked()) return {[JSONx.ATTR_CLASS]: obj._id_}
             else throw new Error(`Can't encode an unlinked item: ${obj}`)
 
         if (T.isClass(obj)) {

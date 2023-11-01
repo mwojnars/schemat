@@ -248,7 +248,7 @@ export class Item {
        undefined in a newborn item; immutable after the first assignment
     */
     get _record_() {
-        assert(this.has_id())
+        assert(this.is_linked())
         this.assert_loaded()
         return this._record_ = new ItemRecord(this._id_, this._data_)
     }
@@ -292,7 +292,7 @@ export class Item {
 
     get category()  { return this.prop('_category_', {schemaless: true}) }
 
-    has_id()        { return this._id_ !== undefined }
+    is_linked()     { return this._id_ !== undefined }      // object is "linked" when it has an ID assigned, which means it's persisted in DB, or is a stub of an object to be loaded from DB
     is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized
     assert_loaded() { if (!this.is_loaded()) throw new ItemNotLoaded(this) }
 
@@ -362,7 +362,7 @@ export class Item {
          */
         if (this.is_loaded()) { assert(!record); return this }
         if (this._meta_.loading) return assert(!record) && this._meta_.loading    // wait for a previous load to complete instead of starting a new one
-        if (!this.has_id() && !record) return this              // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
+        if (!this.is_linked() && !record) return this           // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
         return this._meta_.loading = this._load(record)         // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
@@ -405,7 +405,7 @@ export class Item {
     }
 
     async _load_record() {
-        if (!this.has_id()) throw new Error(`trying to load data when missing ID: ${this._id_}`)
+        if (!this.is_linked()) throw new Error(`trying to load data when missing ID: ${this._id_}`)
         schemat.registry.session?.countLoaded(this._id_)
 
         let req = new DataRequest(this, 'load', {id: this._id_})
