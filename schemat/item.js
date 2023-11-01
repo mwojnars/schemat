@@ -231,7 +231,7 @@ export class Item {
     // static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
 
-    /*** Special properties ***/
+    /***  System properties  ***/
 
     /* _id_:
        database ID of the object, globally unique; undefined in a newly created item; should never be changed
@@ -298,6 +298,9 @@ export class Item {
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
 
+
+    /***  Instantiation & initialization  ***/
+
     constructor(_fail_ = true) {
         /* For internal use! Always call Item.create() instead of `new Item()`. */
         if(_fail_) throw new Error('item should be instantiated through Item.create() instead of new Item()')
@@ -351,6 +354,9 @@ export class Item {
         this.api = new API(base ? [base.api] : [], endpoints)
         this.actions = base ? {...base.actions, ...actions} : actions
     }
+
+
+    /***  Loading from DB  ***/
 
     async refresh() {
         /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
