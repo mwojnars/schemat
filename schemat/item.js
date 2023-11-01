@@ -232,17 +232,31 @@ export class Item {
     // static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
 
-    // _id_ = database ID of the object, globally unique; undefined for a newly created item; should never be changed
-    //        for an existing item, that's why the property is set to read-only after first assignment
+    // _id_:
+    //    database ID of the object, globally unique, undefined in a newly created item; should never be changed
+    //    for an existing item, that's why the property is set to read-only after the first assignment
+    //
     get _id_()   { return undefined }
     set _id_(id) {
         if (id === undefined) return
         Object.defineProperty(this, '_id_', {value: id, writable: false})
     }
 
-    _data_          // data fields of this item, as a Data object; created during .load()
+    // _record_:
+    //    ItemRecord that contains this item's {id, data} as loaded from DB during last load() or assigned directly;
+    //    undefined in a newborn item; immutable after the first assignment
+    //
+    get _record_() {
+        assert(this.has_id())
+        this.assertLoaded()
+        return this._record_ = new ItemRecord(this._id_, this._data_)
+    }
+    set _record_(record) {
+        assert(record)
+        Object.defineProperty(this, '_record_', {value: record, writable: false})
+    }
 
-    _record_        // ItemRecord that contains this item's data as loaded from DB during last load(); undefined in a newborn item
+    _data_          // data fields of this item, as a Data object; created during .load()
 
     _schema_        // schema of this item's data, as a DATA object; calculated as an imputed property
 
@@ -275,10 +289,8 @@ export class Item {
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
 
     get category()  { return this.prop('_category_', {schemaless: true}) }
-
-    get isLoaded()      { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
-
-    has_id()            { return this._id_ !== undefined }
+    get isLoaded()  { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
+    has_id()        { return this._id_ !== undefined }
 
     get record() {
         /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly. */
@@ -366,7 +378,8 @@ export class Item {
             assert(record instanceof ItemRecord)
 
             this._data_ = record.data
-            if (record.id !== undefined) this._record_ = record     // don't keep a record without ID, it's useless
+            if (record.id !== undefined)                        // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
+                this._record_ = record
 
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
