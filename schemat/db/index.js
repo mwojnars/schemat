@@ -52,14 +52,14 @@ export class Index extends Sequence {
         // delete old records
         for (let [key, value] of del_records || []) {
             let block = this._find_block(key)
-            if (!block.isLoaded) block = await block.load()
+            if (!block.is_loaded()) block = await block.load()
             block.del(req.safe_step(null, 'del', {key})) //|| print(`deleted [${key}]`)
         }
 
         // (over)write new records
         for (let [key, value] of put_records || []) {
             let block = this._find_block(key)
-            if (!block.isLoaded) block = await block.load()
+            if (!block.is_loaded()) block = await block.load()
             block.put(req.safe_step(null, 'put', {key, value})) //|| print(`put [${key}]`)
         }
     }

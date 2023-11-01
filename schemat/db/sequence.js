@@ -62,7 +62,7 @@ export class Sequence extends Item {    // Series?
         stop = stop && this.schema.encode_key(stop)
 
         let block = this._find_block(start)
-        if (!block.isLoaded) block = await block.load()
+        if (!block.is_loaded()) block = await block.load()
 
         for await (let [key, value] of block.scan({start, stop}))
             yield new BinaryRecord(this.schema, key, value)
@@ -123,7 +123,7 @@ export class DataSequence extends Sequence {
             req.make_step(this)
 
         let block = this._find_block(key)
-        if (!block.isLoaded) block = await block.load()
+        if (!block.is_loaded()) block = await block.load()
 
         return block[command].call(block, req)
     }

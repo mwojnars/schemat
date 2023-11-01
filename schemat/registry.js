@@ -166,7 +166,7 @@ export class Registry {
             }
 
         // ...only when the above fails due to missing data, load from the predefined `root_data`
-        if (!root.isLoaded) {
+        if (!root.is_loaded()) {
             await root.load(new ItemRecord(ROOT_ID, root_data))
             print("Registry._init_root(): root category loaded from root_data")
         }

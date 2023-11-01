@@ -99,8 +99,8 @@ export class ItemsCache extends Map {
             let expiry = item._meta_.expiry
             if (expiry === undefined || (0 < expiry && expiry <= now)) {
                 let deleted = this.delete(id)
-                // if (deleted) print('item evicted:', id, item.isLoaded ? '' : '(stub)' )     // TODO: comment out
-                // else print('item not found for eviction:', id, item.isLoaded ? '' : '(stub)' )
+                // if (deleted) print('item evicted:', id, item.is_loaded() ? '' : '(stub)' )     // TODO: comment out
+                // else print('item not found for eviction:', id, item.is_loaded() ? '' : '(stub)' )
                 let done = item.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
                 if (done instanceof Promise) cleanup.push(done)
             }

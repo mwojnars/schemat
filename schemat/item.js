@@ -291,10 +291,10 @@ export class Item {
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
 
     get category()  { return this.prop('_category_', {schemaless: true}) }
-    get isLoaded()  { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
-    has_id()        { return this._id_ !== undefined }
 
-    assert_loaded() { if (!this.isLoaded) throw new ItemNotLoaded(this) }
+    has_id()        { return this._id_ !== undefined }
+    is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized
+    assert_loaded() { if (!this.is_loaded()) throw new ItemNotLoaded(this) }
 
     constructor(_fail_ = true) {
         /* For internal use! Always call Item.create() instead of `new Item()`. */
@@ -360,7 +360,7 @@ export class Item {
            The data can only be loaded ONCE for a given Item instance due to item's immutability.
            If you want to refresh the data, create a new instance or use refresh() instead.
          */
-        if (this.isLoaded) { assert(!record); return this }
+        if (this.is_loaded()) { assert(!record); return this }
         if (this._meta_.loading) return assert(!record) && this._meta_.loading    // wait for a previous load to complete instead of starting a new one
         if (!this.has_id() && !record) return this              // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
         return this._meta_.loading = this._load(record)         // keep a Promise that will eventually load this item's data to avoid race conditions
@@ -386,7 +386,7 @@ export class Item {
             // this._data_ is already loaded, so _category_ should be available IF defined (except non-categorized objects)
             let category = this.category
 
-            if (category && !category.isLoaded && category !== this)
+            if (category && !category.is_loaded() && category !== this)
                 await category.load()
 
             await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
@@ -429,7 +429,7 @@ export class Item {
         let prototypes = this._data_.getValues('extends')
         // for (const p of prototypes)        // TODO: update the code below to verify .category instead of CIDs
             // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
-        prototypes = prototypes.filter(p => !p.isLoaded)
+        prototypes = prototypes.filter(p => !p.is_loaded())
         if (prototypes.length === 1) return prototypes[0].load()            // performance: trying to avoid unnecessary awaits or Promise.all()
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))
     }
@@ -762,7 +762,7 @@ export class Item {
         let [node, req, target] = this._findRouteChecked(request)
         if (node instanceof Promise) node = await node
         if (!node instanceof Item) throw new Error("internal error, expected an item as a target node of a URL route")
-        if (!node.isLoaded) await node.load()
+        if (!node.is_loaded()) await node.load()
         if (typeof target === 'function') target = target(node)         // delayed target test after the node is loaded
         return target ? node.handle(req) : node.route(req)
     }
@@ -778,7 +778,7 @@ export class Item {
         try {
             let [node, req, target] = this._findRouteChecked(request)
             if (node instanceof Promise) node = await node
-            if (!node.isLoaded) await node.load()
+            if (!node.is_loaded()) await node.load()
             if (typeof target === 'function') target = target(node)     // delayed target test after the node is loaded
             if (target) return [node, req]
             return node.routeNode(req, strategy)
