@@ -235,7 +235,7 @@ export class Page {
             - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
          */
         let {item} = props
-        item.assertLoaded()
+        item.assert_loaded()
         if (!targetElement) print(`SSR render() of ID=${item._id_}`)
         let view = e(this.view.bind(item), props)
         return targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)

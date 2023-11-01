@@ -278,10 +278,10 @@ export function delayed_render(async_fun, deps = [], empty = undefined) {
 }
 
 export function useItemLoading(raise = false) {
-    /* A hook that returns a function, assertLoaded(item), that checks whether an `item` is already loaded, and if not,
+    /* A hook that returns a function, assert_loaded(item), that checks whether an `item` is already loaded, and if not,
        schedules its loading to be executed after the current render completes, then requests re-rendering.
-       If raise=false, assertLoaded(item) returns true if the `item` is loaded, false otherwise;
-       if raise=true, an ItemNotLoaded exception is raised in the latter case. The assertLoaded() function
+       If raise=false, assert_loaded(item) returns true if the `item` is loaded, false otherwise;
+       if raise=true, an ItemNotLoaded exception is raised in the latter case. The assert_loaded() function
        can be called multiple times during a single render: with the same or different item as an argument.
      */
     let [missingItems, setMissingItems] = useState([])
@@ -292,14 +292,14 @@ export function useItemLoading(raise = false) {
         setMissingItems([])
     }, [missingItems])
 
-    function assertLoaded(item) {
+    function assert_loaded(item) {
         if (item.isLoaded) return true
         if (!missingItems.includes(item))
             setMissingItems(prev => [...prev, item])
         if (raise) throw new ItemNotLoaded()
         return false
     }
-    return assertLoaded
+    return assert_loaded
 }
 
 export const ItemLoadingHOC = (classComponent, config = {raise: false}) =>

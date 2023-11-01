@@ -249,7 +249,7 @@ export class Item {
     */
     get _record_() {
         assert(this.has_id())
-        this.assertLoaded()
+        this.assert_loaded()
         return this._record_ = new ItemRecord(this._id_, this._data_)
     }
     set _record_(record) {
@@ -294,7 +294,7 @@ export class Item {
     get isLoaded()  { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created (but not fully initialized)
     has_id()        { return this._id_ !== undefined }
 
-    assertLoaded()  { if (!this.isLoaded) throw new ItemNotLoaded(this) }
+    assert_loaded() { if (!this.isLoaded) throw new ItemNotLoaded(this) }
 
     constructor(_fail_ = true) {
         /* For internal use! Always call Item.create() instead of `new Item()`. */
@@ -636,7 +636,7 @@ export class Item {
     //        the first one if first=true (default), or the last one, otherwise.
     //        TODO: for repeated keys, return a sub-object: {first, last, all} - configurable in schema settings
     //       */
-    //     this.assertLoaded()
+    //     this.assert_loaded()
     //     let obj = this._data_.object(first)
     //     obj.__item__ = this
     //     return obj
@@ -696,7 +696,7 @@ export class Item {
     //
     //     assert(false, 'getSchema() is never used with an argument')
     //
-    //     this.assertLoaded()
+    //     this.assert_loaded()
     //     let keys = [], data = this._data_
     //
     //     // convert numeric indices in `path` to keys
@@ -738,7 +738,7 @@ export class Item {
         // app = app || defaultApp
 
         if (app) {
-            app.assertLoaded()
+            app.assert_loaded()
             path = app.urlPath(this)
             if (path) path = './' + path            // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
         }

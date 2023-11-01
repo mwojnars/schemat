@@ -61,7 +61,7 @@ export class ClientProcess extends SchematProcess {
 
         let root = document.querySelector("#page-component")
         let item = this.registry.session.item
-        item.assertLoaded()
+        item.assert_loaded()
         // print('main item:', item)
 
         // return item.view[view].render(root)

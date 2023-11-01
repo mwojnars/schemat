@@ -161,7 +161,7 @@ export class ReactPage extends RenderedPage {
 
     async render(target, html_element) {
         /* If called server-side, `props` are just the server-side context. */
-        target.assertLoaded()
+        target.assert_loaded()
         let view = this._create_view(target)
         let component = e(view.component)
         let prepare = view.prepare_client()
@@ -179,7 +179,7 @@ export class ReactPage extends RenderedPage {
         },
 
         render_server() {
-            this.assertLoaded()
+            this.assert_loaded()
             print(`SSR render('${this.context.request.endpoint}') of ID=${this._id_}`)
             let view = e(this.component)
             return ReactDOM.renderToString(view)
