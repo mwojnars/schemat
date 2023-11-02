@@ -274,6 +274,8 @@ export class Item {
     _category_      // category of this item, as a Category object
     // _class_         // class of this item, as a JS class object; created during .load()
 
+    _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
+
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
         target:  this,          // the target object itself
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
@@ -339,7 +341,7 @@ export class Item {
     static create_stub(id) {
         /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
         let core = new this(false)
-        let item = new Proxy(core, proxy_handler)
+        let item = core._proxy_ = new Proxy(core, proxy_handler)
         if (id !== undefined) core._id_ = id
         return item
     }
@@ -494,7 +496,7 @@ export class Item {
 
     /***  Dynamic loading of source code  ***/
 
-    async getClass()    { return this.prop('_class_') || this.category?.getItemClass?.() }
+    async getClass()    { return this.prop('_class_') || this.category?.getItemClass() }
 
     // async getClass()    {
     //     if (this.category && !this.category.getItemClass) {
@@ -625,14 +627,16 @@ export class Item {
         // `streams` is a function so its evaluation can be omitted if a non-repeated value is already available in this._data_
         let streams = () => this.getAncestors().map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
 
-        if (prop === '_category_')
+        if (prop === '_category_' || prop === 'category')
             entries = concat(streams().map(stream => [...stream]))
         else {
             // let schema = this.getSchema()
             // let schema = this._schema_     // doesn't work here due to circular deps on properties
-            // assert(this.category)
-            let schema = this.category?.getItemSchema?.() || new DATA_GENERIC()
+
+            let category = this._proxy_.category
+            let schema = category?.getItemSchema() || new DATA_GENERIC()
             let type = schema.get(prop)
+
             if (!type)
                 if (!silent) throw new Error(`not in schema: '${prop}'`)
                 else return
@@ -694,11 +698,11 @@ export class Item {
         (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not null,
         CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
         */
-        let cat = this.category?.getName?.() || ""
+        let cat = this.category?.getName() || ""
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = this.category?.url?.()
+            let url = this.category?.url()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
         let stamp = cat ? `${cat}:${this._id_}` : `${this._id_}`
