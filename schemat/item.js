@@ -262,6 +262,8 @@ export class Item {
 
     _schema_        // schema of this item's data, as a DATA object; calculated as an imputed property
 
+    // _class_         // class of this item, as a JS class object; created during .load()
+
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
         target:  this,          // the target object itself
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
@@ -269,6 +271,9 @@ export class Item {
         expiry:  undefined,     // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
         props_cache: new Map(), // cache of computed properties, {prop: array_of_entries}; each array consists of own data + inherited, or just schema default / imputed
         calls_cache: new Map(), // cache of method calls, {method: value}, of no-arg calls of methods registered thru setCaching(); values can be Promises!
+
+        // db         // the origin database of this item; undefined in newborn items
+        // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
 
         set_id(id) {
             /* Like obj._id_ = id, but allows re-setting with the same ID value. */
@@ -278,9 +283,6 @@ export class Item {
             return id
         },
     }
-
-    // _db_         // the origin database of this item; undefined in newborn items
-    // _ring_       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
 
     registry        // Registry that manages access to this item
 
@@ -434,7 +436,7 @@ export class Item {
 
     initPrototypes() {
         /* Load all Schemat prototypes of this object. */
-        let prototypes = this._data_.getValues('extends')
+        let prototypes = this.getPrototypes()
         // for (const p of prototypes)        // TODO: update the code below to verify .category instead of CIDs
             // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
         prototypes = prototypes.filter(p => !p.is_loaded())
