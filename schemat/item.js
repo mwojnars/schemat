@@ -165,12 +165,17 @@ export class Request {
  **
  */
 
+// UNDEFINED token marks an object's value that has been fully computed, with inheritance and imputation,
+// but still remains undefined, so it should *not* be recomputed again
+const UNDEFINED = Symbol('UNDEFINED')
+
 // these props can never be found inside item's schema, and should always be accessed as regular object attributes
 const _proxy_reserved_props = ['_id_', '_meta_', '_data_', '_record_']
 
 const item_proxy_handler = {
     get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
+        if (value === UNDEFINED) return undefined
         if (value !== undefined) return value
 
         // there are many queries for 'then' because after a promise resolves, its result is checked for .then to see if it's another promise
@@ -262,6 +267,7 @@ export class Item {
 
     _schema_        // schema of this item's data, as a DATA object; calculated as an imputed property
 
+    _category_      // category of this item, as a Category object
     // _class_         // class of this item, as a JS class object; created during .load()
 
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
@@ -558,6 +564,9 @@ export class Item {
            If there are multiple values for 'path', the first one is returned.
            `opts` are {default, schemaless}.
          */
+        // POJO attribute value as a default
+        let value = this[path]
+
         if (this._data_) {
             // this._data_: a property can be read before the loading completes (!), e.g., for use inside __init__();
             // a "shadow" item doesn't map to a DB record, so its props can't be read with this.props() below
@@ -573,8 +582,6 @@ export class Item {
             }
         }
 
-        // POJO attribute value as a default
-        let value = this[path]
         if (value !== undefined) return value
 
         return opts.default
@@ -611,11 +618,14 @@ export class Item {
         // `streams` is a function so its evaluation can be omitted if a non-repeated value is already available in this._data_
         let streams = () => this.getAncestors().map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
 
+        if (prop === '_category_' || prop === 'category') schemaless = true
+
         if (schemaless) entries = concat(streams().map(stream => [...stream]))
         else {
             // let schema = this.getSchema()
             // let schema = this._schema_     // doesn't work here due to circular deps on properties
-            let schema = this.category?.getItemSchema() || new DATA_GENERIC()
+            // assert(this.category)
+            let schema = this.category?.getItemSchema?.() || new DATA_GENERIC()
             let type = schema.get(prop)
             if (!type)
                 if (!silent) throw new Error(`not in schema: '${prop}'`)
@@ -627,14 +637,13 @@ export class Item {
                 entries = type.combineStreams(streams(), this)            // `default` or `impute` property of the schema may be applied here
 
             this._meta_.props_cache.set(prop, entries)
-            // if(entries.length === 1) {
-            //     // console.log('prop:', prop, entries)
-            //     this[prop] = entries[0].value
-            // }
         }
 
-        if(entries.length) this[prop] = entries[0].value
-        this[`${prop}_array`] = entries.map(entry => entry.value)
+        // print(`prop '${prop}'`)
+        if (!['category', '_category_'].includes(prop)) {
+            this[prop] = entries.length ? entries[0].value : UNDEFINED
+            this[`${prop}_array`] = entries.map(entry => entry.value)
+        }
 
         yield* entries
     }

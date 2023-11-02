@@ -229,7 +229,7 @@ export class ItemAdminPage extends ReactPage {
             let staticAssets = this._schema_.getAssets().renderAll()
             let customAssets = this.category?.prop('html_assets')
             let assets = [globalAssets, staticAssets, customAssets]
-            return assets .filter(a => a && a.trim()) .join('\n')
+            return assets .filter(a => a?.trim()) .join('\n')
         },
 
         component({extra = null} = {}) {
