@@ -54,7 +54,7 @@ export class File extends Item {
     }
 }
 
-File.createAPI({        // endpoints...
+File.create_api({        // endpoints...
 
     'CALL/text':    new InternalService(function (request)
     {

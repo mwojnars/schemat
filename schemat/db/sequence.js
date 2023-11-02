@@ -46,7 +46,7 @@ export class Sequence extends Item {    // Series?
         for (let block of this.blocks) {
             await block
             await block.open()
-            block.setExpiry('never')            // prevent eviction of this item from Registry's cache (!)
+            block._set_expiry('never')          // prevent eviction of this item from Registry's cache (!)
         }
     }
 

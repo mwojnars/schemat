@@ -349,7 +349,7 @@ export class Item {
         return item.load(record)
     }
 
-    static createAPI(endpoints, actions = {}) {
+    static create_api(endpoints, actions = {}) {
         /* Create .api and .actions of this Item (sub)class. */
         let base = Object.getPrototypeOf(this)
         if (!T.isSubclass(base, Item)) base = undefined
@@ -386,7 +386,7 @@ export class Item {
             if (record.id !== undefined)                        // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
                 this._record_ = record
 
-            let proto = this.initPrototypes()                   // load prototypes
+            let proto = this._init_prototypes()                 // load prototypes
             if (proto instanceof Promise) await proto
 
             // // root category's class must be set here in a special way - this is particularly needed inside DB blocks,
@@ -399,13 +399,13 @@ export class Item {
             if (category && !category.is_loaded() && category !== this)
                 await category.load()
 
-            await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
-            this._initNetwork()
+            await this._init_class()                            // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
+            this._init_network()
 
             let init = this.__init__()                          // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init             // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
 
-            this.setExpiry(category?.prop('cache_ttl'))
+            this._set_expiry(category?.prop('cache_ttl'))
 
             return this
 
@@ -424,7 +424,7 @@ export class Item {
         return new ItemRecord(this._id_, json)
     }
 
-    setExpiry(ttl) {
+    _set_expiry(ttl) {
         /* Time To Live (ttl) is expressed in seconds. */
         let expiry
         if (ttl === undefined) return                       // leave the expiry date unchanged
@@ -434,7 +434,7 @@ export class Item {
         this._meta_.expiry = expiry
     }
 
-    initPrototypes() {
+    _init_prototypes() {
         /* Load all Schemat prototypes of this object. */
         let prototypes = this.getPrototypes()
         // for (const p of prototypes)        // TODO: update the code below to verify .category instead of CIDs
@@ -444,14 +444,14 @@ export class Item {
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))
     }
 
-    async _initClass() {
+    async _init_class() {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
         // if (this.category === this) return                      // special case for RootCategory: its class is already set up, must prevent circular deps
         // T.setClass(this, await this.category.getItemClass())    // change the actual class of this item from Item to the category's proper class
         T.setClass(this, await this.getClass() || Item)    // change the actual class of this item from Item to the category's proper class
     }
 
-    _initNetwork() {
+    _init_network() {
         /* Create a .net connector and .action triggers for this item's network API. */
         let role = this.registry.onServer ? 'server' : 'client'
         this._net_ = new Network(this, role, this.constructor.api)
@@ -930,7 +930,7 @@ Item.setCaching('getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEn
 // In a special case when an action is called directly on the server through item.action.XXX(), `request` is null,
 // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
 
-Item.createAPI(
+Item.create_api(
     {
         // http endpoints...
 
@@ -1184,7 +1184,7 @@ export class Category extends Item {
 
 Category.setCaching('getModule', 'getItemClass', 'getSource', 'getItemSchema', 'getAssets')   //'getHandlers'
 
-Category.createAPI(
+Category.create_api(
     {
         'GET/default':  new CategoryAdminPage(),            // TODO: add explicit support for aliases
         'GET/item':     new CategoryAdminPage(),
@@ -1272,7 +1272,7 @@ export class RootCategory extends Category {
 
     get category() { return this }              // root category is a category for itself
 
-    _initClass() {}                             // RootCategory's class is already set up, no need to do anything more
+    _init_class() {}                             // RootCategory's class is already set up, no need to do anything more
 
     getItemSchema() {
         /* In RootCategory, this == this.category, and to avoid infinite recursion we must perform
