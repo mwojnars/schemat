@@ -629,7 +629,7 @@ export class Item {
         // `streams` is a function so its evaluation can be omitted if a non-repeated value is already available in this._data_
         let streams = () => this.getAncestors().map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
 
-        if (prop === '_category_' || prop === 'category')
+        if (prop === '_category_')
             entries = concat(streams().map(stream => [...stream]))
         else {
             // let schema = this.getSchema()
@@ -651,12 +651,10 @@ export class Item {
             this._meta_.props_cache.set(prop, entries)
         }
 
-        assert(prop !== proxy_handler.UNDEFINED)
-
-        if (![].includes(prop)) {
-            this._self_[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
-            this._self_[`${prop}_array`] = entries.map(entry => entry.value)
-        }
+        // cache the result in a plain attribute in this._self_; _self_ is used instead of `this` because the latter
+        // can be a derived object (e.g., a View) whose prototype is _self_
+        this._self_[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
+        this._self_[`${prop}_array`] = entries.map(entry => entry.value)
 
         yield* entries
     }
@@ -1293,9 +1291,9 @@ export class RootCategory extends Category {
         this._meta_.expiry = 0                  // never evict from Registry
     }
 
-    get _category_() { return this }              // root category is a category for itself
+    get _category_() { return this }            // root category is a category for itself
 
-    _init_class() {}                             // RootCategory's class is already set up, no need to do anything more
+    _init_class() {}                            // RootCategory's class is already set up, no need to do anything more
 
     getItemSchema() {
         /* In RootCategory, this == this._category_, and to avoid infinite recursion we must perform
