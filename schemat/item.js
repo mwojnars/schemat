@@ -298,7 +298,8 @@ export class Item {
     static api        = null    // API instance that defines this item's endpoints and protocols
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
 
-    get category()  { return this.prop('_category_', {schemaless: true}) }
+    get category()  { return this._category_ }
+    // get category()  { return this.prop('_category_') }
 
     is_linked()     { return this._id_ !== undefined }                  // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized
@@ -573,13 +574,13 @@ export class Item {
             let value = this.props(path, opts).next().value
             if (value !== undefined) return value
 
-            // before falling back to a default value stored in a POJO attribute,
-            // check that 'path' is valid according to schema, to block access to system fields like ._data_ etc
-            if (!opts.schemaless) {
-                let schema = this._schema_  //getSchema()
-                let [prop] = Path.split(path)
-                if (schema && !schema.isValidKey(prop)) throw new Error(`not in schema: ${prop}`)
-            }
+            // // before falling back to a default value stored in a POJO attribute,
+            // // check that 'path' is valid according to schema, to block access to system fields like ._data_ etc
+            // if (!opts.schemaless) {
+            //     let schema = this._schema_  //getSchema()
+            //     let [prop] = Path.split(path)
+            //     if (schema && !schema.isValidKey(prop)) throw new Error(`not in schema: ${prop}`)
+            // }
         }
 
         if (value !== undefined) return value
@@ -618,9 +619,8 @@ export class Item {
         // `streams` is a function so its evaluation can be omitted if a non-repeated value is already available in this._data_
         let streams = () => this.getAncestors().map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
 
-        if (prop === '_category_' || prop === 'category') schemaless = true
-
-        if (schemaless) entries = concat(streams().map(stream => [...stream]))
+        if (prop === '_category_')
+            entries = concat(streams().map(stream => [...stream]))
         else {
             // let schema = this.getSchema()
             // let schema = this._schema_     // doesn't work here due to circular deps on properties
@@ -640,7 +640,7 @@ export class Item {
         }
 
         // print(`prop '${prop}'`)
-        if (!['category', '_category_'].includes(prop)) {
+        if (!['category'].includes(prop)) {
             this[prop] = entries.length ? entries[0].value : UNDEFINED
             this[`${prop}_array`] = entries.map(entry => entry.value)
         }
@@ -1281,6 +1281,7 @@ export class RootCategory extends Category {
     }
 
     get category() { return this }              // root category is a category for itself
+    get _category_() { return this }              // root category is a category for itself
 
     _init_class() {}                             // RootCategory's class is already set up, no need to do anything more
 
