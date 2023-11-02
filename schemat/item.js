@@ -609,7 +609,7 @@ export class Item {
 
         // below, `this` is included at the 1st position among ancestors;
         // `streams` is a function so its evaluation can be omitted if a non-repeated value is already available in this._data_
-        let streams = () => this.getAncestors().map(proto => proto._data_.readEntries(prop))
+        let streams = () => this.getAncestors().map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
 
         if (schemaless) entries = concat(streams().map(stream => [...stream]))
         else {
@@ -627,11 +627,15 @@ export class Item {
                 entries = type.combineStreams(streams(), this)            // `default` or `impute` property of the schema may be applied here
 
             this._meta_.props_cache.set(prop, entries)
-            if(entries.length === 1) {
-                // console.log('prop:', prop, entries)
-                this[prop] = entries[0].value
-            }
+            // if(entries.length === 1) {
+            //     // console.log('prop:', prop, entries)
+            //     this[prop] = entries[0].value
+            // }
         }
+
+        if(entries.length) this[prop] = entries[0].value
+        this[`${prop}_array`] = entries.map(entry => entry.value)
+
         yield* entries
     }
 
