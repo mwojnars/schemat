@@ -803,8 +803,7 @@ export class ITEM extends Type {
             let ciid = HTML(item.getStamp({html: false, brackets: false}))
 
             if (name && url) {
-                // assert(item.category === item._category_, item)
-                let note = item.category.getName() || null
+                let note = item._category_.getName() || null
                 return SPAN(
                     url ? A({href: url}, name) : name,
                     SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)

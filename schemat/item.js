@@ -653,9 +653,6 @@ export class Item {
 
         assert(prop !== proxy_handler.UNDEFINED)
 
-        // try { print(`prop '${prop}'`) }
-        // catch (e) { assert(false) }
-
         if (![].includes(prop)) {
             this._self_[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
             this._self_[`${prop}_array`] = entries.map(entry => entry.value)
@@ -1296,7 +1293,6 @@ export class RootCategory extends Category {
         this._meta_.expiry = 0                  // never evict from Registry
     }
 
-    get category() { return this }              // root category is a category for itself
     get _category_() { return this }              // root category is a category for itself
 
     _init_class() {}                             // RootCategory's class is already set up, no need to do anything more
