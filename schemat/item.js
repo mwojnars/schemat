@@ -166,13 +166,14 @@ export class Request {
  */
 
 // UNDEFINED token marks an object's value that has been fully computed, with inheritance and imputation,
-// but still remains undefined, so it should *not* be recomputed again
-const UNDEFINED = Symbol('UNDEFINED')
+// but still remains undefined, so it should *not* be computed again
+const UNDEFINED = Symbol.for('UNDEFINED')
 
 // these props can never be found inside item's schema, and should always be accessed as regular object attributes
 const _proxy_reserved_props = ['_id_', '_meta_', '_data_', '_record_']
 
 const item_proxy_handler = {
+
     get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
         if (value === UNDEFINED) return undefined
@@ -490,7 +491,7 @@ export class Item {
 
     /***  Dynamic loading of source code  ***/
 
-    async getClass()    { return this.prop('_class_') || this.category?.getItemClass() }
+    async getClass()    { return this.prop('_class_') || this.category?.getItemClass?.() }
 
     // async getClass()    {
     //     if (this.category && !this.category.getItemClass) {
@@ -572,6 +573,7 @@ export class Item {
             // this._data_: a property can be read before the loading completes (!), e.g., for use inside __init__();
             // a "shadow" item doesn't map to a DB record, so its props can't be read with this.props() below
             let value = this.props(path, opts).next().value
+            if(value === UNDEFINED) print('UNDEFINED #1', path, this)
             if (value !== undefined) return value
 
             // // before falling back to a default value stored in a POJO attribute,
@@ -583,6 +585,7 @@ export class Item {
             // }
         }
 
+        if(value === UNDEFINED) print('UNDEFINED #2', path, this)
         if (value !== undefined) return value
 
         return opts.default
@@ -641,7 +644,7 @@ export class Item {
 
         // print(`prop '${prop}'`)
         if (!['category'].includes(prop)) {
-            this[prop] = entries.length ? entries[0].value : UNDEFINED
+            this[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : UNDEFINED
             this[`${prop}_array`] = entries.map(entry => entry.value)
         }
 
@@ -688,11 +691,11 @@ export class Item {
         (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not null,
         CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
         */
-        let cat = this.category?.getName() || ""
+        let cat = this.category?.getName?.() || ""
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = this.category?.url()
+            let url = this.category?.url?.()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
         let stamp = cat ? `${cat}:${this._id_}` : `${this._id_}`

@@ -11,7 +11,7 @@ import {Data} from "../data.js";
 
 
 // EMPTY token marks an empty value in a record
-export const EMPTY = Symbol('empty')
+export const EMPTY = Symbol.for('empty')
 
 
 /**********************************************************************************************************************/

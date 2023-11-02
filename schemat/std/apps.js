@@ -88,7 +88,7 @@ export class AppSpaces extends Application {
 
     urlPath(item) {
         let spaces_rev = this.spacesRev()
-        let space = spaces_rev.get(item.category._id_)
+        let space = spaces_rev.get(item._category_?._id_)
         if (space) return `${space}:${item._id_}`
     }
     spacesRev() {
