@@ -619,6 +619,7 @@ export class Item {
            for system properties, like _category_, which are processed when the schema is not yet available.
          */
         if (!this._data_) throw new NotLoaded(this)
+        assert(typeof prop === 'string')
 
         let entries = this._meta_.props_cache.get(prop)                         // array of entries, or undefined
         if (entries) yield* entries
@@ -649,7 +650,11 @@ export class Item {
             this._meta_.props_cache.set(prop, entries)
         }
 
-        // print(`prop '${prop}'`)
+        assert(prop !== proxy_handler.UNDEFINED)
+
+        // try { print(`prop '${prop}'`) }
+        // catch (e) { assert(false) }
+
         if (!['category'].includes(prop)) {
             this[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
             this[`${prop}_array`] = entries.map(entry => entry.value)
@@ -1056,7 +1061,7 @@ export class Category extends Item {
         let base = module.Class
         let name = `${base.name}`
         let cls = {[name]: class extends base {}}[name]
-        let _category = T.getOwnProperty(cls, 'category')
+        let _category = T.getOwnProperty(cls, '_category_')
         assert(_category === undefined || _category === this, this, _category)
 
         // cls.category_old = this
@@ -1296,7 +1301,7 @@ export class RootCategory extends Category {
     _init_class() {}                             // RootCategory's class is already set up, no need to do anything more
 
     getItemSchema() {
-        /* In RootCategory, this == this.category, and to avoid infinite recursion we must perform
+        /* In RootCategory, this == this._category_, and to avoid infinite recursion we must perform
            schema inheritance manually (without this.prop()).
          */
         let root_fields = this._data_.get('fields')

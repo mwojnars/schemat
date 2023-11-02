@@ -803,6 +803,7 @@ export class ITEM extends Type {
             let ciid = HTML(item.getStamp({html: false, brackets: false}))
 
             if (name && url) {
+                // assert(item.category === item._category_, item)
                 let note = item.category.getName() || null
                 return SPAN(
                     url ? A({href: url}, name) : name,
@@ -1431,7 +1432,7 @@ export class OWN_SCHEMA extends TYPE {
         editable: false,
         impute() {
             // assert(this instanceof Item)
-            return this.category?.getItemSchema() || new DATA_GENERIC()
+            return this._category_?.getItemSchema() || new DATA_GENERIC()
         }
     }
 }

@@ -359,7 +359,7 @@ export class Session {
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
         let site  = registry.site
-        let items = [this.item, this.item.category, registry.root, site, site.category, this.app]
+        let items = [this.item, this.item._category_, registry.root, site, site._category_, this.app]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(it => it._record_.encoded())
 
@@ -407,7 +407,7 @@ export class ClientRegistry extends Registry {
         let data = item._data_.__getstate__()
         delete data['_category_']
 
-        let category = item.category
+        let category = item._category_
         assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items
 
         let record = await category.action.create_item(data)

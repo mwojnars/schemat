@@ -178,7 +178,7 @@ export class IndexByCategory extends BasicIndex {
     ]));
 
     *generate_keys(item) {
-        yield [item.category?._id_, item._id_]
+        yield [item._category_?._id_, item._id_]
     }
 }
 
