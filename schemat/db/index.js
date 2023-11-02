@@ -136,8 +136,7 @@ export class BasicIndex extends Index {
             yield new PlainRecord(this.schema, key, value)
     }
 
-    accept(item) { return item && (!this.category || schemat.equivalent(item.category, this.category)) }
-    // accept(item) { return item && (!this.category || item.category?.is(this.category)) }
+    accept(item) { return item && (!this.category || schemat.equivalent(item._category_, this.category)) }
 
     generate_value(item) {
         /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.

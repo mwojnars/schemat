@@ -407,7 +407,7 @@ export class Item {
             // if (this._id_ === ROOT_ID) T.setClass(this, RootCategory)
 
             // this._data_ is already loaded, so _category_ should be available IF defined (except non-categorized objects)
-            let category = this.category
+            let category = this._category_
 
             if (category && !category.is_loaded() && category !== this)
                 await category.load()
@@ -450,7 +450,7 @@ export class Item {
     _init_prototypes() {
         /* Load all Schemat prototypes of this object. */
         let prototypes = this.getPrototypes()
-        // for (const p of prototypes)        // TODO: update the code below to verify .category instead of CIDs
+        // for (const p of prototypes)        // TODO: update the code below to verify ._category_ instead of CIDs
             // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
         prototypes = prototypes.filter(p => !p.is_loaded())
         if (prototypes.length === 1) return prototypes[0].load()            // performance: trying to avoid unnecessary awaits or Promise.all()
@@ -459,8 +459,8 @@ export class Item {
 
     async _init_class() {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
-        // if (this.category === this) return                      // special case for RootCategory: its class is already set up, must prevent circular deps
-        // T.setClass(this, await this.category.getItemClass())    // change the actual class of this item from Item to the category's proper class
+        // if (this._category_ === this) return                      // special case for RootCategory: its class is already set up, must prevent circular deps
+        // T.setClass(this, await this._category_.getItemClass())    // change the actual class of this item from Item to the category's proper class
         T.setClass(this, await this.getClass() || Item)    // change the actual class of this item from Item to the category's proper class
     }
 
@@ -482,7 +482,7 @@ export class Item {
         /* Check whether this item belongs to a `category`, or its subcategory.
            All comparisons along the way use item IDs, not object identity. The item must be loaded.
         */
-        return this.category.inherits(category)
+        return this._category_.inherits(category)
     }
     inherits(parent) {
         /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
@@ -496,7 +496,7 @@ export class Item {
 
     /***  Dynamic loading of source code  ***/
 
-    async getClass()    { return this.prop('_class_') || this.category?.getItemClass() }
+    async getClass()    { return this.prop('_class_') || this._category_?.getItemClass() }
 
     // async getClass()    {
     //     if (this.category && !this.category.getItemClass) {
@@ -633,7 +633,7 @@ export class Item {
             // let schema = this.getSchema()
             // let schema = this._schema_     // doesn't work here due to circular deps on properties
 
-            let category = this._proxy_.category
+            let category = this._proxy_._category_
             let schema = category?.getItemSchema() || new DATA_GENERIC()
             let type = schema.get(prop)
 
@@ -698,11 +698,11 @@ export class Item {
         (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not null,
         CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
         */
-        let cat = this.category?.getName() || ""
+        let cat = this._category_?.getName() || ""
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = this.category?.url()
+            let url = this._category_?.url()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
         let stamp = cat ? `${cat}:${this._id_}` : `${this._id_}`
