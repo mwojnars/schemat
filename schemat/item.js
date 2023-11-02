@@ -165,25 +165,28 @@ export class Request {
  **
  */
 
-// UNDEFINED token marks an object's value that has been fully computed, with inheritance and imputation,
-// but still remains undefined, so it should *not* be computed again
-const UNDEFINED = Symbol.for('UNDEFINED')
+const proxy_handler = {
+    /* Proxy handler for all network objects: stubs or loaded from DB. Combines POJO attributes with loaded properties
+       and in this way facilitates caching of computed properties in plain attributes of the `target` object.
+     */
 
-// these props can never be found inside item's schema, and should always be accessed as regular object attributes
-const _proxy_reserved_props = ['_id_', '_meta_', '_data_', '_record_']
+    // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
+    // and still remained undefined, so it should *not* be computed again
+    UNDEFINED: Symbol.for('proxy_handler.UNDEFINED'),
 
-const item_proxy_handler = {
+    // these props can never be found inside item's schema and should always be accessed as regular object attributes
+    _reserved: ['_id_', '_meta_', '_data_', '_record_'],
 
     get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
-        if (value === UNDEFINED) return undefined
+        if (value === proxy_handler.UNDEFINED) return undefined
         if (value !== undefined) return value
 
         // there are many queries for 'then' because after a promise resolves, its result is checked for .then to see if it's another promise
         if (prop === 'then') return undefined
 
         // if (prop.length >= 2 && prop[0] === '_' && prop[prop.length - 1] === '_')    // _***_ props are reserved for internal use
-        if (_proxy_reserved_props.includes(prop))
+        if (proxy_handler._reserved.includes(prop))
             return undefined
 
         // console.log('get', prop)
@@ -336,7 +339,7 @@ export class Item {
     static create_stub(id) {
         /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
         let core = new this(false)
-        let item = new Proxy(core, item_proxy_handler)
+        let item = new Proxy(core, proxy_handler)
         if (id !== undefined) core._id_ = id
         return item
     }
@@ -573,7 +576,7 @@ export class Item {
             // this._data_: a property can be read before the loading completes (!), e.g., for use inside __init__();
             // a "shadow" item doesn't map to a DB record, so its props can't be read with this.props() below
             let value = this.props(path, opts).next().value
-            if(value === UNDEFINED) print('UNDEFINED #1', path, this)
+            if(value === proxy_handler.UNDEFINED) print('UNDEFINED #1', path, this)
             if (value !== undefined) return value
 
             // // before falling back to a default value stored in a POJO attribute,
@@ -585,7 +588,7 @@ export class Item {
             // }
         }
 
-        if(value === UNDEFINED) print('UNDEFINED #2', path, this)
+        if(value === proxy_handler.UNDEFINED) print('UNDEFINED #2', path, this)
         if (value !== undefined) return value
 
         return opts.default
@@ -644,7 +647,7 @@ export class Item {
 
         // print(`prop '${prop}'`)
         if (!['category'].includes(prop)) {
-            this[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : UNDEFINED
+            this[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
             this[`${prop}_array`] = entries.map(entry => entry.value)
         }
 
