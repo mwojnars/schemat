@@ -271,10 +271,11 @@ export class Item {
 
     _schema_        // schema of this item's data, as a DATA object; calculated as an imputed property
 
-    _category_      // category of this item, as a Category object
+    // _category_      // category of this item, as a Category object
     // _class_         // class of this item, as a JS class object; created during .load()
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
+    _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
 
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
         target:  this,          // the target object itself
@@ -304,8 +305,8 @@ export class Item {
     static api        = null    // API instance that defines this item's endpoints and protocols
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
 
-    get category()  { return this._category_ }
-    // get category()  { return this.prop('_category_') }
+    // get category()  { return this._category_ }
+    // set category(c) { this._category_ = c }
 
     is_linked()     { return this._id_ !== undefined }                  // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized
@@ -319,6 +320,7 @@ export class Item {
     constructor(_fail_ = true) {
         /* For internal use! Always call Item.create() instead of `new Item()`. */
         if(_fail_) throw new Error('item should be instantiated through Item.create() instead of new Item()')
+        this._self_ = this      // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
         this.registry = globalThis.registry
     }
 
@@ -327,11 +329,10 @@ export class Item {
     }
 
     static create(...args) {
-        /* Create an empty newborn item, no ID, and execute its __create__(...args).
+        /* Create an empty newborn item, no ID, and execute its __create__(...args). Return the item.
            This function, or create_stub(id), should be used instead of the constructor.
+           If __create__ is overloaded and returns a Promise, this function returns a Promise too.
          */
-        // let core = new this(false)
-        // let item = new Proxy(core, item_proxy_handler)
         let item = this.create_stub()
         let created = item.__create__(...args)
         if (created instanceof Promise) return created.then(() => item)
@@ -655,9 +656,9 @@ export class Item {
         // try { print(`prop '${prop}'`) }
         // catch (e) { assert(false) }
 
-        if (!['category'].includes(prop)) {
-            this[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
-            this[`${prop}_array`] = entries.map(entry => entry.value)
+        if (![].includes(prop)) {
+            this._self_[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
+            this._self_[`${prop}_array`] = entries.map(entry => entry.value)
         }
 
         yield* entries
