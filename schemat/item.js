@@ -5,7 +5,7 @@ import {NotFound, NotLinked, NotLoaded} from './errors.js'
 
 import { JSONx } from './serialize.js'
 import { Path, Catalog, Data } from './data.js'
-import {DATA, DATA_GENERIC, generic_type} from "./type.js"
+import {DATA, DATA_GENERIC, generic_type, ITEM} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 import {CategoryAdminPage, ItemAdminPage} from "./pages.js";
 import {ItemRecord} from "./db/records.js";
@@ -610,14 +610,12 @@ export class Item {
     propsList(path)         { return [...this.props(path)] }
     propsReversed(path)     { return [...this.props(path)].reverse() }
 
-    *_scan_entries(prop, {schemaless=false, silent=false} = {}) {
+    *_scan_entries(prop, {silent=false} = {}) {
         /* Generate a stream of valid entries for a given property: own entries followed by inherited ones;
            or the default entry (if own/inherited are missing), or an imputed entry.
            If the schema doesn't allow multiple entries for `prop`, the first one is yielded (for atomic types),
            or the objects (own, inherited & default) get merged into one (for "mergeable" types like CATALOG).
            Once computed, the list of entries is cached for future use.
-           If schemaless=true, a concatenated stream of all matching entries is returned without caching -
-           for system properties, like _category_, which are processed when the schema is not yet available.
          */
         if (!this._data_) throw new NotLoaded(this)
         assert(typeof prop === 'string')
@@ -625,31 +623,34 @@ export class Item {
         let entries = this._meta_.props_cache.get(prop)                         // array of entries, or undefined
         if (entries) yield* entries
 
-        // below, `this` is included at the 1st position among ancestors;
-        // `streams` is a function so its evaluation can be omitted if a non-repeated value is already available in this._data_
-        let streams = () => this.getAncestors().map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
+        let type
 
-        if (prop === '_category_')
-            entries = concat(streams().map(stream => [...stream]))
+        // find out the `type` (Type instance) of the property
+        if (prop === '_category_')          // _category_ needs special handling because the schema is not yet available
+            type = new ITEM()
+            // entries = concat(streams().map(stream => [...stream]))
+
         else {
             // let schema = this.getSchema()
             // let schema = this._schema_     // doesn't work here due to circular deps on properties
 
             let category = this._proxy_._category_
             let schema = category?.getItemSchema() || new DATA_GENERIC()
-            let type = schema.get(prop)
+            type = schema.get(prop)
 
             if (!type)
-                if (!silent) throw new Error(`not in schema: '${prop}'`)
-                else return
-
-            if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))
-                entries = [this._data_.getEntry(prop)]                        // non-repeated value is present in `this`, can skip inheritance to speed up
-            else
-                entries = type.combineStreams(streams(), this)            // `default` or `impute` property of the schema may be applied here
-
-            this._meta_.props_cache.set(prop, entries)
+                if (silent) return; else throw new Error(`not in schema: '${prop}'`)
         }
+
+        if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))      // non-repeated value is present in `this`? can skip inheritance to speed up
+            entries = [this._data_.getEntry(prop)]
+        else {
+            // `this` is included in `streams` at the 1st position among ancestors
+            let streams = () => this.getAncestors().map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
+            entries = type.combineStreams(streams(), this)          // `default` or `impute` of the schema may be applied here
+        }
+
+        this._meta_.props_cache.set(prop, entries)
 
         // cache the result in a plain attribute in this._self_; _self_ is used instead of `this` because the latter
         // can be a derived object (e.g., a View) whose prototype is _self_
