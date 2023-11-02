@@ -622,18 +622,14 @@ export class Item {
 
         let entries = this._meta_.props_cache.get(prop)                         // array of entries, or undefined
         if (entries) yield* entries
-
         let type
 
-        // find out the `type` (Type instance) of the property
-        if (prop === '_category_')          // _category_ needs special handling because the schema is not yet available
-            type = new ITEM()
-            // entries = concat(streams().map(stream => [...stream]))
+        // find out the `type` (Type instance) of the property;
+        // _category_ needs special handling because the schema is not yet available at this point
 
+        if (prop === '_category_') type = new ITEM()
         else {
-            // let schema = this.getSchema()
             // let schema = this._schema_     // doesn't work here due to circular deps on properties
-
             let category = this._proxy_._category_
             let schema = category?.getItemSchema() || new DATA_GENERIC()
             type = schema.get(prop)
@@ -645,9 +641,9 @@ export class Item {
         if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))      // non-repeated value is present in `this`? can skip inheritance to speed up
             entries = [this._data_.getEntry(prop)]
         else {
-            // `this` is included in `streams` at the 1st position among ancestors
-            let streams = () => this.getAncestors().map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
-            entries = type.combineStreams(streams(), this)          // `default` or `impute` of the schema may be applied here
+            // `this` is included as the first one among ancestors
+            let streams = this.getAncestors().map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
+            entries = type.combineStreams(streams, this)            // `default` or `impute` of the schema may be applied here
         }
 
         this._meta_.props_cache.set(prop, entries)
