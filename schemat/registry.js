@@ -152,6 +152,8 @@ export class Registry {
         /* Create the RootCategory object, ID=0, and load its contents either from the DB (if present there)
            or from the predefined `root_data`.
          */
+        if (this.root) return this.root
+
         let root = this.root = RootCategory.create()
         this.register(root)
 
