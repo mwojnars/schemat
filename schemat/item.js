@@ -602,12 +602,14 @@ export class Item {
            If schemaless=true, a concatenated stream of all matching entries is returned without caching -
            for system properties, like _category_, which are processed when the schema is not yet available.
          */
+        if (!this._data_) throw new NotLoaded(this)
+
         let entries = this._meta_.props_cache.get(prop)                         // array of entries, or undefined
         if (entries) yield* entries
 
         // below, `this` is included at the 1st position among ancestors;
         // `streams` is a function so its evaluation can be omitted if a non-repeated value is already available in this._data_
-        let streams = () => this.getAncestors().map(proto => proto._raw_entries(prop))
+        let streams = () => this.getAncestors().map(proto => proto._data_.readEntries(prop))
 
         if (schemaless) entries = concat(streams().map(stream => [...stream]))
         else {
@@ -631,14 +633,6 @@ export class Item {
             }
         }
         yield* entries
-    }
-
-    *_raw_entries(prop = undefined) {
-        /* Generate a stream of own entries (from this._data_) for a given property(s). No inherited/imputed entries.
-           `prop` can be a string, or an array of strings, or undefined. The entries preserve their original order.
-         */
-        if (!this._data_) throw new NotLoaded(this)
-        yield* this._data_.readEntries(prop)
     }
 
     // object(first = true) {
