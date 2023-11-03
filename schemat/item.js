@@ -429,7 +429,7 @@ export class Item {
             let init = this.__init__()                          // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init             // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
 
-            this._set_expiry(category?.prop('cache_ttl'))
+            this._set_expiry(category?.cache_ttl)
 
             return this
 
@@ -507,7 +507,7 @@ export class Item {
 
     /***  Dynamic loading of source code  ***/
 
-    async getClass()    { return this.prop('_class_') || this._category_?.getItemClass() }
+    async getClass()    { return this._class_ || this._category_?.getItemClass() }
 
     // async getClass()    {
     //     if (this.category && !this.category.getItemClass) {
@@ -617,9 +617,6 @@ export class Item {
             yield* Path.walk(entry.value, tail)                 // walk down the `tail` path of nested objects
     }
 
-    // propsList(prop)         { return this[prop + proxy_handler.MULTIPLE_SUFFIX] }
-    // propsReversed(prop)     { return this[prop + proxy_handler.MULTIPLE_SUFFIX].reverse() }
-
     *_scan_entries(prop, {silent=false} = {}) {
         /* Generate a stream of valid entries for a given property: own entries followed by inherited ones;
            or the default entry (if own/inherited are missing), or an imputed entry.
@@ -695,11 +692,11 @@ export class Item {
     getPrototypes()     { return this._data_.getValues('extends') }
 
 
-    getName() { return this.prop('name') || '' }
+    getName() { return this.name || '' }
     getPath() {
         /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.
            Starts with '/' (absolute path). */
-        return this.prop('path') || this.registry.site.systemPath(this)
+        return this.path || this.registry.site.systemPath(this)
     }
 
     getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
@@ -1124,14 +1121,14 @@ export class Category extends Item {
 
     getClassPath() {
         /* Return import path of this category's items' base class, as a pair [module_path, class_name]. */
-        return splitLast(this.prop('class_path') || '', ':')
+        return splitLast(this.class_path || '', ':')
     }
 
     getSource() {
         /* Combine all code snippets of this category, including inherited ones, into a module source code.
            Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
-        let name = this.prop('class_name') || `Class_${this._id_}`
+        let name = this.class_name || `Class_${this._id_}`
         let base = this._codeBaseClass()
         let init = this._codeInit()
         let code = this._codeClass(name)
@@ -1204,7 +1201,7 @@ export class Category extends Item {
 
     getItemSchema() {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
-        return this.prop('item_schema')
+        return this.item_schema
     }
 
     _checkPath(request) {
@@ -1308,9 +1305,7 @@ export class RootCategory extends Category {
     _init_class() {}                            // RootCategory's class is already set up, no need to do anything more
 
     getItemSchema() {
-        /* In RootCategory, this == this._category_, and to avoid infinite recursion we must perform
-           schema inheritance manually (without this.prop()).
-         */
+        /* In RootCategory, this == this._category_, and to avoid infinite recursion we must perform schema inheritance manually. */
         let root_fields = this._data_.get('fields')
         let default_fields = root_fields.get('fields').props.default
         let fields = new Catalog(root_fields, default_fields)
