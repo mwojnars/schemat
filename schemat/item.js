@@ -697,10 +697,9 @@ export class Item {
         return [this, ...unique(concat(ancestors))]
     }
 
+    // getPrototypes()     { return this.extends_array }
     getPrototypes()     { return this._data_.getValues('extends') }
 
-
-    // getName() { return this.name || '' }
     getPath() {
         /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.
            Starts with '/' (absolute path). */
@@ -1309,8 +1308,6 @@ export class RootCategory extends Category {
 
     get _category_() { return this }            // root category is a category for itself
 
-    _init_class() {}                            // RootCategory's class is already set up, no need to do anything more
-
     get item_schema() {
         /* In RootCategory, this == this._category_, and to avoid infinite recursion we must perform schema inheritance manually. */
         let root_fields = this._data_.get('fields')
@@ -1319,6 +1316,8 @@ export class RootCategory extends Category {
         let custom = this._data_.get('allow_custom_fields')
         return new DATA({fields: fields.object(), strict: custom !== true})
     }
+
+    _init_class() {}                            // RootCategory's class is already set up, no need to do anything more
 }
 
 
