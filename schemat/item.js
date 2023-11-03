@@ -617,8 +617,8 @@ export class Item {
             yield* Path.walk(entry.value, tail)                 // walk down the `tail` path of nested objects
     }
 
-    propsList(prop)         { return this[prop + proxy_handler.MULTIPLE_SUFFIX] }
-    propsReversed(prop)     { return this[prop + proxy_handler.MULTIPLE_SUFFIX].reverse() }
+    // propsList(prop)         { return this[prop + proxy_handler.MULTIPLE_SUFFIX] }
+    // propsReversed(prop)     { return this[prop + proxy_handler.MULTIPLE_SUFFIX].reverse() }
 
     *_scan_entries(prop, {silent=false} = {}) {
         /* Generate a stream of valid entries for a given property: own entries followed by inherited ones;
@@ -756,7 +756,7 @@ export class Item {
          */
         // let env = this.registry.onServer ? 'server' : 'client'
         // let snippets = this.getMany([key, `${key}_${env}`], params)
-        let snippets = this.propsReversed(key)
+        let snippets = this[`${key}_array`].reverse()
         return snippets.join('\n')
     }
 
@@ -1194,7 +1194,7 @@ export class Category extends Item {
     // }
     _codeCache() {
         /* Source code of setCaching() statement for selected methods of a custom Class. */
-        let methods = this.propsReversed('cached_methods')
+        let methods = this.cached_methods_array.reverse()
         methods = methods.join(' ').replaceAll(',', ' ').trim()
         if (!methods) return ''
         methods = methods.split(/\s+/).map(m => `'${m}'`)

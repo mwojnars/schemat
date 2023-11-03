@@ -153,7 +153,7 @@ export class BasicIndex extends Index {
         let field_values = []
 
         for (const name of this.schema.field_names) {
-            const values = item.propsList(name)
+            const values = item[`${name}_array`]
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && field_values.length)
                 throw new Error(`key field ${name} has multiple values, which is allowed only for the first field in the index`)
