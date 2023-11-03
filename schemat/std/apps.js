@@ -99,7 +99,7 @@ export class AppSpaces extends Application {
     findRoute(request) {
         let step = request.step()
         let [space, id] = step.split(':')
-        let category = this.prop(`spaces/${space}`)          // decode space identifier and convert to a category object
+        let category = this.spaces.get(space)               // decode space identifier and convert to a category object
         if (!category) request.throwNotFound()
         let item = this.registry.getItem(Number(id))
         return [item, request.pushApp(this).move(step), true]

@@ -97,7 +97,7 @@ export class Folder extends Item {
     findRoute(request) {
         let step = request.step()
         if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
-        let item = this.prop(`files/${step}`)
+        let item = this.files.get(step)
         // request.pushMethod('@file')                     // if `item` doesn't provide @file method, its default one will be used
         return [item, request.move(step), item => !(item instanceof Folder)]
     }
