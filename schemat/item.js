@@ -638,7 +638,7 @@ export class Item {
         else {
             // let schema = this._schema_     // doesn't work here due to circular deps on properties
             let category = this._proxy_._category_
-            let schema = category?.getItemSchema() || new DATA_GENERIC()
+            let schema = category?.item_schema || new DATA_GENERIC()
             type = schema.get(prop)
         }
 
@@ -722,13 +722,13 @@ export class Item {
 
     // getSchema() {
     //     /* Return schema of this item (instance of DATA), or of a particular `field`. */
-    //     return this.category?.getItemSchema() || new DATA_GENERIC()
+    //     return this.category?.item_schema || new DATA_GENERIC()
     // }
 
     // getSchema(path = null) {
     //     /* Return schema of this item (instance of DATA), or of a given `path` inside nested catalogs,
     //        as defined in this item's category's `fields` property. */
-    //     let schema = this.category.getItemSchema()
+    //     let schema = this.category.item_schema
     //     if (!path?.length) return schema
     //
     //     assert(false, 'getSchema() is never used with an argument')
@@ -1027,6 +1027,10 @@ export class Category extends Item {
     also acts as a manager that controls access to and creation of new items within category.
     */
 
+    // properties:
+    // item_schema                 // ITEM_SCHEMA of items in this category (not the schema of self)
+
+
     __init__() { return this._initSchema() }
 
     async _initSchema() {
@@ -1199,11 +1203,6 @@ export class Category extends Item {
         return `Class.setCaching(${methods.join(',')})`
     }
 
-    getItemSchema() {
-        /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
-        return this.item_schema
-    }
-
     _checkPath(request) {
         /* Check if the request's path is compatible with the default path of this item. Throw an exception if not. */
         let path  = request.pathFull
@@ -1213,7 +1212,7 @@ export class Category extends Item {
     }
 }
 
-Category.setCaching('getModule', 'getItemClass', 'getSource', 'getItemSchema', 'getAssets')   //'getHandlers'
+Category.setCaching('getModule', 'getItemClass', 'getSource', 'getAssets')   //'getHandlers'
 
 Category.create_api(
     {
@@ -1304,7 +1303,7 @@ export class RootCategory extends Category {
 
     _init_class() {}                            // RootCategory's class is already set up, no need to do anything more
 
-    getItemSchema() {
+    get item_schema() {
         /* In RootCategory, this == this._category_, and to avoid infinite recursion we must perform schema inheritance manually. */
         let root_fields = this._data_.get('fields')
         let default_fields = root_fields.get('fields').props.default
@@ -1313,8 +1312,6 @@ export class RootCategory extends Category {
         return new DATA({fields: fields.object(), strict: custom !== true})
     }
 }
-
-RootCategory.setCaching('getItemSchema')
 
 
 /**********************************************************************************************************************/

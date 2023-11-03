@@ -1431,7 +1431,7 @@ export class OWN_SCHEMA extends TYPE {
         editable: false,
         impute() {
             // assert(this instanceof Item)
-            return this._category_?.getItemSchema() || new DATA_GENERIC()
+            return this._category_?.item_schema || new DATA_GENERIC()
         }
     }
 }
