@@ -20,7 +20,7 @@ export class Router extends Item {
 
     async route(request) {
         let step   = request.step()
-        let routes = this.prop('routes')
+        let routes = this.routes
         let node   = routes.get(step)
         if (step && node) return node.load().then(n => n.route(request.move(step)))
 
@@ -41,7 +41,7 @@ export class Router extends Item {
 
     // findRoute(request) {
     //     let step   = request.step()
-    //     let routes = this.prop('routes')
+    //     let routes = this.routes
     //     let route  = routes.get(step)
     //     if (step && route)  return [route, request.move(step)]
     //     if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
@@ -53,6 +53,10 @@ export class Site extends Router {
 
     static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
+
+    // properties:
+    URL
+    path_internal
 
     async __init__()   { if (this.registry.onServer) this._vm = await import('vm') }
 
@@ -171,23 +175,23 @@ export class Site extends Router {
 
     // findRoute(request) {
     //     return request.path ?
-    //         [this.prop('router'), request, false] :
-    //         [this.prop('empty_path'),  request,  true]
+    //         [this.router, request, false] :
+    //         [this.empty_path,  request,  true]
     // }
 
     systemURL() {
         /* Absolute base URL for system calls originating at a web client and targeting specific items. */
-        return this.prop('URL') + this.prop('path_internal')
+        return this.URL + this.path_internal
     }
     systemPath(item) {
         /* Default absolute URL path ("system path") of the item. No domain. */
         item.assert_linked()
-        return this.prop('path_internal') + `/${item._id_}`
+        return this.path_internal + `/${item._id_}`
     }
 
     urlRaw(item) {
         /* Absolute raw URL for an `item`. TODO: reuse the AppBasic instead of the code below. */
-        return this.prop('URL') + this.systemPath(item)
+        return this.URL + this.systemPath(item)
     }
 }
 

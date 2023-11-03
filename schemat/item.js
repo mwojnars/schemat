@@ -665,7 +665,7 @@ export class Item {
         else {
             let ancestors = type.props.inherit ? proxy._get_ancestors() : [this]   // `this` is always included as the first ancestor
             let streams = ancestors.map(proto => proto._own_entries(prop))
-            entries = type.combineStreams(streams, this)            // `default` or `impute` of the schema may be applied here
+            entries = type.combineStreams(streams, this)            // `default` and `impute` of the schema is applied here
         }
 
         this._meta_.props_cache.set(prop, entries)
