@@ -10,15 +10,17 @@ import {CATALOG, CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN, ITEM_SCH
 
 // global-default fields shared by all item types
 let default_fields = new Catalog({
-    _category_  : new ITEM({info: "Category of this item. Determines item's behavior and the schema of its attributes. Each category should be an item of the Root Category (IID=0)."}),
+    _category_  : new ITEM({info: "Category of this item. Determines item's behavior and the schema of its attributes. Each category should be an item of the Root Category (IID=0).",
+                            inherit: false}),
     _class_     : new CLASS({info: "Javascript class to be assigned to the item after loading to provide custom methods for the item."}),
-    _schema_    : new OWN_SCHEMA({info: "The DATA schema for this item. Non-editable, automatically imputed from this item's category(ies)."}),
+    _schema_    : new OWN_SCHEMA({info: "The DATA schema for this item. Non-editable, automatically imputed from this item's category(ies).", inherit: false}),
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters.", default: ""}),
     path        : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If `path` is configured, callers can only import this item's code through the `path`, so that the code is always interpreted the same and can be cached after parsing."}),
     info        : new TEXT({info: "Description of the item."}),
     extends     : new ITEM({info: "An item that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
                                   "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items or categories - the latter case represents category inheritance. " +
-                                  "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories."}),
+                                  "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories.",
+                            inherit: false}),
     html_title  : new STRING({info: "HTML title to be used for when this item is rendered."}),
 })
 

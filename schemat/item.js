@@ -637,15 +637,17 @@ export class Item {
 
         let entries = this._meta_.props_cache.get(prop)                         // array of entries, or undefined
         if (entries) yield* entries
+
+        let proxy = this._proxy_
         let type
 
         // find out the `type` (Type instance) of the property ...
         // _category_ needs special handling because the schema is not yet available at this point
 
-        if (prop === '_category_') type = new ITEM()
+        if (prop === '_category_') type = new ITEM({inherit: false})
         else {
             // let schema = this._schema_     // doesn't work here due to circular deps on properties
-            let category = this._proxy_._category_
+            let category = proxy._category_
             let schema = category?.item_schema || new DATA_GENERIC()
             type = schema.get(prop)
         }
@@ -661,8 +663,8 @@ export class Item {
             entries = [this._data_.getEntry(prop)]
 
         else {
-            // `this` is included as the first ancestor
-            let streams = this.getAncestors().map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
+            let ancestors = type.props.inherit ? proxy.getAncestors() : [this]       // `this` is always included as the first ancestor
+            let streams = ancestors.map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
             entries = type.combineStreams(streams, this)            // `default` or `impute` of the schema may be applied here
         }
 
@@ -697,8 +699,14 @@ export class Item {
         return [this, ...unique(concat(ancestors))]
     }
 
-    // getPrototypes()     { return this.extends_array }
-    getPrototypes()     { return this._data_.getValues('extends') }
+    // getPrototypes()     { return this._data_.getValues('extends') }
+    getPrototypes() {
+        let a1 = this._data_.getValues('extends')
+        // let a2 = this.extends_array
+        // print('a1:', a1)
+        // print('a2:', a2)
+        return a1
+    }
 
     getPath() {
         /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.

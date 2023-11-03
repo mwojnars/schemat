@@ -42,6 +42,7 @@ export class Type {
                                 // since repeated properties behave like lists of varying length, and zero is a valid length,
                                 // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
+        inherit  : true,        // if false, inheritance is disabled for this field; used particularly for some system fields
         impute   : undefined,   // a function to be used for imputation of missing values; `this` references the item;
                                 // only called for non-repeated properties, when `default`==undefined and there are no inherited values
 

@@ -68,6 +68,7 @@
           info: Category of this item. Determines item's behavior and the schema of its
             attributes. Each category should be an item of the Root Category
             (IID=0).
+          inherit: false
           "@": ITEM
         _class_:
           info: Javascript class to be assigned to the item after loading to provide
@@ -76,6 +77,7 @@
         _schema_:
           info: The DATA schema for this item. Non-editable, automatically imputed from
             this item's category(ies).
+          inherit: false
           "@": OWN_SCHEMA
         name:
           info: Display name of the item. May contain spaces, punctuation, non-latin
@@ -101,6 +103,7 @@
             individual entries from catalog-valued fields, see
             Item.getInherited(). In this way, subcategories inherit individual
             field schemas as defined in base categories.
+          inherit: false
           "@": ITEM
         html_title:
           info: HTML title to be used for when this item is rendered.
