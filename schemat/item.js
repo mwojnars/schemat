@@ -664,7 +664,7 @@ export class Item {
 
         else {
             let ancestors = type.props.inherit ? proxy._get_ancestors() : [this]   // `this` is always included as the first ancestor
-            let streams = ancestors.map(proto => proto._data_.readEntries(prop))
+            let streams = ancestors.map(proto => proto._own_entries(prop))
             entries = type.combineStreams(streams, this)            // `default` or `impute` of the schema may be applied here
         }
 
@@ -678,16 +678,10 @@ export class Item {
         yield* entries
     }
 
-    // object(first = true) {
-    //     /* Return this._data_ converted to a plain object. For repeated keys, only one value is included:
-    //        the first one if first=true (default), or the last one, otherwise.
-    //        TODO: for repeated keys, return a sub-object: {first, last, all} - configurable in schema settings
-    //       */
-    //     this.assert_loaded()
-    //     let obj = this._data_.object(first)
-    //     obj.__item__ = this
-    //     return obj
-    // }
+    _own_entries(prop) { return this._data_.readEntries(prop) }
+    _own_values(prop)  { return this._data_.getValues(prop) }
+
+    _get_prototypes()  { return this._own_values('_extends_') }
 
     _get_ancestors() {
         /* Linearized list of all ancestors, with `this` at the first position.
@@ -699,7 +693,16 @@ export class Item {
         return [this, ...unique(concat(ancestors))]
     }
 
-    _get_prototypes()   { return this._data_.getValues('_extends_') }
+    // object(first = true) {
+    //     /* Return this._data_ converted to a plain object. For repeated keys, only one value is included:
+    //        the first one if first=true (default), or the last one, otherwise.
+    //        TODO: for repeated keys, return a sub-object: {first, last, all} - configurable in schema settings
+    //       */
+    //     this.assert_loaded()
+    //     let obj = this._data_.object(first)
+    //     obj.__item__ = this
+    //     return obj
+    // }
 
     getPath() {
         /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.
