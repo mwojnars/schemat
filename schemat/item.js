@@ -701,7 +701,7 @@ export class Item {
 
     // getPrototypes()     { return this._data_.getValues('extends') }
     getPrototypes() {
-        let a1 = this._data_.getValues('extends')
+        let a1 = this._data_.getValues('_extends_')
         // let a2 = this.extends_array
         // print('a1:', a1)
         // print('a2:', a2)

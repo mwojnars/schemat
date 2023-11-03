@@ -79,6 +79,17 @@
             this item's category(ies).
           inherit: false
           "@": OWN_SCHEMA
+        _extends_:
+          info: An item that serves as a prototype for this one, that is, provides default
+            values for missing properties of this item. Multiple prototypes are
+            allowed, the first one has priority over subsequent ones. Prototypes
+            can be defined for regular items or categories - the latter case
+            represents category inheritance. Items/categories may inherit
+            individual entries from catalog-valued fields, see
+            Item.getInherited(). In this way, subcategories inherit individual
+            field schemas as defined in base categories.
+          inherit: false
+          "@": ITEM
         name:
           info: Display name of the item. May contain spaces, punctuation, non-latin
             characters.
@@ -94,17 +105,6 @@
         info:
           info: Description of the item.
           "@": TEXT
-        extends:
-          info: An item that serves as a prototype for this one, that is, provides default
-            values for missing properties of this item. Multiple prototypes are
-            allowed, the first one has priority over subsequent ones. Prototypes
-            can be defined for regular items or categories - the latter case
-            represents category inheritance. Items/categories may inherit
-            individual entries from catalog-valued fields, see
-            Item.getInherited(). In this way, subcategories inherit individual
-            field schemas as defined in base categories.
-          inherit: false
-          "@": ITEM
         html_title:
           info: HTML title to be used for when this item is rendered.
           "@": STRING
@@ -188,7 +188,7 @@
 - __id: 4
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
-  extends:
+  _extends_:
     "@": 3
   class_path: /system/local/std/files.js:FileLocal
   fields:
@@ -220,7 +220,7 @@
   info: |-
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
-  extends:
+  _extends_:
     "@": 5
   class_path: /system/local/std/files.js:FolderLocal
   fields:
