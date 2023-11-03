@@ -181,6 +181,7 @@ const proxy_handler = {
         let value = Reflect.get(target, prop, receiver)
         if (value === proxy_handler.UNDEFINED) return undefined
         if (value !== undefined) return value
+        if (!target._data_) return undefined
 
         // there are many queries for 'then' because after a promise resolves, its result is checked for .then to see if it's another promise
         if (prop === 'then') return undefined
@@ -191,11 +192,16 @@ const proxy_handler = {
 
         // console.log('get', prop)
 
-        if (target._data_) {
-            let stream = target._scan_entries(prop, {silent: true})
-            let entry = stream.next().value
-            if (entry) return entry.value
+        if (prop.endsWith('_array')) {
+            prop = prop.slice(0, -6)
+            let entries = target._scan_entries(prop, {silent: true})
+            return [...entries].map(entry => entry.value)
         }
+
+        let entries = target._scan_entries(prop, {silent: true})
+        let entry = entries.next().value
+        if (entry) return entry.value
+
         // return target.prop(prop, {schemaless: true})
         // let data = target._data_
         // if (data?.has(prop)) return data.get(prop)
@@ -607,8 +613,10 @@ export class Item {
             yield* Path.walk(entry.value, tail)                 // walk down the `tail` path of nested objects
     }
 
-    propsList(path)         { return [...this.props(path)] }
-    propsReversed(path)     { return [...this.props(path)].reverse() }
+    // propsList(path)         { return [...this.props(path)] }
+    // propsReversed(path)     { return [...this.props(path)].reverse() }
+    propsList(prop)         { return this[`${prop}_array`] }
+    propsReversed(prop)     { return this[`${prop}_array`].reverse() }
 
     *_scan_entries(prop, {silent=false} = {}) {
         /* Generate a stream of valid entries for a given property: own entries followed by inherited ones;

@@ -19,13 +19,13 @@ export class File extends Item {
          */
         return content
     }
-    content() {
+    _content() {
         /* Initial raw content of this file before any processing. */
         return this.prop('content')
     }
     read() {
         /* Final post-processed (e.g., transpiled, compacted) content of this file. */
-        return this.process(this.content())
+        return this.process(this._content())
     }
 
     // async CALL_import({request}) {
@@ -78,7 +78,7 @@ File.create_api({        // endpoints...
 export class FileLocal extends File {
     async __init__()  { if (this.registry.onServer) this._mod_fs = await import('fs') }
 
-    content(encoding) {
+    _content(encoding) {
         let path = this.prop('path')
         if (path) return this._mod_fs.readFileSync(path, {encoding})
     }
