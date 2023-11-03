@@ -468,7 +468,7 @@ export class Item {
 
     _init_prototypes() {
         /* Load all Schemat prototypes of this object. */
-        let prototypes = this.getPrototypes()
+        let prototypes = this._get_prototypes()
         // for (const p of prototypes)        // TODO: update the code below to verify ._category_ instead of CIDs
             // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
         prototypes = prototypes.filter(p => !p.is_loaded())
@@ -508,7 +508,7 @@ export class Item {
            True if parent==this. All comparisons by item ID.
          */
         if (schemat.equivalent(this, parent)) return true
-        for (const proto of this.getPrototypes())
+        for (const proto of this._get_prototypes())
             if (proto.inherits(parent)) return true
         return false
     }
@@ -646,7 +646,7 @@ export class Item {
 
         if (prop === '_category_') type = new ITEM({inherit: false})
         else {
-            // let schema = this._schema_     // doesn't work here due to circular deps on properties
+            // let schema = this._schema_ || new DATA_GENERIC()    // doesn't work here due to circular deps on properties
             let category = proxy._category_
             let schema = category?.item_schema || new DATA_GENERIC()
             type = schema.get(prop)
@@ -663,8 +663,8 @@ export class Item {
             entries = [this._data_.getEntry(prop)]
 
         else {
-            let ancestors = type.props.inherit ? proxy.getAncestors() : [this]       // `this` is always included as the first ancestor
-            let streams = ancestors.map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
+            let ancestors = type.props.inherit ? proxy._get_ancestors() : [this]   // `this` is always included as the first ancestor
+            let streams = ancestors.map(proto => proto._data_.readEntries(prop))
             entries = type.combineStreams(streams, this)            // `default` or `impute` of the schema may be applied here
         }
 
@@ -689,24 +689,17 @@ export class Item {
     //     return obj
     // }
 
-    getAncestors() {
+    _get_ancestors() {
         /* Linearized list of all ancestors, with `this` at the first position.
            TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
            https://en.wikipedia.org/wiki/C3_linearization
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
-        let ancestors = this.getPrototypes().map(proto => proto.getAncestors())
+        let ancestors = this._get_prototypes().map(proto => proto._get_ancestors())
         return [this, ...unique(concat(ancestors))]
     }
 
-    // getPrototypes()     { return this._data_.getValues('extends') }
-    getPrototypes() {
-        let a1 = this._data_.getValues('_extends_')
-        // let a2 = this.extends_array
-        // print('a1:', a1)
-        // print('a2:', a2)
-        return a1
-    }
+    _get_prototypes()   { return this._data_.getValues('_extends_') }
 
     getPath() {
         /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.
@@ -734,32 +727,6 @@ export class Item {
         if (!brackets) return stamp
         return `[${stamp}]`
     }
-
-    // getSchema() {
-    //     /* Return schema of this item (instance of DATA), or of a particular `field`. */
-    //     return this.category?.item_schema || new DATA_GENERIC()
-    // }
-
-    // getSchema(path = null) {
-    //     /* Return schema of this item (instance of DATA), or of a given `path` inside nested catalogs,
-    //        as defined in this item's category's `fields` property. */
-    //     let schema = this.category.item_schema
-    //     if (!path?.length) return schema
-    //
-    //     assert(false, 'getSchema() is never used with an argument')
-    //
-    //     this.assert_loaded()
-    //     let keys = [], data = this._data_
-    //
-    //     // convert numeric indices in `path` to keys
-    //     for (let step of path) {
-    //         assert(data instanceof Catalog)
-    //         let entry = data.getEntry(step)                     // can be undefined for the last step of `path`
-    //         keys.push(typeof step === 'number' ? entry.key : step)
-    //         data = entry?.value
-    //     }
-    //     return schema.find(keys)
-    // }
 
     mergeSnippets(key, params) {
         /* Retrieve all source code snippets (inherited first & own last) assigned to a given `key`.
@@ -953,7 +920,7 @@ export class Item {
         }
     }
 
-    // static cached_methods = ['getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render']
+    // static cached_methods = ['_get_prototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render']
     //
     // static initClass() {
     //     let methods = this.category.prop('cached_methods')
@@ -963,7 +930,7 @@ export class Item {
 
 /**********************************************************************************************************************/
 
-Item.setCaching('getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render')
+Item.setCaching('_get_prototypes', '_get_ancestors', 'getPath', 'getActions', 'getEndpoints', 'render')
 
 
 // When service functions (below) are called, `this` is always bound to the Item instance, so they execute
@@ -1132,7 +1099,7 @@ export class Category extends Item {
         let cls
         if (!path) [path, name] = this.getClassPath()
         if (!path) {
-            let proto = this.getPrototypes()[0]
+            let proto = this._get_prototypes()[0]
             return proto ? proto.getItemClass() : Item
         }
         return this.registry.importDirect(path, name || 'default')
