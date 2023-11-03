@@ -170,12 +170,15 @@ const proxy_handler = {
        and in this way facilitates caching of computed properties in plain attributes of the `target` object.
      */
 
+    // the suffix appended to property name when an array of all values of this property is requested
+    MULTIPLE_SUFFIX: '_array',
+
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
     UNDEFINED: Symbol.for('proxy_handler.UNDEFINED'),
 
     // these props can never be found inside item's schema and should always be accessed as regular object attributes
-    _reserved: ['_id_', '_meta_', '_data_', '_record_'],
+    RESERVED: ['_id_', '_meta_', '_data_', '_record_'],
 
     get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
@@ -187,13 +190,14 @@ const proxy_handler = {
         if (prop === 'then') return undefined
 
         // if (prop.length >= 2 && prop[0] === '_' && prop[prop.length - 1] === '_')    // _***_ props are reserved for internal use
-        if (proxy_handler._reserved.includes(prop))
+        if (proxy_handler.RESERVED.includes(prop))
             return undefined
 
         // console.log('get', prop)
+        let suffix = proxy_handler.MULTIPLE_SUFFIX
 
-        if (prop.endsWith('_array')) {
-            prop = prop.slice(0, -6)
+        if (prop.endsWith(suffix)) {
+            prop = prop.slice(0, -suffix.length)
             let entries = target._scan_entries(prop, {silent: true})
             return [...entries].map(entry => entry.value)
         }
