@@ -617,10 +617,8 @@ export class Item {
             yield* Path.walk(entry.value, tail)                 // walk down the `tail` path of nested objects
     }
 
-    // propsList(path)         { return [...this.props(path)] }
-    // propsReversed(path)     { return [...this.props(path)].reverse() }
-    propsList(prop)         { return this[`${prop}_array`] }
-    propsReversed(prop)     { return this[`${prop}_array`].reverse() }
+    propsList(prop)         { return this[prop + proxy_handler.MULTIPLE_SUFFIX] }
+    propsReversed(prop)     { return this[prop + proxy_handler.MULTIPLE_SUFFIX].reverse() }
 
     *_scan_entries(prop, {silent=false} = {}) {
         /* Generate a stream of valid entries for a given property: own entries followed by inherited ones;
@@ -646,10 +644,13 @@ export class Item {
             let schema = category?.getItemSchema() || new DATA_GENERIC()
             type = schema.get(prop)
 
-            if (!type)
+            if (!type) {
+                print('missing prop:', prop)
                 if (silent) return; else throw new Error(`not in schema: '${prop}'`)
+            }
         }
 
+        // compute an array of `entries`
         if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))      // non-repeated value is present in `this`? can skip inheritance to speed up
             entries = [this._data_.getEntry(prop)]
         else {
@@ -663,7 +664,7 @@ export class Item {
         // cache the result in a plain attribute in this._self_; _self_ is used instead of `this` because the latter
         // can be a derived object (e.g., a View) whose prototype is _self_
         this._self_[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
-        this._self_[`${prop}_array`] = entries.map(entry => entry.value)
+        this._self_[prop + proxy_handler.MULTIPLE_SUFFIX] = entries.map(entry => entry.value)
 
         yield* entries
     }
