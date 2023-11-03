@@ -214,7 +214,7 @@ export class ItemAdminPage extends ReactPage {
 
         html_title() {
             /* Get/compute a title for an HTML response page for a given request & view name. */
-            let title = this.prop('html_title')
+            let title = this.html_title
             // if (title instanceof Function) title = title()          // this can still return undefined
             if (typeof title === 'string') return title
 
@@ -227,7 +227,7 @@ export class ItemAdminPage extends ReactPage {
             /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
             let globalAssets = Resources.clientAssets
             let staticAssets = this._schema_.getAssets().renderAll()
-            let customAssets = this._category_?.prop('html_assets')
+            let customAssets = this._category_?.html_assets
             let assets = [globalAssets, staticAssets, customAssets]
             return assets .filter(a => a?.trim()) .join('\n')
         },
