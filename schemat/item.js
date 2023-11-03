@@ -634,7 +634,7 @@ export class Item {
         if (entries) yield* entries
         let type
 
-        // find out the `type` (Type instance) of the property;
+        // find out the `type` (Type instance) of the property ...
         // _category_ needs special handling because the schema is not yet available at this point
 
         if (prop === '_category_') type = new ITEM()
@@ -643,18 +643,20 @@ export class Item {
             let category = this._proxy_._category_
             let schema = category?.getItemSchema() || new DATA_GENERIC()
             type = schema.get(prop)
-
-            if (!type) {
-                print('missing prop:', prop)
-                if (silent) return; else throw new Error(`not in schema: '${prop}'`)
-            }
         }
 
-        // compute an array of `entries`
-        if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))      // non-repeated value is present in `this`? can skip inheritance to speed up
+        // compute an array of `entries` ...
+
+        if (!type)
+            if (silent) entries = []
+            else throw new Error(`not in schema: '${prop}'`)
+
+        // non-repeated value is present in `this`? can skip inheritance to speed up
+        else if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))
             entries = [this._data_.getEntry(prop)]
+
         else {
-            // `this` is included as the first one among ancestors
+            // `this` is included as the first ancestor
             let streams = this.getAncestors().map(proto => proto._data_.readEntries(prop))   //proto[`${prop}_array`]
             entries = type.combineStreams(streams, this)            // `default` or `impute` of the schema may be applied here
         }
