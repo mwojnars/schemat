@@ -250,6 +250,14 @@ export class Item {
     // static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
 
+    /***  Common properties ***/
+
+    // defined in root.js/default_fields, but declared here to avoid IDE warnings...
+
+    name
+    path
+
+
     /***  System properties  ***/
 
     /* _id_:
@@ -692,7 +700,7 @@ export class Item {
     getPrototypes()     { return this._data_.getValues('extends') }
 
 
-    getName() { return this.name || '' }
+    // getName() { return this.name || '' }
     getPath() {
         /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.
            Starts with '/' (absolute path). */
@@ -708,7 +716,7 @@ export class Item {
         (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not null,
         CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
         */
-        let cat = this._category_?.getName() || ""
+        let cat = this._category_?.name || ""
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)

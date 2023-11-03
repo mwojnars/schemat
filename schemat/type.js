@@ -799,11 +799,11 @@ export class ITEM extends Type {
                 return SPAN({suppressHydrationWarning: true}, "loading...")
 
             let url  = item.url()
-            let name = item.getName()
+            let name = item.name
             let ciid = HTML(item.getStamp({html: false, brackets: false}))
 
             if (name && url) {
-                let note = item._category_.getName() || null
+                let note = item._category_.name || null
                 return SPAN(
                     url ? A({href: url}, name) : name,
                     SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
