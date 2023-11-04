@@ -117,32 +117,31 @@ export class Type {
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
 
-    combine_inherited(streams, item) {
-        /* Combine streams of inherited values that match this type. Return an array of values.
-           The streams are either concatenated, or the values are merged into one, depending on `prop.repeated`.
-           In the latter case, the default value (if present) is included in the merge as the last element.
+    combine_inherited(arrays, item) {
+        /* Combine arrays of inherited values that match this type. Return an array of values.
+           The arrays are either concatenated, or the values are merged into one, depending on `prop.repeated`.
+           In the latter case, the default value (if present) is also included in the merge.
            `item` is an argument to downstream impute().
          */
-        if (this.isRepeated()) return concat(streams.map(stream => [...stream]))
-        let value = this.merge_inherited(streams, item)
+        if (this.isRepeated()) return concat(arrays)
+        let value = this.merge_inherited(arrays, item)
         return value !== undefined ? [value] : []
     }
 
-    merge_inherited(streams, item) {
+    merge_inherited(arrays, item) {
         /* Only used for single-valued schemas (when prop.repeated == false).
-           Merge the values of multiple inherited streams matching this type (TODO: check against incompatible inheritance).
+           Merge multiple inherited arrays of values matching this type (TODO: check against incompatible inheritance).
            Return the merged value, or undefined if it cannot be determined.
            The merged value may include or consist of the type's imputed value (props.impute()) or default (props.default).
-           Base class implementation returns the first value of `streams`, or the default value, or imputed value.
+           Base class implementation returns the first value of `arrays`, or the default value, or imputed value.
            Subclasses may provide a different implementation - in such case the type is considered "compound"
            and should return isCompound() == true to prevent simplified merging in Item._compute_property().
          */
         assert(!this.isRepeated())
-        for (let values of streams) {
-            let arr = [...values]                       // convert an iterator to an array
-            if (!arr.length) continue
-            // if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued type")
-            return arr[0]
+        for (let values of arrays) {
+            if (!values.length) continue
+            // if (values.length > 1) throw new Error("multiple values present for a key in a single-valued type")
+            return values[0]
         }
         return this.impute(item)                        // if no values were found, impute a value
     }
@@ -950,8 +949,8 @@ export class CATALOG extends Type {
         })
     }
 
-    merge_inherited(streams, item) {
-        let values = concat(streams.map(s => [...s]))               // input streams must be materialized before concat()
+    merge_inherited(arrays, item) {
+        let values = concat(arrays)
         if (!values.length) return this.impute(item)
 
         // include the default value in the merge, if present
