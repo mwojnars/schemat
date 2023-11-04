@@ -477,10 +477,12 @@ export class Item {
     }
 
     async _init_class() {
-        /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
-        // if (this._category_ === this) return                      // special case for RootCategory: its class is already set up, must prevent circular deps
-        // T.setClass(this, await this._category_.getItemClass())    // change the actual class of this item from Item to the category's proper class
-        T.setClass(this, await this.getClass() || Item)    // change the actual class of this item from Item to the category's proper class
+        /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass,
+           known after loading the item's data.
+         */
+        // T.setClass(this, await this.getClass() || Item)
+        let cls = this._class_ || await this._category_?.getItemClass()
+        T.setClass(this, cls || Item)
     }
 
     _init_network() {
@@ -514,8 +516,6 @@ export class Item {
     }
 
     /***  Dynamic loading of source code  ***/
-
-    async getClass()    { return this._class_ || this._category_?.getItemClass() }
 
     // async getClass()    {
     //     if (this.category && !this.category.getItemClass) {
