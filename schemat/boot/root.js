@@ -20,8 +20,8 @@ let default_fields = new Catalog({
                             inherit: false}),
 
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters.", default: ""}),
-    path        : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If `path` is configured, callers can only import this item's code through the `path`, so that the code is always interpreted the same and can be cached after parsing."}),
     info        : new TEXT({info: "Description of the item."}),
+    import_path : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If configured, callers can only import this item's code through this path, so the code is always interpreted in the same way and can be cached after parsing."}),
     html_title  : new STRING({info: "HTML title to be used for when this item is rendered."}),
 })
 

@@ -255,7 +255,7 @@ export class Item {
     // defined in root.js/default_fields, but declared here to avoid IDE warnings...
 
     name
-    path
+    import_path
 
 
     /***  System properties  ***/
@@ -708,7 +708,7 @@ export class Item {
     getPath() {
         /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.
            Starts with '/' (absolute path). */
-        return this.path || this.registry.site.systemPath(this)
+        return this.import_path || this.registry.site.systemPath(this)
     }
 
     getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
