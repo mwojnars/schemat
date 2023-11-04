@@ -588,8 +588,10 @@ export class Item {
            (for atomic types), or the objects (own, inherited & default) get merged altogether (for "mergeable" types like CATALOG).
            Once computed, the list of entries is cached for future use.
          */
-        if (!this._data_) throw new NotLoaded(this)
         assert(typeof prop === 'string')
+
+        let data = this._data_
+        if (!data) throw new NotLoaded(this)
 
         let proxy = this._proxy_
         let type
@@ -599,7 +601,7 @@ export class Item {
 
         if (prop === '_category_') type = new ITEM({inherit: false})
         else {
-            // let schema = this._schema_ || new DATA_GENERIC()    // doesn't work here due to circular deps on properties
+            // let schema = proxy._schema_ || new DATA_GENERIC()    // doesn't work here due to circular deps on properties
             let category = proxy._category_
             let schema = category?.item_schema || new DATA_GENERIC()
             type = schema.get(prop)
@@ -607,9 +609,9 @@ export class Item {
 
         if (!type) return []
 
-        // non-repeated value is present in `this`? can skip inheritance to speed up
-        if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))
-            return [this._data_.getEntry(prop)]
+        // the property is atomic (non-repeated and non-compound) and an own value is present? skip inheritance to speed up
+        if (!type.isRepeated() && !type.isCompound() && data.has(prop))
+            return [data.getEntry(prop)]
 
         let ancestors = type.props.inherit ? proxy._get_ancestors() : [proxy]   // `this` is always included as the first ancestor
         let streams = ancestors.map(proto => proto._own_entries(prop))
