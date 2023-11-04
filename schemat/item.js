@@ -579,47 +579,6 @@ export class Item {
 
     /***  READ access to item's data  ***/
 
-    // prop(path, opts = {}) {
-    //     /* Read the item's property either from this._data_, or (if missing) from this POJO's regular attribute
-    //        - this allows defining attributes either through DB or item's class constructor.
-    //        If there are multiple values for 'path', the first one is returned.
-    //        `opts` are {default, schemaless}.
-    //      */
-    //     // POJO attribute value as a default
-    //     let value = this[path]
-    //
-    //     if (this._data_) {
-    //         // this._data_: a property can be read before the loading completes (!), e.g., for use inside __init__();
-    //         // a "shadow" item doesn't map to a DB record, so its props can't be read with this.props() below
-    //         let value = this.props(path, opts).next().value
-    //         if(value === proxy_handler.UNDEFINED) print('UNDEFINED #1', path, this)
-    //         if (value !== undefined) return value
-    //
-    //         // // before falling back to a default value stored in a POJO attribute,
-    //         // // check that 'path' is valid according to schema, to block access to system fields like ._data_ etc
-    //         // if (!opts.schemaless) {
-    //         //     let schema = this._schema_  //getSchema()
-    //         //     let [prop] = Path.split(path)
-    //         //     if (schema && !schema.isValidKey(prop)) throw new Error(`not in schema: ${prop}`)
-    //         // }
-    //     }
-    //
-    //     if(value === proxy_handler.UNDEFINED) print('UNDEFINED #2', path, this)
-    //     if (value !== undefined) return value
-    //
-    //     return opts.default
-    // }
-    //
-    // *props(path, opts) {
-    //     /* Generate a stream of all (sub)property values that match a given `path`. The path should start with
-    //        a top-level property name, followed by subproperties separated by '/'. Alternatively, the path
-    //        can be an array of subsequent property names, or positions (in a nested array or Catalog).
-    //      */
-    //     let [prop, tail] = Path.splitAll(path)
-    //     for (const entry of this._scan_entries(prop, opts))     // find all the entries for a given `prop`
-    //         yield* Path.walk(entry.value, tail)                 // walk down the `tail` path of nested objects
-    // }
-
     *_scan_entries(prop, {silent=false} = {}) {
         /* Generate a stream of valid entries for a given property: own entries followed by inherited ones;
            or the default entry (if own/inherited are missing), or an imputed entry.
