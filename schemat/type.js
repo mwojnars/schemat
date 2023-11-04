@@ -117,37 +117,34 @@ export class Type {
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
 
-    combineStreams(streamsOfEntries, item) {
-        /* Combine streams of inherited entries whose .value matches this type. Return an array of entries.
-           The streams are either concatenated, or the entries are merged into one, depending on `prop.repeated`.
-           In the latter case, the default value (if present) is included in the merge as the last entry.
+    combineStreams(streams, item) {
+        /* Combine streams of inherited values that match this type. Return an array of values.
+           The streams are either concatenated, or the values are merged into one, depending on `prop.repeated`.
+           In the latter case, the default value (if present) is included in the merge as the last element.
            `item` is an argument to downstream impute().
          */
-        if (this.isRepeated()) return concat(streamsOfEntries.map(stream => [...stream]))
-        let entry = this.mergeEntries(streamsOfEntries, item)
-        return entry !== undefined ? [entry] : []
+        if (this.isRepeated()) return concat(streams.map(stream => [...stream]))
+        let value = this.mergeEntries(streams, item)
+        return value !== undefined ? [value] : []
     }
 
-    mergeEntries(streamsOfEntries, item) {
+    mergeEntries(streams, item) {
         /* Only used for single-valued schemas (when prop.repeated == false).
-           Merge the values of multiple streams of inherited entries whose .value matches this type (TODO: check against incompatible inheritance).
-           Return an entry whose .value is the result of the merge, or undefined if the value cannot be determined.
+           Merge the values of multiple inherited streams matching this type (TODO: check against incompatible inheritance).
+           Return the merged value, or undefined if it cannot be determined.
            The merged value may include or consist of the type's imputed value (props.impute()) or default (props.default).
-           The entry returned can be synthetic and contain {value} attribute only.
-           Base class implementation returns the first entry of `streamsOfEntries`, or the default value, or imputed value.
+           Base class implementation returns the first value of `streams`, or the default value, or imputed value.
            Subclasses may provide a different implementation - in such case the type is considered "compound"
-           and should return isCompound() == true to prevent simplified merging in Item.entries().
+           and should return isCompound() == true to prevent simplified merging in Item._compute_property().
          */
         assert(!this.isRepeated())
-        for (let entries of streamsOfEntries) {
-            let arr = [...entries]                          // convert an iterator to an array
-            if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued type")
-            if (arr.length < 1) continue
+        for (let values of streams) {
+            let arr = [...values]                       // convert an iterator to an array
+            if (!arr.length) continue
+            // if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued type")
             return arr[0]
         }
-
-        let value = this.impute(item)
-        if (value !== undefined) return {value}             // synthetic entry with imputed value
+        return this.impute(item)                        // if no values were found, impute a value
     }
 
     impute(item) {
@@ -954,17 +951,16 @@ export class CATALOG extends Type {
     }
 
     mergeEntries(streams, item) {
-        let entries = concat(streams.map(s => [...s]))              // input streams must be materialized before concat()
-        if (entries.length === 0) return this.impute(item)
+        let values = concat(streams.map(s => [...s]))               // input streams must be materialized before concat()
+        if (!values.length) return this.impute(item)
 
         // include the default value in the merge, if present
-        let catalogs = entries.map(e => e.value)
         let default_ = this.props.default
-        if (default_ !== undefined) catalogs = [...catalogs, default_]
+        let catalogs = (default_ !== undefined) ? [...values, default_] : values
 
-        return {value: Catalog.merge(catalogs, !this.isRepeated())}                   // merge entries
+        return Catalog.merge(catalogs, !this.isRepeated())          // merge all values (catalogs) into a single catalog
 
-        // TODO: inside Catalog.merge(), if repeated=false, overlapping entries should be merged recursively
+        // TODO: inside Catalog.merge(), if repeated=false, overlapping values should be merged recursively
         //       through combine() of props.values type
     }
 

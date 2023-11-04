@@ -201,8 +201,7 @@ const proxy_handler = {
         let multiple = prop.endsWith(suffix)
         if (multiple) prop = prop.slice(0, -suffix.length)      // use the base property name without the suffix
 
-        let entries = target._compute_property(prop)
-        let values = entries.map(entry => entry.value)
+        let values = target._compute_property(prop)
         value = values[0]
 
         // cache the result in target._self_; _self_ is used instead of `target` because the latter
@@ -609,17 +608,17 @@ export class Item {
 
         if (!type) return []
 
-        // the property is atomic (non-repeated and non-compound) and an own value is present? skip inheritance to speed up
+        // if the property is atomic (non-repeated and non-compound) and an own value is present, skip inheritance to speed up
         if (!type.isRepeated() && !type.isCompound() && data.has(prop))
-            return [data.getEntry(prop)]
+            return [data.get(prop)]
 
         let ancestors = type.props.inherit ? proxy._get_ancestors() : [proxy]   // `this` is always included as the first ancestor
-        let streams = ancestors.map(proto => proto._own_entries(prop))
+        let streams = ancestors.map(proto => proto._own_values(prop))
         return type.combineStreams(streams, proxy)                              // `default` and `impute` of the schema is applied here
     }
 
-    _own_entries(prop) { return this._data_.readEntries(prop) }
-    // _own_values(prop)  { return this._data_.getValues(prop) }
+    // _own_entries(prop) { return this._data_.readEntries(prop) }
+    _own_values(prop)  { return this._data_.getValues(prop) }
 
     _get_prototypes()  { return this._extends__array }
     // _get_prototypes()  { return this._own_values('_extends_') }
