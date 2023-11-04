@@ -679,9 +679,10 @@ export class Item {
     }
 
     _own_entries(prop) { return this._data_.readEntries(prop) }
-    _own_values(prop)  { return this._data_.getValues(prop) }
+    // _own_values(prop)  { return this._data_.getValues(prop) }
 
-    _get_prototypes()  { return this._own_values('_extends_') }
+    _get_prototypes()  { return this._extends__array }
+    // _get_prototypes()  { return this._own_values('_extends_') }
 
     _get_ancestors() {
         /* Linearized list of all ancestors, with `this` at the first position.

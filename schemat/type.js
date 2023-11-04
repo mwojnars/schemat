@@ -686,6 +686,7 @@ export class GENERIC extends Type {
     static defaultProps = {
         class: undefined,
         //types: undefined,
+        inherit: false,
     }
 
     validate(obj) {
