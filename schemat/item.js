@@ -300,7 +300,6 @@ export class Item {
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
         mutable: false,         // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
         expiry:  undefined,     // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
-        props_cache: new Map(), // cache of computed properties, {prop: array_of_entries}; each array consists of own data + inherited, or just schema default / imputed
         calls_cache: new Map(), // cache of method calls, {method: value}, of no-arg calls of methods registered thru setCaching(); values can be Promises!
 
         // db         // the origin database of this item; undefined in newborn items
@@ -579,6 +578,11 @@ export class Item {
 
     /***  READ access to item's data  ***/
 
+    _compute_property(prop, {silent=false} = {}) {
+        /* Compute a property, `prop`, and return an array of its values. The array consists of own data + inherited,
+           or just schema default / imputed */
+    }
+
     *_scan_entries(prop, {silent=false} = {}) {
         /* Generate a stream of valid entries for a given property: own entries followed by inherited ones;
            or the default entry (if own/inherited are missing), or an imputed entry.
@@ -589,11 +593,8 @@ export class Item {
         if (!this._data_) throw new NotLoaded(this)
         assert(typeof prop === 'string')
 
-        let entries = this._meta_.props_cache.get(prop)                         // array of entries, or undefined
-        if (entries) yield* entries
-
         let proxy = this._proxy_
-        let type
+        let entries, type
 
         // find out the `type` (Type instance) of the property ...
         // _category_ needs special handling because the schema is not yet available at this point
@@ -622,10 +623,8 @@ export class Item {
             entries = type.combineStreams(streams, proxy)           // `default` and `impute` of the schema is applied here
         }
 
-        this._meta_.props_cache.set(prop, entries)
-
         // cache the result in a plain attribute in this._self_; _self_ is used instead of `this` because the latter
-        // can be a derived object (e.g., a View) whose prototype is _self_
+        // can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
         this._self_[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
         this._self_[prop + proxy_handler.MULTIPLE_SUFFIX] = entries.map(entry => entry.value)
 
