@@ -198,13 +198,14 @@ const proxy_handler = {
 
         if (prop.endsWith(suffix)) {
             prop = prop.slice(0, -suffix.length)
-            let entries = target._scan_entries(prop, {silent: true})
-            return [...entries].map(entry => entry.value)
+            let entries = target._compute_property(prop, {silent: true})
+            return entries.map(entry => entry.value)
         }
 
-        let entries = target._scan_entries(prop, {silent: true})
-        let entry = entries.next().value
-        if (entry) return entry.value
+        let entries = target._compute_property(prop, {silent: true})
+        if (entries.length) return entries[0].value
+        // let entry = entries.next().value
+        // if (entry) return entry.value
 
         // return target.prop(prop, {schemaless: true})
         // let data = target._data_
@@ -579,15 +580,10 @@ export class Item {
     /***  READ access to item's data  ***/
 
     _compute_property(prop, {silent=false} = {}) {
-        /* Compute a property, `prop`, and return an array of its values. The array consists of own data + inherited,
-           or just schema default / imputed */
-    }
-
-    *_scan_entries(prop, {silent=false} = {}) {
-        /* Generate a stream of valid entries for a given property: own entries followed by inherited ones;
-           or the default entry (if own/inherited are missing), or an imputed entry.
-           If the schema doesn't allow multiple entries for `prop`, the first one is yielded (for atomic types),
-           or the objects (own, inherited & default) get merged into one (for "mergeable" types like CATALOG).
+        /* Compute a property, `prop`, and return an array of its values. The array consists of own data + inherited
+           (in this order), or just schema default / imputed (if own/inherited are missing).
+           If the schema doesn't allow multiple entries for `prop`, only the first one is included in the result
+           (for atomic types), or the objects (own, inherited & default) get merged altogether (for "mergeable" types like CATALOG).
            Once computed, the list of entries is cached for future use.
          */
         if (!this._data_) throw new NotLoaded(this)
@@ -628,7 +624,7 @@ export class Item {
         this._self_[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
         this._self_[prop + proxy_handler.MULTIPLE_SUFFIX] = entries.map(entry => entry.value)
 
-        yield* entries
+        return entries
     }
 
     _own_entries(prop) { return this._data_.readEntries(prop) }
