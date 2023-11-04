@@ -13,7 +13,7 @@ export class SchematProcess {
     client_db       // the client DB of the cluster; only defined in client-side processes (in a browser)
 
     get db() {
-        return this.cluster?.prop('db') || this.client_db
+        return this.cluster?.db || this.client_db
     }
 
     constructor() {
