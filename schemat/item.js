@@ -592,7 +592,7 @@ export class Item {
         assert(typeof prop === 'string')
 
         let proxy = this._proxy_
-        let entries, type
+        let type
 
         // find out the `type` (Type instance) of the property ...
         // _category_ needs special handling because the schema is not yet available at this point
@@ -605,27 +605,15 @@ export class Item {
             type = schema.get(prop)
         }
 
-        // compute an array of `entries` ...
-
-        if (!type) entries = []
-        // throw new Error(`not in schema: '${prop}'`)
+        if (!type) return []
 
         // non-repeated value is present in `this`? can skip inheritance to speed up
-        else if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))
-            entries = [this._data_.getEntry(prop)]
+        if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))
+            return [this._data_.getEntry(prop)]
 
-        else {
-            let ancestors = type.props.inherit ? proxy._get_ancestors() : [proxy]   // `this` is always included as the first ancestor
-            let streams = ancestors.map(proto => proto._own_entries(prop))
-            entries = type.combineStreams(streams, proxy)           // `default` and `impute` of the schema is applied here
-        }
-
-        // // cache the result in a plain attribute in this._self_; _self_ is used instead of `this` because the latter
-        // // can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
-        // this._self_[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
-        // this._self_[prop + proxy_handler.MULTIPLE_SUFFIX] = entries.map(entry => entry.value)
-
-        return entries
+        let ancestors = type.props.inherit ? proxy._get_ancestors() : [proxy]   // `this` is always included as the first ancestor
+        let streams = ancestors.map(proto => proto._own_entries(prop))
+        return type.combineStreams(streams, proxy)                              // `default` and `impute` of the schema is applied here
     }
 
     _own_entries(prop) { return this._data_.readEntries(prop) }
