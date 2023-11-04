@@ -170,7 +170,7 @@ const proxy_handler = {
        and in this way facilitates caching of computed properties in plain attributes of the `target` object.
      */
 
-    // the suffix appended to property name when an array of all values of this property is requested
+    // the suffix appended to a property name when an array of *all* values of this property is requested, not a single value
     MULTIPLE_SUFFIX: '_array',
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
@@ -195,22 +195,15 @@ const proxy_handler = {
 
         // console.log('get', prop)
         let suffix = proxy_handler.MULTIPLE_SUFFIX
+        let multiple = prop.endsWith(suffix)
+        if (multiple) prop = prop.slice(0, -suffix.length)      // use the base property name without the suffix
 
-        if (prop.endsWith(suffix)) {
-            prop = prop.slice(0, -suffix.length)
-            let entries = target._compute_property(prop, {silent: true})
-            return entries.map(entry => entry.value)
-        }
+        let entries = target._compute_property(prop)
+        let values = entries.map(entry => entry.value)
 
-        let entries = target._compute_property(prop, {silent: true})
-        if (entries.length) return entries[0].value
-        // let entry = entries.next().value
-        // if (entry) return entry.value
-
-        // return target.prop(prop, {schemaless: true})
-        // let data = target._data_
-        // if (data?.has(prop)) return data.get(prop)
+        return multiple ? values : values[0]
     },
+
     // set(target, prop, value, receiver) {
     //     // console.log('set', prop)
     //     return Reflect.set(target, prop, value, receiver)
@@ -579,7 +572,7 @@ export class Item {
 
     /***  READ access to item's data  ***/
 
-    _compute_property(prop, {silent=false} = {}) {
+    _compute_property(prop) {
         /* Compute a property, `prop`, and return an array of its values. The array consists of own data + inherited
            (in this order), or just schema default / imputed (if own/inherited are missing).
            If the schema doesn't allow multiple entries for `prop`, only the first one is included in the result
@@ -605,9 +598,8 @@ export class Item {
 
         // compute an array of `entries` ...
 
-        if (!type)
-            if (silent) entries = []
-            else throw new Error(`not in schema: '${prop}'`)
+        if (!type) entries = []
+        // throw new Error(`not in schema: '${prop}'`)
 
         // non-repeated value is present in `this`? can skip inheritance to speed up
         else if (!type.isRepeated() && !type.isCompound() && this._data_.has(prop))
