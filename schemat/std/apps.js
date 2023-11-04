@@ -84,7 +84,7 @@ export class AppSpaces extends Application {
     where SPACE is a text identifier assigned to a category in `spaces` property.
     */
 
-    // cached_methods = 'spacesRev'
+    spaces
 
     urlPath(item) {
         let spaces_rev = this.spacesRev()
@@ -92,7 +92,7 @@ export class AppSpaces extends Application {
         if (space) return `${space}:${item._id_}`
     }
     spacesRev() {
-        let catalog = this.prop('spaces')
+        let catalog = this.spaces
         return new Map(catalog.map(({key, value:item}) => [item._id_, key]))
     }
 

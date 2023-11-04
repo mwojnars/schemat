@@ -13,10 +13,16 @@ import { DataBlock } from './block.js'
 
 export class MySQL extends DataBlock {
 
+    // properties
+    offset
+    connection
+    tables
+
+    // temporary
     _sqlTables              // array of SQL table names
     _categories             // array of Category items corresponding to SQL tables; TODO: enable reload of category items
 
-    get _offset() { return this.prop('offset') || 0 }
+    get _offset() { return this.offset || 0 }
     get _size()   { return this._sqlTables.length }
 
     async open() {
@@ -30,7 +36,7 @@ export class MySQL extends DataBlock {
 
     async _connect() {
         let opts = {dateStrings: true}              // also of use if dateStrings=false: timezone='Z' means UTC, 'local' means take server's timezone
-        let conn = this.prop('connection') || {}
+        let conn = this.connection || {}
         let args = T.subset(this, 'host', 'port', 'user', 'database', 'password')
         return this._mod_mysql.createConnection({...opts, ...conn, ...args})      // individual parameters, if defined, override the 'connection' object
     }
@@ -49,7 +55,7 @@ export class MySQL extends DataBlock {
 
     async _initTables() {
         /* Compute the mapping of CID numbers to SQL table names and return as a Map object. */
-        let tables = this.prop('tables')
+        let tables = this.tables
         this._sqlTables = []
         this._categories = []
 

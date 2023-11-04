@@ -37,7 +37,7 @@
     // console.log('vm:', vm)
   views:
     view: |
-      let text = this.prop('text')
+      let text = this.text
       return P('Post:', BR(), text)
     "@": Catalog
   class_body: |-
