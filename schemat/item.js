@@ -585,7 +585,6 @@ export class Item {
            (in this order), or just schema default / imputed (if own/inherited are missing).
            If the schema doesn't allow multiple entries for `prop`, only the first one is included in the result
            (for atomic types), or the objects (own, inherited & default) get merged altogether (for "mergeable" types like CATALOG).
-           Once computed, the list of entries is cached for future use.
          */
         assert(typeof prop === 'string')
 
@@ -614,10 +613,9 @@ export class Item {
 
         let ancestors = type.props.inherit ? proxy._get_ancestors() : [proxy]   // `this` is always included as the first ancestor
         let streams = ancestors.map(proto => proto._own_values(prop))
-        return type.combineStreams(streams, proxy)                              // `default` and `impute` of the schema is applied here
+        return type.combine_inherited(streams, proxy)                              // `default` and `impute` of the schema is applied here
     }
 
-    // _own_entries(prop) { return this._data_.readEntries(prop) }
     _own_values(prop)  { return this._data_.getValues(prop) }
 
     _get_prototypes()  { return this._extends__array }

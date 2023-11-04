@@ -117,18 +117,18 @@ export class Type {
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
 
-    combineStreams(streams, item) {
+    combine_inherited(streams, item) {
         /* Combine streams of inherited values that match this type. Return an array of values.
            The streams are either concatenated, or the values are merged into one, depending on `prop.repeated`.
            In the latter case, the default value (if present) is included in the merge as the last element.
            `item` is an argument to downstream impute().
          */
         if (this.isRepeated()) return concat(streams.map(stream => [...stream]))
-        let value = this.mergeEntries(streams, item)
+        let value = this.merge_inherited(streams, item)
         return value !== undefined ? [value] : []
     }
 
-    mergeEntries(streams, item) {
+    merge_inherited(streams, item) {
         /* Only used for single-valued schemas (when prop.repeated == false).
            Merge the values of multiple inherited streams matching this type (TODO: check against incompatible inheritance).
            Return the merged value, or undefined if it cannot be determined.
@@ -950,7 +950,7 @@ export class CATALOG extends Type {
         })
     }
 
-    mergeEntries(streams, item) {
+    merge_inherited(streams, item) {
         let values = concat(streams.map(s => [...s]))               // input streams must be materialized before concat()
         if (!values.length) return this.impute(item)
 
