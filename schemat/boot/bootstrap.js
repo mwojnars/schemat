@@ -85,7 +85,7 @@ async function create_categories(Category) {
         class_path  : '/system/local/std/files.js:FileLocal',
         // _boot_class : 'schemat.item.FileLocal',
         fields      : C({
-            path    : new STRING(),             // path to a local file on disk
+            local_path : new STRING(),          // path to a local file on disk
             //format: new STRING(),             // file format: pdf, xlsx, ...
         }),
     })
@@ -105,7 +105,7 @@ async function create_categories(Category) {
         _extends_   : cat.Folder,
         class_path  : '/system/local/std/files.js:FolderLocal',
         // _boot_class : 'schemat.item.FolderLocal',
-        fields      : C({path: new STRING()}),
+        fields      : C({local_path: new STRING()}),
     })
 
     cat.Application = await Category.new(7, {
@@ -192,7 +192,7 @@ async function create_items(cat, Category) {
     //     // fields      : C({spaces: new CATALOG({values: new ITEM({type_exact: Category})})}),
     // })
 
-    item.dir_local  = await cat.FolderLocal.new({name: '/local', path: '.'})   //path.dirname(__dirname)
+    item.dir_local  = await cat.FolderLocal.new({name: '/local', local_path: '.'})   //path.dirname(__dirname)
 
     item.dir_system = await cat.Folder.new({name: "/system",
         files: C({

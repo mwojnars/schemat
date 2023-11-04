@@ -192,7 +192,7 @@
     "@": 3
   class_path: /system/local/std/files.js:FileLocal
   fields:
-    path:
+    local_path:
       "@": STRING
     "@": Catalog
   _category_:
@@ -224,7 +224,7 @@
     "@": 5
   class_path: /system/local/std/files.js:FolderLocal
   fields:
-    path:
+    local_path:
       "@": STRING
     "@": Catalog
   _category_:
@@ -306,7 +306,7 @@
   "@": Data
 - __id: 12
   name: /local
-  path: .
+  local_path: .
   _category_:
     "@": 6
   "@": Data

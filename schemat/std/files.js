@@ -13,6 +13,9 @@ import {HttpService, InternalService} from "../services.js"
 
 export class File extends Item {
 
+    content
+    mimetype
+
     process(content) {
         /* Optional processing (e.g., transpiling, compaction) of this file before it gets sent to a client/caller.
            Can be overriden by subclasses.
@@ -21,7 +24,7 @@ export class File extends Item {
     }
     _content() {
         /* Initial raw content of this file before any processing. */
-        return this.prop('content')
+        return this.content
     }
     read() {
         /* Final post-processed (e.g., transpiled, compacted) content of this file. */
@@ -44,7 +47,7 @@ export class File extends Item {
 
     setMimeType(res, path) {
         // use the `mimetype` property if present...
-        let mimetype = this.prop('mimetype')
+        let mimetype = this.mimetype
         if (mimetype) return res.type(mimetype)
 
         // ...otherwise, set Content-Type to match the URL path's extension, like in .../file.EXT
@@ -76,15 +79,18 @@ File.create_api({        // endpoints...
 
 
 export class FileLocal extends File {
+
+    local_path
+
     async __init__()  { if (this.registry.onServer) this._mod_fs = await import('fs') }
 
     _content(encoding) {
-        let path = this.prop('path')
+        let path = this.local_path
         if (path) return this._mod_fs.readFileSync(path, {encoding})
     }
 
     // GET_file({request}) {
-    //     let path = this.prop('path')
+    //     let path = this.local_path
     //     request.res.sendFile(path, {}, (err) => {if(err) request.res.sendStatus(err.status)})
     //
     //     // TODO respect the "If-Modified-Since" http header like in django.views.static.serve(), see:
@@ -105,6 +111,8 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
+    local_path
+
     async __init__() {
         if (this.registry.onServer) {
             this._mod_fs = await import('fs')
@@ -118,7 +126,7 @@ export class FolderLocal extends Folder {
     }
 
     handlePartial(request) {
-        let root = this.prop('path')
+        let root = this.local_path
         root = this._mod_path.resolve(root)                     // make `root` an absolute path
         if (!root) throw new Error('missing `path` property in a FolderLocal')
         let path = this._mod_path.join(root, request.path)      // this reduces the '..' special symbols, so we have to check
