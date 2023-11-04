@@ -181,12 +181,15 @@ const proxy_handler = {
     RESERVED: ['_id_', '_meta_', '_data_', '_record_'],
 
     get(target, prop, receiver) {
+        let UNDEF = proxy_handler.UNDEFINED
         let value = Reflect.get(target, prop, receiver)
-        if (value === proxy_handler.UNDEFINED) return undefined
+
+        if (value === UNDEF) return undefined
         if (value !== undefined) return value
         if (!target._data_) return undefined
 
-        // there are many queries for 'then' because after a promise resolves, its result is checked for .then to see if it's another promise
+        // there are many queries for 'then' because after a promise resolves, its result is checked for .then
+        // to see if the result is another promise; defining a `then` property is unsafe, hence we disallow it
         if (prop === 'then') return undefined
 
         // if (prop.length >= 2 && prop[0] === '_' && prop[prop.length - 1] === '_')    // _***_ props are reserved for internal use
@@ -200,8 +203,14 @@ const proxy_handler = {
 
         let entries = target._compute_property(prop)
         let values = entries.map(entry => entry.value)
+        value = values[0]
 
-        return multiple ? values : values[0]
+        // cache the result in target._self_; _self_ is used instead of `target` because the latter
+        // can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
+        target._self_[prop] = (value !== undefined) ? value : UNDEF
+        target._self_[prop + suffix] = values
+
+        return multiple ? values : value
     },
 
     // set(target, prop, value, receiver) {
@@ -611,10 +620,10 @@ export class Item {
             entries = type.combineStreams(streams, proxy)           // `default` and `impute` of the schema is applied here
         }
 
-        // cache the result in a plain attribute in this._self_; _self_ is used instead of `this` because the latter
-        // can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
-        this._self_[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
-        this._self_[prop + proxy_handler.MULTIPLE_SUFFIX] = entries.map(entry => entry.value)
+        // // cache the result in a plain attribute in this._self_; _self_ is used instead of `this` because the latter
+        // // can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
+        // this._self_[prop] = entries.length && (entries[0].value !== undefined) ? entries[0].value : proxy_handler.UNDEFINED
+        // this._self_[prop + proxy_handler.MULTIPLE_SUFFIX] = entries.map(entry => entry.value)
 
         return entries
     }
