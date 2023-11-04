@@ -202,14 +202,23 @@ const proxy_handler = {
         if (multiple) prop = prop.slice(0, -suffix.length)      // use the base property name without the suffix
 
         let values = target._compute_property(prop)
-        value = values[0]
+        let single = values[0]
+        let single_cached = (single !== undefined) ? single : UNDEF
 
         // cache the result in target._self_; _self_ is used instead of `target` because the latter
         // can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
-        target._self_[prop] = (value !== undefined) ? value : UNDEF
-        target._self_[prop + suffix] = values
+        let self = target._self_
+        let writable = (prop[0] === '_' && prop[prop.length - 1] !== '_')       // only private props, _xxx, remain writable after caching
 
-        return multiple ? values : value
+        if (writable) {
+            self[prop] = single_cached
+            self[prop + suffix] = values
+        } else {
+            Object.defineProperty(self, prop, {value: single_cached, writable, configurable: true})
+            Object.defineProperty(self, prop + suffix, {value: values, writable, configurable: true})
+        }
+
+        return multiple ? values : single
     },
 
     // set(target, prop, value, receiver) {

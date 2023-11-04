@@ -71,7 +71,6 @@
     "@": 202
   filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../../app-demo/data/db-paperity.yaml
   format: data-yaml
-  autoincrement: 1015
   _class_:
     =: db.DataBlock
     "@": (class)
@@ -149,7 +148,6 @@
     "@": 207
   filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../data/db-demo.yaml
   format: data-yaml
-  autoincrement: 1018
   _class_:
     =: db.DataBlock
     "@": (class)

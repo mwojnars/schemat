@@ -135,10 +135,14 @@ export class Block extends Item {
 export class DataBlock extends Block {
     /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
 
-    autoincrement = 0       // current maximum item ID; a new record is assigned id=autoincrement+1
+    _autoincrement = 0      // current maximum item ID; a new record is assigned id=_autoincrement+1
+
+    async __init__() {
+        this._autoincrement = await super.__init__()
+    }
 
     async open() {
-        this.autoincrement = await super.open()
+        this._autoincrement = await super.open()
     }
 
     async assert_unique(key, id, msg) {
@@ -152,11 +156,11 @@ export class DataBlock extends Block {
     }
 
     async insert(req) {
-        // calculate the `id` if not provided, update autoincrement and write the data
+        // calculate the `id` if not provided, update _autoincrement and write the data
         let {id, key, data} = req.args
 
         if (id === undefined || id === null) {
-            id = Math.max(this.autoincrement + 1, req.current_ring.start_iid)      // no ID? use autoincrement with the next available ID
+            id = Math.max(this._autoincrement + 1, req.current_ring.start_iid)      // no ID? use _autoincrement with the next available ID
             key = req.current_data.encode_key(id)
         }
         else await this.assert_unique(key, id)                  // fixed ID provided by the caller? perform a uniqueness check
@@ -164,7 +168,7 @@ export class DataBlock extends Block {
         req.current_ring.assert_valid_id(id, `candidate ID=${id} for a new item is outside of the valid range for this ring`)
         req.current_ring.assert_writable(id, `cannot write ID=${id} in this ring`)
 
-        this.autoincrement = Math.max(id, this.autoincrement)
+        this._autoincrement = Math.max(id, this._autoincrement)
 
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
@@ -219,7 +223,7 @@ export class DataBlock extends Block {
 
     async erase(req) {
         /* Remove all records from this sequence; open() should be called first. */
-        this.autoincrement = 0
+        this._autoincrement = 0
         return super.erase(req)
     }
 }
