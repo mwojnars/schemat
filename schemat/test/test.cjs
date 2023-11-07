@@ -1,7 +1,7 @@
 /*
     End-to-end tests for the Schemat application. Run command:
 
-        ./node_modules/.bin/mocha
+        ./node_modules/.bin/mocha --exit
 
  */
 
@@ -25,7 +25,7 @@ async function delay(duration) {
 
 
 describe('Schemat Tests', function () {
-    this.timeout(30000)         // Extended timeout for asynchronous tests
+    this.timeout(10000)         // Extended timeout for asynchronous tests
 
     // Start a one-time bootstrap process and check if it completes without errors
     describe('Bootstrap', function () {
@@ -114,6 +114,7 @@ describe('Schemat Tests', function () {
     })
 
     after(function (done) {
+        console.log()
         setTimeout(() => {
             wtf.dump()              // list the open handles that are keeping the event loop active
             done()
