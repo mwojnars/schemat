@@ -36,6 +36,8 @@ export class BackendProcess extends SchematProcess {
 
 export class WorkerProcess extends BackendProcess {
 
+    _server         // the express server to be closed upon shutdown
+
     // async startCluster(boot_db, cluster_id) {
     //     let cluster = new Cluster()
     //     cluster._id_ = cluster_id
@@ -43,6 +45,13 @@ export class WorkerProcess extends BackendProcess {
     //     await cluster.startup()
     //     return cluster
     // }
+
+    async shutdown() {
+        if (this._server) {
+            print('\nReceived kill signal, shutting down gracefully...')
+            this._server.close(() => { print('Server closed') })
+        }
+    }
 
     async CLI_run({host, port, workers}) {
         await this.cluster.startup()
@@ -53,9 +62,15 @@ export class WorkerProcess extends BackendProcess {
         // await this._update_all()
         // await this._reinsert_all()
 
-        let web = new WebServer(this.cluster, {host, port, workers}).start()
-        let data = new DataServer(this.cluster).start()
-        return Promise.all([web, data])
+        let web = new WebServer(this.cluster, {host, port, workers})
+        this._server = await web.start()
+
+        process.on('SIGTERM', () => this.shutdown())        // listen for TERM signal, e.g. kill
+        process.on('SIGINT', () => this.shutdown())         // listen for INT signal, e.g. Ctrl+C
+
+        // let web = new WebServer(this.cluster, {host, port, workers}).start()
+        // let data = new DataServer(this.cluster).start()
+        // return Promise.all([web, data])
     }
 }
 

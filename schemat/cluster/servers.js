@@ -102,7 +102,7 @@ export class WebServer extends Server {
         //     res.send('Hello World!')
         // })
 
-        app.listen(this.port, this.host, () => print(`worker ${process.pid} listening at http://${this.host}:${this.port}`))
+        return app.listen(this.port, this.host, () => print(`worker ${process.pid} listening at http://${this.host}:${this.port}`))
     }
 
     async start() {
@@ -113,7 +113,7 @@ export class WebServer extends Server {
             cluster.on('exit', (worker) => print(`Worker ${worker.process.pid} terminated`))
             return
         }
-        await this.serve_express()
+        return this.serve_express()
     }
 }
 

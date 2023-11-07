@@ -5,6 +5,7 @@
 
  */
 
+const wtf = require('wtfnode')
 const {expect} = require('chai')
 const puppeteer = require('puppeteer')
 const http = require('http')
@@ -71,7 +72,7 @@ describe('Schemat Tests', function () {
 
         after(async function () {
             await browser.close()
-            server.kill()
+            server.kill('SIGINT')
         })
 
         it('sys.category:0', async function () {
@@ -110,5 +111,12 @@ describe('Schemat Tests', function () {
         //
         //     // ...additional tests for reverting the change
         // })
+    })
+
+    after(function (done) {
+        setTimeout(() => {
+            wtf.dump()              // list the open handles that are keeping the event loop active
+            done()
+        }, 100)                     // set timeout to allow all resources to close properly
     })
 })
