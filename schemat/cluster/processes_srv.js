@@ -51,6 +51,7 @@ export class WorkerProcess extends BackendProcess {
             print('\nReceived kill signal, shutting down gracefully...')
             this._server.close(() => { print('Server closed') })
         }
+        setTimeout(() => process.exit(0), 10)
     }
 
     async CLI_run({host, port, workers}) {

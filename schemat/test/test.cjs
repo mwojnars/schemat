@@ -63,8 +63,18 @@ describe('Schemat Tests', function () {
         let page
 
         before(async function () {
-            // Start the server
-            server = exec(`node --experimental-vm-modules cluster/manage.js --port ${PORT} run`)
+            // Start the server...
+            // The inner "exec" is necessary to pass the SIGTERM signal to the child "node" process, otherwise the kill()
+            // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
+            // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
+            server = exec(`exec node --experimental-vm-modules cluster/manage.js --port ${PORT} run`, (error, stdout, stderr) => {
+                if (error) {
+                    console.error('Error during server startup:', '\n' + stderr)
+                } else {
+                    console.error('Server stdout:', '\n' + stdout)
+                }
+            })
+            // console.log('Server started:', server.pid)
             await delay(1000)                                   // wait for server to start
             browser = await puppeteer.launch({headless: "new"})
             page = await browser.newPage()
@@ -72,7 +82,9 @@ describe('Schemat Tests', function () {
 
         after(async function () {
             await browser.close()
-            server.kill('SIGINT')
+            let killed = server.kill()
+            // console.log('Server killed:', killed)
+            await delay(200)                                   // wait for server to stop
         })
 
         it('sys.category:0', async function () {
@@ -113,11 +125,11 @@ describe('Schemat Tests', function () {
         // })
     })
 
-    after(function (done) {
-        console.log()
-        setTimeout(() => {
-            wtf.dump()              // list the open handles that are keeping the event loop active
-            done()
-        }, 100)                     // set timeout to allow all resources to close properly
-    })
+    // after(function (done) {
+    //     console.log()
+    //     setTimeout(() => {
+    //         wtf.dump()              // list the open handles that are keeping the event loop active
+    //         done()
+    //     }, 100)                     // set timeout to allow all resources to close properly
+    // })
 })
