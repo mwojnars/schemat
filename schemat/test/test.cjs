@@ -1,7 +1,19 @@
+/*
+    End-to-end tests for the Schemat application. Run command:
+
+        ./node_modules/.bin/mocha
+
+ */
+
 const {expect} = require('chai')
 const puppeteer = require('puppeteer')
 const http = require('http')
 const {exec} = require('child_process')
+
+
+const HOST = '127.0.0.1'
+const PORT = 3001
+const DOMAIN = `http://${HOST}:${PORT}`
 
 
 async function delay(duration) {
@@ -16,14 +28,14 @@ describe('Schemat Tests', function () {
 
     // Start a one-time bootstrap process and check if it completes without errors
     describe('Bootstrap', function () {
-        it('bootstrap', async function (done) {
+        it('bootstrap', function (done) {
             exec('node --experimental-vm-modules cluster/manage.js build', (error, stdout, stderr) => {
                 if (error) {
                     console.error('Error during bootstrap:', stderr)
                     done(error)
                 } else {
-                    console.log('bootstrap stdout:', stdout)
-                    console.error('bootstrap stderr:', stderr)
+                    // console.log('stdout:', '\n' + stdout)
+                    // console.error('stderr:', '\n' + stderr)
                     done()
                 }
             })
@@ -51,19 +63,19 @@ describe('Schemat Tests', function () {
 
         before(async function () {
             // Start the server
-            server = exec('node --experimental-vm-modules cluster/manage.js run')
+            server = exec(`node --experimental-vm-modules cluster/manage.js --port ${PORT} run`)
             await delay(1000)                                   // wait for server to start
-            browser = await puppeteer.launch()
+            browser = await puppeteer.launch({headless: "new"})
             page = await browser.newPage()
         })
 
         after(async function () {
             await browser.close()
-            server.kill('SIGINT')
+            server.kill()
         })
 
         it('sys.category:0', async function () {
-            await page.goto('http://127.0.0.1:3000/sys.category:0')
+            await page.goto(`${DOMAIN}/sys.category:0`)
             const response = await page.waitForResponse(response => response.status() === 200)
             expect(response.ok()).to.be.true
         })
