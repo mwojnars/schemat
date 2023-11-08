@@ -21,6 +21,17 @@ async function delay(duration) {
     return new Promise((resolve) => setTimeout(resolve, duration));
 }
 
+async function expect_status_ok(page, status = 200) {
+    const response = await page.waitForResponse(response => response.status() === status)
+    expect(response.ok()).to.be.true
+}
+
+function expect_include_all(content, ...strings) {
+    for (let str of strings) {
+        expect(content).to.include(str)
+    }
+}
+
 /**********************************************************************************************************************/
 
 
@@ -42,25 +53,10 @@ describe('Schemat Tests', function () {
             })
         })
     })
-    // it('bootstrap generation', async function () {
-    //     await new Promise((resolve, reject) => {
-    //         exec('node --experimental-vm-modules cluster/manage.js build', (error, stdout, stderr) => {
-    //             if (error) {
-    //                 console.error(`exec error: ${error}`)
-    //                 return reject(error)
-    //             }
-    //             console.log(`stdout: ${stdout}`)
-    //             console.error(`stderr: ${stderr}`)
-    //             resolve()
-    //         })
-    //     })
-    // })
 
     describe('Web Application', function () {
 
-        let server
-        let browser
-        let page
+        let server, browser, page, pageError
 
         before(async function () {
             // Start the server...
@@ -78,6 +74,16 @@ describe('Schemat Tests', function () {
             await delay(1000)                                   // wait for server to start
             browser = await puppeteer.launch({headless: "new"})
             page = await browser.newPage()
+            page.on('pageerror', error => { pageError = error })
+        })
+
+        beforeEach(() => {
+            pageError = null
+        })
+
+        afterEach(() => {
+            console.error('Page error:', pageError)
+            expect(pageError).to.be.null
         })
 
         after(async function () {
@@ -89,8 +95,8 @@ describe('Schemat Tests', function () {
 
         it('sys.category:0', async function () {
             await page.goto(`${DOMAIN}/sys.category:0`)
-            const response = await page.waitForResponse(response => response.status() === 200)
-            expect(response.ok()).to.be.true
+            await expect_status_ok(page)
+            expect_include_all(await page.content(), 'Category:0', 'Category of items', 'name', 'cache_ttl', 'fields', 'Ring', 'Varia')
         })
 
         // Repeat the above it() block for each URL you want to test
