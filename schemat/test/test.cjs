@@ -50,8 +50,12 @@ async function test_react_page(page, url, selector = null, strings = []) {
 
     expect_include_all(await page.content(), ...strings)
 
-    if (selector) {
-        await page.waitForSelector(selector)                    // wait for a React element to be rendered
+    if (selector && strings.length) {
+        // determining that React has rendered the component in full is tricky, hence we use several methods...
+        await page.waitForSelector(selector, {visible: true})       // wait for a React element to be present and visible (non-empty), which means in practice that it started rendering
+        await delay(300)                                            // wait for a short time to allow the component to render fully
+        // await page.waitForFunction(() => document.querySelector(selector)?.textContent.includes('Expected Text'))
+
         expect_include_all(await page.content(), ...strings)
     }
 }
@@ -141,10 +145,19 @@ describe('Schemat Tests', function () {
             await delay(200)                                        // wait for server to stop
         })
 
-        it('sys.category:0', async function () {
+        it('Category', async function () {
             await test_react_page(page, `${DOMAIN}/sys.category:0`, '#page-component',
-                ['Category:0', 'Category of items', 'name', 'cache_ttl', 'fields', 'Ring', 'Varia']
-            )
+                ['Category:0', 'Category of items', 'name', 'cache_ttl', 'fields', 'Ring', 'Varia'])
+        })
+
+        it('Varia', async function () {
+            await test_react_page(page, `${DOMAIN}/sys.category:1000`, '#page-component',
+                ['Category:1000', 'Varia', 'name', '_category_', 'fields', 'Varia:1016', 'Create Item'])
+        })
+
+        it('varia item', async function () {
+            await test_react_page(page, `${DOMAIN}/$/1016`, '#page-component',
+                ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
         })
 
         // Repeat the above it() block for each URL you want to test
