@@ -12,20 +12,20 @@ const puppeteer = require('puppeteer')
 const http = require('http')
 const {exec} = require('child_process')
 
-let toString
-(async () => {
-    const utils = await import("../utils.js")
-    toString = utils.toString
-})()
-
+// let toString
+// (async () => {
+//     const utils = await import("../utils.js")
+//     toString = utils.toString
+// })()
 // Object.prototype.toString = toString
+
 let print = console.log
 
 
 /**********************************************************************************************************************/
 
 const HOST = '127.0.0.1'
-const PORT = 3001
+const PORT = 3000
 const DOMAIN = `http://${HOST}:${PORT}`
 
 
@@ -109,9 +109,8 @@ describe('Schemat Tests', function () {
             for (let msg of messages)
                 console.log(`Console [${msg.type()}]: `, msg.text())
 
-            let errors = messages.filter(msg => msg.type() === 'error')
-            let error = errors[0]
-            assert(!error, `client-side error: ${error.text()}`)
+            let error = messages.find(msg => msg.type() === 'error')
+            assert(!error, `client-side error: ${error?.text()}`)
 
             // if (page_error) {
             //     console.log('\nPage error:', JSON.stringify(page_error))
