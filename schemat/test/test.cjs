@@ -44,6 +44,18 @@ function expect_include_all(content, ...strings) {
     }
 }
 
+async function test_react_page(page, url, selector = null, strings = []) {
+    await page.goto(url, { waitUntil: 'domcontentloaded' })
+    await expect_status_ok(page)
+
+    expect_include_all(await page.content(), ...strings)
+
+    if (selector) {
+        await page.waitForSelector(selector)                    // wait for a React element to be rendered
+        expect_include_all(await page.content(), ...strings)
+    }
+}
+
 /**********************************************************************************************************************/
 
 
@@ -130,14 +142,9 @@ describe('Schemat Tests', function () {
         })
 
         it('sys.category:0', async function () {
-            await page.goto(`${DOMAIN}/sys.category:0`, { waitUntil: 'domcontentloaded' })
-            await expect_status_ok(page)
-
-            const strings = ['Category:0', 'Category of items', 'name', 'cache_ttl', 'fields', 'Ring', 'Varia']
-            expect_include_all(await page.content(), ...strings)
-
-            await page.waitForSelector('#page-component')           // wait for a React element to be rendered
-            expect_include_all(await page.content(), ...strings)
+            await test_react_page(page, `${DOMAIN}/sys.category:0`, '#page-component',
+                ['Category:0', 'Category of items', 'name', 'cache_ttl', 'fields', 'Ring', 'Varia']
+            )
         })
 
         // Repeat the above it() block for each URL you want to test
