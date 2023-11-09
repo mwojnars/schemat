@@ -92,6 +92,13 @@ export class WebServer extends Server {
         //  - multer:      https://www.npmjs.com/package/multer and https://expressjs.com/en/5x/api.html#req.body
         //  - fileupload:  https://www.npmjs.com/package/express-fileupload & https://stackoverflow.com/a/50243907/1202674 (newer one, possibly easier)
 
+        // // set CORS headers in all responses to allow cross-origin requests
+        // app.use((req, res, next) => {
+        //     res.header('Access-Control-Allow-Origin', '*')      // or the specific origin of your client app
+        //     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+        //     next()
+        // })
+
         // app.use(express.json())                                 // for parsing application/json to req.body object
         app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
         app.use(bodyParser.text({type: '*/*', limit: '10MB'}))  // for setting req.body string from plain-text body (if not json MIME-type)
