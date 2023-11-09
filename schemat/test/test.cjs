@@ -5,12 +5,24 @@
 
  */
 
+const util = require('util')
 const wtf = require('wtfnode')
-const {expect} = require('chai')
+const {expect, assert} = require('chai')
 const puppeteer = require('puppeteer')
 const http = require('http')
 const {exec} = require('child_process')
 
+let toString
+(async () => {
+    const utils = await import("../utils.js")
+    toString = utils.toString
+})()
+
+// Object.prototype.toString = toString
+let print = console.log
+
+
+/**********************************************************************************************************************/
 
 const HOST = '127.0.0.1'
 const PORT = 3001
@@ -56,7 +68,7 @@ describe('Schemat Tests', function () {
 
     describe('Web Application', function () {
 
-        let server, browser, page, pageError
+        let server, browser, page, messages
 
         before(async function () {
             // Start the server...
@@ -65,38 +77,68 @@ describe('Schemat Tests', function () {
             // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
             server = exec(`exec node --experimental-vm-modules cluster/manage.js --port ${PORT} run`, (error, stdout, stderr) => {
                 if (error) {
-                    console.error('Error during server startup:', '\n' + stderr)
+                    console.error('\nError during server startup:', '\n' + stderr)
                 } else {
-                    console.error('Server stdout:', '\n' + stdout)
+                    console.error('\nServer stdout:', '\n' + stdout)
                 }
             })
             // console.log('Server started:', server.pid)
-            await delay(1000)                                   // wait for server to start
+            await delay(1000)                                       // wait for server to start
             browser = await puppeteer.launch({headless: "new"})
             page = await browser.newPage()
-            page.on('pageerror', error => { pageError = error })
+
+            // page.on('pageerror', error => {
+            //     if (!error) { console.log('NO ERROR (!?)'); return }
+            //     page_error = error
+            //     console.log(`Error [${error.type()}]: `, error.text())
+            //     // console.log(Object.prototype.toString.call(error))
+            //     // for (const property in error) { console.log(`${property}: ${error[property]}`) }
+            //     // console.log(util.inspect(page_error, { showHidden: false, depth: null, colors: true }))
+            // })
+
+            page.on('console', msg => { messages.push(msg) })
         })
 
-        beforeEach(() => {
-            pageError = null
-        })
+        beforeEach(() => { messages = [] })
 
-        afterEach(() => {
-            console.error('Page error:', pageError)
-            expect(pageError).to.be.null
+        afterEach(async () => {
+            await page.waitForNetworkIdle()                         // wait for page to render completely
+            // await page.waitForNetworkIdle({ idleTime: 500, timeout: 5000 })
+            // await delay(2000)
+
+            for (let msg of messages)
+                console.log(`Console [${msg.type()}]: `, msg.text())
+
+            let errors = messages.filter(msg => msg.type() === 'error')
+            let error = errors[0]
+            assert(!error, `client-side error: ${error.text()}`)
+
+            // if (page_error) {
+            //     console.log('\nPage error:', JSON.stringify(page_error))
+            //     // console.log('\nPage error:', util.inspect(page_error, { showHidden: false, depth: null }))
+            //     // console.log('Page error message:', page_error.message);
+            //     // console.log('Page error stack trace:\n', page_error.stack);
+            //     // console.error('\nPage error:', page_error, '\n')
+            // }
+            // expect(page_error).to.be.null
         })
 
         after(async function () {
             await browser.close()
             let killed = server.kill()
             // console.log('Server killed:', killed)
-            await delay(200)                                   // wait for server to stop
+            await delay(200)                                        // wait for server to stop
         })
 
         it('sys.category:0', async function () {
-            await page.goto(`${DOMAIN}/sys.category:0`)
+            await page.goto(`${DOMAIN}/sys.category:0`, { waitUntil: 'domcontentloaded' })
             await expect_status_ok(page)
-            expect_include_all(await page.content(), 'Category:0', 'Category of items', 'name', 'cache_ttl', 'fields', 'Ring', 'Varia')
+
+            const strings = ['Category:0', 'Category of items', 'name', 'cache_ttl', 'fields', 'Ring', 'Varia']
+            expect_include_all(await page.content(), ...strings)
+
+            await page.waitForSelector('#page-component')           // wait for a React element to be rendered
+            expect_include_all(await page.content(), ...strings)
         })
 
         // Repeat the above it() block for each URL you want to test
