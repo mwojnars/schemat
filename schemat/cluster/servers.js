@@ -68,10 +68,7 @@ export class WebServer extends Server {
         }
         catch (ex) {
             print(ex)
-            if (ex instanceof Request.PathNotFound)
-                try { res.sendStatus(404) } catch(e){}
-            else
-                try { res.sendStatus(500) } catch(e){}
+            try { res.sendStatus(ex.code || 500) } catch(e){}
         }
 
         // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
