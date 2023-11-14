@@ -1,6 +1,6 @@
 "use strict";
 
-import { print, assert, Counter } from './utils.js'
+import { print, assert, Counter } from './common/utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache } from './data.js'

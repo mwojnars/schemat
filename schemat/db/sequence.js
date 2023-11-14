@@ -1,6 +1,6 @@
 import {BinaryRecord, SequenceSchema} from "./records.js";
 import {INTEGER} from "../type.js";
-import {assert, print} from "../utils.js";
+import {assert, print} from "../common/utils.js";
 import {DataBlock} from "./block.js";
 import {Item} from "../item.js";
 

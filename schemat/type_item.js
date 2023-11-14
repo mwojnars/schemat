@@ -3,7 +3,7 @@
     - to avoid circular dependencies when some other files (dependencies of item.js) want to import type.js.
  */
 
-import { T, assert, print, splitLast } from './utils.js'
+import { T, assert, print, splitLast } from './common/utils.js'
 import { Item } from './item.js'
 
 

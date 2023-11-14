@@ -1,5 +1,5 @@
 import {NotImplemented} from "../errors.js";
-import {dedentFull, escape_html, print, T} from "../utils.js";
+import {dedentFull, escape_html, print, T} from "../common/utils.js";
 import {Resources, ReactDOM} from './resources.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'

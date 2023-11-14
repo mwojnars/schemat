@@ -1,6 +1,6 @@
 import path from 'node:path'
 import {DataAccessError, DatabaseError} from "../errors.js"
-import {T, assert, print, merge} from '../utils.js'
+import {T, assert, print, merge} from '../common/utils.js'
 import {Item} from "../item.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory} from "./index.js";

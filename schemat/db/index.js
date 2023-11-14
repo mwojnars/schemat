@@ -1,4 +1,4 @@
-import {assert, print, T} from "../utils.js";
+import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {PlainRecord, SequenceSchema} from "./records.js";

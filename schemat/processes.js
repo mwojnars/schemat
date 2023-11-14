@@ -1,4 +1,4 @@
-import {print, assert} from "./utils.js"
+import {print, assert} from "./common/utils.js"
 import {ClientRegistry} from "./registry.js"
 import {ClientDB} from "./db/db.js"
 

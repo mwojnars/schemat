@@ -1,6 +1,6 @@
 'use strict'
 
-import { print, assert, T, escape_html, splitLast, concat, unique } from './utils.js'
+import { print, assert, T, escape_html, splitLast, concat, unique } from './common/utils.js'
 import {UrlPathNotFound, NotLinked, NotLoaded} from './errors.js'
 
 import { JSONx } from './serialize.js'
@@ -15,8 +15,8 @@ export const ROOT_ID = 0
 export const SITE_CATEGORY_ID = 1
 
 
-// import * as utils from 'http://127.0.0.1:3000/system/local/utils.js'
-// import * as utils from 'file:///home/..../src/schemat/utils.js'
+// import * as utils from 'http://127.0.0.1:3000/system/local/common/utils.js'
+// import * as utils from 'file:///home/..../src/schemat/common/utils.js'
 // print("imported utils from localhost:", utils)
 // print('import.meta:', import.meta)
 

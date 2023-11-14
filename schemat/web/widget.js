@@ -1,4 +1,4 @@
-import { T, assert, print, tryimport, dedentFull } from '../utils.js'
+import { T, assert, print, tryimport, dedentFull } from '../common/utils.js'
 import { e, cssPrepend, interpolate, DIV } from './react-utils.js'
 import { React, Resources } from './resources.js'
 

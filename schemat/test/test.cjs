@@ -14,7 +14,7 @@ const {exec} = require('child_process')
 
 // let toString
 // (async () => {
-//     const utils = await import("../utils.js")
+//     const utils = await import("../common/utils.js")
 //     toString = utils.toString
 // })()
 // Object.prototype.toString = toString

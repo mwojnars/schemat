@@ -4,7 +4,7 @@
     they should not be modified (except for lazy internal calculation of missing derived fields).
  */
 
-import {assert, print, T} from "../utils.js";
+import {assert, print, T} from "../common/utils.js";
 import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput, compareUint8Arrays, fnv1aHash} from "../util/binary.js";
 import {Data} from "../data.js";

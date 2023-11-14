@@ -2,7 +2,7 @@
   name: Varia
   info: Category of items that do not belong to any specific category.
   class_body: >-
-    static check() { import('/system/local/utils.js').then(mod =>
+    static check() { import('/system/local/common/utils.js').then(mod =>
     console.log("Varia.code: imported ", mod)) }
 
     static error() { throw new Error('Varia/code/error()') }

@@ -1,5 +1,5 @@
 import {NotImplemented} from "../errors.js"
-import {assert, print} from "../utils.js"
+import {assert, print} from "../common/utils.js"
 
 
 /**********************************************************************************************************************/

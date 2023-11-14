@@ -1,5 +1,5 @@
 // import mysql from 'mysql2'
-import {assert, print, T} from '../utils.js'
+import {assert, print, T} from '../common/utils.js'
 import { DataBlock } from './block.js'
 
 //let db = mysql.createConnection(srv)

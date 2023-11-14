@@ -1,4 +1,4 @@
-import {assert, T} from "../utils.js";
+import {assert, T} from "../common/utils.js";
 import {DataAccessError, ItemNotFound} from "../errors.js";
 
 

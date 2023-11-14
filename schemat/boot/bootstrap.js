@@ -2,7 +2,7 @@
 Creating core items from scratch and storing them as initial items in DB.
  */
 
-import {print, assert} from '../utils.js'
+import {print, assert} from '../common/utils.js'
 import {SITE_CATEGORY_ID} from '../item.js'
 import {GENERIC, TYPE, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {Catalog} from "../data.js"

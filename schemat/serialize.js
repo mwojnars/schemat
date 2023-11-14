@@ -1,6 +1,6 @@
 /* Serialization of objects of arbitrary classes. */
 
-import { T } from './utils.js'
+import { T } from './common/utils.js'
 import { Item } from './item.js'
 
 
