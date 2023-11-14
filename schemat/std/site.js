@@ -1,5 +1,6 @@
-import {UrlPathNotFound} from "../common/errors.js"
+import {set_global} from "../common/globals.js"
 import {print, assert, T} from '../common/utils.js'
+import {UrlPathNotFound} from "../common/errors.js"
 import {Item, Request} from '../item.js'
 
 
@@ -7,7 +8,7 @@ import {Item, Request} from '../item.js'
 // For this reason, importLocal() is added to the global context, so that the modules imported from DB can use it
 // as an alias for standard (non-VM) import(). Adding this function in a call to vm.createContext() instead of here raises errors.
 
-globalThis.importLocal = (p) => import(p)
+set_global({importLocal: (p) => import(p)})
 
 
 /**********************************************************************************************************************

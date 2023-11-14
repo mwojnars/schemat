@@ -1,6 +1,7 @@
 'use strict'
 
-import { print, assert, T, escape_html, splitLast, concat, unique } from './common/utils.js'
+import {set_global} from "./common/globals.js"
+import {print, assert, T, escape_html, splitLast, concat, unique} from './common/utils.js'
 import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
 
 import { JSONx } from './serialize.js'
@@ -1244,4 +1245,4 @@ export class RootCategory extends Category {
 
 /**********************************************************************************************************************/
 
-globalThis.Item = Item              // Item class is available globally without import, for dynamic code
+set_global({Item})                  // Item class is available globally without import, for dynamic code

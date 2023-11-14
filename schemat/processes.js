@@ -1,3 +1,4 @@
+import {set_global} from "./common/globals.js"
 import {print, assert} from "./common/utils.js"
 import {ClientRegistry} from "./registry.js"
 import {ClientDB} from "./db/db.js"
@@ -17,7 +18,7 @@ export class SchematProcess {
     }
 
     constructor() {
-        globalThis.schemat = this
+        set_global({schemat: this})
     }
 
     async init() { return this }         // creating the registry; override in subclasses
@@ -25,7 +26,8 @@ export class SchematProcess {
     async _create_registry(registry_class, ...args) {
         let registry = new registry_class(this, ...args)
         this.registry = registry
-        globalThis.registry = registry
+        set_global({registry})
+
         await registry.init_classpath()
         await registry.boot()
         return this
