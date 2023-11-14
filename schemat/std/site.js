@@ -31,7 +31,7 @@ export class Router extends Item {
         for (let {value: defaultNode} of defaultRoutes)
             try { return await defaultNode.load().then(n => n.route(request.copy())) }
             catch(ex) {
-                if (!(ex instanceof Request.PathNotFound)) throw ex
+                if (!(ex instanceof Request.UrlPathNotFound)) throw ex
                 lastEx = ex
             }
 
@@ -79,7 +79,7 @@ export class Site extends Router {
         print('Application:', Application)
         let app = await this.getRouteNode(route, strategy)
         if (app.instanceof(Application)) return app
-        throw new Request.PathNotFound("not an application")
+        throw new Request.UrlPathNotFound("not an application")
     }
 
     async importModule(path, referrer) {

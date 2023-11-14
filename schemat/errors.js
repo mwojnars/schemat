@@ -52,6 +52,9 @@ export class NotFound extends BaseError {
     static message = "URL not found"
     static code    = 404
 }
+export class UrlPathNotFound extends NotFound {
+    static message = "URL path not found"
+}
 
 export class NotImplemented extends BaseError {
     static message = "not implemented"

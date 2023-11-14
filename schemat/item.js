@@ -59,11 +59,11 @@ export class Request {
     static SEP_ROUTE  = '/'         // separator of route segments in URL paths
     static SEP_METHOD = '@'         // separator of a method name within a URL path
 
-    static PathNotFound = class extends NotFound {
+    static UrlPathNotFound = class extends NotFound {
         static message = "URL path not found"
     }
 
-    throwNotFound(msg, args)  { throw new Request.PathNotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
+    throwNotFound(msg, args)  { throw new Request.UrlPathNotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
 
 
     get req()       { return this.session?.req }
@@ -753,7 +753,7 @@ export class Item {
             return node.routeNode(req, strategy)
         }
         catch (ex) {
-            if (ex instanceof Request.PathNotFound && strategy === 'last')
+            if (ex instanceof Request.UrlPathNotFound && strategy === 'last')
                 return [this, request]      // assumption: findRoute() above must NOT modify the `request` before throwing a NotFound!
             throw ex
         }
