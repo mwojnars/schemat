@@ -19,7 +19,7 @@ export function thread_local_variable() {
     const handler = {
         get(target, prop, receiver) {
             if (prop === 'run_with')
-                return (context, callback) => local.run(context, callback)
+                return (store, callback) => local.run(store, callback)
 
             // if (prop === 'local') return local
 
@@ -35,7 +35,7 @@ export function thread_local_variable() {
                 throw new Error(`${prop} is not writable`)
 
             const store = local.getStore()
-            return Reflect.set(store, prop, value, receiver)
+            return Reflect.set(store, prop, value)
 
             // store[prop] = value
             // return true

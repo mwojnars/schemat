@@ -5,6 +5,8 @@ import bodyParser from 'body-parser'
 // import http from 'http'
 
 import {assert, print, sleep} from '../common/utils.js'
+import {set_global} from "../common/globals.js";
+import {thread_local_variable} from "./local.js";
 import {Session} from '../registry.js'
 import {Request} from "../item.js";
 
@@ -41,7 +43,7 @@ export class Server {
 
 export class WebServer extends Server {
     /* Edge HTTP server based on express. Can spawn multiple worker processes.
-       For sending & receiving multi-part data (HTML+JSON) in http response, see:
+       For sending & receiving multipart data (HTML+JSON) in http response, see:
        - https://stackoverflow.com/a/50883981/1202674
        - https://stackoverflow.com/a/47067787/1202674
      */
@@ -51,13 +53,15 @@ export class WebServer extends Server {
         this.host = host
         this.port = port
         this.workers = workers          // no. of worker processes to spawn
+
+        set_global({session: thread_local_variable()})
     }
 
     async handle(req, res) {
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
         print(`Server.handle() worker ${process.pid}:`, req.path)
 
-        let session = new Session(req, res)
+        // let session = new Session(req, res)
         await session.start()
 
         try {
@@ -74,7 +78,6 @@ export class WebServer extends Server {
         let {check} = await registry.site.importModule("/site/widgets.js")
         check()
 
-        // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         // await sleep(200)                 // for testing
         // session.printCounts()
         await session.stop()
@@ -99,7 +102,9 @@ export class WebServer extends Server {
         app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
         app.use(bodyParser.text({type: '*/*', limit: '10MB'}))  // for setting req.body string from plain-text body (if not json MIME-type)
 
-        app.all('*', (req, res) => this.handle(req, res))
+        app.all('*', (req, res) => session.run_with(new Session(req, res), () => this.handle(req, res)))
+        // app.all('*', (req, res) => this.handle(req, res))
+
         // web.get('*', async (req, res) => {
         //     res.send(`URL path: ${req.path}`)
         //     res.send('Hello World!')
