@@ -115,8 +115,8 @@ export class FolderLocal extends Folder {
 
     async __init__() {
         if (this.registry.onServer) {
-            this._mod_fs = await import('fs')
-            this._mod_path = await import('path')        // to avoid awaiting in handlePartial()
+            this._mod_fs = await import('node:fs')
+            this._mod_path = await import('node:path')        // to avoid awaiting in handlePartial()
         }
     }
 

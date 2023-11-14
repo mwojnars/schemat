@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 import {DataAccessError, DatabaseError} from "../errors.js"
 import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
