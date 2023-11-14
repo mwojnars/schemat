@@ -1,5 +1,5 @@
 import path from 'node:path'
-import {DataAccessError, DatabaseError} from "../errors.js"
+import {DataAccessError, DatabaseError} from "../common/errors.js"
 import {T, assert, print, merge} from '../common/utils.js'
 import {Item} from "../item.js"
 import {EditData} from "./edits.js";

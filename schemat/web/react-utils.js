@@ -1,5 +1,5 @@
 import { assert, print, tryimport, T } from '../common/utils.js'
-import { NotLoaded } from '../errors.js'
+import { NotLoaded } from '../common/errors.js'
 import { React, ReactDOM } from './resources.js'
 export { React, ReactDOM }
 

@@ -1,4 +1,4 @@
-import {NotImplemented} from "../errors.js";
+import {NotImplemented} from "../common/errors.js";
 import {dedentFull, escape_html, print, T} from "../common/utils.js";
 import {Resources, ReactDOM} from './resources.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,

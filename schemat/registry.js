@@ -1,7 +1,7 @@
 "use strict";
 
 import { print, assert, Counter } from './common/utils.js'
-import { ItemNotFound, NotImplemented } from './errors.js'
+import { ItemNotFound, NotImplemented } from './common/errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache } from './data.js'
 import { Item, RootCategory, ROOT_ID, SITE_CATEGORY_ID } from './item.js'

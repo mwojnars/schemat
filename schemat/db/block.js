@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import yaml from 'yaml';
 
 import {assert, print, T} from '../common/utils.js'
-import {DataConsistencyError, NotImplemented} from '../errors.js'
+import {DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {Item} from '../item.js'
 import {ChangeRequest} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../util/binary.js";

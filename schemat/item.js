@@ -1,7 +1,7 @@
 'use strict'
 
 import { print, assert, T, escape_html, splitLast, concat, unique } from './common/utils.js'
-import {UrlPathNotFound, NotLinked, NotLoaded} from './errors.js'
+import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
 
 import { JSONx } from './serialize.js'
 import { Path, Catalog, Data } from './data.js'

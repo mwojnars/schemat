@@ -1,4 +1,4 @@
-import {NotImplemented} from "../errors.js"
+import {NotImplemented} from "../common/errors.js"
 import {assert, print} from "../common/utils.js"
 
 

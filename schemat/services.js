@@ -1,5 +1,5 @@
 import {print, assert, T} from "./common/utils.js"
-import { NotFound, RequestFailed } from './errors.js'
+import { NotFound, RequestFailed } from './common/errors.js'
 import { JSONx } from './serialize.js'
 
 
