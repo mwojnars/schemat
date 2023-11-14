@@ -700,7 +700,7 @@ export class Item {
     url(method, args) {
         /* `method` is an optional name of a web @method, `args` will be appended to URL as a query string. */
         let site = this.registry.site
-        let app  = this.registry.session.app
+        let app  = this.registry.session.app        // space = request.current_namespace
         let path
         // let defaultApp = this.registry.site.getApplication()
         // let defaultApp = this.registry.session.apps['$']

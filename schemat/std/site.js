@@ -190,7 +190,7 @@ export class Site extends Router {
     }
 
     urlRaw(item) {
-        /* Absolute raw URL for an `item`. TODO: reuse the AppBasic instead of the code below. */
+        /* Absolute technical URL for an `item`. TODO: reuse the AppBasic instead of the code below. */
         return this.URL + this.systemPath(item)
     }
 }

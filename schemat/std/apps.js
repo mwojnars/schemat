@@ -7,7 +7,7 @@ import {Item} from "../item.js"
 export class Application extends Item {
     /*
         Application is a (possibly unbounded) collection of items available over the web that together serve the user's
-        particular need. Each item has a unique URL path within the application's URL space, and the application
+        particular need. Each eligible item has a unique URL path within the application's URL space, and the application
         allows to retrieve this path for an arbitrary item (urlPath()) and, vice versa, map a URL path to
         a corresponding target item (findRoute()). All paths are relative to the application's base route.
 
@@ -80,8 +80,8 @@ export class AppBasic extends Application {
 
 export class AppSpaces extends Application {
     /*
-    Application for accessing individual objects (items) through verbose paths of the form: .../SPACE:IID,
-    where SPACE is a text identifier assigned to a category in `spaces` property.
+    A collection of objects accessible through human-readable paths of the form: GROUP-NAME:ID,
+    where GROUP-NAME is a category-specific qualifier defined in `spaces` property.
     */
 
     spaces
