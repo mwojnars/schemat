@@ -1,14 +1,14 @@
 // import { Temporal } from './libs/js-temporal/polyfill.js'
 
-import { React, MaterialUI } from './resources.js'
-import { e, cl, st, createRef, useState, useItemLoading, delayed_render } from './react-utils.js'
-import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './react-utils.js'
-import { ItemLoadingHOC } from './react-utils.js'
+import { React, MaterialUI } from './web/resources.js'
+import { e, cl, st, createRef, useState, useItemLoading, delayed_render } from './web/react-utils.js'
+import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './web/react-utils.js'
+import { ItemLoadingHOC } from './web/react-utils.js'
 import { T, assert, print, trycatch, truncate, concat } from './utils.js'
 import {DataError, NotImplemented, ValueError} from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
-import { Assets, Component, Widget } from './widget.js'
+import { Assets, Component, Widget } from './web/widget.js'
 import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
 
 // print('Temporal:', Temporal)

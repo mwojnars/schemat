@@ -1,6 +1,5 @@
-import { T, assert, print, tryimport, dedentFull } from './utils.js'
-import { e, cssPrepend, interpolate } from './react-utils.js'
-import { DIV } from './react-utils.js'
+import { T, assert, print, tryimport, dedentFull } from '../utils.js'
+import { e, cssPrepend, interpolate, DIV } from './react-utils.js'
 import { React, Resources } from './resources.js'
 
 let csso = await tryimport('csso')
