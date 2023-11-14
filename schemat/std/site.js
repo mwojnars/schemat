@@ -1,5 +1,6 @@
-import { print, assert, T } from '../utils.js'
-import { Item, Request } from '../item.js'
+import {UrlPathNotFound} from "../errors.js"
+import {print, assert, T} from '../utils.js'
+import {Item, Request} from '../item.js'
 
 
 // Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -31,7 +32,7 @@ export class Router extends Item {
         for (let {value: defaultNode} of defaultRoutes)
             try { return await defaultNode.load().then(n => n.route(request.copy())) }
             catch(ex) {
-                if (!(ex instanceof Request.UrlPathNotFound)) throw ex
+                if (!(ex instanceof UrlPathNotFound)) throw ex
                 lastEx = ex
             }
 
@@ -79,7 +80,7 @@ export class Site extends Router {
         print('Application:', Application)
         let app = await this.getRouteNode(route, strategy)
         if (app.instanceof(Application)) return app
-        throw new Request.UrlPathNotFound("not an application")
+        throw new UrlPathNotFound("not an application")
     }
 
     async importModule(path, referrer) {

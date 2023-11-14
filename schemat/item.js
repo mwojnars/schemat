@@ -1,7 +1,7 @@
 'use strict'
 
 import { print, assert, T, escape_html, splitLast, concat, unique } from './utils.js'
-import {NotFound, NotLinked, NotLoaded} from './errors.js'
+import {UrlPathNotFound, NotLinked, NotLoaded} from './errors.js'
 
 import { JSONx } from './serialize.js'
 import { Path, Catalog, Data } from './data.js'
@@ -59,11 +59,7 @@ export class Request {
     static SEP_ROUTE  = '/'         // separator of route segments in URL paths
     static SEP_METHOD = '@'         // separator of a method name within a URL path
 
-    static UrlPathNotFound = class extends NotFound {
-        static message = "URL path not found"
-    }
-
-    throwNotFound(msg, args)  { throw new Request.UrlPathNotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
+    throwNotFound(msg, args)  { throw new UrlPathNotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
 
 
     get req()       { return this.session?.req }
@@ -753,7 +749,7 @@ export class Item {
             return node.routeNode(req, strategy)
         }
         catch (ex) {
-            if (ex instanceof Request.UrlPathNotFound && strategy === 'last')
+            if (ex instanceof UrlPathNotFound && strategy === 'last')
                 return [this, request]      // assumption: findRoute() above must NOT modify the `request` before throwing a NotFound!
             throw ex
         }
