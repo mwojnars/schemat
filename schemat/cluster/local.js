@@ -23,8 +23,10 @@ export function thread_local_variable() {
             // if (prop === 'local') return local
 
             const store = local.getStore()
-            const value = store[prop]
-            return typeof value === 'function' ? value.bind(store) : value
+            return Reflect.get(store, prop, receiver)
+            
+            // const value = store[prop]
+            // return typeof value === 'function' ? value.bind(store) : value
         },
         set(target, prop, value, receiver) {
             // if (['run_with', 'local'].includes(prop))
@@ -32,8 +34,10 @@ export function thread_local_variable() {
                 throw new Error(`${prop} is not writable`)
 
             const store = local.getStore()
-            store[prop] = value
-            return true
+            return Reflect.set(store, prop, value, receiver)
+
+            // store[prop] = value
+            // return true
         }
     }
 
