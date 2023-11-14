@@ -48,7 +48,6 @@ export class WebServer extends Server {
 
     constructor(node, {host, port, workers}) {
         super()
-        this.registry = node.registry
         this.host = host
         this.port = port
         this.workers = workers          // no. of worker processes to spawn
@@ -62,7 +61,7 @@ export class WebServer extends Server {
         await session.start()
 
         try {
-            let result = this.registry.site.routeWeb(session)
+            let result = registry.site.routeWeb(session)
             if (result instanceof Promise) result = await result
             if (typeof result === 'string') res.send(result)
         }
@@ -72,7 +71,7 @@ export class WebServer extends Server {
         }
 
         // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
-        let {check} = await this.registry.site.importModule("/site/widgets.js")
+        let {check} = await registry.site.importModule("/site/widgets.js")
         check()
 
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
