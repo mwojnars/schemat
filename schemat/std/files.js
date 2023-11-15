@@ -131,7 +131,7 @@ export class FolderLocal extends Folder {
         if (!root) throw new Error('missing `path` property in a FolderLocal')
         let path = this._mod_path.join(root, request.path)      // this reduces the '..' special symbols, so we have to check
         if (!path.startsWith(root)) request.throwNotFound()     // if the final path still falls under the `root`, for security
-        if (request.session) request.session.sendFile(path)
+        if (request.session) request.res.sendFile(path)
         else return this._mod_fs.readFileSync(path, {encoding: 'utf8'})
     }
 }

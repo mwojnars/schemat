@@ -348,10 +348,10 @@ export class Session {
     printCounts()   { print(`items requested ${this.itemsRequested.total()} times: `, this.itemsRequested)
                       print(`items loaded ${this.itemsLoaded.total()} times:    `, this.itemsLoaded) }
 
-    redirect(...args)       { this.res.redirect(...args)   }
-    send(...args)           { this.res.send(...args)       }
-    sendFile(...args)       { this.res.sendFile(...args)   }
-    sendStatus(...args)     { this.res.sendStatus(...args) }
+    // redirect(...args)       { this.res.redirect(...args)   }
+    // send(...args)           { this.res.send(...args)       }
+    // sendFile(...args)       { this.res.sendFile(...args)   }
+    // sendStatus(...args)     { this.res.sendStatus(...args) }
     // sendItem(...args)       { this.res.sendItem(...args)   }
     // sendItems(...args)      { this.res.sendItems(...args)  }
 
