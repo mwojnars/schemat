@@ -67,7 +67,7 @@ export class WebServer extends Server {
         try {
             // let result = registry.site.routeWeb(session)
 
-            let request = new Request({session})
+            let request = new Request({req, res, session})
             let result = registry.site.route(request)
 
             if (result instanceof Promise) result = await result
@@ -106,7 +106,7 @@ export class WebServer extends Server {
         app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
         app.use(bodyParser.text({type: '*/*', limit: '10MB'}))  // for setting req.body string from plain-text body (if not json MIME-type)
 
-        app.all('*', (req, res) => session.run_with(new Session(req, res), () => this.handle(req, res)))
+        app.all('*', (req, res) => session.run_with(new Session(), () => this.handle(req, res)))
         // app.all('*', (req, res) => this.handle(req, res))
 
         // web.get('*', async (req, res) => {

@@ -338,10 +338,10 @@ export class Session {
     itemsRequested = new Counter()       // for each item ID: no. of times the item was requested through registry.getItem() during this session
     itemsLoaded    = new Counter()       // for each item ID: no. of times the item data was attempted to be loaded from DB
 
-    constructor(req, res) {
-        this.req = req
-        this.res = res
-    }
+    // constructor(req, res) {
+    //     this.req = req
+    //     this.res = res
+    // }
 
     async start()   { this.releaseMutex = await registry.startSession(this) }
     async stop()    { return registry.stopSession(this.releaseMutex) }

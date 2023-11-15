@@ -88,13 +88,13 @@ export class Request {
         return this.pathFull.slice(0, this.position)
     }
 
-    constructor({path, method, session}) {
-        this.req = session?.req
-        this.res = session?.res
+    constructor({path, method, req, res, session}) {
+        this.req = req
+        this.res = res
 
         this.session = session
         this.protocol =
-            !session                    ? "CALL" :          // CALL = internal call through Site.route()
+            !this.req                   ? "CALL" :          // CALL = internal call through Site.route()
             this.req.method === 'GET'   ? "GET"  :          // GET  = read access through HTTP GET
                                           "POST"            // POST = write access through HTTP POST
 
