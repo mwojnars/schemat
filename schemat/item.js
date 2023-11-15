@@ -62,8 +62,8 @@ export class Request {
 
     throwNotFound(msg, args)  { throw new UrlPathNotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
 
-    req
-    res
+    req             // instance of node.js express' Request
+    res             // instance of node.js express' Response
 
     protocol        // CALL, GET, POST, (SOCK in the future); there can be different services exposed at the same endpoint-name but different protocols
     session         // Session object; only for top-level web requests (not for internal requests)
