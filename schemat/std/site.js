@@ -171,7 +171,7 @@ export class Site extends Router {
 
     routeWeb(session) {
         /* Convert a web request to an internal Request and process it through route(). */
-        let request = new Request({session, path: session.path})
+        let request = new Request({session, path: session.req.path})
         return this.route(request)
     }
 

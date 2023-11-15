@@ -93,7 +93,7 @@ export class Request {
         this.session = session
         this.protocol =
             !session                    ? "CALL" :          // CALL = internal call through Site.route()
-            session.method === 'GET'    ? "GET"  :          // GET  = read access through HTTP GET
+            session.req.method === 'GET'? "GET"  :          // GET  = read access through HTTP GET
                                           "POST"            // POST = write access through HTTP POST
 
         let meth, sep = Request.SEP_METHOD
