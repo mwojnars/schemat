@@ -169,11 +169,11 @@ export class Site extends Router {
 
     /*** Processing requests & URL generation ***/
 
-    routeWeb(session) {
-        /* Convert a web request to an internal Request and process it through route(). */
-        let request = new Request({session, path: session.req.path})
-        return this.route(request)
-    }
+    // routeWeb(session) {
+    //     /* Convert a web request to an internal Request and process it through route(). */
+    //     let request = new Request({session})
+    //     return this.route(request)
+    // }
 
     // findRoute(request) {
     //     return request.path ?

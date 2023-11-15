@@ -62,9 +62,8 @@ export class Request {
 
     throwNotFound(msg, args)  { throw new UrlPathNotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
 
-
-    get req()       { return this.session?.req }
-    get res()       { return this.session?.res }
+    req
+    res
 
     protocol        // CALL, GET, POST, (SOCK in the future); there can be different services exposed at the same endpoint-name but different protocols
     session         // Session object; only for top-level web requests (not for internal requests)
@@ -90,14 +89,18 @@ export class Request {
     }
 
     constructor({path, method, session}) {
+        this.req = session?.req
+        this.res = session?.res
+
         this.session = session
         this.protocol =
             !session                    ? "CALL" :          // CALL = internal call through Site.route()
-            session.req.method === 'GET'? "GET"  :          // GET  = read access through HTTP GET
+            this.req.method === 'GET'   ? "GET"  :          // GET  = read access through HTTP GET
                                           "POST"            // POST = write access through HTTP POST
 
-        let meth, sep = Request.SEP_METHOD
-        ;[this.pathFull, meth] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+        if (path === undefined) path = this.req.path
+        let meth, sep = Request.SEP_METHOD;
+        [this.pathFull, meth] = path.includes(sep) ? splitLast(path, sep) : [path, '']
 
         // in Express, the web path always starts with at least on character, '/', even if the URL contains a domain alone;
         // this leading-trailing slash has to be truncated for correct segmentation and detection of an empty path

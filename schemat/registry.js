@@ -311,8 +311,8 @@ export class Registry {
 export class Session {
     /* Collection of objects that are global to a single request processing. Also holds an evolving state of the latter. */
 
-    req                 // instance of node.js express' Request (only present server-side)
-    res                 // instance of node.js express' Response (only present server-side)
+    // req                 // instance of node.js express' Request (only present server-side)
+    // res                 // instance of node.js express' Response (only present server-side)
 
     // get path()          { return this.req.path }        // URL path, same as req.path, with @method name included (!)
     // get method()        { return this.req.method }      // "GET" or "POST"

@@ -65,7 +65,11 @@ export class WebServer extends Server {
         await session.start()
 
         try {
-            let result = registry.site.routeWeb(session)
+            // let result = registry.site.routeWeb(session)
+
+            let request = new Request({session})
+            let result = registry.site.route(request)
+
             if (result instanceof Promise) result = await result
             if (typeof result === 'string') res.send(result)
         }
