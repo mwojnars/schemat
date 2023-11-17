@@ -735,29 +735,29 @@ export class Item {
         if (typeof target === 'function') target = target(node)         // delayed target test after the node is loaded
         return target ? node.handle(req) : node.route(req)
     }
-    async routeNode(request, strategy = 'last') {
-        /* Like route(), but request.path can point to an intermediate node on a route,
-           and instead of calling .handle() this method returns a (loaded) node pointed to by the path:
-           the first node where request.path becomes empty (if strategy="first");
-           or the last node before catching a Request.NotFound error (if strategy="last");
-           or the target node with remaining subpath - if the target was reached along the way.
-           A pair is returned: [node, current-request] from the point where the routing was terminated.
-         */
-        if (!request.path && strategy === 'first') return [this, request]
-        try {
-            let [node, req, target] = this._findRouteChecked(request)
-            if (node instanceof Promise) node = await node
-            if (!node.is_loaded()) await node.load()
-            if (typeof target === 'function') target = target(node)     // delayed target test after the node is loaded
-            if (target) return [node, req]
-            return node.routeNode(req, strategy)
-        }
-        catch (ex) {
-            if (ex instanceof UrlPathNotFound && strategy === 'last')
-                return [this, request]      // assumption: findRoute() above must NOT modify the `request` before throwing a NotFound!
-            throw ex
-        }
-    }
+    // async routeNode(request, strategy = 'last') {
+    //     /* Like route(), but request.path can point to an intermediate node on a route,
+    //        and instead of calling .handle() this method returns a (loaded) node pointed to by the path:
+    //        the first node where request.path becomes empty (if strategy="first");
+    //        or the last node before catching a Request.NotFound error (if strategy="last");
+    //        or the target node with remaining subpath - if the target was reached along the way.
+    //        A pair is returned: [node, current-request] from the point where the routing was terminated.
+    //      */
+    //     if (!request.path && strategy === 'first') return [this, request]
+    //     try {
+    //         let [node, req, target] = this._findRouteChecked(request)
+    //         if (node instanceof Promise) node = await node
+    //         if (!node.is_loaded()) await node.load()
+    //         if (typeof target === 'function') target = target(node)     // delayed target test after the node is loaded
+    //         if (target) return [node, req]
+    //         return node.routeNode(req, strategy)
+    //     }
+    //     catch (ex) {
+    //         if (ex instanceof UrlPathNotFound && strategy === 'last')
+    //             return [this, request]      // assumption: findRoute() above must NOT modify the `request` before throwing a NotFound!
+    //         throw ex
+    //     }
+    // }
 
     _findRouteChecked(request) {
         /* Wrapper around findRoute() that adds validity checks. */

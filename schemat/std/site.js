@@ -70,19 +70,19 @@ export class Site extends Router {
         return this.route(new Request({path, method: '@item'}))
     }
 
-    async getRouteNode(route, strategy = 'last') {
-        /* URL-call that returns an intermediate routing node installed at the `route` point of URL paths. */
-        return this.routeNode(new Request({path: route}), strategy)
-    }
-
-    async getApplication(route, strategy = 'last') {
-        /* URL-call to an application installed as a routing node at the end of `route` path. */
-        let Application = await this.findItem('/system/Application')
-        print('Application:', Application)
-        let app = await this.getRouteNode(route, strategy)
-        if (app.instanceof(Application)) return app
-        throw new UrlPathNotFound("not an application")
-    }
+    // async getRouteNode(route, strategy = 'last') {
+    //     /* URL-call that returns an intermediate routing node installed at the `route` point of URL paths. */
+    //     return this.routeNode(new Request({path: route}), strategy)
+    // }
+    //
+    // async getApplication(route, strategy = 'last') {
+    //     /* URL-call to an application installed as a routing node at the end of `route` path. */
+    //     let Application = await this.findItem('/system/Application')
+    //     print('Application:', Application)
+    //     let app = await this.getRouteNode(route, strategy)
+    //     if (app.instanceof(Application)) return app
+    //     throw new UrlPathNotFound("not an application")
+    // }
 
     async importModule(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Universal Namespace (SUN). Returns a vm.Module object. */
