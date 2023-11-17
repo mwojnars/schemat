@@ -55,36 +55,38 @@ export class WebServer extends Server {
         this.workers = workers          // no. of worker processes to spawn
 
         set_global({session: thread_local_variable()})
+        set_global({request: thread_local_variable()})
     }
 
     async handle(req, res) {
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
         print(`Server.handle() worker ${process.pid}:`, req.path)
 
-        // let session = new Session(req, res)
-        await session.start()
+        return new Promise((resolve, reject) => {
+            request.run_with(new Request({req, res, session}), async () => {
+                await session.start()
 
-        try {
-            // let result = registry.site.routeWeb(session)
+                try {
+                    let request = new Request({req, res, session})      // TODO: use global `request` instead
+                    let result = await registry.site.route(request)
+                    if (typeof result === 'string') res.send(result)
+                }
+                catch (ex) {
+                    print(ex)
+                    try { res.sendStatus(ex.code || 500) } catch(e){}
+                }
 
-            let request = new Request({req, res, session})
-            let result = registry.site.route(request)
+                // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
+                let {check} = await registry.site.importModule("/site/widgets.js")
+                check()
 
-            if (result instanceof Promise) result = await result
-            if (typeof result === 'string') res.send(result)
-        }
-        catch (ex) {
-            print(ex)
-            try { res.sendStatus(ex.code || 500) } catch(e){}
-        }
+                // await sleep(200)                 // for testing
+                // session.printCounts()
+                await session.stop()
 
-        // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
-        let {check} = await registry.site.importModule("/site/widgets.js")
-        check()
-
-        // await sleep(200)                 // for testing
-        // session.printCounts()
-        await session.stop()
+                resolve()
+            })
+        })
     }
 
     async serve_express() {
