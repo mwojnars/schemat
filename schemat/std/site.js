@@ -36,8 +36,32 @@ export class Router extends Item {
                 if (!(ex instanceof UrlPathNotFound)) throw ex
                 lastEx = ex
             }
-
         if (lastEx) throw lastEx
+
+        // let default_routes = Array.from(routes).filter(e => !e.key).map(e => e.value)
+        // for (let node of default_routes) {
+        //     await node.load()
+        //     // assert(node is a Directory) ?
+        //     if (node.contains(step))
+        //         return node.route(request)
+        // }
+
+        // for (let [name, node] of routes) {
+        //
+        //     // empty route? don't consume any part of the request path, and only step into the (Directory) node
+        //     // if it possibly contains the `step` sub-route
+        //     if (name === "") {
+        //         if (!node.is_loaded()) await node.load()
+        //         assert(node instanceof Directory, "empty route must point to a Directory or Namespace")
+        //         if (node.contains(step)) return node.route(request)
+        //         else continue
+        //     }
+        //     if (name === step) {
+        //         if (!node.is_loaded()) await node.load()
+        //         return node.route(request.move(step))
+        //     }
+        // }
+
         request.throwNotFound()
     }
 
