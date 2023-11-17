@@ -727,8 +727,11 @@ export class Item {
         Typically, `request` originates from a web request. The routing can also be started internally,
         and in such case request.session is left undefined.
         */
-        assert(this.registry.onServer)                  // route() is exclusively server-side functionality, including internal URL-calls
-        let [node, req, target] = this._findRouteChecked(request)
+        assert(this.registry.onServer)                      // route() is exclusively server-side functionality, including internal URL-calls
+        let next = this.findRoute(request)                  // here, a part of request.path gets consumed
+        if (!next || !next[0]) request.throwNotFound()      // missing `node` in the returned tuple
+
+        let [node, req, target] = next  //this._findRouteChecked(request)
         if (node instanceof Promise) node = await node
         if (!node instanceof Item) throw new Error("internal error, expected an item as a target node of a URL route")
         if (!node.is_loaded()) await node.load()
@@ -758,14 +761,13 @@ export class Item {
     //         throw ex
     //     }
     // }
-
-    _findRouteChecked(request) {
-        /* Wrapper around findRoute() that adds validity checks. */
-        let next = this.findRoute(request)              // here, a part of request.path gets consumed
-        if (!next) request.throwNotFound()
-        if (!next[0]) request.throwNotFound()           // missing `node` in the returned tuple
-        return next
-    }
+    //
+    // _findRouteChecked(request) {
+    //     /* Wrapper around findRoute() that adds validity checks. */
+    //     let next = this.findRoute(request)                  // here, a part of request.path gets consumed
+    //     if (!next || !next[0]) request.throwNotFound()      // missing `node` in the returned tuple
+    //     return next
+    // }
 
     findRoute(request) {
         /* Find the next node on a route identified by request.path, the route starting in this node.
