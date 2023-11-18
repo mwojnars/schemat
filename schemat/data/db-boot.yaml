@@ -254,11 +254,11 @@
     "@": 0
   "@": Data
 - __id: 9
-  name: AppSpaces
+  name: CategoryID_Namespace
   info: "Namespace for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
-  class_path: /system/local/std/apps.js:AppSpaces
+  class_path: /system/local/std/apps.js:CategoryID_Namespace
   fields:
     spaces:
       values:

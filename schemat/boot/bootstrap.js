@@ -123,10 +123,10 @@ async function create_categories(Category) {
             category    : new ITEM({category: Category, info: "Optional category(ies) of items handled by this application."}),
         }),
     })
-    cat.AppSpaces = await Category.new(9, {
-        name        : "AppSpaces",
+    cat.CategoryID_Namespace = await Category.new(9, {
+        name        : "CategoryID_Namespace",
         info        : "Namespace for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
-        class_path  : '/system/local/std/apps.js:AppSpaces',
+        class_path  : '/system/local/std/apps.js:CategoryID_Namespace',
         fields      : C({spaces: new CATALOG({values: new ITEM({category: Category})})}),
         cached_methods: "spacesRev",
     })

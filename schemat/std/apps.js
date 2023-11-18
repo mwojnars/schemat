@@ -78,10 +78,10 @@ export class ID_Namespace extends Namespace {
     }
 }
 
-export class AppSpaces extends Namespace {
+export class CategoryID_Namespace extends Namespace {
     /*
-    A collection of objects accessible through human-readable paths of the form: GROUP-NAME:ID,
-    where GROUP-NAME is a category-specific qualifier defined in `spaces` property.
+    A collection of objects accessible through human-readable paths of the form: CATEGORY:ID,
+    where CATEGORY is a category-specific text qualifier defined in `spaces` property.
     */
 
     spaces
@@ -106,6 +106,6 @@ export class AppSpaces extends Namespace {
     }
 }
 
-AppSpaces.setCaching('spacesRev')
+CategoryID_Namespace.setCaching('spacesRev')
 
 
