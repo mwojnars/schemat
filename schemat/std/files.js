@@ -98,18 +98,18 @@ export class FileLocal extends File {
     // }
 }
 
-export class Folder extends Item {
+export class Directory extends Item {
 
     findRoute(request) {
         let step = request.step()
         if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
         let item = this.files.get(step)
         // request.pushMethod('@file')                     // if `item` doesn't provide @file method, its default one will be used
-        return [item, request.move(step), item => !(item instanceof Folder)]
+        return [item, request.move(step), item => !(item instanceof Directory)]
     }
 }
 
-export class FolderLocal extends Folder {
+export class FolderLocal extends Directory {
 
     local_path
 

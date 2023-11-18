@@ -199,10 +199,10 @@
     "@": 0
   "@": Data
 - __id: 5
-  name: Folder
+  name: Directory
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
-  class_path: /system/local/std/files.js:Folder
+  class_path: /system/local/std/files.js:Directory
   fields:
     files:
       values:
@@ -319,7 +319,7 @@
       "@": 7
     File:
       "@": 3
-    Folder:
+    Directory:
       "@": 5
     Site:
       "@": 1

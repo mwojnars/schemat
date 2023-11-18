@@ -89,11 +89,11 @@ async function create_categories(Category) {
             //format: new STRING(),             // file format: pdf, xlsx, ...
         }),
     })
-    cat.Folder = await Category.new(5, {
-        name        : "Folder",
+    cat.Directory = await Category.new(5, {
+        name        : "Directory",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
-        class_path  : '/system/local/std/files.js:Folder',
-        // _boot_class : 'schemat.item.Folder',
+        class_path  : '/system/local/std/files.js:Directory',
+        // _boot_class : 'schemat.item.Directory',
         fields      : C({
             files       : new CATALOG({values: new ITEM()}),          // file & directory names mapped to item IDs
             _is_folder  : new BOOLEAN({default: true}),
@@ -102,7 +102,7 @@ async function create_categories(Category) {
     cat.FolderLocal = await Category.new(6, {
         name        : "FolderLocal",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
-        _extends_   : cat.Folder,
+        _extends_   : cat.Directory,
         class_path  : '/system/local/std/files.js:FolderLocal',
         // _boot_class : 'schemat.item.FolderLocal',
         fields      : C({local_path: new STRING()}),
@@ -165,8 +165,8 @@ async function create_items(cat, Category) {
     let item = {}
 
     // item.test_txt = await cat.File.new({content: "This is a test file."})
-    // item.dir_tmp1 = await cat.Folder.new({files: C({'test.txt': item.test_txt})})
-    // item.dir_tmp2 = await cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
+    // item.dir_tmp1 = await cat.Directory.new({files: C({'test.txt': item.test_txt})})
+    // item.dir_tmp2 = await cat.Directory.new({files: C({'tmp1': item.dir_tmp1})})
 
     // item.app_system = await cat.Application.new({
     //     name: "AppBasic",
@@ -194,12 +194,12 @@ async function create_items(cat, Category) {
 
     item.dir_local  = await cat.FolderLocal.new({name: '/local', local_path: '.'})   //path.dirname(__dirname)
 
-    item.dir_system = await cat.Folder.new({name: "/system",
+    item.dir_system = await cat.Directory.new({name: "/system",
         files: C({
             'local'         : item.dir_local,
             'Application'   : cat.Application,
             'File'          : cat.File,
-            'Folder'        : cat.Folder,
+            'Directory'        : cat.Directory,
             'Site'          : cat.Site,
         }),
     })
@@ -218,9 +218,9 @@ async function create_items(cat, Category) {
     //     `)
     // })
     //
-    // item.dir_demo   = await cat.Folder.new({name: "/demo", })
-    // item.dir_apps   = await cat.Folder.new({name: "/apps", files: C({'demo': item.dir_demo})})
-    // item.dir_site   = await cat.Folder.new({name: "/site",
+    // item.dir_demo   = await cat.Directory.new({name: "/demo", })
+    // item.dir_apps   = await cat.Directory.new({name: "/apps", files: C({'demo': item.dir_demo})})
+    // item.dir_site   = await cat.Directory.new({name: "/site",
     //     files: C({
     //         'utils.js':     item.utils_js,
     //         'widgets.js':   item.widgets_js,
@@ -229,7 +229,7 @@ async function create_items(cat, Category) {
     //
     // // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     // item.dir_local = await cat.FolderLocal.new({name: '/local', path: `${path_local}`})
-    // item.dir_files = await cat.Folder.new({name: "/files",
+    // item.dir_files = await cat.Directory.new({name: "/files",
     //     files: C({
     //         'apps':     item.dir_apps,
     //         'local':    item.dir_local,
@@ -243,7 +243,7 @@ async function create_items(cat, Category) {
     //     spaces: C({
     //         'sys.category':     Category,
     //         'sys.site':         cat.Site,
-    //         'sys.dir':          cat.Folder,
+    //         'sys.dir':          cat.Directory,
     //         'sys.file':         cat.File,
     //     }),
     // })
