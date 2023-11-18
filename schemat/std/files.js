@@ -7,6 +7,7 @@
 import {print} from "../common/utils.js"
 import {Item} from "../item.js"
 import {HttpService, InternalService} from "../services.js"
+import {Directory} from "./dirs.js";
 
 
 /**********************************************************************************************************************/
@@ -96,17 +97,6 @@ export class FileLocal extends File {
     //     // TODO respect the "If-Modified-Since" http header like in django.views.static.serve(), see:
     //     // https://github.com/django/django/blob/main/django/views/static.py
     // }
-}
-
-export class Directory extends Item {
-
-    findRoute(request) {
-        let step = request.step()
-        if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
-        let item = this.entries.get(step)
-        // request.pushMethod('@file')                     // if `item` doesn't provide @file method, its default one will be used
-        return [item, request.move(step), item => !(item instanceof Directory)]
-    }
 }
 
 export class LocalDirectory extends Directory {

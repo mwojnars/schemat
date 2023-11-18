@@ -92,7 +92,7 @@ async function create_categories(Category) {
     cat.Directory = await Category.new(5, {
         name        : "Directory",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
-        class_path  : '/system/local/std/files.js:Directory',
+        class_path  : '/system/local/std/dirs.js:Directory',
         // _boot_class : 'schemat.item.Directory',
         fields      : C({
             entries     : new CATALOG({values: new ITEM()}),          // file & directory names mapped to item IDs

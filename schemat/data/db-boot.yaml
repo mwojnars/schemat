@@ -202,7 +202,7 @@
   name: Directory
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
-  class_path: /system/local/std/files.js:Directory
+  class_path: /system/local/std/dirs.js:Directory
   fields:
     entries:
       values:
