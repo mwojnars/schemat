@@ -110,7 +110,7 @@
   "@": Data
 - __id: 1009
   name: /apps
-  files:
+  entries:
     demo:
       "@": 1008
     paperity:
@@ -121,7 +121,7 @@
   "@": Data
 - __id: 1010
   name: /site
-  files:
+  entries:
     utils.js:
       "@": 1005
     widgets.js:
@@ -134,7 +134,7 @@
   name: domain
   info: Directory with public static files that must be accessible at the domain
     root, like .../favicon.ico, /robots.txt etc.
-  files:
+  entries:
     favicon.ico:
       "@": 1007
     "@": Catalog

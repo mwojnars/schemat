@@ -95,7 +95,7 @@ async function create_categories(Category) {
         class_path  : '/system/local/std/files.js:Directory',
         // _boot_class : 'schemat.item.Directory',
         fields      : C({
-            files       : new CATALOG({values: new ITEM()}),          // file & directory names mapped to item IDs
+            entries     : new CATALOG({values: new ITEM()}),          // file & directory names mapped to item IDs
             _is_folder  : new BOOLEAN({default: true}),
         }),
     })
@@ -195,11 +195,11 @@ async function create_items(cat, Category) {
     item.dir_local  = await cat.LocalDirectory.new({name: '/local', local_path: '.'})   //path.dirname(__dirname)
 
     item.dir_system = await cat.Directory.new({name: "/system",
-        files: C({
+        entries: C({
             'local'         : item.dir_local,
             'Application'   : cat.Application,
             'File'          : cat.File,
-            'Directory'        : cat.Directory,
+            'Directory'     : cat.Directory,
             'Site'          : cat.Site,
         }),
     })

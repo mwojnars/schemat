@@ -204,7 +204,7 @@
     nested directories.
   class_path: /system/local/std/files.js:Directory
   fields:
-    files:
+    entries:
       values:
         "@": ITEM
       "@": CATALOG
@@ -312,7 +312,7 @@
   "@": Data
 - __id: 13
   name: /system
-  files:
+  entries:
     local:
       "@": 12
     Application:
