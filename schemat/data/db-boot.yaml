@@ -234,7 +234,7 @@
   name: Namespace
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
-  class_path: /system/local/std/apps.js:Namespace
+  class_path: /system/local/std/dirs.js:Namespace
   _category_:
     "@": 0
   "@": Data
@@ -242,7 +242,7 @@
   name: ID_Namespace
   info: Namespace that serves items on simple URLs of the form /IID. Mainly used
     for system & admin purposes, or as a last-resort default for URL generation.
-  class_path: /system/local/std/apps.js:ID_Namespace
+  class_path: /system/local/std/dirs.js:ID_Namespace
   fields:
     category:
       category:
@@ -258,7 +258,7 @@
   info: "Namespace for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
-  class_path: /system/local/std/apps.js:CategoryID_Namespace
+  class_path: /system/local/std/dirs.js:CategoryID_Namespace
   fields:
     spaces:
       values:
