@@ -4,7 +4,7 @@ import {Item} from "../item.js"
 
 /**********************************************************************************************************************/
 
-export class Application extends Item {
+export class Namespace extends Item {
     /*
         Application is a (possibly unbounded) collection of items available over the web that together serve the user's
         particular need. Each eligible item has a unique URL path within the application's URL space, and the application
@@ -56,7 +56,7 @@ export class Application extends Item {
 }
 
 
-export class AppBasic extends Application {
+export class AppBasic extends Namespace {
     /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /IID */
 
     // view/action       -- what @view to use for rendering the items when a view is not specified in the URL
@@ -78,7 +78,7 @@ export class AppBasic extends Application {
     }
 }
 
-export class AppSpaces extends Application {
+export class AppSpaces extends Namespace {
     /*
     A collection of objects accessible through human-readable paths of the form: GROUP-NAME:ID,
     where GROUP-NAME is a category-specific qualifier defined in `spaces` property.

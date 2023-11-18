@@ -231,16 +231,16 @@
     "@": 0
   "@": Data
 - __id: 7
-  name: Application
+  name: Namespace
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
-  class_path: /system/local/std/apps.js:Application
+  class_path: /system/local/std/apps.js:Namespace
   _category_:
     "@": 0
   "@": Data
 - __id: 8
   name: AppBasic
-  info: Application that serves items on simple URLs of the form /IID. Mainly used
+  info: Namespace that serves items on simple URLs of the form /IID. Mainly used
     for system & admin purposes, or as a last-resort default for URL generation.
   class_path: /system/local/std/apps.js:AppBasic
   fields:
@@ -255,7 +255,7 @@
   "@": Data
 - __id: 9
   name: AppSpaces
-  info: "Application for accessing public data through verbose paths of the form:
+  info: "Namespace for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
   class_path: /system/local/std/apps.js:AppSpaces
@@ -315,7 +315,7 @@
   entries:
     local:
       "@": 12
-    Application:
+    Namespace:
       "@": 7
     File:
       "@": 3
