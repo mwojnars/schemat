@@ -13,6 +13,8 @@ export class Directory extends Item {
         // request.pushMethod('@file')                     // if `item` doesn't provide @file method, its default one will be used
         return [item, request.move(step), item => !(item instanceof Directory)]
     }
+
+    contains(name) { return this.entries.has(name) }
 }
 
 export class Namespace extends Directory {
@@ -64,6 +66,8 @@ export class Namespace extends Directory {
     //     let func = this.findRoute = this.parseMethod('findRoute', 'request')
     //     return func.call(this, request)
     // }
+
+    contains(name) { return true }
 }
 
 

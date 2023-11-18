@@ -2,6 +2,7 @@ import {set_global} from "../common/globals.js"
 import {print, assert, T} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Item, Request} from '../item.js'
+import {Directory} from "./dirs.js";
 
 
 // Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -23,20 +24,21 @@ export class Router extends Item {
     async route(request) {
         let step   = request.step()
         let routes = this.routes
-        let node   = routes.get(step)
-        if (step && node) return node.load().then(n => n.route(request.move(step)))
 
-        // check for empty '' route segment(s) in the routing table, there can be multiple ones;
-        // try the first one, or proceed to the next one if NotFound is raised...
-        let lastEx
-        let defaultRoutes = routes.getEmpty()
-        for (let {value: defaultNode} of defaultRoutes)
-            try { return await defaultNode.load().then(n => n.route(request.copy())) }
-            catch(ex) {
-                if (!(ex instanceof UrlPathNotFound)) throw ex
-                lastEx = ex
-            }
-        if (lastEx) throw lastEx
+        // let node   = routes.get(step)
+        // if (step && node) return node.load().then(n => n.route(request.move(step)))
+        //
+        // // check for empty '' route segment(s) in the routing table, there can be multiple ones;
+        // // try the first one, or proceed to the next one if NotFound is raised...
+        // let lastEx
+        // let defaultRoutes = routes.getEmpty()
+        // for (let {value: defaultNode} of defaultRoutes)
+        //     try { return await defaultNode.load().then(n => n.route(request.copy())) }
+        //     catch(ex) {
+        //         if (!(ex instanceof UrlPathNotFound)) throw ex
+        //         lastEx = ex
+        //     }
+        // if (lastEx) throw lastEx
 
         // let default_routes = Array.from(routes).filter(e => !e.key).map(e => e.value)
         // for (let node of default_routes) {
@@ -46,21 +48,21 @@ export class Router extends Item {
         //         return node.route(request)
         // }
 
-        // for (let [name, node] of routes) {
-        //
-        //     // empty route? don't consume any part of the request path, and only step into the (Directory) node
-        //     // if it possibly contains the `step` sub-route
-        //     if (name === "") {
-        //         if (!node.is_loaded()) await node.load()
-        //         assert(node instanceof Directory, "empty route must point to a Directory or Namespace")
-        //         if (node.contains(step)) return node.route(request)
-        //         else continue
-        //     }
-        //     if (name === step) {
-        //         if (!node.is_loaded()) await node.load()
-        //         return node.route(request.move(step))
-        //     }
-        // }
+        for (let {key: name, value: node} of routes) {
+
+            // empty route? don't consume any part of the request path; step into the (Directory) node
+            // only if it may contain the `step` sub-route
+            if (!name) {
+                if (!node.is_loaded()) await node.load()
+                assert(node instanceof Directory, "empty route can only point to a Directory or Namespace")
+                if (node.contains(step)) return node.route(request)
+                else continue
+            }
+            if (name === step) {
+                if (!node.is_loaded()) await node.load()
+                return node.route(request.move(step))
+            }
+        }
 
         request.throwNotFound()
     }
