@@ -115,10 +115,10 @@ async function create_categories(Category) {
         // fields      : C({findRoute: new CODE(), urlPath: new CODE(), _boot_class: new STRING()}),
         // custom_class: true,
     })
-    cat.AppBasic = await Category.new(8, {
-        name        : "AppBasic",
+    cat.ID_Namespace = await Category.new(8, {
+        name        : "ID_Namespace",
         info        : "Namespace that serves items on simple URLs of the form /IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
-        class_path  : '/system/local/std/apps.js:AppBasic',
+        class_path  : '/system/local/std/apps.js:ID_Namespace',
         fields      : C({
             category    : new ITEM({category: Category, info: "Optional category(ies) of items handled by this application."}),
         }),

@@ -239,10 +239,10 @@
     "@": 0
   "@": Data
 - __id: 8
-  name: AppBasic
+  name: ID_Namespace
   info: Namespace that serves items on simple URLs of the form /IID. Mainly used
     for system & admin purposes, or as a last-resort default for URL generation.
-  class_path: /system/local/std/apps.js:AppBasic
+  class_path: /system/local/std/apps.js:ID_Namespace
   fields:
     category:
       category:

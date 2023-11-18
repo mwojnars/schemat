@@ -6,7 +6,7 @@ import {Item} from "../item.js"
 
 export class Namespace extends Item {
     /*
-        Application is a (possibly unbounded) collection of items available over the web that together serve the user's
+        Unbounded collection of objects available over the web that together serve the user's
         particular need. Each eligible item has a unique URL path within the application's URL space, and the application
         allows to retrieve this path for an arbitrary item (urlPath()) and, vice versa, map a URL path to
         a corresponding target item (findRoute()). All paths are relative to the application's base route.
@@ -56,8 +56,8 @@ export class Namespace extends Item {
 }
 
 
-export class AppBasic extends Namespace {
-    /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /IID */
+export class ID_Namespace extends Namespace {
+    /* All objects accessible through the raw numeric ID url path of the form: /ID */
 
     // view/action       -- what @view to use for rendering the items when a view is not specified in the URL
 
