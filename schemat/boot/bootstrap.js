@@ -38,7 +38,7 @@ async function create_categories(Category) {
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             path_internal   : new PATH({info: "URL route of an internal application for default/admin web access to items. The application should handle all items."}),
             routes          : new CATALOG({values: new ITEM(), repeated: true, info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. NO leading/trailing slashes."}),
-            //path_local    : new PATH({info: "URL route of a FolderLocal that maps to the root folder of the Schemat's local installation."}),
+            //path_local    : new PATH({info: "URL route of a LocalDirectory that maps to the root folder of the Schemat's local installation."}),
             //route_default: new ITEM({info: "URL route anchored at the site root, i.e., having empty URL prefix. If there are multiple `route_default` entries, they are being tried in the order of listing in the site's configuration, until a route is found that does NOT raise the Request.NotFound."}),
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({category: cat.Database, info: "Global database layer"}),
@@ -99,12 +99,12 @@ async function create_categories(Category) {
             _is_folder  : new BOOLEAN({default: true}),
         }),
     })
-    cat.FolderLocal = await Category.new(6, {
-        name        : "FolderLocal",
+    cat.LocalDirectory = await Category.new(6, {
+        name        : "LocalDirectory",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
         _extends_   : cat.Directory,
-        class_path  : '/system/local/std/files.js:FolderLocal',
-        // _boot_class : 'schemat.item.FolderLocal',
+        class_path  : '/system/local/std/files.js:LocalDirectory',
+        // _boot_class : 'schemat.item.LocalDirectory',
         fields      : C({local_path: new STRING()}),
     })
 
@@ -192,7 +192,7 @@ async function create_items(cat, Category) {
     //     // fields      : C({spaces: new CATALOG({values: new ITEM({type_exact: Category})})}),
     // })
 
-    item.dir_local  = await cat.FolderLocal.new({name: '/local', local_path: '.'})   //path.dirname(__dirname)
+    item.dir_local  = await cat.LocalDirectory.new({name: '/local', local_path: '.'})   //path.dirname(__dirname)
 
     item.dir_system = await cat.Directory.new({name: "/system",
         files: C({
@@ -228,7 +228,7 @@ async function create_items(cat, Category) {
     // })
     //
     // // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    // item.dir_local = await cat.FolderLocal.new({name: '/local', path: `${path_local}`})
+    // item.dir_local = await cat.LocalDirectory.new({name: '/local', path: `${path_local}`})
     // item.dir_files = await cat.Directory.new({name: "/files",
     //     files: C({
     //         'apps':     item.dir_apps,

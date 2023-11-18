@@ -216,13 +216,13 @@
     "@": 0
   "@": Data
 - __id: 6
-  name: FolderLocal
+  name: LocalDirectory
   info: |-
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
   _extends_:
     "@": 5
-  class_path: /system/local/std/files.js:FolderLocal
+  class_path: /system/local/std/files.js:LocalDirectory
   fields:
     local_path:
       "@": STRING

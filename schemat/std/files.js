@@ -109,7 +109,7 @@ export class Directory extends Item {
     }
 }
 
-export class FolderLocal extends Directory {
+export class LocalDirectory extends Directory {
 
     local_path
 
@@ -128,7 +128,7 @@ export class FolderLocal extends Directory {
     handlePartial(request) {
         let root = this.local_path
         root = this._mod_path.resolve(root)                     // make `root` an absolute path
-        if (!root) throw new Error('missing `path` property in a FolderLocal')
+        if (!root) throw new Error('missing `path` property in a LocalDirectory')
         let path = this._mod_path.join(root, request.path)      // this reduces the '..' special symbols, so we have to check
         if (!path.startsWith(root)) request.throwNotFound()     // if the final path still falls under the `root`, for security
         if (request.res) request.res.sendFile(path)
