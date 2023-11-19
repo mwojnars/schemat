@@ -147,21 +147,6 @@
   _category_:
     "@": 0
   "@": Data
-- __id: 2
-  name: Router
-  info: A set of sub-applications or sub-folders, each bound to a different URL
-    prefix.
-  fields:
-    routes:
-      values:
-        "@": ITEM
-      repeated: true
-      "@": CATALOG
-    "@": Catalog
-  class_path: /system/local/std/site.js:Router
-  _category_:
-    "@": 0
-  "@": Data
 - __id: 3
   name: File
   info: File with a text content.

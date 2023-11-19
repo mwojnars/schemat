@@ -45,25 +45,25 @@ async function create_categories(Category) {
         }),
     })
 
-    cat.Router  = await Category.new(2, {
-        name        : "Router",
-        info        : "A set of sub-applications or sub-folders, each bound to a different URL prefix.",
-        fields      : C({
-            // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
-            routes      : new CATALOG({values: new ITEM(), repeated: true}),
-        }),
-        class_path  : '/system/local/std/site.js:Router',
-        // _boot_class : 'schemat.item.Router',
-        // code        : dedent(`
-        //                 findRoute(request) {
-        //                     let step   = request.step()
-        //                     let routes = this.prop('routes')
-        //                     let route  = routes.get(step)
-        //                     if (step && route)  return [route, request.move(step)]
-        //                     if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
-        //                 }
-        //             `),
-    })
+    // cat.Router  = await Category.new(2, {
+    //     name        : "Router",
+    //     info        : "A set of sub-applications or sub-folders, each bound to a different URL prefix.",
+    //     fields      : C({
+    //         // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
+    //         routes      : new CATALOG({values: new ITEM(), repeated: true}),
+    //     }),
+    //     class_path  : '/system/local/std/site.js:Router',
+    //     // _boot_class : 'schemat.item.Router',
+    //     // code        : dedent(`
+    //     //                 findRoute(request) {
+    //     //                     let step   = request.step()
+    //     //                     let routes = this.prop('routes')
+    //     //                     let route  = routes.get(step)
+    //     //                     if (step && route)  return [route, request.move(step)]
+    //     //                     if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
+    //     //                 }
+    //     //             `),
+    // })
 
     cat.File = await Category.new(3, {
         name        : "File",

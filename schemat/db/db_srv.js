@@ -4,7 +4,7 @@ import {T, assert, print, merge} from '../common/utils.js'
 import {Item} from "../item.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory} from "./index.js";
-import {Record, ItemRecord} from "./records.js";
+import {Record, ItemRecord, ChangeRequest} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
 import {JSONx} from "../serialize.js";
