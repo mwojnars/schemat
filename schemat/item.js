@@ -109,11 +109,11 @@ export class Request {
         this.pushMethod(method, '@' + meth)
     }
 
-    copy() {
-        let request = T.clone(this)
-        request.methods = [...this.methods]
-        return request
-    }
+    // copy() {
+    //     let request = T.clone(this)
+    //     request.methods = [...this.methods]
+    //     return request
+    // }
 
     _prepare(method) {
         if (!method) return method
