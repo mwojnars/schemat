@@ -11,6 +11,22 @@ import {Item} from "../item.js"
 export class Container extends Item {
 
     contains(name) { return true }
+
+    resolve(request) {
+        /* Find an object pointed to by request.path_remaining, in this or a nested container.
+           Return the object. The `request` may be modified in the process.
+         */
+        throw new Error('not implemented')
+    }
+
+    identify(item) {
+        /* Return a unique string identifier of `item` within this container. */
+        throw new Error('not implemented')
+    }
+    address(item) {
+        /* Return an absolute URL path to `item` including the path from root to this container. */
+        throw new Error('not implemented')
+    }
 }
 
 
@@ -84,6 +100,16 @@ export class ID_Namespace extends Namespace {
     /* All objects accessible through the raw numeric ID url path of the form: /ID */
 
     // view/action       -- what @view to use for rendering the items when a view is not specified in the URL
+
+    identify(item) {
+        /* Return a unique string identifier of `item` within this container. */
+        item.assert_linked()
+        return `${item._id_}`
+    }
+    address(item) {
+        /* Return an absolute URL path to `item` including the path from root to this container. */
+        return this.internal_url + '/' + this.identify(item)        // internal_url may contain an explicit blank segment: /*BLANK
+    }
 
     urlPath(item) {
         item.assert_linked()
