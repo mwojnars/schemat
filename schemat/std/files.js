@@ -7,7 +7,7 @@
 import {print} from "../common/utils.js"
 import {Item} from "../item.js"
 import {HttpService, InternalService} from "../services.js"
-import {Directory} from "./dirs.js";
+import {Directory} from "./urls.js";
 
 
 /**********************************************************************************************************************/

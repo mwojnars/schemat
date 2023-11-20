@@ -92,7 +92,7 @@ async function create_categories(Category) {
     cat.Directory = await Category.new(5, {
         name        : "Directory",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
-        class_path  : '/system/local/std/dirs.js:Directory',
+        class_path  : '/system/local/std/urls.js:Directory',
         // _boot_class : 'schemat.item.Directory',
         fields      : C({
             entries     : new CATALOG({values: new ITEM()}),          // file & directory names mapped to item IDs
@@ -111,14 +111,14 @@ async function create_categories(Category) {
     cat.Namespace = await Category.new(7, {
         name        : "Namespace",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
-        class_path  : '/system/local/std/dirs.js:Namespace',
+        class_path  : '/system/local/std/urls.js:Namespace',
         // fields      : C({findRoute: new CODE(), urlPath: new CODE(), _boot_class: new STRING()}),
         // custom_class: true,
     })
     cat.ID_Namespace = await Category.new(8, {
         name        : "ID_Namespace",
         info        : "Namespace that serves items on simple URLs of the form /IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
-        class_path  : '/system/local/std/dirs.js:ID_Namespace',
+        class_path  : '/system/local/std/urls.js:ID_Namespace',
         fields      : C({
             category    : new ITEM({category: Category, info: "Optional category(ies) of items handled by this application."}),
         }),
@@ -126,7 +126,7 @@ async function create_categories(Category) {
     cat.CategoryID_Namespace = await Category.new(9, {
         name        : "CategoryID_Namespace",
         info        : "Namespace for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
-        class_path  : '/system/local/std/dirs.js:CategoryID_Namespace',
+        class_path  : '/system/local/std/urls.js:CategoryID_Namespace',
         fields      : C({spaces: new CATALOG({values: new ITEM({category: Category})})}),
         cached_methods: "spacesRev",
     })

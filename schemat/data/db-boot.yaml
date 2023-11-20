@@ -187,7 +187,7 @@
   name: Directory
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
-  class_path: /system/local/std/dirs.js:Directory
+  class_path: /system/local/std/urls.js:Directory
   fields:
     entries:
       values:
@@ -219,7 +219,7 @@
   name: Namespace
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
-  class_path: /system/local/std/dirs.js:Namespace
+  class_path: /system/local/std/urls.js:Namespace
   _category_:
     "@": 0
   "@": Data
@@ -227,7 +227,7 @@
   name: ID_Namespace
   info: Namespace that serves items on simple URLs of the form /IID. Mainly used
     for system & admin purposes, or as a last-resort default for URL generation.
-  class_path: /system/local/std/dirs.js:ID_Namespace
+  class_path: /system/local/std/urls.js:ID_Namespace
   fields:
     category:
       category:
@@ -243,7 +243,7 @@
   info: "Namespace for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
-  class_path: /system/local/std/dirs.js:CategoryID_Namespace
+  class_path: /system/local/std/urls.js:CategoryID_Namespace
   fields:
     spaces:
       values:

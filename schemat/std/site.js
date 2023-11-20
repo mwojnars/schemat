@@ -2,7 +2,7 @@ import {set_global} from "../common/globals.js"
 import {print, assert, T} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Item, Request} from '../item.js'
-import {Directory} from "./dirs.js";
+import {Directory} from "./urls.js";
 
 
 // Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.

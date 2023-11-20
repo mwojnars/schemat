@@ -1,3 +1,7 @@
+/*
+    Container classes (Directory, Namespace) for building URL paths and routing requests to items.
+ */
+
 import {assert} from "../common/utils.js"
 import {Item} from "../item.js"
 
