@@ -67,7 +67,7 @@ export class WebServer extends Server {
                 await session.start()
 
                 try {
-                    let request = new Request({req, res, session})      // TODO: use global `request` instead
+                    // let request = new Request({req, res, session})      // TODO: use global `request` instead
                     let result = await registry.site.route(request)
                     if (typeof result === 'string') res.send(result)
                 }
