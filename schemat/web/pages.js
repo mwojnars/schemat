@@ -139,9 +139,9 @@ export class RenderedPage extends HtmlPage {
              */
             let data_string = this._encode_page_data(data)
             return `
-                <p id="page-data" style="display:none">${data_string}</p>
                 <div id="page-component">${html}</div>
                 <script async type="module">${code}</script>
+                <p id="page-data" style="display:none">${data_string}</p>
             `
         },
 
