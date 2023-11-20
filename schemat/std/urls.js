@@ -8,20 +8,27 @@ import {Item} from "../item.js"
 
 /**********************************************************************************************************************/
 
-export class Directory extends Item {
+export class Container extends Item {
+
+    contains(name) { return true }
+}
+
+
+export class Directory extends Container {
 
     findRoute(request) {
         let step = request.step()
         if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
         let item = this.entries.get(step)
         // request.pushMethod('@file')                     // if `item` doesn't provide @file method, its default one will be used
-        return [item, request.move(step), item => !(item instanceof Directory)]
+        return [item, request.move(step), item => !(item instanceof Container)]
     }
 
     contains(name) { return this.entries.has(name) }
 }
 
-export class Namespace extends Directory {
+
+export class Namespace extends Container {
     /*
         Unbounded collection of objects available over the web that together serve the user's
         particular need. Each eligible item has a unique URL path within the application's URL space, and the application
@@ -70,8 +77,6 @@ export class Namespace extends Directory {
     //     let func = this.findRoute = this.parseMethod('findRoute', 'request')
     //     return func.call(this, request)
     // }
-
-    contains(name) { return true }
 }
 
 

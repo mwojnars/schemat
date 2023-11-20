@@ -2,7 +2,7 @@ import {set_global} from "../common/globals.js"
 import {print, assert, T} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Item, Request} from '../item.js'
-import {Directory} from "./urls.js";
+import {Container} from "./urls.js";
 
 
 // Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -97,7 +97,7 @@ export class Site extends Item {
             // only if it may contain the `step` sub-route
             if (!name) {
                 if (!node.is_loaded()) await node.load()
-                assert(node instanceof Directory, "empty route can only point to a Directory or Namespace")
+                assert(node instanceof Container, "empty route can only point to a Directory or Namespace")
                 if (node.contains(step)) return node.route(request)
                 else continue
             }
