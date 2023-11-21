@@ -15,8 +15,7 @@ export class Container extends Item {
 
     find_route(path) {
         /* Return an item inside this container or below, identified by a given URL path.
-           The path is relative to this container's URL path, and may be empty (`this` is returned in such case).
-           The path should NOT contain a leading slash.
+           The path is relative to this container's URL path and should NOT contain a leading slash.
            This function returns a Promise (!) if data loading is needed along the way, or the final result otherwise
            (check if the result is instanceof Promise to avoid unnecessary awaiting).
          */
@@ -44,7 +43,6 @@ export class Container extends Item {
 export class Directory extends Container {
 
     find_route(path) {
-        // if (!path) return this
         assert(path, `path must be non-empty`)
         let step = path.split('/')[0]
         let next = this.entries.get(step)
@@ -57,7 +55,6 @@ export class Directory extends Container {
             if (!(next instanceof Container)) throw new UrlPathNotFound({path})
             return next.find_route(subpath)
         }
-
         return next.is_loaded() ? tail() : next.load().then(tail)
     }
 
