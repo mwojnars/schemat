@@ -62,31 +62,27 @@ export class WebServer extends Server {
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
         print(`Server.handle() worker ${process.pid}:`, req.path)
 
-        return new Promise((resolve, reject) => {
-            request.run_with(new Request({req, res, session}), async () => {
-                await session.start()
+        await session.start()
 
-                try {
-                    // let request = new Request({req, res, session})      // TODO: use global `request` instead
-                    let result = await registry.site.route(request)
-                    if (typeof result === 'string') res.send(result)
-                }
-                catch (ex) {
-                    print(ex)
-                    try { res.sendStatus(ex.code || 500) } catch(e){}
-                }
+        await request.run_with(new Request({req, res, session}), async () => {
+            try {
+                // let request = new Request({req, res, session})
+                let result = await registry.site.route(request)
+                if (typeof result === 'string') res.send(result)
+            }
+            catch (ex) {
+                print(ex)
+                try { res.sendStatus(ex.code || 500) } catch(e){}
+            }
 
-                // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
-                let {check} = await registry.site.importModule("/site/widgets.js")
-                check()
-
-                // await sleep(200)                 // for testing
-                // session.printCounts()
-                await session.stop()
-
-                resolve()
-            })
+            // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
+            let {check} = await registry.site.importModule("/site/widgets.js")
+            check()
         })
+
+        // await sleep(200)                 // for testing
+        // session.printCounts()
+        await session.stop()
     }
 
     async serve_express() {
