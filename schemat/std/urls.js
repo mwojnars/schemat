@@ -4,6 +4,7 @@
 
 import {assert} from "../common/utils.js"
 import {Item} from "../item.js"
+import {UrlPathNotFound} from "../common/errors.js";
 
 
 /**********************************************************************************************************************/
@@ -11,6 +12,16 @@ import {Item} from "../item.js"
 export class Container extends Item {
 
     contains(name) { return true }
+
+    find_route(path) {
+        /* Return an item inside this container or below, identified by a given URL path.
+           The path is relative to this container's URL path, and may be empty (`this` is returned in such case).
+           The path should NOT contain a leading slash.
+           This function returns a Promise (!) if data loading is needed along the way, or the final result otherwise
+           (check if the result is instanceof Promise to avoid unnecessary awaiting).
+         */
+        throw new Error('not implemented')
+    }
 
     resolve(request) {
         /* Find an object pointed to by request.path_remaining, in this or a nested container.
@@ -31,6 +42,24 @@ export class Container extends Item {
 
 
 export class Directory extends Container {
+
+    find_route(path) {
+        // if (!path) return this
+        assert(path, `path must be non-empty`)
+        let step = path.split('/')[0]
+        let next = this.entries.get(step)
+        if (!next) throw new UrlPathNotFound({path})
+        let subpath = path.slice(step.length + 1)
+
+        let tail = () => {
+            // here, `next` is already loaded
+            if (!subpath) return next
+            if (!(next instanceof Container)) throw new UrlPathNotFound({path})
+            return next.find_route(subpath)
+        }
+
+        return next.is_loaded() ? tail() : next.load().then(tail)
+    }
 
     findRoute(request) {
         let step = request.step()
