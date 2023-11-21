@@ -2,16 +2,16 @@
 
 (_WARNING: This is a work in progress at an early stage of development!_)
 
-**Schemat** is an object-oriented software platform for scalable, data-centric web applications 
-with complex and evolving data schemas.
+**Schemat** is the next generation platform for building scalable, data-heavy 
+internet applications fully composed of network-level objects (*network-wide OOP*).
 
 It provides a uniform **object space** that can be interacted with across the network from any machine,
 be it a server-side storage (database) node, a compute (app server) node, or a client machine.
 In addition, Schemat makes application objects **network-aware** and unifies the client and server
 environments to the point where a single object can fully encapsulate a particular web functionality
--- the _data_, _behavior_, and _appearance_ -- contrary to traditional approaches like MVC, 
-where these three aspects of a functionality are implemented separately and remain dispersed 
-throughout the codebase, which prevents the true OOP to emerge.
+-- its _data_, _behavior_ and _appearance_ altogether -- contrary to traditional approaches like MVC, 
+where these three aspects are implemented separately and remain dispersed 
+throughout the codebase, which prevents the network-level OOP to emerge.
 By creating an **extended object model** that spans the entire application stack -- from the database to the client -- 
 Schemat is the first application platform that genuinely brings the full expression of OOP paradigm to the web.
 
