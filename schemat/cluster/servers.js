@@ -63,11 +63,16 @@ export class WebServer extends Server {
         print(`Server.handle() worker ${process.pid}:`, req.path)
 
         await session.start()
+        // let request = new Request({req, res, session})
 
         await Request.run_with({req, res, session}, async () => {
             try {
-                // let request = new Request({req, res, session})
+                // let object = await registry.site.find_route(request.path)
+                // print('object:', object)
+
+                // let result = await object.handle(request)
                 let result = await registry.site.route(request)
+
                 if (typeof result === 'string') res.send(result)
             }
             catch (ex) {

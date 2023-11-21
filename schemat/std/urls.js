@@ -47,13 +47,13 @@ export class Directory extends Container {
         let step = path.split('/')[0]
         let next = this.entries.get(step)
         if (!next) throw new UrlPathNotFound({path})
-        let subpath = path.slice(step.length + 1)
+        let rest = path.slice(step.length + 1)
 
         let tail = () => {
             // here, `next` is already loaded
-            if (!subpath) return next
+            if (!rest) return next
             if (!(next instanceof Container)) throw new UrlPathNotFound({path})
-            return next.find_route(subpath)
+            return next.find_route(rest)
         }
         return next.is_loaded() ? tail() : next.load().then(tail)
     }

@@ -81,8 +81,30 @@ export class Site extends Item {
 
     async __init__()   { if (this.registry.onServer) this._vm = await import('vm') }
 
-    // async find_route(path) {
-    // }
+    async find_route(path) {
+        let step = path.split('/')[0]               // can be empty
+        let rest = path.slice(step.length + 1)
+
+        for (let {key: name, value: node} of this.routes) {
+
+            // empty route? don't consume any part of the request path; step into the (Directory) node
+            // only if it may contain the `step` sub-route
+            if (!name) {
+                if (!node.is_loaded()) await node.load()
+                assert(node instanceof Container, "empty route can only point to a Container (Directory, Namespace)")
+                if (node.contains(step)) return node.find_route(path)
+                else continue
+            }
+            if (name === step) {
+                if (!node.is_loaded()) await node.load()
+                if (node instanceof Container && rest)
+                    return node.find_route(rest)
+                else if (rest) throw new UrlPathNotFound({path})
+                else return node
+            }
+        }
+        throw new UrlPathNotFound({path})
+    }
 
     async findItem(path) {
         /* URL-call that requests and returns an item pointed to by `path`.
