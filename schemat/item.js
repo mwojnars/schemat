@@ -109,6 +109,13 @@ export class Request {
         this.pushMethod(method, '@' + meth)
     }
 
+    static async run_with(props, callback) {
+        /* Set the thread-global `request` object to a newly created one with `props` and run `callback()`.
+           Return a promise that resolves to the result of `callback()`.
+         */
+        return new Promise((resolve, reject) => request.run_with(new Request(props), () => resolve(callback())))
+    }
+
     // copy() {
     //     let request = T.clone(this)
     //     request.methods = [...this.methods]
