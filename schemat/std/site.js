@@ -91,6 +91,7 @@ export class Site extends Item {
     }
 
     async route(request) {
+        /* Use the thread-global `request` to find the target item and execute its endpoint function. */
         let step = request.step()
         for (let {key: name, value: node} of this.routes) {
 

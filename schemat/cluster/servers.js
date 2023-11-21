@@ -64,7 +64,7 @@ export class WebServer extends Server {
 
         await session.start()
 
-        await request.run_with(new Request({req, res, session}), async () => {
+        await Request.run_with({req, res, session}, async () => {
             try {
                 // let request = new Request({req, res, session})
                 let result = await registry.site.route(request)
