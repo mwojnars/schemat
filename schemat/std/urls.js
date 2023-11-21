@@ -14,8 +14,8 @@ export class Container extends Item {
     contains(name) { return true }
 
     find_route(path) {
-        /* Return an item inside this container or below, identified by a given URL path.
-           The path is relative to this container's URL path and should NOT contain a leading slash.
+        /* Return a (loaded) object inside this container or below identified by a given URL path.
+           The path is relative to this container's URL position and should NOT contain a leading slash.
            This function returns a Promise (!) if data loading is needed along the way, or the final result otherwise
            (check if the result is instanceof Promise to avoid unnecessary awaiting).
          */
@@ -126,6 +126,16 @@ export class ID_Namespace extends Namespace {
     /* All objects accessible through the raw numeric ID url path of the form: /ID */
 
     // view/action       -- what @view to use for rendering the items when a view is not specified in the URL
+
+    find_route(path) {
+        assert(path, `path must be non-empty`)
+        try {
+            let id = Number(path)
+            assert(!isNaN(id))
+            return registry.getLoaded(id)
+        }
+        catch (ex) { throw new UrlPathNotFound({path}) }
+    }
 
     identify(item) {
         /* Return a unique string identifier of `item` within this container. */
