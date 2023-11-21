@@ -86,7 +86,11 @@ export class Site extends Item {
            The request is handled by the target item's CALL_item() endpoint.
            The item is fully loaded (this is a prerequisite to calling CALL_*()).
          */
-        return this.route(new Request({path, method: '@item'}))
+
+        return new Promise((resolve, reject) =>
+            request.run_with(new Request({path, method: '@item'}), () => resolve(this.route(request)))
+        )
+        // return this.route(new Request({path, method: '@item'}))
     }
 
     async route(request) {
