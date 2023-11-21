@@ -87,10 +87,6 @@ export class Site extends Item {
            The item is fully loaded (this is a prerequisite to calling CALL_*()).
          */
         return Request.run_with({path, method: '@item'}, () => this.route(request))
-
-        // return new Promise((resolve, reject) =>
-        //     request.run_with(new Request({path, method: '@item'}), () => resolve(this.route(request)))
-        // )
         // return this.route(new Request({path, method: '@item'}))
     }
 
@@ -153,7 +149,8 @@ export class Site extends Item {
         if (path.startsWith(local + '/'))
             return this.localImport(this.registry.directImportPath(path))
 
-        let source = await this.route(new Request({path, method: '@text'}))
+        // let source = await this.route(new Request({path, method: '@text'}))
+        let source = await Request.run_with({path, method: '@text'}, () => this.route(request))
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
 
         return this.parseModule(source, path)
