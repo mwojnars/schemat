@@ -8,6 +8,7 @@ import {print} from "../common/utils.js"
 import {Item} from "../item.js"
 import {HttpService, InternalService} from "../services.js"
 import {Directory} from "./urls.js";
+import {UrlPathNotFound} from "../common/errors.js";
 
 
 /**********************************************************************************************************************/
@@ -110,19 +111,34 @@ export class LocalDirectory extends Directory {
         }
     }
 
+    find_route(path) {
+        // create a fake Item object to wrap up a local file
+        return {
+            handle(request) { return this._read_file(path, request.res) },
+        }
+    }
+
     findRoute(request) {
         // always mark this folder as a target: either to display it (empty path), or to pass the execution to .handlePartial()
         return [this, request, true]
     }
 
     handlePartial(request) {
+        let {path: url_path, res} = request
+        return this._read_file(url_path, res)
+    }
+
+    _read_file(url_path, res) {
         let root = this.local_path
-        root = this._mod_path.resolve(root)                     // make `root` an absolute path
+        root = this._mod_path.resolve(root)                         // make `root` an absolute path
+
         if (!root) throw new Error('missing `path` property in a LocalDirectory')
-        let path = this._mod_path.join(root, request.path)      // this reduces the '..' special symbols, so we have to check
-        if (!path.startsWith(root)) request.throwNotFound()     // if the final path still falls under the `root`, for security
-        if (request.res) request.res.sendFile(path)
-        else return this._mod_fs.readFileSync(path, {encoding: 'utf8'})
+        let file_path = this._mod_path.join(root, url_path)         // this reduces the '..' special symbols, so we have to check
+        if (!file_path.startsWith(root))                            // if the final path still falls under the `root`, for security
+            throw new UrlPathNotFound({path: url_path})
+
+        if (res) res.sendFile(file_path)
+        else return this._mod_fs.readFileSync(file_path, {encoding: 'utf8'})
     }
 }
 
