@@ -170,12 +170,22 @@ export class CategoryID_Namespace extends Namespace {
     where CATEGORY is a category-specific text qualifier defined in `spaces` property.
     */
 
+    ID_SEPARATOR = ':'
+
     spaces
+
+    find_route(path) {
+        assert(path, `path must be non-empty`)
+        let [space, id, ...rest] = path.split(this.ID_SEPARATOR)
+        let category = this.spaces.get(space)               // decode space identifier and convert to a category object
+        if (!category || rest) throw new UrlPathNotFound({path})
+        return registry.getLoaded(Number(id))
+    }
 
     urlPath(item) {
         let spaces_rev = this.spacesRev()
         let space = spaces_rev.get(item._category_?._id_)
-        if (space) return `${space}:${item._id_}`
+        if (space) return `${space}${this.ID_SEPARATOR}${item._id_}`
     }
     spacesRev() {
         let catalog = this.spaces
@@ -184,7 +194,7 @@ export class CategoryID_Namespace extends Namespace {
 
     findRoute(request) {
         let step = request.step()
-        let [space, id] = step.split(':')
+        let [space, id] = step.split(this.ID_SEPARATOR)
         let category = this.spaces.get(space)               // decode space identifier and convert to a category object
         if (!category) request.throwNotFound()
         let item = this.registry.getItem(Number(id))
