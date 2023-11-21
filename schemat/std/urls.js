@@ -179,7 +179,7 @@ export class CategoryID_Namespace extends Namespace {
         let sep = CategoryID_Namespace.ID_SEPARATOR
         let [space, id, ...rest] = path.split(sep)
         let category = this.spaces.get(space)               // decode space identifier and convert to a category object
-        if (!category || rest) throw new UrlPathNotFound({path})
+        if (!category || rest.length) throw new UrlPathNotFound({path})
         return registry.getLoaded(Number(id))
     }
 

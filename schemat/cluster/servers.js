@@ -67,7 +67,7 @@ export class WebServer extends Server {
 
         await Request.run_with({req, res, session}, async () => {
             try {
-                // let object = await registry.site.find_route(request.path)
+                let object = await registry.site.find_route(request.path.slice(1))
                 // print('object:', object)
 
                 // let result = await object.handle(request)
