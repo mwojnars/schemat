@@ -123,25 +123,34 @@ export class Site extends Item {
     }
 
     async route(request) {
-        /* Use the thread-global `request` to find the target item and execute its endpoint function. */
-        let step = request.step()
-        for (let {key: name, value: node} of this.routes) {
+        let object = await registry.site.find_route(request.path.slice(1))
 
-            // empty route? don't consume any part of the request path; step into the (Directory) node
-            // only if it may contain the `step` sub-route
-            if (!name) {
-                if (!node.is_loaded()) await node.load()
-                assert(node instanceof Container, "empty route can only point to a Directory or Namespace")
-                if (node.contains(step)) return node.route(request)
-                else continue
-            }
-            if (name === step) {
-                if (!node.is_loaded()) await node.load()
-                return node.route(request.move(step))
-            }
-        }
-        request.throwNotFound()
+        request.path = ''
+        request.item = object
+
+        return object.handle(request)
     }
+
+    // async route(request) {
+    //     /* Use the thread-global `request` to find the target item and execute its endpoint function. */
+    //     let step = request.step()
+    //     for (let {key: name, value: node} of this.routes) {
+    //
+    //         // empty route? don't consume any part of the request path; step into the (Directory) node
+    //         // only if it may contain the `step` sub-route
+    //         if (!name) {
+    //             if (!node.is_loaded()) await node.load()
+    //             assert(node instanceof Container, "empty route can only point to a Directory or Namespace")
+    //             if (node.contains(step)) return node.route(request)
+    //             else continue
+    //         }
+    //         if (name === step) {
+    //             if (!node.is_loaded()) await node.load()
+    //             return node.route(request.move(step))
+    //         }
+    //     }
+    //     request.throwNotFound()
+    // }
 
     // async getRouteNode(route, strategy = 'last') {
     //     /* URL-call that returns an intermediate routing node installed at the `route` point of URL paths. */
