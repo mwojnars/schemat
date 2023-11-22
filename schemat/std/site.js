@@ -90,7 +90,7 @@ export class Site extends Item {
 
         for (let {key: name, value: node} of this.routes) {
 
-            // assert(name, "route name must be non-empty; use *NAME for a blank route")
+            // assert(name, "route name must be non-empty; use *NAME for a blank route (name excluded in public URLs)")
             // let blank = (name[0] === '*')
 
             let blank = !name
@@ -118,8 +118,8 @@ export class Site extends Item {
            The request is handled by the target item's CALL_item() endpoint.
            The item is fully loaded (this is a prerequisite to calling CALL_*()).
          */
-        return Request.run_with({path, method: '@item'}, () => this.route(request))
-        // return this.route(new Request({path, method: '@item'}))
+        // return Request.run_with({path, method: '@item'}, () => this.route(request))
+        return this.route(new Request({path, method: '@item'}))
     }
 
     async route(request) {
@@ -182,8 +182,8 @@ export class Site extends Item {
         if (path.startsWith(local + '/'))
             return this.localImport(this.registry.directImportPath(path))
 
-        // let source = await this.route(new Request({path, method: '@text'}))
-        let source = await Request.run_with({path, method: '@text'}, () => this.route(request))
+        // let source = await Request.run_with({path, method: '@text'}, () => this.route(request))
+        let source = await this.route(new Request({path, method: '@text'}))
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
 
         return this.parseModule(source, path)
