@@ -71,9 +71,8 @@ export class WebServer extends Server {
 
                 request.path = ''
                 request.item = object
-                // request.app = null // todo
-                let result = await object.handle(request)
 
+                let result = await object.handle(request)
                 // let result = await registry.site.route(request)
 
                 if (typeof result === 'string') res.send(result)

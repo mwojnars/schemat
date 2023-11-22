@@ -69,7 +69,9 @@ set_global({importLocal: (p) => import(p)})
 // }
 
 export class Site extends Item {
-    /* Global configuration of all applications that comprise this website, with URL routing etc. */
+    /* Global configuration of all applications that comprise this website, with URL routing etc.
+       A route whose name starts with asterisk (*NAME) is treated as blank.
+     */
 
     static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
@@ -81,24 +83,31 @@ export class Site extends Item {
 
     async __init__()   { if (this.registry.onServer) this._vm = await import('vm') }
 
-    async find_route(path) {
-        let step = path.split('/')[0]               // can be empty
+    async find_route(path, explicit_blank = false) {
+        if (!path) return this
+        let step = path.split('/')[0]
         let rest = path.slice(step.length + 1)
 
         for (let {key: name, value: node} of this.routes) {
 
-            // empty route? don't consume any part of the request path; step into the (Directory) node
+            // assert(name, "route name must be non-empty; use *NAME for a blank route")
+            // let blank = (name[0] === '*')
+
+            // blank route? only consume the `step` if explicit_blank=true
+
+            let blank = !name
+
+            // blank route? don't consume any part of the request path; step into the (Directory) node
             // only if it may contain the `step` sub-route
-            if (!name) {
+            if (blank) {
                 if (!node.is_loaded()) await node.load()
-                assert(node instanceof Container, "empty route can only point to a Container (Directory, Namespace)")
+                assert(node instanceof Container, "blank route can only point to a Container (Directory, Namespace)")
+                if (explicit_blank) return rest ? node.find_route(rest) : node
                 if (node.contains(step)) return node.find_route(path)
-                else continue
             }
-            if (name === step) {
+            else if (name === step) {
                 if (!node.is_loaded()) await node.load()
-                if (node instanceof Container && rest)
-                    return node.find_route(rest)
+                if (node instanceof Container && rest) return node.find_route(rest)
                 else if (rest) throw new UrlPathNotFound({path})
                 else return node
             }
