@@ -128,6 +128,7 @@ export class ID_Namespace extends Namespace {
     // view/action       -- what @view to use for rendering the items when a view is not specified in the URL
 
     find_route(path) {
+        request.app = this      // todo: remove
         assert(path, `path must be non-empty`)
         try {
             let id = Number(path)
@@ -175,6 +176,7 @@ export class CategoryID_Namespace extends Namespace {
     spaces
 
     find_route(path) {
+        request.app = this      // todo: remove
         assert(path, `path must be non-empty`)
         let sep = CategoryID_Namespace.ID_SEPARATOR
         let [space, id, ...rest] = path.split(sep)

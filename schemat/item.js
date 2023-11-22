@@ -154,10 +154,10 @@ export class Request {
         return this             //Object.create(this, {path: path})
     }
 
-    pushApp(app) {
-        this.app = app
-        return this
-    }
+    // pushApp(app) {
+    //     this.app = app
+    //     return this
+    // }
 
     settleEndpoint(endpoint) {
         /* Settle the endpoint for this request. */
@@ -712,6 +712,10 @@ export class Item {
         // let defaultApp = this.registry.site.getApplication()
         // let defaultApp = this.registry.session.apps['$']
         // app = app || defaultApp
+
+        // this.url_path = this.url_container.address(item)
+        // url = this.url_path + method + args      // absolute path
+        // if (relative) url = replace(prefix in url with './')
 
         if (app) {
             app.assert_loaded()
