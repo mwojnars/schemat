@@ -93,12 +93,10 @@ export class Site extends Item {
             // assert(name, "route name must be non-empty; use *NAME for a blank route")
             // let blank = (name[0] === '*')
 
-            // blank route? only consume the `step` if explicit_blank=true
-
             let blank = !name
 
-            // blank route? don't consume any part of the request path; step into the (Directory) node
-            // only if it may contain the `step` sub-route
+            // blank route? only consume the `step` and truncate the request path if explicit_blank=true;
+            // step into the nested Container only if it potentially contains the `step`
             if (blank) {
                 if (!node.is_loaded()) await node.load()
                 assert(node instanceof Container, "blank route can only point to a Container (Directory, Namespace)")
