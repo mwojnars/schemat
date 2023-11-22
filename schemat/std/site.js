@@ -122,9 +122,9 @@ export class Site extends Item {
         return this.route(new Request({path, method: '@item'}))
     }
 
-    async route(request) {
+    async route(request, explicit_blank = false) {
         let path = request.path.slice(1)                // drop the leading slash
-        let object = request.item = await this.find_route(path)
+        let object = request.item = await this.find_route(path, explicit_blank)
         request.path = ''
         return object.handle(request)
     }
