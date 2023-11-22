@@ -123,11 +123,9 @@ export class Site extends Item {
     }
 
     async route(request) {
-        let object = await registry.site.find_route(request.path.slice(1))
-
+        let path = request.path.slice(1)                // drop the leading slash
+        let object = request.item = await this.find_route(path)
         request.path = ''
-        request.item = object
-
         return object.handle(request)
     }
 
