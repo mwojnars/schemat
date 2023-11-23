@@ -13,18 +13,15 @@ export class Container extends Item {
 
     contains(name) { return true }
 
-    find_route(path) {
-        /* Return a (loaded) object inside this container or below identified by a given URL path.
-           The path is relative to this container's URL position and should NOT contain a leading slash.
-           This function returns a Promise (!) if data loading is needed along the way, or the final result otherwise
-           (check if the result is instanceof Promise to avoid unnecessary awaiting).
-         */
-        throw new Error('not implemented')
-    }
+    find_route(path, explicit_blank = false) {
+        /* Find an object pointed to by `path` in this or a nested container. Return the object in a loaded state.
+           A Promise is returned (!) if async operation is needed during the computation, or the final result
+           otherwise - check if the result is a Promise to avoid unnecessary awaiting.
 
-    resolve(request) {
-        /* Find an object pointed to by request.path_remaining, in this or a nested container.
-           Return the object. The `request` may be modified in the process.
+           The path is relative to this container's base path and should NOT contain a leading slash.
+           If `explicit_blank` is true, the path is an internal "container path" that includes explicit blank segment(s)
+           (a/*BLANK/b/c); otherwise, the path is a "URL path" with blank segments hidden (a/b/c).
+           Currently, a blank segment is only allowed at the top level of a URL path, inside a Site directory.
          */
         throw new Error('not implemented')
     }

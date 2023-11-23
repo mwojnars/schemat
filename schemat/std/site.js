@@ -123,6 +123,7 @@ export class Site extends Item {
     }
 
     async route(request, explicit_blank = false) {
+        /* Find the object pointed by the request's URL path and execute its endpoint function. */
         let path = request.path.slice(1)                // drop the leading slash
         let object = request.item = await this.find_route(path, explicit_blank)
         request.path = ''
