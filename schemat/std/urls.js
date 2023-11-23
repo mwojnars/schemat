@@ -13,7 +13,7 @@ export class Container extends Item {
 
     contains(name) { return true }
 
-    find_route(path, explicit_blank = false) {
+    resolve(path, explicit_blank = false) {
         /* Find an object pointed to by `path` in this or a nested container. Return the object in a loaded state.
            A Promise is returned (!) if async operation is needed during the computation, or the final result
            otherwise - check if the result is a Promise to avoid unnecessary awaiting.
@@ -39,7 +39,7 @@ export class Container extends Item {
 
 export class Directory extends Container {
 
-    find_route(path) {
+    resolve(path) {
         assert(path, `path must be non-empty`)
         let step = path.split('/')[0]
         let next = this.entries.get(step)
@@ -50,7 +50,7 @@ export class Directory extends Container {
             // here, `next` is already loaded
             if (!rest) return next
             if (!(next instanceof Container)) throw new UrlPathNotFound({path})
-            return next.find_route(rest)
+            return next.resolve(rest)
         }
         return next.is_loaded() ? tail() : next.load().then(tail)
     }
@@ -124,7 +124,7 @@ export class ID_Namespace extends Namespace {
 
     // view/action       -- what @view to use for rendering the items when a view is not specified in the URL
 
-    find_route(path) {
+    resolve(path) {
         request.app = this      // todo: remove
         assert(path, `path must be non-empty`)
         try {
@@ -172,7 +172,7 @@ export class CategoryID_Namespace extends Namespace {
 
     spaces
 
-    find_route(path) {
+    resolve(path) {
         request.app = this      // todo: remove
         assert(path, `path must be non-empty`)
         let sep = CategoryID_Namespace.ID_SEPARATOR

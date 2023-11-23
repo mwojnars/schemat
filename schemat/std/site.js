@@ -83,7 +83,7 @@ export class Site extends Item {
 
     async __init__()   { if (this.registry.onServer) this._vm = await import('vm') }
 
-    async find_route(path, explicit_blank = false) {
+    async resolve(path, explicit_blank = false) {
         if (!path) return this
         let step = path.split('/')[0]
         let rest = path.slice(step.length + 1)
@@ -100,12 +100,12 @@ export class Site extends Item {
             if (blank) {
                 if (!node.is_loaded()) await node.load()
                 assert(node instanceof Container, "blank route can only point to a Container (Directory, Namespace)")
-                if (explicit_blank) return rest ? node.find_route(rest) : node
-                if (node.contains(step)) return node.find_route(path)
+                if (explicit_blank) return rest ? node.resolve(rest) : node
+                if (node.contains(step)) return node.resolve(path)
             }
             else if (name === step) {
                 if (!node.is_loaded()) await node.load()
-                if (node instanceof Container && rest) return node.find_route(rest)
+                if (node instanceof Container && rest) return node.resolve(rest)
                 else if (rest) throw new UrlPathNotFound({path})
                 else return node
             }
@@ -125,7 +125,7 @@ export class Site extends Item {
     async route(request, explicit_blank = false) {
         /* Find the object pointed by the request's URL path and execute its endpoint function. */
         let path = request.path.slice(1)                // drop the leading slash
-        let object = request.item = await this.find_route(path, explicit_blank)
+        let object = request.item = await this.resolve(path, explicit_blank)
         request.path = ''
         return object.handle(request)
     }

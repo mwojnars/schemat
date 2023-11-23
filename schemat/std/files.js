@@ -111,7 +111,7 @@ export class LocalDirectory extends Directory {
         }
     }
 
-    find_route(path) {
+    resolve(path) {
         // create a fake Item object to wrap up a local file
         return {
             handle: (request) => this._read_file(path, request.res),
