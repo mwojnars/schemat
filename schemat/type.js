@@ -44,7 +44,8 @@ export class Type {
 
         inherit  : true,        // if false, inheritance is disabled for this field; used particularly for some system fields
         impute   : undefined,   // a function to be used for imputation of missing values; `this` references the item;
-                                // only called for non-repeated properties, when `default`==undefined and there are no inherited values
+                                // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
+                                // the function must be *synchronous* and cannot return a Promise
 
         // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
         // hidden   : undefined,   // if true, the field described by this type is not displayed in the UI;
