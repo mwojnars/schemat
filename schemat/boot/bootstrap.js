@@ -35,7 +35,7 @@ async function create_categories(Category) {
         // _boot_class : 'schemat.item.Site',
         // _extends_   : cat.Router,
         fields      : C({
-            base_url             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
+            base_url        : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             path_internal   : new PATH({info: "URL route of an internal application for default/admin web access to items. The application should handle all items."}),
             routes          : new CATALOG({values: new ITEM(), repeated: true, info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. NO leading/trailing slashes."}),
             //path_local    : new PATH({info: "URL route of a LocalDirectory that maps to the root folder of the Schemat's local installation."}),
