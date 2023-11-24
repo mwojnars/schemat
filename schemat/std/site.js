@@ -77,7 +77,7 @@ export class Site extends Item {
     static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
     // properties:
-    URL
+    base_url
     routes
     path_internal
 
@@ -265,7 +265,7 @@ export class Site extends Item {
 
     systemURL() {
         /* Absolute base URL for system calls originating at a web client and targeting specific items. */
-        return this.URL + this.path_internal
+        return this.base_url + this.path_internal
     }
     systemPath(item) {
         /* Default absolute URL path ("system path") of the item. No domain. */
@@ -275,7 +275,7 @@ export class Site extends Item {
 
     urlRaw(item) {
         /* Absolute technical URL for an `item`. TODO: reuse the AppBasic instead of the code below. */
-        return this.URL + this.systemPath(item)
+        return this.base_url + this.systemPath(item)
     }
 }
 

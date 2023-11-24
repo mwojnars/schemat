@@ -98,6 +98,9 @@
         info:
           info: Description of the item.
           "@": TEXT
+        html_title:
+          info: HTML title to be used for when this item is rendered.
+          "@": STRING
         import_path:
           info: "Canonical path of this item within the SUN, for: display, resolving
             relative code imports, resolving relative item references (REF
@@ -105,9 +108,6 @@
             through this path, so the code is always interpreted in the same way
             and can be cached after parsing."
           "@": PATH
-        html_title:
-          info: HTML title to be used for when this item is rendered.
-          "@": STRING
         "@": Catalog
       "@": CATALOG
     item_schema:
@@ -127,7 +127,7 @@
     startup.
   class_path: /system/local/std/site.js:Site
   fields:
-    URL:
+    base_url:
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
       "@": STRING

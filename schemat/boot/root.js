@@ -21,8 +21,11 @@ let default_fields = new Catalog({
 
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters.", default: ""}),
     info        : new TEXT({info: "Description of the item."}),
-    import_path : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If configured, callers can only import this item's code through this path, so the code is always interpreted in the same way and can be cached after parsing."}),
     html_title  : new STRING({info: "HTML title to be used for when this item is rendered."}),
+
+    import_path    : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If configured, callers can only import this item's code through this path, so the code is always interpreted in the same way and can be cached after parsing."}),
+    // container_path : new STRING({info: "Access path to the parent Container where this object is located within the Object Space. Should contain leading '/'. If the path passes through a blank route (/*ROUTE), the corresponding segment must be included (unlike in URLs)."}),
+    // url_path       : new STRING({info: "Absolute canonical URL path of this object within the site. Automatically calculated by the parent container as defined by the `container_path`. If the object is accessed by a different URL, redirection is performed to the canonical URL."}),
 })
 
 // fields inside a category instance, including the root category
