@@ -182,38 +182,33 @@ export class JsonService extends HttpService {
 
     async server(target, request) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
-        let {req, res} = request        // Express's request and response objects
-        let out, ex
         try {
-            // let body = req.body
-            // // let {req: {body}}  = request
-            // // print(body)
-            //
-            // // the arguments may have already been JSON-parsed by middleware if mimetype=json was set in the request; it can also be {}
-            // let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
-            // if (!T.isArray(args)) throw new Error("incorrect format of web request")
-            // if (this.opts.encodeArgs) args = JSONx.decode(args)
-
             let args = this.decode_args(target, request)
-            out = this.execute(target, request, ...args)
+            let out = this.execute(target, request, ...args)
             if (T.isPromise(out)) out = await out
+            return this.send_result(request, out)
         }
-        catch (e) {ex = e}
-        return this._send_response(res, out, ex)
+        catch (ex) { this.send_error(request, ex) }
     }
 
-    _send_response(res, output, error, defaultCode = 500) {
-        /* JSON-encode and send the {output} result of the service execution, or an {error} details with a proper
+    send_error({res}, error, defaultCode = 500) {
+        res.type('json')
+        res.status(error.code || defaultCode)
+        res.send({error})
+        throw error
+    }
+    send_result({res}, result) {
+        /* JSON-encode and send the result of the service execution, or an {error} with a proper
            HTTP status code if an exception was caught. */
         res.type('json')
-        if (error) {
-            res.status(error.code || defaultCode)
-            res.send({error})
-            throw error
-        }
-        if (output === undefined) res.end()                             // missing output --> empty response body
-        if (this.opts.encodeResult) output = JSONx.encode(output)
-        res.send(JSON.stringify(output))
+        // if (error) {
+        //     res.status(error.code || defaultCode)
+        //     res.send({error})
+        //     throw error
+        // }
+        if (result === undefined) res.end()                             // missing result --> empty response body
+        if (this.opts.encodeResult) result = JSONx.encode(result)
+        res.send(JSON.stringify(result))
     }
 }
 
