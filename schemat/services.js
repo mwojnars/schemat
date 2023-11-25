@@ -101,12 +101,12 @@ export class HttpService extends Service {
        should use `req` and `res` objects directly, and it is also responsible for error handling.
        client() returns response body as a raw string.
      */
-    _decodeError(ret)   { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
+    _decode_error(ret)   { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
 
     async client(target, ...args) {
         let url = target.url(this.endpoint_name)        // it's assumed the `target` is an Item instance with .url()
         let ret = await fetch(url)                      // client-side JS Response object
-        if (!ret.ok) return this._decodeError(ret)
+        if (!ret.ok) return this._decode_error(ret)
         return ret.text()
     }
     server(target, request)  { return this.execute(target, request) }
@@ -130,7 +130,7 @@ export class JsonService extends HttpService {
     async client(target, ...args) {
         let url = target.url(this.endpoint_name)
         let ret = await this._fetch(url, args, this.endpoint_method)        // client-side JS Response object
-        if (!ret.ok) return this._decodeError(ret)
+        if (!ret.ok) return this._decode_error(ret)
 
         let result = await ret.text()                           // json string or empty
         if (!result) return
@@ -153,7 +153,7 @@ export class JsonService extends HttpService {
         return fetch(url, params)
     }
 
-    async _decodeError(ret) {
+    async _decode_error(ret) {
         let error = await ret.json()
         throw new RequestFailed({...error, code: ret.status})
     }
@@ -176,10 +176,10 @@ export class JsonService extends HttpService {
             if (T.isPromise(out)) out = await out
         }
         catch (e) {ex = e}
-        return this._sendResponse(res, out, ex)
+        return this._send_response(res, out, ex)
     }
 
-    _sendResponse(res, output, error, defaultCode = 500) {
+    _send_response(res, output, error, defaultCode = 500) {
         /* JSON-encode and send the {output} result of the service execution, or an {error} details with a proper
            HTTP status code if an exception was caught. */
         res.type('json')
