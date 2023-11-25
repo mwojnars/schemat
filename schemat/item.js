@@ -1175,7 +1175,6 @@ Category.create_api(
             this._checkPath(request)
             request.res.type('js')
             return this.getSource()
-            // request.res.send(this.getSource())
         }),
 
         // 'GET/scan':     new HttpService(async function (request)

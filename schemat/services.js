@@ -126,9 +126,9 @@ export class HttpService extends Service {
 
     // the methods below are typically overridden in subclasses...
 
-    encode_args(url, ...args)      { return [url, {}] }     // on the client, encode the arguments as [URL, options for fetch()];
-                                                            // here, args are ignored, but subclasses may use them
-    decode_args(target, request)   { return [] }            // on the server, decode the arguments from the request object
+    encode_args(url, ...args)      { return [url, {}] }         // on the client, encode the arguments as [URL, options for fetch()];
+                                                                // here, args are ignored, but subclasses may use them
+    decode_args(target, request)   { return [] }                // on the server, decode the arguments from the request object
 
     send_result(request, result)   { request.res.send(result) }     // on the server, encode the result and send it to the client
 

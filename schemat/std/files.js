@@ -76,7 +76,6 @@ File.create_api({        // endpoints...
         let txt = this.read()
         if (txt === undefined) request.throwNotFound()
         return txt
-        // request.res.send(txt)
     }),
 })
 
