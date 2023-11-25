@@ -296,6 +296,7 @@ export class Types {
 
     static async arrayFromAsync(iterator) {
         let arr = []
+        if (isPromise(iterator)) iterator = await iterator
         for await (const v of iterator) arr.push(v)
         return arr
     }
