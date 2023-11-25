@@ -274,6 +274,7 @@ export class Types {
     static isMissing      = (obj) => (obj === null || obj === undefined)                // test if obj is null or undefined (two cases of "missingness")
     static isEmpty        = (obj) => (!obj || Object.keys(obj).length === 0)
     static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
+    static isPromise      = (obj) => (obj instanceof Promise)
 
     static deleteFirst = (arr, x) => {
         let i = arr.indexOf(x);
@@ -342,6 +343,11 @@ export class Types {
     }
     static clone = (obj) => Object.assign(Object.create(Object.getPrototypeOf(obj)), obj)
 }
+
+export const isPromise = Types.isPromise
+
+
+/**********************************************************************************************************************/
 
 export class Maths {
     /* Common math operations. */
