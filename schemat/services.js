@@ -119,20 +119,21 @@ export class HttpService extends Service {
             let args = this.decode_args(target, request)
             let result = this.execute(target, request, ...args)
             if (isPromise(result)) result = await result
-            return this.send_result(request, result)
+            return this.send_result(target, request, result, ...args)
         }
-        catch (ex) { this.send_error(request, ex) }
+        catch (ex) { this.send_error(target, request, ex) }
     }
 
     // the methods below are typically overridden in subclasses...
 
-    encode_args(url, ...args)      { return [url, {}] }         // on the client, encode the arguments as [URL, options for fetch()];
-                                                                // here, args are ignored, but subclasses may use them
-    decode_args(target, request)   { return [] }                // on the server, decode the arguments from the request object
+    encode_args(url, ...args)      { return [url, {}] }     // on the client, encode the arguments as [URL, options for fetch()]; here, args are ignored, but subclasses may use them
+    decode_args(target, request)   { return [] }            // on the server, decode the arguments from the request object
 
-    send_result(request, result)   { request.res.send(result) }     // on the server, encode the result and send it to the client
+    send_result(target, request, result, ...args) {         // on the server, encode the result and send it to the client
+        request.res.send(result)
+    }
 
-    send_error(request, error, code = 500) {                        // on the server, encode the error and send it to the client
+    send_error(target, request, error, code = 500) {        // on the server, encode the error and send it to the client
         request.res.status(error?.code || code).send(error?.message || 'Internal Error')
         if (error) throw error
     }
@@ -183,7 +184,7 @@ export class JsonService extends HttpService {
         return args
     }
 
-    send_result({res}, result) {
+    send_result(target, {res}, result, ...args) {
         /* JSON-encode and send the result of the service execution, or an {error} with a proper
            HTTP status code if an exception was caught. */
         res.type('json')
@@ -199,7 +200,7 @@ export class JsonService extends HttpService {
         return result
     }
 
-    send_error({res}, error, code = 500) {
+    send_error(target, {res}, error, code = 500) {
         res.type('json')
         res.status(error.code || code)
         res.send({error})
@@ -290,13 +291,21 @@ export class TaskService extends JsonService {
     execute(target, request, task_name, ...args) {
         let task = this.tasks[task_name]
         if (!task) throw new NotFound(`unknown task name: '${task_name}'`)
+        let process = task instanceof Task ? task.process : task
+        return process.call(target, request, ...args)
+        // if (!encode_result) return result
+        // if (T.isPromise(result)) return result.then(res => encode_result.call(target, res, ...args))
+        // return encode_result.call(target, result, ...args)
+    }
 
-        let {process, encode_result} = (task instanceof Task ? task : {process: task})
-        let result = process.call(target, request, ...args)
-        if (!encode_result) return result
-
-        if (T.isPromise(result)) return result.then(res => encode_result.call(target, res, ...args))
-        return encode_result.call(target, result, ...args)
+    async send_result(target, request, result, task_name, ...args) {
+        let task = this.tasks[task_name]
+        let encode_result = task instanceof Task ? task.encode_result : null
+        if (encode_result) {
+            result = encode_result.call(target, result, ...args)
+            if (isPromise(result)) result = await result
+        }
+        return super.send_result(target, request, result, ...args)
     }
 
     // ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
