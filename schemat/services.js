@@ -101,12 +101,10 @@ export class HttpService extends Service {
        should use `req` and `res` objects directly, and it is also responsible for error handling.
        client() returns response body as a raw string.
      */
-    _decode_error(ret)   { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
-
     async client(target, ...args) {
         let url = target.url(this.endpoint_name)        // it's assumed the `target` is an Item instance with .url()
         let ret = await fetch(url)                      // client-side JS Response object
-        if (!ret.ok) return this._decode_error(ret)
+        if (!ret.ok) return this.decode_error(ret)
         let result = ret.text()
         return this.decode_result(result)
     }
@@ -118,6 +116,8 @@ export class HttpService extends Service {
 
     encode_result(result) { return result }     // on the server, encode the result before sending it to the client
     decode_result(result) { return result }     // on the client, decode the result received from the server
+
+    decode_error(ret)     { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
 }
 
 
@@ -137,8 +137,8 @@ export class JsonService extends HttpService {
 
     async client(target, ...args) {
         let url = target.url(this.endpoint_name)
-        let ret = await this._fetch(url, args, this.endpoint_method)        // client-side JS Response object
-        if (!ret.ok) return this._decode_error(ret)
+        let ret = await this._fetch(url, args)                  // client-side JS Response object
+        if (!ret.ok) return this.decode_error(ret)
 
         let result = await ret.text()                           // json string or empty
         if (!result) return
@@ -148,10 +148,11 @@ export class JsonService extends HttpService {
         return result
     }
 
-    async _fetch(url, args, method = 'POST') {
+    async _fetch(url, args) {
         /* Fetch the `url` while including the `args` (if any) in the request body, json-encoded.
            For GET requests, `args` must be missing (undefined), as we don't allow body in GET.
          */
+        let method = this.endpoint_method || 'POST'
         let params = {method, headers: {}}
         if (args !== undefined) {
             if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
@@ -161,7 +162,7 @@ export class JsonService extends HttpService {
         return fetch(url, params)
     }
 
-    async _decode_error(ret) {
+    async decode_error(ret) {
         let error = await ret.json()
         throw new RequestFailed({...error, code: ret.status})
     }
