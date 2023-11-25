@@ -305,7 +305,7 @@ export class CategoryAdminPage extends ItemAdminPage {
             return ItemAdminPage.View.component.call(this, {extra: FRAGMENT(
                 H2('Items'),
                 e(preloaded ? this.ItemsLoaded : this.Items, {key: 'items', items: items, itemRemoved: () => setItems(scan())}),
-                // e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
+                // e(this.Items, {key: 'items', items: items, itemRemoved: () => setItems(scan())}),
                 H3('Add item'),
                 e(this.Items, {items: newItems, itemRemoved}),
                 e(this.NewItem, {itemAdded}),
@@ -322,7 +322,8 @@ export class CategoryAdminPage extends ItemAdminPage {
             /* A list (table) of items that belong to this category. */
             if (!items || items.length === 0) return null
             const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
-            // let loaded = T.isArray(items) && items.every(item => item.is_loaded())
+            // const loaded = !T.isPromise(items)
+            // const loaded = T.isArray(items) && items.every(item => item.is_loaded())
 
             // materialize the list of items
             let items_loaded = //loaded ? items :
