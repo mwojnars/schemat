@@ -123,16 +123,19 @@ export class HttpService extends Service {
         }
         catch (ex) { this.send_error(request, ex) }
     }
-    // server(target, request)  {
-    //     let result = this.execute(target, request)
-    //     return isPromise(result) ? result.then(res => this.encode_result(res)) : this.encode_result(result)
-    // }
+
+    // the methods below are typically overridden in subclasses...
 
     encode_args(url, ...args)      { return [url, {}] }     // on the client, encode the arguments as [URL, options for fetch()];
                                                             // here, args are ignored, but subclasses may use them
     decode_args(target, request)   { return [] }            // on the server, decode the arguments from the request object
 
     send_result(request, result)   { request.res.send(result) }     // on the server, encode the result and send it to the client
+
+    send_error(request, error, code = 500) {                        // on the server, encode the error and send it to the client
+        request.res.status(error?.code || code).send(error?.message || 'Internal Error')
+        if (error) throw error
+    }
 
     decode_result(result, ...args) { return result }        // on the client, decode the result received from the server
     decode_error(ret, ...args)     { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
@@ -167,18 +170,6 @@ export class JsonService extends HttpService {
         return [url, params]
     }
 
-    decode_result(result, ...args) {
-        if (!result) return
-        result = JSON.parse(result)
-        if (this.opts.encodeResult) result = JSONx.decode(result)
-        return result
-    }
-
-    async decode_error(ret) {
-        let error = await ret.json()
-        throw new RequestFailed({...error, code: ret.status})
-    }
-
     decode_args(target, request) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
 
@@ -192,23 +183,6 @@ export class JsonService extends HttpService {
         return args
     }
 
-    // async server(target, request) {
-    //     /* The request body should be empty or contain a JSON array of arguments: [...args]. */
-    //     try {
-    //         let args = this.decode_args(target, request)
-    //         let out = this.execute(target, request, ...args)
-    //         if (T.isPromise(out)) out = await out
-    //         return this.send_result(request, out)
-    //     }
-    //     catch (ex) { this.send_error(request, ex) }
-    // }
-
-    send_error({res}, error, code = 500) {
-        res.type('json')
-        res.status(error.code || code)
-        res.send({error})
-        throw error
-    }
     send_result({res}, result) {
         /* JSON-encode and send the result of the service execution, or an {error} with a proper
            HTTP status code if an exception was caught. */
@@ -216,6 +190,25 @@ export class JsonService extends HttpService {
         if (result === undefined) return res.end()                      // missing result --> empty response body
         if (this.opts.encodeResult) result = JSONx.encode(result)
         res.send(JSON.stringify(result))
+    }
+
+    decode_result(result, ...args) {
+        if (!result) return
+        result = JSON.parse(result)
+        if (this.opts.encodeResult) result = JSONx.decode(result)
+        return result
+    }
+
+    send_error({res}, error, code = 500) {
+        res.type('json')
+        res.status(error.code || code)
+        res.send({error})
+        throw error
+    }
+
+    async decode_error(ret) {
+        let error = await ret.json()
+        throw new RequestFailed({...error, code: ret.status})
     }
 }
 
