@@ -15,8 +15,8 @@ export class Container extends Item {
 
     resolve(path, explicit_blank = false) {
         /* Find an object pointed to by `path` in this or a nested container. Return the object in a loaded state.
-           A Promise is returned (!) if async operation is needed during the computation, or the final result
-           otherwise - check if the result is a Promise to avoid unnecessary awaiting.
+           A Promise can be returned (!) if an async operation has to be performed during the computation;
+           or the final result otherwise - check if the result is a Promise to avoid unnecessary awaiting.
 
            The path is relative to this container's base path and should NOT contain a leading slash.
            If `explicit_blank` is true, the path is an internal "container path" that includes explicit blank segment(s)
