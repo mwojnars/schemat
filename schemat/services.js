@@ -107,7 +107,6 @@ export class HttpService extends Service {
         let base_url = target.url(this.endpoint_name)       // it's assumed the `target` is an Item instance with .url()
         let [url, options] = this.encode_args(base_url, ...args)
 
-        // let ret = await this.fetch(url, ...args)            // `ret` is client-side JS Response object
         let ret = await fetch(url, options)                 // `ret` is client-side JS Response object
         if (!ret.ok) return this.decode_error(ret)
 
@@ -120,15 +119,9 @@ export class HttpService extends Service {
         return isPromise(result) ? result.then(res => this.encode_result(res)) : this.encode_result(result)
     }
 
-    // fetch(url, ...args) {
-    //     let [final_url, options] = this.encode_args(url, ...args)
-    //     return fetch(final_url, options)
-    // }
-
     encode_args(url, ...args)      { return [url, {}] }     // on the client, encode the arguments as [URL, options for fetch()];
                                                             // here, args are ignored, but subclasses may use them
-
-    decode_args() {}
+    decode_args(target, request)   { return [] }            // on the server, decode the arguments from the request object
 
     encode_result(result, ...args) { return result }        // on the server, encode the result before sending it to the client
     decode_result(result, ...args) { return result }        // on the client, decode the result received from the server
@@ -162,7 +155,6 @@ export class JsonService extends HttpService {
             params.body = JSON.stringify(args)
         }
         return [url, params]
-        // return fetch(url, params)
     }
 
     decode_result(result, ...args) {
@@ -177,20 +169,32 @@ export class JsonService extends HttpService {
         throw new RequestFailed({...error, code: ret.status})
     }
 
+    decode_args(target, request) {
+        let body = request.req.body             // `req` is Express's request object
+
+        // the arguments may have already been JSON-parsed by middleware if mimetype=json was set in the request; it can also be {}
+        let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
+
+        if (!T.isArray(args)) throw new Error("incorrect format of arguments in the web request")
+        if (this.opts.encodeArgs) args = JSONx.decode(args)
+        return args
+    }
+
     async server(target, request) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
         let {req, res} = request        // Express's request and response objects
         let out, ex
         try {
-            let body = req.body
-            // let {req: {body}}  = request
-            // print(body)
+            // let body = req.body
+            // // let {req: {body}}  = request
+            // // print(body)
+            //
+            // // the arguments may have already been JSON-parsed by middleware if mimetype=json was set in the request; it can also be {}
+            // let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
+            // if (!T.isArray(args)) throw new Error("incorrect format of web request")
+            // if (this.opts.encodeArgs) args = JSONx.decode(args)
 
-            // the arguments may have already been JSON-parsed by middleware if mimetype=json was set in the request; it can also be {}
-            let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
-            if (!T.isArray(args)) throw new Error("incorrect format of web request")
-            if (this.opts.encodeArgs) args = JSONx.decode(args)
-
+            let args = this.decode_args(target, request)
             out = this.execute(target, request, ...args)
             if (T.isPromise(out)) out = await out
         }
