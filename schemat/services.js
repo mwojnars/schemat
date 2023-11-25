@@ -199,9 +199,12 @@ export class Task {
        Every function below (if present) is called with `this` bound to the target object (an owner of the task).
        The functions can be sync or async.
      */
-    // prepare      // client-side function args=prepare(...args) to be called before sending the arguments to the server
-    process         // server-side function process(request, ...args) to be called with the arguments received from the client
-    finalize        // client-side function finalize(result, ...args) to be called with the result received from the server
+    // prepare      // client-side function args=prepare(...args) called before sending the arguments to the server
+    process         // server-side function process(request, ...args) called with the arguments received from the client
+    finalize        // client-side function finalize(result, ...args) called with the result received from the server
+
+    encode_result   // server-side function encode_result(result, ...args) called before sending the result to the client
+    decode_result   // client-side function decode_result(result, ...args) called with the result received from the server
 
     constructor({process, finalize} = {}) {
         // this.prepare = prepare
@@ -270,8 +273,13 @@ export class TaskService extends JsonService {
     execute(target, request, task_name, ...args) {
         let task = this.tasks[task_name]
         if (!task) throw new NotFound(`unknown task name: '${task_name}'`)
-        if (task instanceof Task) task = task.process
-        return task.call(target, request, ...args)
+
+        let {process, encode_result} = (task instanceof Task ? task : {process: task})
+        let result = process.call(target, request, ...args)
+        if (!encode_result) return result
+
+        if (T.isPromise(result)) return result.then(res => encode_result.call(target, res, ...args))
+        return encode_result.call(target, result, ...args)
     }
 
     // ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
