@@ -75,7 +75,8 @@ File.create_api({        // endpoints...
         this.setMimeType(request.res, request.pathFull)
         let txt = this.read()
         if (txt === undefined) request.throwNotFound()
-        request.res.send(txt)
+        return txt
+        // request.res.send(txt)
     }),
 })
 

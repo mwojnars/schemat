@@ -114,16 +114,26 @@ export class HttpService extends Service {
         return this.decode_result(result, ...args)
     }
 
-    server(target, request)  {
-        let result = this.execute(target, request)
-        return isPromise(result) ? result.then(res => this.encode_result(res)) : this.encode_result(result)
+    async server(target, request) {
+        try {
+            let args = this.decode_args(target, request)
+            let result = this.execute(target, request, ...args)
+            if (isPromise(result)) result = await result
+            return this.send_result(request, result)
+        }
+        catch (ex) { this.send_error(request, ex) }
     }
+    // server(target, request)  {
+    //     let result = this.execute(target, request)
+    //     return isPromise(result) ? result.then(res => this.encode_result(res)) : this.encode_result(result)
+    // }
 
     encode_args(url, ...args)      { return [url, {}] }     // on the client, encode the arguments as [URL, options for fetch()];
                                                             // here, args are ignored, but subclasses may use them
     decode_args(target, request)   { return [] }            // on the server, decode the arguments from the request object
 
-    encode_result(result, ...args) { return result }        // on the server, encode the result before sending it to the client
+    send_result(request, result)   { request.res.send(result) }     // on the server, encode the result and send it to the client
+
     decode_result(result, ...args) { return result }        // on the client, decode the result received from the server
     decode_error(ret, ...args)     { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
 }
@@ -170,6 +180,8 @@ export class JsonService extends HttpService {
     }
 
     decode_args(target, request) {
+        /* The request body should be empty or contain a JSON array of arguments: [...args]. */
+
         let body = request.req.body             // `req` is Express's request object
 
         // the arguments may have already been JSON-parsed by middleware if mimetype=json was set in the request; it can also be {}
@@ -180,20 +192,20 @@ export class JsonService extends HttpService {
         return args
     }
 
-    async server(target, request) {
-        /* The request body should be empty or contain a JSON array of arguments: [...args]. */
-        try {
-            let args = this.decode_args(target, request)
-            let out = this.execute(target, request, ...args)
-            if (T.isPromise(out)) out = await out
-            return this.send_result(request, out)
-        }
-        catch (ex) { this.send_error(request, ex) }
-    }
+    // async server(target, request) {
+    //     /* The request body should be empty or contain a JSON array of arguments: [...args]. */
+    //     try {
+    //         let args = this.decode_args(target, request)
+    //         let out = this.execute(target, request, ...args)
+    //         if (T.isPromise(out)) out = await out
+    //         return this.send_result(request, out)
+    //     }
+    //     catch (ex) { this.send_error(request, ex) }
+    // }
 
-    send_error({res}, error, defaultCode = 500) {
+    send_error({res}, error, code = 500) {
         res.type('json')
-        res.status(error.code || defaultCode)
+        res.status(error.code || code)
         res.send({error})
         throw error
     }
@@ -201,12 +213,7 @@ export class JsonService extends HttpService {
         /* JSON-encode and send the result of the service execution, or an {error} with a proper
            HTTP status code if an exception was caught. */
         res.type('json')
-        // if (error) {
-        //     res.status(error.code || defaultCode)
-        //     res.send({error})
-        //     throw error
-        // }
-        if (result === undefined) res.end()                             // missing result --> empty response body
+        if (result === undefined) return res.end()                      // missing result --> empty response body
         if (this.opts.encodeResult) result = JSONx.encode(result)
         res.send(JSON.stringify(result))
     }

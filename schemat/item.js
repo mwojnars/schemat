@@ -1174,7 +1174,8 @@ Category.create_api(
             /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
             this._checkPath(request)
             request.res.type('js')
-            request.res.send(this.getSource())
+            return this.getSource()
+            // request.res.send(this.getSource())
         }),
 
         // 'GET/scan':     new HttpService(async function (request)
