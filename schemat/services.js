@@ -74,8 +74,8 @@ export class Service {
     }
 
     server(target, request) {
-        /* Server-side request handler for the execution of an RPC call (from client()) or a regular web request
-           (from a browser). Subclasses should override this method to decode arguments in a service-specific way. 
+        /* Server-side request handler for the execution of an RPC call (from client()) or a regular web  (from a browser).
+           Subclasses should override this method to decode arguments and encode result in a service-specific way.
          */
         throw new Error(`no server-side request handler for the service`)
     }
@@ -361,7 +361,7 @@ export class Network {
         this.api = api
     }
 
-    createActionTriggers(actions) {
+    create_triggers(actions) {
         /* Map selected endpoints of the API to action triggers for the target object and return as {action: trigger}.
            `actions` is a specification of the form: {action-name: [endpoint, ...fixed-args]},
            where `fixed-args` is a list (possibly empty or partial) of the arguments that will be passed

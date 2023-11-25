@@ -511,7 +511,7 @@ export class Item {
         /* Create a .net connector and .action triggers for this item's network API. */
         let role = this.registry.onServer ? 'server' : 'client'
         this._net_ = new Network(this, role, this.constructor.api)
-        this.action = this._net_.createActionTriggers(this.constructor.actions)
+        this.action = this._net_.create_triggers(this.constructor.actions)
     }
 
     __init__() {}
