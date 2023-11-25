@@ -199,12 +199,12 @@ export class Task {
        Every function below (if present) is called with `this` bound to the target object (an owner of the task).
        The functions can be sync or async.
      */
-    prepare         // client-side function args=prepare(...args) to be called before sending the arguments to the server
+    // prepare      // client-side function args=prepare(...args) to be called before sending the arguments to the server
     process         // server-side function process(request, ...args) to be called with the arguments received from the client
     finalize        // client-side function finalize(result, ...args) to be called with the result received from the server
 
-    constructor({prepare, process, finalize} = {}) {
-        this.prepare = prepare
+    constructor({process, finalize} = {}) {
+        // this.prepare = prepare
         this.process = process
         this.finalize = finalize
     }
@@ -258,9 +258,9 @@ export class TaskService extends JsonService {
 
         let task_name = args[0]
         let task = this.tasks[task_name]
-        let {prepare, finalize} = (task instanceof Task ? task : {})
+        let {finalize} = (task instanceof Task ? task : {})
 
-        if (prepare) args = await prepare.call(target, ...args)
+        // if (prepare) args = await prepare.call(target, ...args)
         let result = await super.client(target, ...args)
         if (finalize) result = finalize.call(target, result, ...args)
 
