@@ -1203,7 +1203,7 @@ Category.create_api(
                     }
                     return items.map(item => item._record_.encoded())
                 },
-                finalize(records) {
+                decode_result(records) {
                     /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
                     let items = []
                     for (const rec of records) {             // rec's shape: {id, data}

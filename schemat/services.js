@@ -201,15 +201,14 @@ export class Task {
      */
     // prepare      // client-side function args=prepare(...args) called before sending the arguments to the server
     process         // server-side function process(request, ...args) called with the arguments received from the client
-    finalize        // client-side function finalize(result, ...args) called with the result received from the server
-
     encode_result   // server-side function encode_result(result, ...args) called before sending the result to the client
     decode_result   // client-side function decode_result(result, ...args) called with the result received from the server
 
-    constructor({process, finalize} = {}) {
+    constructor({process, encode_result, decode_result} = {}) {
         // this.prepare = prepare
         this.process = process
-        this.finalize = finalize
+        this.encode_result = encode_result
+        this.decode_result = decode_result
     }
 }
 
@@ -261,11 +260,11 @@ export class TaskService extends JsonService {
 
         let task_name = args[0]
         let task = this.tasks[task_name]
-        let {finalize} = (task instanceof Task ? task : {})
+        let decode_result = task instanceof Task ? task.decode_result : null
 
         // if (prepare) args = await prepare.call(target, ...args)
         let result = await super.client(target, ...args)
-        if (finalize) result = finalize.call(target, result, ...args)
+        if (decode_result) result = decode_result.call(target, result, ...args)
 
         return result
     }
