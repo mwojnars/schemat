@@ -1201,6 +1201,9 @@ Category.create_api(
                         await item.load()
                         items.push(item)
                     }
+                    return items
+                },
+                encode_result(items) {
                     return items.map(item => item._record_.encoded())
                 },
                 decode_result(records) {
