@@ -1,4 +1,4 @@
-import {print, assert, T} from "./common/utils.js"
+import {print, assert, T, isPromise} from "./common/utils.js"
 import { NotFound, RequestFailed } from './common/errors.js'
 import { JSONx } from './serialize.js'
 
@@ -107,9 +107,17 @@ export class HttpService extends Service {
         let url = target.url(this.endpoint_name)        // it's assumed the `target` is an Item instance with .url()
         let ret = await fetch(url)                      // client-side JS Response object
         if (!ret.ok) return this._decode_error(ret)
-        return ret.text()
+        let result = ret.text()
+        return this.decode_result(result)
     }
-    server(target, request)  { return this.execute(target, request) }
+
+    server(target, request)  {
+        let result = this.execute(target, request)
+        return isPromise(result) ? result.then(res => this.encode_result(res)) : this.encode_result(result)
+    }
+
+    encode_result(result) { return result }     // on the server, encode the result before sending it to the client
+    decode_result(result) { return result }     // on the client, decode the result received from the server
 }
 
 
