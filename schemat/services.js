@@ -103,7 +103,7 @@ export class HttpService extends Service {
      */
     async client(target, ...args) {
         let url = target.url(this.endpoint_name)        // it's assumed the `target` is an Item instance with .url()
-        let ret = await fetch(url)                      // client-side JS Response object
+        let ret = await this.fetch(url, ...args)        // client-side JS Response object
         if (!ret.ok) return this.decode_error(ret)
         let result = ret.text()
         return this.decode_result(result)
@@ -113,6 +113,8 @@ export class HttpService extends Service {
         let result = this.execute(target, request)
         return isPromise(result) ? result.then(res => this.encode_result(res)) : this.encode_result(result)
     }
+
+    fetch(url, ...args)   { return fetch(url) } // args are ignored here, but subclasses may use them
 
     encode_result(result) { return result }     // on the server, encode the result before sending it to the client
     decode_result(result) { return result }     // on the client, decode the result received from the server
@@ -130,25 +132,21 @@ export class JsonService extends HttpService {
        objects as arguments or results, you should perform JSONx.encode/decode() before and after the call.
      */
 
-    static opts = {
+    opts = {
         encodeArgs:   true,         // if true, the arguments of RPC calls are auto-encoded via JSONx before sending
         encodeResult: false,        // if true, the results of RPC calls are auto-encoded via JSONx before sending
     }
 
     async client(target, ...args) {
-        let url = target.url(this.endpoint_name)
-        let ret = await this._fetch(url, args)                  // client-side JS Response object
-        if (!ret.ok) return this.decode_error(ret)
-
-        let result = await ret.text()                           // json string or empty
-        if (!result) return
-
-        result = JSON.parse(result)
-        if (this.opts.encodeResult) result = JSONx.decode(result)
+        let result = await super.client(target, ...args)
+        if (result) {
+            result = JSON.parse(result)
+            if (this.opts.encodeResult) result = JSONx.decode(result)
+        }
         return result
     }
 
-    async _fetch(url, args) {
+    async fetch(url, ...args) {
         /* Fetch the `url` while including the `args` (if any) in the request body, json-encoded.
            For GET requests, `args` must be missing (undefined), as we don't allow body in GET.
          */
