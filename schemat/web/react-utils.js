@@ -254,14 +254,15 @@ export const useRef = React.useRef
 
 /**********************************************************************************************************************/
 
-export function delayed_render(result, deps = [], empty = undefined) {
-    /* Delayed rendering: returns null on initial rendering attempt, then asynchronously calculates
-       rendering output through async_fun() and requests re-rendering to return the final result. */
+export function delayed_render(value, deps = [], empty = undefined) {
+    /* Delayed React rendering for async values. If `value` is a Promise, return null on initial rendering attempt,
+       then asynchronously await the value and request re-rendering to return the final value.
+     */
 
-    // let result = async_fun()
+    if (!T.isPromise(value)) return value
 
     const [output, setOutput] = useState(empty)
-    useEffect(async () => setOutput(await result), deps)
+    useEffect(async () => setOutput(await value), deps)
     return (output === empty) ? null : output
 
     // DRAFT to allow deps=null without infinite re-rendering loop:
