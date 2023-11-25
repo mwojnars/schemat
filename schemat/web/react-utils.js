@@ -257,6 +257,7 @@ export const useRef = React.useRef
 export function delayed_render(value, deps = [], empty = undefined) {
     /* Delayed React rendering for async values. If `value` is a Promise, return null on initial rendering attempt,
        then asynchronously await the value and request re-rendering to return the final value.
+       NOTE: during SSR, re-rendering is NOT executed and so the server-side output contains nulls instead of the final values.
      */
 
     if (!T.isPromise(value)) return value

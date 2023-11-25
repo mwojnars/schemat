@@ -1,5 +1,5 @@
 import {NotImplemented} from "../common/errors.js";
-import {dedentFull, escape_html, print, T} from "../common/utils.js";
+import {T, print, assert, dedentFull, escape_html} from "../common/utils.js";
 import {Resources, ReactDOM} from './resources.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
@@ -291,8 +291,9 @@ export class CategoryAdminPage extends ItemAdminPage {
         component() {
             let preloaded = this.context.items               // TODO: must be pulled from response data on the client to avoid re-scanning on 1st render
 
-            const scan = () => this.action.list_items() //offset, limit)
-            // const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
+            const scan = () => this.action.list_items()
+            // const scan = () => this.registry.scan_category(this)         // returns an async generator that requires "for await"
+
             const [items, setItems] = useState(preloaded || scan())          // existing child items; state prevents re-scan after every itemAdded()
                                                                 // TODO: use materialized list of items to explicitly control re-scanning
                                                                 //    ...and avoid React's incorrect refresh when Items (below) are called in a different way
@@ -311,9 +312,9 @@ export class CategoryAdminPage extends ItemAdminPage {
             )})
         },
 
-        ItemsLoaded({items, remove}) {
+        ItemsLoaded({items}) {
             if (!items || items.length === 0) return null
-            let rows = items.map(item => this._ItemEntry({item, remove}))
+            let rows = items.map(item => this._ItemEntry({item}))
             return TABLE(TBODY(...rows))
         },
 
