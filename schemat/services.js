@@ -293,9 +293,6 @@ export class TaskService extends JsonService {
         if (!task) throw new NotFound(`unknown task name: '${task_name}'`)
         let process = task instanceof Task ? task.process : task
         return process.call(target, request, ...args)
-        // if (!encode_result) return result
-        // if (T.isPromise(result)) return result.then(res => encode_result.call(target, res, ...args))
-        // return encode_result.call(target, result, ...args)
     }
 
     async send_result(target, request, result, task_name, ...args) {
