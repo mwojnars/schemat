@@ -89,12 +89,14 @@ export class Service {
     }
 }
 
+
 export class InternalService extends Service {
     /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
        defined as SUN routing paths but executed server-side exclusively.
      */
     server(target, request)  { return this.execute(target, request) }
 }
+
 
 export class HttpService extends Service {
     /* Base class for HTTP-based services. Does not interpret input/output data in any way; the service function
@@ -105,8 +107,8 @@ export class HttpService extends Service {
         let url = target.url(this.endpoint_name)        // it's assumed the `target` is an Item instance with .url()
         let ret = await this.fetch(url, ...args)        // client-side JS Response object
         if (!ret.ok) return this.decode_error(ret)
-        let result = ret.text()
-        return this.decode_result(result)
+        let result = await ret.text()
+        return this.decode_result(result, ...args)
     }
 
     server(target, request)  {
@@ -114,12 +116,12 @@ export class HttpService extends Service {
         return isPromise(result) ? result.then(res => this.encode_result(res)) : this.encode_result(result)
     }
 
-    fetch(url, ...args)   { return fetch(url) } // args are ignored here, but subclasses may use them
+    fetch(url, ...args)            { return fetch(url) }    // args are ignored here, but subclasses may use them
 
-    encode_result(result) { return result }     // on the server, encode the result before sending it to the client
-    decode_result(result) { return result }     // on the client, decode the result received from the server
+    encode_result(result, ...args) { return result }        // on the server, encode the result before sending it to the client
+    decode_result(result, ...args) { return result }        // on the client, decode the result received from the server
 
-    decode_error(ret)     { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
+    decode_error(ret, ...args)     { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
 }
 
 
@@ -137,12 +139,10 @@ export class JsonService extends HttpService {
         encodeResult: false,        // if true, the results of RPC calls are auto-encoded via JSONx before sending
     }
 
-    async client(target, ...args) {
-        let result = await super.client(target, ...args)
-        if (result) {
-            result = JSON.parse(result)
-            if (this.opts.encodeResult) result = JSONx.decode(result)
-        }
+    decode_result(result, ...args) {
+        if (!result) return
+        result = JSON.parse(result)
+        if (this.opts.encodeResult) result = JSONx.decode(result)
         return result
     }
 
