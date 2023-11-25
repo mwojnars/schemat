@@ -18,7 +18,7 @@ export class HtmlPage extends HttpService {
         // and a `context` property
         let view = this._create_view(target, request)
         let prepare = view.prepare_server()
-        if (prepare instanceof Promise) return prepare.then(() => view.generate())
+        if (T.isPromise(prepare)) return prepare.then(() => view.generate())
         return view.generate()
     }
 
@@ -165,7 +165,7 @@ export class ReactPage extends RenderedPage {
         let view = this._create_view(target)
         let component = e(view.component)
         let prepare = view.prepare_client()
-        if (prepare instanceof Promise) await prepare
+        if (T.isPromise(prepare)) await prepare
         return ReactDOM.render(component, html_element)
     }
 

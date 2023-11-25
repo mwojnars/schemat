@@ -102,7 +102,7 @@ export class ItemsCache extends Map {
                 // if (deleted) print('item evicted:', id, item.is_loaded() ? '' : '(stub)' )     // TODO: comment out
                 // else print('item not found for eviction:', id, item.is_loaded() ? '' : '(stub)' )
                 let done = item.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
-                if (done instanceof Promise) cleanup.push(done)
+                if (T.isPromise(done)) cleanup.push(done)
             }
         }
         if (cleanup.length) return Promise.all(cleanup)

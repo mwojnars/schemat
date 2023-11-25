@@ -173,7 +173,7 @@ export class JsonService extends HttpService {
             if (this.opts.encodeArgs) args = JSONx.decode(args)
 
             out = this.execute(target, request, ...args)
-            if (out instanceof Promise) out = await out
+            if (T.isPromise(out)) out = await out
         }
         catch (e) {ex = e}
         return this._sendResponse(res, out, ex)
