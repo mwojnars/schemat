@@ -446,6 +446,7 @@ export class Item {
                 await category.load()
 
             await this._init_class()                            // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
+            // await this._init_url()                              // set the URL path of this item
             this._init_network()
 
             let init = this.__init__()                          // optional custom initialization after the data is loaded
@@ -498,6 +499,13 @@ export class Item {
         let cls = this._class_ || await this._category_?.getItemClass()
         T.setClass(this, cls || Item)
     }
+
+    // async _init_url() {
+    //     /* Initialize this item's URL path. */
+    //     print('container_path:', this.container_path)
+    //     this._container_ = await registry.site.resolve(this.container_path, true)
+    //     print('container:', this._container_)
+    // }
 
     _init_network() {
         /* Create a .net connector and .action triggers for this item's network API. */
