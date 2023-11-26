@@ -108,10 +108,10 @@ export class HttpService extends Service {
         let [url, options] = this.encode_args(base_url, ...args)
 
         let ret = await fetch(url, options)                 // `ret` is client-side JS Response object
-        if (!ret.ok) return this.decode_error(ret)
+        if (!ret.ok) return this.recv_error(ret)
 
         let result = await ret.text()
-        return this.decode_result(result, ...args)
+        return this.recv_result(result, ...args)
     }
 
     async server(target, request) {
@@ -138,8 +138,8 @@ export class HttpService extends Service {
         if (error) throw error
     }
 
-    decode_result(result, ...args) { return result }        // on the client, decode the result received from the server
-    decode_error(ret, ...args)     { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
+    recv_result(result, ...args)   { return result }        // on the client, decode (and store) the result received from the server
+    recv_error(ret, ...args)       { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
 }
 
 
@@ -193,7 +193,7 @@ export class JsonService extends HttpService {
         res.send(JSON.stringify(result))
     }
 
-    decode_result(result, ...args) {
+    recv_result(result, ...args) {
         if (!result) return
         result = JSON.parse(result)
         if (this.opts.encodeResult) result = JSONx.decode(result)
@@ -207,7 +207,7 @@ export class JsonService extends HttpService {
         throw error
     }
 
-    async decode_error(ret) {
+    async recv_error(ret) {
         let error = await ret.json()
         throw new RequestFailed({...error, code: ret.status})
     }
