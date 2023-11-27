@@ -2,7 +2,7 @@
     Loading of libraries and static resources.
 */
 
-class Resources {
+export class Resources {
     /*
     Google Fonts to use for admin panel:
     - Raleway -- for headers
@@ -45,8 +45,8 @@ class Resources {
         <!--<script src="/system/local/assets/libs/react.production.min.js" integrity="sha256-Ipu/TQ50iCCVZBUsZyNJfxrDk0E2yhaEIz0vqI+kFG8=" crossorigin="anonymous"></script>
             <script src="/system/local/assets/libs/react-dom.production.min.js" integrity="sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0=" crossorigin="anonymous"></script>-->
         
-        <script src="/system/local/assets/libs/react.development.js" integrity="sha256-QoQkvFHtz5oCOcl2oGlRo0NnSv5iAC8rMtEUDx31wCQ=" crossorigin="anonymous"></script>
-        <script src="/system/local/assets/libs/react-dom.development.js" integrity="sha256-SxURW871LR4j9t5iZ7x9lieLlmxT4XsmJKUSeaLe3wE=" crossorigin="anonymous"></script>
+        <script src="/system/local/assets/libs/react.development.js" crossorigin="anonymous"></script>
+        <script src="/system/local/assets/libs/react-dom.development.js" crossorigin="anonymous"></script>
 
         <!-- Bootstrap - only use for widgets and in-block layout, not for page layout
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet"> <!--Bootstrap Icons-->
@@ -92,7 +92,7 @@ Bootstrap, Bootstrap Icons -- large number of different classes; TODO: drop this
 // exports.React_ = React_
 // module.exports = {React_}
 
-let {                                                               // on client...
+export let {                                                               // on client...
     React,
     ReactDOM,
     // ReactBootstrap,
@@ -105,7 +105,7 @@ if (!React) {                                                       // on server
     // React      = (await import("./assets/libs/react.production.min.js")).default
     // ReactDOM   = (await import("./assets/libs/react-dom.production.min.js")).default
     React      = (await import("react")).default
-    ReactDOM   = (await import("react-dom/server.js")).default
+    ReactDOM   = (await import("react-dom/server")).default
     MaterialUI = (await import("@mui/material")).default
     // MIcons     = (await import("@mui/icons-material")).default
     // ReactBootstrap = (await import("@mui/material")).default
@@ -115,5 +115,4 @@ if (!React) {                                                       // on server
     // CSSTransition = (await import("react-transition-group")).CSSTransition
 }
 
-export { Resources, React, ReactDOM, MaterialUI }
 export default Resources

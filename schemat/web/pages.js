@@ -166,7 +166,8 @@ export class ReactPage extends RenderedPage {
         let component = e(view.component)
         let prepare = view.prepare_client()
         if (T.isPromise(prepare)) await prepare
-        return ReactDOM.render(component, html_element)
+        return ReactDOM.createRoot(html_element).render(component)
+        // return ReactDOM.render(component, html_element)
     }
 
     static View = {
@@ -339,8 +340,10 @@ export class CategoryAdminPage extends ItemAdminPage {
             /* A single row in the list of items. */
             let name = item.name || item.getStamp({html:false})
             let url  = item.url()
+            // let url  = delayed_render(Promise.resolve(item.url())) || ''
             return TR(
                 TD(`${item._id_} ${NBSP}`),
+                // TD(A({href: url}, name), ' ', NBSP),
                 TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
                 TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
             )
