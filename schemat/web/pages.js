@@ -167,7 +167,6 @@ export class ReactPage extends RenderedPage {
         let prepare = view.prepare_client()
         if (T.isPromise(prepare)) await prepare
         return ReactDOM.createRoot(html_element).render(component)
-        // return ReactDOM.render(component, html_element)
     }
 
     static View = {
