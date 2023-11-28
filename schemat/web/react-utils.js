@@ -263,7 +263,7 @@ export function delayed_render(value, deps = [], empty = undefined) {
     if (!T.isPromise(value)) return value
 
     const [output, setOutput] = useState(empty)
-    useEffect(() => { (async () => setOutput(await value))() }, deps)
+    useEffect(() => { value.then(v => setOutput(v)) }, deps)
     return (output === empty) ? null : output
 
     // DRAFT to allow deps=null without infinite re-rendering loop:

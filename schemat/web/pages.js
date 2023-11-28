@@ -247,7 +247,8 @@ export class ItemAdminPage extends ReactPage {
         Title() {
             /* <H1> element to be displayed as a page title. */
             let name = this.name
-            let ciid = this.getStamp()
+            // let ciid = this.getStamp()
+            let ciid = delayed_render(Promise.resolve(this.getStamp()))
             if (name)
                 return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
             else
@@ -339,7 +340,7 @@ export class CategoryAdminPage extends ItemAdminPage {
             /* A single row in the list of items. */
             let name = item.name || item.getStamp({html:false})
             let url  = item.url()
-            // let url  = delayed_render(Promise.resolve(item.url())) || ''
+            // let url  = delayed_render(Promise.resolve(item.url()), [item])
             return TR(
                 TD(`${item._id_} ${NBSP}`),
                 // TD(A({href: url}, name), ' ', NBSP),
