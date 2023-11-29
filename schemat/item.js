@@ -501,7 +501,7 @@ export class Item {
     }
 
     async _init_url() {
-        /* Initialize this item's URL path. */
+        /* Initialize this item's URL path, this._url_. */
 
         let default_path = () => registry.site.systemPath(this)
 

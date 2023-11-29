@@ -24,7 +24,7 @@ let default_fields = new Catalog({
     html_title  : new STRING({info: "HTML title to be used for when this item is rendered."}),
 
     import_path    : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If configured, callers can only import this item's code through this path, so the code is always interpreted in the same way and can be cached after parsing."}),
-    // container_path : new STRING({info: "Access path to the parent Container of this object relative to the site's root. Should contain leading '/'. If the path passes through a blank route (/*ROUTE), the corresponding segment must be included (unlike in URLs)."}),
+    container_path : new STRING({info: "Access path to the parent Container of this object relative to the site's root, with leading '/'. If the path passes through a blank route (/*ROUTE), the corresponding segment must be included (unlike in URLs)."}),
     // url_path       : new STRING({info: "Absolute canonical URL path of this object within the site. Automatically calculated by the parent container as defined by the `container_path`. If the object is accessed by a different URL, redirection is performed to the canonical URL."}),
 })
 
