@@ -500,12 +500,14 @@ export class Item {
         T.setClass(this, cls || Item)
     }
 
-    // async _init_url() {
-    //     /* Initialize this item's URL path. */
-    //     print('container_path:', this.container_path)
-    //     this._container_ = await registry.site.resolve(this.container_path, true)
-    //     print('container:', this._container_)
-    // }
+    async _init_url() {
+        /* Initialize this item's URL path. */
+        print('container_path:', this.container_path)
+        this._container_ = await registry.site.resolve(this.container_path, true)
+        print('container:', this._container_)
+        this._url_ = this._container_.build_url(this)
+        // this._url_ = this._container_.url + '/' + this.name
+    }
 
     _init_network() {
         /* Create a .net connector and .action triggers for this item's network API. */

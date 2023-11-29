@@ -30,9 +30,22 @@ export class Container extends Item {
         /* Return a unique string identifier of `item` within this container. */
         throw new Error('not implemented')
     }
-    address(item) {
-        /* Return an absolute URL path to `item` including the path from root to this container. */
-        throw new Error('not implemented')
+
+    build_path(item) {
+        /* Return an access path to `item` including the path from root to this container.
+           The access path is like a URL path, but it may contain explicit blank segments: /*BLANK
+         */
+        return this._path_ + '/' + this.identify(item)
+    }
+
+    build_url(item) {
+        /* Create an absolute URL path for `item` that starts at the site's root. The `item` should belong to this container. */
+        return this._path_to_url(this.build_path(item))
+    }
+
+    _path_to_url(path) {
+        /* Convert a path to a URL by removing all blank segments, /*xxx. */
+        return path.replace(/\/\*[^/]*/g, '')
     }
 }
 
@@ -140,10 +153,7 @@ export class ID_Namespace extends Namespace {
         item.assert_linked()
         return `${item._id_}`
     }
-    address(item) {
-        /* Return an absolute URL path to `item` including the path from root to this container. */
-        return this.internal_url + '/' + this.identify(item)        // internal_url may contain an explicit blank segment: /*BLANK
-    }
+
 
     urlPath(item) {
         item.assert_linked()

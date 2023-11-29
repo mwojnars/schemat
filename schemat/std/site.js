@@ -68,7 +68,7 @@ set_global({importLocal: (p) => import(p)})
 //     // }
 // }
 
-export class Site extends Item {
+export class Site extends Container {
     /* Global configuration of all applications that comprise this website, with URL routing etc.
        A route whose name starts with asterisk (*NAME) is treated as blank.
      */
