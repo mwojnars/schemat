@@ -69,6 +69,8 @@ export class Container extends Item {
         let url = path.replace(/\/\*[^/]*/g, '')
         return [url, last_blank]
     }
+
+    urlPath(item) { return this.identify(item) }
 }
 
 
@@ -90,21 +92,21 @@ export class Directory extends Container {
         return next.is_loaded() ? tail() : next.load().then(tail)
     }
 
+    identify(item) {
+        item.assert_linked()
+        let id = item._id_
+        for (let [name, ref] of this.entries)
+            if (ref._id_ === id) return name
+    }
+
+    contains(name) { return this.entries.has(name) }
+
     findRoute(request) {
         let step = request.step()
         if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
         let item = this.entries.get(step)
         // request.pushMethod('@file')                     // if `item` doesn't provide @file method, its default one will be used
         return [item, request.move(step), item => !(item instanceof Container)]
-    }
-
-    contains(name) { return this.entries.has(name) }
-
-    identify(item) {
-        item.assert_linked()
-        let id = item._id_
-        for (let [name, ref] of this.entries)
-            if (ref._id_ === id) return name
     }
 }
 
@@ -178,16 +180,10 @@ export class ID_Namespace extends Namespace {
     }
 
     identify(item) {
-        /* Return a unique string identifier of `item` within this container. */
         item.assert_linked()
         return `${item._id_}`
     }
 
-
-    urlPath(item) {
-        item.assert_linked()
-        return `${item._id_}`
-    }
     findRoute(request) {
         /* Extract item ID from a raw URL path. */
         let step = request.step(), id
@@ -221,12 +217,13 @@ export class CategoryID_Namespace extends Namespace {
         return registry.getLoaded(Number(id))
     }
 
-    urlPath(item) {
+    identify(item) {
         let sep = CategoryID_Namespace.ID_SEPARATOR
         let spaces_rev = this.spacesRev()
         let space = spaces_rev.get(item._category_?._id_)
         if (space) return `${space}${sep}${item._id_}`
     }
+
     spacesRev() {
         let catalog = this.spaces
         return new Map(catalog.map(({key, value:item}) => [item._id_, key]))
