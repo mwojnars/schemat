@@ -10,6 +10,11 @@ import {UrlPathNotFound} from "../common/errors.js";
 /**********************************************************************************************************************/
 
 export class Container extends Item {
+    /* A hierarchical collection of objects that assigns unique URL paths to each object (build_url())
+       and can map a URL path back to a corresponding object (resolve()). May contain nested containers.
+       Can assign "container access paths" which are like URL paths but with explicit blank segments (/*xxx);
+       these paths are used internally to identify objects within a container, before a final URL is generated.
+     */
 
     contains(name) { return true }
 
@@ -27,7 +32,9 @@ export class Container extends Item {
     }
 
     identify(item) {
-        /* Return a unique non-empty string identifier of `item` within this container. */
+        /* Return a unique non-empty string identifier of `item` within this container. An identifier of the form *xxx
+           (ident[0] == '*') denotes a blank segment that should be removed when converting container access path to a URL path.
+         */
         throw new Error('not implemented')
     }
 
@@ -92,6 +99,13 @@ export class Directory extends Container {
     }
 
     contains(name) { return this.entries.has(name) }
+
+    identify(item) {
+        item.assert_linked()
+        let id = item._id_
+        for (let [name, ref] of this.entries)
+            if (ref._id_ === id) return name
+    }
 }
 
 
