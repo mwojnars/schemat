@@ -502,11 +502,18 @@ export class Item {
 
     async _init_url() {
         /* Initialize this item's URL path. */
+
+        let default_path = () => registry.site.systemPath(this)
+
+        if (!this.container_path)
+            return this._url_ = default_path()
+
         print('container_path:', this.container_path)
         this._container_ = await registry.site.resolve(this.container_path, true)
         print('container:', this._container_)
-        this._url_ = this._container_.build_url(this)
-        // this._url_ = this._container_.url + '/' + this.name
+        let [url, duplicate] = this._container_.build_url(this)
+
+        return this._url_ = duplicate ? default_path() : url
     }
 
     _init_network() {

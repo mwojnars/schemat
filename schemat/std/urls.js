@@ -27,25 +27,40 @@ export class Container extends Item {
     }
 
     identify(item) {
-        /* Return a unique string identifier of `item` within this container. */
+        /* Return a unique non-empty string identifier of `item` within this container. */
         throw new Error('not implemented')
     }
 
-    build_path(item) {
-        /* Return an access path to `item` including the path from root to this container.
-           The access path is like a URL path, but it may contain explicit blank segments: /*BLANK
+    build_path(member) {
+        /* Return an access path to `member` including the path from root to this container.
+           The access path is like a URL path, but with explicit blank segments: /*BLANK
          */
-        return this._path_ + '/' + this.identify(item)
+        assert(this._path_[0] === '/', `_path_ must start with '/'`)
+        let ident = this.identify(member)
+        assert(ident, `object is not a member of this container`)
+        return this._path_ + '/' + ident
     }
 
     build_url(item) {
-        /* Create an absolute URL path for `item` that starts at the site's root. The `item` should belong to this container. */
+        /* Create an absolute URL path from the site's root to `item`. Return [url, duplicate], where:
+           - `url` is the URL path from the site's root to `item`;
+           - duplicate=true if the `url` is a duplicate of an ancestor's URL path, due to a terminal blank segment.
+           The `item` should be a member of this container.
+         */
         return this._path_to_url(this.build_path(item))
     }
 
     _path_to_url(path) {
-        /* Convert a path to a URL by removing all blank segments, /*xxx. */
-        return path.replace(/\/\*[^/]*/g, '')
+        /* Convert a container access path to a URL path by removing all blank segments (/*xxx).
+           NOTE 1: if the last segment is blank, the result URL can be a duplicate of the URL of a parent or ancestor container (!);
+           NOTE 2: even if the last segment is not blank, the result URL can still be a duplicate of the URL of a sibling object,
+                   if they both share an ancestor container with a blank segment. This cannot be automatically detected
+                   and should be prevented by proper configuration of top-level containers.
+         */
+        let last = path.split('/').pop()
+        let last_blank = last.startsWith('*')               // if the last segment is blank, the URL is a duplicate of a parent's URL
+        let url = path.replace(/\/\*[^/]*/g, '')
+        return [url, last_blank]
     }
 }
 
