@@ -112,8 +112,6 @@ async function create_categories(Category) {
         name        : "Namespace",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
         class_path  : '/system/local/std/urls.js:Namespace',
-        // fields      : C({findRoute: new CODE(), urlPath: new CODE(), _boot_class: new STRING()}),
-        // custom_class: true,
     })
     cat.ID_Namespace = await Category.new(8, {
         name        : "ID_Namespace",

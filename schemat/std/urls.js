@@ -69,8 +69,6 @@ export class Container extends Item {
         let url = path.replace(/\/\*[^/]*/g, '')
         return [url, last_blank]
     }
-
-    urlPath(item) { return this.identify(item) }
 }
 
 
@@ -113,14 +111,8 @@ export class Directory extends Container {
 
 export class Namespace extends Container {
     /*
-        Unbounded collection of objects available over the web that together serve the user's
-        particular need. Each eligible item has a unique URL path within the application's URL space, and the application
-        allows to retrieve this path for an arbitrary item (urlPath()) and, vice versa, map a URL path to
-        a corresponding target item (findRoute()). All paths are relative to the application's base route.
-
-        Within the application, some paths may be fixed and link to a limited number of predefined system items;
-        while other paths may be dynamically generated and link to an arbitrary number of user-created items,
-        giving the user an ability to create new items. Applications can also be nested.
+        Unbounded collection of objects: each object that satisfies the criteria of the namespace can be assigned
+        (dynamically) a unique identifier, typically based on the object's ID.
      */
 
     /*
@@ -140,20 +132,6 @@ export class Namespace extends Container {
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     */
 
-    // address(item) {
-    //     /* If `item` belongs to the item space defined by this application, return its URL subpath
-    //        (no leading '/') to be appended to a route when building a URL. Otherwise, return undefined.
-    //      */
-    // }
-
-    // urlPath(item) {
-    //     /* Generate a URL name/path (fragment after the base route string) of `item`.
-    //        The path does NOT have a leading separator, or it has a different (internal) meaning -
-    //        in any case, a leading separator should be inserted by caller if needed.
-    //      */
-    //     let func = this.urlPath = this.parseMethod('urlPath', 'item')
-    //     return func.call(this, item)
-    // }
     // findRoute(request)  {
     //     // findRoute() is parsed dynamically from source on the 1st call and stored in `this` -
     //     // not in a class prototype like `code` (!); after that, all calls go directly to the new function

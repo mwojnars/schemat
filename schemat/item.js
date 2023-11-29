@@ -733,7 +733,7 @@ export class Item {
 
         if (app) {
             app.assert_loaded()
-            path = app.urlPath(this)
+            path = app.identify(this)
             if (path) path = './' + path            // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
         }
         if (!path)  path = site.urlRaw(this)        // fallback; urlRaw() is an absolute path, no leading ./
