@@ -141,7 +141,7 @@
       info: URL route of an internal application for default/admin web access to
         items. The application should handle all items.
       "@": PATH
-    routes:
+    entries:
       values:
         "@": ITEM
       repeated: true

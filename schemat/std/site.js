@@ -78,7 +78,7 @@ export class Site extends Directory {
 
     // properties:
     base_url
-    routes
+    entries
     path_internal
 
     async __init__()   { if (this.registry.onServer) this._vm = await import('vm') }
@@ -88,7 +88,7 @@ export class Site extends Directory {
         let step = path.split('/')[0]
         let rest = path.slice(step.length + 1)
 
-        for (let {key: name, value: node} of this.routes) {
+        for (let {key: name, value: node} of this.entries) {
 
             // assert(name, "route name must be non-empty; use *NAME for a blank route (name excluded in public URLs)")
             // let blank = (name[0] === '*')
