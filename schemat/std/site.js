@@ -2,7 +2,7 @@ import {set_global} from "../common/globals.js"
 import {print, assert, T} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Item, Request} from '../item.js'
-import {Container} from "./urls.js";
+import {Container, Directory} from "./urls.js";
 
 
 // Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -68,7 +68,7 @@ set_global({importLocal: (p) => import(p)})
 //     // }
 // }
 
-export class Site extends Container {
+export class Site extends Directory {
     /* Global configuration of all applications that comprise this website, with URL routing etc.
        A route whose name starts with asterisk (*NAME) is treated as blank.
      */
