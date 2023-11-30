@@ -81,7 +81,18 @@ export class Site extends Directory {
     entries
     path_internal
 
-    async __init__()   { if (this.registry.onServer) this._vm = await import('vm') }
+    async __init__() {
+        if (this.registry.onServer) this._vm = await import('vm')
+        // return this._init_url()             // Site's URL path is needed quickly, so it's initialized already here despite the call in _load()
+    }
+
+    async _init_url() {
+        // remove domain name from the base URL and keep the remaining URL path
+        let url = new URL(this.base_url)
+        this._url_ = url.pathname
+        assert(this._url_[0] === '/', `incorrect base URL: ${this.base_url}`)
+        print('Site._init_url():', this._url_)
+    }
 
     async resolve(path, explicit_blank = false) {
         if (!path) return this

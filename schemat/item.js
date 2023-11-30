@@ -505,11 +505,12 @@ export class Item {
     async _init_url() {
         /* Initialize this item's URL path, this._url_. */
 
-        while (!registry.site) {
+        // wait until the site is initialized and its URL path is known; wait and try again if needed
+        while (!registry.site?._url_) {
             // print('no registry.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
-            await delay(0)                                  // wait for the site to be initialized and try again
-            if (this._url_) return this._url_               // already initialized
-            if (registry.is_closing) return undefined       // site is closing, no need to wait any longer
+            await delay(100)
+            if (this._url_) return this._url_               // already initialized?
+            if (registry.is_closing) return undefined       // site is closing? no need to wait any longer
         }
 
         let default_path = () => registry.site.systemPath(this)
