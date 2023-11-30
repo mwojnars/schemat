@@ -97,10 +97,8 @@ export class Site extends Directory {
 
         for (let {key: name, value: node} of this.entries) {
 
-            // assert(name, "route name must be non-empty; use *NAME for a blank route (name excluded in public URLs)")
-            // let blank = (name[0] === '*')
-
-            let blank = !name || (name[0] === '*')
+            assert(name, "route name must be non-empty; use *NAME for a blank route to be excluded in public URLs")
+            let blank = (name[0] === '*')
 
             // blank route? only consume the `step` and truncate the request path if explicit_blank=true;
             // step into the nested Container only if it potentially contains the `step`
