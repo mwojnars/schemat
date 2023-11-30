@@ -87,7 +87,7 @@ export class Site extends Directory {
         let url = new URL(this.base_url)            // remove domain name from the base URL and keep the remaining URL path
         this._url_ = url.pathname
         assert(this._url_[0] === '/', `incorrect base URL: ${this.base_url}`)
-        print('Site._init_url():', this._url_)
+        // print('Site._init_url():', this._url_)
     }
 
     async resolve(path, explicit_blank = false) {
@@ -100,7 +100,7 @@ export class Site extends Directory {
             // assert(name, "route name must be non-empty; use *NAME for a blank route (name excluded in public URLs)")
             // let blank = (name[0] === '*')
 
-            let blank = !name
+            let blank = !name || (name[0] === '*')
 
             // blank route? only consume the `step` and truncate the request path if explicit_blank=true;
             // step into the nested Container only if it potentially contains the `step`
