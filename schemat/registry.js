@@ -146,6 +146,7 @@ export class Registry {
         /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
         this.root = await this._init_root()             // always returns a valid object, possibly created from `root_data`
         this.site = await this._init_site(site_id)      // may return an undefined
+        if (this.site) print("Registry: site loaded")
     }
 
     async _init_root() {
@@ -162,7 +163,7 @@ export class Registry {
             try {
                 await root.load()
                 root.assert_loaded()
-                // print("root category loaded from DB")
+                print("Registry: root category loaded from DB")
             } catch (ex) {
                 if (!(ex instanceof ItemNotFound)) throw ex
             }
@@ -170,9 +171,10 @@ export class Registry {
         // ...only when the above fails due to missing data, load from the predefined `root_data`
         if (!root.is_loaded()) {
             await root.load(new ItemRecord(ROOT_ID, root_data))
-            print("Registry._init_root(): root category loaded from root_data")
+            print("Registry: root category loaded from root_data")
         }
 
+        print("Registry: root category created")
         return root
     }
 
@@ -183,7 +185,7 @@ export class Registry {
             // if (!site_id)
             //     if (this.onClient) return
             //     else site_id = await this._find_site()
-            return await this.getLoaded(site_id)
+            return await (this.site_pending = this.getLoaded(site_id))
         } catch (ex) {
             if (!(ex instanceof ItemNotFound)) throw ex
         }

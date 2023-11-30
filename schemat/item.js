@@ -445,19 +445,20 @@ export class Item {
             if (category && !category.is_loaded() && category !== this)
                 await category.load()
 
-            await this._init_class()                            // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
-            // await this._init_url()                              // set the URL path of this item
+            await this._init_class()                        // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
             this._init_network()
 
-            let init = this.__init__()                          // optional custom initialization after the data is loaded
-            if (init instanceof Promise) await init             // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
+            let init = this.__init__()                      // optional custom initialization after the data is loaded
+            if (init instanceof Promise) await init         // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
 
             this._set_expiry(category?.cache_ttl)
+
+            // this._init_url()                                // set the URL path of this item - intentionally un-awaited to avoid blocking the load() call
 
             return this
 
         } finally {
-            this._meta_.loading = false                         // cleanup to allow another load attempt, even after an error
+            this._meta_.loading = false                     // cleanup to allow another load attempt, even after an error
         }
     }
 
@@ -502,16 +503,36 @@ export class Item {
 
     async _init_url() {
         /* Initialize this item's URL path, this._url_. */
+        // if (!registry.site) {
+        //     print('no registry.site, waiting for it to be initialized... in', this.constructor?.name || this)
+        //     setTimeout(() => this._init_url())      // wait for the site to be initialized and try again
+        //     return this._url_
+        // }
+
+        while (!registry.site) {
+            print('no registry.site, waiting for it to be initialized... in', this.constructor?.name || this)
+            // if (!registry.site_pending) {
+                setTimeout(() => this._init_url())      // wait for the site to be initialized and try again
+                return
+            // }
+            // await registry.site_pending
+        }
+
+        assert(registry.site, 'registry.site is not defined')
 
         let default_path = () => registry.site.systemPath(this)
 
-        if (!this.container_path)
-            return this._url_ = default_path()
+        if (!this.container_path) {
+            let url = default_path()
+            print('no container_path:', url)
+            return this._url_ = url
+        }
 
         print('container_path:', this.container_path)
-        this._container_ = await registry.site.resolve(this.container_path, true)
-        print('container:', this._container_)
-        let [url, duplicate] = this._container_.build_url(this)
+        let container = await registry.site.resolve(this.container_path, true)
+        print('container:', container)
+        let [url, duplicate] = container.build_url(this)
+        print('url:', url, ` (duplicate=${duplicate})`)
 
         return this._url_ = duplicate ? default_path() : url
     }
@@ -727,8 +748,7 @@ export class Item {
         // let defaultApp = this.registry.session.apps['$']
         // app = app || defaultApp
 
-        // this.url_path = this.url_container.address(item)
-        // url = this.url_path + method + args      // absolute path
+        // url = site.domain + this._url_ + method + args      // absolute path
         // if (relative) url = replace(prefix in url with './')
 
         if (app) {
@@ -1273,6 +1293,16 @@ export class RootCategory extends Category {
     }
 
     _init_class() {}                            // RootCategory's class is already set up, no need to do anything more
+
+    // async _init_url() {
+    //     if (!registry.site) {
+    //         print('no registry.site, waiting for it to be initialized...')
+    //         return await this._init_url()
+    //         // setTimeout(() => this._init_url())      // wait for the site to be initialized and try again
+    //         // return this._url_
+    //     }
+    //     return super._init_url()
+    // }
 }
 
 
