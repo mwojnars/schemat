@@ -4,7 +4,7 @@ import express from 'express'
 import bodyParser from 'body-parser'
 // import http from 'http'
 
-import {assert, print, sleep} from '../common/utils.js'
+import {assert, print} from '../common/utils.js'
 import {set_global} from "../common/globals.js";
 import {thread_local_variable} from "./local.js";
 import {Session} from '../registry.js'

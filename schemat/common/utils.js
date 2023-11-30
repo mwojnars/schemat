@@ -180,10 +180,8 @@ export function unique(array) {
     return array.filter((x, i, a) => a.indexOf(x) === i)
 }
 
-
-export function sleep(millis) {
-    return new Promise(resolve => setTimeout(resolve, millis))
-}
+export const delay = async ms => new Promise(resolve => setTimeout(resolve, ms))
+export const sleep = delay
 
 export function detect_nodejs() {
     /* Return true if the process is (likely) running on a Node.js server rather than in a browser. */

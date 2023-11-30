@@ -20,6 +20,7 @@ const {exec} = require('child_process')
 // Object.prototype.toString = toString
 
 let print = console.log
+let delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 
 /**********************************************************************************************************************/
@@ -28,10 +29,6 @@ const HOST = '127.0.0.1'
 const PORT = 3000
 const DOMAIN = `http://${HOST}:${PORT}`
 
-
-async function delay(duration) {
-    return new Promise((resolve) => setTimeout(resolve, duration));
-}
 
 async function expect_status_ok(page, status = 200) {
     const response = await page.waitForResponse(response => response.status() === status)
