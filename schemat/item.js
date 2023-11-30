@@ -506,7 +506,7 @@ export class Item {
         /* Initialize this item's URL path, this._url_. */
 
         while (!registry.site) {
-            print('no registry.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
+            // print('no registry.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
             await delay(0)                                  // wait for the site to be initialized and try again
             if (this._url_) return this._url_               // already initialized
             if (registry.is_closing) return undefined       // site is closing, no need to wait any longer

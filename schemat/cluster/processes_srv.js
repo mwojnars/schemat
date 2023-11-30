@@ -51,6 +51,7 @@ export class WorkerProcess extends BackendProcess {
             print('\nReceived kill signal, shutting down gracefully...')
             this._server.close(() => { print('Server closed') })
         }
+        registry.is_closing = true
         setTimeout(() => process.exit(0), 10)
     }
 
