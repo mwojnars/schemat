@@ -1,11 +1,11 @@
 'use strict'
 
 import {set_global} from "./common/globals.js"
-import {print, assert, T, escape_html, splitLast, concat, unique} from './common/utils.js'
+import {print, assert, T, escape_html, splitLast, concat, unique, delay} from './common/utils.js'
 import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
 
-import { JSONx } from './serialize.js'
-import { Path, Catalog, Data } from './data.js'
+import {JSONx} from './serialize.js'
+import {Path, Catalog, Data} from './data.js'
 import {DATA, DATA_GENERIC, generic_type, ITEM} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 import {CategoryAdminPage, ItemAdminPage} from "./web/pages.js";
@@ -185,7 +185,7 @@ const proxy_handler = {
     UNDEFINED: Symbol.for('proxy_handler.UNDEFINED'),
 
     // these props can never be found inside item's schema and should always be accessed as regular object attributes
-    RESERVED: ['_id_', '_meta_', '_data_', '_record_'],
+    RESERVED: ['_id_', '_meta_', '_data_', '_record_', '_url_'],
 
     get(target, prop, receiver) {
         let UNDEF = proxy_handler.UNDEFINED
@@ -453,7 +453,8 @@ export class Item {
 
             this._set_expiry(category?.cache_ttl)
 
-            // this._init_url()                                // set the URL path of this item - intentionally un-awaited to avoid blocking the load() call
+            if (this.is_linked())
+                setTimeout(() => this._init_url())          // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
             return this
 
@@ -503,22 +504,12 @@ export class Item {
 
     async _init_url() {
         /* Initialize this item's URL path, this._url_. */
-        // if (!registry.site) {
-        //     print('no registry.site, waiting for it to be initialized... in', this.constructor?.name || this)
-        //     setTimeout(() => this._init_url())      // wait for the site to be initialized and try again
-        //     return this._url_
-        // }
 
         while (!registry.site) {
-            print('no registry.site, waiting for it to be initialized... in', this.constructor?.name || this)
-            // if (!registry.site_pending) {
-                setTimeout(() => this._init_url())      // wait for the site to be initialized and try again
-                return
-            // }
-            // await registry.site_pending
+            print('no registry.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
+            await delay(0)                                  // wait for the site to be initialized and try again
+            if (this._url_) return this._url_               // already initialized
         }
-
-        assert(registry.site, 'registry.site is not defined')
 
         let default_path = () => registry.site.systemPath(this)
 
@@ -1293,16 +1284,6 @@ export class RootCategory extends Category {
     }
 
     _init_class() {}                            // RootCategory's class is already set up, no need to do anything more
-
-    // async _init_url() {
-    //     if (!registry.site) {
-    //         print('no registry.site, waiting for it to be initialized...')
-    //         return await this._init_url()
-    //         // setTimeout(() => this._init_url())      // wait for the site to be initialized and try again
-    //         // return this._url_
-    //     }
-    //     return super._init_url()
-    // }
 }
 
 

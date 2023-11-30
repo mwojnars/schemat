@@ -145,7 +145,7 @@ export class Registry {
     async boot(site_id = SITE_ID) {
         /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
         this.root = await this._init_root()             // always returns a valid object, possibly created from `root_data`
-        this.site = await this._init_site(site_id)      // may return an undefined
+        this.site = await this._init_site(site_id)      // may return undefined if the record not found in DB (!)
         if (this.site) print("Registry: site loaded")
     }
 
@@ -185,7 +185,7 @@ export class Registry {
             // if (!site_id)
             //     if (this.onClient) return
             //     else site_id = await this._find_site()
-            return await (this.site_pending = this.getLoaded(site_id))
+            return await this.getLoaded(site_id)
         } catch (ex) {
             if (!(ex instanceof ItemNotFound)) throw ex
         }

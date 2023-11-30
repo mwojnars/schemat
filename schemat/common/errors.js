@@ -64,10 +64,10 @@ export class DataError extends BaseError {}
 export class ValueError extends DataError {}
 
 export class NotLinked extends BaseError {
-    constructor(obj) { super(`object is unlinked (missing ID): ${obj}`) }
+    constructor(obj) { super(`object is unlinked (missing ID)`) }
 }
 export class NotLoaded extends BaseError {
-    constructor(obj) { super(`object is not loaded yet, run 'await obj.load()': ${obj}`) }
+    constructor(obj) { super(`object is not loaded yet, run 'await obj.load()', id=${obj._id_}`) }
 }
 
 export class ServerError extends BaseError {
