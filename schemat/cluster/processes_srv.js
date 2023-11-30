@@ -93,7 +93,8 @@ export class AdminProcess extends BackendProcess {
         print(`Starting full RESET of DB, core items will be created anew in: ${file}`)
 
         let {bootstrap} = await import('../boot/bootstrap.js')
-        return bootstrap(db)
+        await bootstrap(db)
+        registry.is_closing = true
     }
 
     async CLI_move({id, newid, bottom, ring: ringName}) {

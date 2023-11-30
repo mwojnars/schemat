@@ -108,6 +108,7 @@ export class Registry {
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests
     session                 // current web Session, or undefined; max. one session is active at a given moment
+    is_closing = false      // true if the Schemat node is in the process of shutting down
 
     _cache = new ItemsCache()
 
