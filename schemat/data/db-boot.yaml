@@ -138,8 +138,9 @@
         (if any); no trailing '/'."
       "@": STRING
     default_path:
-      info: URL route of an internal application for default/admin web access to
-        items. The application should handle all items.
+      info: URL path of a default container that can be used to access any object via
+        its ID. For internal purposes. Should contain a leading slash and no
+        trailing slash.
       "@": PATH
     entries:
       values:
