@@ -277,8 +277,14 @@ export class MemoryStorage extends Storage {
            are binary keys (Uint8Array).
          */
         let sorted_keys = [...this._records.keys()].sort(compareUint8Arrays)
+        let total = sorted_keys.length
+
         let start_index = start ? sorted_keys.findIndex(key => compareUint8Arrays(key, start) >= 0) : 0
-        let stop_index = stop ? sorted_keys.findIndex(key => compareUint8Arrays(key, stop) >= 0) : sorted_keys.length
+        let stop_index = stop ? sorted_keys.findIndex(key => compareUint8Arrays(key, stop) >= 0) : total
+
+        if (start_index < 0) start_index = total
+        if (stop_index < 0) stop_index = total
+
         for (let key of sorted_keys.slice(start_index, stop_index))
             yield [key, this._records.get(key)]
     }
