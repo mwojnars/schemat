@@ -66,8 +66,6 @@
   base_url: http://127.0.0.1:3000
   default_path: /system/object
   entries:
-    $:
-      "@": 1013
     apps:
       "@": 1009
     site:
@@ -139,11 +137,6 @@
     "@": Catalog
   _category_:
     "@": 5
-  "@": Data
-- __id: 1013
-  name: /$
-  _category_:
-    "@": 8
   "@": Data
 - __id: 1014
   name: Catalog
