@@ -306,14 +306,6 @@
   entries:
     local:
       "@": 12
-    Namespace:
-      "@": 7
-    File:
-      "@": 3
-    Directory:
-      "@": 5
-    Site:
-      "@": 1
     "@": Catalog
   _category_:
     "@": 5

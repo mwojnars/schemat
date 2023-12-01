@@ -195,10 +195,6 @@ async function create_items(cat, Category) {
     item.dir_system = await cat.Directory.new({name: "/system",
         entries: C({
             'local'         : item.dir_local,
-            'Namespace'     : cat.Namespace,
-            'File'          : cat.File,
-            'Directory'     : cat.Directory,
-            'Site'          : cat.Site,
         }),
     })
 
