@@ -137,7 +137,7 @@
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
       "@": STRING
-    path_internal:
+    default_path:
       info: URL route of an internal application for default/admin web access to
         items. The application should handle all items.
       "@": PATH

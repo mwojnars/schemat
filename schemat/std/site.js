@@ -79,7 +79,7 @@ export class Site extends Directory {
     // properties:
     base_url
     entries
-    path_internal
+    default_path
 
     async __init__()  { if (this.registry.onServer) this._vm = await import('vm') }
 
@@ -275,12 +275,12 @@ export class Site extends Directory {
 
     systemURL() {
         /* Absolute base URL for system calls originating at a web client and targeting specific items. */
-        return this.base_url + this.path_internal
+        return this.base_url + this.default_path
     }
     systemPath(item) {
         /* Default absolute URL path ("system path") of the item. No domain. */
         item.assert_linked()
-        return this.path_internal + `/${item._id_}`
+        return this.default_path + `/${item._id_}`
     }
 
     urlRaw(item) {

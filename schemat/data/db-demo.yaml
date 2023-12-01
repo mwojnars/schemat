@@ -64,7 +64,7 @@
 - __id: 1004
   name: catalog_site
   base_url: http://127.0.0.1:3000
-  path_internal: /$
+  default_path: /$
   entries:
     $:
       "@": 1013
