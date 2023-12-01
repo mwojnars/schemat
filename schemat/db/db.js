@@ -47,7 +47,7 @@ export class ClientDB {
     }
 
     async _from_ajax(id) {
-        /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
+        /* Retrieve an object by its ID from a server-side DB. */
         print(`ajax download [${id}]...`)
         return $.get(`${this._url}/${id}@json`)
     }
