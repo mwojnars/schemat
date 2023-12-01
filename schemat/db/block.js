@@ -387,7 +387,7 @@ export class JsonIndexStorage extends MemoryStorage {
             let key = JSON.stringify(Array.from(binary_key))
             return json_value ? `[${key}, ${json_value}]` : `[${key}]`
         })
-        fs.writeFileSync(this.filename, lines.join('\n'), 'utf8')
+        fs.writeFileSync(this.filename, lines.join('\n') + '\n', 'utf8')
     }
 }
 

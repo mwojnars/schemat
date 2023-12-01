@@ -190,10 +190,12 @@ async function create_items(cat, Category) {
     //     // fields      : C({spaces: new CATALOG({values: new ITEM({type_exact: Category})})}),
     // })
 
-    item.dir_local  = await cat.LocalDirectory.new({name: '/local', local_path: '.'})   //path.dirname(__dirname)
+    item.default_namespace = await cat.ID_Namespace.new(14, {name: "default namespace", info: "All objects accessible by their IDs."})
+    item.dir_local  = await cat.LocalDirectory.new(12, {name: '/local', local_path: '.'})   //path.dirname(__dirname)
 
-    item.dir_system = await cat.Directory.new({name: "/system",
+    item.dir_system = await cat.Directory.new(13, {name: "/system",
         entries: C({
+            'object'        : item.default_namespace,
             'local'         : item.dir_local,
         }),
     })
