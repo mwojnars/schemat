@@ -124,7 +124,7 @@ export class AdminProcess extends BackendProcess {
             throw new Error(`target ID already exists: [${newid}]`)
 
         // identify the source ring
-        let source = await db.find_ring({item: id})
+        let source = await db.find_ring({id})
         if (source === undefined) throw new Error(`item not found: [${id}]`)
         if (source.readonly) throw new Error(`the ring '${source.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
 

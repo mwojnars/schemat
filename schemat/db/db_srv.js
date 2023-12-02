@@ -234,14 +234,14 @@ export class ServerDB {
         this.rings.push(ring)
     }
 
-    async find_ring({item, name}) {
-        /* Return the top-most ring that contains a given item's ID (`item`), or has a given ring name (`name`).
+    async find_ring({id, name}) {
+        /* Return the top-most ring that has a given object `id` in DB, or a given `name`.
            Return undefined if not found. Can be called to check if an item ID or a ring name exists.
          */
-        let req = new DataRequest(this, 'find_ring', {id: item})
+        let req = new DataRequest(this, 'find_ring', {id})
         for (const ring of this.reversed) {
             if (name && ring.name === name) return ring
-            if (item) {
+            if (id) {
                 let data = await ring.handle(req.clone(), 'get')
                 if (data !== undefined) return ring
             }
@@ -303,15 +303,10 @@ export class ServerDB {
         }
         else ring = this.reversed.find(r => r.writable(id))         // find the first ring where `id` can be written
 
-        id = await ring.handle(req)
-        return item._meta_.set_id(id)
-        
-        // for (const ring of this.reversed)
-        //     if (ring.writable(id)) {
-        //         let id = await ring.handle(req)
-        //         return item._meta_.set_id(id)
-        //     }
-
+        if (ring) {
+            id = await ring.handle(req)
+            return item._meta_.set_id(id)
+        }
         return req.error_access(id === undefined ?
             "cannot insert the item, the ring(s) are read-only" :
             "cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range"
