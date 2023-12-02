@@ -45,26 +45,6 @@ async function create_categories(Category) {
         }),
     })
 
-    // cat.Router  = await Category.new(2, {
-    //     name        : "Router",
-    //     info        : "A set of sub-applications or sub-folders, each bound to a different URL prefix.",
-    //     fields      : C({
-    //         // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
-    //         routes      : new CATALOG({values: new ITEM(), repeated: true}),
-    //     }),
-    //     class_path  : '/system/local/std/site.js:Router',
-    //     // _boot_class : 'schemat.item.Router',
-    //     // code        : dedent(`
-    //     //                 findRoute(request) {
-    //     //                     let step   = request.step()
-    //     //                     let routes = this.prop('routes')
-    //     //                     let route  = routes.get(step)
-    //     //                     if (step && route)  return [route, request.move(step)]
-    //     //                     if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
-    //     //                 }
-    //     //             `),
-    // })
-
     cat.File = await Category.new(3, {
         name        : "File",
         info        : "File with a text content.",
@@ -162,34 +142,6 @@ async function create_categories(Category) {
 async function create_items(cat, Category) {
     let item = {}
 
-    // item.test_txt = await cat.File.new({content: "This is a test file."})
-    // item.dir_tmp1 = await cat.Directory.new({files: C({'test.txt': item.test_txt})})
-    // item.dir_tmp2 = await cat.Directory.new({files: C({'tmp1': item.dir_tmp1})})
-
-    // item.app_system = await cat.Application.new({
-    //     name: "AppBasic",
-    //     info: "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
-    //
-    //     findRoute: dedent(`
-    //         let step = request.step(), id
-    //         try { id = step.split(':').map(Number) }
-    //         catch (ex) { request.throwNotFound() }
-    //         request.setDefaultMethod('@full')
-    //         return [this.registry.getItem(id), request.move(step), true]
-    //     `),
-    //     urlPath: dedent(`
-    //         console.log('AppBasic.urlPath()')
-    //         let [cid, iid] = item.id
-    //         return cid + ':' + iid
-    //     `),
-    // })
-    // item.app_spaces = await cat.Application.new({
-    //     name        : "AppSpaces",
-    //     info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
-    //     class       : 'schemat.item.AppSpaces',
-    //     // fields      : C({spaces: new CATALOG({values: new ITEM({type_exact: Category})})}),
-    // })
-
     item.default_namespace = await cat.ID_Namespace.new(14, {name: "default namespace", info: "All objects accessible by their IDs."})
     item.dir_local  = await cat.LocalDirectory.new(12, {name: '/local', local_path: '.'})   //path.dirname(__dirname)
 
@@ -204,46 +156,6 @@ async function create_items(cat, Category) {
     //     name            : "STRING",
     //     class_path      : "/system/local/type.js:STRING",
     // })
-
-    // item.utils_js   = await cat.File.new({content: `export let print = console.log`})
-    // item.widgets_js = await cat.File.new({content: dedent(`
-    //         import {print} from '../site/utils.js'
-    //         export function check() { print('called /site/widgets.js/check()') }
-    //         //let fs = await importLocal('fs')
-    //         //print('fs:',fs)
-    //     `)
-    // })
-    //
-    // item.dir_demo   = await cat.Directory.new({name: "/demo", })
-    // item.dir_apps   = await cat.Directory.new({name: "/apps", files: C({'demo': item.dir_demo})})
-    // item.dir_site   = await cat.Directory.new({name: "/site",
-    //     files: C({
-    //         'utils.js':     item.utils_js,
-    //         'widgets.js':   item.widgets_js,
-    //     })
-    // })
-    //
-    // // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    // item.dir_local = await cat.LocalDirectory.new({name: '/local', path: `${path_local}`})
-    // item.dir_files = await cat.Directory.new({name: "/files",
-    //     files: C({
-    //         'apps':     item.dir_apps,
-    //         'local':    item.dir_local,
-    //         'site':     item.dir_site,
-    //         'system':   item.dir_system,
-    //     })
-    // })
-
-    // item.router = await cat.Router.new({name: "Router",
-    //     routes: C({
-    //         'files':    item.dir_files,
-    //         '$':        item.app_system,
-    //         '':         item.app_catalog,        // default route
-    //     }),
-    // })
-
-    // item.item_002.push('name', "test_item")
-    // item.item_002.push('name', "duplicate")
 
     return item
 }
