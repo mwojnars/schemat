@@ -85,8 +85,9 @@ export class Site extends Directory {
 
     async _init_url() {
         let url = new URL(this.base_url)            // remove domain name from the base URL and keep the remaining URL path
-        this._url_  = url.pathname
-        this._path_ = url.pathname
+        // this._url_  = url.pathname
+        // this._path_ = url.pathname
+        this._url_ = '/'
         assert(this._url_[0] === '/', `incorrect base URL: ${this.base_url}`)
         // print('Site._init_url():', this._url_)
     }

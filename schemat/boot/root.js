@@ -18,6 +18,7 @@ let default_fields = new Catalog({
                                   "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items or categories - the latter case represents category inheritance. " +
                                   "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories.",
                             inherit: false}),
+    _container_ : new ITEM({info: "Parent URL container of this object where the canonical URL path of this object is defined."}),
 
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters.", default: ""}),
     info        : new TEXT({info: "Description of the item."}),

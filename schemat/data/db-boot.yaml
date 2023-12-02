@@ -90,6 +90,10 @@
             field schemas as defined in base categories.
           inherit: false
           "@": ITEM
+        _container_:
+          info: Parent URL container of this object where the canonical URL path of this
+            object is defined.
+          "@": ITEM
         name:
           info: Display name of the item. May contain spaces, punctuation, non-latin
             characters.

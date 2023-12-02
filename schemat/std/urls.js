@@ -10,8 +10,9 @@ import {UrlPathNotFound} from "../common/errors.js";
 /**********************************************************************************************************************/
 
 export class Container extends Item {
-    /* A hierarchical collection of objects that assigns unique URL paths to each object (build_url())
-       and can map a URL path back to a corresponding object (resolve()). May contain nested containers.
+    /* A collection of objects that are all published under the same URL path prefix.
+       Container can assign unique URL path segment (identifier) to each member object, and can map a relative URL path
+       back to an object (resolve()). May contain nested containers.
        Can assign "container access paths" which are like URL paths but with explicit blank segments (/*xxx);
        these paths are used internally to identify objects within a container, before a final URL is generated.
      */
