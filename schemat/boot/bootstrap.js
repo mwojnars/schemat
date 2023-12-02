@@ -253,7 +253,7 @@ async function create_items(cat, Category) {
     // })
     
     // item.catalog_wiki = await cat.Site.new({
-    //     name        : "catalog_site",
+    //     name        : "main_site",
     //     URL         : "http://127.0.0.1:3000",
     //     default_path : "/$",
     //     router      : item.router,
