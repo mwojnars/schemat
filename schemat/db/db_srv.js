@@ -212,6 +212,8 @@ export class ServerDB {
             }
 
             this.append(ring)
+            print(`...opened ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'read-write'})`)
+
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
 
             if (!ring.is_linked())
