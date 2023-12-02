@@ -233,16 +233,6 @@ async function create_items(cat, Category) {
     //         'system':   item.dir_system,
     //     })
     // })
-    //
-    // item.app_system  = await cat.AppBasic.new({name: "/$",})
-    // item.app_catalog = await cat.AppSpaces.new({name: "Catalog",
-    //     spaces: C({
-    //         'sys.category':     Category,
-    //         'sys.site':         cat.Site,
-    //         'sys.dir':          cat.Directory,
-    //         'sys.file':         cat.File,
-    //     }),
-    // })
 
     // item.router = await cat.Router.new({name: "Router",
     //     routes: C({
@@ -251,15 +241,7 @@ async function create_items(cat, Category) {
     //         '':         item.app_catalog,        // default route
     //     }),
     // })
-    
-    // item.catalog_wiki = await cat.Site.new({
-    //     name        : "main_site",
-    //     URL         : "http://127.0.0.1:3000",
-    //     default_path : "/$",
-    //     router      : item.router,
-    //     // database    : item.database,
-    // })
-    
+
     // item.item_002.push('name', "test_item")
     // item.item_002.push('name', "duplicate")
 

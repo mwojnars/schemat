@@ -139,7 +139,7 @@
     "@": 5
   "@": Data
 - __id: 1014
-  name: Catalog
+  name: main_space
   spaces:
     sys.category:
       "@": 0
