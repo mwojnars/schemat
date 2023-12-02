@@ -85,12 +85,14 @@ export class Site extends Directory {
 
     async _init_url() {
         let url = new URL(this.base_url)            // remove domain name from the base URL and keep the remaining URL path
-        this._url_ = url.pathname
+        this._url_  = url.pathname
+        this._path_ = url.pathname
         assert(this._url_[0] === '/', `incorrect base URL: ${this.base_url}`)
         // print('Site._init_url():', this._url_)
     }
 
     async resolve(path, explicit_blank = false) {
+        if (path[0] === '/') path = path.slice(1)           // drop the leading slash
         if (!path) return this
         let step = path.split('/')[0]
         let rest = path.slice(step.length + 1)
@@ -105,12 +107,12 @@ export class Site extends Directory {
             if (blank) {
                 if (!node.is_loaded()) await node.load()
                 assert(node instanceof Container, "blank route can only point to a Container (Directory, Namespace)")
-                if (explicit_blank) return rest ? node.resolve(rest) : node
-                if (node.contains(step)) return node.resolve(path)
+                if (explicit_blank) return rest ? node.resolve(rest, explicit_blank) : node
+                if (node.contains(step)) return node.resolve(path, explicit_blank)
             }
             else if (name === step) {
                 if (!node.is_loaded()) await node.load()
-                if (node instanceof Container && rest) return node.resolve(rest)
+                if (node instanceof Container && rest) return node.resolve(rest, explicit_blank)
                 else if (rest) throw new UrlPathNotFound({path})
                 else return node
             }

@@ -49,6 +49,8 @@ export let root_fields = new Catalog({
     cached_methods:new STRING({info: "Space- and/or comma-separated list of method names of this category's Class whose calls are to be cached via Item.setCaching(). Only used when a custom subclass is created through the `class_body` or `views` properties."}),
     fields       : new CATALOG({values: new TYPE(), info: "Fields must have unique names.", default: default_fields}),
     item_schema  : new ITEM_SCHEMA({info: "The DATA schema for this category's items. A virtual (non-editable) field automatically imputed from the `fields` property."}),
+    // container_path : new STRING({info: "Access path to the parent Container of this object relative to the site's root, with leading '/'. If the path passes through a blank route (/*ROUTE), the corresponding segment must be included (unlike in URLs).",
+    //                              default: "/system/object"}),
 
     // _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `class_body` is configured, the class is subclassed dynamically to insert the desired code. Should only be used for core Schemat categories."}),
     //custom_class : new BOOLEAN({info: "If true in a category, items of this category are allowed to provide their own `class_body` and `code*` implementations.", default: false}),

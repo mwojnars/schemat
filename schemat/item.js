@@ -274,6 +274,7 @@ export class Item {
 
     name
     import_path
+    container_path
 
 
     /***  System properties  ***/
@@ -454,7 +455,8 @@ export class Item {
             this._set_expiry(category?.cache_ttl)
 
             if (this.is_linked())
-                setTimeout(() => this._init_url())          // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
+                this._url_promise_ = this._init_url()
+                // setTimeout(() => this._init_url())          // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
             return this
 
@@ -518,13 +520,19 @@ export class Item {
         if (!this.container_path) {
             let url = default_path()
             print('no container_path:', url)
-            return this._url_ = url
+            return this._url_ = this._path_ = url
         }
-
         print('container_path:', this.container_path)
+
         let container = await registry.site.resolve(this.container_path, true)
-        print('container:', container)
-        let [url, duplicate] = container.build_url(this)
+        print(`container: '${container.name}'`)
+
+        // await container._url_promise_        // wait until the container's URL path is initialized
+        assert(container._path_)
+        this._path_ = container.build_path(this)
+
+        // let [url, duplicate] = container.build_url(this)
+        let [url, duplicate] = container._path_to_url(this._path_)
         print('url:', url, ` (duplicate=${duplicate})`)
 
         return this._url_ = duplicate ? default_path() : url
@@ -736,7 +744,7 @@ export class Item {
         /* `method` is an optional name of a web @method, `args` will be appended to URL as a query string. */
         let site = this.registry.site
         let app  = this.registry.session.app        // space = request.current_namespace
-        let path
+        let path = this._url_
         // let defaultApp = this.registry.site.getApplication()
         // let defaultApp = this.registry.session.apps['$']
         // app = app || defaultApp
@@ -744,11 +752,11 @@ export class Item {
         // url = site.domain + this._url_ + method + args      // absolute path
         // if (relative) url = replace(prefix in url with './')
 
-        if (app) {
-            app.assert_loaded()
-            path = app.identify(this)
-            if (path) path = './' + path            // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-        }
+        // if (app) {
+        //     app.assert_loaded()
+        //     path = app.identify(this)
+        //     if (path) path = './' + path            // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
+        // }
         if (!path)  path = site.urlRaw(this)        // fallback; urlRaw() is an absolute path, no leading ./
         if (method) path += Request.SEP_METHOD + method                 // append @method and ?args if present...
         if (args)   path += '?' + new URLSearchParams(args).toString()
