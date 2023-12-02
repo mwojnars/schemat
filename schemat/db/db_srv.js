@@ -289,18 +289,28 @@ export class ServerDB {
         return this.update(item._id_, new EditData(item.dumpData()))
     }
 
-    async insert(item) {
+    async insert(item, ring_name = null) {
         /* Find the top-most ring where the item's ID is writable and insert there. If a new ID is assigned,
-           it is written to item._id_.
+           it is written to item._id_. `ring` is an optional name of a ring to use.
          */
-        let id = item._id_
+        let id = item._id_          // can be undefined
         let req = new DataRequest(this, 'insert', {id, data: item.dumpData()})
+        let ring
 
-        for (const ring of this.reversed)
-            if (ring.writable(id)) {
-                let id = await ring.handle(req)
-                return item._meta_.set_id(id)
-            }
+        if (ring_name) {                                            // find the ring by name
+            ring = await this.find_ring({name: ring_name})
+            if (!ring) return req.error_access(`target ring not found in the database: '${ring_name}'`)
+        }
+        else ring = this.reversed.find(r => r.writable(id))         // find the first ring where `id` can be written
+
+        id = await ring.handle(req)
+        return item._meta_.set_id(id)
+        
+        // for (const ring of this.reversed)
+        //     if (ring.writable(id)) {
+        //         let id = await ring.handle(req)
+        //         return item._meta_.set_id(id)
+        //     }
 
         return req.error_access(id === undefined ?
             "cannot insert the item, the ring(s) are read-only" :

@@ -35,7 +35,8 @@ async function main() {
             //     .positional('id')
             //     .positional('newid')
         )
-        .command( 'build [path_db_boot]', 'generate the core "db-boot" database anew')
+        .command('reinsert <id> <ring>', 'remove an object from its current ring and insert it into `ring` under a new ID')
+        .command('build [path_db_boot]', 'generate the core "db-boot" database anew')
             .option('bottom', {
                 alias: 'b',
                 description: 'if set, new items are inserted at the lowest possible DB level',
