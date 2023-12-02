@@ -1,6 +1,8 @@
 /*
-    Launch & management of a Schemat cluster.
+    Launch & manage a Schemat cluster.
     TODO: move out static CLI functionality to another class & file.
+
+    Usage:   node --experimental-vm-modules cluster/manage.js [run|build|move] [options]
 */
 
 import yargs from 'yargs'
@@ -20,32 +22,29 @@ const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
 async function main() {
 
     let argv = yargs(hideBin(process.argv))
-        .command(
-            'run', 'start a Schemat cluster', {
+
+        .command('run', 'start a Schemat cluster',
+            {
                 host:       {default: HOST},
                 port:       {default: PORT},
                 workers:    {default: WORKERS},
             }
         )
-        .command(
-            'move <id> <newid>',
-            'change IID of a given item; update references in other items (if occur inside standard data types)',
+        .command('move <id> <newid>', 'change ID of an object; update references in other objects (if occur inside standard data types)',
             // (yargs) => yargs
             //     .positional('id')
             //     .positional('newid')
         )
-        .command(
-            'build [path_db_boot]', 'generate the core "db-boot" database anew',
-        )
-        .option('bottom', {
-            alias: 'b',
-            description: 'if set, new items are inserted at the lowest possible DB level',
-            type: 'boolean'
-        })
-        .option('db', {
-            description: 'name of the DB in a stack where insertion of new items should start (can propagate upwards)',
-            type: 'string'
-        })
+        .command( 'build [path_db_boot]', 'generate the core "db-boot" database anew')
+            .option('bottom', {
+                alias: 'b',
+                description: 'if set, new items are inserted at the lowest possible DB level',
+                type: 'boolean'
+            })
+            .option('db', {
+                description: 'name of the DB in a stack where insertion of new items should start (can propagate upwards)',
+                type: 'string'
+            })
 
         .demandCommand(1, 'Please provide a command to run.')
         .help().alias('help', 'h')
