@@ -300,6 +300,7 @@ export class ServerDB {
         if (ring_name) {                                            // find the ring by name
             ring = await this.find_ring({name: ring_name})
             if (!ring) return req.error_access(`target ring not found: '${ring_name}'`)
+            if (!ring.writable(id)) return req.error_access(`the ring '${ring_name}' is read-only or the ID is not writable`)
         }
         else ring = this.reversed.find(r => r.writable(id))         // find the first ring where `id` can be written
 
