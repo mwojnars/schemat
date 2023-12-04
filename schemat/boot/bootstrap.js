@@ -139,26 +139,19 @@ async function create_categories(Category) {
 
 /**********************************************************************************************************************/
 
-async function create_items(cat, Category) {
-    let item = {}
-
-    // item.default_namespace = await cat.ID_Namespace.new(14, {name: "default namespace", info: "All objects accessible by their IDs."})
-    // item.dir_local  = await cat.LocalDirectory.new(12, {name: '/local', local_path: '.'})   //path.dirname(__dirname)
-    //
-    // item.dir_system = await cat.Directory.new(13, {name: "/system",
-    //     entries: C({
-    //         'object'        : item.default_namespace,
-    //         'local'         : item.dir_local,
-    //     }),
-    // })
-
-    // item.STRING = await cat.Type.new({
-    //     name            : "STRING",
-    //     class_path      : "/system/local/type.js:STRING",
-    // })
-
-    return item
-}
+// async function create_items(cat, Category) {
+//     let item = {}
+//     // item.default_namespace = await cat.ID_Namespace.new(14, {name: "default namespace", info: "All objects accessible by their IDs."})
+//     // item.dir_local  = await cat.LocalDirectory.new(12, {name: '/local', local_path: '.'})   //path.dirname(__dirname)
+//     //
+//     // item.dir_system = await cat.Directory.new(13, {name: "/system",
+//     //     entries: C({
+//     //         'object'        : item.default_namespace,
+//     //         'local'         : item.dir_local,
+//     //     }),
+//     // })
+//     return item
+// }
 
 /**********************************************************************************************************************
  **
@@ -171,12 +164,12 @@ export async function bootstrap(db) {
     
     let Category = registry.root
     let cats  = await create_categories(Category)               // create non-root categories & leaf items
-    let items = await create_items(cats, Category)
+    // let items = await create_items(cats, Category)
 
     // insert to DB and assign item IDs if missing
-    for (let item of [Category, ...Object.values(cats), ...Object.values(items)])
+    for (let item of [Category, ...Object.values(cats)])        //...Object.values(items)
         await db.insert(item)
 
-    // await db.insert_many(Category, ...Object.values(cats), ...Object.values(items))
+    // await db.insert_many(Category, ...Object.values(cats))
 }
 
