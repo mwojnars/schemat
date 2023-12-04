@@ -71,7 +71,7 @@
     site:
       "@": 1010
     system:
-      "@": 13
+      "@": 1019
     "*root":
       "@": 1011
     "*":
@@ -166,4 +166,27 @@
   text: Ala ma kota
   _category_:
     "@": 1001
+  "@": Data
+- __id: 1019
+  name: /system
+  entries:
+    object:
+      "@": 1021
+    local:
+      "@": 1020
+    "@": Catalog
+  _category_:
+    "@": 5
+  "@": Data
+- __id: 1020
+  name: /local
+  local_path: .
+  _category_:
+    "@": 6
+  "@": Data
+- __id: 1021
+  name: default namespace
+  info: All objects accessible by their IDs.
+  _category_:
+    "@": 8
   "@": Data

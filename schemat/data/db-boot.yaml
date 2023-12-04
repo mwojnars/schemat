@@ -300,26 +300,3 @@
   _category_:
     "@": 0
   "@": Data
-- __id: 14
-  name: default namespace
-  info: All objects accessible by their IDs.
-  _category_:
-    "@": 8
-  "@": Data
-- __id: 12
-  name: /local
-  local_path: .
-  _category_:
-    "@": 6
-  "@": Data
-- __id: 13
-  name: /system
-  entries:
-    object:
-      "@": 14
-    local:
-      "@": 12
-    "@": Catalog
-  _category_:
-    "@": 5
-  "@": Data

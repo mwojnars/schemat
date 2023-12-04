@@ -142,15 +142,15 @@ async function create_categories(Category) {
 async function create_items(cat, Category) {
     let item = {}
 
-    item.default_namespace = await cat.ID_Namespace.new(14, {name: "default namespace", info: "All objects accessible by their IDs."})
-    item.dir_local  = await cat.LocalDirectory.new(12, {name: '/local', local_path: '.'})   //path.dirname(__dirname)
-
-    item.dir_system = await cat.Directory.new(13, {name: "/system",
-        entries: C({
-            'object'        : item.default_namespace,
-            'local'         : item.dir_local,
-        }),
-    })
+    // item.default_namespace = await cat.ID_Namespace.new(14, {name: "default namespace", info: "All objects accessible by their IDs."})
+    // item.dir_local  = await cat.LocalDirectory.new(12, {name: '/local', local_path: '.'})   //path.dirname(__dirname)
+    //
+    // item.dir_system = await cat.Directory.new(13, {name: "/system",
+    //     entries: C({
+    //         'object'        : item.default_namespace,
+    //         'local'         : item.dir_local,
+    //     }),
+    // })
 
     // item.STRING = await cat.Type.new({
     //     name            : "STRING",
