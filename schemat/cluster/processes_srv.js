@@ -146,8 +146,10 @@ export class AdminProcess extends BackendProcess {
         print('move: done')
     }
 
-    async _update_references(id, newid) {
-        let new_item = registry.getItem(newid)
+    async _update_references(id, new_id) {
+        if (id === new_id) return
+        let new_item = registry.getItem(new_id)
+
         for await (let ref of registry.scan_all()) {           // search for references to `id` in a referrer item, `ref`
             await ref.load()
             let prev_json = ref._record_.data_json
@@ -173,11 +175,11 @@ export class AdminProcess extends BackendProcess {
         let ring = await db.find_ring({name: ring_name})
 
         await db.delete(id)
-        let newid = await ring.insert(null, item.dumpData())
+        let new_id = await ring.insert(null, item.dumpData())
 
-        // update references
+        await this._update_references(id, new_id)
 
-        print(`reinserted item [${id}] as [${newid}]`)
+        print(`reinserted item [${id}] as [${new_id}]`)
     }
 
     async _update_all() {
