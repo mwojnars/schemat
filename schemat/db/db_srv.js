@@ -124,7 +124,7 @@ export class Ring extends Item {
         return this.data_sequence.handle(req.make_step(this, command))
     }
 
-    // shortcut methods for handle() ...
+    // shortcut methods for handle() when the ring needs to be accessed directly without a database ...
 
     async select(id, req = null) {
         req = req || new DataRequest()
@@ -136,9 +136,9 @@ export class Ring extends Item {
         return this.handle(req.safe_step(null, 'delete', {id}))
     }
 
-    async _insert(id, data) {
-        /* For internal use when a ring needs to be accessed directly without a database. */
-        return this.handle(new DataRequest(this, 'insert', {id, data}))
+    async insert(id, data, req = null) {
+        req = req || new DataRequest()
+        return this.handle(req.safe_step(this, 'insert', {id, data}))
     }
 
     async _update(item) {
@@ -156,7 +156,7 @@ export class Ring extends Item {
 
         // 1st phase: insert stubs
         for (let item of items)
-            item._meta_.set_id(await this._insert(item._id_, empty_data))
+            item._meta_.set_id(await this.insert(item._id_, empty_data))
 
         // 2nd phase: update items with actual data
         for (let item of items) {
