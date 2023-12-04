@@ -81,7 +81,7 @@ export class Block extends Item {
         /* Write the `data` here in this block under the `id` and propagate the change to derived indexes.
            No forward of the request to another ring.
          */
-        let {key, value} = req.args                  // handle 'value' arg instead of 'data'?
+        let {key, value} = req.args                     // handle 'value' arg instead of 'data'?
         let value_old = await this._storage.get(key) || null
         await this._storage.put(key, value)
         this._flush(req)
@@ -89,10 +89,10 @@ export class Block extends Item {
     }
 
     async del(req) {
-        let {key, value} = req.args
+        let {key, value} = req.args                     // `value` is needed for change calculation & propagation
 
         if (value === undefined) value = await this._storage.get(key)
-        if (value === undefined) return false        // TODO: notify about data inconsistency (there should no missing records)
+        if (value === undefined) return false           // TODO: notify about data inconsistency (there should no missing records)
 
         let deleted = this._storage.del(key)
         this._flush(req)
@@ -208,17 +208,13 @@ export class DataBlock extends Block {
          */
         let {key} = req.args
         let data = await this._storage.get(key)
+        if (data === undefined) return req.forward_down()
 
-        // in a read-only ring no delete can be done: check if the record exists and either forward or throw an error
-        if (req.current_ring.readonly)
-            if (data === undefined)
-                return req.forward_down()
-            else
-                return req.error_access("cannot remove the item, the ring is read-only")
+        if (req.current_ring.readonly)                                  // in a read-only ring no delete can be done
+            return req.error_access("cannot remove the item, the ring is read-only")
 
-        // perform the delete
         req = req.make_step(this, null, {key, value: data})
-        return this.del(req)
+        return this.del(req)                                            // perform the delete
     }
 
     async erase(req) {
