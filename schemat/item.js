@@ -380,6 +380,10 @@ export class Item {
         return item
     }
 
+    static async from_data(id, data) {
+        return Item.from_record(new ItemRecord(id, data))
+    }
+
     static async from_binary(binary_record /*Record*/) {
         let item_record = ItemRecord.from_binary(binary_record)
         return Item.from_record(item_record)
@@ -1039,7 +1043,7 @@ export class Category extends Item {
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
         data.set('_category_', this)
-        return Item.from_record(new ItemRecord(id, data))
+        return Item.from_data(id, data)
     }
 
     async getItemClass() {

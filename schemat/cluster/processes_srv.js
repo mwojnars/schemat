@@ -98,16 +98,13 @@ export class AdminProcess extends BackendProcess {
         registry.is_closing = true
     }
 
-    async CLI_move({id, newid, bottom, ring: ringName}) {
+    async CLI_move({id, newid, bottom, ring: ring_name}) {
         /* Move an item to a different ring, or change its IID. */
 
         await this.cluster.startup()
 
-        function convert(id_)   { return (typeof id_ === 'string') ? Number(id_) : id_ }
-        // function convert(id_)   { return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_ }
-
-        id = convert(id)
-        newid = convert(newid)
+        id = Number(id)
+        newid = Number(newid)
 
         let db = this.db
         let sameID = (id === newid)
@@ -129,7 +126,7 @@ export class AdminProcess extends BackendProcess {
         if (source.readonly) throw new Error(`the ring '${source.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
 
         // identify the target ring
-        let target = ringName ? await db.find_ring({name: ringName}) : bottom ? db.bottom : source
+        let target = ring_name ? await db.find_ring({name: ring_name}) : bottom ? db.bottom : source
 
         if (sameID && source === target)
             throw new Error(`trying to move a record [${id}] to the same ring (${source.name}) without change of ID`)
@@ -178,8 +175,22 @@ export class AdminProcess extends BackendProcess {
             await this.db.update_full(item)
     }
 
+    async CLI_reinsert({id, ring: ring_name}) {
+        /* Move an item to a different ring, or change its IID. */
+
+        await this.cluster.startup()
+
+        id = Number(id)
+        let db = this.db
+        // let req = new DataRequest(this, 'reinsert')
+
+        let item = await registry.getLoaded(id)
+
+        db.insert(item, ring_name)
+    }
+
     async _reinsert_all() {
-        /* Re-insert every item so that it receives a new ID. Update references in other items. */
+        /* Re-insert every item to the same ring so that it receives a new ID. Update references in other items. */
         let db = this.db
         let req = new DataRequest(this, 'reinsert_all')
 
@@ -191,13 +202,11 @@ export class AdminProcess extends BackendProcess {
             for (const id of ids) {
                 // the record might have been modified during this loop - must re-read ("select")
                 let data = await ring.handle(req.safe_step(null, 'select', {id}))
-
-                // let item = await globalThis.registry.makeItem(new ItemRecord(id, data))
-                let item = await Item.from_record(new ItemRecord(id, data))
+                let item = await Item.from_data(id, data)
 
                 print(`reinserting item [${id}]...`)
                 let new_id = await ring.handle(req.safe_step(null, 'insert', {data: item.dumpData()}))
-                item = await Item.from_record(new ItemRecord(new_id, data))
+                item = await Item.from_data(new_id, data)
 
                 print(`...new id=[${new_id}]`)
                 await this._update_references(id, item)

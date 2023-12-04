@@ -35,7 +35,7 @@ async function main() {
             //     .positional('id')
             //     .positional('newid')
         )
-        .command('reinsert <id> <ring>', 'remove an object from its current ring and insert it into `ring` under a new ID')
+        .command('reinsert <id> <ring>', 'remove an object from its current ring and insert into `ring` under a new ID')
         .command('build [path_db_boot]', 'generate the core "db-boot" database anew')
             .option('bottom', {
                 alias: 'b',
