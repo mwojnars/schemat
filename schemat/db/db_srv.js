@@ -124,6 +124,13 @@ export class Ring extends Item {
         return this.data_sequence.handle(req.make_step(this, command))
     }
 
+    // shortcut methods for handle() ...
+
+    async select(id, req = null) {
+        req = req || new DataRequest()
+        return this.handle(req.safe_step(this, 'select', {id}))
+    }
+
     async _insert(id, data) {
         /* For internal use when a ring needs to be accessed directly without a database. */
         return this.handle(new DataRequest(this, 'insert', {id, data}))
