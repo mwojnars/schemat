@@ -182,10 +182,12 @@ export class AdminProcess extends BackendProcess {
 
         id = Number(id)
         let db = this.db
-
         let item = await registry.getLoaded(id)
+        let ring = await db.find_ring({name: ring_name})
 
-        db.insert(item, ring_name)
+        await db.delete(id)
+        let newid = await ring.insert(null, item.dumpData())
+        print(`reinserted item [${id}] as [${newid}]`)
     }
 
     async _reinsert_all() {
