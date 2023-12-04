@@ -51,11 +51,7 @@ async function main() {
         .help().alias('help', 'h')
         .argv
 
-    let commands = [
-        'run',
-        'move',
-        'build',
-    ]
+    let commands = ['run', 'move', 'build', 'reinsert']
 
     let cmd = argv._[0]
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
