@@ -137,42 +137,29 @@ export class AdminProcess extends BackendProcess {
         let data = await source.select(id, req)
         await db.save(req.safe_step(target, 'save', {id: newid, data}))
 
-        if (!sameID) {
-            // // update children of a category item: change their CID to `new_iid`
-            // if (cid === ROOT_ID && !sameID)
-            //     for await (let {id: child_id} of db.scan(iid))
-            //         await this.move({id: child_id, newid: [new_iid, child_id[1]]})
-
-            // update references
-            let newItem = globalThis.registry.getItem(newid)
-            for await (let ref of globalThis.registry.scan_all()) {           // search for references to `id` in a referrer item, `ref`
-                await ref.load()
-                let prev_json = ref._record_.data_json
-                ref._data_.transform({value: item => (item._id_ !== undefined && item._id_ === id) ? newItem : item})
-                let new_json = JSONx.stringify(ref._data_)
-                if (new_json !== prev_json) {
-                    print(`move: updating reference(s) in ID=${ref._id_}`)
-                    await db.update(ref)
-                }
-            }
-        }
+        if (!sameID) await this._update_references(id, newid)
 
         // remove the old item from DB
-        try {
-            await source.delete(id, req)
-        }
+        try { await source.delete(id, req) }
         catch (ex) { print("WARNING:", ex) }
 
         print('move: done')
     }
 
-    async _update_all() {
-        /* Perform "update in place" on every item in the database, for instance, to force conversion of the items
-           to a new format. All rings in the DB must be set as writable (!), otherwise the update will write a copy
-           of an item in another ring instead of updating in place.
-         */
-        for await (let item of globalThis.registry.scan_all())
-            await this.db.update_full(item)
+    async _update_references(id, newid) {
+        let new_item = registry.getItem(newid)
+        for await (let ref of registry.scan_all()) {           // search for references to `id` in a referrer item, `ref`
+            await ref.load()
+            let prev_json = ref._record_.data_json
+
+            ref._data_.transform({value: item => (item._id_ !== undefined && item._id_ === id) ? new_item : item})
+            let new_json = JSONx.stringify(ref._data_)
+
+            if (new_json !== prev_json) {
+                print(`updating reference(s) in ID=${ref._id_}`)
+                await this.db.update(ref)
+            }
+        }
     }
 
     async CLI_reinsert({id, ring: ring_name}) {
@@ -187,7 +174,19 @@ export class AdminProcess extends BackendProcess {
 
         await db.delete(id)
         let newid = await ring.insert(null, item.dumpData())
+
+        // update references
+
         print(`reinserted item [${id}] as [${newid}]`)
+    }
+
+    async _update_all() {
+        /* Perform "update in place" on every item in the database, for instance, to force conversion of the items
+           to a new format. All rings in the DB must be set as writable (!), otherwise the update will write a copy
+           of an item in another ring instead of updating in place.
+         */
+        for await (let item of globalThis.registry.scan_all())
+            await this.db.update_full(item)
     }
 
     async _reinsert_all() {
