@@ -182,7 +182,6 @@ export class AdminProcess extends BackendProcess {
 
         id = Number(id)
         let db = this.db
-        // let req = new DataRequest(this, 'reinsert')
 
         let item = await registry.getLoaded(id)
 
@@ -192,7 +191,6 @@ export class AdminProcess extends BackendProcess {
     async _reinsert_all() {
         /* Re-insert every item to the same ring so that it receives a new ID. Update references in other items. */
         let db = this.db
-        let req = new DataRequest(this, 'reinsert_all')
 
         for (let ring of db.rings) {
             if (ring.readonly) continue
@@ -201,16 +199,16 @@ export class AdminProcess extends BackendProcess {
 
             for (const id of ids) {
                 // the record might have been modified during this loop - must re-read ("select")
-                let data = await ring.select(id, req)
+                let data = await ring.select(id)
                 let item = await Item.from_data(id, data)
 
                 print(`reinserting item [${id}]...`)
-                let new_id = await ring.insert(null, item.dumpData(), req)
+                let new_id = await ring.insert(null, item.dumpData())
                 item = await Item.from_data(new_id, data)
 
                 print(`...new id=[${new_id}]`)
                 await this._update_references(id, item)
-                await ring.delete(id, req)
+                await ring.delete(id)
                 // await ring.flush()
             }
         }
