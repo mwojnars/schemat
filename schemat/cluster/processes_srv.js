@@ -169,7 +169,7 @@ export class AdminProcess extends BackendProcess {
         let item = Item.create_stub(new_id)
 
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
-        let transform = (it => it._id_ === old_id ? item : it)
+        let transform = (it => it?._id_ === old_id ? item : it)
 
         for (let ring of this.db.rings) {
             for await (const record of ring.scan_all()) {               // search for references to `old_id` in all records
@@ -196,7 +196,7 @@ export class AdminProcess extends BackendProcess {
     //     let new_item = Item.create_stub(new_id)
     //
     //     // transform function: checks if a sub-object is an item of ID=old_id and replaces it with `item` if so
-    //     let transform = (it => it._id_ === id ? new_item : it)
+    //     let transform = (it => it?._id_ === old_id ? item : it)
     //
     //     for await (let ref of registry.scan_all()) {           // search for references to `id` in a referrer item, `ref`
     //         await ref.load()
