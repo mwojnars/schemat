@@ -174,8 +174,9 @@ export class AdminProcess extends BackendProcess {
         for (let ring of this.db.rings) {
             for await (const record of ring.scan_all()) {               // search for references to `old_id` in all records
                 let id = record.id
-                let data = JSONx.transform(record.data, transform)
-                if (data === record.data) continue                      // no changes? don't update the record
+                let json = record.data_json
+                let data = JSONx.transform(json, transform)             // new json data
+                if (data === json) continue                             // no changes? don't update the record
 
                 if (ring.readonly)
                     print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
