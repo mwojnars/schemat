@@ -141,10 +141,13 @@ export class Ring extends Item {
         return this.handle(req.safe_step(this, 'insert', {id, data}))
     }
 
-    async update(item, req = null) {
+    async update(id_or_item, data = null, req = null) {
         req = req || new DataRequest()
-        let edits = [new EditData(item.dumpData())]
-        return this.handle(req.safe_step(this, 'update', {id: item._id_, edits}))
+        let item = T.isNumber(id_or_item) ? null : id_or_item
+        let id = item ? item._id_ : id_or_item
+        if (!data) data = item.dumpData()
+        let edits = [new EditData(data)]
+        return this.handle(req.safe_step(this, 'update', {id, edits}))
     }
 
     async insert_many(...items) {

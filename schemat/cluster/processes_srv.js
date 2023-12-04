@@ -99,7 +99,7 @@ export class AdminProcess extends BackendProcess {
     }
 
     async CLI_move({id, newid, bottom, ring: ring_name}) {
-        /* Move an item to a different ring, or change its IID. */
+        /* Move an item to a different ring, or change its ID. */
 
         await this.cluster.startup()
 
@@ -146,26 +146,8 @@ export class AdminProcess extends BackendProcess {
         print('move: done')
     }
 
-    async _update_references(id, new_id) {
-        if (id === new_id) return
-        let new_item = registry.getItem(new_id)
-
-        for await (let ref of registry.scan_all()) {           // search for references to `id` in a referrer item, `ref`
-            await ref.load()
-            let prev_json = ref._record_.data_json
-
-            ref._data_.transform({value: item => (item._id_ !== undefined && item._id_ === id) ? new_item : item})
-            let new_json = JSONx.stringify(ref._data_)
-
-            if (new_json !== prev_json) {
-                print(`updating reference(s) in ID=${ref._id_}`)
-                await this.db.update(ref)
-            }
-        }
-    }
-
     async CLI_reinsert({id, ring: ring_name}) {
-        /* Move an item to a different ring, or change its IID. */
+        /* Remove an object from its current ring and insert into `ring` under a new ID. */
 
         await this.cluster.startup()
 
@@ -173,14 +155,61 @@ export class AdminProcess extends BackendProcess {
         let db = this.db
         let item = await registry.getLoaded(id)
         let ring = await db.find_ring({name: ring_name})
-
-        await db.delete(id)
         let new_id = await ring.insert(null, item.dumpData())
 
+        await db.delete(id)
         await this._update_references(id, new_id)
 
         print(`reinserted item [${id}] as [${new_id}]`)
     }
+
+    async _update_references(old_id, new_id) {
+        /* Scan all items in the DB and replace references to `old_id` with references to `item`. */
+        if (old_id === new_id) return
+        let item = Item.create_stub(new_id)
+
+        // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
+        let transform = (it => it._id_ === old_id ? item : it)
+
+        for (let ring of this.db.rings) {
+            for await (const record of ring.scan_all()) {               // search for references to `old_id` in all records
+                let id = record.id
+                let data = JSONx.transform(record.data, transform)
+                if (data === record.data) continue                      // no changes? don't update the record
+
+                if (ring.readonly)
+                    print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
+                else {
+                    print(`...updating reference(s) in object [${id}]`)
+                    await ring.update(id, data)
+                    // await this.db.update(id, new EditData(data))
+                    // await ring.flush()
+                }
+            }
+        }
+    }
+
+    // async _update_references_2(id, new_id) {
+    //     if (id === new_id) return
+    //     // let new_item = registry.getItem(new_id)
+    //     let new_item = Item.create_stub(new_id)
+    //
+    //     // transform function: checks if a sub-object is an item of ID=old_id and replaces it with `item` if so
+    //     let transform = (it => it._id_ === id ? new_item : it)
+    //
+    //     for await (let ref of registry.scan_all()) {           // search for references to `id` in a referrer item, `ref`
+    //         await ref.load()
+    //         let prev_json = ref._record_.data_json
+    //
+    //         ref._data_.transform({value: transform})
+    //         let new_json = JSONx.stringify(ref._data_)
+    //
+    //         if (new_json !== prev_json) {
+    //             print(`updating reference(s) in ID=${ref._id_}`)
+    //             await this.db.update_full(ref)
+    //         }
+    //     }
+    // }
 
     async _update_all() {
         /* Perform "update in place" on every item in the database, for instance, to force conversion of the items
@@ -207,37 +236,12 @@ export class AdminProcess extends BackendProcess {
 
                 print(`reinserting item [${id}]...`)
                 let new_id = await ring.insert(null, item.dumpData())
-                item = await Item.from_data(new_id, data)
+                // item = await Item.from_data(new_id, data)
 
                 print(`...new id=[${new_id}]`)
-                await this._update_references(id, item)
+                await this._update_references(id, new_id)
                 await ring.delete(id)
                 // await ring.flush()
-            }
-        }
-    }
-
-    async _update_references(old_id, item) {
-        /* Scan all items in the DB and replace references to `old_id` with references to `item`. */
-        let db = this.db
-
-        // transform function: checks if a sub-object is an item of ID=old_id and replaces it with `item` if so
-        let transform = (it => it._id_ === old_id ? item : it)
-
-        for (let ring of db.rings) {
-            for await (const record of ring.scan_all()) {        // search for references to `old_id` in a referrer item, `ref`
-
-                let id = record.id
-                let data = JSONx.transform(record.data, transform)
-                if (data === record.data) continue          // no changes? don't update the `ref` item
-
-                if (ring.readonly)
-                    print(`...WARNING: cannot update a reference [${old_id}] > [${item._id_}] in item [${id}], the ring is read-only`)
-                else {
-                    print(`...updating reference(s) in item [${id}]`)
-                    await db.update(id, new EditData(data))
-                    // await ring.flush()
-                }
             }
         }
     }
