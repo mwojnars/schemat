@@ -141,10 +141,10 @@ export class Ring extends Item {
         return this.handle(req.safe_step(this, 'insert', {id, data}))
     }
 
-    async _update(item) {
-        /* For internal use when a ring needs to be accessed directly without a database. */
+    async update(item, req = null) {
+        req = req || new DataRequest()
         let edits = [new EditData(item.dumpData())]
-        return this.handle(new DataRequest(this, 'update', {id: item._id_, edits}))
+        return this.handle(req.safe_step(this, 'update', {id: item._id_, edits}))
     }
 
     async insert_many(...items) {
@@ -162,7 +162,7 @@ export class Ring extends Item {
         for (let item of items) {
             // if item has no _data_, create it from the object's properties
             item._data_ = item._data_ || object_to_item_data(item)
-            await this._update(item)
+            await this.update(item)
         }
     }
 
