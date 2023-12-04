@@ -110,13 +110,6 @@ export class AdminProcess extends BackendProcess {
         let sameID = (id === newid)
         let req = new DataRequest(this, 'CLI_move', {id})
 
-        // let [cid, iid] = id
-        // let [new_cid, new_iid] = newid
-        // let sameID = (cid === new_cid && iid === new_iid)
-
-        // if ((cid === ROOT_ID || new_cid === ROOT_ID) && cid !== new_cid)
-        //     throw new Error(`cannot change a category item (CID=${ROOT_ID}) to a non-category (CID=${cid || new_cid}) or back`)
-
         if (!sameID && await db.select(req.safe_step(null, 'check-not-exists', {id: newid})))
             throw new Error(`target ID already exists: [${newid}]`)
 
@@ -150,6 +143,7 @@ export class AdminProcess extends BackendProcess {
         /* Remove an object from its current ring and insert into `ring` under a new ID. */
 
         await this.cluster.startup()
+        print(`\nreinserting item [${id}]...`)
 
         id = Number(id)
         let db = this.db
@@ -160,7 +154,7 @@ export class AdminProcess extends BackendProcess {
         await db.delete(id)
         await this._update_references(id, new_id)
 
-        print(`reinserted item [${id}] as [${new_id}]`)
+        print(`...reinserted item [${id}] as [${new_id}]\n`)
     }
 
     async _update_references(old_id, new_id) {
