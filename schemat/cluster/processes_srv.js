@@ -159,7 +159,7 @@ export class AdminProcess extends BackendProcess {
 
         // remove the old item from DB
         try {
-            await source.handle(req.safe_step(null, 'delete', {id}))
+            await source.delete(id, req)
         }
         catch (ex) { print("WARNING:", ex) }
 
@@ -210,7 +210,7 @@ export class AdminProcess extends BackendProcess {
 
                 print(`...new id=[${new_id}]`)
                 await this._update_references(id, item)
-                await ring.handle(req.safe_step(null, 'delete', {id}))
+                await ring.delete(id, req)
                 // await ring.flush()
             }
         }
