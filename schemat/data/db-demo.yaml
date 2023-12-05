@@ -84,6 +84,8 @@
   content: export let print = console.log
   _category_:
     "@": 3
+  _container_:
+    "@": 1010
   "@": Data
 - __id: 1006
   content: |-
@@ -93,6 +95,8 @@
     //print('fs:',fs)
   _category_:
     "@": 3
+  _container_:
+    "@": 1010
   "@": Data
 - __id: 1007
   name: favicon.ico
