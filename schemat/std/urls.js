@@ -51,6 +51,10 @@ export class Container extends Item {
         assert(this._path_[0] === '/', `_path_ must start with '/'`)
         let ident = this.identify(member)
         assert(ident, `object is not a member of this container`)
+
+        // the last char in _path_ can be '/' for a site (_path_='/'); don't include extra '/' in such case
+        if (this._path_.endsWith('/')) return this._path_ + ident
+
         return this._path_ + '/' + ident
     }
 
