@@ -274,7 +274,6 @@ export class Item {
 
     name
     import_path
-    container_path
     _container_
 
 
@@ -526,15 +525,13 @@ export class Item {
         let container
 
         if (this._container_)           container = await this._container_.load()
-        else if (this.container_path)   container = await site.resolve(this.container_path, true)
+        // else if (this.container_path)   container = await site.resolve(this.container_path, true)
         else {
             let url = default_path()
-            // print('_init_url() no container_path:', url)
+            // print('_init_url() missing _container_:', url)
             return this._url_ = this._path_ = url
         }
-        // print('_init_url() container_path:', this.container_path)
         // let container = await registry.site.resolve(this.container_path, true)
-        // let container = this._container_ ? await this._container_.load() : await site.resolve(this.container_path, true)
         // print(`_init_url() container: '${container.name}'`)
 
         // await container._url_promise_        // wait until the container's URL path is initialized

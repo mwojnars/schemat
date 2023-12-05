@@ -17,11 +17,6 @@ export class Container extends Item {
        these paths are used internally to identify objects within a container, before a final URL is generated.
      */
 
-    // async _init_url() {
-    //     if (!this.container_path) throw new Error(`container_path is obligatory for a container`)
-    //     await super._init_url()
-    // }
-
     contains(name) { return true }
 
     resolve(path, explicit_blank = false) {
