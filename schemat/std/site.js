@@ -225,7 +225,7 @@ export class Site extends Directory {
 
     async localImport(path) {
         /* Import a module from the local installation (server-side) using standard import(); return a vm.SyntheticModule. */
-        print('localImport() path:', path)
+        // print('localImport() path:', path)
         const vm    = this._vm
         let local   = await import(path)
         let context = vm.createContext(globalThis)

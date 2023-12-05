@@ -528,7 +528,7 @@ export class Item {
         // else if (this.container_path)   container = await site.resolve(this.container_path, true)
         else {
             let url = default_path()
-            // print('_init_url() missing _container_:', url)
+            print('missing _container_:', url, `(${this.name})`)
             return this._url_ = this._path_ = url
         }
         // let container = await registry.site.resolve(this.container_path, true)
@@ -537,7 +537,7 @@ export class Item {
         // await container._url_promise_        // wait until the container's URL path is initialized
         this._path_ = container.build_path(this)
         let [url, duplicate] = site.path_to_url(this._path_)
-        print('_init_url():', url, ` (duplicate=${duplicate})`)
+        // print('_init_url():', url, ` (duplicate=${duplicate})`)
 
         return this._url_ = duplicate ? default_path() : url
     }
