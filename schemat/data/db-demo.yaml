@@ -100,9 +100,11 @@
   "@": Data
 - __id: 1007
   name: favicon.ico
-  path: ./assets/favicon.ico
+  local_path: ./assets/favicon.ico
   _category_:
     "@": 4
+  _container_:
+    "@": 1011
   "@": Data
 - __id: 1008
   name: /demo
