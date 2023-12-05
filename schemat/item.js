@@ -524,8 +524,6 @@ export class Item {
         let default_path = () => site.systemPath(this)
         let container = this._container_
 
-        // if (this._container_)           container = await this._container_.load()
-        // else if (this.container_path)   container = await site.resolve(this.container_path, true)
         if (!container) {
             let url = default_path()
             print('missing _container_:', url, `(${this.name})`)

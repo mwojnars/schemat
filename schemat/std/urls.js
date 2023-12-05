@@ -43,8 +43,8 @@ export class Container extends Item {
         /* Return an access path to `member` including the path from root to this container.
            The access path is like a URL path, but with explicit blank segments: /*BLANK
          */
-        assert(this._path_, `_path_ is not initialized (${this.name} ${this._id_})`)
-        assert(this._path_[0] === '/', `_path_ must start with '/'`)
+        assert(this._path_, `container's _path_ is not initialized (${this.name} ${this._id_})`)
+        assert(this._path_[0] === '/', `container's _path_ must start with '/'`)
 
         let ident = this.identify(member)
         assert(ident, `object is not a member of this container`)
