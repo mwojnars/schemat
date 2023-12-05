@@ -513,12 +513,12 @@ export class Item {
 
         let site = registry.site
 
-        // wait until the site is initialized and its URL path is known; wait and try again if needed
-        while (!site?._url_) {
+        while (!site) {                                         // wait until the site is created (important for bootstrap objects)
             // print('no registry.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
-            await delay(100)
-            if (this._url_) return this._url_               // already initialized?
-            if (registry.is_closing) return undefined       // site is closing? no need to wait any longer
+            await delay()
+            if (this._url_) return this._url_                   // already initialized?
+            if (registry.is_closing) return undefined           // site is closing? no need to wait any longer
+            site = registry.site
         }
 
         let default_path = () => site.systemPath(this)
