@@ -104,6 +104,8 @@
   name: /demo
   _category_:
     "@": 5
+  _container_:
+    "@": 1009
   "@": Data
 - __id: 1009
   name: /apps
@@ -193,10 +195,14 @@
   local_path: .
   _category_:
     "@": 6
+  _container_:
+    "@": 1019
   "@": Data
 - __id: 1021
   name: default namespace
   info: All objects accessible by their IDs.
   _category_:
     "@": 8
+  _container_:
+    "@": 1019
   "@": Data
