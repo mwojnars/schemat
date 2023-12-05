@@ -115,6 +115,8 @@
     "@": Catalog
   _category_:
     "@": 5
+  _container_:
+    "@": 1004
   "@": Data
 - __id: 1010
   name: /site
@@ -126,6 +128,8 @@
     "@": Catalog
   _category_:
     "@": 5
+  _container_:
+    "@": 1004
   "@": Data
 - __id: 1011
   name: domain
@@ -137,6 +141,8 @@
     "@": Catalog
   _category_:
     "@": 5
+  _container_:
+    "@": 1004
   "@": Data
 - __id: 1014
   name: main_space
@@ -152,6 +158,8 @@
     "@": Catalog
   _category_:
     "@": 9
+  _container_:
+    "@": 1004
   "@": Data
 - __id: 1016
   title: Ala ma kota Sierściucha i psa Kłapoucha.
@@ -177,6 +185,8 @@
     "@": Catalog
   _category_:
     "@": 5
+  _container_:
+    "@": 1004
   "@": Data
 - __id: 1020
   name: /local
