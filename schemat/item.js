@@ -185,7 +185,7 @@ const proxy_handler = {
     UNDEFINED: Symbol.for('proxy_handler.UNDEFINED'),
 
     // these props can never be found inside item's schema and should always be accessed as regular object attributes
-    RESERVED: ['_id_', '_meta_', '_data_', '_record_', '_url_', '_path_'],
+    RESERVED: ['_id_', '_meta_', '_data_', '_record_', '_url_', '_path_', '_url_promise_'],
 
     get(target, prop, receiver) {
         let UNDEF = proxy_handler.UNDEFINED
@@ -522,11 +522,11 @@ export class Item {
         }
 
         let default_path = () => site.systemPath(this)
-        let container
+        let container = this._container_
 
-        if (this._container_)           container = await this._container_.load()
+        // if (this._container_)           container = await this._container_.load()
         // else if (this.container_path)   container = await site.resolve(this.container_path, true)
-        else {
+        if (!container) {
             let url = default_path()
             print('missing _container_:', url, `(${this.name})`)
             return this._url_ = this._path_ = url
@@ -534,7 +534,11 @@ export class Item {
         // let container = await registry.site.resolve(this.container_path, true)
         // print(`_init_url() container: '${container.name}'`)
 
-        // await container._url_promise_        // wait until the container's URL path is initialized
+        if (!container.is_loaded()) {
+            await container.load()
+            await container._url_promise_                   // wait until the container's path is initialized
+        }
+
         this._path_ = container.build_path(this)
         let [url, duplicate] = site.path_to_url(this._path_)
         // print('_init_url():', url, ` (duplicate=${duplicate})`)
