@@ -86,7 +86,7 @@ export class Directory extends Container {
     identify(item) {
         item.assert_linked()
         let id = item._id_
-        for (let [name, ref] of this.entries)
+        for (let {key: name, value: ref} of this.entries)
             if (ref._id_ === id) return name
     }
 

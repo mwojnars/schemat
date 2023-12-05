@@ -185,7 +185,7 @@ const proxy_handler = {
     UNDEFINED: Symbol.for('proxy_handler.UNDEFINED'),
 
     // these props can never be found inside item's schema and should always be accessed as regular object attributes
-    RESERVED: ['_id_', '_meta_', '_data_', '_record_', '_url_', '_container_'],
+    RESERVED: ['_id_', '_meta_', '_data_', '_record_', '_url_', '_path_'],
 
     get(target, prop, receiver) {
         let UNDEF = proxy_handler.UNDEFINED
@@ -529,7 +529,7 @@ export class Item {
         else if (this.container_path)   container = await site.resolve(this.container_path, true)
         else {
             let url = default_path()
-            print('_init_url() no container_path:', url)
+            // print('_init_url() no container_path:', url)
             return this._url_ = this._path_ = url
         }
         // print('_init_url() container_path:', this.container_path)

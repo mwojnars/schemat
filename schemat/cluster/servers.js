@@ -60,7 +60,7 @@ export class WebServer extends Server {
 
     async handle(req, res) {
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
-        print(`Server.handle() worker ${process.pid}:`, req.path)
+        // print(`Server.handle() worker ${process.pid}:`, req.path)
 
         await session.start()
         // let request = new Request({req, res, session})
@@ -75,9 +75,9 @@ export class WebServer extends Server {
                 try { res.sendStatus(ex.code || 500) } catch(e){}
             }
 
-            // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
-            let {check} = await registry.site.importModule("/site/widgets.js")
-            check()
+            // // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
+            // let {check} = await registry.site.importModule("/site/widgets.js")
+            // check()
         })
 
         // await sleep(200)                 // for testing
