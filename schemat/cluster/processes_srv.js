@@ -184,28 +184,6 @@ export class AdminProcess extends BackendProcess {
         }
     }
 
-    // async _update_references_2(id, new_id) {
-    //     if (id === new_id) return
-    //     // let new_item = registry.getItem(new_id)
-    //     let new_item = Item.create_stub(new_id)
-    //
-    //     // transform function: checks if a sub-object is an item of ID=old_id and replaces it with `item` if so
-    //     let transform = (it => it?._id_ === old_id ? item : it)
-    //
-    //     for await (let ref of registry.scan_all()) {           // search for references to `id` in a referrer item, `ref`
-    //         await ref.load()
-    //         let prev_json = ref._record_.data_json
-    //
-    //         ref._data_.transform({value: transform})
-    //         let new_json = JSONx.stringify(ref._data_)
-    //
-    //         if (new_json !== prev_json) {
-    //             print(`updating reference(s) in ID=${ref._id_}`)
-    //             await this.db.update_full(ref)
-    //         }
-    //     }
-    // }
-
     async _update_all() {
         /* Perform "update in place" on every item in the database, for instance, to force conversion of the items
            to a new format. All rings in the DB must be set as writable (!), otherwise the update will write a copy
