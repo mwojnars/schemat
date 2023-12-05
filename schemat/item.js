@@ -535,15 +535,12 @@ export class Item {
         // print('_init_url() container_path:', this.container_path)
         // let container = await registry.site.resolve(this.container_path, true)
         // let container = this._container_ ? await this._container_.load() : await site.resolve(this.container_path, true)
-        print(`_init_url() container: '${container.name}'`)
+        // print(`_init_url() container: '${container.name}'`)
 
         // await container._url_promise_        // wait until the container's URL path is initialized
-        assert(container._path_)
         this._path_ = container.build_path(this)
-
-        // let [url, duplicate] = container.build_url(this)
         let [url, duplicate] = site.path_to_url(this._path_)
-        print('_init_url() url:', url, ` (duplicate=${duplicate})`)
+        print('_init_url():', url, ` (duplicate=${duplicate})`)
 
         return this._url_ = duplicate ? default_path() : url
     }
