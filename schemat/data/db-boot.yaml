@@ -91,8 +91,10 @@
           inherit: false
           "@": ITEM
         _container_:
-          info: Parent URL container of this object where the canonical URL path of this
-            object is defined.
+          info: Parent URL container of this object. The chain of containers leading from
+            Site to the object define the access path of this object, which can
+            be converted to a canonical URL path of the object by removing blank
+            segments.
           "@": ITEM
         name:
           info: Display name of the item. May contain spaces, punctuation, non-latin

@@ -92,6 +92,19 @@ export class Site extends Directory {
         // print('Site._init_url():', this._url_)
     }
 
+    path_to_url(path) {
+        /* Convert a container access path to a URL path by removing all blank segments (/*xxx).
+           NOTE 1: if the last segment is blank, the result URL can be a duplicate of the URL of a parent or ancestor container (!);
+           NOTE 2: even if the last segment is not blank, the result URL can still be a duplicate of the URL of a sibling object,
+                   if they both share an ancestor container with a blank segment. This cannot be automatically detected
+                   and should be prevented by proper configuration of top-level containers.
+         */
+        let last = path.split('/').pop()
+        let last_blank = last.startsWith('*')               // if the last segment is blank, the URL is a duplicate of a parent's URL
+        let url = path.replace(/\/\*[^/]*/g, '')
+        return [url, last_blank]
+    }
+
     async resolve(path, explicit_blank = false) {
         if (path[0] === '/') path = path.slice(1)           // drop the leading slash
         if (!path) return this

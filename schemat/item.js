@@ -185,7 +185,7 @@ const proxy_handler = {
     UNDEFINED: Symbol.for('proxy_handler.UNDEFINED'),
 
     // these props can never be found inside item's schema and should always be accessed as regular object attributes
-    RESERVED: ['_id_', '_meta_', '_data_', '_record_', '_url_'],
+    RESERVED: ['_id_', '_meta_', '_data_', '_record_', '_url_', '_container_'],
 
     get(target, prop, receiver) {
         let UNDEF = proxy_handler.UNDEFINED
@@ -275,6 +275,7 @@ export class Item {
     name
     import_path
     container_path
+    _container_
 
 
     /***  System properties  ***/
@@ -511,33 +512,38 @@ export class Item {
     async _init_url() {
         /* Initialize this item's URL path, this._url_. */
 
+        let site = registry.site
+
         // wait until the site is initialized and its URL path is known; wait and try again if needed
-        while (!registry.site?._url_) {
+        while (!site?._url_) {
             // print('no registry.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
             await delay(100)
             if (this._url_) return this._url_               // already initialized?
             if (registry.is_closing) return undefined       // site is closing? no need to wait any longer
         }
 
-        let default_path = () => registry.site.systemPath(this)
+        let default_path = () => site.systemPath(this)
+        let container
 
-        if (!this.container_path) {
+        if (this._container_)           container = await this._container_.load()
+        else if (this.container_path)   container = await site.resolve(this.container_path, true)
+        else {
             let url = default_path()
-            print('no container_path:', url)
+            print('_init_url() no container_path:', url)
             return this._url_ = this._path_ = url
         }
-        print('container_path:', this.container_path)
-
-        let container = await registry.site.resolve(this.container_path, true)
-        print(`container: '${container.name}'`)
+        // print('_init_url() container_path:', this.container_path)
+        // let container = await registry.site.resolve(this.container_path, true)
+        // let container = this._container_ ? await this._container_.load() : await site.resolve(this.container_path, true)
+        print(`_init_url() container: '${container.name}'`)
 
         // await container._url_promise_        // wait until the container's URL path is initialized
         assert(container._path_)
         this._path_ = container.build_path(this)
 
         // let [url, duplicate] = container.build_url(this)
-        let [url, duplicate] = container._path_to_url(this._path_)
-        print('url:', url, ` (duplicate=${duplicate})`)
+        let [url, duplicate] = site.path_to_url(this._path_)
+        print('_init_url() url:', url, ` (duplicate=${duplicate})`)
 
         return this._url_ = duplicate ? default_path() : url
     }
