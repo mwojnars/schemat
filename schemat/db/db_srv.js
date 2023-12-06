@@ -51,6 +51,8 @@ export class Ring extends Item {
     stop_iid                // (optional) maximum IID of all items
 
 
+    // __create__() and open() are only used when the (raw) ring is created from scratch as a plain object, not loaded from DB...
+
     __create__({name, ...opts}) {
         let {file} = opts
         this._file = file
@@ -219,7 +221,7 @@ export class ServerDB {
         for (const spec of rings) {
             let ring
 
-            if (spec.item) ring = await globalThis.registry.getLoaded(spec.item)
+            if (spec.item) ring = await registry.getLoaded(spec.item)
             else if (spec instanceof Ring) ring = spec
             else {
                 ring = Ring.create(spec)
@@ -229,7 +231,7 @@ export class ServerDB {
             this.append(ring)
             print(`...opened ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'read-write'})`)
 
-            await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
+            await registry.boot()                       // reload `root` and `site` to have the most relevant objects after a next ring is added
 
             if (!ring.is_linked())
                 await ring._init_indexes(req.clone())   // TODO: temporary

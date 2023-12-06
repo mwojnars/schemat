@@ -27,7 +27,7 @@ export class SchematProcess {
         set_global({registry})
 
         await registry.init_classpath()
-        await registry.boot()
+        // await registry.boot()
         return this
     }
 
@@ -53,6 +53,7 @@ export class ClientProcess extends SchematProcess {
         this.client_db = new ClientDB(data.items)
 
         await this._create_registry(ClientRegistry)
+        await this.registry.boot()
         await this.registry.bootData(data)
 
         // print('root:', await registry.getItem([0,0], {load: true}))

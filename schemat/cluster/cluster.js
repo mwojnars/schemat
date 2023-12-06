@@ -16,7 +16,7 @@ export const DB_ROOT   = __dirname + '/data'
 
 /**********************************************************************************************************************/
 
-export class Cluster extends Item {
+export class Cluster { //extends Item {
     /* Managing the cluster's infrastructure. */
 
     db
@@ -43,8 +43,8 @@ export class Cluster extends Item {
            which should replace the db object with the ultimate one (TODO).
          */
 
-        let req = new DataRequest(this, 'startup')
-
+        // let req = new DataRequest(this, 'startup')
+        //
         // let cluster_ring_spec = this.constructor.cluster_ring_spec
         // try { fs.unlinkSync(cluster_ring_spec.file) } catch(ex) {}
         //

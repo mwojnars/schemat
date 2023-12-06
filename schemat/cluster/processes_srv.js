@@ -23,11 +23,13 @@ export class BackendProcess extends SchematProcess {
 
     async start(cmd, opts = {}) {
         await this._create_registry(ServerRegistry, __dirname)
+        // await this.registry.boot()
 
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
 
-        this.cluster = Cluster.create()
+        // this.cluster = Cluster.create()
+        this.cluster = new Cluster()
         return this[method](opts)
     }
 }
