@@ -21,8 +21,6 @@ export class SchematProcess {
         set_global({schemat: this})
     }
 
-    async init() { return this }         // creating the registry; override in subclasses
-
     async _create_registry(registry_class, ...args) {
         let registry = new registry_class(this, ...args)
         this.registry = registry
@@ -45,7 +43,7 @@ export class SchematProcess {
 
 export class ClientProcess extends SchematProcess {
 
-    async init() { return this._create_registry(ClientRegistry) }
+    // async init() { return this._create_registry(ClientRegistry) }
 
     async start() {
         /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
@@ -54,7 +52,7 @@ export class ClientProcess extends SchematProcess {
         print('page data:', data)
         this.client_db = new ClientDB(data.items)
 
-        await this.init()
+        await this._create_registry(ClientRegistry)
         await this.registry.bootData(data)
 
         // print('root:', await registry.getItem([0,0], {load: true}))

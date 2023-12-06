@@ -23,9 +23,9 @@ const __dirname  = path.dirname(__filename) + '/..'
 export class BackendProcess extends SchematProcess {
     CLI_PREFIX = 'CLI_'
 
-    async init() { return this._create_registry(ServerRegistry, __dirname) }
+    async start(cmd, opts = {}) {
+        await this._create_registry(ServerRegistry, __dirname)
 
-    start(cmd, opts = {}) {
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
 
