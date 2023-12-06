@@ -51,24 +51,6 @@ export class Ring extends Item {
     stop_iid                // (optional) maximum IID of all items
 
 
-    // __create__() and open() are only used when the (raw) ring is created from scratch as a plain object, not loaded from DB...
-
-    __create__({name, ...opts}) {
-        let {file} = opts
-        this._file = file
-        this.name = name || (file && path.basename(file, path.extname(file)))
-
-        let {readonly = false, start_iid = 0, stop_iid} = opts
-        this.readonly = readonly
-        this.start_iid = start_iid
-        this.stop_iid = stop_iid
-    }
-
-    async open() {
-        this.data_sequence = DataSequence.create(this, this._file)
-        return this.data_sequence.open()
-    }
-
     async __init__() {
         /* Initialize the ring after it's been loaded from DB. */
         await this.data_sequence.load()
@@ -190,6 +172,25 @@ export class Ring extends Item {
     }
 }
 
+class PlainRing extends Ring {
+    /* A plain ring object that is NOT stored in DB. Only this kind of object needs __create__() and open(). */
+
+    __create__({name, ...opts}) {
+        let {file} = opts
+        this._file = file
+        this.name = name || (file && path.basename(file, path.extname(file)))
+
+        let {readonly = false, start_iid = 0, stop_iid} = opts
+        this.readonly = readonly
+        this.start_iid = start_iid
+        this.stop_iid = stop_iid
+    }
+
+    async open() {
+        this.data_sequence = DataSequence.create(this, this._file)
+        return this.data_sequence.open()
+    }
+}
 
 /**********************************************************************************************************************
  **
@@ -224,7 +225,7 @@ export class ServerDB {
             if (spec.item) ring = await registry.getLoaded(spec.item)
             else if (spec instanceof Ring) ring = spec
             else {
-                ring = Ring.create(spec)
+                ring = PlainRing.create(spec)           // a plain ring object that is NOT stored in DB
                 await ring.open()
             }
 
