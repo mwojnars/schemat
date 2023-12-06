@@ -159,16 +159,20 @@ export class Registry {
         let root = this.root = RootCategory.create()
         this.register(root)
 
-        // try loading `root` from the DB first...
-        if (this.db)
-            try {
-                await root.load()
-                root.assert_loaded()
-                print("Registry: root category loaded from DB")
-            } catch (ex) {
-                if (!(ex instanceof ItemNotFound)) throw ex
-            }
+        await root.load()
+        root.assert_loaded()
+        print("Registry: root category loaded from DB")
 
+        // // try loading `root` from the DB first...
+        // if (this.db)
+        //     try {
+        //         await root.load()
+        //         root.assert_loaded()
+        //         print("Registry: root category loaded from DB")
+        //     } catch (ex) {
+        //         if (!(ex instanceof ItemNotFound)) throw ex
+        //     }
+        //
         // // ...only when the above fails due to missing data, load from the predefined `root_data`
         // // TODO: this is only used by CLI_build() and bootstrap.js -- can be removed if bootstrap is not supported anymore!
         // if (!root.is_loaded()) {

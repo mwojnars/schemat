@@ -2,7 +2,7 @@ import { Mutex } from 'async-mutex'
 
 import { assert, print, T } from './common/utils.js'
 import { Registry } from './registry.js'
-import { EditData } from './db/edits.js'
+import {ROOT_ID} from "./item.js";
 
 
 /**********************************************************************************************************************
@@ -45,8 +45,17 @@ export class ServerRegistry extends Registry {
     }
     async stopSession(releaseMutex) {
         assert(this.session, 'trying to stop a web session when none was started')
-        await this._cache.evict()
+        await this._evict()
         delete this.session
         releaseMutex()
+    }
+
+    async _evict() {
+        /* Evict expired objects in _cache. */
+        await this._cache.evict()
+        if (!this._cache.has(ROOT_ID)) {            // if `root` is no longer present in _cache, call _init_root() once again
+            this.root = undefined
+            await this._init_root()
+        }
     }
 }
