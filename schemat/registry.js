@@ -214,7 +214,7 @@ export class Registry {
     }
 
     unregister(item) {
-        /* Remove an item with a given ID from the cache, if only this exact item is still there. */
+        /* Remove an object with a given ID from the cache, but only if this exact object is still there. */
         if (this._cache.get(item._id_) === item)
             this._cache.delete(item._id_)
     }
