@@ -30,15 +30,15 @@ let default_fields = new Catalog({
 })
 
 // fields inside a category instance, including the root category
-export let root_fields = new Catalog({
+let root_fields = new Catalog({
     class_path   : new STRING({info: "SUN path to a Javascript file that contains a (base) class for this category. May contain an optional class name appended after colon ':'. If the class name is missing (no colon), default import from the file is used."}),
     class_name   : new STRING({info: "Custom internal name for the Class of this category, for debugging. Also used as an alias when exporting the Class from the category's module."}),
     class_init   : new CODE({repeated: true, info: "Module-level initialization for this category's Javascript class. Typically contains import statements and global variables. Preceeds the Class definition (`class_body`, `views`) in the category's module code."}),
     class_body   : new CODE({repeated: true, info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `class_path` class, or the class of the first base category, or the top-level Item."}),
-    // prototype    : new CATALOG({values: new CODE() / METHOD() / PROPERTY() / GENERIC()}, info: "JS prototype for object instances of this category. May contain property definitions (with values of generic type) and/or method definitions."),
-    // pages        : new CATALOG({values: new CODE(), info: "Source code of React class components that render HTML response pages for particular URL endpoints of this category's items. Each entry in `pages` is a name of the endpoint + the body of a class component inheriting from the `Page` base class. NO class header or surrounding braces {...}, they are added automatically. Static attributes/methods are allowed."}),
     pages        : new CATALOG({values: new CODE(), info: "Source code of functions that generate static HTML response for particular access methods of this category's items."}),
     views        : new CATALOG({values: new CODE(), info: "Body of React functional components (no function header) to be added dynamically to the category's Class body as VIEW_name(props) methods for rendering item views. Inside the function body, `this` refers the item to be rendered. Alternatively, the code of each view may consist of a method header, view() {...}, and be accompanied by supporting methods: title(), assets() - like in a class body."}),
+    // prototype    : new CATALOG({values: new CODE() / METHOD() / PROPERTY() / GENERIC()}, info: "JS prototype for object instances of this category. May contain property definitions (with values of generic type) and/or method definitions."),
+    // pages        : new CATALOG({values: new CODE(), info: "Source code of React class components that render HTML response pages for particular URL endpoints of this category's items. Each entry in `pages` is a name of the endpoint + the body of a class component inheriting from the `Page` base class. NO class header or surrounding braces {...}, they are added automatically. Static attributes/methods are allowed."}),
     // module    : new CODE({info: "Source code of a Javascript module to be created for this category. May contain imports. Should export a Class that defines the class to be used by items of this category. Alternatively, the Class'es body can be defined through the `class_body` and/or `views` properties."}),
     // code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
     // code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
