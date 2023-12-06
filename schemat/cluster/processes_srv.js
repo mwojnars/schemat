@@ -6,12 +6,10 @@ import {print, assert, T} from "../common/utils.js";
 import {Cluster, DB_ROOT} from "./cluster.js";
 import {Item} from "../item.js";
 import {JSONx} from "../serialize.js";
-import {EditData} from "../db/edits.js";
 import {DataServer, WebServer} from "./servers.js";
 import {Ring, ServerDB} from "../db/db_srv.js";
 import {SchematProcess} from "../processes.js";
 import {ServerRegistry} from "../registry_srv.js";
-import {ItemRecord} from "../db/records.js";
 import {DataRequest} from "../db/data_request.js";
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
@@ -177,7 +175,6 @@ export class AdminProcess extends BackendProcess {
                 else {
                     print(`...updating reference(s) in object [${id}]`)
                     await ring.update(id, data)
-                    // await this.db.update(id, new EditData(data))
                     // await ring.flush()
                 }
             }
