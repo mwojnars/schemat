@@ -5,8 +5,8 @@ import { ItemNotFound, NotImplemented } from './common/errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache } from './data.js'
 import { Item, RootCategory, ROOT_ID, SITE_CATEGORY_ID } from './item.js'
-import { root_data } from './boot/root.js'
-import {ItemRecord} from "./db/records.js";
+// import { root_data } from './boot/root.js'
+// import {ItemRecord} from "./db/records.js";
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -169,12 +169,12 @@ export class Registry {
                 if (!(ex instanceof ItemNotFound)) throw ex
             }
 
-        // ...only when the above fails due to missing data, load from the predefined `root_data`
-        // TODO: this is only used by CLI_build() and bootstrap.js -- can be removed if bootstrap is not supported anymore!
-        if (!root.is_loaded()) {
-            await root.load(new ItemRecord(ROOT_ID, root_data))
-            print("Registry: root category created from root_data")
-        }
+        // // ...only when the above fails due to missing data, load from the predefined `root_data`
+        // // TODO: this is only used by CLI_build() and bootstrap.js -- can be removed if bootstrap is not supported anymore!
+        // if (!root.is_loaded()) {
+        //     await root.load(new ItemRecord(ROOT_ID, root_data))
+        //     print("Registry: root category created from root_data")
+        // }
 
         // print("Registry: root category created")
         return root

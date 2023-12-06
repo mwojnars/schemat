@@ -63,21 +63,21 @@ async function test_react_page(page, url, selector = null, strings = []) {
 describe('Schemat Tests', function () {
     this.timeout(10000)         // Extended timeout for asynchronous tests
 
-    // Start a one-time bootstrap process and check if it completes without errors
-    describe('Bootstrap', function () {
-        it('bootstrap', function (done) {
-            exec('node --experimental-vm-modules cluster/manage.js build', (error, stdout, stderr) => {
-                if (error) {
-                    console.error('Error during bootstrap:', stderr)
-                    done(error)
-                } else {
-                    // console.log('stdout:', '\n' + stdout)
-                    // console.error('stderr:', '\n' + stderr)
-                    done()
-                }
-            })
-        })
-    })
+    // // Start a one-time bootstrap process and check if it completes without errors
+    // describe('Bootstrap', function () {
+    //     it('bootstrap', function (done) {
+    //         exec('node --experimental-vm-modules cluster/manage.js build', (error, stdout, stderr) => {
+    //             if (error) {
+    //                 console.error('Error during bootstrap:', stderr)
+    //                 done(error)
+    //             } else {
+    //                 // console.log('stdout:', '\n' + stdout)
+    //                 // console.error('stderr:', '\n' + stderr)
+    //                 done()
+    //             }
+    //         })
+    //     })
+    // })
 
     describe('Web Application', function () {
 

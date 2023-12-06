@@ -36,22 +36,23 @@ async function main() {
             //     .positional('newid')
         )
         .command('reinsert <id> <ring>', 'remove an object from its current ring and insert into `ring` under a new ID')
-        .command('build [path_db_boot]', 'generate the core "db-boot" database anew')
-            .option('bottom', {
-                alias: 'b',
-                description: 'if set, new items are inserted at the lowest possible DB level',
-                type: 'boolean'
-            })
-            .option('db', {
-                description: 'name of the DB in a stack where insertion of new items should start (can propagate upwards)',
-                type: 'string'
-            })
+
+        // .command('build [path_db_boot]', 'generate the core "db-boot" database anew')
+        //     .option('bottom', {
+        //         alias: 'b',
+        //         description: 'if set, new items are inserted at the lowest possible DB level',
+        //         type: 'boolean'
+        //     })
+        //     .option('db', {
+        //         description: 'name of the DB in a stack where insertion of new items should start (can propagate upwards)',
+        //         type: 'string'
+        //     })
 
         .demandCommand(1, 'Please provide a command to run.')
         .help().alias('help', 'h')
         .argv
 
-    let commands = ['run', 'move', 'build', 'reinsert']
+    let commands = ['run', 'move', 'reinsert']     //'build'
 
     let cmd = argv._[0]
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
