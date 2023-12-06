@@ -170,6 +170,7 @@ export class Registry {
             }
 
         // ...only when the above fails due to missing data, load from the predefined `root_data`
+        // TODO: this is only used by CLI_build() and bootstrap.js -- can be removed if bootstrap is not supported anymore!
         if (!root.is_loaded()) {
             await root.load(new ItemRecord(ROOT_ID, root_data))
             print("Registry: root category created from root_data")
