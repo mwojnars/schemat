@@ -194,6 +194,7 @@ const proxy_handler = {
         if (value === UNDEF) return undefined
         if (value !== undefined) return value
         if (!target._data_) return undefined
+        if (typeof prop !== 'string') return undefined          // `prop` can be a symbol like [Symbol.toPrimitive] - ignore
 
         // there are many queries for 'then' because after a promise resolves, its result is checked for .then
         // to see if the result is another promise; defining a `then` property is unsafe, hence we disallow it
@@ -532,10 +533,8 @@ export class Item {
         // let container = await registry.site.resolve(this.container_path, true)
         // print(`_init_url() container: '${container.name}'`)
 
-        if (!container.is_loaded()) {
-            await container.load()
-            await container._url_promise_                   // wait until the container's path is initialized
-        }
+        if (!container.is_loaded()) await container.load()          // container must be fully loaded
+        if (!container._path_) await container._url_promise_        // container's path must be initialized
 
         this._path_ = container.build_path(this)
         let [url, duplicate] = site.path_to_url(this._path_)

@@ -4,6 +4,11 @@
   class_path: /system/local/item.js:Category
   cache_ttl: 60
   fields:
+    _container_:
+      # info: to be automatically copied from global defaults (todo)
+      default:
+        "@": 1014
+      "@": ITEM
     class_path:
       info: SUN path to a Javascript file that contains a (base) class for this
         category. May contain an optional class name appended after colon ':'.
