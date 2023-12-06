@@ -45,8 +45,8 @@ export class ServerRegistry extends Registry {
     }
     async stopSession(releaseMutex) {
         assert(this.session, 'trying to stop a web session when none was started')
-        await this._evict()
         delete this.session
+        await this._evict()
         releaseMutex()
     }
 
@@ -54,6 +54,6 @@ export class ServerRegistry extends Registry {
         /* Evict expired objects in _cache. */
         await this._cache.evict()
         if (!this._cache.has(ROOT_ID))              // if `root` is no longer present in _cache, call _init_root() once again
-            await this._init_root()
+            await this._init_root()                 // WARN: between evict() and _init_root() there's no root defined! problem if a request comes in
     }
 }
