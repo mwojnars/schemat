@@ -147,21 +147,20 @@ export class Registry {
         /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
         this.root = await this._init_root()             // always returns a valid object, possibly created from `root_data`
         this.site = await this._init_site(site_id)      // may return undefined if the record not found in DB (!)
-        if (this.site) print("Registry: site loaded")
+        // if (this.site) print("Registry: site loaded")
     }
 
     async _init_root() {
         /* Create the RootCategory object, ID=0, and load its contents either from the DB (if present there)
            or from the predefined `root_data`.
          */
-        if (this.root) return this.root
-
+        // if (this.root) return this.root                  // warn: this is incorrect during startup if root is redefined in higher rings
         let root = this.root = RootCategory.create()
         this.register(root)
 
         await root.load()
         root.assert_loaded()
-        print("Registry: root category loaded from DB")
+        // print("Registry: root category loaded from DB")
 
         // // try loading `root` from the DB first...
         // if (this.db)
