@@ -173,34 +173,29 @@ export class Request {
  */
 
 class ItemProxy {
-    /* Proxy wrapper for all network objects (Items): stubs or loaded from DB.
-       Combines plain object attributes with loaded properties and makes them accessible with the standard obj.prop syntax.
+    /* Creates a Proxy wrapper for network objects (Items), be it stubs, unlinked objects, or loaded from DB.
+       Combines plain object attributes with loaded properties and makes them all accessible with the `obj.prop` syntax.
        Performs caching of computed properties in plain attributes of the `target` object.
        Ensures immutability of regular properties.
-     */
-
-    static wrap(target) {
-        return new Proxy(target, proxy_handler)
-    }
-}
-
-const proxy_handler = {
-    /* Proxy handler for all network objects: stubs or loaded from DB. Combines POJO attributes with loaded properties
-       and in this way facilitates caching of computed properties in plain attributes of the `target` object.
+       Since a Proxy class can't be subclassed, all methods and properties of ItemProxy are static.
      */
 
     // the suffix appended to a property name when an array of *all* values of this property is requested, not a single value
-    MULTIPLE_SUFFIX: '_array',
+    static MULTIPLE_SUFFIX = '_array'
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
-    UNDEFINED: Symbol.for('proxy_handler.UNDEFINED'),
+    static UNDEFINED = Symbol.for('ItemProxy.UNDEFINED')
 
     // these props can never be found inside item's schema and should always be accessed as regular object attributes
-    RESERVED: ['_id_', '_meta_', '_data_', '_record_', '_url_', '_path_', '_url_promise_'],
+    static RESERVED = ['_id_', '_meta_', '_data_', '_record_', '_url_', '_path_', '_url_promise_']
 
-    get(target, prop, receiver) {
-        let UNDEF = proxy_handler.UNDEFINED
+    static wrap(target) {
+        return new Proxy(target, {get: this.get})
+    }
+
+    static get(target, prop, receiver) {
+        let UNDEF = ItemProxy.UNDEFINED
         let value = Reflect.get(target, prop, receiver)
 
         if (value === UNDEF) return undefined
@@ -213,11 +208,11 @@ const proxy_handler = {
         if (prop === 'then') return undefined
 
         // if (prop.length >= 2 && prop[0] === '_' && prop[prop.length - 1] === '_')    // _***_ props are reserved for internal use
-        if (proxy_handler.RESERVED.includes(prop))
+        if (ItemProxy.RESERVED.includes(prop))
             return undefined
 
         // console.log('get', prop)
-        let suffix = proxy_handler.MULTIPLE_SUFFIX
+        let suffix = ItemProxy.MULTIPLE_SUFFIX
         let multiple = prop.endsWith(suffix)
         if (multiple) prop = prop.slice(0, -suffix.length)      // use the base property name without the suffix
 
@@ -239,14 +234,13 @@ const proxy_handler = {
         }
 
         return multiple ? values : single
-    },
+    }
 
-    // set(target, prop, value, receiver) {
+    // static   set(target, prop, value, receiver) {
     //     // console.log('set', prop)
     //     return Reflect.set(target, prop, value, receiver)
-    // },
+    // }
 }
-
 
 export class Item {
 
@@ -328,11 +322,9 @@ export class Item {
     }
 
     get _schema_() {
-        print('get _schema_')
         return this._schema_ = this._category_?.item_schema || new DATA_GENERIC()
     }
     set _schema_(schema) {
-        print('set _schema_')
         Object.defineProperty(this._self_, '_schema_', {value: schema, writable: false})
     }
 
@@ -345,10 +337,9 @@ export class Item {
     _default_ = {
         self: this,             // the main object itself, for use in getters below
 
-        get _schema_() {
-            print('_default_._schema_')
-            return this.self._category_?.item_schema || new DATA_GENERIC()
-        },
+        // get _schema_() {
+        //     return this.self._category_?.item_schema || new DATA_GENERIC()
+        // },
     }
 
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
