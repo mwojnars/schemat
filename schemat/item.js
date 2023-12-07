@@ -313,7 +313,8 @@ export class Item {
     _data_          // data fields of this item, as a Data object; created during .load()
 
     _default_ = {
-        _schema_: new DATA_GENERIC()        // schema of this item's data, as a DATA object; calculated as an imputed property
+        _schema_: new DATA_GENERIC()
+        // get _schema_() { return this._category_?.item_schema || new DATA_GENERIC() },
     }
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
@@ -329,13 +330,13 @@ export class Item {
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
 
-        set_id(id) {
-            /* Like obj._id_ = id, but allows re-setting with the same ID value. */
-            let prev = this.target._id_
-            if (prev !== undefined) assert(prev === id, `ID is read-only and can't be changed from ${prev} to ${id}`)
-            else this.target._id_ = id
-            return id
-        },
+        // set_id(id) {
+        //     /* Like obj._id_ = id, but allows re-setting with the same ID value. */
+        //     let prev = this.target._id_
+        //     if (prev !== undefined) assert(prev === id, `ID is read-only and can't be changed from ${prev} to ${id}`)
+        //     else this.target._id_ = id
+        //     return id
+        // },
     }
 
     _net_           // Network adapter that connects this item to its network API as defined in this.constructor.api
@@ -410,6 +411,13 @@ export class Item {
         this.actions = base ? {...base.actions, ...actions} : actions
     }
 
+    _set_id(id) {
+        /* Like obj._id_ = id, but allows re-setting with the same ID value. */
+        let prev = this._id_
+        if (prev !== undefined) assert(prev === id, `ID is read-only and can't be changed from ${prev} to ${id}`)
+        else this._id_ = id
+        return id
+    }
 
     /***  Loading from DB  ***/
 

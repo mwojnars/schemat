@@ -143,7 +143,7 @@ export class Ring extends Item {
 
         // 1st phase: insert stubs
         for (let item of items)
-            item._meta_.set_id(await this.insert(item._id_, empty_data))
+            item._set_id(await this.insert(item._id_, empty_data))
 
         // 2nd phase: update items with actual data
         for (let item of items) {
@@ -324,7 +324,7 @@ export class ServerDB {
 
         if (ring) {
             id = await ring.handle(req)
-            return item._meta_.set_id(id)
+            return item._set_id(id)
         }
         return req.error_access(id === undefined ?
             "cannot insert the item, the ring(s) are read-only" :
@@ -354,7 +354,7 @@ export class ServerDB {
     //         let req2 = req.safe_step(null, 'insert', {id, data})     // insert stubs with empty data
     //         let ring = rings.find(r => r.writable(id))
     //         if (!ring) return req2.error_access(`cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
-    //         item._meta_.set_id(await ring.handle(req2))
+    //         item._set_id(await ring.handle(req2))
     //     }
     //
     //     // 2nd phase: update items with actual data
