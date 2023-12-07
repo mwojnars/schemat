@@ -314,8 +314,10 @@ export class Item {
 
     _default_ = {
         _self_:   this,         // the main object itself
-        _schema_: new DATA_GENERIC()
-        // get _schema_() { return this._category_?.item_schema || new DATA_GENERIC() },
+        // _schema_: new DATA_GENERIC()
+        get _schema_() {
+            return this._self_._category_?.item_schema || new DATA_GENERIC()
+        },
     }
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
