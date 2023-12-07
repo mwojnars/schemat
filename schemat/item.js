@@ -271,11 +271,16 @@ export class Item {
 
     /***  Common properties ***/
 
-    // defined in root.js/default_fields, but declared here to avoid IDE warnings...
+    // defined in Category::fields::fields::default (root.js/default_fields), but declared here to avoid IDE warnings...
 
     name
+    info
     import_path
+    _extends_
     _container_
+    _schema_                // schema of this item's data, as a DATA object; calculated as an imputed property
+    _class_                 // JS class of this item; assigned during .load()
+    // _category_           // category of this item, as a Category object
 
 
     /***  System properties  ***/
@@ -307,10 +312,9 @@ export class Item {
 
     _data_          // data fields of this item, as a Data object; created during .load()
 
-    _schema_        // schema of this item's data, as a DATA object; calculated as an imputed property
-
-    // _category_      // category of this item, as a Category object
-    // _class_         // class of this item, as a JS class object; created during .load()
+    // _default_ = {
+    //     _schema_: new DATA_GENERIC()        // schema of this item's data, as a DATA object; calculated as an imputed property
+    // }
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
