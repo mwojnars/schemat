@@ -195,11 +195,11 @@ class ItemProxy {
     }
 
     static get(target, prop, receiver) {
-        let UNDEF = ItemProxy.UNDEFINED
         let value = Reflect.get(target, prop, receiver)
 
-        if (value === UNDEF) return undefined
+        if (value === ItemProxy.UNDEFINED) return undefined
         if (value !== undefined) return value
+
         if (!target._data_) return undefined
         if (typeof prop !== 'string') return undefined          // `prop` can be a symbol like [Symbol.toPrimitive] - ignore
 
@@ -211,6 +211,12 @@ class ItemProxy {
         if (ItemProxy.RESERVED.includes(prop))
             return undefined
 
+        return ItemProxy._fetch(target, prop)
+    }
+
+    static _fetch(target, prop) {
+        /* Fetch a single value or an array of all values of a property `prop` from the target item's data. */
+
         // console.log('get', prop)
         let suffix = ItemProxy.MULTIPLE_SUFFIX
         let multiple = prop.endsWith(suffix)
@@ -218,7 +224,7 @@ class ItemProxy {
 
         let values = target._compute_property(prop)
         let single = values[0]
-        let single_cached = (single !== undefined) ? single : UNDEF
+        let single_cached = (single !== undefined) ? single : ItemProxy.UNDEFINED
 
         // cache the result in target._self_; _self_ is used instead of `target` because the latter
         // can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
@@ -241,6 +247,8 @@ class ItemProxy {
     //     return Reflect.set(target, prop, value, receiver)
     // }
 }
+
+/**********************************************************************************************************************/
 
 export class Item {
 
@@ -929,11 +937,6 @@ export class Item {
                 let value = fun.call(this)
                 if (value instanceof Promise)                       // for async methods store the final value when available
                     value.then(v => cache.set(name, v))             // to speed up subsequent access (no waiting for promise)
-
-                // Object.defineProperty(this, name, {enumerable: false, value: function(...args_) {
-                //     // TODO: call the original fun if multiple args are passed
-                //     return value
-                // }})
 
                 cache.set(name, value)                              // may store a promise (!)
                 return value                                        // may return a promise (!), the caller should be aware
