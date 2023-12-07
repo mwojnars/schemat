@@ -312,9 +312,9 @@ export class Item {
 
     _data_          // data fields of this item, as a Data object; created during .load()
 
-    // _default_ = {
-    //     _schema_: new DATA_GENERIC()        // schema of this item's data, as a DATA object; calculated as an imputed property
-    // }
+    _default_ = {
+        _schema_: new DATA_GENERIC()        // schema of this item's data, as a DATA object; calculated as an imputed property
+    }
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
@@ -671,7 +671,14 @@ export class Item {
 
         let ancestors = type.props.inherit ? proxy._get_ancestors() : [proxy]   // `this` is always included as the first ancestor
         let streams = ancestors.map(proto => proto._own_values(prop))
-        return type.combine_inherited(streams, proxy)                              // `default` and `impute` of the schema is applied here
+        let values = type.combine_inherited(streams, proxy)                     // `default` and `impute` of the schema is applied here
+
+        if (!values.length) {                                                   // impute with class-level default as a last resort
+            let pojo_default = this._default_[prop]
+            if (pojo_default !== undefined) values = [pojo_default]
+        }
+
+        return values
     }
 
     _own_values(prop)  { return this._data_.getValues(prop) }
