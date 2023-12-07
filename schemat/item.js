@@ -278,9 +278,12 @@ export class Item {
     import_path
     _extends_
     _container_
-    _schema_                // schema of this item's data, as a DATA object; calculated as an imputed property
     _class_                 // JS class of this item; assigned during .load()
+
+    // the props below have GETTERS defined, so they must be commented out not to mask the getter:
+
     // _category_           // category of this item, as a Category object
+    // _schema_             // schema of this item's data, as a DATA object; calculated as an imputed property
 
 
     /***  System properties  ***/
@@ -292,7 +295,7 @@ export class Item {
     get _id_()   { return undefined }
     set _id_(id) {
         if (id === undefined) return
-        Object.defineProperty(this, '_id_', {value: id, writable: false})
+        Object.defineProperty(this._self_, '_id_', {value: id, writable: false})
     }
 
     /* _record_:
@@ -307,7 +310,16 @@ export class Item {
     set _record_(record) {
         assert(record)
         assert(record.id === this._id_)
-        Object.defineProperty(this, '_record_', {value: record, writable: false})
+        Object.defineProperty(this._self_, '_record_', {value: record, writable: false})
+    }
+
+    get _schema_() {
+        print('get _schema_')
+        return this._schema_ = this._category_?.item_schema || new DATA_GENERIC()
+    }
+    set _schema_(schema) {
+        print('set _schema_')
+        Object.defineProperty(this._self_, '_schema_', {value: schema, writable: false})
     }
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
@@ -320,6 +332,7 @@ export class Item {
         self: this,             // the main object itself, for use in getters below
 
         get _schema_() {
+            print('_default_._schema_')
             return this.self._category_?.item_schema || new DATA_GENERIC()
         },
     }
