@@ -84,7 +84,7 @@ export class FileLocal extends File {
 
     local_path
 
-    async __init__()  { if (this.registry.onServer) this._mod_fs = await import('fs') }
+    async __init__()  { if (registry.onServer) this._mod_fs = await import('fs') }
 
     _content(encoding) {
         let path = this.local_path
@@ -105,7 +105,7 @@ export class LocalDirectory extends Directory {
     local_path
 
     async __init__() {
-        if (this.registry.onServer) {
+        if (registry.onServer) {
             this._mod_fs = await import('node:fs')
             this._mod_path = await import('node:path')        // to avoid awaiting in handlePartial()
         }

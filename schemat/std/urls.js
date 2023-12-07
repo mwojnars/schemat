@@ -165,7 +165,7 @@ export class ID_Namespace extends Namespace {
         }
         catch (ex) { request.throwNotFound() }
         // request.pushMethod('@full')
-        return [this.registry.getItem(id), request.move(step), true]
+        return [registry.getItem(id), request.move(step), true]
     }
 }
 
@@ -207,7 +207,7 @@ export class CategoryID_Namespace extends Namespace {
         let [space, id] = step.split(sep)
         let category = this.spaces.get(space)               // decode space identifier and convert to a category object
         if (!category) request.throwNotFound()
-        let item = this.registry.getItem(Number(id))
+        let item = registry.getItem(Number(id))
         return [item, request.pushApp(this).move(step), true]
     }
 }

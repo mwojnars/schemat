@@ -81,7 +81,7 @@ export class Site extends Directory {
     entries
     default_path
 
-    async __init__()  { if (this.registry.onServer) this._vm = await import('vm') }
+    async __init__()  { if (registry.onServer) this._vm = await import('vm') }
 
     async _init_url() {
         let url = new URL(this.base_url)            // remove domain name from the base URL and keep the remaining URL path
@@ -196,7 +196,7 @@ export class Site extends Directory {
         // TODO: cache module objects, parameter Site:cache_modules_ttl
         // TODO: for circular dependency return an unfinished module (use cache for this)
 
-        assert(this.registry.onServer)
+        assert(registry.onServer)
 
         // make `path` absolute
         if (path[0] === '.') {
@@ -212,9 +212,9 @@ export class Site extends Directory {
         if (path[0] !== '/') return this.localImport(path)
 
         // local import if `path` starts with PATH_LOCAL_SUN
-        let local = this.registry.PATH_LOCAL_SUN
+        let local = registry.PATH_LOCAL_SUN
         if (path.startsWith(local + '/'))
-            return this.localImport(this.registry.directImportPath(path))
+            return this.localImport(registry.directImportPath(path))
 
         // let source = await Request.run_with({path, method: '@text'}, () => this.route(request))
         let source = await this.route(new Request({path, method: '@text'}))

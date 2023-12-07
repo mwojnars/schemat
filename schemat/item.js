@@ -359,7 +359,7 @@ export class Item {
         /* For internal use! Always call Item.create() instead of `new Item()`. */
         if(_fail_) throw new Error('item should be instantiated through Item.create() instead of new Item()')
         this._self_ = this      // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
-        this.registry = globalThis.registry
+        // this.registry = globalThis.registry
     }
 
     __create__(...args) {
@@ -418,7 +418,7 @@ export class Item {
 
     async refresh() {
         /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
-        return this.registry.getItem(this._id_).load()
+        return registry.getItem(this._id_).load()
     }
 
     async load(record = null /*ItemRecord*/) {
@@ -549,7 +549,7 @@ export class Item {
 
     _init_network() {
         /* Create a .net connector and .action triggers for this item's network API. */
-        let role = this.registry.onServer ? 'server' : 'client'
+        let role = registry.onServer ? 'server' : 'client'
         this._net_ = new Network(this, role, this.constructor.api)
         this.action = this._net_.create_triggers(this.constructor.actions)
     }
@@ -603,7 +603,7 @@ export class Item {
     //        by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
     //      */
     //     let name = this.get('_boot_class')
-    //     if (name) base = this.registry.getClass(name)
+    //     if (name) base = registry.getClass(name)
     //
     //     let body = this.mergeSnippets('class')           // full class body from concatenated `code` and `code_*` snippets
     //     if (!body) return base
@@ -611,7 +611,7 @@ export class Item {
     //     let url = this.sourceURL('class')
     //     let import_ = (path) => {
     //         if (path[0] === '.') throw Error(`relative import not allowed in dynamic code of a category (${url}), path='${path}'`)
-    //         return this.registry.site.import(path)
+    //         return registry.site.import(path)
     //     }
     //     let source = `return class extends base {${body}}` + `\n//# sourceURL=${url}`
     //     return new Function('base', 'import_', source) (base, import_)
@@ -706,7 +706,7 @@ export class Item {
     getPath() {
         /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.
            Starts with '/' (absolute path). */
-        return this.import_path || this.registry.site.systemPath(this)
+        return this.import_path || registry.site.systemPath(this)
     }
 
     getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
@@ -735,7 +735,7 @@ export class Item {
            including the environment-specific {key}_client OR {key}_server keys; assumes the values are strings.
            Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets.
          */
-        // let env = this.registry.onServer ? 'server' : 'client'
+        // let env = registry.onServer ? 'server' : 'client'
         // let snippets = this.getMany([key, `${key}_${env}`], params)
         let snippets = this[`${key}_array`].reverse()
         return snippets.join('\n')
@@ -751,11 +751,11 @@ export class Item {
 
     url(method, args) {
         /* `method` is an optional name of a web @method, `args` will be appended to URL as a query string. */
-        let site = this.registry.site
-        let app  = this.registry.session.app        // space = request.current_namespace
+        let site = registry.site
+        let app  = registry.session.app        // space = request.current_namespace
         let path = this._url_
-        // let defaultApp = this.registry.site.getApplication()
-        // let defaultApp = this.registry.session.apps['$']
+        // let defaultApp = registry.site.getApplication()
+        // let defaultApp = registry.session.apps['$']
         // app = app || defaultApp
 
         // url = site.domain + this._url_ + method + args      // absolute path
@@ -782,7 +782,7 @@ export class Item {
         Typically, `request` originates from a web request. The routing can also be started internally,
         and in such case request.session is left undefined.
         */
-        assert(this.registry.onServer)                      // route() is exclusively server-side functionality, including internal URL-calls
+        assert(registry.onServer)                           // route() is exclusively server-side functionality, including internal URL-calls
         let next = this.findRoute(request)                  // here, a part of request.path gets consumed
         if (!next || !next[0]) request.throwNotFound()      // missing `node` in the returned tuple
 
@@ -881,7 +881,7 @@ export class Item {
 
     make_editable() {
         /* Mark this item as editable and remove it from the Registry. */
-        this.registry.unregister(this)
+        registry.unregister(this)
         this._meta_.mutable = true
         return this
     }
@@ -1074,8 +1074,8 @@ export class Category extends Item {
            This method uses this.getPath() as the module's path for linking nested imports in parseModule():
            this is either the item's `path` property, or the default path built from the item's ID on the site's system path.
          */
-        let site = this.registry.site
-        let onClient = this.registry.onClient
+        let site = registry.site
+        let onClient = registry.onClient
         let [classPath, name] = this.getClassPath()
 
         if (!site) {
@@ -1089,7 +1089,7 @@ export class Category extends Item {
 
         try {
             return await (onClient ?
-                            this.registry.import(modulePath) :
+                            registry.import(modulePath) :
                             site.parseModule(this.getSource(), modulePath)
             )
         }
@@ -1109,7 +1109,7 @@ export class Category extends Item {
             let proto = this._get_prototypes()[0]
             return proto ? proto.getItemClass() : Item
         }
-        return this.registry.importDirect(path, name || 'default')
+        return registry.importDirect(path, name || 'default')
     }
 
     getClassPath() {
@@ -1221,7 +1221,7 @@ Category.create_api(
         //     /* Retrieve all children of this category and send to client as a JSON array.
         //      */
         //     let items = []
-        //     for await (const item of this.registry.scan(this)) {
+        //     for await (const item of registry.scan(this)) {
         //         await item.load()
         //         items.push(item)
         //     }
@@ -1236,7 +1236,7 @@ Category.create_api(
                    // TODO: use size limit & offset (pagination).
                    // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
                     let items = []
-                    for await (const item of this.registry.scan_category(this)) {
+                    for await (const item of registry.scan_category(this)) {
                         await item.load()
                         items.push(item)
                     }
@@ -1248,13 +1248,13 @@ Category.create_api(
                 decode_result(records) {
                     /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
                     let items = []
-                    for (const rec of records) {             // rec's shape: {id, data}
+                    for (const rec of records) {                    // rec's shape: {id, data}
                         if (rec.data) {
                             rec.data = JSON.stringify(rec.data)
                             schemat.db.cache(rec)                   // need to cache the item in ClientDB
-                            // this.registry.unregister(rec.id)     // evict the item from the Registry to allow re-loading
+                            // registry.unregister(rec.id)          // evict the item from the Registry to allow re-loading
                         }
-                        items.push(this.registry.getItem(rec.id))
+                        items.push(registry.getItem(rec.id))
                     }
                     return items
                 }
