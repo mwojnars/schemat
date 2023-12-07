@@ -172,6 +172,18 @@ export class Request {
  **
  */
 
+class ItemProxy {
+    /* Proxy wrapper for all network objects (Items): stubs or loaded from DB.
+       Combines plain object attributes with loaded properties and makes them accessible with the standard obj.prop syntax.
+       Performs caching of computed properties in plain attributes of the `target` object.
+       Ensures immutability of regular properties.
+     */
+
+    static wrap(target) {
+        return new Proxy(target, proxy_handler)
+    }
+}
+
 const proxy_handler = {
     /* Proxy handler for all network objects: stubs or loaded from DB. Combines POJO attributes with loaded properties
        and in this way facilitates caching of computed properties in plain attributes of the `target` object.
@@ -385,7 +397,7 @@ export class Item {
     static create_stub(id) {
         /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
         let core = new this(false)
-        let item = core._proxy_ = new Proxy(core, proxy_handler)
+        let item = core._proxy_ = ItemProxy.wrap(core)
         if (id !== undefined) core._id_ = id
         return item
     }
