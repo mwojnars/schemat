@@ -313,6 +313,7 @@ export class Item {
     _data_          // data fields of this item, as a Data object; created during .load()
 
     _default_ = {
+        _self_:   this,         // the main object itself
         _schema_: new DATA_GENERIC()
         // get _schema_() { return this._category_?.item_schema || new DATA_GENERIC() },
     }
@@ -321,7 +322,6 @@ export class Item {
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
 
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
-        target:  this,          // the target object itself
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
         mutable: false,         // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
         expiry:  undefined,     // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
@@ -329,14 +329,6 @@ export class Item {
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
-
-        // set_id(id) {
-        //     /* Like obj._id_ = id, but allows re-setting with the same ID value. */
-        //     let prev = this.target._id_
-        //     if (prev !== undefined) assert(prev === id, `ID is read-only and can't be changed from ${prev} to ${id}`)
-        //     else this.target._id_ = id
-        //     return id
-        // },
     }
 
     _net_           // Network adapter that connects this item to its network API as defined in this.constructor.api
