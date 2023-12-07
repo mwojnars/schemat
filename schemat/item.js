@@ -310,18 +310,19 @@ export class Item {
         Object.defineProperty(this, '_record_', {value: record, writable: false})
     }
 
-    _data_          // data fields of this item, as a Data object; created during .load()
-
-    _default_ = {
-        _self_:   this,         // the main object itself
-        // _schema_: new DATA_GENERIC()
-        get _schema_() {
-            return this._self_._category_?.item_schema || new DATA_GENERIC()
-        },
-    }
-
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
+    _data_          // data fields of this item, as a Data object; created during .load()
+    _net_           // Network adapter that connects this item to its network API as defined in this.constructor.api
+    action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
+
+    _default_ = {
+        self: this,             // the main object itself, for use in getters below
+
+        get _schema_() {
+            return this.self._category_?.item_schema || new DATA_GENERIC()
+        },
+    }
 
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
@@ -332,9 +333,6 @@ export class Item {
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
     }
-
-    _net_           // Network adapter that connects this item to its network API as defined in this.constructor.api
-    action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
 
     static api        = null    // API instance that defines this item's endpoints and protocols
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
