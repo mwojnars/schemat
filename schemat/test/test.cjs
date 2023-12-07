@@ -157,7 +157,10 @@ describe('Schemat Tests', function () {
                 ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
         })
 
-        // Repeat the above it() block for each URL you want to test
+        it('varia item', async function () {
+            await test_react_page(page, `${DOMAIN}/system/object/1017`, '#page-component',
+                ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
+        })
 
         // describe('UI Actions on sys.category:1000', function () {
         //     before(async function () {
