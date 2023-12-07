@@ -338,8 +338,6 @@ export class Item {
         },
     }
 
-    registry        // Registry that manages access to this item
-
     _net_           // Network adapter that connects this item to its network API as defined in this.constructor.api
     action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
 
@@ -359,7 +357,6 @@ export class Item {
         /* For internal use! Always call Item.create() instead of `new Item()`. */
         if(_fail_) throw new Error('item should be instantiated through Item.create() instead of new Item()')
         this._self_ = this      // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
-        // this.registry = globalThis.registry
     }
 
     __create__(...args) {
