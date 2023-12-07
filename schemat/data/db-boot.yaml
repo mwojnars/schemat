@@ -79,11 +79,6 @@
           info: Javascript class to be assigned to the item after loading to provide
             custom methods for the item.
           "@": CLASS
-#        _schema_:
-#          info: The DATA schema for this item. Non-editable, automatically imputed from
-#            this item's category(ies).
-#          inherit: false
-#          "@": OWN_SCHEMA
         _extends_:
           info: An item that serves as a prototype for this one, that is, provides default
             values for missing properties of this item. Multiple prototypes are

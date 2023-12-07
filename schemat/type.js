@@ -1422,19 +1422,6 @@ export class ITEM_SCHEMA extends TYPE {
     }
 }
 
-// export class OWN_SCHEMA extends TYPE {
-//     /* An (imputed) instance of DATA schema for the item (self), imputed from the category. */
-//
-//     static defaultProps = {
-//         editable: false,
-//         impute() {
-//             // assert(this instanceof Item)
-//             return this._category_?.item_schema || new DATA_GENERIC()
-//         }
-//     }
-// }
-
-
 /**********************************************************************************************************************/
 
 // export class VIRTUAL_FIELD extends Type {

@@ -1,5 +1,5 @@
 import {Catalog, Data} from "../data.js"
-import {CATALOG, CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN, ITEM_SCHEMA, OWN_SCHEMA, CLASS} from "../type.js"
+import {CATALOG, CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN, ITEM_SCHEMA, CLASS} from "../type.js"
 
 
 /**********************************************************************************************************************
@@ -13,7 +13,6 @@ let default_fields = new Catalog({
     _category_  : new ITEM({info: "Category of this item. Determines item's behavior and the schema of its attributes. Each category should be an item of the Root Category (IID=0).",
                             inherit: false}),
     _class_     : new CLASS({info: "Javascript class to be assigned to the item after loading to provide custom methods for the item."}),
-    _schema_    : new OWN_SCHEMA({info: "The DATA schema for this item. Non-editable, automatically imputed from this item's category(ies).", inherit: false}),
     _extends_   : new ITEM({info: "An item that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
                                   "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items or categories - the latter case represents category inheritance. " +
                                   "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories.",
