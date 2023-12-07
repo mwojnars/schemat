@@ -278,12 +278,14 @@ export class Item {
     import_path
     _extends_
     _container_
-    _class_                 // JS class of this item; assigned during .load()
+    _class_                 // JS class of this item; assigned AFTER object creation during .load()
 
-    // the props below have GETTERS defined, so they must be commented out not to mask the getter:
+    /* the props below have GETTERS defined, so they must be commented out not to mask the getters:
 
-    // _category_           // category of this item, as a Category object
-    // _schema_             // schema of this item's data, as a DATA object; calculated as an imputed property
+    _category_              // category of this item, as a Category object
+    _schema_                // schema of this item's data, as a DATA object; calculated as an imputed property
+
+    */
 
 
     /***  System properties  ***/
