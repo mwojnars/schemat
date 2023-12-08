@@ -958,7 +958,7 @@ export class Item {
 
 /**********************************************************************************************************************/
 
-Item.setCaching('getActions', 'getEndpoints', 'render')
+Item.setCaching('render')
 
 
 // When service functions (below) are called, `this` is always bound to the Item instance, so they execute
