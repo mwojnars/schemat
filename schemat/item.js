@@ -1080,9 +1080,8 @@ export class Category extends Item {
             let base = module.Class
             let name = `${base.name}`
             let cls = {[name]: class extends base {}}[name]
-            let _category = T.getOwnProperty(cls, '_category_')
+            let _category = T.getOwnProperty(cls, '_category_')     // ??? not needed?
             assert(_category === undefined || _category === this, this, _category)
-
             // cls.category_old = this
 
             // print('base:', base)
