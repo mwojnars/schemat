@@ -50,7 +50,6 @@ async function create_categories(Category) {
         info        : "File with a text content.",
         class_path  : '/system/local/std/files.js:File',
         // _boot_class : 'schemat.item.File',
-        cached_methods: "read",
         fields      : C({
             content     : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
             mimetype    : new STRING({info: "MIME type string (must include '/') to be set as Content-Type when serving file download; or an extension ('js', 'jpg', ...) to be converted to an appropriate type. If missing, response mimetype is inferred from the URL path extension, if present."}),
@@ -106,7 +105,6 @@ async function create_categories(Category) {
         info        : "Namespace for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         class_path  : '/system/local/std/urls.js:CategoryID_Namespace',
         fields      : C({spaces: new CATALOG({values: new ITEM({category: Category})})}),
-        cached_methods: "spacesRev",
     })
 
     cat.Type = await Category.new(10, {

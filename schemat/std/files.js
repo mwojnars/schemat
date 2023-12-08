@@ -28,10 +28,6 @@ export class File extends Item {
         /* Initial raw content of this file before any processing. */
         return this.content
     }
-    // read() {
-    //     /* Final post-processed (e.g., transpiled, compacted) content of this file. */
-    //     return this.process(this._content())
-    // }
 
     get content_processed() {
         return ItemProxy.CACHED(this.process(this._content()))

@@ -58,12 +58,6 @@
         reuse by subsequent requests. A real number. If zero, the items are
         evicted immediately after each request.
       "@": NUMBER
-    cached_methods:
-      info: Space- and/or comma-separated list of method names of this category's
-        Class whose calls are to be cached via Item.setCaching(). Only used when
-        a custom subclass is created through the `class_body` or `views`
-        properties.
-      "@": STRING
     fields:
       values:
         "@": TYPE
@@ -151,7 +145,6 @@
   name: File
   info: File with a text content.
   class_path: /system/local/std/files.js:File
-  cached_methods: read
   fields:
     content:
       "@": CODE
@@ -252,7 +245,6 @@
         "@": ITEM
       "@": CATALOG
     "@": Catalog
-  cached_methods: spacesRev
   _category_:
     "@": 0
   "@": Data
