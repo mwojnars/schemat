@@ -319,6 +319,10 @@ export class Item {
     _category_              category of this item, as a Category object
     _container_
 
+    _path_
+    _url_
+    _url_promise_
+
     import_path
 
     */
@@ -505,8 +509,7 @@ export class Item {
             this._set_expiry(category?.cache_ttl)
 
             if (this.is_linked())
-                this._url_promise_ = this._init_url()
-                // setTimeout(() => this._init_url())          // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
+                this._url_promise_ = this._init_url()       // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
             return this
 
@@ -736,7 +739,9 @@ export class Item {
     getPath() {
         /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.
            Starts with '/' (absolute path). */
-        return this.import_path || registry.site.systemPath(this)
+        let path = this.import_path || registry.site.systemPath(this)
+        print('getPath():', path, ' _url_:', this._url_)
+        return path
     }
 
     getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
