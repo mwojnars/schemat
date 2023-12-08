@@ -958,9 +958,6 @@ export class Item {
 
 /**********************************************************************************************************************/
 
-Item.setCaching('render')
-
-
 // When service functions (below) are called, `this` is always bound to the Item instance, so they execute
 // in the context of their item like if they were regular methods of the Item (sub)class.
 // The first argument, `request`, is a Request instance, followed by action-specific list of arguments.
