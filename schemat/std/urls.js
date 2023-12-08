@@ -3,7 +3,7 @@
  */
 
 import {assert} from "../common/utils.js"
-import {Item} from "../item.js"
+import {Item, ItemProxy} from "../item.js"
 import {UrlPathNotFound} from "../common/errors.js";
 
 
@@ -191,14 +191,16 @@ export class CategoryID_Namespace extends Namespace {
 
     identify(item) {
         let sep = CategoryID_Namespace.ID_SEPARATOR
-        let spaces_rev = this.spacesRev()
+        let spaces_rev = this.spaces_rev
         let space = spaces_rev.get(item._category_?._id_)
         if (space) return `${space}${sep}${item._id_}`
     }
 
-    spacesRev() {
+    get spaces_rev() {
+        /* A reverse mapping of category identifiers to space names. Cached. */
         let catalog = this.spaces
-        return new Map(catalog.map(({key, value:item}) => [item._id_, key]))
+        let rev = new Map(catalog.map(({key, value:item}) => [item._id_, key]))
+        return ItemProxy.CACHED(rev)
     }
 
     findRoute(request) {
@@ -211,7 +213,4 @@ export class CategoryID_Namespace extends Namespace {
         return [item, request.pushApp(this).move(step), true]
     }
 }
-
-CategoryID_Namespace.setCaching('spacesRev')
-
 
