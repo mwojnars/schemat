@@ -190,12 +190,22 @@ class ItemProxy {
     // these props can never be found inside item's schema and should always be accessed as regular object attributes
     static RESERVED = ['_id_', '_meta_', '_data_', '_record_', '_url_', '_path_', '_url_promise_']
 
+    static CACHED(value) {
+        /* Call this function to mark a return value of a getter as to-be-cached and prevent it from being recomputed. */
+        if (value === undefined) value = ItemProxy.UNDEFINED
+        return {[this.CACHED_OBJECT]: true, value}
+    }
+    static CACHED_OBJECT = Symbol.for('ItemProxy.CACHED_OBJECT')
+
     static wrap(target) {
         return new Proxy(target, {get: this.get})
     }
 
     static get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
+
+        // let value = target[prop]
+        // if (typeof value === 'function') value = value.call(receiver)       // getter
 
         if (value === ItemProxy.UNDEFINED) return undefined
         if (value !== undefined) return value
@@ -210,6 +220,13 @@ class ItemProxy {
         // if (prop.length >= 2 && prop[0] === '_' && prop[prop.length - 1] === '_')    // _***_ props are reserved for internal use
         if (ItemProxy.RESERVED.includes(prop))
             return undefined
+
+        // try using the ${prop}_cached (typically, a getter) and caching the result, if present
+        value = Reflect.get(target, `${prop}_cached`, receiver)
+        if (value !== undefined) {
+            Object.defineProperty(target._self_, prop, {value, writable: false, configurable: true})
+            return value
+        }
 
         return ItemProxy._fetch(target, prop)
     }
@@ -301,6 +318,9 @@ export class Item {
 
     */
 
+    // // list of special attributes that are implemented as getters, but are immutable and should be cached like regular props
+    // _cached_ = ['_category_', '_schema_']
+
 
     /***  System properties  ***/
 
@@ -329,11 +349,19 @@ export class Item {
         Object.defineProperty(this._self_, '_record_', {value: record, writable: false})
     }
 
-    get _schema_() {
-        return this._schema_ = this._category_?.item_schema || new DATA_GENERIC()
-    }
-    set _schema_(schema) {
-        Object.defineProperty(this._self_, '_schema_', {value: schema, writable: false})
+    // get _schema_() {
+    //     return this._schema_ = this._category_?.item_schema || new DATA_GENERIC()
+    // }
+    // set _schema_(schema) {
+    //     Object.defineProperty(this._self_, '_schema_', {value: schema, writable: false})
+    // }
+
+    // get _schema_() {
+    //     return ItemProxy.CACHED(this._category_?.item_schema || new DATA_GENERIC())
+    // }
+    get _schema__cached() {
+        print('get _schema__cached')
+        return this._category_?.item_schema || new DATA_GENERIC()
     }
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
@@ -342,13 +370,12 @@ export class Item {
     _net_           // Network adapter that connects this item to its network API as defined in this.constructor.api
     action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
 
-    _default_ = {
-        self: this,             // the main object itself, for use in getters below
-
-        // get _schema_() {
-        //     return this.self._category_?.item_schema || new DATA_GENERIC()
-        // },
-    }
+    // _default_ = {
+    //     self: this,             // the main object itself, for use in getters below
+    //     get _schema_() {
+    //         return this.self._category_?.item_schema || new DATA_GENERIC()
+    //     },
+    // }
 
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
@@ -699,10 +726,10 @@ export class Item {
         let streams = ancestors.map(proto => proto._own_values(prop))
         let values = type.combine_inherited(streams, proxy)                     // `default` and `impute` of the schema is applied here
 
-        if (!values.length) {                                                   // impute with class-level default as a last resort
-            let pojo_default = this._default_[prop]
-            if (pojo_default !== undefined) values = [pojo_default]
-        }
+        // if (!values.length) {                                                   // impute with class-level default as a last resort
+        //     let pojo_default = this._default_[prop]
+        //     if (pojo_default !== undefined) values = [pojo_default]
+        // }
 
         return values
     }
