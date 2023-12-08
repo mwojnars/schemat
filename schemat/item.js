@@ -298,23 +298,19 @@ export class Item {
 
     name
     info
+
+    /***  Special properties  ***/
+
     import_path
     _extends_
     _container_
     _class_                 // JS class of this item; assigned AFTER object creation during .load()
 
-    /* the props below have GETTERS defined, so they must be commented out not to mask the getters:
+                            /* the props below have GETTERS defined, so they must be commented out not to mask the getters:
 
     _category_              // category of this item, as a Category object
     _schema_                // schema of this item's data, as a DATA object; calculated as an imputed property
-
-    */
-
-    // // list of special attributes that are implemented as getters, but are immutable and should be cached like regular props
-    // _cached_ = ['_category_', '_schema_']
-
-
-    /***  System properties  ***/
+                            */
 
     /* _id_:
        database ID of the object, globally unique; undefined in a newly created item; should never be changed
@@ -346,6 +342,8 @@ export class Item {
         return ItemProxy.CACHED(value)
     }
 
+    /***  Internal properties  ***/
+
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
     _data_          // data fields of this item, as a Data object; created during .load()
@@ -364,6 +362,9 @@ export class Item {
 
     static api        = null    // API instance that defines this item's endpoints and protocols
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
+
+
+    /***  Object status  ***/
 
     is_linked()     { return this._id_ !== undefined }                  // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized
