@@ -192,8 +192,9 @@ class ItemProxy {
     static CACHED_VALUE = Symbol.for('ItemProxy.CACHED_VALUE')
 
     static CACHED(value) {
-        /* Call this function to add a wrapper to a return value of a getter of the object's special property
-           to mark that the value should be cached and reused after the first calculation.
+        /* Wrap up a return value of a getter of the object's special property to mark that the value
+           should be cached and reused after the first calculation. undefined is a valid, cached value,
+           and it is stored as ItemProxy.UNDEFINED. If you don't want caching, return `value` instead (not wrapped).
          */
         return {[this.CACHED_VALUE]: true, value}
     }
