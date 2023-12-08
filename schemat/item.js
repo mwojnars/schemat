@@ -348,10 +348,9 @@ export class Item {
     get _prototypes_() { return ItemProxy.CACHED(this._extends__array) }
 
     get _ancestors_() {
-        /* TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
-           https://en.wikipedia.org/wiki/C3_linearization
-           http://python-history.blogspot.com/2010/06/method-resolution-order.html
-         */
+        // TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
+        // https://en.wikipedia.org/wiki/C3_linearization
+        // http://python-history.blogspot.com/2010/06/method-resolution-order.html
         let candidates = this._prototypes_.map(proto => proto._ancestors_)
         let ancestors = [this, ...unique(concat(candidates))]
         return ItemProxy.CACHED(ancestors)
