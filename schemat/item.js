@@ -312,7 +312,9 @@ export class Item {
     _schema_                schema of this item's data, as a DATA object
 
     _extends_
-    _prototypes_            array of direct ancestors (prototypes) of this object
+    _prototypes_            array of direct ancestors (prototypes) of this object; alias for `_extends__array`
+    _ancestors_             array of all ancestors, deduplicated and linearized, with `this` at the first position
+
     _class_                 JS class of this item; assigned AFTER object creation during .load()
     _category_              category of this item, as a Category object
     _container_
@@ -344,6 +346,16 @@ export class Item {
     }
 
     get _prototypes_() { return ItemProxy.CACHED(this._extends__array) }
+
+    get _ancestors_() {
+        /* TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
+           https://en.wikipedia.org/wiki/C3_linearization
+           http://python-history.blogspot.com/2010/06/method-resolution-order.html
+         */
+        let candidates = this._prototypes_.map(proto => proto._ancestors_)
+        let ancestors = [this, ...unique(concat(candidates))]
+        return ItemProxy.CACHED(ancestors)
+    }
 
 
     /***  Internal properties  ***/
@@ -710,16 +722,6 @@ export class Item {
     }
 
     _own_values(prop)  { return this._data_.getValues(prop) }
-
-    get _ancestors_() {
-        /* Linearized list of all ancestors, with `this` at the first position.
-           TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
-           https://en.wikipedia.org/wiki/C3_linearization
-           http://python-history.blogspot.com/2010/06/method-resolution-order.html
-         */
-        let ancestors = this._prototypes_.map(proto => proto._ancestors_)
-        return [this, ...unique(concat(ancestors))]
-    }
 
     // object(first = true) {
     //     /* Return this._data_ converted to a plain object. For repeated keys, only one value is included:
