@@ -195,7 +195,6 @@ class ItemProxy {
         /* Call this function to add a wrapper to a return value of a getter of the object's special property
            to mark that the value should be cached and reused after the first calculation.
          */
-        if (value === undefined) value = ItemProxy.UNDEFINED
         return {[this.CACHED_VALUE]: true, value}
     }
 
@@ -211,7 +210,8 @@ class ItemProxy {
         if (typeof value === 'object' && value?.[ItemProxy.CACHED_VALUE]) {
             // the value comes from a getter and should be cached
             value = value.value
-            Object.defineProperty(target._self_, prop, {value, writable: false, configurable: true})
+            let stored = (value === undefined) ? ItemProxy.UNDEFINED : value
+            Object.defineProperty(target._self_, prop, {value: stored, writable: false, configurable: true})
             return value
         }
 
