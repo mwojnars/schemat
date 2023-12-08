@@ -200,7 +200,7 @@ class ItemProxy {
     }
 
 
-    static wrap(target) {
+    static create(target) {
         return new Proxy(target, {get: this.get})
     }
 
@@ -228,11 +228,7 @@ class ItemProxy {
         if (ItemProxy.RESERVED.includes(prop))
             return undefined
 
-        return ItemProxy._fetch(target, prop)
-    }
-
-    static _fetch(target, prop) {
-        /* Fetch a single value or an array of all values of a property `prop` from the target item's data. */
+        // fetch a single value or an array of values of a property `prop` from the target object's _data_ ...
 
         // console.log('get', prop)
         let suffix = ItemProxy.MULTIPLE_SUFFIX
@@ -258,11 +254,6 @@ class ItemProxy {
 
         return multiple ? values : single
     }
-
-    // static set(target, prop, value, receiver) {
-    //     // console.log('set', prop)
-    //     return Reflect.set(target, prop, value, receiver)
-    // }
 }
 
 /**********************************************************************************************************************/
@@ -406,7 +397,7 @@ export class Item {
     static create_stub(id) {
         /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
         let core = new this(false)
-        let item = core._proxy_ = ItemProxy.wrap(core)
+        let item = core._proxy_ = ItemProxy.create(core)
         if (id !== undefined) core._id_ = id
         return item
     }
