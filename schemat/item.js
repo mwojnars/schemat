@@ -384,7 +384,6 @@ export class Item {
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
         mutable: false,         // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
         expiry:  undefined,     // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
-        calls_cache: new Map(), // cache of method calls, {method: value}, of no-arg calls of methods registered thru setCaching(); values can be Promises!
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -922,42 +921,6 @@ export class Item {
         registry.unregister(this)
         this._meta_.mutable = true
         return this
-    }
-
-    static setCaching(...methods) {
-        /* In the class'es prototype, replace each method from `methods` with cached(method) wrapper.
-           The wrapper utilizes the `_methodCache` property of an Item instance to store cached values.
-           NOTE: the value is cached and re-used only when the method was called without arguments;
-                 otherwise, the original method is executed on each and every call.
-           NOTE: methods cached can be async, in such case the value cached and returned is a Promise.
-         */
-        // print(`${this.constructor.name}.setCaching(): ${methods}`)
-
-        const cached = (name, fun) => {
-            function wrapper(...args) {
-                while (args.length && args[args.length-1] === undefined)
-                    args.pop()                                      // drop trailing `undefined` arguments
-                if (args.length) return fun.call(this, ...args)     // here and below, `this` is an Item instance
-
-                let cache = this._meta_.calls_cache                 // here, `this` is an Item instance
-                if (cache.has(name)) return cache.get(name)         // print(`${name}() from _methodCache`)
-
-                let value = fun.call(this)
-                if (value instanceof Promise)                       // for async methods store the final value when available
-                    value.then(v => cache.set(name, v))             // to speed up subsequent access (no waiting for promise)
-
-                cache.set(name, value)                              // may store a promise (!)
-                return value                                        // may return a promise (!), the caller should be aware
-            }
-            Object.defineProperty(wrapper, 'name', {value: `${name}_cached`})
-            wrapper.isCached = true                                 // to detect an existing wrapper and avoid repeated wrapping
-            return wrapper
-        }
-        for (const name of methods) {
-            let fun = this.prototype[name]                          // here, `this` is the Item class or its subclass
-            if (fun && !fun.isCached)
-                this.prototype[name] = cached(name, fun)
-        }
     }
 }
 
