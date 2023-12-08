@@ -277,7 +277,7 @@ export class Site extends Directory {
 
     /*** Processing requests & URL generation ***/
 
-    get system_URL() {
+    get system_url() {
         /* Absolute base URL for system calls originating at a web client and targeting specific items. */
         return ItemProxy.CACHED(this.base_url + this.default_path)
     }

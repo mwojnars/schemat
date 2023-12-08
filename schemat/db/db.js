@@ -23,7 +23,7 @@ export class ClientDB {
                             // each data is JSON-encoded for safety, to avoid accidental modification
 
     // base URL for AJAX calls, should contain no trailing slash '/' (!)
-    get _url() { return globalThis.registry.site.system_URL }
+    get _url() { return globalThis.registry.site.system_url }
 
     constructor(records = []) {
         this.cache(...records)
