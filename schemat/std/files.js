@@ -5,7 +5,7 @@
  */
 
 import {print} from "../common/utils.js"
-import {Item} from "../item.js"
+import {Item, ItemProxy} from "../item.js"
 import {HttpService, InternalService} from "../services.js"
 import {Directory} from "./urls.js";
 import {UrlPathNotFound} from "../common/errors.js";
@@ -28,9 +28,13 @@ export class File extends Item {
         /* Initial raw content of this file before any processing. */
         return this.content
     }
-    read() {
-        /* Final post-processed (e.g., transpiled, compacted) content of this file. */
-        return this.process(this._content())
+    // read() {
+    //     /* Final post-processed (e.g., transpiled, compacted) content of this file. */
+    //     return this.process(this._content())
+    // }
+
+    get content_processed() {
+        return ItemProxy.CACHED(this.process(this._content()))
     }
 
     // async CALL_import({request}) {
@@ -64,7 +68,7 @@ File.create_api({        // endpoints...
     'CALL/text':    new InternalService(function (request)
     {
         /* Plain text of this File for Site.import() etc. */
-        let txt = this.read()
+        let txt = this.content_processed
         if (txt === undefined) request.throwNotFound()
         return txt
     }),
@@ -73,7 +77,7 @@ File.create_api({        // endpoints...
     {
         // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
         this.setMimeType(request.res, request.pathFull)
-        let txt = this.read()
+        let txt = this.content_processed
         if (txt === undefined) request.throwNotFound()
         return txt
     }),
