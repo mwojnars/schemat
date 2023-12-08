@@ -259,7 +259,7 @@ class ItemProxy {
         return multiple ? values : single
     }
 
-    // static   set(target, prop, value, receiver) {
+    // static set(target, prop, value, receiver) {
     //     // console.log('set', prop)
     //     return Reflect.set(target, prop, value, receiver)
     // }
@@ -348,13 +348,6 @@ export class Item {
         assert(record.id === this._id_)
         Object.defineProperty(this._self_, '_record_', {value: record, writable: false})
     }
-
-    // get _schema_() {
-    //     return this._schema_ = this._category_?.item_schema || new DATA_GENERIC()
-    // }
-    // set _schema_(schema) {
-    //     Object.defineProperty(this._self_, '_schema_', {value: schema, writable: false})
-    // }
 
     get _schema_() {
         let value = this._category_?.item_schema || new DATA_GENERIC()
@@ -715,11 +708,6 @@ export class Item {
         let ancestors = type.props.inherit ? proxy._get_ancestors() : [proxy]   // `this` is always included as the first ancestor
         let streams = ancestors.map(proto => proto._own_values(prop))
         let values = type.combine_inherited(streams, proxy)                     // `default` and `impute` of the schema is applied here
-
-        // if (!values.length) {                                                   // impute with class-level default as a last resort
-        //     let pojo_default = this._default_[prop]
-        //     if (pojo_default !== undefined) values = [pojo_default]
-        // }
 
         return values
     }
