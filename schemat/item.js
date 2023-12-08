@@ -325,6 +325,8 @@ export class Item {
     _import_path_           default URL import path of this item, for interpretation of relative imports in dynamic code
                             inside this item; starts with '/' (absolute path); TODO: replace with _url_?
 
+    _assets_                cached web Assets of this object's _schema_
+
     */
 
     get _id_()   { return undefined }
@@ -365,6 +367,8 @@ export class Item {
         // print('_import_path_:', path, ' _url_:', this._url_)
         return ItemProxy.CACHED(path)
     }
+
+    get _assets_() { return ItemProxy.CACHED(this._schema_.getAssets()) }
 
 
     /***  Internal properties  ***/
@@ -1227,7 +1231,6 @@ export class Category extends Item {
     }
 }
 
-Category.setCaching('getAssets')
 
 Category.create_api(
     {

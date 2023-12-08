@@ -224,7 +224,8 @@ export class ItemAdminPage extends ReactPage {
         html_head() {
             /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
             let globalAssets = Resources.clientAssets
-            let staticAssets = this._schema_.getAssets().renderAll()
+            let staticAssets = this._assets_.renderAll()
+            // let staticAssets = this._schema_.getAssets().renderAll()
             let customAssets = this._category_?.html_assets
             let assets = [globalAssets, staticAssets, customAssets]
             return assets .filter(a => a?.trim()) .join('\n')
