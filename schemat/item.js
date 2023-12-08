@@ -322,7 +322,8 @@ export class Item {
     _path_
     _url_
     _url_promise_
-
+    _import_path_           default URL import path of this item, for interpretation of relative imports in dynamic code
+                            inside this item; starts with '/' (absolute path); TODO: replace with _url_?
     */
 
     get _id_()   { return undefined }
@@ -356,6 +357,12 @@ export class Item {
         let candidates = this._prototypes_.map(proto => proto._ancestors_)
         let ancestors = [this, ...unique(concat(candidates))]
         return ItemProxy.CACHED(ancestors)
+    }
+
+    get _import_path_() {
+        let path = registry.site.systemPath(this)
+        // print('_import_path_:', path, ' _url_:', this._url_)
+        return ItemProxy.CACHED(path)
     }
 
 
@@ -733,14 +740,6 @@ export class Item {
     //     obj.__item__ = this
     //     return obj
     // }
-
-    get _import_path_() {
-        /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.
-           Starts with '/' (absolute path). */
-        let path = registry.site.systemPath(this)
-        // print('_import_path_:', path, ' _url_:', this._url_)
-        return path
-    }
 
     getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
         /*
