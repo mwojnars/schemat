@@ -183,19 +183,20 @@ class ItemProxy {
     // the suffix appended to a property name when an array of *all* values of this property is requested, not a single value
     static MULTIPLE_SUFFIX = '_array'
 
-    // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
-    // and still remained undefined, so it should *not* be computed again
-    static UNDEFINED = Symbol.for('ItemProxy.UNDEFINED')
-
     // these props can never be found inside item's schema and should always be accessed as regular object attributes
     static RESERVED = ['_id_', '_meta_', '_data_', '_record_', '_url_', '_path_', '_url_promise_']
 
+    // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
+    // and still remained undefined, so it should *not* be computed again
+    static UNDEFINED = Symbol.for('ItemProxy.UNDEFINED')
+    static CACHED_VALUE = Symbol.for('ItemProxy.CACHED_VALUE')
+
     static CACHED(value) {
-        /* Call this function to mark a return value of a getter as to-be-cached and prevent it from being recomputed. */
+        /* Call this function to mark that a return value of a getter for the object's special property should be cached. */
         if (value === undefined) value = ItemProxy.UNDEFINED
-        return {[this.CACHED_OBJECT]: true, value}
+        return {[this.CACHED_VALUE]: true, value}
     }
-    static CACHED_OBJECT = Symbol.for('ItemProxy.CACHED_OBJECT')
+
 
     static wrap(target) {
         return new Proxy(target, {get: this.get})
@@ -204,8 +205,12 @@ class ItemProxy {
     static get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
 
-        // let value = target[prop]
-        // if (typeof value === 'function') value = value.call(receiver)       // getter
+        if (typeof value === 'object' && value?.[ItemProxy.CACHED_VALUE]) {
+            // the value comes from a getter and should be cached
+            value = value.value
+            Object.defineProperty(target._self_, prop, {value, writable: false, configurable: true})
+            return value
+        }
 
         if (value === ItemProxy.UNDEFINED) return undefined
         if (value !== undefined) return value
@@ -221,12 +226,12 @@ class ItemProxy {
         if (ItemProxy.RESERVED.includes(prop))
             return undefined
 
-        // try using the ${prop}_cached (typically, a getter) and caching the result, if present
-        value = Reflect.get(target, `${prop}_cached`, receiver)
-        if (value !== undefined) {
-            Object.defineProperty(target._self_, prop, {value, writable: false, configurable: true})
-            return value
-        }
+        // // try using the ${prop}_cached (typically, a getter) and caching the result, if present
+        // value = Reflect.get(target, `${prop}_cached`, receiver)
+        // if (value !== undefined) {
+        //     Object.defineProperty(target._self_, prop, {value, writable: false, configurable: true})
+        //     return value
+        // }
 
         return ItemProxy._fetch(target, prop)
     }
@@ -356,26 +361,21 @@ export class Item {
     //     Object.defineProperty(this._self_, '_schema_', {value: schema, writable: false})
     // }
 
-    // get _schema_() {
-    //     return ItemProxy.CACHED(this._category_?.item_schema || new DATA_GENERIC())
-    // }
-    get _schema__cached() {
-        print('get _schema__cached')
-        return this._category_?.item_schema || new DATA_GENERIC()
+    get _schema_() {
+        let value = this._category_?.item_schema || new DATA_GENERIC()
+        return ItemProxy.CACHED(value)
     }
+
+    // get _schema__cached() {
+    //     print('get _schema__cached')
+    //     return this._category_?.item_schema || new DATA_GENERIC()
+    // }
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
     _data_          // data fields of this item, as a Data object; created during .load()
     _net_           // Network adapter that connects this item to its network API as defined in this.constructor.api
     action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
-
-    // _default_ = {
-    //     self: this,             // the main object itself, for use in getters below
-    //     get _schema_() {
-    //         return this.self._category_?.item_schema || new DATA_GENERIC()
-    //     },
-    // }
 
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
         loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
