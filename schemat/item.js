@@ -301,32 +301,32 @@ export class Item {
 
     /***  Special properties  ***/
 
-    import_path
+    /* some of the props below have getters defined, and so they must be commented out not to mask the getters:
+
+    _id_                    database ID of the object, globally unique; undefined in a newly created item; should never be changed
+                            for an existing item, that's why the property is set to read-only after the first assignment
+
+    _record_                ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
+                            undefined in a newborn item; immutable after the first assignment
+
+    _schema_                schema of this item's data, as a DATA object
+
     _extends_
+    _prototypes_            array of direct ancestors (prototypes) of this object
+    _class_                 JS class of this item; assigned AFTER object creation during .load()
+    _category_              category of this item, as a Category object
     _container_
-    _class_                 // JS class of this item; assigned AFTER object creation during .load()
 
-                            /* the props below have GETTERS defined, so they must be commented out not to mask the getters:
+    import_path
 
-    _category_              // category of this item, as a Category object
-    _schema_                // schema of this item's data, as a DATA object; calculated as an imputed property
-    _prototypes_            // array of direct ancestors (prototypes) of this object
-                            */
-
-    /* _id_:
-       database ID of the object, globally unique; undefined in a newly created item; should never be changed
-       for an existing item, that's why the property is set to read-only after the first assignment
     */
+
     get _id_()   { return undefined }
     set _id_(id) {
         if (id === undefined) return
         Object.defineProperty(this._self_, '_id_', {value: id, writable: false})
     }
 
-    /* _record_:
-       ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
-       undefined in a newborn item; immutable after the first assignment
-    */
     get _record_() {
         this.assert_linked()
         this.assert_loaded()
