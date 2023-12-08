@@ -522,7 +522,7 @@ export class Item {
 
     _init_prototypes() {
         /* Load all Schemat prototypes of this object. */
-        let prototypes = this._get_prototypes()
+        let prototypes = this._prototypes_
         // for (const p of prototypes)        // TODO: update the code below to verify ._category_ instead of CIDs
             // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
         prototypes = prototypes.filter(p => !p.is_loaded())
@@ -598,7 +598,7 @@ export class Item {
            True if parent==this. All comparisons by item ID.
          */
         if (schemat.equivalent(this, parent)) return true
-        for (const proto of this._get_prototypes())
+        for (const proto of this._prototypes_)
             if (proto.inherits(parent)) return true
         return false
     }
@@ -707,6 +707,8 @@ export class Item {
 
     _own_values(prop)  { return this._data_.getValues(prop) }
 
+    get _prototypes_() { return ItemProxy.CACHED(this._extends__array) }
+
     _get_prototypes()  { return this._extends__array }
     // _get_prototypes()  { return this._own_values('_extends_') }
 
@@ -716,7 +718,7 @@ export class Item {
            https://en.wikipedia.org/wiki/C3_linearization
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
-        let ancestors = this._get_prototypes().map(proto => proto._get_ancestors())
+        let ancestors = this._prototypes_.map(proto => proto._get_ancestors())
         return [this, ...unique(concat(ancestors))]
     }
 
@@ -1129,7 +1131,7 @@ export class Category extends Item {
         let cls
         if (!path) [path, name] = this.getClassPath()
         if (!path) {
-            let proto = this._get_prototypes()[0]
+            let proto = this._prototypes_[0]
             return proto ? proto.getItemClass() : Item
         }
         return registry.importDirect(path, name || 'default')
