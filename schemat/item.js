@@ -310,6 +310,7 @@ export class Item {
 
     _category_              // category of this item, as a Category object
     _schema_                // schema of this item's data, as a DATA object; calculated as an imputed property
+    _prototypes_            // array of direct ancestors (prototypes) of this object
                             */
 
     /* _id_:
@@ -341,6 +342,9 @@ export class Item {
         let value = this._category_?.item_schema || new DATA_GENERIC()
         return ItemProxy.CACHED(value)
     }
+
+    get _prototypes_() { return ItemProxy.CACHED(this._extends__array) }
+
 
     /***  Internal properties  ***/
 
@@ -707,11 +711,6 @@ export class Item {
 
     _own_values(prop)  { return this._data_.getValues(prop) }
 
-    get _prototypes_() { return ItemProxy.CACHED(this._extends__array) }
-
-    _get_prototypes()  { return this._extends__array }
-    // _get_prototypes()  { return this._own_values('_extends_') }
-
     _get_ancestors() {
         /* Linearized list of all ancestors, with `this` at the first position.
            TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
@@ -951,18 +950,11 @@ export class Item {
                 this.prototype[name] = cached(name, fun)
         }
     }
-
-    // static cached_methods = ['_get_prototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render']
-    //
-    // static initClass() {
-    //     let methods = this.category.prop('cached_methods')
-    //     this.setCaching(...methods)
-    // }
 }
 
 /**********************************************************************************************************************/
 
-Item.setCaching('_get_prototypes', '_get_ancestors', 'getPath', 'getActions', 'getEndpoints', 'render')
+Item.setCaching('_get_ancestors', 'getPath', 'getActions', 'getEndpoints', 'render')
 
 
 // When service functions (below) are called, `this` is always bound to the Item instance, so they execute
