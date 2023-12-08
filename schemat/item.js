@@ -702,22 +702,22 @@ export class Item {
         if (!type.isRepeated() && !type.isCompound() && data.has(prop))
             return [data.get(prop)]
 
-        let ancestors = type.props.inherit ? proxy._get_ancestors() : [proxy]   // `this` is always included as the first ancestor
+        let ancestors = type.props.inherit ? proxy._ancestors_ : [proxy]    // `this` is always included as the first ancestor
         let streams = ancestors.map(proto => proto._own_values(prop))
-        let values = type.combine_inherited(streams, proxy)                     // `default` and `impute` of the schema is applied here
+        let values = type.combine_inherited(streams, proxy)                 // `default` and `impute` of the schema is applied here
 
         return values
     }
 
     _own_values(prop)  { return this._data_.getValues(prop) }
 
-    _get_ancestors() {
+    get _ancestors_() {
         /* Linearized list of all ancestors, with `this` at the first position.
            TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
            https://en.wikipedia.org/wiki/C3_linearization
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
-        let ancestors = this._prototypes_.map(proto => proto._get_ancestors())
+        let ancestors = this._prototypes_.map(proto => proto._ancestors_)
         return [this, ...unique(concat(ancestors))]
     }
 
@@ -954,7 +954,7 @@ export class Item {
 
 /**********************************************************************************************************************/
 
-Item.setCaching('_get_ancestors', 'getPath', 'getActions', 'getEndpoints', 'render')
+Item.setCaching('getPath', 'getActions', 'getEndpoints', 'render')
 
 
 // When service functions (below) are called, `this` is always bound to the Item instance, so they execute
