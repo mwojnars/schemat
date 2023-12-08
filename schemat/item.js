@@ -1175,10 +1175,9 @@ export class Category extends Item {
         // if (!body) return 'let Class = Base'
         let def  = body ? `class ${name} extends Base {\n${body}\n}` : `let ${name} = Base`
         if (name !== 'Class') def += `\nlet Class = ${name}`
+        return def
         // let views = this._codeViewsHandlers()
         // let hdlrs = this._codeHandlers()
-        let cache = this._codeCache()
-        return [def, cache] .filter(Boolean) .join('\n')
     }
     _codeBody() {
         /* Source code of this category's dynamic Class body. */
@@ -1210,15 +1209,6 @@ export class Category extends Item {
     //     // print('_codeHandlers():', code)
     //     // return code
     // }
-    _codeCache() {
-        /* Source code of setCaching() statement for selected methods of a custom Class. */
-        let methods = this.cached_methods_array.reverse()
-        methods = methods.join(' ').replaceAll(',', ' ').trim()
-        if (!methods) return ''
-        methods = methods.split(/\s+/).map(m => `'${m}'`)
-        print('_codeCache().cached:', methods)
-        return `Class.setCaching(${methods.join(',')})`
-    }
 
     _checkPath(request) {
         /* Check if the request's path is compatible with the default path of this item. Throw an exception if not. */
