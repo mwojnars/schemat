@@ -200,7 +200,8 @@ class ItemProxy {
     }
 
 
-    static create(target) {
+    static wrap(target) {
+        /* Create a Proxy wrapper around `target` object. */
         return new Proxy(target, {get: this.get})
     }
 
@@ -397,7 +398,7 @@ export class Item {
     static create_stub(id) {
         /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
         let core = new this(false)
-        let item = core._proxy_ = ItemProxy.create(core)
+        let item = core._proxy_ = ItemProxy.wrap(core)
         if (id !== undefined) core._id_ = id
         return item
     }
