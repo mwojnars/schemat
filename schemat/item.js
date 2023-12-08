@@ -192,7 +192,9 @@ class ItemProxy {
     static CACHED_VALUE = Symbol.for('ItemProxy.CACHED_VALUE')
 
     static CACHED(value) {
-        /* Call this function to mark that a return value of a getter for the object's special property should be cached. */
+        /* Call this function to add a wrapper to a return value of a getter of the object's special property
+           to mark that the value should be cached and reused after the first calculation.
+         */
         if (value === undefined) value = ItemProxy.UNDEFINED
         return {[this.CACHED_VALUE]: true, value}
     }
@@ -225,13 +227,6 @@ class ItemProxy {
         // if (prop.length >= 2 && prop[0] === '_' && prop[prop.length - 1] === '_')    // _***_ props are reserved for internal use
         if (ItemProxy.RESERVED.includes(prop))
             return undefined
-
-        // // try using the ${prop}_cached (typically, a getter) and caching the result, if present
-        // value = Reflect.get(target, `${prop}_cached`, receiver)
-        // if (value !== undefined) {
-        //     Object.defineProperty(target._self_, prop, {value, writable: false, configurable: true})
-        //     return value
-        // }
 
         return ItemProxy._fetch(target, prop)
     }
@@ -365,11 +360,6 @@ export class Item {
         let value = this._category_?.item_schema || new DATA_GENERIC()
         return ItemProxy.CACHED(value)
     }
-
-    // get _schema__cached() {
-    //     print('get _schema__cached')
-    //     return this._category_?.item_schema || new DATA_GENERIC()
-    // }
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
