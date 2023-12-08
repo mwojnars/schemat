@@ -559,7 +559,7 @@ export class Item {
            known after loading the item's data.
          */
         // T.setClass(this, await this.getClass() || Item)
-        let cls = this._class_ || await this._category_?.getItemClass()
+        let cls = this._class_ || await this._category_?._item_class_
         T.setClass(this, cls || Item)
     }
 
@@ -634,15 +634,15 @@ export class Item {
     //         print('this.category:', this.category)
     //         print('getItemClass:', this.category.getItemClass)
     //     }
-    //     return this.category?.getItemClass()
+    //     return this.category?._item_class_
     // }
 
     // getClass() {
     //     /* Create/parse/load a JS class for this item. If `custom_class` property is true, the item may receive
     //        a custom subclass (different from the category's default) built from this item's own & inherited `code*` snippets.
     //      */
-    //     return this.category.getItemClass()
-    //     // let base = this.category.getItemClass()
+    //     return this.category._item_class_
+    //     // let base = this.category._item_class_
     //     // let custom = this.category.get('custom_class')
     //     // return custom ? this.parseClass(base) : base
     // }
@@ -1072,22 +1072,23 @@ export class Category extends Item {
         return Item.from_data(id, data)
     }
 
-    async getItemClass() {
-        /* Return the dynamically created class to be used for items of this category. */
-        // below, module.Class is subclassed to allow safe addition of a static .category attribute,
-        // even when several categories share the `base` class, so each one needs a different value of .category
-        let module = await this.getModule()
-        let base = module.Class
-        let name = `${base.name}`
-        let cls = {[name]: class extends base {}}[name]
-        let _category = T.getOwnProperty(cls, '_category_')
-        assert(_category === undefined || _category === this, this, _category)
+    get _item_class_() {
+        /* Return a (cached) Promise that resolves to the dynamically created class to be used for items of this category. */
+        return ItemProxy.CACHED(this.getModule().then(module => {
+            // below, module.Class is subclassed to allow safe addition of a static _category_ attribute:
+            // when several categories share the `base` class, each one needs a different value of _category_
+            let base = module.Class
+            let name = `${base.name}`
+            let cls = {[name]: class extends base {}}[name]
+            let _category = T.getOwnProperty(cls, '_category_')
+            assert(_category === undefined || _category === this, this, _category)
 
-        // cls.category_old = this
+            // cls.category_old = this
 
-        // print('base:', base)
-        // print('cls:', cls)
-        return cls
+            // print('base:', base)
+            // print('cls:', cls)
+            return cls
+        }))
     }
 
     async getModule() {
@@ -1128,7 +1129,7 @@ export class Category extends Item {
         if (!path) [path, name] = this.getClassPath()
         if (!path) {
             let proto = this._prototypes_[0]
-            return proto ? proto.getItemClass() : Item
+            return proto ? proto._item_class_ : Item
         }
         return registry.importDirect(path, name || 'default')
     }
@@ -1227,7 +1228,7 @@ export class Category extends Item {
     }
 }
 
-Category.setCaching('getModule', 'getItemClass', 'getAssets')   //'getHandlers'
+Category.setCaching('getAssets')
 
 Category.create_api(
     {
