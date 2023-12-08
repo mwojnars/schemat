@@ -181,106 +181,63 @@ export class Widget extends Component {}
  **
  */
 
-export class Page {
-    /* Collection of methods that together generate a complete HTML response for a particular URL endpoint.
-       Most of the methods when called are bound to the item being rendered, not a Page instance.
-       A Page is NOT a React component itself, but some part(s) of it (the body) can be React components.
-       The base class takes care of inserting control code that loads initial items and maintains the link between
-       the client and the server.
-       Selected instance methods can be overriden by subclasses to customize all, or part, of page generation process.
-     */
-
-    // static page(item, request) { return new this().page(item, request) }        // page() can be called on a class or instance
-
-    static page(item, request) {
-        /* Generate an HTML page to be sent as a response to a GET request;
-           fill the page with HTML contents rendered from a view() function (React functional component).
-         */
-        let proto  = this.prototype
-        let title  = proto.title.call(item, request)
-        let assets = proto.assets.call(item, request)
-        let body   = proto.body.call(item, request)
-        return proto.frame.call(item, {title, assets, body})
-    }
-
-    // page(item, request) {
-    //     /* Generate an HTML page to be sent as a response to a GET request;
-    //        fill the page with HTML contents rendered from a view function (React functional component).
-    //        The `view` name should point to a method VIEW_{view} of the current Item's subclass.
-    //      */
-    //     let title  = this.title.call(item, request)
-    //     let assets = this.assets.call(item, request)
-    //     let body   = this.body.call(item, request)
-    //     return this.frame.call(item, {title, assets, body})
-    // }
-
-    frame({title, assets, body}) {
-        /* Here, `this` is bound to the item being rendered. */
-        return dedentFull(`
-            <!DOCTYPE html><html>
-            <head>
-                <title>${title}</title>
-                ${assets}
-            </head>`) +
-            `<body>\n${body}\n</body></html>`
-    }
-
-    render(props, targetElement = null) {
-        /* Render the view() into an HTMLElement (client-side) if `targetElement` is given,
-           or to a string (server-side) otherwise. When rendering server-side, useEffect() & delayed_render() do NOT work,
-           so only a part of the HTML output is actually rendered. For workaround, see:
-            - https://github.com/kmoskwiak/useSSE  (useSSE, "use Server-Side Effect" hook)
-            - https://medium.com/swlh/how-to-use-useeffect-on-server-side-654932c51b13
-            - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
-         */
-        let {item} = props
-        item.assert_loaded()
-        if (!targetElement) print(`SSR render() of ID=${item._id_}`)
-        let view = e(this.view.bind(item), props)
-        return targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
-        // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
-    }
-}
-
-// let _page_ = {
-//     assets(request) { return `abc` },
-//     title(request) {},
-// }
-
-export class ViewPage extends Page {
-    /* A Page whose HTML body is rendered from a "view" component. Defaults are used for the remaining HTML code. */
-
-    
-
-}
-
-export class Page_ {
-    /* Container for a number of functions that together - after binding to an Item instance -
-       can be used to generate the HTML contents of a web response page.
-     */
-    html        // static HTML code of the entire response, starting with DOCTYPE and <html> section
-    head        // inner code of the html/meta section
-    body        // inner code of the html/body section
-}
-
-export class View extends Page_ {
-    /* A specialized container that provides individual functions for .
-     */
-    title
-    assets
-    view        // React functional component that renders the entire contents of the page
-}
-
-
-// export class Layout extends Component {
-//     /* Takes a number of named blocks, e.g.: head, foot, main, side, ... and places them in predefined
-//        positions on a page.
+// export class Page {
+//     /* Collection of methods that together generate a complete HTML response for a particular URL endpoint.
+//        Most of the methods when called are bound to the item being rendered, not a Page instance.
+//        A Page is NOT a React component itself, but some part(s) of it (the body) can be React components.
+//        The base class takes care of inserting control code that loads initial items and maintains the link between
+//        the client and the server.
+//        Selected instance methods can be overriden by subclasses to customize all, or part, of page generation process.
 //      */
-//     static defaultProps = {
-//         blocks: {},             // named blocks, e.g.: head, foot, main, side ... to be placed on a page
+//
+//     // static page(item, request) { return new this().page(item, request) }        // page() can be called on a class or instance
+//
+//     static page(item, request) {
+//         /* Generate an HTML page to be sent as a response to a GET request;
+//            fill the page with HTML contents rendered from a view() function (React functional component).
+//          */
+//         let proto  = this.prototype
+//         let title  = proto.title.call(item, request)
+//         let assets = proto.assets.call(item, request)
+//         let body   = proto.body.call(item, request)
+//         return proto.frame.call(item, {title, assets, body})
 //     }
-//     render() {
-//         let {blocks} = this.props
+//
+//     // page(item, request) {
+//     //     /* Generate an HTML page to be sent as a response to a GET request;
+//     //        fill the page with HTML contents rendered from a view function (React functional component).
+//     //        The `view` name should point to a method VIEW_{view} of the current Item's subclass.
+//     //      */
+//     //     let title  = this.title.call(item, request)
+//     //     let assets = this.assets.call(item, request)
+//     //     let body   = this.body.call(item, request)
+//     //     return this.frame.call(item, {title, assets, body})
+//     // }
+//
+//     frame({title, assets, body}) {
+//         /* Here, `this` is bound to the item being rendered. */
+//         return dedentFull(`
+//             <!DOCTYPE html><html>
+//             <head>
+//                 <title>${title}</title>
+//                 ${assets}
+//             </head>`) +
+//             `<body>\n${body}\n</body></html>`
+//     }
+//
+//     render(props, targetElement = null) {
+//         /* Render the view() into an HTMLElement (client-side) if `targetElement` is given,
+//            or to a string (server-side) otherwise. When rendering server-side, useEffect() & delayed_render() do NOT work,
+//            so only a part of the HTML output is actually rendered. For workaround, see:
+//             - https://github.com/kmoskwiak/useSSE  (useSSE, "use Server-Side Effect" hook)
+//             - https://medium.com/swlh/how-to-use-useeffect-on-server-side-654932c51b13
+//             - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
+//          */
+//         let {item} = props
+//         item.assert_loaded()
+//         if (!targetElement) print(`SSR render() of ID=${item._id_}`)
+//         let view = e(this.view.bind(item), props)
+//         return targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
+//         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
 //     }
 // }
-
