@@ -107,13 +107,6 @@
         html_title:
           info: HTML title to be used for when this item is rendered.
           "@": STRING
-        import_path:
-          info: "Canonical path of this item within the SUN, for: display, resolving
-            relative code imports, resolving relative item references (REF
-            type), etc. If configured, callers can only import this item's code
-            through this path, so the code is always interpreted in the same way
-            and can be cached after parsing."
-          "@": PATH
         "@": Catalog
       "@": CATALOG
     item_schema:

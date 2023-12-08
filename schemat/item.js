@@ -323,8 +323,6 @@ export class Item {
     _url_
     _url_promise_
 
-    import_path
-
     */
 
     get _id_()   { return undefined }
@@ -739,8 +737,8 @@ export class Item {
     getPath() {
         /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.
            Starts with '/' (absolute path). */
-        let path = this.import_path || registry.site.systemPath(this)
-        print('getPath():', path, ' _url_:', this._url_)
+        let path = registry.site.systemPath(this)
+        // print('getPath():', path, ' _url_:', this._url_)
         return path
     }
 
@@ -1219,6 +1217,7 @@ export class Category extends Item {
         /* Check if the request's path is compatible with the default path of this item. Throw an exception if not. */
         let path  = request.pathFull
         let dpath = this.getPath()              // `path` must be equal to the default path of this item
+        // print('_checkPath():', path, dpath)
         if (path !== dpath)
             throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
     }
