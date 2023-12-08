@@ -1,7 +1,7 @@
 import {set_global} from "../common/globals.js"
 import {print, assert, T} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
-import {Item, Request} from '../item.js'
+import {ItemProxy, Request} from '../item.js'
 import {Container, Directory} from "./urls.js";
 
 
@@ -277,21 +277,9 @@ export class Site extends Directory {
 
     /*** Processing requests & URL generation ***/
 
-    // routeWeb(session) {
-    //     /* Convert a web request to an internal Request and process it through route(). */
-    //     let request = new Request({session})
-    //     return this.route(request)
-    // }
-
-    // findRoute(request) {
-    //     return request.path ?
-    //         [this.router, request, false] :
-    //         [this.empty_path,  request,  true]
-    // }
-
-    systemURL() {
+    get system_URL() {
         /* Absolute base URL for system calls originating at a web client and targeting specific items. */
-        return this.base_url + this.default_path
+        return ItemProxy.CACHED(this.base_url + this.default_path)
     }
     systemPath(item) {
         /* Default absolute URL path ("system path") of the item. No domain. */
@@ -305,4 +293,3 @@ export class Site extends Directory {
     }
 }
 
-Site.setCaching('systemURL')
