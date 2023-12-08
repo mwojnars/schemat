@@ -299,9 +299,9 @@ export class Item {
     name
     info
 
-    /***  Special properties  ***/
+    /***  Special properties:
 
-    /* some of the props below have getters defined, and so they must be commented out not to mask the getters:
+    (some of the props below have getters defined, so they must be commented out not to mask the getters)
 
     _id_                    database ID of the object, globally unique; undefined in a newly created item; should never be changed
                             for an existing item, that's why the property is set to read-only after the first assignment
@@ -324,6 +324,7 @@ export class Item {
     _url_promise_
     _import_path_           default URL import path of this item, for interpretation of relative imports in dynamic code
                             inside this item; starts with '/' (absolute path); TODO: replace with _url_?
+
     */
 
     get _id_()   { return undefined }
@@ -1031,14 +1032,17 @@ Item.create_api(
 /**********************************************************************************************************************/
 
 export class Category extends Item {
-    /*
-    A category is an item that describes other items: their schema and functionality;
-    also acts as a manager that controls access to and creation of new items within category.
+    /* A category is an item that describes other items: their schema and functionality;
+       also acts as a manager that controls access to and creation of new items within category.
+     */
+
+    /***  Special properties:
+
+    item_schema             ITEM_SCHEMA of items in this category (not the schema of self)
+
+    _source_                module source code of this category: all code snippets combined, including inherited ones
+
     */
-
-    // properties:
-    // item_schema                 // ITEM_SCHEMA of items in this category (not the schema of self)
-
 
     __init__() { return this._initSchema() }
 
@@ -1090,7 +1094,7 @@ export class Category extends Item {
     }
 
     async getModule() {
-        /* Parse the source code of this category (from getSource()) and return as a module's namespace object.
+        /* Parse the source code of this category (from _source_) and return as a module's namespace object.
            This method uses this._import_path_ as the module's path for linking nested imports in parseModule():
            this is either the item's `path` property, or the default path built from the item's ID on the site's system path.
          */
@@ -1110,7 +1114,7 @@ export class Category extends Item {
         try {
             return await (onClient ?
                             registry.import(modulePath) :
-                            site.parseModule(this.getSource(), modulePath)
+                            site.parseModule(this._source_, modulePath)
             )
         }
         catch (ex) {
@@ -1137,7 +1141,7 @@ export class Category extends Item {
         return splitLast(this.class_path || '', ':')
     }
 
-    getSource() {
+    get _source_() {
         /* Combine all code snippets of this category, including inherited ones, into a module source code.
            Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
@@ -1148,7 +1152,9 @@ export class Category extends Item {
         let expo = `export {Base, Class, Class as ${name}, Class as default}`
 
         let snippets = [base, init, code, expo].filter(Boolean)
-        return snippets.join('\n')
+        let source = snippets.join('\n')
+
+        return ItemProxy.CACHED(source)
     }
 
     _hasCustomCode() { return this._codeInit() || this._codeBody() }
@@ -1217,12 +1223,14 @@ export class Category extends Item {
         let path  = request.pathFull
         let dpath = this._import_path_              // `path` must be equal to the default path of this item
         // print('_checkPath():', path, dpath)
+        // print('_source_:', this._source_)
+
         if (path !== dpath)
             throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
     }
 }
 
-Category.setCaching('getModule', 'getItemClass', 'getSource', 'getAssets')   //'getHandlers'
+Category.setCaching('getModule', 'getItemClass', 'getAssets')   //'getHandlers'
 
 Category.create_api(
     {
@@ -1234,7 +1242,7 @@ Category.create_api(
             /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
             this._checkPath(request)
             request.res.type('js')
-            return this.getSource()
+            return this._source_
         }),
 
         // 'GET/scan':     new HttpService(async function (request)
