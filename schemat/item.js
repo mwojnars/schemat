@@ -565,7 +565,7 @@ export class Item {
          */
         // T.setClass(this, await this.getClass() || Item)
         if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
-        let cls = this._class_ || await this._category_?._item_class_
+        let cls = this._class_ || this._category_?.item_class || await this._category_?._item_class_
         T.setClass(this, cls || Item)
     }
 
@@ -1076,9 +1076,13 @@ export class Category extends Item {
             return {Class: await this.getDefaultClass(classPath, name)}
         }
 
-        // print(`getModule(): category ID=${this._id_}, classPath='${classPath}', name='${name}' - before await...`)
+        // print(`getModule(): category ID=${this._id_}, name='${name}' - before await...`)
         // if (!this._url_) await this._url_promise_        // wait until the item's URL is initialized
-        // print(`getModule(): category ID=${this._id_}, classPath='${classPath}', name='${name}' - await done`)
+        // while (!this._url_) {
+        //     print(`getModule(): category ID=${this._id_}, name='${name}' - delay...`)
+        //     await delay(100)                  // wait until the item's URL is initialized
+        // }
+        // print(`getModule(): category ID=${this._id_}, name='${name}' - await done`)
 
         let modulePath = this._import_path_
 

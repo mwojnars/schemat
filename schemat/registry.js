@@ -127,6 +127,9 @@ export class Registry {
         await classpath.setModule("", "./db/edits.js")          // add all Edit (sub)types for intra-cluster communication
         await classpath.setModule("", "./db/records.js")
 
+        await classpath.setModule("", "./item.js")
+        await classpath.setModule("", "./std/urls.js")
+
         if (this.onServer) {
             await classpath.setModule("db", "./db/block.js")
             await classpath.setModule("db", "./db/sequence.js")

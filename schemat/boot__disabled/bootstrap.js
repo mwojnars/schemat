@@ -6,6 +6,7 @@ import {print, assert} from '../common/utils.js'
 import {SITE_CATEGORY_ID} from '../item.js'
 import {GENERIC, TYPE, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {Catalog} from "../data.js"
+import {CategoryID_Namespace} from "../std/urls.js";
 
 // import {fileURLToPath} from 'url'
 // import path from "path"
@@ -103,8 +104,9 @@ async function create_categories(Category) {
     cat.CategoryID_Namespace = await Category.new(9, {
         name        : "CategoryID_Namespace",
         info        : "Namespace for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
-        class_path  : '/system/local/std/urls.js:CategoryID_Namespace',
         fields      : C({spaces: new CATALOG({values: new ITEM({category: Category})})}),
+        item_class  : CategoryID_Namespace,
+        // class_path  : '/system/local/std/urls.js:CategoryID_Namespace',
     })
 
     cat.Type = await Category.new(10, {
