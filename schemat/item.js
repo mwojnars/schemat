@@ -202,10 +202,10 @@ export class ItemProxy {
 
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
-        return new Proxy(target, {get: this.get})
+        return new Proxy(target, {get: this.proxy_get})
     }
 
-    static get(target, prop, receiver) {
+    static proxy_get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
 
         if (typeof value === 'object' && value?.[ItemProxy.CACHED_VALUE]) {
@@ -364,6 +364,7 @@ export class Item {
     }
 
     get _import_path_() {
+        // let path = this._url_
         let path = registry.site.systemPath(this)
         // print('_import_path_:', path, ' _url_:', this._url_)
         return ItemProxy.CACHED(path)
@@ -563,6 +564,7 @@ export class Item {
            known after loading the item's data.
          */
         // T.setClass(this, await this.getClass() || Item)
+        if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
         let cls = this._class_ || await this._category_?._item_class_
         T.setClass(this, cls || Item)
     }
@@ -1074,6 +1076,10 @@ export class Category extends Item {
             return {Class: await this.getDefaultClass(classPath, name)}
         }
 
+        // print(`getModule(): category ID=${this._id_}, classPath='${classPath}', name='${name}' - before await...`)
+        // if (!this._url_) await this._url_promise_        // wait until the item's URL is initialized
+        // print(`getModule(): category ID=${this._id_}, classPath='${classPath}', name='${name}' - await done`)
+
         let modulePath = this._import_path_
 
         try {
@@ -1285,7 +1291,7 @@ export class RootCategory extends Category {
         return new DATA({fields: fields.object(), strict: custom !== true})
     }
 
-    _init_class() {}                            // RootCategory's class is already set up, no need to do anything more
+    // _init_class() {}                            // RootCategory's class is already set up, no need to do anything more
 }
 
 
