@@ -126,7 +126,6 @@ export class Registry {
         classpath.setMany("", Map, Catalog, Data)               // add Map, Catalog & Data to the classpath
         await classpath.setModule("", "./db/edits.js")          // add all Edit (sub)types for intra-cluster communication
         await classpath.setModule("", "./db/records.js")
-
         await classpath.setModule("", "./item.js")
         await classpath.setModule("std", "./std/files.js")
         await classpath.setModule("std", "./std/site.js")
