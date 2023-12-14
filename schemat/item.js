@@ -363,14 +363,9 @@ export class Item {
         return ItemProxy.CACHED(ancestors)
     }
 
-    get _import_path_() {
-        let path = this._url_
-        // let path = registry.site.systemPath(this)
-        // print('_import_path_:', path, ' _url_:', this._url_)
-        return ItemProxy.CACHED(path)
-    }
-
-    get _assets_() { return ItemProxy.CACHED(this._schema_.getAssets()) }
+    // get _import_path_() { return registry.site.systemPath(this) }
+    get _import_path_()     { return ItemProxy.CACHED(this._url_) }
+    get _assets_()          { return ItemProxy.CACHED(this._schema_.getAssets()) }
 
 
     /***  Internal properties  ***/
@@ -1076,15 +1071,7 @@ export class Category extends Item {
             return {Class: await this.getDefaultClass(classPath, name)}
         }
 
-        if (!this._url_)  {
-            // print(`getModule(): category ID=${this._id_}, name='${name}' - before await...`)
-            await this._url_promise_        // wait until the item's URL is initialized
-            // while (!this._url_) {
-            //     print(`getModule(): category ID=${this._id_}, name='${name}' - delay...`)
-            //     await delay(100)                  // wait until the item's URL is initialized
-            // }
-            // print(`getModule(): category ID=${this._id_}, name='${name}' - await done`)
-        }
+        if (!this._url_) await this._url_promise_                   // wait until the item's URL is initialized
 
         let modulePath = this._import_path_
         assert(modulePath, `missing _import_path_ for category ID=${this._id_}`)
