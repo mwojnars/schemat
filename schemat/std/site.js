@@ -287,9 +287,9 @@ export class Site extends Directory {
         return this.default_path + `/${item._id_}`
     }
 
-    urlRaw(item) {
-        /* Absolute technical URL for an `item`. TODO: reuse the AppBasic instead of the code below. */
-        return this.base_url + this.systemPath(item)
-    }
+    // urlRaw(item) {
+    //     /* Absolute technical URL for an `item`. TODO: reuse the AppBasic instead of the code below. */
+    //     return this.base_url + this.systemPath(item)
+    // }
 }
 

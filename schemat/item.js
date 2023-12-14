@@ -789,7 +789,7 @@ export class Item {
         // let app  = registry.session.app        // space = request.current_namespace
 
         let path = this._url_
-        assert(path, `missing _url_ for ${this}`)
+        assert(path, `missing _url_ for object #${this._id_}, you should introduce a delay or await object._url_promise_ first`)
 
         // let defaultApp = registry.site.getApplication()
         // let defaultApp = registry.session.apps['$']
