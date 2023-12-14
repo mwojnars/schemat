@@ -363,7 +363,6 @@ export class Item {
         return ItemProxy.CACHED(ancestors)
     }
 
-    // get _import_path_() { return registry.site.systemPath(this) }
     get _import_path_()     { return ItemProxy.CACHED(this._url_) }
     get _assets_()          { return ItemProxy.CACHED(this._schema_.getAssets()) }
 

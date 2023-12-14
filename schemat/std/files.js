@@ -100,7 +100,8 @@ export class FileLocal extends File {
     // }
 }
 
-export class LocalDirectory extends Directory {
+export class LocalFolder extends Directory {
+    /* A folder on the local filesystem containing a number of files (no objects). */
 
     local_path
 
@@ -132,7 +133,7 @@ export class LocalDirectory extends Directory {
         let root = this.local_path
         root = this._mod_path.resolve(root)                         // make `root` an absolute path
 
-        if (!root) throw new Error('missing `path` property in a LocalDirectory')
+        if (!root) throw new Error('missing `path` property in a LocalFolder')
         let file_path = this._mod_path.join(root, url_path)         // this reduces the '..' special symbols, so we have to check
         if (!file_path.startsWith(root))                            // if the final path still falls under the `root`, for security
             throw new UrlPathNotFound({path: url_path})
