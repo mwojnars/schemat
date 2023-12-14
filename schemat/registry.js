@@ -128,6 +128,8 @@ export class Registry {
         await classpath.setModule("", "./db/records.js")
 
         await classpath.setModule("", "./item.js")
+        await classpath.setModule("std", "./std/files.js")
+        await classpath.setModule("std", "./std/site.js")
         await classpath.setModule("std", "./std/urls.js")
 
         if (this.onServer) {
