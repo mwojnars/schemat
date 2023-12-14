@@ -364,8 +364,8 @@ export class Item {
     }
 
     get _import_path_() {
-        // let path = this._url_
-        let path = registry.site.systemPath(this)
+        let path = this._url_
+        // let path = registry.site.systemPath(this)
         // print('_import_path_:', path, ' _url_:', this._url_)
         return ItemProxy.CACHED(path)
     }
@@ -1076,15 +1076,18 @@ export class Category extends Item {
             return {Class: await this.getDefaultClass(classPath, name)}
         }
 
-        // print(`getModule(): category ID=${this._id_}, name='${name}' - before await...`)
-        // if (!this._url_) await this._url_promise_        // wait until the item's URL is initialized
-        // while (!this._url_) {
-        //     print(`getModule(): category ID=${this._id_}, name='${name}' - delay...`)
-        //     await delay(100)                  // wait until the item's URL is initialized
-        // }
-        // print(`getModule(): category ID=${this._id_}, name='${name}' - await done`)
+        if (!this._url_)  {
+            // print(`getModule(): category ID=${this._id_}, name='${name}' - before await...`)
+            await this._url_promise_        // wait until the item's URL is initialized
+            // while (!this._url_) {
+            //     print(`getModule(): category ID=${this._id_}, name='${name}' - delay...`)
+            //     await delay(100)                  // wait until the item's URL is initialized
+            // }
+            // print(`getModule(): category ID=${this._id_}, name='${name}' - await done`)
+        }
 
         let modulePath = this._import_path_
+        assert(modulePath, `missing _import_path_ for category ID=${this._id_}`)
 
         try {
             return await (onClient ?
@@ -1093,7 +1096,7 @@ export class Category extends Item {
             )
         }
         catch (ex) {
-            print(`ERROR when parsing dynamic code for category ID=${this._id_}, will use a default class instead. Cause:\n`, ex)
+            print(`ERROR when parsing dynamic code from "${modulePath}" path for category ID=${this._id_}, will use a default class instead. Cause:\n`, ex)
             return {Class: await this.getDefaultClass(classPath, name)}
         }
     }
