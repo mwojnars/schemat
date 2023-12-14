@@ -106,7 +106,6 @@ async function create_categories(Category) {
         info        : "Namespace for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         fields      : C({spaces: new CATALOG({values: new ITEM({category: Category})})}),
         item_class  : CategoryID_Namespace,
-        // class_path  : '/system/local/std/urls.js:CategoryID_Namespace',
     })
 
     cat.Type = await Category.new(10, {

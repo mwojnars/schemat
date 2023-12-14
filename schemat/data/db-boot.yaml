@@ -242,7 +242,7 @@
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
   item_class:
-    =: CategoryID_Namespace
+    =: std.CategoryID_Namespace
     "@": (class)
   fields:
     spaces:
