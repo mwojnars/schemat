@@ -785,9 +785,12 @@ export class Item {
 
     url(method, args) {
         /* `method` is an optional name of a web @method, `args` will be appended to URL as a query string. */
-        let site = registry.site
-        let app  = registry.session.app        // space = request.current_namespace
+        // let site = registry.site
+        // let app  = registry.session.app        // space = request.current_namespace
+
         let path = this._url_
+        assert(path, `missing _url_ for ${this}`)
+
         // let defaultApp = registry.site.getApplication()
         // let defaultApp = registry.session.apps['$']
         // app = app || defaultApp
@@ -800,7 +803,8 @@ export class Item {
         //     path = app.identify(this)
         //     if (path) path = './' + path            // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
         // }
-        if (!path)  path = site.urlRaw(this)        // fallback; urlRaw() is an absolute path, no leading ./
+        // if (!path)  path = site.urlRaw(this)        // fallback; urlRaw() is an absolute path, no leading ./
+
         if (method) path += Request.SEP_METHOD + method                 // append @method and ?args if present...
         if (args)   path += '?' + new URLSearchParams(args).toString()
         return path
