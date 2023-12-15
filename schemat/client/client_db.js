@@ -37,8 +37,6 @@ export class ClientDB {
     async _from_ajax(id) {
         /* Retrieve an object by its ID from a server-side DB. */
         print(`ajax download [${id}]...`)
-        // let base = registry.site.default_url
-        // let url = `${base}/${id}@json`
         let url = registry.site.default_path_of(id) + '@json'
         return fetch(url).then(response => response.json())         // load object's JSON data from the server
     }

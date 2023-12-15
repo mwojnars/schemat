@@ -291,12 +291,6 @@ export class Site extends Directory {
         return lead + parts.join('/')
     }
 
-    /*** Processing requests & URL generation ***/
-
-    // get default_url() {
-    //     /* Absolute base URL for system calls originating at a web client and targeting specific items. */
-    //     return ItemProxy.CACHED(this.base_url + this.default_path)
-    // }
     default_path_of(object_or_id) {
         /* Default absolute URL path ("system path") of a given object. Starts with '/', no domain.
            This function assumes that the container pointed to by the `default_path` is an ID_Namespace,
