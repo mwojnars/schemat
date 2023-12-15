@@ -76,10 +76,14 @@ export class Site extends Directory {
     static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
-    // properties:
+    // properties (persisted):
     base_url
     entries
     default_path
+
+    // properties (temporary):
+    default_container
+
 
     async __init__()  {
         if (registry.onServer) this._vm = await import('vm')
@@ -89,7 +93,6 @@ export class Site extends Directory {
     async _init_default_container() {
         while (!registry.site) await delay()
         this.default_container = await this.resolve(this.default_path)
-        // print('default_container:', this.default_container)
     }
 
     async _init_url() {

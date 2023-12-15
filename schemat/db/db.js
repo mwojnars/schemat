@@ -22,9 +22,6 @@ export class ClientDB {
     _cache = new Map()      // {id: data_json}, cache of item data received on initial or subsequent web requests;
                             // each data is JSON-encoded for safety, to avoid accidental modification
 
-    // base URL for AJAX calls, should contain no trailing slash '/' (!)
-    get _url() { return globalThis.registry.site.system_url }
-
     constructor(records = []) {
         this.cache(...records)
     }
@@ -49,7 +46,14 @@ export class ClientDB {
     async _from_ajax(id) {
         /* Retrieve an object by its ID from a server-side DB. */
         print(`ajax download [${id}]...`)
-        return $.get(`${this._url}/${id}@json`)
+        let base = registry.site.system_url
+        let url = `${base}/${id}@json`
+
+        // load JSON data from the server; same as $.get(url) but without jQuery
+        // return await fetch(url).then(response => response.json())
+        // let response = await fetch(url)
+
+        return $.get(url)
     }
     // async *scan(cid) {
     //     assert(cid || cid === 0)
