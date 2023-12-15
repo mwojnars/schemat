@@ -5,7 +5,8 @@ import {assert, print} from "../common/utils.js"
 /**********************************************************************************************************************/
 
 export class ClientDB {
-    /* Client-side DB that communicates with the server via AJAX calls.
+    /* Client-side thin DB interface that communicates with the server via AJAX calls.
+       To be used as a drop-in replacement for ServerDB in registry.db.
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
 
