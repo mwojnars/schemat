@@ -88,6 +88,18 @@ export class Site extends Directory {
         this._check_default_container()                 // no await to avoid blocking the site's startup
     }
 
+    async _init_url() {
+        let url = new URL(this.base_url)            // remove domain name from the base URL and keep the remaining URL path
+        // this._url_  = url.pathname
+        // this._path_ = url.pathname
+        this._url_ = this._path_ = '/'
+        assert(this._url_[0] === '/', `incorrect base URL: ${this.base_url}`)
+        // print('Site._init_url():', this._url_)
+    }
+
+
+    /***  URL generation  ***/
+
     async _check_default_container() {
         while (!registry.site) await delay()
         let default_container = await this.resolve(this.default_path)
@@ -99,13 +111,13 @@ export class Site extends Directory {
         assert(default_container instanceof ID_Namespace, `the container [${this._id_}] at the default path ('${this.default_path}') must be an ID_Namespace`)
     }
 
-    async _init_url() {
-        let url = new URL(this.base_url)            // remove domain name from the base URL and keep the remaining URL path
-        // this._url_  = url.pathname
-        // this._path_ = url.pathname
-        this._url_ = this._path_ = '/'
-        assert(this._url_[0] === '/', `incorrect base URL: ${this.base_url}`)
-        // print('Site._init_url():', this._url_)
+    default_path_of(object_or_id) {
+        /* Default absolute URL path ("system path") of a given object. Starts with '/', no domain.
+           This function assumes that the container pointed to by the `default_path` is an ID_Namespace,
+           otherwise the URL returned may be incorrect (!). See _check_default_container().
+         */
+        let id = typeof object_or_id === 'number' ? object_or_id : object_or_id._id_
+        return this.default_path + `/${id}`
     }
 
     path_to_url(path) {
@@ -120,6 +132,9 @@ export class Site extends Directory {
         let url = path.replace(/\/\*[^/]*/g, '')
         return [url, last_blank]
     }
+
+
+    /***  Request resolution  ***/
 
     async resolve(path, explicit_blank = false) {
         if (path[0] === '/') path = path.slice(1)           // drop the leading slash
@@ -289,17 +304,6 @@ export class Site extends Directory {
             else parts.push(part)
 
         return lead + parts.join('/')
-    }
-
-    default_path_of(object_or_id) {
-        /* Default absolute URL path ("system path") of a given object. Starts with '/', no domain.
-           This function assumes that the container pointed to by the `default_path` is an ID_Namespace,
-           otherwise the URL returned may be incorrect (!). See _check_default_container().
-         */
-        let id = typeof object_or_id === 'number' ? object_or_id : object_or_id._id_
-        return this.default_path + `/${id}`
-        // item.assert_linked()
-        // return this.default_path + `/${item._id_}`
     }
 }
 
