@@ -2,7 +2,7 @@ import {set_global} from "../common/globals.js"
 import {print, assert, T, delay} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {ItemProxy, Request} from '../item.js'
-import {Container, Directory} from "./urls.js";
+import {Container, Directory, ID_Namespace} from "./urls.js";
 
 
 // Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -76,23 +76,27 @@ export class Site extends Directory {
     static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
-    // properties (persisted):
+    // properties:
     base_url
     entries
     default_path
 
-    // properties (temporary):
-    default_container
-
 
     async __init__()  {
-        if (registry.onServer) this._vm = await import('vm')
-        this._ready_.default_container = this._init_default_container()
+        if (registry.onClient) return
+        this._vm = await import('vm')
+        this._check_default_container()                 // no await to avoid blocking the site's startup
     }
 
-    async _init_default_container() {
+    async _check_default_container() {
         while (!registry.site) await delay()
-        this.default_container = await this.resolve(this.default_path)
+        let default_container = await this.resolve(this.default_path)
+
+        // check that default_path maps to a container...
+        assert(default_container instanceof Container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
+
+        // ...and that this container is an ID_Namespace, so it is compatible with the URL generation on the client
+        assert(default_container instanceof ID_Namespace, `the container [${this._id_}] at the default path ('${this.default_path}') must be an ID_Namespace`)
     }
 
     async _init_url() {
@@ -272,7 +276,7 @@ export class Site extends Directory {
     _unprefix(path) { return path.startsWith(Site.DOMAIN_SCHEMAT) ? path.slice(Site.DOMAIN_SCHEMAT.length) : path }
 
     _normPath(path) {
-        /* Drop single dots '.' occuring as `path` segments; truncate parent segments wherever '..' occur. */
+        /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
         path = path.replaceAll('/./', '/')
         let lead = path[0] === '/' ? path[0] : ''
         if (lead) path = path.slice(1)
@@ -294,14 +298,12 @@ export class Site extends Directory {
         return ItemProxy.CACHED(this.base_url + this.default_path)
     }
     systemPath(item) {
-        /* Default absolute URL path ("system path") of the item. No domain. */
+        /* Default absolute URL path ("system path") of the item. Starts with '/', no domain.
+           This function assumes that the container pointed to by the `default_path` is an ID_Namespace,
+           otherwise the URL returned may be incorrect (!). See _check_default_container().
+         */
         item.assert_linked()
         return this.default_path + `/${item._id_}`
     }
-
-    // urlRaw(item) {
-    //     /* Absolute technical URL for an `item`. TODO: reuse the AppBasic instead of the code below. */
-    //     return this.base_url + this.systemPath(item)
-    // }
 }
 
