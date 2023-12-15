@@ -374,8 +374,8 @@ export class Item {
     _net_           // Network adapter that connects this item to its network API as defined in this.constructor.api
     action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
 
-    _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
-        loading:   false,       // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
+    _meta_ = {                  // _meta_ contain system properties of this object...
+        loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         mutable:   false,       // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
         expiry:    undefined,   // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
@@ -383,8 +383,8 @@ export class Item {
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
     }
 
-    _ready_ = {                 // promises that resolve when the corresponding data is fully calculated/loaded; subclasses may add more...
-        url: undefined,         // resolves with the value of this._url_ when it's ready
+    _ready_ = {                 // _ready_ contains status flags and promises that resolve when the corresponding data is calculated/loaded; subclasses may add their own...
+        url: undefined,         // resolves with this._url_ when this._url_ is computed
     }
 
     static api        = null    // API instance that defines this item's endpoints and protocols

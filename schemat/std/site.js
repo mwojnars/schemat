@@ -83,7 +83,7 @@ export class Site extends Directory {
 
     async __init__()  {
         if (registry.onServer) this._vm = await import('vm')
-        this._meta_.default_container_ready = this._init_default_container()
+        this._ready_.default_container = this._init_default_container()
     }
 
     async _init_default_container() {
