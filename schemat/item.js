@@ -184,7 +184,7 @@ export class ItemProxy {
     static MULTIPLE_SUFFIX = '_array'
 
     // these props can never be found inside item's schema and should always be accessed as regular object attributes
-    static RESERVED = ['_id_', '_meta_', '_data_', '_record_', '_url_', '_path_', '_url_promise_']
+    static RESERVED = ['_id_', '_meta_', '_data_', '_record_', '_url_', '_path_']
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
@@ -321,8 +321,7 @@ export class Item {
     _container_
 
     _path_
-    _url_
-    _url_promise_
+    _url_                   if you want to be sure that _url_ is computed, await _meta_.url_ready first
     _import_path_           default URL import path of this item, for interpretation of relative imports in dynamic code
                             inside this item; starts with '/' (absolute path); TODO: replace with _url_?
 
@@ -376,9 +375,10 @@ export class Item {
     action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
 
     _meta_ = {                  // Schemat-related special properties of this object and methods to operate on it...
-        loading: false,         // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
-        mutable: false,         // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
-        expiry:  undefined,     // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
+        loading:   false,       // Promise created at the start of _load(), indicates that the item is currently loading its data from DB
+        mutable:   false,       // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
+        expiry:    undefined,   // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
+        url_ready: undefined,   // promise that resolves with this._url_ when the latter has been computed
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -514,7 +514,7 @@ export class Item {
             this._set_expiry(category?.cache_ttl)
 
             if (this.is_linked())
-                this._url_promise_ = this._init_url()       // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
+                this._meta_.url_ready = this._init_url()    // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
             return this
 
@@ -588,7 +588,7 @@ export class Item {
         // print(`_init_url() container: '${container.name}'`)
 
         if (!container.is_loaded()) await container.load()          // container must be fully loaded
-        if (!container._path_) await container._url_promise_        // container's path must be initialized
+        if (!container._path_) await container._meta_.url_ready     // container's path must be initialized
 
         this._path_ = container.build_path(this)
         let [url, duplicate] = site.path_to_url(this._path_)
@@ -788,7 +788,7 @@ export class Item {
         // let app  = registry.session.app        // space = request.current_namespace
 
         let path = this._url_
-        assert(path, `missing _url_ for object #${this._id_}, you should introduce a delay or await object._url_promise_ first`)
+        assert(path, `missing _url_ for object #${this._id_}, you should introduce a delay or await _meta_.url_ready first`)
 
         // let defaultApp = registry.site.getApplication()
         // let defaultApp = registry.session.apps['$']
@@ -1074,7 +1074,7 @@ export class Category extends Item {
             return {Class: await this.getDefaultClass(classPath, name)}
         }
 
-        if (!this._url_) await this._url_promise_                   // wait until the item's URL is initialized
+        if (!this._url_) await this._meta_.url_ready                    // wait until the item's URL is initialized
 
         let modulePath = this._import_path_
         assert(modulePath, `missing _import_path_ for category ID=${this._id_}`)

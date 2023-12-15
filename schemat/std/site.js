@@ -83,10 +83,10 @@ export class Site extends Directory {
 
     async __init__()  {
         if (registry.onServer) this._vm = await import('vm')
-        this._meta_.default_container_loading = this._set_default_container()
+        this._meta_.default_container_loading = this._init_default_container()
     }
 
-    async _set_default_container() {
+    async _init_default_container() {
         while (!registry.site) await delay()
         this.default_container = await this.resolve(this.default_path)
         // print('default_container:', this.default_container)
