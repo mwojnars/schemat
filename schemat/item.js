@@ -321,10 +321,7 @@ export class Item {
     _container_
 
     _path_
-    _url_                   if you want to be sure that _url_ is computed, await _ready_.url first
-    _import_path_           default URL import path of this item, for interpretation of relative imports in dynamic code
-                            inside this item; starts with '/' (absolute path); TODO: replace with _url_?
-
+    _url_                   absolute URL path of this object; calculated right *after* __init__(); to be sure that _url_ is computed, await _ready_.url first
     _assets_                cached web Assets of this object's _schema_
 
     */
@@ -362,7 +359,7 @@ export class Item {
         return ItemProxy.CACHED(ancestors)
     }
 
-    get _import_path_()     { return ItemProxy.CACHED(this._url_) }
+    // get _import_path_()     { return ItemProxy.CACHED(this._url_) }
     get _assets_()          { return ItemProxy.CACHED(this._schema_.getAssets()) }
 
 
@@ -791,7 +788,8 @@ export class Item {
         // let app  = registry.session.app        // space = request.current_namespace
 
         let path = this._url_
-        assert(path, `missing _url_ for object #${this._id_}, you should introduce a delay or await _ready_.url first`)
+        // if (!path) return ''
+        assert(path, `missing _url_ for object [${this._id_}], you should introduce a delay or await _ready_.url first`)
 
         // let defaultApp = registry.site.getApplication()
         // let defaultApp = registry.session.apps['$']
@@ -1063,8 +1061,7 @@ export class Category extends Item {
 
     async getModule() {
         /* Parse the source code of this category (from _source_) and return as a module's namespace object.
-           This method uses this._import_path_ as the module's path for linking nested imports in parseModule():
-           this is either the item's `path` property, or the default path built from the item's ID on the site's system path.
+           This method uses this._url_ as the module's path for linking nested imports in parseModule().
          */
         let site = registry.site
         let onClient = registry.onClient
@@ -1079,8 +1076,8 @@ export class Category extends Item {
 
         if (!this._url_) await this._ready_.url                     // wait until the item's URL is initialized
 
-        let modulePath = this._import_path_
-        assert(modulePath, `missing _import_path_ for category ID=${this._id_}`)
+        let modulePath = this._url_
+        assert(modulePath, `missing _url_ for category ID=${this._id_}`)
 
         try {
             return await (onClient ?
@@ -1182,10 +1179,7 @@ export class Category extends Item {
     _checkPath(request) {
         /* Check if the request's path is compatible with the default path of this item. Throw an exception if not. */
         let path  = request.pathFull
-        let dpath = this._import_path_              // `path` must be equal to the default path of this item
-        // print('_checkPath():', path, dpath)
-        // print('_source_:', this._source_)
-
+        let dpath = this._url_                      // `path` must be equal to the canonical URL path of this item
         if (path !== dpath)
             throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
     }
