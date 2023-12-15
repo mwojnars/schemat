@@ -4,16 +4,6 @@ import {assert, print} from "../common/utils.js"
 
 /**********************************************************************************************************************/
 
-// export class Database {
-//     /* Common interface for server-side and client-side database layers alike. */
-//
-//     async select(id)    { throw new NotImplemented() }
-//     async *scan(cid)    { throw new NotImplemented() }
-// }
-
-
-/**********************************************************************************************************************/
-
 export class ClientDB {
     /* Client-side DB that communicates with the server via AJAX calls.
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
@@ -48,24 +38,7 @@ export class ClientDB {
         print(`ajax download [${id}]...`)
         let base = registry.site.system_url
         let url = `${base}/${id}@json`
-
-        // load JSON data from the server; same as $.get(url) but without jQuery
-        // return await fetch(url).then(response => response.json())
-        // let response = await fetch(url)
-
-        return $.get(url)
+        return fetch(url).then(response => response.json())         // load object's JSON data from the server
     }
-    // async *scan(cid) {
-    //     assert(cid || cid === 0)
-    //     print(`ajax category scan [${cid}]...`)
-    //     let records = await $.get(`${this._url}/${cid}@scan`)
-    //     for (const rec of records) {            // rec's shape: {id, data}
-    //         if (rec.data) {
-    //             rec.data = JSON.stringify(rec.data)
-    //             this.cache(rec)
-    //         }
-    //         yield rec
-    //     }
-    // }
 }
 
