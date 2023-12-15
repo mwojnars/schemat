@@ -293,17 +293,19 @@ export class Site extends Directory {
 
     /*** Processing requests & URL generation ***/
 
-    get default_url() {
-        /* Absolute base URL for system calls originating at a web client and targeting specific items. */
-        return ItemProxy.CACHED(this.base_url + this.default_path)
-    }
-    default_path_of(item) {
-        /* Default absolute URL path ("system path") of the item. Starts with '/', no domain.
+    // get default_url() {
+    //     /* Absolute base URL for system calls originating at a web client and targeting specific items. */
+    //     return ItemProxy.CACHED(this.base_url + this.default_path)
+    // }
+    default_path_of(object_or_id) {
+        /* Default absolute URL path ("system path") of a given object. Starts with '/', no domain.
            This function assumes that the container pointed to by the `default_path` is an ID_Namespace,
            otherwise the URL returned may be incorrect (!). See _check_default_container().
          */
-        item.assert_linked()
-        return this.default_path + `/${item._id_}`
+        let id = typeof object_or_id === 'number' ? object_or_id : object_or_id._id_
+        return this.default_path + `/${id}`
+        // item.assert_linked()
+        // return this.default_path + `/${item._id_}`
     }
 }
 
