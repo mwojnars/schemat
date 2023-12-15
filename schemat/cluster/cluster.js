@@ -3,7 +3,7 @@ import {fileURLToPath} from "url"
 
 import {print, T} from "../common/utils.js"
 import {Item} from "../item.js"
-import {Ring, ServerDB} from "../db/db_srv.js"
+import {Ring, ServerDB} from "../db/db.js"
 import {DataRequest} from "../db/data_request.js";
 import fs from "fs";
 

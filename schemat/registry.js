@@ -135,7 +135,7 @@ export class Registry {
             await classpath.setModule("db", "./db/block.js")
             await classpath.setModule("db", "./db/sequence.js")
             await classpath.setModule("db", "./db/index.js")
-            await classpath.setModule("db", "./db/db_srv.js")
+            await classpath.setModule("db", "./db/db.js")
         }
 
         // add all Type subtypes (all-caps class names) + TypeWrapper
