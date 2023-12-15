@@ -580,7 +580,7 @@ export class Item {
         }
 
         let container = this._container_
-        let default_path = () => site.systemPath(this)
+        let default_path = () => site.default_path_of(this)
 
         if (!container) {
             let url = default_path()

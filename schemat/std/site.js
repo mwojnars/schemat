@@ -293,11 +293,11 @@ export class Site extends Directory {
 
     /*** Processing requests & URL generation ***/
 
-    get system_url() {
+    get default_url() {
         /* Absolute base URL for system calls originating at a web client and targeting specific items. */
         return ItemProxy.CACHED(this.base_url + this.default_path)
     }
-    systemPath(item) {
+    default_path_of(item) {
         /* Default absolute URL path ("system path") of the item. Starts with '/', no domain.
            This function assumes that the container pointed to by the `default_path` is an ID_Namespace,
            otherwise the URL returned may be incorrect (!). See _check_default_container().
