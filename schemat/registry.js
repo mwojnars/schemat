@@ -155,8 +155,8 @@ export class Registry {
     }
 
     async _init_root() {
-        /* Create the RootCategory object, ID=0, and load its contents either from the DB (if present there)
-           or from the predefined `root_data`.
+        /* Create the RootCategory object, ID=0, and load its contents from the DB.  The root object must be present
+           in the lowest ring already, possibly overwritten by newer variants in higher rings.
          */
         // if (this.root) return this.root                  // warn: this is incorrect during startup if root is redefined in higher rings
         let root = this.root = RootCategory.create()

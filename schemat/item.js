@@ -576,8 +576,8 @@ export class Item {
             site = registry.site
         }
 
-        let default_path = () => site.systemPath(this)
         let container = this._container_
+        let default_path = () => site.systemPath(this)
 
         if (!container) {
             let url = default_path()

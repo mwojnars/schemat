@@ -1,5 +1,5 @@
 import {set_global} from "../common/globals.js"
-import {print, assert, T} from '../common/utils.js'
+import {print, assert, T, delay} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {ItemProxy, Request} from '../item.js'
 import {Container, Directory} from "./urls.js";
@@ -81,7 +81,16 @@ export class Site extends Directory {
     entries
     default_path
 
-    async __init__()  { if (registry.onServer) this._vm = await import('vm') }
+    async __init__()  {
+        if (registry.onServer) this._vm = await import('vm')
+        this._meta_.default_container_loading = this._set_default_container()
+    }
+
+    async _set_default_container() {
+        while (!registry.site) await delay()
+        this.default_container = await this.resolve(this.default_path)
+        // print('default_container:', this.default_container)
+    }
 
     async _init_url() {
         let url = new URL(this.base_url)            // remove domain name from the base URL and keep the remaining URL path
