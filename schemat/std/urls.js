@@ -10,10 +10,12 @@ import {UrlPathNotFound} from "../common/errors.js";
 /**********************************************************************************************************************/
 
 export class Container extends Item {
-    /* A collection of objects that are all published under the same URL path prefix.
-       Container can assign unique URL path segment (identifier) to each member object, and can map a relative URL path
-       back to an object (resolve()). May contain nested containers.
-       Can assign "container access paths" which are like URL paths but with explicit blank segments (/*xxx);
+    /*
+       Bidirectional mapping of URL names to objects, and a collection of objects that are all published
+       under the same URL path prefix as defined by the parent container(s).
+       Container assigns unique identifiers to each member object (identify()) that are used as URL path segments,
+       and can map a relative URL path back to an object (resolve()). May contain nested containers.
+       It can assign "container access paths" which are like URL paths but with explicit blank segments (/*xxx);
        these paths are used internally to identify objects within a container, before a final URL is generated.
      */
 
@@ -105,33 +107,12 @@ export class Directory extends Container {
 
 export class Namespace extends Container {
     /*
-        Unbounded collection of objects: each object that satisfies the criteria of the namespace can be assigned
-        (dynamically) a unique identifier, typically based on the object's ID.
-     */
+        Unbounded collection of objects: each object that satisfies the criteria of the namespace is accepted
+        and can receive a (dynamically created) unique identifier, typically built from the object's ID.
+        Typically, Namespace is placed as a leaf on a URL route.
 
-    /*
-    Application implements a bidirectional mapping of URL names to items and back.
-    Typically, an application is placed as the leaf segment of a routing pattern,
-    to provide naming & routing for an open set of dynamically created items ("item space")
-    which do not have their own proper names. Usually, the application also provides methods
-    (endpoints) for creating new items. Applications make sure the URL names are unique.
-
-    Not every route must contain an application, rather it may be composed of statically-named segments alone.
-    Also, there can be multiple applications on a particular route, for example, the route:
-
-       /post/XXX/comment/YYY
-
-    contains two applications: "posts" and "comments". Some applications may generate multi-segment names.
-
-    INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
+        INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     */
-
-    // findRoute(request)  {
-    //     // findRoute() is parsed dynamically from source on the 1st call and stored in `this` -
-    //     // not in a class prototype like `code` (!); after that, all calls go directly to the new function
-    //     let func = this.findRoute = this.parseMethod('findRoute', 'request')
-    //     return func.call(this, request)
-    // }
 }
 
 
