@@ -216,7 +216,7 @@ export class ItemAdminPage extends ReactPage {
             let title = this.html_title
             // if (title instanceof Function) title = title()          // this can still return undefined
             if (typeof title === 'string') return title
-            let stamp = this.getStamp({html: false})
+            let stamp = this.make_stamp({html: false})
             return `${this.name} ${stamp}`
         },
 
@@ -247,7 +247,7 @@ export class ItemAdminPage extends ReactPage {
         Title() {
             /* <H1> element to be displayed as a page title. */
             let name = this.name
-            let stamp = this.getStamp()
+            let stamp = this.make_stamp()
             if (name)
                 return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(stamp)}))
             else
@@ -337,7 +337,7 @@ export class CategoryAdminPage extends ItemAdminPage {
 
         _ItemEntry({item, remove}) {
             /* A single row in the list of items. */
-            let name = item.name || item.getStamp({html:false})
+            let name = item.name || item.make_stamp({html:false})
             let url  = item.url()
             return TR(
                 TD(`${item._id_} ${NBSP}`),

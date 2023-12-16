@@ -741,12 +741,11 @@ export class Item {
     //     return obj
     // }
 
-    getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
-        /*
-        "[CATEGORY:ID]" string (stamp) if the category of `this` has a "name" prop; or "[ID]" otherwise.
-        If html=true, the category name is hyperlinked to the category's profile page (unless URL failed to generate)
-        and is HTML-escaped. If max_len is provided, category's suffix may be replaced with '...' to make its length <= max_len.
-        */
+    make_stamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
+        /* [CATEGORY:ID] string (stamp) if the category of `this` has a name; or [ID] otherwise.
+           If html=true, the category name is hyperlinked to the category's profile page (unless URL failed to generate)
+           and is HTML-escaped. If max_len is provided, category's suffix may be replaced with '...' to make its length <= max_len.
+         */
         let cat = this._category_?.name || ""
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {

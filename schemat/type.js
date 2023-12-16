@@ -799,7 +799,7 @@ export class ITEM extends Type {
 
             let url = item.url()
             let name = item.name
-            let stamp = HTML(item.getStamp({html: false, brackets: false}))
+            let stamp = HTML(item.make_stamp({html: false, brackets: false}))
 
             if (name && url) {
                 let note = item._category_.name || null
@@ -820,7 +820,7 @@ export class ITEM extends Type {
     //
     //     let url  = item.url()
     //     let name = item.get('name', '')
-    //     let stamp = HTML(item.getStamp({html: false, brackets: false}))
+    //     let stamp = HTML(item.make_stamp({html: false, brackets: false}))
     //
     //     if (name && url) {
     //         let note = item.category.get('name', null)
