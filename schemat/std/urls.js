@@ -95,13 +95,13 @@ export class Directory extends Container {
 
     contains(name) { return this.entries.has(name) }
 
-    findRoute(request) {
-        let step = request.step()
-        if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
-        let item = this.entries.get(step)
-        // request.pushMethod('@file')                     // if `item` doesn't provide @file method, its default one will be used
-        return [item, request.move(step), item => !(item instanceof Container)]
-    }
+    // findRoute(request) {
+    //     let step = request.step()
+    //     if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
+    //     let item = this.entries.get(step)
+    //     // request.pushMethod('@file')                     // if `item` doesn't provide @file method, its default one will be used
+    //     return [item, request.move(step), item => !(item instanceof Container)]
+    // }
 }
 
 
@@ -137,17 +137,17 @@ export class ID_Namespace extends Namespace {
         return `${item._id_}`
     }
 
-    findRoute(request) {
-        /* Extract item ID from a raw URL path. */
-        let step = request.step(), id
-        try {
-            id = Number(step)
-            assert(!isNaN(id))
-        }
-        catch (ex) { request.throwNotFound() }
-        // request.pushMethod('@full')
-        return [registry.getItem(id), request.move(step), true]
-    }
+    // findRoute(request) {
+    //     /* Extract item ID from a raw URL path. */
+    //     let step = request.step(), id
+    //     try {
+    //         id = Number(step)
+    //         assert(!isNaN(id))
+    //     }
+    //     catch (ex) { request.throwNotFound() }
+    //     // request.pushMethod('@full')
+    //     return [registry.getItem(id), request.move(step), true]
+    // }
 }
 
 export class CategoryID_Namespace extends Namespace {
@@ -184,14 +184,14 @@ export class CategoryID_Namespace extends Namespace {
         return ItemProxy.CACHED(rev)
     }
 
-    findRoute(request) {
-        let step = request.step()
-        let sep = CategoryID_Namespace.ID_SEPARATOR
-        let [space, id] = step.split(sep)
-        let category = this.spaces.get(space)               // decode space identifier and convert to a category object
-        if (!category) request.throwNotFound()
-        let item = registry.getItem(Number(id))
-        return [item, request.pushApp(this).move(step), true]
-    }
+    // findRoute(request) {
+    //     let step = request.step()
+    //     let sep = CategoryID_Namespace.ID_SEPARATOR
+    //     let [space, id] = step.split(sep)
+    //     let category = this.spaces.get(space)               // decode space identifier and convert to a category object
+    //     if (!category) request.throwNotFound()
+    //     let item = registry.getItem(Number(id))
+    //     return [item, request.pushApp(this).move(step), true]
+    // }
 }
 

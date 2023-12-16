@@ -119,10 +119,10 @@ export class LocalFolder extends Directory {
         }
     }
 
-    findRoute(request) {
-        // always mark this folder as a target: either to display it (empty path), or to pass the execution to .handlePartial()
-        return [this, request, true]
-    }
+    // findRoute(request) {
+    //     // always mark this folder as a target: either to display it (empty path), or to pass the execution to .handlePartial()
+    //     return [this, request, true]
+    // }
 
     handlePartial(request) {
         let {path: url_path, res} = request
