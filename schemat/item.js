@@ -359,8 +359,7 @@ export class Item {
         return ItemProxy.CACHED(ancestors)
     }
 
-    // get _import_path_()     { return ItemProxy.CACHED(this._url_) }
-    get _assets_()          { return ItemProxy.CACHED(this._schema_.getAssets()) }
+    get _assets_()  { return ItemProxy.CACHED(this._schema_.getAssets()) }
 
 
     /***  Internal properties  ***/
@@ -1074,19 +1073,17 @@ export class Category extends Item {
             return {Class: await this.getDefaultClass(classPath, name)}
         }
 
-        if (!this._url_) await this._ready_.url                     // wait until the item's URL is initialized
-
-        let modulePath = this._url_
-        assert(modulePath, `missing _url_ for category ID=${this._id_}`)
+        let path = this._url_ || await this._ready_.url                 // wait until the item's URL is initialized
+        assert(path, `missing _url_ for category ID=${this._id_}`)
 
         try {
             return await (onClient ?
-                            registry.import(modulePath) :
-                            site.parseModule(this._source_, modulePath)
+                            registry.import(path) :
+                            site.parseModule(this._source_, path)
             )
         }
         catch (ex) {
-            print(`ERROR when parsing dynamic code from "${modulePath}" path for category ID=${this._id_}, will use a default class instead. Cause:\n`, ex)
+            print(`ERROR when parsing dynamic code from "${path}" path for category ID=${this._id_}, will use a default class instead. Cause:\n`, ex)
             return {Class: await this.getDefaultClass(classPath, name)}
         }
     }
