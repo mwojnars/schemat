@@ -13,12 +13,11 @@ export class HtmlPage extends HttpService {
     /* An HTTP(S) service that generates an HTML page in response to a browser-invoked web request.
        In the base class implementation, the page is built out of separate strings/functions for: title, head, body.
      */
-    execute(target, request) {
+    async execute(target, request) {
         // `view` is a descendant of `target` that additionally contains all View.* properties & methods
         // and a `context` property
         let view = this._create_view(target, request)
-        let prepare = view.prepare_server()
-        if (T.isPromise(prepare)) return prepare.then(() => view.generate())
+        await view.prepare_server()
         return view.generate()
     }
 
@@ -31,6 +30,7 @@ export class HtmlPage extends HttpService {
            plus some request-related data (on the server).
          */
         let context = {request, target, page: this}
+        // let View = this.constructor.View.prototype
         let View = this.constructor.View
         let view = Object.setPrototypeOf({...View, context}, target)
 
@@ -101,7 +101,7 @@ export class RenderedPage extends HtmlPage {
        The (re)rendering can take place on the server and/or the client.
      */
 
-    render(target, html_element, props) {
+    async render(target, html_element, props) {
         /* Client-side rendering of the main component of the page to an HTML element. */
         throw new NotImplemented('render() must be implemented in subclasses')
     }
@@ -164,18 +164,18 @@ export class ReactPage extends RenderedPage {
         target.assert_loaded()
         let view = this._create_view(target)
         let component = e(view.component)
-        let prepare = view.prepare_client()
-        if (T.isPromise(prepare)) await prepare
+        await view.prepare_client()
         return ReactDOM.createRoot(html_element).render(component)
     }
 
     static View = {
         ...RenderedPage.View,
 
-        prepare_client() {
-            /* Add extra information to the view before the rendering starts client-side. Can be async in subclasses. */
-            print(`prepare_client() called for ${this.constructor.name}`)
-            return null
+        async prepare_client() {
+            /* Add extra information to the view before the rendering starts client-side. */
+            print(`prepare_client() called for ${this.constructor.name}:${this._id_}, ${this._category_}`)
+            await this._ready_.url
+            await this._category_?._ready_.url
         },
 
         render_server() {
