@@ -806,71 +806,6 @@ export class Item {
         return path
     }
 
-    // async route(request) {
-    //     /*
-    //     Override this method, or findRoute(), in subclasses of items that serve as intermediate nodes on URL paths.
-    //     The route() method should forward the `request` to the next node on the path
-    //     by calling either its node.route(), if more routing is needed, or node.handle(),
-    //     if the node was identified as a TARGET item that should actually serve the request.
-    //     The routing node can also forward the request to itself by calling this.handle().
-    //     Typically, `request` originates from a web request. The routing can also be started internally,
-    //     and in such case request.session is left undefined.
-    //     */
-    //     assert(false, `route() not implemented for ${this.constructor.name} [${this._id_}]`)
-    //
-    //     assert(registry.onServer)                           // route() is exclusively server-side functionality, including internal URL-calls
-    //     let next = this.findRoute(request)                  // here, a part of request.path gets consumed
-    //     if (!next || !next[0]) request.throwNotFound()      // missing `node` in the returned tuple
-    //
-    //     let [node, req, target] = next  //this._findRouteChecked(request)
-    //     if (node instanceof Promise) node = await node
-    //     if (!node instanceof Item) throw new Error("internal error, expected an item as a target node of a URL route")
-    //     if (!node.is_loaded()) await node.load()
-    //     if (typeof target === 'function') target = target(node)         // delayed target test after the node is loaded
-    //     return target ? node.handle(req) : node.route(req)
-    // }
-    // async routeNode(request, strategy = 'last') {
-    //     /* Like route(), but request.path can point to an intermediate node on a route,
-    //        and instead of calling .handle() this method returns a (loaded) node pointed to by the path:
-    //        the first node where request.path becomes empty (if strategy="first");
-    //        or the last node before catching a Request.NotFound error (if strategy="last");
-    //        or the target node with remaining subpath - if the target was reached along the way.
-    //        A pair is returned: [node, current-request] from the point where the routing was terminated.
-    //      */
-    //     if (!request.path && strategy === 'first') return [this, request]
-    //     try {
-    //         let [node, req, target] = this._findRouteChecked(request)
-    //         if (node instanceof Promise) node = await node
-    //         if (!node.is_loaded()) await node.load()
-    //         if (typeof target === 'function') target = target(node)     // delayed target test after the node is loaded
-    //         if (target) return [node, req]
-    //         return node.routeNode(req, strategy)
-    //     }
-    //     catch (ex) {
-    //         if (ex instanceof UrlPathNotFound && strategy === 'last')
-    //             return [this, request]      // assumption: findRoute() above must NOT modify the `request` before throwing a NotFound!
-    //         throw ex
-    //     }
-    // }
-    //
-    // _findRouteChecked(request) {
-    //     /* Wrapper around findRoute() that adds validity checks. */
-    //     let next = this.findRoute(request)                  // here, a part of request.path gets consumed
-    //     if (!next || !next[0]) request.throwNotFound()      // missing `node` in the returned tuple
-    //     return next
-    // }
-    //
-    // findRoute(request) {
-    //     /* Find the next node on a route identified by request.path, the route starting in this node.
-    //        Return [next-node, new-request, is-target], or undefined. The next-node can be a stub (unloaded).
-    //        The is-target can be omitted (false by default), or can be a function, target(node),
-    //        to be called later, after the `node` is fully loaded. If `request` is modified internally,
-    //        the implementation must ensure that any exceptions are raised *before* the modifications take place.
-    //      */
-    //     request.throwNotFound()
-    //     return [this, request, false]           // just a mockup for an IDE to infer return types
-    // }
-
     handlePartial(request) {
         /* Handle a request whose "partial path" addresses an inner element of the item. Default: error.
            Subclasses may override this method. Overriding methods can be "async".
@@ -893,7 +828,9 @@ export class Item {
         - an array [val1, val2, ...] if PARAM occurs multiple times.
         */
         request.item = this
-        if (request.path) return this.handlePartial(request)
+
+        assert(!request.path)
+        if (request.path) return this.handlePartial(request)        // TODO: remove handlePartial()
 
         let {session, methods, protocol} = request
         if (!methods.length) methods = ['default']
