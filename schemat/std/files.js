@@ -108,7 +108,7 @@ export class LocalFolder extends Directory {
     async __init__() {
         if (registry.onServer) {
             this._mod_fs = await import('node:fs')
-            this._mod_path = await import('node:path')        // to avoid awaiting in handlePartial()
+            this._mod_path = await import('node:path')
         }
     }
 
@@ -117,11 +117,6 @@ export class LocalFolder extends Directory {
         return {
             handle: (request) => this._read_file(path, request.res),
         }
-    }
-
-    handlePartial(request) {
-        let {path: url_path, res} = request
-        return this._read_file(url_path, res)
     }
 
     _read_file(url_path, res) {

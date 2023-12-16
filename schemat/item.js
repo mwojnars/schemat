@@ -806,20 +806,6 @@ export class Item {
         return path
     }
 
-    handlePartial(request) {
-        /* Handle a request whose "partial path" addresses an inner element of the item. Default: error.
-           Subclasses may override this method. Overriding methods can be "async".
-         */
-        request.throwNotFound()
-        // // route into `data` if there's still a path to be consumed
-        // // TODO: check for "GET" privilege of request.client to this item
-        // await this.load()
-        // ;[entry, subpath] = this._data_.route(request.path)
-        // if (subpath) throw new Error(`path not found: ${subpath}`)
-        //     // if (entry.value instanceof Item) return entry.value.handle(request.move(subpath), session)
-        //     // else throw new Error(`path not found: ${subpath}`)
-    }
-
     handle(request) {
         /*
         Serve a web or internal `request` by executing the corresponding service from this.net.
@@ -828,9 +814,6 @@ export class Item {
         - an array [val1, val2, ...] if PARAM occurs multiple times.
         */
         request.item = this
-
-        assert(!request.path)
-        if (request.path) return this.handlePartial(request)        // TODO: remove handlePartial()
 
         let {session, methods, protocol} = request
         if (!methods.length) methods = ['default']
