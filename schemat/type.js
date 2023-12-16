@@ -797,18 +797,18 @@ export class ITEM extends Type {
             if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
                 return SPAN({suppressHydrationWarning: true}, "loading...")
 
-            let url  = item.url()
+            let url = item.url()
             let name = item.name
-            let ciid = HTML(item.getStamp({html: false, brackets: false}))
+            let stamp = HTML(item.getStamp({html: false, brackets: false}))
 
             if (name && url) {
                 let note = item._category_.name || null
                 return SPAN(
                     url ? A({href: url}, name) : name,
-                    SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
+                    SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : stamp)}, note)
                 )
             } else
-                return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
+                return SPAN('[', url ? A({href: url, ...stamp}) : SPAN(stamp), ']')
         }
     })
 
@@ -820,16 +820,16 @@ export class ITEM extends Type {
     //
     //     let url  = item.url()
     //     let name = item.get('name', '')
-    //     let ciid = HTML(item.getStamp({html: false, brackets: false}))
+    //     let stamp = HTML(item.getStamp({html: false, brackets: false}))
     //
     //     if (name && url) {
     //         let note = item.category.get('name', null)
     //         return SPAN(
     //             url ? A({href: url}, name) : name,
-    //             SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
+    //             SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : stamp)}, note)
     //         )
     //     } else
-    //         return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
+    //         return SPAN('[', url ? A({href: url, ...stamp}) : SPAN(stamp), ']')
     // }
 }
 

@@ -216,8 +216,8 @@ export class ItemAdminPage extends ReactPage {
             let title = this.html_title
             // if (title instanceof Function) title = title()          // this can still return undefined
             if (typeof title === 'string') return title
-            let ciid = this.getStamp({html: false})
-            return `${this.name} ${ciid}`
+            let stamp = this.getStamp({html: false})
+            return `${this.name} ${stamp}`
         },
 
         html_head() {
@@ -247,11 +247,11 @@ export class ItemAdminPage extends ReactPage {
         Title() {
             /* <H1> element to be displayed as a page title. */
             let name = this.name
-            let ciid = this.getStamp()
+            let stamp = this.getStamp()
             if (name)
-                return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
+                return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(stamp)}))
             else
-                return H1(HTML(ciid))
+                return H1(HTML(stamp))
         },
 
         Properties() {
