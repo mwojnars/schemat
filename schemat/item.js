@@ -743,12 +743,9 @@ export class Item {
 
     getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
         /*
-        "Category-Item ID" (CIID) string (stamp) of the form:
-        - [CATEGORY-NAME:IID], if the category of this has a "name" property; or
-        - [CID:IID] otherwise.
-        If html=true, the first part (CATEGORY-NAME or CID) is hyperlinked to the category's profile page
-        (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not null,
-        CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
+        "[CATEGORY:ID]" string (stamp) if the category of `this` has a "name" prop; or "[ID]" otherwise.
+        If html=true, the category name is hyperlinked to the category's profile page (unless URL failed to generate)
+        and is HTML-escaped. If max_len is provided, category's suffix may be replaced with '...' to make its length <= max_len.
         */
         let cat = this._category_?.name || ""
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
@@ -758,8 +755,7 @@ export class Item {
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
         let stamp = cat ? `${cat}:${this._id_}` : `${this._id_}`
-        if (!brackets) return stamp
-        return `[${stamp}]`
+        return brackets ? `[${stamp}]` : stamp
     }
 
     mergeSnippets(key, params) {
