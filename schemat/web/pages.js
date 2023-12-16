@@ -15,7 +15,7 @@ export class HtmlPage extends HttpService {
      */
     async execute(target, request) {
         // `view` is a descendant of `target` that additionally contains all View.* properties & methods
-        // and a `context` property
+        // and a special property `_context_`
         let view = this._create_view(target, request)
         await view.prepare_server()
         return view.generate()
@@ -26,13 +26,13 @@ export class HtmlPage extends HttpService {
            functionality as defined in the page's View. The view object is a descendant of the target object.
            Inside the page-generation functions, `this` is bound to the "view", so the code can access both
            the target object's properties and other page-generation functions.
-           Also, view.context is set to the context object containing at least `target` and `page` (on the client),
+           Also, view._context_ is set to the context object containing at least `target` and `page` (on the client),
            plus some request-related data (on the server).
          */
-        let context = {request, target, page: this}
+        let _context_ = {request, target, page: this}
         // let View = this.constructor.View.prototype
         let View = this.constructor.View
-        let view = Object.setPrototypeOf({...View, context}, target)
+        let view = Object.setPrototypeOf({...View, _context_}, target)
 
         // bind View functions in `view` to the `view` object - this is to prevent React rendering/refresh errors,
         // or the need to manually bind React component functions later on
@@ -55,10 +55,10 @@ export class HtmlPage extends HttpService {
            as they are shared between all views created from a given page class.
         */
 
-        context: undefined,     // the context object: {target, page, ...plus request data as passed to the page's execute()}
+        _context_: undefined,       // the context object: {target, page, ...plus request data as passed to the page's execute()}
 
         async prepare_server() {
-            /* Add extra information to the view (`this` or `this.context`) before the page generation starts.
+            /* Add extra information to the view (`this` or `this._context_`) before the page generation starts.
                Typically, performs asynchronous operations to load data from the database or await for URLs,
                because during actual rendering only synchronous operations may be allowed.
              */
@@ -179,15 +179,15 @@ export class ReactPage extends RenderedPage {
 
         render_server() {
             this.assert_loaded()
-            print(`SSR render('${this.context.request.endpoint}') of ID=${this._id_}`)
+            print(`SSR render('${this._context_.request.endpoint}') of ID=${this._id_}`)
             let view = e(this.component)
             return ReactDOM.renderToString(view)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
         },
 
         page_data() {
-            let dump = this.context.request.session.dump()
-            return {...dump, endpoint: this.context.request.endpoint}
+            let dump = this._context_.request.session.dump()
+            return {...dump, endpoint: this._context_.request.endpoint}
         },
 
         page_script() {
@@ -284,12 +284,12 @@ export class CategoryAdminPage extends ItemAdminPage {
         async prepare_server() {
             // preload the items list
             let scanned = registry.scan_category(this)
-            this.context.items = await T.arrayFromAsync(scanned).then(arr => T.amap(arr, item => item.load()))
-            // this.context.items = await this.action.list_items().then(arr => T.amap(arr, item => item.load()))
+            this._context_.items = await T.arrayFromAsync(scanned).then(arr => T.amap(arr, item => item.load()))
+            // this._context_.items = await this.action.list_items().then(arr => T.amap(arr, item => item.load()))
         },
 
         component() {
-            let preloaded = this.context.items               // TODO: must be pulled from response data on the client to avoid re-scanning on 1st render
+            let preloaded = this._context_.items               // TODO: must be pulled from response data on the client to avoid re-scanning on 1st render
 
             const scan = () => this.action.list_items()
             // const scan = () => registry.scan_category(this)         // returns an async generator that requires "for await"
