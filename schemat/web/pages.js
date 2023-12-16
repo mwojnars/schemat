@@ -57,11 +57,10 @@ export class HtmlPage extends HttpService {
 
         context: undefined,     // the context object: {target, page, ...plus request data as passed to the page's execute()}
 
-        prepare_server() {
+        async prepare_server() {
             /* Add extra information to the view (`this` or `this.context`) before the page generation starts.
-               In subclasses, prepare_server() is typically asynchronous to allow loading of external data from DB;
-               here, it is defined as synchronous to avoid another async call when no actual preparation is performed.
-               The target object can also undergo some additional processing here.
+               Typically, performs asynchronous operations to load data from the database or await for URLs,
+               because during actual rendering only synchronous operations may be allowed.
              */
             print(`prepare_server() called for ${this.constructor.name}`)
         },

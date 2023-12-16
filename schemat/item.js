@@ -791,7 +791,6 @@ export class Item {
             console.error(`missing _url_ for object [${this._id_}], introduce a delay or await _ready_.url`)
             return ''
         }
-        // assert(path, `missing _url_ for object [${this._id_}], you should introduce a delay or await _ready_.url`)
 
         // let defaultApp = registry.site.getApplication()
         // let defaultApp = registry.session.apps['$']
