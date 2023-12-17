@@ -189,15 +189,7 @@ export class ItemProxy {
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
     static UNDEFINED = Symbol.for('ItemProxy.UNDEFINED')
-    static CACHED_VALUE = Symbol.for('ItemProxy.CACHED_VALUE')
-
-    // static CACHED(value) {
-    //     /* Wrap up a return value of a getter of the object's special property to mark that the value
-    //        should be cached and reused after the first calculation. undefined is a valid, cached value,
-    //        and it is stored as ItemProxy.UNDEFINED. If you don't want caching, return `value` instead (not wrapped).
-    //      */
-    //     return {[this.CACHED_VALUE]: true, value}
-    // }
+    static CACHED    = Symbol.for('ItemProxy.CACHED')       // marks a wrapper around a value that comes from a getter function and should be cached
 
 
     static wrap(target) {
@@ -208,7 +200,7 @@ export class ItemProxy {
     static proxy_get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
 
-        if (typeof value === 'object' && value?.[ItemProxy.CACHED_VALUE]) {
+        if (typeof value === 'object' && value?.[ItemProxy.CACHED]) {
             // the value comes from a getter and should be cached
             value = value.value
             let stored = (value === undefined) ? ItemProxy.UNDEFINED : value
@@ -675,7 +667,7 @@ export class Item {
            to avoid repeated calculation. If you don't want to cache <undefined> (or any other value),
            return the original (unwrapped) value instead of calling CACHED_PROP().
          */
-        return {[ItemProxy.CACHED_VALUE]: true, value}
+        return {[ItemProxy.CACHED]: true, value}
     }
 
     // object(first = true) {
