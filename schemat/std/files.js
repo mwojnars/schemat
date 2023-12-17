@@ -30,7 +30,7 @@ export class File extends Item {
     }
 
     get content_processed() {
-        return ItemProxy.CACHED(this.process(this._content()))
+        return this.CACHED_PROP(this.process(this._content()))
     }
 
     // async CALL_import({request}) {

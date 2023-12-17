@@ -191,13 +191,13 @@ export class ItemProxy {
     static UNDEFINED = Symbol.for('ItemProxy.UNDEFINED')
     static CACHED_VALUE = Symbol.for('ItemProxy.CACHED_VALUE')
 
-    static CACHED(value) {
-        /* Wrap up a return value of a getter of the object's special property to mark that the value
-           should be cached and reused after the first calculation. undefined is a valid, cached value,
-           and it is stored as ItemProxy.UNDEFINED. If you don't want caching, return `value` instead (not wrapped).
-         */
-        return {[this.CACHED_VALUE]: true, value}
-    }
+    // static CACHED(value) {
+    //     /* Wrap up a return value of a getter of the object's special property to mark that the value
+    //        should be cached and reused after the first calculation. undefined is a valid, cached value,
+    //        and it is stored as ItemProxy.UNDEFINED. If you don't want caching, return `value` instead (not wrapped).
+    //      */
+    //     return {[this.CACHED_VALUE]: true, value}
+    // }
 
 
     static wrap(target) {
@@ -345,10 +345,10 @@ export class Item {
 
     get _schema_() {
         let value = this._category_?.item_schema || new DATA_GENERIC()
-        return ItemProxy.CACHED(value)
+        return this.CACHED_PROP(value)
     }
 
-    get _prototypes_() { return ItemProxy.CACHED(this._extends__array) }
+    get _prototypes_() { return this.CACHED_PROP(this._extends__array) }
 
     get _ancestors_() {
         // TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
@@ -356,10 +356,10 @@ export class Item {
         // http://python-history.blogspot.com/2010/06/method-resolution-order.html
         let candidates = this._prototypes_.map(proto => proto._ancestors_)
         let ancestors = [this, ...unique(concat(candidates))]
-        return ItemProxy.CACHED(ancestors)
+        return this.CACHED_PROP(ancestors)
     }
 
-    get _assets_()  { return ItemProxy.CACHED(this._schema_.getAssets()) }
+    get _assets_()  { return this.CACHED_PROP(this._schema_.getAssets()) }
 
 
     /***  Internal properties  ***/
@@ -626,69 +626,8 @@ export class Item {
         return false
     }
 
-    /***  Dynamic loading of source code  ***/
 
-    // async getClass()    {
-    //     if (this.category && !this.category.getItemClass) {
-    //         print('this.category:', this.category)
-    //         print('getItemClass:', this.category.getItemClass)
-    //     }
-    //     return this.category?._item_class_
-    // }
-
-    // getClass() {
-    //     /* Create/parse/load a JS class for this item. If `custom_class` property is true, the item may receive
-    //        a custom subclass (different from the category's default) built from this item's own & inherited `code*` snippets.
-    //      */
-    //     return this.category._item_class_
-    //     // let base = this.category._item_class_
-    //     // let custom = this.category.get('custom_class')
-    //     // return custom ? this.parseClass(base) : base
-    // }
-
-    // parseClass(base = Item) {
-    //     /* Concatenate all the relevant `code_*` and `code` snippets of this item into a class body string,
-    //        and dynamically parse them into a new class object - a subclass of `base` or the base class identified
-    //        by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
-    //      */
-    //     let name = this.get('_boot_class')
-    //     if (name) base = registry.getClass(name)
-    //
-    //     let body = this.mergeSnippets('class')           // full class body from concatenated `code` and `code_*` snippets
-    //     if (!body) return base
-    //
-    //     let url = this.sourceURL('class')
-    //     let import_ = (path) => {
-    //         if (path[0] === '.') throw Error(`relative import not allowed in dynamic code of a category (${url}), path='${path}'`)
-    //         return registry.site.import(path)
-    //     }
-    //     let source = `return class extends base {${body}}` + `\n//# sourceURL=${url}`
-    //     return new Function('base', 'import_', source) (base, import_)
-    // }
-        // let asyn = body.match(/\bawait\b/)              // if `body` contains "await" word, even if it's in a comment (!),
-        // let func = asyn ? AsyncFunction : Function      // an async function is created instead of a synchronous one
-
-    // parseMethod(path, ...args) {
-    //     let source = this.get(path)
-    //     let url = this.sourceURL(path)
-    //     return source ? new Function(...args, source + `\n//# sourceURL=${url}`) : undefined
-    // }
-
-    // sourceURL(path) {
-    //     /* Build a sourceURL string for the code parsed dynamically from a data element, `path`, of this item. */
-    //     function clean(s) {
-    //         if (typeof s !== 'string') return ''
-    //         return s.replace(/\W/, '')                  // keep ascii-alphanum characters only, drop all others
-    //     }
-    //     let domain   = Item.CODE_DOMAIN
-    //     let cat_name = clean(this.get('name'))
-    //     let fil_name = `${cat_name}_${this.id_str}`
-    //     return `${domain}:///items/${fil_name}/${path}`
-    //     // return `\n//# sourceURL=${url}`
-    // }
-
-
-    /***  READ access to item's data  ***/
+    /***  READ access to properties  ***/
 
     _compute_property(prop) {
         /* Compute a property, `prop`, and return an array of its values. The array consists of own data + inherited
@@ -729,6 +668,15 @@ export class Item {
     }
 
     _own_values(prop)  { return this._data_.getValues(prop) }
+
+    CACHED_PROP(value) {
+        /* Wrap a `value` of a getter of a special property to mark that the value should be cached and reused
+           after the first calculation. <undefined> is a valid value and is stored as ItemProxy.UNDEFINED
+           to avoid repeated calculation. If you don't want to cache <undefined> (or any other value),
+           return the original (unwrapped) value instead of calling CACHED_PROP().
+         */
+        return {[ItemProxy.CACHED_VALUE]: true, value}
+    }
 
     // object(first = true) {
     //     /* Return this._data_ converted to a plain object. For repeated keys, only one value is included:
@@ -841,6 +789,68 @@ export class Item {
         this._meta_.mutable = true
         return this
     }
+
+
+    /***  Dynamic loading of source code  ***/
+
+    // async getClass()    {
+    //     if (this.category && !this.category.getItemClass) {
+    //         print('this.category:', this.category)
+    //         print('getItemClass:', this.category.getItemClass)
+    //     }
+    //     return this.category?._item_class_
+    // }
+
+    // getClass() {
+    //     /* Create/parse/load a JS class for this item. If `custom_class` property is true, the item may receive
+    //        a custom subclass (different from the category's default) built from this item's own & inherited `code*` snippets.
+    //      */
+    //     return this.category._item_class_
+    //     // let base = this.category._item_class_
+    //     // let custom = this.category.get('custom_class')
+    //     // return custom ? this.parseClass(base) : base
+    // }
+
+    // parseClass(base = Item) {
+    //     /* Concatenate all the relevant `code_*` and `code` snippets of this item into a class body string,
+    //        and dynamically parse them into a new class object - a subclass of `base` or the base class identified
+    //        by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
+    //      */
+    //     let name = this.get('_boot_class')
+    //     if (name) base = registry.getClass(name)
+    //
+    //     let body = this.mergeSnippets('class')           // full class body from concatenated `code` and `code_*` snippets
+    //     if (!body) return base
+    //
+    //     let url = this.sourceURL('class')
+    //     let import_ = (path) => {
+    //         if (path[0] === '.') throw Error(`relative import not allowed in dynamic code of a category (${url}), path='${path}'`)
+    //         return registry.site.import(path)
+    //     }
+    //     let source = `return class extends base {${body}}` + `\n//# sourceURL=${url}`
+    //     return new Function('base', 'import_', source) (base, import_)
+    // }
+        // let asyn = body.match(/\bawait\b/)              // if `body` contains "await" word, even if it's in a comment (!),
+        // let func = asyn ? AsyncFunction : Function      // an async function is created instead of a synchronous one
+
+    // parseMethod(path, ...args) {
+    //     let source = this.get(path)
+    //     let url = this.sourceURL(path)
+    //     return source ? new Function(...args, source + `\n//# sourceURL=${url}`) : undefined
+    // }
+
+    // sourceURL(path) {
+    //     /* Build a sourceURL string for the code parsed dynamically from a data element, `path`, of this item. */
+    //     function clean(s) {
+    //         if (typeof s !== 'string') return ''
+    //         return s.replace(/\W/, '')                  // keep ascii-alphanum characters only, drop all others
+    //     }
+    //     let domain   = Item.CODE_DOMAIN
+    //     let cat_name = clean(this.get('name'))
+    //     let fil_name = `${cat_name}_${this.id_str}`
+    //     return `${domain}:///items/${fil_name}/${path}`
+    //     // return `\n//# sourceURL=${url}`
+    // }
 }
 
 /**********************************************************************************************************************/
@@ -961,7 +971,7 @@ export class Category extends Item {
 
     get _item_class_() {
         /* Return a (cached) Promise that resolves to the dynamically created class to be used for items of this category. */
-        return ItemProxy.CACHED(this.getModule().then(module => {
+        return this.CACHED_PROP(this.getModule().then(module => {
             // below, module.Class is subclassed to allow safe addition of a static _category_ attribute:
             // when several categories share the `base` class, each one needs a different value of _category_
             let base = module.Class
@@ -1038,7 +1048,7 @@ export class Category extends Item {
         let snippets = [base, init, code, expo].filter(Boolean)
         let source = snippets.join('\n')
 
-        return ItemProxy.CACHED(source)
+        return this.CACHED_PROP(source)
     }
 
     _hasCustomCode() { return this._codeInit() || this._codeBody() }

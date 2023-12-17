@@ -25,7 +25,7 @@
 - Inheritance (via prototypes on categories)
 - VIEW_*() methods CANNOT be "async". Any async initialization
   must be done in the `async init(data) {...}` method.
-- Caching: `ItemProxy.CACHED()`
+- Caching: `this.CACHED_PROP()`
 
 ### Routing
 
