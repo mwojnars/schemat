@@ -12,13 +12,12 @@ import {Data} from "../data.js";
 export class HtmlPage extends HttpService {
     /* An HTTP(S) service that generates an HTML page in response to a browser-invoked web request.
        Layout and appearance of the page are defined by a View class (HtmlPage.View or its subclass)
-       that is an inner (static) class of the page class.
+       that is an inner (static) class of the page class. Rendering takes place in a special "view" object that
+       combines properties of the target object with the page-generation functionality of the View class.
        In the base HtmlPage implementation, the page is built out of separate strings/functions for: title, head, body.
      */
 
     async execute(target, request) {
-        // `view` is a descendant of `target` that additionally contains all View.* properties & methods
-        // and a special property `_context_`
         let view = this.create_view(target, request)
         await view.prepare_server()
         return view.generate()
