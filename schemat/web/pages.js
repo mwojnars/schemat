@@ -11,36 +11,6 @@ import {Data} from "../data.js";
 
 class ViewProxy {
 
-    static create_view(view_class, target_object, context = {}) {
-        /* Create a "view" object that combines the regular interface and properties of the target object
-           with the page-generation functionality as defined in the page's View class.
-           Technically, the view is a Proxy that combines properties of two objects:
-
-           - an instance of HtmlPage.View (sub)class that provides methods and (React) components for view generation;
-           - a target object whose data and properties are to be presented in the view.
-
-           If JS supported multiple prototypical inheritance, the view would be created simply as an object
-           with two prototypes: the view_class's prototype and the target_object. ViewProxy is a workaround
-           that uses a Proxy to intercept all read access to attributes and redirect them to the view_class
-           (in the first place) and then to the target_object (if not found in the view_class).
-
-           All writes go to the view object itself. The view inherits target_object's prototype chain, so the view
-           looks like an instance of target_object's class in terms of `instanceof` and `isPrototypeOf()`.
-           Inside the view's methods, `this` is bound to the view object, so it can access both the target_object's
-           properties and methods, and the view_class's methods - this is the main benefit of this (mocked)
-           multiple inheritance. Note that the view_class's attributes overshadow the target_object's attributes,
-           so, occasionally, a public property of the target_object may become inaccessible from inside the view.
-
-           View's _context_ is set to contain at least `target` and `page` (on the client),
-           plus some request-related data (on the server).
-         */
-
-        let base = new view_class(context)
-        return new Proxy(target_object, {
-            get: (target, prop, receiver) => this.proxy_get(base, target_object, prop, receiver)
-        })
-    }
-
     static proxy_get(base_view, target_object, prop, receiver) {
         let value = Reflect.get(base_view, prop, receiver)
 
@@ -65,16 +35,48 @@ export class HtmlPage extends HttpService {
     async execute(target, request) {
         // `view` is a descendant of `target` that additionally contains all View.* properties & methods
         // and a special property `_context_`
-        let view = this._create_view(target, request)
+        let view = this.create_view(target, request)
         await view.prepare_server()
         return view.generate()
     }
 
-    _create_view(target, request = null) {
-        let context = {request, target, page: this}
+    create_view(target_object, request = null) {
+        /* Create a "view" object that combines the regular interface and properties of the target object
+           with the page-generation functionality as defined in the page's View class.
+           Technically, the view is a Proxy that combines properties of two objects:
+
+           - an instance of HtmlPage.View or its subclass, that provides methods and (React) components for view generation;
+           - a target object whose data and properties are to be presented in the view.
+
+           If JS supported multiple prototypical inheritance, the view would be created simply as an object
+           with two prototypes: the view_class's prototype and the target_object. ViewProxy is a workaround
+           that uses a Proxy to intercept all read access to attributes and redirect them to the view_class
+           (in the first place) and then to the target_object (if not found in the view_class).
+
+           All writes go to the view object itself. The view inherits target_object's prototype chain, so the view
+           looks like an instance of target_object's class in terms of `instanceof` and `isPrototypeOf()`.
+           Inside the view's methods, `this` is bound to the view object, so it can access both the target_object's
+           properties and methods, and the view_class's methods - this is the main benefit of this (mocked)
+           multiple inheritance. Note that the view_class's attributes overshadow the target_object's attributes,
+           so, occasionally, a public property of the target_object may become inaccessible from inside the view.
+
+           The view's _context_ is set to contain at least `target` and `page` (on the client),
+           plus some request-related data (on the server).
+         */
+        
         let View = this.constructor.View
-        return ViewProxy.create_view(View, target, context)
+        let base = new View({request, target: target_object, page: this})
+
+        return new Proxy(target_object, {
+            get: (target, prop, receiver) => ViewProxy.proxy_get(base, target_object, prop, receiver)
+        })
     }
+
+    // _create_view(target, request = null) {
+    //     let context = {request, target, page: this}
+    //     let View = this.constructor.View
+    //     return ViewProxy.create_view(View, target, context)
+    // }
 
     static View = class {
         /* Methods and properties to be copied to a descendant of the target object to create a "view" that
@@ -196,7 +198,7 @@ export class ReactPage extends RenderedPage {
     async render_client(target, html_element) {
         assert(registry.client_side)
         target.assert_loaded()
-        let view = this._create_view(target)
+        let view = this.create_view(target)
         let component = e(view.component)
         await view.prepare_client()
         return ReactDOM.createRoot(html_element).render(component)
