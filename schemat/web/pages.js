@@ -16,7 +16,7 @@ class ViewProxy {
            - an instance of a `view_class` that (mainly) provides methods for view generation;
            - a `target_object` whose data and properties are to be presented in the view.
 
-           If JS supported multiple prototypical inheritance, the view would be simply created as an object
+           If JS supported multiple prototypical inheritance, the view would be created simply as an object
            with two prototypes: the view_class's prototype and the target_object. ViewProxy is a workaround
            that uses a Proxy to intercept all read access to attributes and redirect them to the view_class
            (in the first place) and then to the target_object (if not found in the view_class).
@@ -37,6 +37,11 @@ class ViewProxy {
 
     static proxy_get(base_view, target_object, prop, receiver) {
         let value = Reflect.get(base_view, prop, receiver)
+
+        // a method in base_view is often a React functional component, which must be bound to the view object
+        // to allow its delayed execution inside a DOM tree
+        if (typeof value === 'function') return value.bind(receiver)
+
         if (value !== undefined) return value
         return Reflect.get(target_object, prop, receiver)
     }
@@ -65,9 +70,11 @@ export class HtmlPage extends HttpService {
            plus some request-related data (on the server).
          */
         let _context_ = {request, target, page: this}
-        // let View = this.constructor.View.prototype
         let View = this.constructor.View
-        let view = Object.setPrototypeOf({...View, _context_}, target)
+        // let view = Object.setPrototypeOf({...View, _context_}, target)
+
+        let view = ViewProxy.create_view(View, target)
+        view._context_ = _context_
 
         // bind View functions in `view` to the `view` object - this is to prevent React rendering/refresh errors,
         // or the need to manually bind React component functions later on
@@ -80,7 +87,7 @@ export class HtmlPage extends HttpService {
         return view
     }
 
-    static View = {
+    static View = class {
         /* Methods and properties to be copied to a descendant of the target object to create a "view" that
            combines the regular interface of the target with the page-generation functionality as defined below.
            Inside the page-generation functions, `this` is bound to this combined "view" object, so it can access both
@@ -90,7 +97,7 @@ export class HtmlPage extends HttpService {
            as they are shared between all views created from a given page class.
         */
 
-        _context_: undefined,       // the context object: {target, page, ...plus request data as passed to the page's execute()}
+        // _context_: undefined,       // the context object: {target, page, ...plus request data as passed to the page's execute()}
 
         async prepare_server() {
             /* Add extra information to the view (`this` or `this._context_`) before the page generation starts.
@@ -98,7 +105,7 @@ export class HtmlPage extends HttpService {
                because during actual rendering only synchronous operations may be allowed.
              */
             print(`prepare_server() called for ${this.constructor.name}`)
-        },
+        }
 
         generate() {
             /* Generate a complete HTML page server-side. Can be async.
@@ -108,11 +115,11 @@ export class HtmlPage extends HttpService {
             let assets = this.html_head()
             let body = this.html_body()
             return this.html_frame({title, assets, body})
-        },
+        }
 
-        html_title()  {},       // override in subclasses; return a plain string to be put inside <title>...</title>
-        html_head()   {},       // override in subclasses; return an HTML string to be put inside <head>...</head>
-        html_body()   {},       // override in subclasses; return an HTML string to be put inside <body>...</body>
+        html_title()  {}        // override in subclasses; return a plain string to be put inside <title>...</title>
+        html_head()   {}        // override in subclasses; return an HTML string to be put inside <head>...</head>
+        html_body()   {}        // override in subclasses; return an HTML string to be put inside <body>...</body>
 
         html_frame({title, assets, body}) {
             // the title string IS escaped, while the other elements are NOT
@@ -124,7 +131,7 @@ export class HtmlPage extends HttpService {
                     ${assets || ''}
                 </head>`) +
                 `<body>\n${body || ''}\n</body></html>`
-        },
+        }
     }
 }
 
@@ -140,32 +147,32 @@ export class RenderedPage extends HtmlPage {
         throw new NotImplemented('render() must be implemented in subclasses')
     }
 
-    static View = {
-        ...HtmlPage.View,
+    static View = class extends HtmlPage.View {
+        // ...HtmlPage.View,
 
         html_body() {
             let html = this.render_server()
             let data = this.page_data()
             let code = this.page_script()
             return this.component_frame({html, data, code})
-        },
+        }
 
         render_server() {
             /* Server-side rendering (SSR) of the main component of the page to an HTML string. */
             return ''
-        },
+        }
 
         page_data() {
             /* Data string to be embedded in HTML output for use by the client-side JS code. Must be HTML-escaped. */
             throw new NotImplemented('page_data() must be implemented in subclasses')
-        },
+        }
 
         page_script() {
             /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
                This code will launch the client-side rendering of the component.
              */
             throw new NotImplemented('page_script() must be implemented in subclasses')
-        },
+        }
 
         component_frame({html, data, code}) {
             /* The HTML wrapper for the page's main component, `html`, and its `data` and the launch script, `code`.
@@ -177,11 +184,11 @@ export class RenderedPage extends HtmlPage {
                 <script async type="module">${code}</script>
                 <p id="page-data" style="display:none">${data_string}</p>
             `
-        },
+        }
 
         _encode_page_data(data) {
             return btoa(encodeURIComponent(JSON.stringify(data)))
-        },
+        }
     }
 }
 
@@ -202,15 +209,15 @@ export class ReactPage extends RenderedPage {
         return ReactDOM.createRoot(html_element).render(component)
     }
 
-    static View = {
-        ...RenderedPage.View,
+    static View = class extends RenderedPage.View {
+        // ...RenderedPage.View,
 
         async prepare_client() {
             /* Add extra information to the view before the rendering starts client-side. */
             print(`prepare_client() called for ${this.constructor.name}:${this._id_}, ${this._category_}`)
             await this._ready_.url
             await this._category_?._ready_.url
-        },
+        }
 
         render_server() {
             this.assert_loaded()
@@ -218,16 +225,16 @@ export class ReactPage extends RenderedPage {
             let view = e(this.component)
             return ReactDOM.renderToString(view)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
-        },
+        }
 
         page_data() {
             let dump = this._context_.request.session.dump()
             return {...dump, endpoint: this._context_.request.endpoint}
-        },
+        }
 
         page_script() {
             return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start();`
-        },
+        }
 
         component() {
             /* The React component to be rendered as the page's content. */
@@ -243,8 +250,8 @@ export class ItemAdminPage extends ReactPage {
        is expected to be an instance of Item.
      */
 
-    static View = {
-        ...ReactPage.View,
+    static View = class extends ReactPage.View {
+        // ...ReactPage.View,
 
         html_title() {
             /* Get/compute a title for an HTML response page for a given request & view name. */
@@ -253,7 +260,7 @@ export class ItemAdminPage extends ReactPage {
             if (typeof title === 'string') return title
             let stamp = this.make_stamp({html: false})
             return `${this.name} ${stamp}`
-        },
+        }
 
         html_head() {
             /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
@@ -263,7 +270,7 @@ export class ItemAdminPage extends ReactPage {
             let customAssets = this._category_?.html_assets
             let assets = [globalAssets, staticAssets, customAssets]
             return assets .filter(a => a?.trim()) .join('\n')
-        },
+        }
 
         component({extra = null} = {}) {
             /* Detailed (admin) view of an item. */
@@ -275,7 +282,7 @@ export class ItemAdminPage extends ReactPage {
                 this.Properties(),
                 extra,
             )
-        },
+        }
 
         // standard components for Item pages...
 
@@ -287,7 +294,7 @@ export class ItemAdminPage extends ReactPage {
                 return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(stamp)}))
             else
                 return H1(HTML(stamp))
-        },
+        }
 
         Properties() {
             /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
@@ -296,7 +303,7 @@ export class ItemAdminPage extends ReactPage {
                     this._schema_.displayTable({item: this}),
                     // e(changes.Buttons.bind(changes)),
                 )
-        },
+        }
     }
 }
 
@@ -311,8 +318,8 @@ export class ItemAdminPage extends ReactPage {
 
 export class CategoryAdminPage extends ItemAdminPage {
 
-    static View = {
-        ...ItemAdminPage.View,
+    static View = class extends ItemAdminPage.View {
+        // ...ItemAdminPage.View,
 
         /* Below, `this` is bound to an instance of Category. */
 
@@ -321,7 +328,7 @@ export class CategoryAdminPage extends ItemAdminPage {
             let scanned = registry.scan_category(this)
             this._context_.items = await T.arrayFromAsync(scanned).then(arr => T.amap(arr, item => item.load()))
             // this._context_.items = await this.action.list_items().then(arr => T.amap(arr, item => item.load()))
-        },
+        }
 
         component() {
             let preloaded = this._context_.items               // TODO: must be pulled from response data on the client to avoid re-scanning on 1st render
@@ -337,7 +344,7 @@ export class CategoryAdminPage extends ItemAdminPage {
             const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
             const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
-            return ItemAdminPage.View.component.call(this, {extra: FRAGMENT(
+            return super.component({extra: FRAGMENT(
                 H2('Items'),
                 e(preloaded ? this.ItemsLoaded : this.Items, {key: 'items', items: items, itemRemoved: () => setItems(scan())}),
                 // e(this.Items, {key: 'items', items: items, itemRemoved: () => setItems(scan())}),
@@ -345,13 +352,13 @@ export class CategoryAdminPage extends ItemAdminPage {
                 e(this.Items, {items: newItems, itemRemoved}),
                 e(this.NewItem, {itemAdded}),
             )})
-        },
+        }
 
         ItemsLoaded({items}) {
             if (!items || items.length === 0) return null
             let rows = items.map(item => this._ItemEntry({item}))
             return TABLE(TBODY(...rows))
-        },
+        }
 
         Items({items, itemRemoved}) {
             /* A list (table) of items that belong to this category. */
@@ -368,7 +375,7 @@ export class CategoryAdminPage extends ItemAdminPage {
 
             let rows = items_loaded.map(item => this._ItemEntry({item, remove}))
             return TABLE(TBODY(...rows))
-        },
+        }
 
         _ItemEntry({item, remove}) {
             /* A single row in the list of items. */
@@ -379,7 +386,7 @@ export class CategoryAdminPage extends ItemAdminPage {
                 TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
                 TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
             )
-        },
+        }
 
         NewItem({itemAdded}) {
 
