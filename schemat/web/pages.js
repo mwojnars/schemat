@@ -29,23 +29,21 @@ export class HtmlPage extends HttpService {
            with the page-generation functionality as defined in the page's View class.
            Technically, the view is a Proxy that combines properties of two objects:
 
-           - an instance of HtmlPage.View or its subclass, that provides methods and (React) components for view generation;
+           - an instance of HtmlPage.View or its subclass that provides methods and (React) components for view generation
            - a target object whose data and properties are to be presented in the view.
 
            If JS supported multiple prototypical inheritance, the view would be created simply as an object
-           with two prototypes: the view_class's prototype and the target. ViewProxy is a workaround
-           that uses a Proxy to intercept all read access to attributes and redirect them to the view_class
-           (in the first place) and then to the target (if not found in the view_class).
+           with two prototypes: the view_class's prototype and the target. A proxy is a workaround that intercepts
+           all read access to attributes and redirects them to the View class (in the first place) or to the target object.
 
-           All writes go to the view object itself. The view inherits target's prototype chain, so the view
-           looks like an instance of target's class in terms of `instanceof` and `isPrototypeOf()`.
-           Inside the view's methods, `this` is bound to the view object, so it can access both the target's
-           properties and methods, and the view_class's methods - this is the main benefit of this (mocked)
-           multiple inheritance. Note that the view_class's attributes overshadow the target's attributes,
-           so, occasionally, a public property of the target may become inaccessible from inside the view.
+           All writes go to the view object itself. The view inherits target's prototype chain, so it looks like
+           an instance of the target's class in terms of `instanceof` and `isPrototypeOf()`.
+           Inside the view's methods, `this` is bound to the view object, so the view can access both the target's
+           properties and methods, and the View class's methods. Note that the View class's attributes overshadow
+           the target's attributes, so a property of the target may occasionally become inaccessible from inside the view.
 
            The view's _context_ is set to contain at least `target` and `page` (on the client),
-           plus some request-related data (on the server).
+           plus some request-related data (on the server). TODO: drop _context_
          */
 
         let View = this.constructor.View
@@ -55,8 +53,8 @@ export class HtmlPage extends HttpService {
             get: (_, prop, receiver) => {
                 let value = Reflect.get(base, prop, receiver)
 
-                // a method in base_view is often a React functional component, which must be bound to the view object
-                // to allow its delayed execution inside a DOM tree
+                // methods in `base` are often React functional components, which must be bound to the view object
+                // to allow their delayed execution inside a DOM tree
                 if (typeof value === 'function') return value.bind(receiver)
 
                 if (value !== undefined) return value
