@@ -9,6 +9,41 @@ import {Data} from "../data.js";
 
 /**********************************************************************************************************************/
 
+class ViewProxy {
+
+    static create_view(view_class, target_object) {
+        /* Create a "view" object that is a Proxy that internally combines properties of two objects:
+           - an instance of a `view_class` that (mainly) provides methods for view generation;
+           - a `target_object` whose data and properties are to be presented in the view.
+
+           If JS supported multiple prototypical inheritance, the view would be simply created as an object
+           with two prototypes: the view_class's prototype and the target_object. ViewProxy is a workaround
+           that uses a Proxy to intercept all read access to attributes and redirect them to the view_class
+           (in the first place) and then to the target_object (if not found in the view_class).
+
+           All writes go to the view object itself. The view inherits target_object's prototype chain, so the view
+           looks like an instance of target_object's class in terms of `instanceof` and `isPrototypeOf()`.
+           Inside the view's methods, `this` is bound to the view object, so it can access both the target_object's
+           properties and methods, and the view_class's methods - this is the main benefit of this (mocked)
+           multiple inheritance. Note that the view_class's attributes overshadow the target_object's attributes,
+           so, occasionally, a public property of the target_object may become inaccessible from inside the view.
+         */
+
+        let base_view = new view_class()
+        return new Proxy(target_object, {
+            get: (target, prop, receiver) => this.proxy_get(base_view, target_object, prop, receiver)
+        })
+    }
+
+    static proxy_get(base_view, target_object, prop, receiver) {
+        let value = Reflect.get(base_view, prop, receiver)
+        if (value !== undefined) return value
+        return Reflect.get(target_object, prop, receiver)
+    }
+}
+
+/**********************************************************************************************************************/
+
 export class HtmlPage extends HttpService {
     /* An HTTP(S) service that generates an HTML page in response to a browser-invoked web request.
        In the base class implementation, the page is built out of separate strings/functions for: title, head, body.
