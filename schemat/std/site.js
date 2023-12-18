@@ -1,7 +1,7 @@
 import {set_global} from "../common/globals.js"
 import {print, assert, T, delay} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
-import {ItemProxy, Request} from '../item.js'
+import {Request} from '../item.js'
 import {Container, Directory, ID_Namespace} from "./urls.js";
 
 
