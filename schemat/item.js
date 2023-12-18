@@ -590,7 +590,7 @@ export class Item {
 
     _init_network() {
         /* Create a .net connector and .action triggers for this item's network API. */
-        let role = registry.onServer ? 'server' : 'client'
+        let role = registry.server_side ? 'server' : 'client'
         this._net_ = new Network(this, role, this.constructor.api)
         this.action = this._net_.create_triggers(this.constructor.actions)
     }
@@ -702,8 +702,8 @@ export class Item {
            including the environment-specific {key}_client OR {key}_server keys; assumes the values are strings.
            Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets.
          */
-        // let env = registry.onServer ? 'server' : 'client'
-        // let snippets = this.getMany([key, `${key}_${env}`], params)
+        // let side = registry.server_side ? 'server' : 'client'
+        // let snippets = this.getMany([key, `${key}_${side}`], params)
         let snippets = this[`${key}_array`].reverse()
         return snippets.join('\n')
     }
@@ -984,7 +984,7 @@ export class Category extends Item {
            This method uses this._url_ as the module's path for linking nested imports in parseModule().
          */
         let site = registry.site
-        let onClient = registry.onClient
+        let client_side = registry.client_side
         let [classPath, name] = this.getClassPath()
 
         if (!site) {
@@ -998,7 +998,7 @@ export class Category extends Item {
         assert(path, `missing _url_ for category ID=${this._id_}`)
 
         try {
-            return await (onClient ?
+            return await (client_side ?
                             registry.import(path) :
                             site.parseModule(this._source_, path)
             )

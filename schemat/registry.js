@@ -98,9 +98,9 @@ class Classpath {
 
 export class Registry {
 
-    // global flags onServer/onClient to indicate the environment where the code is executing
-    onServer = true
-    get onClient() { return !this.onServer }
+    // global flags server_side/client_side to indicate the environment where the code is executing
+    server_side = true
+    get client_side() { return !this.server_side }
 
     get db() { return this.schemat.db }
 
@@ -131,7 +131,7 @@ export class Registry {
         await classpath.setModule("std", "./std/site.js")
         await classpath.setModule("std", "./std/urls.js")
 
-        if (this.onServer) {
+        if (this.server_side) {
             await classpath.setModule("db", "./db/block.js")
             await classpath.setModule("db", "./db/sequence.js")
             await classpath.setModule("db", "./db/index.js")
@@ -192,7 +192,7 @@ export class Registry {
         if (!this.db) return
         try {
             // if (!site_id)
-            //     if (this.onClient) return
+            //     if (this.client_side) return
             //     else site_id = await this._find_site()
             return await this.getLoaded(site_id)
         } catch (ex) {
@@ -202,7 +202,7 @@ export class Registry {
 
     // async _find_site() {
     //     /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
-    //     assert(this.onServer)
+    //     assert(this.server_side)
     //     let Site = await this.getLoaded(SITE_CATEGORY_ID)
     //     let scan = this.scan(Site, {limit: 1})
     //     let ret  = await scan.next()
@@ -385,7 +385,7 @@ export class Session {
 export class ClientRegistry extends Registry {
     /* Client-side registry: getItem() pulls items from server. */
 
-    onServer = false
+    server_side = false
 
     async bootData(data) {
         await super.boot(data.site_id)

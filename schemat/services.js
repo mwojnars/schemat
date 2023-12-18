@@ -394,7 +394,7 @@ export class Network {
          */
         let triggers = {}
         let target = this.target
-        let serverSide = (this.role === Network.SERVER)
+        let server_side = (this.role === Network.SERVER)
 
         // create a trigger for each action and store in `this.action`
         for (let [name, spec] of Object.entries(actions)) {
@@ -404,7 +404,7 @@ export class Network {
             let service = this.resolve(endpoint)
             if (!service) throw new Error(`undeclared API service: '${endpoint}'`)
 
-            triggers[name] = serverSide
+            triggers[name] = server_side
                 ? (...args) => service.execute(target, null, ...fixed, ...args)     // may return a Promise
                 : (...args) => service.client(target, ...fixed, ...args)            // may return a Promise
         }

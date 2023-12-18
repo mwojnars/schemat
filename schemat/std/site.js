@@ -33,7 +33,7 @@ export class Site extends Directory {
 
 
     async __init__()  {
-        if (registry.onClient) return
+        if (registry.client_side) return
         this._vm = await import('vm')
         this._check_default_container()                 // no await to avoid blocking the site's startup
     }
@@ -177,7 +177,7 @@ export class Site extends Directory {
         // TODO: cache module objects, parameter Site:cache_modules_ttl
         // TODO: for circular dependency return an unfinished module (use cache for this)
 
-        assert(registry.onServer)
+        assert(registry.server_side)
 
         // make `path` absolute
         if (path[0] === '.') {

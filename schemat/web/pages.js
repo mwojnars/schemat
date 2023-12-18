@@ -159,7 +159,7 @@ export class ReactPage extends RenderedPage {
      */
 
     async render_client(target, html_element) {
-        assert(registry.onClient)
+        assert(registry.client_side)
         target.assert_loaded()
         let view = this._create_view(target)
         let component = e(view.component)
