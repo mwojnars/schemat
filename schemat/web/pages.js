@@ -10,11 +10,11 @@ import {Data} from "../data.js";
 /**********************************************************************************************************************/
 
 export class HtmlPage extends HttpService {
-    /* An HTTP(S) service that generates an HTML page in response to a browser-invoked web request.
-       Layout and appearance of the page are defined by a View class (HtmlPage.View or its subclass)
-       that is an inner (static) class of the page class. Rendering takes place in a special "view" object that
-       combines properties of the target object with the page-generation functionality of the View class.
-       In the base HtmlPage implementation, the page is built out of separate strings/functions for: title, head, body.
+    /* An HTTP(S) service that generates an HTML page for a `target` object in response to a browser-invoked web request.
+       The layout and appearance of the page are defined by a View class: HtmlPage.View, or its subclass, or any class
+       that implements the generate() method; that is an inner (static) class of the page class.  Rendering takes place
+       in a special "view" object that combines properties of the target with the page-generation functionality of the View.
+       In the base HtmlPage implementation, the page is built of separate strings/functions for: title, head, body.
      */
 
     async execute(target, request) {
@@ -242,7 +242,6 @@ export class ItemAdminPage extends ReactPage {
             /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
             let globalAssets = Resources.clientAssets
             let staticAssets = this._assets_.renderAll()
-            // let staticAssets = this._schema_.getAssets().renderAll()
             let customAssets = this._category_?.html_assets
             let assets = [globalAssets, staticAssets, customAssets]
             return assets .filter(a => a?.trim()) .join('\n')
