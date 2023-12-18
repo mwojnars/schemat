@@ -51,8 +51,11 @@ class ViewProxy {
 
 export class HtmlPage extends HttpService {
     /* An HTTP(S) service that generates an HTML page in response to a browser-invoked web request.
-       In the base class implementation, the page is built out of separate strings/functions for: title, head, body.
+       Layout and appearance of the page are defined by a View class (HtmlPage.View or its subclass)
+       that is an inner (static) class of the page class.
+       In the base HtmlPage implementation, the page is built out of separate strings/functions for: title, head, body.
      */
+
     async execute(target, request) {
         // `view` is a descendant of `target` that additionally contains all View.* properties & methods
         // and a special property `_context_`
