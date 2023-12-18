@@ -11,7 +11,7 @@ import {Data} from "../data.js";
 
 class ViewProxy {
 
-    static create_view(view_class, target_object) {
+    static create_view(view_class, target_object, context = {}) {
         /* Create a "view" object that is a Proxy that internally combines properties of two objects:
            - an instance of a `view_class` that (mainly) provides methods for view generation;
            - a `target_object` whose data and properties are to be presented in the view.
@@ -29,9 +29,9 @@ class ViewProxy {
            so, occasionally, a public property of the target_object may become inaccessible from inside the view.
          */
 
-        let base_view = new view_class()
+        let base = new view_class(context)
         return new Proxy(target_object, {
-            get: (target, prop, receiver) => this.proxy_get(base_view, target_object, prop, receiver)
+            get: (target, prop, receiver) => this.proxy_get(base, target_object, prop, receiver)
         })
     }
 
@@ -69,12 +69,9 @@ export class HtmlPage extends HttpService {
            Also, view._context_ is set to the context object containing at least `target` and `page` (on the client),
            plus some request-related data (on the server).
          */
-        let _context_ = {request, target, page: this}
+        let context = {request, target, page: this}
         let View = this.constructor.View
-        // let view = Object.setPrototypeOf({...View, _context_}, target)
-
-        let view = ViewProxy.create_view(View, target)
-        view._context_ = _context_
+        let view = ViewProxy.create_view(View, target, context)
 
         // bind View functions in `view` to the `view` object - this is to prevent React rendering/refresh errors,
         // or the need to manually bind React component functions later on
@@ -97,7 +94,11 @@ export class HtmlPage extends HttpService {
            as they are shared between all views created from a given page class.
         */
 
-        // _context_: undefined,       // the context object: {target, page, ...plus request data as passed to the page's execute()}
+        _context_           // the context object: {target, page, ...plus request data as passed to the page's execute()}
+
+        constructor(context = {}) {
+            this._context_ = context
+        }
 
         async prepare_server() {
             /* Add extra information to the view (`this` or `this._context_`) before the page generation starts.
