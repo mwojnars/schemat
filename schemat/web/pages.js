@@ -9,22 +9,6 @@ import {Data} from "../data.js";
 
 /**********************************************************************************************************************/
 
-class ViewProxy {
-
-    static proxy_get(base_view, target_object, prop, receiver) {
-        let value = Reflect.get(base_view, prop, receiver)
-
-        // a method in base_view is often a React functional component, which must be bound to the view object
-        // to allow its delayed execution inside a DOM tree
-        if (typeof value === 'function') return value.bind(receiver)
-
-        if (value !== undefined) return value
-        return Reflect.get(target_object, prop, receiver)
-    }
-}
-
-/**********************************************************************************************************************/
-
 export class HtmlPage extends HttpService {
     /* An HTTP(S) service that generates an HTML page in response to a browser-invoked web request.
        Layout and appearance of the page are defined by a View class (HtmlPage.View or its subclass)
@@ -63,20 +47,23 @@ export class HtmlPage extends HttpService {
            The view's _context_ is set to contain at least `target` and `page` (on the client),
            plus some request-related data (on the server).
          */
-        
+
         let View = this.constructor.View
-        let base = new View({request, target: target_object, page: this})
+        let base_view = new View({request, target: target_object, page: this})
 
         return new Proxy(target_object, {
-            get: (target, prop, receiver) => ViewProxy.proxy_get(base, target_object, prop, receiver)
+            get: (_, prop, receiver) => {
+                let value = Reflect.get(base_view, prop, receiver)
+
+                // a method in base_view is often a React functional component, which must be bound to the view object
+                // to allow its delayed execution inside a DOM tree
+                if (typeof value === 'function') return value.bind(receiver)
+
+                if (value !== undefined) return value
+                return Reflect.get(target_object, prop, receiver)
+            }
         })
     }
-
-    // _create_view(target, request = null) {
-    //     let context = {request, target, page: this}
-    //     let View = this.constructor.View
-    //     return ViewProxy.create_view(View, target, context)
-    // }
 
     static View = class {
         /* Methods and properties to be copied to a descendant of the target object to create a "view" that
