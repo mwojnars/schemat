@@ -12,9 +12,12 @@ import {Data} from "../data.js";
 class ViewProxy {
 
     static create_view(view_class, target_object, context = {}) {
-        /* Create a "view" object that is a Proxy that internally combines properties of two objects:
-           - an instance of a `view_class` that (mainly) provides methods for view generation;
-           - a `target_object` whose data and properties are to be presented in the view.
+        /* Create a "view" object that combines the regular interface and properties of the target object
+           with the page-generation functionality as defined in the page's View class.
+           Technically, the view is a Proxy that combines properties of two objects:
+
+           - an instance of HtmlPage.View (sub)class that provides methods and (React) components for view generation;
+           - a target object whose data and properties are to be presented in the view.
 
            If JS supported multiple prototypical inheritance, the view would be created simply as an object
            with two prototypes: the view_class's prototype and the target_object. ViewProxy is a workaround
@@ -27,6 +30,9 @@ class ViewProxy {
            properties and methods, and the view_class's methods - this is the main benefit of this (mocked)
            multiple inheritance. Note that the view_class's attributes overshadow the target_object's attributes,
            so, occasionally, a public property of the target_object may become inaccessible from inside the view.
+
+           View's _context_ is set to contain at least `target` and `page` (on the client),
+           plus some request-related data (on the server).
          */
 
         let base = new view_class(context)
@@ -65,13 +71,6 @@ export class HtmlPage extends HttpService {
     }
 
     _create_view(target, request = null) {
-        /* Create a "view" object that combines the regular interface of the target object with the page-generation
-           functionality as defined in the page's View. The view object is a descendant of the target object.
-           Inside the page-generation functions, `this` is bound to the "view", so the code can access both
-           the target object's properties and other page-generation functions.
-           Also, view._context_ is set to the context object containing at least `target` and `page` (on the client),
-           plus some request-related data (on the server).
-         */
         let context = {request, target, page: this}
         let View = this.constructor.View
         return ViewProxy.create_view(View, target, context)
