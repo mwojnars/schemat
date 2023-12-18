@@ -100,7 +100,7 @@ export class RenderedPage extends HtmlPage {
        The (re)rendering can take place on the server and/or the client.
      */
 
-    async render(target, html_element, props) {
+    async render_client(target, html_element) {
         /* Client-side rendering of the main component of the page to an HTML element. */
         throw new NotImplemented('render() must be implemented in subclasses')
     }
@@ -158,8 +158,8 @@ export class ReactPage extends RenderedPage {
        The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
      */
 
-    async render(target, html_element) {
-        /* If called server-side, `props` are just the server-side context. */
+    async render_client(target, html_element) {
+        assert(registry.onClient)
         target.assert_loaded()
         let view = this._create_view(target)
         let component = e(view.component)
