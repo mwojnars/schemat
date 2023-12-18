@@ -71,17 +71,7 @@ export class HtmlPage extends HttpService {
          */
         let context = {request, target, page: this}
         let View = this.constructor.View
-        let view = ViewProxy.create_view(View, target, context)
-
-        // bind View functions in `view` to the `view` object - this is to prevent React rendering/refresh errors,
-        // or the need to manually bind React component functions later on
-        for (const attr in View) {
-            let fun = View[attr]
-            if (typeof fun === "function")
-                view[attr] = fun.bind(view)
-        }
-
-        return view
+        return ViewProxy.create_view(View, target, context)
     }
 
     static View = class {
