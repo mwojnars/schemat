@@ -128,7 +128,6 @@ export class RenderedPage extends HtmlPage {
     }
 
     static View = class extends HtmlPage.View {
-        // ...HtmlPage.View,
 
         html_body() {
             let html = this.render_server()
@@ -190,7 +189,6 @@ export class ReactPage extends RenderedPage {
     }
 
     static View = class extends RenderedPage.View {
-        // ...RenderedPage.View,
 
         async prepare_client() {
             /* Add extra information to the view before the rendering starts client-side. */
@@ -231,7 +229,6 @@ export class ItemAdminPage extends ReactPage {
      */
 
     static View = class extends ReactPage.View {
-        // ...ReactPage.View,
 
         html_title() {
             /* Get/compute a title for an HTML response page for a given request & view name. */
@@ -299,9 +296,8 @@ export class ItemAdminPage extends ReactPage {
 export class CategoryAdminPage extends ItemAdminPage {
 
     static View = class extends ItemAdminPage.View {
-        // ...ItemAdminPage.View,
 
-        /* Below, `this` is bound to an instance of Category. */
+        /* Below, `this` is a view of an instance of Category. */
 
         async prepare_server() {
             // preload the items list
