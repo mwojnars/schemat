@@ -313,7 +313,7 @@ export class CategoryAdminPage extends ItemAdminPage {
 
             return super.component({extra: FRAGMENT(
                 H2('Items'),
-                e(this.ItemsLoaded, {key: 'items', items: items, itemRemoved: async () => setItems(await scan())}),
+                e(this.ItemsLoaded, {items: items, itemRemoved: async () => setItems(await scan()), key: 'items'}),
                 H3('Add item'),
                 e(this.Items, {items: newItems, itemRemoved}),
                 e(this.NewItem, {itemAdded}),
@@ -377,6 +377,8 @@ export class CategoryAdminPage extends ItemAdminPage {
 
                 let draft = await this.new(data)                // item with no IID yet; TODO: validate `data` through category's schema
                 let item = await registry.insert(draft)         // has IID now
+                await item.load()                               // load() is needed to initialize the item's URL
+
                 form.current.reset()                            // clear input fields
                 setFormDisabled(false)
                 itemAdded(item)
