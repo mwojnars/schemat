@@ -1,7 +1,7 @@
 import {NotImplemented} from "../common/errors.js";
 import {T, print, assert, dedentFull, escape_html} from "../common/utils.js";
 import {Resources, ReactDOM} from './resources.js'
-import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
+import { e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
 import {HttpService} from "../services.js";
 import {Data} from "../data.js";
@@ -325,24 +325,8 @@ export class CategoryAdminPage extends ItemAdminPage {
             let remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
             let rows = items.map(item => this._ItemEntry({item, remove}))
             return TABLE(TBODY(...rows))
+            // let items_loaded = delayed_render(T.arrayFromAsync(items).then(arr => T.amap(arr, item => item.load())), [items])
         }
-
-        // Items({items, itemRemoved}) {
-        //     /* A list (table) of items that belong to this category. */
-        //     if (!items || items.length === 0) return null
-        //     const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
-        //     // const loaded = !T.isPromise(items)
-        //     // const loaded = T.isArray(items) && items.every(item => item.is_loaded())
-        //
-        //     // materialize the list of items
-        //     let items_loaded = //loaded ? items :
-        //         delayed_render(T.arrayFromAsync(items).then(arr => T.amap(arr, item => item.load())), [items])
-        //
-        //     if (!items_loaded) return null
-        //
-        //     let rows = items_loaded.map(item => this._ItemEntry({item, remove}))
-        //     return TABLE(TBODY(...rows))
-        // }
 
         _ItemEntry({item, remove}) {
             /* A single row in the list of items. */
