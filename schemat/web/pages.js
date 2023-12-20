@@ -20,8 +20,8 @@ export class HtmlPage extends HttpService {
     async execute(target, request) {
         /* Server-side generation of an HTML page for the target object. */
         let view = this.create_view(target, request)
-        await view.prepare_server()
-        return view.generate()
+        let props = await view.prepare_server() || {}
+        return view.generate(props)
     }
 
     create_view(target, request = null) {
@@ -83,22 +83,21 @@ export class HtmlPage extends HttpService {
                Typically, performs asynchronous operations to load data from the database or await for URLs,
                so that actual generation/rendering may stick to synchronous operations alone.
              */
-            print(`prepare_server() called for ${this.constructor.name}`)
         }
 
-        generate() {
+        generate(props = {}) {
             /* Generate a complete HTML page server-side. Can be async.
                By default, this function calls target_html_*() functions to build separate parts of the page.
              */
-            let title = this.html_title()
-            let assets = this.html_head()
-            let body = this.html_body()
+            let title = this.html_title(props)
+            let assets = this.html_head(props)
+            let body = this.html_body(props)
             return this.html_frame({title, assets, body})
         }
 
-        html_title()  {}        // override in subclasses; return a plain string to be put inside <title>...</title>
-        html_head()   {}        // override in subclasses; return an HTML string to be put inside <head>...</head>
-        html_body()   {}        // override in subclasses; return an HTML string to be put inside <body>...</body>
+        html_title(props)  {}        // override in subclasses; return a plain string to be put inside <title>...</title>
+        html_head(props)   {}        // override in subclasses; return an HTML string to be put inside <head>...</head>
+        html_body(props)   {}        // override in subclasses; return an HTML string to be put inside <body>...</body>
 
         html_frame({title, assets, body}) {
             // the title string IS escaped, while the other elements are NOT
@@ -126,14 +125,14 @@ export class RenderedPage extends HtmlPage {
 
     static View = class extends HtmlPage.View {
 
-        html_body() {
-            let html = this.render_server()
+        html_body(props) {
+            let html = this.render_server(props)
             let data = this.page_data()
             let code = this.page_script()
             return this.component_frame({html, data, code})
         }
 
-        render_server() {
+        render_server(props) {
             /* Server-side rendering (SSR) of the main component of the page to an HTML string. */
             return ''
         }
@@ -189,15 +188,15 @@ export class ReactPage extends RenderedPage {
 
         async prepare_client() {
             /* Add extra information to the view before the rendering starts client-side. */
-            print(`prepare_client() called for ${this.constructor.name}:${this._id_}, ${this._category_}`)
+            // print(`prepare_client() called for [${this._id_}], ${this._category_}`)
             await this._ready_.url
             await this._category_?._ready_.url
         }
 
-        render_server() {
+        render_server(props) {
             this.assert_loaded()
             print(`SSR render('${this._context_.request.endpoint}') of ID=${this._id_}`)
-            let view = e(this.component)
+            let view = e(this.component, props)
             return ReactDOM.renderToString(view)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
         }
@@ -298,12 +297,14 @@ export class CategoryAdminPage extends ItemAdminPage {
         async prepare_server() {
             // preload the items list
             let scanned = registry.scan_category(this)
-            this._context_.items = await T.arrayFromAsync(scanned).then(arr => T.amap(arr, item => item.load()))
-            // this._context_.items = await this.action.list_items().then(arr => T.amap(arr, item => item.load()))
+            let items = await T.arrayFromAsync(scanned).then(arr => T.amap(arr, item => item.load()))
+            // let items = await this.action.list_items().then(arr => T.amap(arr, item => item.load()))
+            // this._context_.items = items
+            return {items}
         }
 
-        component() {
-            let preloaded = this._context_.items               // TODO: must be pulled from response data on the client to avoid re-scanning on 1st render
+        component({items: preloaded}) {
+            // let preloaded = this._context_.items               // TODO: must be pulled from response data on the client to avoid re-scanning on 1st render
 
             const scan = () => this.action.list_items()
             // const scan = () => registry.scan_category(this)         // returns an async generator that requires "for await"
