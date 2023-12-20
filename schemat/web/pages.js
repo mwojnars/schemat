@@ -297,17 +297,17 @@ export class CategoryAdminPage extends ItemAdminPage {
 
         async prepare(side) {
             await super.prepare(side)
-            let items
+            return {items: await this.action.list_items()}
 
-            // preload the items list
-            if (side === 'server')
-                items = registry.scan_category(this)
-            else
-                items = this.action.list_items()        // TODO: must be pulled from response data on the client to avoid re-scanning on 1st render
-                // let items = await this.action.list_items().then(arr => T.amap(arr, item => item.load()))
-
-            items = await T.arrayFromAsync(items).then(arr => T.amap(arr, item => item.load()))
-            return {items}
+            // // preload the items list
+            // if (side === 'server')
+            //     items = registry.scan_category(this)
+            // else
+            //     items = this.action.list_items()        // TODO: must be pulled from response data on the client to avoid re-scanning on 1st render
+            //     // let items = await this.action.list_items().then(arr => T.amap(arr, item => item.load()))
+            //
+            // items = await T.arrayFromAsync(items).then(arr => T.amap(arr, item => item.load()))
+            // return {items}
         }
 
         component({items: preloaded}) {

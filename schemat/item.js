@@ -1148,7 +1148,7 @@ Category.create_api(
                 encode_result(items) {
                     return items.map(item => item._record_.encoded())
                 },
-                decode_result(records) {
+                async decode_result(records) {
                     /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
                     let items = []
                     for (const rec of records) {                    // rec's shape: {id, data}
@@ -1157,7 +1157,7 @@ Category.create_api(
                             schemat.db.cache(rec)                   // need to cache the item in ClientDB
                             // registry.unregister(rec.id)          // evict the item from the Registry to allow re-loading
                         }
-                        items.push(registry.getItem(rec.id))
+                        items.push(await registry.getLoaded(rec.id))
                     }
                     return items
                 }
