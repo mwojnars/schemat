@@ -20,7 +20,7 @@ export class HtmlPage extends HttpService {
     async execute(target, request) {
         /* Server-side generation of an HTML page for the target object. */
         let view = this.create_view(target, request)
-        let props = await view.prepare_server() || {}
+        let props = await view.prepare('server') || {}
         return view.generate(props)
     }
 
@@ -78,10 +78,11 @@ export class HtmlPage extends HttpService {
             this._context_ = context
         }
 
-        async prepare_server() {
-            /* Add extra information to the view (`this` or `this._context_`) before the page generation starts.
-               Typically, performs asynchronous operations to load data from the database or await for URLs,
-               so that actual generation/rendering may stick to synchronous operations alone.
+        async prepare(side) {
+            /* Prepare/collect extra information before the page generation (view rendering) starts. These are typically
+               asynchronous operations to load data from the DB or await for URLs, so that actual generation/rendering
+               may consist of synchronous operations alone. This method may return a dictionary of properties,
+               however this is not required. `side` is either 'server' or 'client'.
              */
         }
 
@@ -179,18 +180,18 @@ export class ReactPage extends RenderedPage {
         assert(registry.client_side)
         target.assert_loaded()
         let view = this.create_view(target)
-        let component = e(view.component)
-        await view.prepare_client()
+        let props = await view.prepare('client') || {}
+        let component = e(view.component, props)
         return ReactDOM.createRoot(html_element).render(component)
     }
 
     static View = class extends RenderedPage.View {
 
-        async prepare_client() {
-            /* Add extra information to the view before the rendering starts client-side. */
-            // print(`prepare_client() called for [${this._id_}], ${this._category_}`)
+        async prepare(side) {
+            // print(`prepare() called for [${this._id_}], ${this._category_}`)
             await this._ready_.url
             await this._category_?._ready_.url
+            return {}
         }
 
         render_server(props) {
@@ -294,13 +295,16 @@ export class CategoryAdminPage extends ItemAdminPage {
 
         /* Below, `this` is a view of an instance of Category. */
 
-        async prepare_server() {
-            // preload the items list
-            let scanned = registry.scan_category(this)
-            let items = await T.arrayFromAsync(scanned).then(arr => T.amap(arr, item => item.load()))
-            // let items = await this.action.list_items().then(arr => T.amap(arr, item => item.load()))
-            // this._context_.items = items
-            return {items}
+        async prepare(side) {
+            await super.prepare(side)
+            if (side === 'server') {
+                // preload the items list
+                let scanned = registry.scan_category(this)
+                let items = await T.arrayFromAsync(scanned).then(arr => T.amap(arr, item => item.load()))
+                // let items = await this.action.list_items().then(arr => T.amap(arr, item => item.load()))
+                // this._context_.items = items
+                return {items}
+            }
         }
 
         component({items: preloaded}) {
