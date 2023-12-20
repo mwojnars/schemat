@@ -1132,8 +1132,10 @@ Category.create_api(
 
         'POST/read': new TaskService({
             list_items: new Task({
+                /* Retrieve all children of `this` category server-side and send them to client as a JSON array
+                   of flat, fully loaded records.
+                 */
                 async process(request, offset, limit) {
-                    /* Retrieve all children of this category server-side and send them to client as a JSON array of flat records. */
                    // TODO: use size limit & offset (pagination).
                    // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
                     let items = []

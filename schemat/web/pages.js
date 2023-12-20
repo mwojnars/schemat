@@ -297,14 +297,17 @@ export class CategoryAdminPage extends ItemAdminPage {
 
         async prepare(side) {
             await super.prepare(side)
-            if (side === 'server') {
-                // preload the items list
-                let scanned = registry.scan_category(this)
-                let items = await T.arrayFromAsync(scanned).then(arr => T.amap(arr, item => item.load()))
+            let items
+
+            // preload the items list
+            if (side === 'server')
+                items = registry.scan_category(this)
+            else
+                items = this.action.list_items()
                 // let items = await this.action.list_items().then(arr => T.amap(arr, item => item.load()))
-                // this._context_.items = items
-                return {items}
-            }
+
+            items = await T.arrayFromAsync(items).then(arr => T.amap(arr, item => item.load()))
+            return {items}
         }
 
         component({items: preloaded}) {
@@ -323,7 +326,7 @@ export class CategoryAdminPage extends ItemAdminPage {
 
             return super.component({extra: FRAGMENT(
                 H2('Items'),
-                e(preloaded ? this.ItemsLoaded : this.Items, {key: 'items', items: items, itemRemoved: () => setItems(scan())}),
+                e(preloaded ? this.ItemsLoaded : this.Items, {key: 'items', items: items, itemRemoved: async () => setItems(await scan())}),
                 // e(this.Items, {key: 'items', items: items, itemRemoved: () => setItems(scan())}),
                 H3('Add item'),
                 e(this.Items, {items: newItems, itemRemoved}),
@@ -331,9 +334,10 @@ export class CategoryAdminPage extends ItemAdminPage {
             )})
         }
 
-        ItemsLoaded({items}) {
+        ItemsLoaded({items, itemRemoved}) {
             if (!items || items.length === 0) return null
-            let rows = items.map(item => this._ItemEntry({item}))
+            let remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
+            let rows = items.map(item => this._ItemEntry({item, remove}))
             return TABLE(TBODY(...rows))
         }
 
