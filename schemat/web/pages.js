@@ -313,36 +313,36 @@ export class CategoryAdminPage extends ItemAdminPage {
 
             return super.component({extra: FRAGMENT(
                 H2('Items'),
-                e(this.ItemsLoaded, {items: items, itemRemoved: async () => setItems(await scan()), key: 'items'}),
+                e(this.Items, {items: items, itemRemoved: async () => setItems(await scan()), key: 'items'}),
                 H3('Add item'),
                 e(this.Items, {items: newItems, itemRemoved}),
                 e(this.NewItem, {itemAdded}),
             )})
         }
 
-        ItemsLoaded({items, itemRemoved}) {
+        Items({items, itemRemoved}) {
             if (!items || items.length === 0) return null
             let remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
             let rows = items.map(item => this._ItemEntry({item, remove}))
             return TABLE(TBODY(...rows))
         }
 
-        Items({items, itemRemoved}) {
-            /* A list (table) of items that belong to this category. */
-            if (!items || items.length === 0) return null
-            const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
-            // const loaded = !T.isPromise(items)
-            // const loaded = T.isArray(items) && items.every(item => item.is_loaded())
-
-            // materialize the list of items
-            let items_loaded = //loaded ? items :
-                delayed_render(T.arrayFromAsync(items).then(arr => T.amap(arr, item => item.load())), [items])
-
-            if (!items_loaded) return null
-
-            let rows = items_loaded.map(item => this._ItemEntry({item, remove}))
-            return TABLE(TBODY(...rows))
-        }
+        // Items({items, itemRemoved}) {
+        //     /* A list (table) of items that belong to this category. */
+        //     if (!items || items.length === 0) return null
+        //     const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
+        //     // const loaded = !T.isPromise(items)
+        //     // const loaded = T.isArray(items) && items.every(item => item.is_loaded())
+        //
+        //     // materialize the list of items
+        //     let items_loaded = //loaded ? items :
+        //         delayed_render(T.arrayFromAsync(items).then(arr => T.amap(arr, item => item.load())), [items])
+        //
+        //     if (!items_loaded) return null
+        //
+        //     let rows = items_loaded.map(item => this._ItemEntry({item, remove}))
+        //     return TABLE(TBODY(...rows))
+        // }
 
         _ItemEntry({item, remove}) {
             /* A single row in the list of items. */
