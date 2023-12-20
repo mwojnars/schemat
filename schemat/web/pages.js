@@ -18,15 +18,15 @@ export class HtmlPage extends HttpService {
      */
 
     async execute(target, request) {
+        /* Server-side generation of an HTML page for the target object. */
         let view = this.create_view(target, request)
         await view.prepare_server()
         return view.generate()
     }
 
     create_view(target, request = null) {
-        /* Create a "view" object that combines the regular interface and properties of the target object
-           with the page-generation functionality as defined in the page's View class.
-           Technically, the view is a Proxy that combines properties of two objects:
+        /* Create a "view" object that combines the properties of the target object with the page-generation
+           functionality of the page's View class. Technically, it is a Proxy that combines properties of two objects:
 
            - an instance of HtmlPage.View or its subclass that provides methods and (React) components for view generation
            - a target object whose data and properties are to be presented in the view.
@@ -81,7 +81,7 @@ export class HtmlPage extends HttpService {
         async prepare_server() {
             /* Add extra information to the view (`this` or `this._context_`) before the page generation starts.
                Typically, performs asynchronous operations to load data from the database or await for URLs,
-               because during actual rendering only synchronous operations may be allowed.
+               so that actual generation/rendering may stick to synchronous operations alone.
              */
             print(`prepare_server() called for ${this.constructor.name}`)
         }
@@ -117,9 +117,7 @@ export class HtmlPage extends HttpService {
 /**********************************************************************************************************************/
 
 export class RenderedPage extends HtmlPage {
-    /* An HTML page that is rendered from a component (e.g., React).
-       The (re)rendering can take place on the server and/or the client.
-     */
+    /* An HTML page that is rendered from a component (e.g., React) and can be (re-)rendered on the client. */
 
     async render_client(target, html_element) {
         /* Client-side rendering of the main component of the page to an HTML element. */
