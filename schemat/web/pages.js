@@ -218,65 +218,61 @@ export class ReactPage extends RenderedPage {
 
 /**********************************************************************************************************************/
 
-export class ItemAdminPage extends ReactPage {
-    /* A page that displays the properties of a single item. The target (`this` in target_*() functions)
-       is expected to be an instance of Item.
-     */
+export class ItemAdminView extends ReactPage.View {
+    /* Admin view that displays all persistent properties of a web object. */
 
-    static View = class extends ReactPage.View {
+    html_title() {
+        /* Get/compute a title for an HTML response page for a given request & view name. */
+        let title = this.html_title
+        // if (title instanceof Function) title = title()          // this can still return undefined
+        if (typeof title === 'string') return title
+        let stamp = this.make_stamp({html: false})
+        return `${this.name} ${stamp}`
+    }
 
-        html_title() {
-            /* Get/compute a title for an HTML response page for a given request & view name. */
-            let title = this.html_title
-            // if (title instanceof Function) title = title()          // this can still return undefined
-            if (typeof title === 'string') return title
-            let stamp = this.make_stamp({html: false})
-            return `${this.name} ${stamp}`
-        }
+    html_head() {
+        /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
+        let globalAssets = Resources.clientAssets
+        let staticAssets = this._assets_.renderAll()
+        let customAssets = this._category_?.html_assets
+        let assets = [globalAssets, staticAssets, customAssets]
+        return assets .filter(a => a?.trim()) .join('\n')
+    }
 
-        html_head() {
-            /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
-            let globalAssets = Resources.clientAssets
-            let staticAssets = this._assets_.renderAll()
-            let customAssets = this._category_?.html_assets
-            let assets = [globalAssets, staticAssets, customAssets]
-            return assets .filter(a => a?.trim()) .join('\n')
-        }
+    component({extra = null} = {}) {
+        /* Detailed (admin) view of an item. */
+        return DIV(
+            // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
+            // e(this._mui_test),
+            this.Title(),
+            H2('Properties'),
+            this.Properties(),
+            extra,
+        )
+    }
 
-        component({extra = null} = {}) {
-            /* Detailed (admin) view of an item. */
-            return DIV(
-                // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
-                // e(this._mui_test),
-                this.Title(),
-                H2('Properties'),
-                this.Properties(),
-                extra,
+    // standard components for Item pages...
+
+    Title() {
+        /* <H1> element to be displayed as a page title. */
+        let name = this.name
+        let stamp = this.make_stamp()
+        if (name)
+            return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(stamp)}))
+        else
+            return H1(HTML(stamp))
+    }
+
+    Properties() {
+        /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
+        // let changes = new Changes(this)
+        return FRAGMENT(
+                this._schema_.displayTable({item: this}),
+                // e(changes.Buttons.bind(changes)),
             )
-        }
-
-        // standard components for Item pages...
-
-        Title() {
-            /* <H1> element to be displayed as a page title. */
-            let name = this.name
-            let stamp = this.make_stamp()
-            if (name)
-                return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(stamp)}))
-            else
-                return H1(HTML(stamp))
-        }
-
-        Properties() {
-            /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
-            // let changes = new Changes(this)
-            return FRAGMENT(
-                    this._schema_.displayTable({item: this}),
-                    // e(changes.Buttons.bind(changes)),
-                )
-        }
     }
 }
+
 
 // _mui_test() {
 //     return e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST')
@@ -287,11 +283,8 @@ export class ItemAdminPage extends ReactPage {
 
 /**********************************************************************************************************************/
 
-// export class CategoryAdminPage extends ItemAdminPage {
-
-export class CategoryAdminView extends ItemAdminPage.View {
-
-    /* Below, `this` is a view of an instance of Category. */
+export class CategoryAdminView extends ItemAdminView {
+    /* Admin view that displays properties of a Category object and a list of its children (members of the category). */
 
     async prepare(side) {
         // TODO: on client, items could be pulled from response data to avoid re-scanning on 1st render?

@@ -8,7 +8,7 @@ import {JSONx} from './serialize.js'
 import {Path, Catalog, Data} from './data.js'
 import {DATA, DATA_GENERIC, generic_type, ITEM} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
-import {ReactPage, CategoryAdminView, ItemAdminPage} from "./web/pages.js";
+import {ReactPage, CategoryAdminView, ItemAdminView} from "./web/pages.js";
 import {ItemRecord} from "./db/records.js";
 import {DataRequest} from "./db/data_request.js";
 
@@ -857,8 +857,8 @@ Item.create_api(
     {
         // http endpoints...
 
-        'GET/default':  new ItemAdminPage(),            // TODO: add explicit support for aliases
-        'GET/item':     new ItemAdminPage(),
+        'GET/default':  new ReactPage(ItemAdminView),               // TODO: add explicit support for endpoint aliases?
+        'GET/item':     new ReactPage(ItemAdminView),
 
         'CALL/default': new InternalService(function() { return this }),
         'CALL/item':    new InternalService(function() { return this }),
@@ -1106,10 +1106,8 @@ export class Category extends Item {
 
 Category.create_api(
     {
-        'GET/default':  new ReactPage(CategoryAdminView),            // TODO: add explicit support for aliases
+        'GET/default':  new ReactPage(CategoryAdminView),           // TODO: add explicit support for endpoint aliases?
         'GET/item':     new ReactPage(CategoryAdminView),
-        // 'GET/default':  new CategoryAdminPage(),            // TODO: add explicit support for aliases
-        // 'GET/item':     new CategoryAdminPage(),
 
         'GET/import':   new HttpService(function (request)
         {
