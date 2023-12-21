@@ -18,11 +18,11 @@ export class HtmlPage extends HttpService {
      */
 
     constructor(View = null) {
-        /* `View` is a class that defines the page's layout and appearance.
-           If not specified, the page's own static View class (constructor.View) is used.
+        /* `View` is a class that defines the page's layout and appearance, typically a subclass of HtmlPage.View.
+           If not specified, the page's own static View (constructor.View) is used.
          */
         super()
-        this.View = View
+        this.View = View || this.constructor.View
     }
 
     async execute(target, request) {
@@ -50,8 +50,7 @@ export class HtmlPage extends HttpService {
            the target's attributes, so a property of the target may occasionally become inaccessible from inside the view.
          */
 
-        let View = this.View || this.constructor.View
-        let base = new View({request, target, page: this})
+        let base = new this.View({request, target, page: this})
 
         return new Proxy(target, {
             get: (_, prop, receiver) => {
