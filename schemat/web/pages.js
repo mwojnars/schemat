@@ -27,16 +27,16 @@ export class HtmlPage extends HttpService {
 
     async execute(target, request) {
         /* Server-side generation of an HTML page for the target object. */
-        let view = this.create_view(target, request)
+        let view = this.create_view(target)
         let props = await view.prepare('server') || {}
         return view.generate({request, ...props})
     }
 
-    create_view(target, request = null) {
-        /* Create a "view" object that combines the properties of the target object with the page-generation
-           functionality of the page's View class. Technically, it is a Proxy that combines properties of two objects:
+    create_view(target) {
+        /* Create a "view" object that combines the properties of the target object with page-generation functionality
+           of the page's View class. Technically, a view is a Proxy that combines properties of two objects:
 
-           - an instance of HtmlPage.View or its subclass that provides methods and (React) components for view generation
+           - an instance of HtmlPage.View or its subclass that provides methods and high-level components for view generation
            - a target object whose data and properties are to be presented in the view.
 
            If JS supported multiple prototypical inheritance, the view would be created simply as an object
