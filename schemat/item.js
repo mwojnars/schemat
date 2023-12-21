@@ -94,7 +94,7 @@ export class Request {
 
         this.session = session
         this.protocol =
-            !this.req                   ? "CALL" :          // CALL = internal call through Site.route()
+            !this.req                   ? "CALL" :          // CALL = internal call through Site.route_internal()
             this.req.method === 'GET'   ? "GET"  :          // GET  = read access through HTTP GET
                                           "POST"            // POST = write access through HTTP POST
 

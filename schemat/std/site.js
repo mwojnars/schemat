@@ -122,7 +122,9 @@ export class Site extends Directory {
     }
 
     async route_internal(path) {
-        /* Internal URL-call to a CALL/* endpoint of an object identified by a URL `path`. */
+        /* Internal URL-call to a CALL/* endpoint of an object identified by a URL `path`.
+           The path should contain an endpoint name, otherwise the default endpoint is used.
+         */
         return this.route(new Request({path}))
         // return Request.run_with({path}, () => this.route(request))
     }
