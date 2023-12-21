@@ -50,13 +50,13 @@ export class HtmlPage extends HttpService {
            the target's attributes, so a property of the target may occasionally become inaccessible from inside the view.
          */
 
-        let base = new this.View({request, target, page: this})
+        let base_view = new this.View()
 
         return new Proxy(target, {
             get: (_, prop, receiver) => {
-                let value = Reflect.get(base, prop, receiver)
+                let value = Reflect.get(base_view, prop, receiver)
 
-                // methods in `base` are often React functional components, which must be bound to the view object
+                // methods in `base_view` are often React functional components, which must be bound to the view object
                 // to allow their delayed execution inside a DOM tree
                 if (typeof value === 'function') return value.bind(receiver)
 
