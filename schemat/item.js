@@ -8,7 +8,7 @@ import {JSONx} from './serialize.js'
 import {Path, Catalog, Data} from './data.js'
 import {DATA, DATA_GENERIC, generic_type, ITEM} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
-import {CategoryAdminPage, ItemAdminPage} from "./web/pages.js";
+import {ReactPage, CategoryAdminView, ItemAdminPage} from "./web/pages.js";
 import {ItemRecord} from "./db/records.js";
 import {DataRequest} from "./db/data_request.js";
 
@@ -1106,8 +1106,10 @@ export class Category extends Item {
 
 Category.create_api(
     {
-        'GET/default':  new CategoryAdminPage(),            // TODO: add explicit support for aliases
-        'GET/item':     new CategoryAdminPage(),
+        'GET/default':  new ReactPage(CategoryAdminView),            // TODO: add explicit support for aliases
+        'GET/item':     new ReactPage(CategoryAdminView),
+        // 'GET/default':  new CategoryAdminPage(),            // TODO: add explicit support for aliases
+        // 'GET/item':     new CategoryAdminPage(),
 
         'GET/import':   new HttpService(function (request)
         {
