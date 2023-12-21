@@ -36,11 +36,11 @@ export class HtmlPage extends HttpService {
         /* Create a "view" object that combines the properties of the target object with page-generation functionality
            of the page's View class. Technically, a view is a Proxy that combines properties of two objects:
 
-           - an instance of HtmlPage.View or its subclass that provides methods and high-level components for view generation
+           - a base view: instance of HtmlPage.View that provides methods and high-level components for view generation
            - a target object whose data and properties are to be presented in the view.
 
            If JS supported multiple prototypical inheritance, the view would be created simply as an object
-           with two prototypes: the view_class's prototype and the target. A proxy is a workaround that intercepts
+           with two prototypes: the View class's prototype and the target. A proxy is a workaround that intercepts
            all read access to attributes and redirects them to the View class (in the first place) or to the target object.
 
            All writes go to the view object itself. The view inherits target's prototype chain, so it looks like
