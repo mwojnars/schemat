@@ -120,7 +120,7 @@ export class RenderedPage extends HtmlPage {
         html_body(props) {
             let html = this.render_server(props)
             let data = this.page_data(props)
-            let code = this.page_script()
+            let code = this.page_script(props)
             return this.component_frame({html, data, code})
         }
 
@@ -134,7 +134,7 @@ export class RenderedPage extends HtmlPage {
             throw new NotImplemented('page_data() must be implemented in subclasses')
         }
 
-        page_script() {
+        page_script(props) {
             /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
                This code will launch the client-side rendering of the component.
              */
@@ -198,7 +198,7 @@ export class ReactPage extends RenderedPage {
             return {...dump, endpoint: props.request.endpoint}
         }
 
-        page_script() {
+        page_script(props) {
             return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start();`
         }
 
