@@ -718,29 +718,12 @@ export class Item {
 
     url(method, args) {
         /* `method` is an optional name of a web @method, `args` will be appended to URL as a query string. */
-        // let site = registry.site
-        // let app  = registry.session.app        // space = request.current_namespace
 
         let path = this._url_
         if (!path) {
             console.error(`missing _url_ for object [${this._id_}], introduce a delay or await _ready_.url`)
             return ''
         }
-
-        // let defaultApp = registry.site.getApplication()
-        // let defaultApp = registry.session.apps['$']
-        // app = app || defaultApp
-
-        // url = site.domain + this._url_ + method + args      // absolute path
-        // if (relative) url = replace(prefix in url with './')
-
-        // if (app) {
-        //     app.assert_loaded()
-        //     path = app.identify(this)
-        //     if (path) path = './' + path            // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-        // }
-        // if (!path)  path = site.urlRaw(this)        // fallback; urlRaw() is an absolute path, no leading ./
-
         if (method) path += Request.SEP_METHOD + method                 // append @method and ?args if present...
         if (args)   path += '?' + new URLSearchParams(args).toString()
         return path
@@ -767,6 +750,7 @@ export class Item {
         for (let endpoint of endpoints) {
             let service = this._net_.resolve(endpoint)
             if (service) {
+                // print(`handle() endpoint: ${endpoint}`)
                 request.settleEndpoint(endpoint)
                 return service.server(this, request)
             }
@@ -858,10 +842,10 @@ Item.create_api(
         // http endpoints...
 
         'GET/default':  new ReactPage(ItemAdminView),               // TODO: add explicit support for endpoint aliases?
-        'GET/item':     new ReactPage(ItemAdminView),
 
         'CALL/default': new InternalService(function() { return this }),
         'CALL/item':    new InternalService(function() { return this }),
+
         'GET/json':     new JsonService(function() { return this._record_.encoded() }),
 
         // item's edit actions for use in the admin interface...

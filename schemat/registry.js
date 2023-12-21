@@ -242,8 +242,6 @@ export class Registry {
 
     async getLoaded(id)     { return this.getItem(id).load() }
 
-    // async findItem(path) { return this.site.findItem(path) }
-
     async *scan_all({limit} = {}) {
         /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
         let count = 0
