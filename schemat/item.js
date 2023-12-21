@@ -841,11 +841,9 @@ Item.create_api(
     {
         // http endpoints...
 
-        'GET/default':  new ReactPage(ItemAdminView),               // TODO: add explicit support for endpoint aliases?
-
         'CALL/default': new InternalService(function() { return this }),
-        'CALL/item':    new InternalService(function() { return this }),
 
+        'GET/default':  new ReactPage(ItemAdminView),
         'GET/json':     new JsonService(function() { return this._record_.encoded() }),
 
         // item's edit actions for use in the admin interface...
@@ -1090,29 +1088,14 @@ export class Category extends Item {
 
 Category.create_api(
     {
-        'GET/default':  new ReactPage(CategoryAdminView),           // TODO: add explicit support for endpoint aliases?
-        'GET/item':     new ReactPage(CategoryAdminView),
-
+        'GET/default':  new ReactPage(CategoryAdminView),
         'GET/import':   new HttpService(function (request)
-        {
-            /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
-            this._checkPath(request)
-            request.res.type('js')
-            return this._source_
-        }),
-
-        // 'GET/scan':     new HttpService(async function (request)
-        // {
-        //     /* Retrieve all children of this category and send to client as a JSON array.
-        //      */
-        //     let items = []
-        //     for await (const item of registry.scan(this)) {
-        //         await item.load()
-        //         items.push(item)
-        //     }
-        //     let records = items.map(item => item.record.encoded())
-        //     request.res.json(records)
-        // }),
+            {
+                /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
+                this._checkPath(request)
+                request.res.type('js')
+                return this._source_
+            }),
 
         'POST/read': new TaskService({
             list_items: new Task({
