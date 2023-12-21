@@ -115,13 +115,16 @@ export class Site extends Directory {
         throw new UrlPathNotFound({path})
     }
 
-    async findItem(path) {
-        /* URL-call that requests and returns an item pointed to by `path`.
-           The request is handled by the target item's CALL_item() endpoint.
-           The item is fully loaded (this is a prerequisite to calling CALL_*()).
-         */
-        // return Request.run_with({path, method: '@item'}, () => this.route(request))
-        return this.route(new Request({path, method: '@item'}))
+    async find_item(path) {
+        /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
+        // return this.route(new Request({path, method: '@item'}))
+        return this.route_internal(path)
+    }
+
+    async route_internal(path) {
+        /* Internal URL-call to a CALL/* endpoint of an object identified by a URL `path`. */
+        return this.route(new Request({path}))
+        // return Request.run_with({path}, () => this.route(request))
     }
 
     async route(request, explicit_blank = false) {
@@ -136,27 +139,6 @@ export class Site extends Directory {
         request.path = ''
         return object.handle(request)
     }
-
-    // async route(request) {
-    //     /* Use the thread-global `request` to find the target item and execute its endpoint function. */
-    //     let step = request.step()
-    //     for (let {key: name, value: node} of this.routes) {
-    //
-    //         // empty route? don't consume any part of the request path; step into the (Directory) node
-    //         // only if it may contain the `step` sub-route
-    //         if (!name) {
-    //             if (!node.is_loaded()) await node.load()
-    //             assert(node instanceof Container, "empty route can only point to a Directory or Namespace")
-    //             if (node.contains(step)) return node.route(request)
-    //             else continue
-    //         }
-    //         if (name === step) {
-    //             if (!node.is_loaded()) await node.load()
-    //             return node.route(request.move(step))
-    //         }
-    //     }
-    //     request.throwNotFound()
-    // }
 
     async importModule(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Universal Namespace (SUN). Returns a vm.Module object. */
@@ -183,8 +165,7 @@ export class Site extends Directory {
         if (path.startsWith(local + '/'))
             return this.localImport(registry.directImportPath(path))
 
-        // let source = await Request.run_with({path, method: '@text'}, () => this.route(request))
-        let source = await this.route(new Request({path, method: '@text'}))
+        let source = await this.route_internal(path + '@text')
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
 
         return this.parseModule(source, path)
