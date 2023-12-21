@@ -21,7 +21,7 @@ export class HtmlPage extends HttpService {
         /* Server-side generation of an HTML page for the target object. */
         let view = this.create_view(target, request)
         let props = await view.prepare('server') || {}
-        return view.generate(props)
+        return view.generate({request, ...props})
     }
 
     create_view(target, request = null) {
@@ -128,7 +128,7 @@ export class RenderedPage extends HtmlPage {
 
         html_body(props) {
             let html = this.render_server(props)
-            let data = this.page_data()
+            let data = this.page_data(props)
             let code = this.page_script()
             return this.component_frame({html, data, code})
         }
@@ -138,7 +138,7 @@ export class RenderedPage extends HtmlPage {
             return ''
         }
 
-        page_data() {
+        page_data(props) {
             /* Data string to be embedded in HTML output for use by the client-side JS code. Must be HTML-escaped. */
             throw new NotImplemented('page_data() must be implemented in subclasses')
         }
@@ -196,15 +196,15 @@ export class ReactPage extends RenderedPage {
 
         render_server(props) {
             this.assert_loaded()
-            print(`SSR render('${this._context_.request.endpoint}') of ID=${this._id_}`)
+            print(`SSR render('${props.request.endpoint}') of ID=${this._id_}`)
             let view = e(this.component, props)
             return ReactDOM.renderToString(view)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
         }
 
-        page_data() {
-            let dump = this._context_.request.session.dump()
-            return {...dump, endpoint: this._context_.request.endpoint}
+        page_data(props) {
+            let dump = props.request.session.dump()
+            return {...dump, endpoint: props.request.endpoint}
         }
 
         page_script() {
