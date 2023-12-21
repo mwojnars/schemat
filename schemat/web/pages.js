@@ -17,6 +17,14 @@ export class HtmlPage extends HttpService {
        In the base HtmlPage implementation, the page is built of separate strings/functions for: title, head, body.
      */
 
+    constructor(View = null) {
+        /* `View` is a class that defines the page's layout and appearance.
+           If not specified, the page's own static View class (constructor.View) is used.
+         */
+        super()
+        this.View = View
+    }
+
     async execute(target, request) {
         /* Server-side generation of an HTML page for the target object. */
         let view = this.create_view(target, request)
@@ -42,7 +50,7 @@ export class HtmlPage extends HttpService {
            the target's attributes, so a property of the target may occasionally become inaccessible from inside the view.
          */
 
-        let View = this.constructor.View
+        let View = this.View || this.constructor.View
         let base = new View({request, target, page: this})
 
         return new Proxy(target, {
