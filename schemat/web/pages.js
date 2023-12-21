@@ -40,9 +40,6 @@ export class HtmlPage extends HttpService {
            Inside the view's methods, `this` is bound to the view object, so the view can access both the target's
            properties and methods, and the View class's methods. Note that the View class's attributes overshadow
            the target's attributes, so a property of the target may occasionally become inaccessible from inside the view.
-
-           The view's _context_ is set to contain at least `target` and `page` (on the client),
-           plus some request-related data (on the server). TODO: drop _context_
          */
 
         let View = this.constructor.View
@@ -71,12 +68,6 @@ export class HtmlPage extends HttpService {
            view object and not to the target object. However, any attributes defined here in View must stay read-only,
            as they are shared between all views created from a given page class.
         */
-
-        _context_           // the context object: {target, page, ...plus request data as passed to the page's execute()}
-
-        constructor(context = {}) {
-            this._context_ = context
-        }
 
         async prepare(side) {
             /* Prepare/collect extra information before the page generation (view rendering) starts. These are typically
