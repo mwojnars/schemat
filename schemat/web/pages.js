@@ -201,7 +201,7 @@ export class ReactPage extends RenderedPage {
         }
 
         page_data(props) {
-            let dump = props.request.session.dump()
+            let dump = props.request.dump()
             return {...dump, endpoint: props.request.endpoint}
         }
 
