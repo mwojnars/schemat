@@ -54,7 +54,7 @@ export class Request {
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
     methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
 
-    item            // target item responsible for actual handling of the request, as found by the routing procedure
+    // item            // target item responsible for actual handling of the request, as found by the routing procedure
     endpoint        // endpoint of the target item, as found by the routing procedure
 
     get position() {
@@ -716,8 +716,6 @@ export class Item {
         - a string if there's one occurrence of PARAM in a query string,
         - an array [val1, val2, ...] if PARAM occurs multiple times.
         */
-        request.item = this
-
         let {session, methods, protocol} = request
         if (!methods.length) methods = ['default']
         let endpoints = methods.map(p => `${protocol}/${p}`)        // convert endpoint-names to full endpoints

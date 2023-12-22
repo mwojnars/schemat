@@ -132,7 +132,7 @@ export class Site extends Directory {
     async route(request, explicit_blank = false) {
         /* Find the object pointed by the request's URL path and execute its endpoint function. */
         let path = request.path.slice(1)                // drop the leading slash
-        let object = request.item = await this.resolve(path, explicit_blank)
+        let object = await this.resolve(path, explicit_blank)
 
         // if (path !== object.url()) {
         //     // TODO: redirect to the canonical URL
