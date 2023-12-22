@@ -110,6 +110,7 @@ describe('Schemat Tests', function () {
             // })
 
             page.on('console', msg => { messages.push(msg) })
+            page.on('pageerror', error => { messages.push({type: () => 'error', text: () => error}) })
         })
 
         beforeEach(() => { messages = [] })
@@ -120,10 +121,10 @@ describe('Schemat Tests', function () {
             // await delay(2000)
 
             for (let msg of messages)
-                console.log(`Console [${msg.type()}]: `, msg.text())
+                msg.type ? console.log(`Console [${msg.type()}]: `, msg.text()) : console.log(msg)
 
-            let error = messages.find(msg => msg.type() === 'error')
-            assert(!error, `client-side error: ${error?.text()}`)
+            let error = messages.find(msg => msg.type?.() === 'error')
+            assert(!error, `(on client) ${error?.text() || error}`)
 
             // if (page_error) {
             //     console.log('\nPage error:', JSON.stringify(page_error))
