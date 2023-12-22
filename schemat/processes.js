@@ -61,7 +61,7 @@ export class ClientProcess extends SchematProcess {
         // print('[10,1]:', await registry.getItem([10,1], {load: true}))
 
         let root = document.querySelector("#page-component")
-        let item = registry.session.item
+        let item = registry.session.target
         item.assert_loaded()
         // print('main item:', item)
 

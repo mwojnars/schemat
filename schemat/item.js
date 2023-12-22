@@ -721,7 +721,7 @@ export class Item {
         let endpoints = methods.map(p => `${protocol}/${p}`)        // convert endpoint-names to full endpoints
 
         if (session) {
-            session.item = this
+            session.target = this
             if (request.app) session.app = request.app
         }
 

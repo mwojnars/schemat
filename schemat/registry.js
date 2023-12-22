@@ -321,7 +321,7 @@ export class Session {
     /* Collection of objects that are global to a single request processing. Also holds an evolving state of the latter. */
 
     app                 // leaf Application object the request is addressed to
-    item                // target item that's responsible for actual handling of the request
+    target              // target object that's responsible for actual handling of the request
 
     // // req.query.PARAM is a string if there's one occurrence of PARAM in a query string,
     // // or an array [val1, val2, ...] if PARAM occurs multiple times
@@ -344,12 +344,12 @@ export class Session {
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
         let site  = registry.site
-        let items = [this.item, this.item._category_, registry.root, site, site._category_, this.app]
+        let items = [this.target, this.target._category_, registry.root, site, site._category_, this.app]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(it => it._record_.encoded())
 
-        let {app, item} = this
-        let session = {app, item}                               // truncated representation of the current session
+        let {app, target} = this
+        let session = {app, target}                             // truncated representation of the current session
 
         return {site_id: site._id_, session: JSONx.encode(session), items: records}
     }
