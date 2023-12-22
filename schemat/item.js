@@ -21,29 +21,9 @@ export const SITE_CATEGORY_ID = 1
 // print("imported utils from localhost:", utils)
 // print('import.meta:', import.meta)
 
-/**********************************************************************************************************************
- **
- **  UTILITIES
- **
- */
 
-// class Changes {
-//     /* List of changes to item's data that have been made by a user and can be submitted
-//        to the server and applied in DB. Multiple edits of the same data entry are merged into one.
-//      */
-//     constructor(item) { this.item = item }
-//     reset() { print('Reset clicked') }
-//     submit() { print('Submit clicked') }
-//     Buttons() {
-//         return DIV({style: {textAlign:'right', paddingTop:'20px'}},
-//             BUTTON({id: 'reset' , name: 'btn btn-secondary', onClick: this.reset,  disabled: false}, 'Reset'), ' ',
-//             BUTTON({id: 'submit', name: 'btn btn-primary',   onClick: this.submit, disabled: false}, 'Submit'),
-//         )
-//     }
-// }
-
-// AsyncFunction class is needed for parsing from-DB source code
-const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
+// // AsyncFunction class is needed for parsing from-DB source code
+// const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
 
 
 /**********************************************************************************************************************
