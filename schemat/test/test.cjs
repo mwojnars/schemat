@@ -150,7 +150,7 @@ describe('Schemat Tests', function () {
 
         it('Varia', async function () {
             await test_react_page(page, `${DOMAIN}/sys.category:1000`, '#page-component',
-                ['Category:1000', 'Varia', 'name', '_category_', 'fields', 'Varia:1016', 'Create Item'])
+                ['Category:1000', 'Varia', 'name', '_category_', 'fields', 'static check()', 'Varia:1016', 'Create Item'])
         })
 
         it('varia item', async function () {
