@@ -50,7 +50,7 @@ export class Request {
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
     methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
 
-    target          // target item responsible for actual handling of the request, as found by the routing procedure
+    target          // target object responsible for handling of the request; found by the routing procedure starting at the site object
     endpoint        // endpoint of the target item, as found by the routing procedure
 
 
@@ -88,22 +88,6 @@ export class Request {
             if (m && !this.methods.includes(m)) this.methods.push(m)
         }
     }
-
-    // step() {
-    //     if (!this.path) return undefined
-    //     if (this.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${this.path}'`)
-    //     return this.path.slice(1).split(Request.SEP_ROUTE)[0]
-    // }
-    //
-    // move(step = this.step()) {
-    //     /* Truncate `step` or this.step() from this.path. The step can be an empty string. Return this object. */
-    //     if (step === undefined) this.throwNotFound()
-    //     if (step) {
-    //         assert(this.path.startsWith('/' + step))
-    //         this.path = this.path.slice(1 + step.length)
-    //     }
-    //     return this             //Object.create(this, {path: path})
-    // }
 
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
