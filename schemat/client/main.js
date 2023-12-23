@@ -22,8 +22,7 @@ class ClientRegistry extends Registry {
         for (let rec of data.items)
             await this.getLoaded(rec.id)            // preload all boot items from copies passed in constructor()
 
-        let {target} = JSONx.decode(data.session)
-        return target
+        return JSONx.decode(data.target)
     }
 
     directImportPath(path) { return this.remoteImportPath(path) }

@@ -152,10 +152,7 @@ export class Request {
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(it => it._record_.encoded())
 
-        let {app, target} = this
-        let session = {app, target}                             // truncated representation of the current session
-
-        return {site_id: site._id_, session: JSONx.encode(session), items: records}
+        return {site_id: site._id_, target: JSONx.encode(this.target), items: records}
     }
 }
 
