@@ -39,15 +39,13 @@ export class Request {
 
     static SEP_METHOD = '@'         // separator of a method name within a URL path
 
-    throwNotFound(msg, args)  { throw new UrlPathNotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
+    throwNotFound(msg, args)  { throw new UrlPathNotFound(msg, args || {'path': this.pathFull}) }
 
     req             // instance of node.js express' Request
     res             // instance of node.js express' Response
 
     protocol        // CALL, GET, POST, (SOCK in the future); there can be different services exposed at the same endpoint-name but different protocols
     pathFull        // initial path, trailing @method removed; stays unchanged during routing (no truncation)
-    path            // remaining path to be consumed by subsequent nodes along the route;
-                    // equal pathFull at the beginning, it gets truncated while the routing proceeds
 
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
     methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
@@ -72,7 +70,6 @@ export class Request {
         // in Express, the web path always starts with at least on character, '/', even if the URL contains a domain alone;
         // this leading-trailing slash has to be truncated for correct segmentation and detection of an empty path
         if (this.pathFull === '/') this.pathFull = ''
-        this.path = this.pathFull
         this._pushMethod(method, '@' + meth)
     }
 
