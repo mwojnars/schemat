@@ -66,6 +66,7 @@ async function test_react_page(page, url, selector = null, strings = []) {
 
         expect_include_all(await page.content(), ...strings)
     }
+    return page
 }
 
 /**********************************************************************************************************************/
@@ -160,8 +161,11 @@ describe('Schemat Tests', function () {
         })
 
         it('Varia', async function () {
-            await test_react_page(page, `${DOMAIN}/sys.category:1000`, '#page-component',
-                ['Category:1000', 'Varia', 'name', '_category_', 'fields', 'static check()', 'Varia:1016', 'Create Item'])
+            let Varia = await test_react_page(page, `${DOMAIN}/sys.category:1000`, '#page-component',
+                ['Category:1000', 'Varia', 'name', '_category_', 'fields', 'Varia:1016', 'Create Item'])
+
+            // these strings are only available after client-side rendering, not in HTML source:
+            expect_include_all(await Varia.content(), 'check', 'Varia.code')
         })
 
         it('varia item', async function () {
