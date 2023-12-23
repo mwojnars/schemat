@@ -357,13 +357,15 @@ export class ClientRegistry extends Registry {
 
     server_side = false
 
-    async bootData(data) {
-        await super.boot(data.site_id)
+    async client_boot(data) {
+        await this.boot(data.site_id)
         assert(this.site)
 
-        this.session = Session.load(data.session)
+        let session = Session.load(data.session)
         for (let rec of data.items)
             await this.getLoaded(rec.id)            // preload all boot items from copies passed in constructor()
+
+        return session.target
     }
 
     directImportPath(path) { return this.remoteImportPath(path) }

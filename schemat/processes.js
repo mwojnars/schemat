@@ -53,15 +53,14 @@ export class ClientProcess extends SchematProcess {
         this.client_db = new ClientDB(data.items)
 
         await this._create_registry(ClientRegistry)
-        await registry.boot()
-        await registry.bootData(data)
+        let item = await registry.client_boot(data)
 
         // print('root:', await registry.getItem([0,0], {load: true}))
         // print('[0,10]:', await registry.getItem([0,10], {load: true}))
         // print('[10,1]:', await registry.getItem([10,1], {load: true}))
 
         let root = document.querySelector("#page-component")
-        let item = registry.session.target
+        // let item = registry.session.target
         item.assert_loaded()
         // print('main item:', item)
 
