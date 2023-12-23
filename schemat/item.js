@@ -37,7 +37,6 @@ export class Request {
        together with context information that evolves during the routing procedure.
      */
 
-    static SEP_ROUTE  = '/'         // separator of route segments in URL paths
     static SEP_METHOD = '@'         // separator of a method name within a URL path
 
     throwNotFound(msg, args)  { throw new UrlPathNotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
@@ -56,16 +55,6 @@ export class Request {
     target          // target item responsible for actual handling of the request, as found by the routing procedure
     endpoint        // endpoint of the target item, as found by the routing procedure
 
-    // get position() {
-    //     /* Current position of routing along pathFull, i.e., the length of the pathFull's prefix consumed so far. */
-    //     assert(this.pathFull.endsWith(this.path))
-    //     return this.pathFull.length - this.path.length
-    // }
-    //
-    // get route() {
-    //     /* Part of the pathFull consumed so far: pathFull = route + path */
-    //     return this.pathFull.slice(0, this.position)
-    // }
 
     constructor({path, method, req, res}) {
         this.req = req
@@ -124,11 +113,6 @@ export class Request {
     //         this.path = this.path.slice(1 + step.length)
     //     }
     //     return this             //Object.create(this, {path: path})
-    // }
-    //
-    // settleEndpoint(endpoint) {
-    //     /* Settle the endpoint for this request. */
-    //     this.endpoint = endpoint
     // }
 
     dump() {
