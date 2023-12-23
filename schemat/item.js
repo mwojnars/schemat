@@ -144,7 +144,7 @@ export class Request {
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(it => it._record_.encoded())
 
-        return {site_id: site._id_, target: JSONx.encode(this.target), items: records}
+        return {site_id: site._id_, target_id: this.target._id_, items: records}
     }
 }
 
