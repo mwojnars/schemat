@@ -5,12 +5,15 @@
 
  */
 
+const https = require('https')
 const util = require('util')
 const wtf = require('wtfnode')
 const {expect, assert} = require('chai')
 const puppeteer = require('puppeteer')
 const http = require('http')
 const {exec} = require('child_process')
+
+/**********************************************************************************************************************/
 
 // let toString
 // (async () => {
@@ -22,6 +25,14 @@ const {exec} = require('child_process')
 let print = console.log
 let delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
+
+function check_internet(fail) {
+    /* Check that internet connection is available, otherwise the tests hang (even if running on localhost). */
+    const req = https.get('https://www.google.com', (res) => {
+        if (res.statusCode !== 200) fail()
+        req.destroy()                                  // terminate the request to avoid downloading the entire page
+    }).on('error', fail)
+}
 
 /**********************************************************************************************************************/
 
@@ -84,16 +95,17 @@ describe('Schemat Tests', function () {
         let server, browser, page, messages
 
         before(async function () {
+
+            // internet connection must be available even for tests that run on localhost, otherwise they hang
+            check_internet(() => { throw new Error('NO INTERNET CONNECTION. Terminating.') })
+
             // Start the server...
             // The inner "exec" is necessary to pass the SIGTERM signal to the child "node" process, otherwise the kill()
             // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
             // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
             server = exec(`exec node --experimental-vm-modules cluster/manage.js --port ${PORT} run`, (error, stdout, stderr) => {
-                if (error) {
-                    console.error('\nError during server startup:', '\n' + stderr)
-                } else {
-                    console.error('\nServer stdout:', '\n' + stdout)
-                }
+                if (error) console.error('\nError during server startup:', '\n' + stderr)
+                else       console.error('\nServer stdout:', '\n' + stdout)
             })
             // console.log('Server started:', server.pid)
             await delay(1000)                                       // wait for server to start
@@ -137,9 +149,8 @@ describe('Schemat Tests', function () {
         })
 
         after(async function () {
-            await browser.close()
-            let killed = server.kill()
-            // console.log('Server killed:', killed)
+            await browser?.close()
+            let killed = server?.kill()
             await delay(200)                                        // wait for server to stop
         })
 
