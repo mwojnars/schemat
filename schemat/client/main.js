@@ -1,14 +1,54 @@
-import {print} from "../common/utils.js";
+import {assert, print} from "../common/utils.js";
 import {ClientDB} from "./client_db.js";
-import {ClientRegistry} from "../registry.js";
+import {Registry, Session} from "../registry.js";
 import {SchematProcess} from "../processes.js";
 
 
 /**********************************************************************************************************************/
 
+class ClientRegistry extends Registry {
+    /* Client-side registry: getItem() pulls items from server. */
+
+    server_side = false
+
+    async client_boot(data) {
+        await this.boot(data.site_id)
+        assert(this.site)
+
+        let session = Session.load(data.session)
+        for (let rec of data.items)
+            await this.getLoaded(rec.id)            // preload all boot items from copies passed in constructor()
+
+        return session.target
+    }
+
+    directImportPath(path) { return this.remoteImportPath(path) }
+    remoteImportPath(path) { return path + '@import' }      //'@import@file'
+
+    async import(path, name) {
+        /* High-level import of a module and (optionally) its element, `name`, from a SUN path. */
+        let module = import(this.remoteImportPath(path))
+        return name ? (await module)[name] : module
+    }
+
+    async insert(item) {
+        let data = item._data_.__getstate__()
+        delete data['_category_']
+
+        let category = item._category_
+        assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items
+
+        let record = await category.action.create_item(data)
+        if (record) {
+            this.db.cache(record)                       // record == {id: id, data: data-encoded}
+            return this.getItem(record.id)
+        }
+        throw new Error(`cannot create item ${item}`)
+    }
+}
+
 
 /**********************************************************************************************************************/
-
 
 export class ClientProcess extends SchematProcess {
 
