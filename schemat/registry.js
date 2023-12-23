@@ -107,7 +107,6 @@ export class Registry {
     schemat                 // SchematProcess that owns this registry
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests
-    session                 // current web Session, or undefined; max. one session is active at a given moment
     is_closing = false      // true if the Schemat node is in the process of shutting down
 
     _cache = new ItemsCache()
@@ -230,7 +229,7 @@ export class Registry {
         /* Get a registered instance of an item with a given ID, possibly a stub. An existing instance is returned,
            this._cache, or a stub is created anew and saved for future calls.
          */
-        this.session?.countRequested(id)
+        // this.session?.countRequested(id)
 
         // ID requested was already loaded/created? return the existing instance, or create a stub (empty item) otherwise;
         // a stub has no expiry date until filled with data
@@ -325,17 +324,17 @@ export class Session {
     // print('request query: ', req.query)
     // print('request body:  ', req.body)
 
-    releaseMutex        // release function for registry.sessionMutex to be called at the end of this session
-
-    itemsRequested = new Counter()       // for each item ID: no. of times the item was requested through registry.getItem() during this session
-    itemsLoaded    = new Counter()       // for each item ID: no. of times the item data was attempted to be loaded from DB
-
-    async start()   { this.releaseMutex = await registry.startSession(this) }
-    async stop()    { return registry.stopSession(this.releaseMutex) }
-    printCounts()   { print(`items requested ${this.itemsRequested.total()} times: `, this.itemsRequested)
-                      print(`items loaded ${this.itemsLoaded.total()} times:    `, this.itemsLoaded) }
-
-    countRequested(id)      { this.itemsRequested.add(id) }
-    countLoaded(id)         { this.itemsLoaded.add(id)    }
+    // releaseMutex        // release function for registry.sessionMutex to be called at the end of this session
+    //
+    // itemsRequested = new Counter()       // for each item ID: no. of times the item was requested through registry.getItem() during this session
+    // itemsLoaded    = new Counter()       // for each item ID: no. of times the item data was attempted to be loaded from DB
+    //
+    // async start()   { this.releaseMutex = await registry.startSession(this) }
+    // async stop()    { return registry.stopSession(this.releaseMutex) }
+    // printCounts()   { print(`items requested ${this.itemsRequested.total()} times: `, this.itemsRequested)
+    //                   print(`items loaded ${this.itemsLoaded.total()} times:    `, this.itemsLoaded) }
+    //
+    // countRequested(id)      { this.itemsRequested.add(id) }
+    // countLoaded(id)         { this.itemsLoaded.add(id)    }
 }
 

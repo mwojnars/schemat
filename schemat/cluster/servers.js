@@ -62,7 +62,7 @@ export class WebServer extends Server {
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
         // print(`Server.handle() worker ${process.pid}:`, req.path)
 
-        await session.start()
+        // await session.start()
 
         await Request.run_with({req, res}, async () => {
             try {
@@ -79,9 +79,11 @@ export class WebServer extends Server {
             // check()
         })
 
+        await registry.evict_cache()
+
         // await sleep(200)                 // for testing
         // session.printCounts()
-        await session.stop()
+        // await session.stop()
     }
 
     async serve_express() {

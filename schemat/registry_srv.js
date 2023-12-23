@@ -13,8 +13,8 @@ import {ROOT_ID} from "./item.js";
 
 export class ServerRegistry extends Registry {
 
-    sessionMutex = new Mutex()  // a mutex to lock Registry for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
-                                // new requests wait until the current session completes, see Session.start()
+    // sessionMutex = new Mutex()  // a mutex to lock Registry for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
+    //                             // new requests wait until the current session completes, see Session.start()
 
     PATH_LOCAL_SUN = "/system/local"    // SUN folder that maps to the local filesystem folder, PATH_LOCAL_FS;
     PATH_LOCAL_FS                       // scripts from PATH_LOCAL_* can be imported by system items during startup
@@ -37,20 +37,20 @@ export class ServerRegistry extends Registry {
         return name ? (await module)[name] : module
     }
 
-    async startSession(session) {
-        let release = await this.sessionMutex.acquire()
-        assert(!this.session, 'trying to process a new web request when another one is still open')
-        this.session = session
-        return release
-    }
-    async stopSession(releaseMutex) {
-        assert(this.session, 'trying to stop a web session when none was started')
-        delete this.session
-        await this._evict()
-        releaseMutex()
-    }
+    // async startSession(session) {
+    //     let release = await this.sessionMutex.acquire()
+    //     assert(!this.session, 'trying to process a new web request when another one is still open')
+    //     this.session = session
+    //     return release
+    // }
+    // async stopSession(releaseMutex) {
+    //     assert(this.session, 'trying to stop a web session when none was started')
+    //     delete this.session
+    //     await this.evict_cache()
+    //     releaseMutex()
+    // }
 
-    async _evict() {
+    async evict_cache() {
         /* Evict expired objects in _cache. */
         await this._cache.evict()
         if (!this._cache.has(ROOT_ID))              // if `root` is no longer present in _cache, call _init_root() once again

@@ -499,7 +499,7 @@ export class Item {
 
     async _load_record() {
         this.assert_linked()
-        schemat.registry.session?.countLoaded(this._id_)
+        // schemat.registry.session?.countLoaded(this._id_)
 
         let req = new DataRequest(this, 'load', {id: this._id_})
         let json = await schemat.db.select(req)
