@@ -72,7 +72,7 @@ File.create_api({        // endpoints...
     'GET/file':     new HttpService(function (request)
     {
         // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
-        this.setMimeType(request.res, request.pathFull)
+        this.setMimeType(request.res, request.path)
         let txt = this.content_processed
         if (txt === undefined) request.throwNotFound()
         return txt

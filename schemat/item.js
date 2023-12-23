@@ -39,13 +39,13 @@ export class Request {
 
     static SEP_METHOD = '@'         // separator of a method name within a URL path
 
-    throwNotFound(msg, args)  { throw new UrlPathNotFound(msg, args || {'path': this.pathFull}) }
+    throwNotFound(msg, args)  { throw new UrlPathNotFound(msg, args || {path: this.path}) }
 
     req             // instance of node.js express' Request
     res             // instance of node.js express' Response
 
     protocol        // CALL, GET, POST, (SOCK in the future); there can be different services exposed at the same endpoint-name but different protocols
-    pathFull        // initial path, trailing @method removed; stays unchanged during routing (no truncation)
+    path            // URL path, trailing @method removed
 
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
     methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
@@ -65,11 +65,11 @@ export class Request {
 
         if (path === undefined) path = this.req.path
         let meth, sep = Request.SEP_METHOD;
-        [this.pathFull, meth] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+        [this.path, meth] = path.includes(sep) ? splitLast(path, sep) : [path, '']
 
         // in Express, the web path always starts with at least on character, '/', even if the URL contains a domain alone;
         // this leading-trailing slash has to be truncated for correct segmentation and detection of an empty path
-        if (this.pathFull === '/') this.pathFull = ''
+        if (this.path === '/') this.path = ''
         this._pushMethod(method, '@' + meth)
     }
 
@@ -1024,7 +1024,7 @@ export class Category extends Item {
 
     _checkPath(request) {
         /* Check if the request's path is compatible with the default path of this item. Throw an exception if not. */
-        let path  = request.pathFull
+        let path  = request.path
         let dpath = this._url_                      // `path` must be equal to the canonical URL path of this item
         if (path !== dpath)
             throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
