@@ -54,7 +54,6 @@ export class Request {
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
     methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
 
-    app             // leaf Application object the request is addressed to
     target          // target item responsible for actual handling of the request, as found by the routing procedure
     endpoint        // endpoint of the target item, as found by the routing procedure
 
@@ -135,11 +134,6 @@ export class Request {
         return this             //Object.create(this, {path: path})
     }
 
-    // pushApp(app) {
-    //     this.app = app
-    //     return this
-    // }
-
     settleEndpoint(endpoint) {
         /* Settle the endpoint for this request. */
         this.endpoint = endpoint
@@ -148,7 +142,7 @@ export class Request {
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
         let site  = registry.site
-        let items = [this.target, this.target._category_, registry.root, site, site._category_, this.app]
+        let items = [this.target, this.target._category_, registry.root, site, site._category_]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(it => it._record_.encoded())
 
@@ -732,11 +726,6 @@ export class Item {
         let endpoints = methods.map(p => `${protocol}/${p}`)        // convert endpoint-names to full endpoints
 
         request.target = this
-
-        // if (session) {
-        //     session.target = this
-        //     if (request.app) session.app = request.app
-        // }
 
         for (let endpoint of endpoints) {
             let service = this._net_.resolve(endpoint)

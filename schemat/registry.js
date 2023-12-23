@@ -320,9 +320,6 @@ export class Registry {
 export class Session {
     /* Collection of objects that are global to a single request processing. Also holds an evolving state of the latter. */
 
-    // app                 // leaf Application object the request is addressed to
-    // target              // target object that's responsible for actual handling of the request
-
     // // req.query.PARAM is a string if there's one occurrence of PARAM in a query string,
     // // or an array [val1, val2, ...] if PARAM occurs multiple times
     // print('request query: ', req.query)
