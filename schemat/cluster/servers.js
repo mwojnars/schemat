@@ -7,7 +7,6 @@ import bodyParser from 'body-parser'
 import {assert, print} from '../common/utils.js'
 import {set_global} from "../common/globals.js";
 import {thread_local_variable} from "./local.js";
-import {Session} from '../registry.js'
 import {Request} from "../item.js";
 
 
@@ -54,7 +53,6 @@ export class WebServer extends Server {
         this.port = port
         this.workers = workers          // no. of worker processes to spawn
 
-        set_global({session: thread_local_variable()})
         set_global({request: thread_local_variable()})
     }
 
@@ -105,8 +103,7 @@ export class WebServer extends Server {
         app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
         app.use(bodyParser.text({type: '*/*', limit: '10MB'}))  // for setting req.body string from plain-text body (if not json MIME-type)
 
-        app.all('*', (req, res) => session.run_with(new Session(), () => this.handle(req, res)))
-        // app.all('*', (req, res) => this.handle(req, res))
+        app.all('*', (req, res) => this.handle(req, res))
 
         // web.get('*', async (req, res) => {
         //     res.send(`URL path: ${req.path}`)

@@ -309,32 +309,3 @@ export class Registry {
     directImportPath(path)  { throw new NotImplemented() }
 }
 
-
-/**********************************************************************************************************************
- **
- **  WEB SESSION
- **
- */
-
-export class Session {
-    /* Collection of objects that are global to a single request processing. Also holds an evolving state of the latter. */
-
-    // // req.query.PARAM is a string if there's one occurrence of PARAM in a query string,
-    // // or an array [val1, val2, ...] if PARAM occurs multiple times
-    // print('request query: ', req.query)
-    // print('request body:  ', req.body)
-
-    // releaseMutex        // release function for registry.sessionMutex to be called at the end of this session
-    //
-    // itemsRequested = new Counter()       // for each item ID: no. of times the item was requested through registry.getItem() during this session
-    // itemsLoaded    = new Counter()       // for each item ID: no. of times the item data was attempted to be loaded from DB
-    //
-    // async start()   { this.releaseMutex = await registry.startSession(this) }
-    // async stop()    { return registry.stopSession(this.releaseMutex) }
-    // printCounts()   { print(`items requested ${this.itemsRequested.total()} times: `, this.itemsRequested)
-    //                   print(`items loaded ${this.itemsLoaded.total()} times:    `, this.itemsLoaded) }
-    //
-    // countRequested(id)      { this.itemsRequested.add(id) }
-    // countLoaded(id)         { this.itemsLoaded.add(id)    }
-}
-
