@@ -61,8 +61,9 @@ export class WebServer extends Server {
         // print(`Server.handle() worker ${process.pid}:`, req.path)
 
         // await session.start()
+        let request = new Request({req, res})
 
-        await Request.run_with({req, res}, async () => {
+        // await Request.run_with({req, res}, async () => {
             try {
                 let result = await registry.site.route(request)
                 if (typeof result === 'string') res.send(result)
@@ -75,7 +76,7 @@ export class WebServer extends Server {
             // // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
             // let {check} = await registry.site.importModule("/site/widgets.js")
             // check()
-        })
+        // })
 
         await registry.evict_cache()
 
