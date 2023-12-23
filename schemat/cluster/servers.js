@@ -52,31 +52,26 @@ export class WebServer extends Server {
         this.host = host
         this.port = port
         this.workers = workers          // no. of worker processes to spawn
-
-        set_global({request: thread_local_variable()})
     }
 
     async handle(req, res) {
-        if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
+        if (!['GET','POST'].includes(req.method)) return res.sendStatus(405)    // 405 Method Not Allowed
         // print(`Server.handle() worker ${process.pid}:`, req.path)
-
         // await session.start()
-        let request = new Request({req, res})
 
-        // await Request.run_with({req, res}, async () => {
-            try {
-                let result = await registry.site.route(request)
-                if (typeof result === 'string') res.send(result)
-            }
-            catch (ex) {
-                print(ex)
-                try { res.sendStatus(ex.code || 500) } catch(e){}
-            }
+        try {
+            let request = new Request({req, res})
+            let result = await registry.site.route(request)
+            if (typeof result === 'string') res.send(result)
+        }
+        catch (ex) {
+            print(ex)
+            try { res.sendStatus(ex.code || 500) } catch(e){}
+        }
 
-            // // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
-            // let {check} = await registry.site.importModule("/site/widgets.js")
-            // check()
-        // })
+        // // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
+        // let {check} = await registry.site.importModule("/site/widgets.js")
+        // check()
 
         await registry.evict_cache()
 

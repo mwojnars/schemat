@@ -76,13 +76,6 @@ export class Request {
         this._pushMethod(method, '@' + meth)
     }
 
-    static async run_with(props, callback) {
-        /* Set the thread-global `request` object to a newly created one with `props` and run `callback()`.
-           Return a promise that resolves to the result of `callback()`.
-         */
-        return new Promise((resolve, reject) => request.run_with(new Request(props), () => resolve(callback())))
-    }
-
     _prepare(method) {
         if (!method) return method
         assert(method[0] === Request.SEP_METHOD, `method name must start with '${Request.SEP_METHOD}' (${method})`)
