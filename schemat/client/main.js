@@ -1,7 +1,8 @@
 import {assert, print} from "../common/utils.js";
 import {ClientDB} from "./client_db.js";
-import {Registry, Session} from "../registry.js";
+import {Registry} from "../registry.js";
 import {SchematProcess} from "../processes.js";
+import {Request} from "../item.js";
 
 
 /**********************************************************************************************************************/
@@ -15,7 +16,7 @@ class ClientRegistry extends Registry {
         await this.boot(data.site_id)
         assert(this.site)
 
-        let session = Session.load(data.session)
+        let session = Request.load(data.session)
         for (let rec of data.items)
             await this.getLoaded(rec.id)            // preload all boot items from copies passed in constructor()
 
