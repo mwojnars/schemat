@@ -206,7 +206,7 @@ export class ReactPage extends RenderedPage {
         }
 
         page_script(props) {
-            return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start();`
+            return `import {ClientProcess} from "/system/local/client/main.js"; new ClientProcess().start();`
         }
 
         component() {
