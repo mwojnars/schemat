@@ -33,7 +33,7 @@ export const SITE_CATEGORY_ID = 1
  */
 
 export class Request {
-    /* Custom representation of a web request (.session defined) or internal request (no .session),
+    /* Custom representation of a web request or internal request,
        together with context information that evolves during the routing procedure.
      */
 
@@ -46,7 +46,6 @@ export class Request {
     res             // instance of node.js express' Response
 
     protocol        // CALL, GET, POST, (SOCK in the future); there can be different services exposed at the same endpoint-name but different protocols
-    session         // Session object; only for top-level web requests (not for internal requests)
     pathFull        // initial path, trailing @method removed; stays unchanged during routing (no truncation)
     path            // remaining path to be consumed by subsequent nodes along the route;
                     // equal pathFull at the beginning, it gets truncated while the routing proceeds
@@ -68,11 +67,10 @@ export class Request {
         return this.pathFull.slice(0, this.position)
     }
 
-    constructor({path, method, req, res, session}) {
+    constructor({path, method, req, res}) {
         this.req = req
         this.res = res
 
-        this.session = session
         this.protocol =
             !this.req                   ? "CALL" :          // CALL = internal call through Site.route_internal()
             this.req.method === 'GET'   ? "GET"  :          // GET  = read access through HTTP GET
@@ -721,7 +719,7 @@ export class Item {
         - a string if there's one occurrence of PARAM in a query string,
         - an array [val1, val2, ...] if PARAM occurs multiple times.
         */
-        let {session, methods, protocol} = request
+        let {methods, protocol} = request
         if (!methods.length) methods = ['default']
         let endpoints = methods.map(p => `${protocol}/${p}`)        // convert endpoint-names to full endpoints
 
