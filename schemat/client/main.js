@@ -3,6 +3,7 @@ import {ClientDB} from "./client_db.js";
 import {Registry} from "../registry.js";
 import {SchematProcess} from "../processes.js";
 import {Request} from "../item.js";
+import {JSONx} from "../serialize.js";
 
 
 /**********************************************************************************************************************/
@@ -13,14 +14,16 @@ class ClientRegistry extends Registry {
     server_side = false
 
     async client_boot(data) {
+        /* Load response data from state-encoded `data.session` as produced by Request.dump(). */
+
         await this.boot(data.site_id)
         assert(this.site)
 
-        let session = Request.load(data.session)
         for (let rec of data.items)
             await this.getLoaded(rec.id)            // preload all boot items from copies passed in constructor()
 
-        return session.target
+        let {target} = JSONx.decode(data.session)
+        return target
     }
 
     directImportPath(path) { return this.remoteImportPath(path) }
