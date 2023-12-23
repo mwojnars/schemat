@@ -56,16 +56,16 @@ export class Request {
     target          // target item responsible for actual handling of the request, as found by the routing procedure
     endpoint        // endpoint of the target item, as found by the routing procedure
 
-    get position() {
-        /* Current position of routing along pathFull, i.e., the length of the pathFull's prefix consumed so far. */
-        assert(this.pathFull.endsWith(this.path))
-        return this.pathFull.length - this.path.length
-    }
-
-    get route() {
-        /* Part of the pathFull consumed so far: pathFull = route + path */
-        return this.pathFull.slice(0, this.position)
-    }
+    // get position() {
+    //     /* Current position of routing along pathFull, i.e., the length of the pathFull's prefix consumed so far. */
+    //     assert(this.pathFull.endsWith(this.path))
+    //     return this.pathFull.length - this.path.length
+    // }
+    //
+    // get route() {
+    //     /* Part of the pathFull consumed so far: pathFull = route + path */
+    //     return this.pathFull.slice(0, this.position)
+    // }
 
     constructor({path, method, req, res}) {
         this.req = req
@@ -84,7 +84,7 @@ export class Request {
         // this leading-trailing slash has to be truncated for correct segmentation and detection of an empty path
         if (this.pathFull === '/') this.pathFull = ''
         this.path = this.pathFull
-        this.pushMethod(method, '@' + meth)
+        this._pushMethod(method, '@' + meth)
     }
 
     static async run_with(props, callback) {
@@ -94,19 +94,13 @@ export class Request {
         return new Promise((resolve, reject) => request.run_with(new Request(props), () => resolve(callback())))
     }
 
-    // copy() {
-    //     let request = T.clone(this)
-    //     request.methods = [...this.methods]
-    //     return request
-    // }
-
     _prepare(method) {
         if (!method) return method
         assert(method[0] === Request.SEP_METHOD, `method name must start with '${Request.SEP_METHOD}' (${method})`)
         return method.slice(1)
     }
 
-    pushMethod(...methods) {
+    _pushMethod(...methods) {
         /* Append names to this.methods. Each name must start with '@' for easier detection of method names
            in a source code - this prefix is truncated when appended to this.methods.
          */
@@ -116,26 +110,26 @@ export class Request {
         }
     }
 
-    step() {
-        if (!this.path) return undefined
-        if (this.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${this.path}'`)
-        return this.path.slice(1).split(Request.SEP_ROUTE)[0]
-    }
-
-    move(step = this.step()) {
-        /* Truncate `step` or this.step() from this.path. The step can be an empty string. Return this object. */
-        if (step === undefined) this.throwNotFound()
-        if (step) {
-            assert(this.path.startsWith('/' + step))
-            this.path = this.path.slice(1 + step.length)
-        }
-        return this             //Object.create(this, {path: path})
-    }
-
-    settleEndpoint(endpoint) {
-        /* Settle the endpoint for this request. */
-        this.endpoint = endpoint
-    }
+    // step() {
+    //     if (!this.path) return undefined
+    //     if (this.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${this.path}'`)
+    //     return this.path.slice(1).split(Request.SEP_ROUTE)[0]
+    // }
+    //
+    // move(step = this.step()) {
+    //     /* Truncate `step` or this.step() from this.path. The step can be an empty string. Return this object. */
+    //     if (step === undefined) this.throwNotFound()
+    //     if (step) {
+    //         assert(this.path.startsWith('/' + step))
+    //         this.path = this.path.slice(1 + step.length)
+    //     }
+    //     return this             //Object.create(this, {path: path})
+    // }
+    //
+    // settleEndpoint(endpoint) {
+    //     /* Settle the endpoint for this request. */
+    //     this.endpoint = endpoint
+    // }
 
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
@@ -729,7 +723,7 @@ export class Item {
             let service = this._net_.resolve(endpoint)
             if (service) {
                 // print(`handle() endpoint: ${endpoint}`)
-                request.settleEndpoint(endpoint)
+                request.endpoint = endpoint
                 return service.server(this, request)
             }
         }
