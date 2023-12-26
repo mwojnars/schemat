@@ -45,7 +45,7 @@ export class Request {
     res             // instance of node.js express' Response
 
     protocol        // CALL, GET, POST, (SOCK in the future); there can be different services exposed at the same endpoint-name but different protocols
-    path            // URL path, trailing ::endpoint name removed
+    path            // URL path with trailing ::endpoint name removed
 
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
     methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
@@ -70,7 +70,7 @@ export class Request {
         // in Express, the web path always starts with at least on character, '/', even if the URL contains a domain alone;
         // this leading-trailing slash has to be truncated for correct segmentation and detection of an empty path
         if (this.path === '/') this.path = ''
-        this._pushMethod(method, sep + endp)
+        this._push(method, sep + endp)
     }
 
     _prepare(endpoint) {
@@ -80,7 +80,7 @@ export class Request {
         return endpoint.slice(sep.length)
     }
 
-    _pushMethod(...methods) {
+    _push(...methods) {
         /* Append names to this.methods. Each name must start with '::' for easier detection of method names
            in a source code - this prefix is truncated when appended to this.methods.
          */
@@ -674,7 +674,7 @@ export class Item {
         */
         let {methods, protocol} = request
         if (!methods.length) methods = ['default']
-        let endpoints = methods.map(p => `${protocol}/${p}`)        // convert endpoint-names to full endpoints
+        let endpoints = methods.map(e => `${protocol}/${e}`)        // convert endpoint names to full protocol-qualified endpoints: GET/xxx
 
         request.target = this
 
