@@ -115,7 +115,7 @@ export class LocalFolder extends Directory {
     resolve(path) {
         // create a fake Item object to wrap up a local file
         return {
-            handle: (request) => this._read_file(path, request.res),
+            __handle__: (request) => this._read_file(path, request.res),
         }
     }
 

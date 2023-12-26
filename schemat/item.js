@@ -6,7 +6,7 @@ import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
 
 import {JSONx} from './serialize.js'
 import {Path, Catalog, Data} from './data.js'
-import {DATA, DATA_GENERIC, generic_type, ITEM} from "./type.js"
+import {DATA, DATA_GENERIC, ITEM} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 import {ReactPage, CategoryAdminView, ItemAdminView} from "./web/pages.js";
 import {ItemRecord} from "./db/records.js";
@@ -665,7 +665,7 @@ export class Item {
         return path
     }
 
-    handle(request) {
+    __handle__(request) {
         /*
         Serve a web or internal `request` by executing the corresponding service from this.net.
         Query parameters are passed in `req.query`, as:

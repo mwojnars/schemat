@@ -138,7 +138,7 @@ export class Site extends Directory {
         //     // TODO: redirect to the canonical URL
         // }
 
-        return object.handle(request)
+        return object.__handle__(request)
     }
 
     async importModule(path, referrer) {
