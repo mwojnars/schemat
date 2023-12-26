@@ -606,44 +606,6 @@ export class Item {
         return {[ItemProxy.CACHED]: true, value}
     }
 
-    // object(first = true) {
-    //     /* Return this._data_ converted to a plain object. For repeated keys, only one value is included:
-    //        the first one if first=true (default), or the last one, otherwise.
-    //        TODO: for repeated keys, return a sub-object: {first, last, all} - configurable in schema settings
-    //       */
-    //     this.assert_loaded()
-    //     let obj = this._data_.object(first)
-    //     obj.__item__ = this
-    //     return obj
-    // }
-
-    make_stamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
-        /* [CATEGORY:ID] string (stamp) if the category of `this` has a name; or [ID] otherwise.
-           If html=true, the category name is hyperlinked to the category's profile page (unless URL failed to generate)
-           and is HTML-escaped. If max_len is provided, category's suffix may be replaced with '...' to make its length <= max_len.
-         */
-        let cat = this._category_?.name || ""
-        if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
-        if (html) {
-            cat = escape_html(cat)
-            let url = this._category_?.url()
-            if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
-        }
-        let stamp = cat ? `${cat}:${this._id_}` : `${this._id_}`
-        return brackets ? `[${stamp}]` : stamp
-    }
-
-    mergeSnippets(key, params) {
-        /* Retrieve all source code snippets (inherited first & own last) assigned to a given `key`.
-           including the environment-specific {key}_client OR {key}_server keys; assumes the values are strings.
-           Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets.
-         */
-        // let side = registry.server_side ? 'server' : 'client'
-        // let snippets = this.getMany([key, `${key}_${side}`], params)
-        let snippets = this[`${key}_array`].reverse()
-        return snippets.join('\n')
-    }
-
     dumpData() {
         /* Dump this._data_ to a JSONx string with encoding of nested values. */
         return JSONx.stringify(this._data_)
@@ -651,19 +613,6 @@ export class Item {
 
 
     /***  Routing & handling of requests (server-side)  ***/
-
-    url(endpoint, args) {
-        /* `endpoint` is an optional name of an ::endpoint, `args` will be appended to URL as a query string. */
-
-        let path = this._url_
-        if (!path) {
-            console.error(`missing _url_ for object [${this._id_}], introduce a delay or await _ready_.url`)
-            return ''
-        }
-        if (endpoint) path += Request.SEP_ENDPOINT + endpoint               // append ::endpoint and ?args if present...
-        if (args) path += '?' + new URLSearchParams(args).toString()
-        return path
-    }
 
     __handle__(request) {
         /*
@@ -688,6 +637,35 @@ export class Item {
         }
 
         request.throwNotFound(`no service found for [${endpoints}]`)
+    }
+
+    url(endpoint, args) {
+        /* `endpoint` is an optional name of an ::endpoint, `args` will be appended to URL as a query string. */
+
+        let path = this._url_
+        if (!path) {
+            console.error(`missing _url_ for object [${this._id_}], introduce a delay or await _ready_.url`)
+            return ''
+        }
+        if (endpoint) path += Request.SEP_ENDPOINT + endpoint               // append ::endpoint and ?args if present...
+        if (args) path += '?' + new URLSearchParams(args).toString()
+        return path
+    }
+
+    make_stamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
+        /* [CATEGORY:ID] string (stamp) if the category of `this` has a name; or [ID] otherwise.
+           If html=true, the category name is hyperlinked to the category's profile page (unless URL failed to generate)
+           and is HTML-escaped. If max_len is provided, category's suffix may be replaced with '...' to make its length <= max_len.
+         */
+        let cat = this._category_?.name || ""
+        if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
+        if (html) {
+            cat = escape_html(cat)
+            let url = this._category_?.url()
+            if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
+        }
+        let stamp = cat ? `${cat}:${this._id_}` : `${this._id_}`
+        return brackets ? `[${stamp}]` : stamp
     }
 
     make_editable() {
@@ -726,7 +704,7 @@ export class Item {
     //     let name = this.get('_boot_class')
     //     if (name) base = registry.getClass(name)
     //
-    //     let body = this.mergeSnippets('class')           // full class body from concatenated `code` and `code_*` snippets
+    //     let body = this.route_internal(('class')           // full class body from concatenated `code` and `code_*` snippets
     //     if (!body) return base
     //
     //     let url = this.sourceURL('class')
@@ -958,7 +936,7 @@ export class Category extends Item {
 
     _hasCustomCode() { return this._codeInit() || this._codeBody() }
 
-    _codeInit()      { return this.mergeSnippets('class_init') }
+    _codeInit()      { return this._merge_snippets('class_init') }
     _codeBaseClass() {
         /* Source code that imports/loads the base class, Base, for a custom Class of this category. */
         let [path, name] = this.getClassPath()
@@ -978,14 +956,26 @@ export class Category extends Item {
     }
     _codeBody() {
         /* Source code of this category's dynamic Class body. */
-        return this.mergeSnippets('class_body')
-        // let body = this.mergeSnippets('class_body')
+        return this._merge_snippets('class_body')
+        // let body = this.route_internal(('class_body')
         // let methods = []
         // let views = this.prop('views')                              // extend body with VIEW_* methods
         // for (let {key: vname, value: vbody} of views || [])
         //     methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
         // return body + methods.join('\n')
     }
+
+    _merge_snippets(key, params) {
+        /* Retrieve all source code snippets (inherited first & own last) assigned to a given `key`.
+           including the environment-specific {key}_client OR {key}_server keys; assumes the values are strings.
+           Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets.
+         */
+        // let side = registry.server_side ? 'server' : 'client'
+        // let snippets = this.getMany([key, `${key}_${side}`], params)
+        let snippets = this[`${key}_array`].reverse()
+        return snippets.join('\n')
+    }
+
     // _codeViewsHandlers() {
     //     let views = this.prop('views')
     //     if (!views?.length) return
