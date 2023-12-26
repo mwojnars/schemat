@@ -668,7 +668,7 @@ export class Item {
         return brackets ? `[${stamp}]` : stamp
     }
 
-    make_editable() {
+    mark_editable() {
         /* Mark this item as editable and remove it from the Registry. */
         registry.unregister(this)
         this._meta_.mutable = true
@@ -765,13 +765,13 @@ Item.create_api(
             insert_field(request, path, pos, entry) {
                 // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
-                this.make_editable()
+                this.mark_editable()
                 this._data_.insert(path, pos, entry)
                 return schemat.db.update_full(this)
             },
 
             delete_field(request, path) {
-                this.make_editable()
+                this.mark_editable()
                 this._data_.delete(path)
                 return schemat.db.update_full(this)
             },
@@ -779,13 +779,13 @@ Item.create_api(
             update_field(request, path, entry) {
                 // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
-                this.make_editable()
+                this.mark_editable()
                 this._data_.update(path, entry)
                 return schemat.db.update_full(this)
             },
 
             move_field(request, path, pos1, pos2) {
-                this.make_editable()
+                this.mark_editable()
                 this._data_.move(path, pos1, pos2)
                 return schemat.db.update_full(this)
             },
