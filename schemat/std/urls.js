@@ -111,8 +111,6 @@ export class Namespace extends Container {
 export class ID_Namespace extends Namespace {
     /* All objects accessible through the raw numeric ID url path of the form: /ID */
 
-    // view/action       -- what @view to use for rendering the items when a view is not specified in the URL
-
     resolve(path) {
         assert(path, `path must be non-empty`)
         try {

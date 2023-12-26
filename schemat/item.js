@@ -37,7 +37,7 @@ export class Request {
        together with context information that evolves during the routing procedure.
      */
 
-    static SEP_METHOD = '@'         // separator of a method name within a URL path
+    static SEP_ENDPOINT = '::'          // separator of an endpoint name within a URL path
 
     throwNotFound(msg, args)  { throw new UrlPathNotFound(msg, args || {path: this.path}) }
 
@@ -45,7 +45,7 @@ export class Request {
     res             // instance of node.js express' Response
 
     protocol        // CALL, GET, POST, (SOCK in the future); there can be different services exposed at the same endpoint-name but different protocols
-    path            // URL path, trailing @method removed
+    path            // URL path, trailing ::endpoint name removed
 
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
     methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
@@ -64,23 +64,24 @@ export class Request {
                                           "POST"            // POST = write access through HTTP POST
 
         if (path === undefined) path = this.req.path
-        let meth, sep = Request.SEP_METHOD;
-        [this.path, meth] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+        let endp, sep = Request.SEP_ENDPOINT;
+        [this.path, endp] = path.includes(sep) ? splitLast(path, sep) : [path, '']
 
         // in Express, the web path always starts with at least on character, '/', even if the URL contains a domain alone;
         // this leading-trailing slash has to be truncated for correct segmentation and detection of an empty path
         if (this.path === '/') this.path = ''
-        this._pushMethod(method, '@' + meth)
+        this._pushMethod(method, sep + endp)
     }
 
-    _prepare(method) {
-        if (!method) return method
-        assert(method[0] === Request.SEP_METHOD, `method name must start with '${Request.SEP_METHOD}' (${method})`)
-        return method.slice(1)
+    _prepare(endpoint) {
+        if (!endpoint) return endpoint
+        let sep = Request.SEP_ENDPOINT
+        assert(endpoint.startsWith(sep), `endpoint must start with '${sep}' (${endpoint})`)
+        return endpoint.slice(sep.length)
     }
 
     _pushMethod(...methods) {
-        /* Append names to this.methods. Each name must start with '@' for easier detection of method names
+        /* Append names to this.methods. Each name must start with '::' for easier detection of method names
            in a source code - this prefix is truncated when appended to this.methods.
          */
         for (const method of methods) {
@@ -651,16 +652,16 @@ export class Item {
 
     /***  Routing & handling of requests (server-side)  ***/
 
-    url(method, args) {
-        /* `method` is an optional name of a web @method, `args` will be appended to URL as a query string. */
+    url(endpoint, args) {
+        /* `endpoint` is an optional name of an ::endpoint, `args` will be appended to URL as a query string. */
 
         let path = this._url_
         if (!path) {
             console.error(`missing _url_ for object [${this._id_}], introduce a delay or await _ready_.url`)
             return ''
         }
-        if (method) path += Request.SEP_METHOD + method                 // append @method and ?args if present...
-        if (args)   path += '?' + new URLSearchParams(args).toString()
+        if (endpoint) path += Request.SEP_ENDPOINT + endpoint               // append ::endpoint and ?args if present...
+        if (args) path += '?' + new URLSearchParams(args).toString()
         return path
     }
 

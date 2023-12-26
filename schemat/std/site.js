@@ -117,7 +117,7 @@ export class Site extends Directory {
 
     async find_item(path) {
         /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
-        // return this.route(new Request({path, method: '@item'}))
+        // return this.route(new Request({path, method: '::item'}))
         return this.route_internal(path)
     }
 
@@ -166,7 +166,7 @@ export class Site extends Directory {
         if (path.startsWith(local + '/'))
             return this.localImport(registry.directImportPath(path))
 
-        let source = await this.route_internal(path + '@text')
+        let source = await this.route_internal(path + '::text')
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
 
         return this.parseModule(source, path)

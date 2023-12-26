@@ -24,7 +24,7 @@ class ClientRegistry extends Registry {
     }
 
     directImportPath(path) { return this.remoteImportPath(path) }
-    remoteImportPath(path) { return path + '@import' }      //'@import@file'
+    remoteImportPath(path) { return path + '::import' }
 
     async import(path, name) {
         /* High-level import of a module and (optionally) its element, `name`, from a SUN path. */
