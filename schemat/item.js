@@ -290,6 +290,16 @@ export class Item {
     get _assets_()  { return this.CACHED_PROP(this._schema_.getAssets()) }
 
 
+    CACHED_PROP(value) {
+        /* Wrap a `value` of a getter of a special property to mark that the value should be cached and reused
+           after the first calculation. <undefined> is a valid value and is stored as ItemProxy.UNDEFINED
+           to avoid repeated calculation. If you don't want to cache <undefined> (or any other value),
+           return the original (unwrapped) value instead of calling CACHED_PROP().
+         */
+        return {[ItemProxy.CACHED]: true, value}
+    }
+
+
     /***  Internal properties  ***/
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
@@ -324,7 +334,7 @@ export class Item {
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
 
 
-    /***  Instantiation & initialization  ***/
+    /***  Instantiation  ***/
 
     constructor(_fail_ = true) {
         /* For internal use! Always call Item.create() instead of `new Item()`. */
@@ -391,12 +401,8 @@ export class Item {
         return id
     }
 
-    /***  Loading from DB  ***/
 
-    async refresh() {
-        /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
-        return registry.getItem(this._id_).load()
-    }
+    /***  Loading & initialization ***/
 
     async load(record = null /*ItemRecord*/) {
         /* Load full data of this item from `record` or from DB, if not loaded yet. Return this object.
@@ -531,31 +537,8 @@ export class Item {
         this.action = this._net_.create_triggers(this.constructor.actions)
     }
 
-    __init__() {}
-        /* Optional item-specific initialization after this._data_ is loaded.
-           Subclasses may override this method as either sync or async.
-         */
-    __done__() {}
-        /* Custom clean up to be executed after the item was evicted from the Registry cache. Can be async. */
 
-    instanceof(category) {
-        /* Check whether this item belongs to a `category`, or its subcategory.
-           All comparisons along the way use item IDs, not object identity. The item must be loaded.
-        */
-        return this._category_.inherits(category)
-    }
-    inherits(parent) {
-        /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
-           True if parent==this. All comparisons by item ID.
-         */
-        if (schemat.equivalent(this, parent)) return true
-        for (const proto of this._prototypes_)
-            if (proto.inherits(parent)) return true
-        return false
-    }
-
-
-    /***  READ access to properties  ***/
+    /***  Access to properties  ***/
 
     _compute_property(prop) {
         /* Compute a property, `prop`, and return an array of its values. The array consists of own data + inherited
@@ -597,46 +580,14 @@ export class Item {
 
     _own_values(prop)  { return this._data_.getValues(prop) }
 
-    CACHED_PROP(value) {
-        /* Wrap a `value` of a getter of a special property to mark that the value should be cached and reused
-           after the first calculation. <undefined> is a valid value and is stored as ItemProxy.UNDEFINED
-           to avoid repeated calculation. If you don't want to cache <undefined> (or any other value),
-           return the original (unwrapped) value instead of calling CACHED_PROP().
-         */
-        return {[ItemProxy.CACHED]: true, value}
+    async refresh() {
+        /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
+        return registry.getItem(this._id_).load()
     }
 
     dump_data() {
         /* Encode and stringify this._data_ through JSONx. Nested values are recursively encoded. */
         return JSONx.stringify(this._data_)
-    }
-
-
-    /***  Routing & handling of requests (server-side)  ***/
-
-    __handle__(request) {
-        /*
-        Serve a web or internal `request` by executing the corresponding service from this.net.
-        Query parameters are passed in `req.query`, as:
-        - a string if there's one occurrence of PARAM in a query string,
-        - an array [val1, val2, ...] if PARAM occurs multiple times.
-        */
-        let {methods, protocol} = request
-        if (!methods.length) methods = ['default']
-        let endpoints = methods.map(e => `${protocol}/${e}`)        // convert endpoint names to full protocol-qualified endpoints: GET/xxx
-
-        request.target = this
-
-        for (let endpoint of endpoints) {
-            let service = this._net_.resolve(endpoint)
-            if (service) {
-                // print(`handle() endpoint: ${endpoint}`)
-                request.endpoint = endpoint
-                return service.server(this, request)
-            }
-        }
-
-        request.throwNotFound(`no service found for [${endpoints}]`)
     }
 
     url(endpoint, args) {
@@ -668,11 +619,61 @@ export class Item {
         return brackets ? `[${stamp}]` : stamp
     }
 
+    instanceof(category) {
+        /* Check whether this item belongs to a `category`, or its subcategory.
+           All comparisons along the way use item IDs, not object identity. The item must be loaded.
+        */
+        return this._category_.inherits(category)
+    }
+
+    inherits(parent) {
+        /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
+           True if parent==this. All comparisons by item ID.
+         */
+        if (schemat.equivalent(this, parent)) return true
+        for (const proto of this._prototypes_)
+            if (proto.inherits(parent)) return true
+        return false
+    }
+
     mark_editable() {
         /* Mark this item as editable and remove it from the Registry. */
         registry.unregister(this)
         this._meta_.mutable = true
         return this
+    }
+
+
+    __init__() {}
+        /* Optional item-specific initialization after this._data_ is loaded.
+           Subclasses may override this method as either sync or async.
+         */
+    __done__() {}
+        /* Custom clean up to be executed after the item was evicted from the Registry cache. Can be async. */
+
+
+    __handle__(request) {
+        /* Serve a web or internal Request by executing the corresponding service from this.net.
+           Query parameters are passed in `req.query`, as:
+           - a string if there's one occurrence of PARAM in a query string,
+           - an array [val1, val2, ...] if PARAM occurs multiple times.
+        */
+        let {methods, protocol} = request
+        if (!methods.length) methods = ['default']
+        let endpoints = methods.map(e => `${protocol}/${e}`)        // convert endpoint names to full protocol-qualified endpoints: GET/xxx
+
+        request.target = this
+
+        for (let endpoint of endpoints) {
+            let service = this._net_.resolve(endpoint)
+            if (service) {
+                // print(`handle() endpoint: ${endpoint}`)
+                request.endpoint = endpoint
+                return service.server(this, request)
+            }
+        }
+
+        request.throwNotFound(`no service found for [${endpoints}]`)
     }
 
 
