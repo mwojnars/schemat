@@ -57,6 +57,11 @@
       info: List of [PROTOCOL, endpoint] pairs that define default endpoint(s) for
         objects of this category when requested via a URL with no explicit
         endpoint.
+      default:
+        GET: main
+        GET/2: admin
+        CALL: self
+        "@": Catalog
       "@": CATALOG
     html_assets:
       info: HTML code to be inserted in the html/head section of every page that is
