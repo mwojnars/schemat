@@ -45,7 +45,7 @@ export class DataAccessError extends DatabaseError { static message = "data acce
 export class DataConsistencyError extends DatabaseError { static message = "data consistency error" }
 
 export class ItemNotFound extends DatabaseError {
-    static message = "item ID not found in the database"
+    static message = "ID not found in the database"
 }
 
 export class NotFound extends BaseError {

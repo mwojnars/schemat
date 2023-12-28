@@ -99,6 +99,6 @@ export class DataRequest {
     // assert_valid_id(msg)        { return this.current_ring.assert_valid_id(this.args?.id, msg || `item ID is outside of the valid range for the ring`) }
 
     error_access(msg)           { throw new DataAccessError(msg, {id: this.args?.id}) }
-    error_item_not_found(msg)   { throw new ItemNotFound(msg, {id: this.args?.id}) }
+    error_id_not_found(msg)     { throw new ItemNotFound(msg, {id: this.args?.id}) }
 }
 

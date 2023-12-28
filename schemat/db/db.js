@@ -402,7 +402,7 @@ export class ServerDB {
         // print(`forward_down(${req.command}, ${req.args})`)
         let ring = this._prev(req.current_ring)
         if (ring) return ring.handle(req)
-        return req.error_item_not_found()
+        return req.error_id_not_found()
     }
 
     save(req) {
