@@ -661,10 +661,17 @@ export class Item {
         let {methods: names, protocol} = request
         request.target = this
 
-        if (!names.length) names = ['default']
-        // if (!names.length) names = this.default_endpoints.get_array(protocol)
+        if (!names.length) {
+            let defaults = this._category_?.default_endpoints.getValues(protocol) || []
+            names.push(...defaults)
+        }
 
-        if (!names.length) return request.throwNotFound(`endpoint name not specified`)
+        if (!names.length) {
+            let defaults = {GET: ['main', 'admin'], CALL: ['self']}
+            names.push(...defaults[protocol] || [])
+        }
+
+        if (!names.length) return request.throwNotFound(`endpoint not specified (protocol ${protocol}`)
 
         let endpoints = names.map(e => `${protocol}/${e}`)        // convert endpoint names to full protocol-qualified endpoints: GET/xxx
 
@@ -755,9 +762,9 @@ Item.create_api(
     {
         // http endpoints...
 
-        'CALL/default': new InternalService(function() { return this }),
+        'CALL/self':    new InternalService(function() { return this }),
 
-        'GET/default':  new ReactPage(ItemAdminView),
+        'GET/admin':    new ReactPage(ItemAdminView),
         'GET/json':     new JsonService(function() { return this._record_.encoded() }),
 
         // item's edit actions for use in the admin interface...
@@ -1014,7 +1021,7 @@ export class Category extends Item {
 
 Category.create_api(
     {
-        'GET/default':  new ReactPage(CategoryAdminView),
+        'GET/admin':    new ReactPage(CategoryAdminView),
         'GET/import':   new HttpService(function (request)
             {
                 /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
