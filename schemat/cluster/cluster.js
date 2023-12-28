@@ -27,7 +27,7 @@ export class Cluster { //extends Item {
         {file: DB_ROOT + '/db-cluster.yaml', start_iid: 200, stop_iid: 300}
 
     static ring_specs = [
-        {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
+        {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: false},
         {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
         Cluster.cluster_ring_spec,
         {item: 200, readonly: false},

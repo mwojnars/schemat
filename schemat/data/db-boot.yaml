@@ -7,13 +7,12 @@
   cache_ttl: 60
   fields:
     _container_:
-      # info: to be automatically copied from global defaults (todo)
       default:
         "@": 1014
       "@": ITEM
     item_class:
-        info: Javascript class for the objects of this category.
-        "@": CLASS
+      info: Javascript class for the objects of this category.
+      "@": CLASS
     class_path:
       info: SUN path to a Javascript file that contains a (base) class for this
         category. May contain an optional class name appended after colon ':'.
@@ -51,6 +50,13 @@
         to be rendered. Alternatively, the code of each view may consist of a
         method header, view() {...}, and be accompanied by supporting methods:
         title(), assets() - like in a class body."
+      "@": CATALOG
+    default_endpoints:
+      values:
+        "@": STRING
+      info: List of [PROTOCOL, endpoint] pairs that define default endpoint(s) for
+        objects of this category when requested via a URL with no explicit
+        endpoint.
       "@": CATALOG
     html_assets:
       info: HTML code to be inserted in the html/head section of every page that is
