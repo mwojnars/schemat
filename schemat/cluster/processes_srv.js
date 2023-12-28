@@ -148,7 +148,7 @@ export class AdminProcess extends BackendProcess {
         let db = this.db
         let item = await registry.getLoaded(id)
         let ring = await db.find_ring({name: ring_name})
-        let new_id = await ring.insert(null, item.dumpData())
+        let new_id = await ring.insert(null, item.dump_data())
 
         await db.delete(id)
         await this._update_references(id, new_id)
@@ -206,7 +206,7 @@ export class AdminProcess extends BackendProcess {
                 let item = await Item.from_data(id, data)
 
                 print(`reinserting item [${id}]...`)
-                let new_id = await ring.insert(null, item.dumpData())
+                let new_id = await ring.insert(null, item.dump_data())
                 // item = await Item.from_data(new_id, data)
 
                 print(`...new id=[${new_id}]`)

@@ -129,7 +129,7 @@ export class Ring extends Item {
         req = req || new DataRequest()
         let item = T.isNumber(id_or_item) ? null : id_or_item
         let id = item ? item._id_ : id_or_item
-        if (!data) data = item.dumpData()
+        if (!data) data = item.dump_data()
         let edits = [new EditData(data)]
         return this.handle(req.safe_step(this, 'update', {id, edits}))
     }
@@ -304,7 +304,7 @@ export class ServerDB {
 
     async update_full(item) {
         /* Replace all data inside the item's record in DB with item.data. */
-        return this.update(item._id_, new EditData(item.dumpData()))
+        return this.update(item._id_, new EditData(item.dump_data()))
     }
 
     async insert(item, ring_name = null) {
@@ -312,7 +312,7 @@ export class ServerDB {
            it is written to item._id_. `ring` is an optional name of a ring to use.
          */
         let id = item._id_          // can be undefined
-        let req = new DataRequest(this, 'insert', {id, data: item.dumpData()})
+        let req = new DataRequest(this, 'insert', {id, data: item.dump_data()})
         let ring
 
         if (ring_name) {                                            // find the ring by name
@@ -350,7 +350,7 @@ export class ServerDB {
     //     // 1st phase: insert stubs, each stub is inserted to the highest possible ring
     //     for (let item of items) {
     //         let id = item._id_
-    //         let data = ''  // id > 0 ? empty_data : item.dumpData()
+    //         let data = ''  // id > 0 ? empty_data : item.dump_data()
     //         let req2 = req.safe_step(null, 'insert', {id, data})     // insert stubs with empty data
     //         let ring = rings.find(r => r.writable(id))
     //         if (!ring) return req2.error_access(`cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)

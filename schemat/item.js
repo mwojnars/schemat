@@ -606,8 +606,8 @@ export class Item {
         return {[ItemProxy.CACHED]: true, value}
     }
 
-    dumpData() {
-        /* Dump this._data_ to a JSONx string with encoding of nested values. */
+    dump_data() {
+        /* Encode and stringify this._data_ object through JSONx. Nested values are recursively encoded. */
         return JSONx.stringify(this._data_)
     }
 
