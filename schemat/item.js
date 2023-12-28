@@ -658,11 +658,15 @@ export class Item {
            - a string if there's one occurrence of PARAM in a query string,
            - an array [val1, val2, ...] if PARAM occurs multiple times.
         */
-        let {methods, protocol} = request
-        if (!methods.length) methods = ['default']
-        let endpoints = methods.map(e => `${protocol}/${e}`)        // convert endpoint names to full protocol-qualified endpoints: GET/xxx
-
+        let {methods: names, protocol} = request
         request.target = this
+
+        if (!names.length) names = ['default']
+        // if (!names.length) names = this.default_endpoints.get_array(protocol)
+
+        if (!names.length) return request.throwNotFound(`endpoint name not specified`)
+
+        let endpoints = names.map(e => `${protocol}/${e}`)        // convert endpoint names to full protocol-qualified endpoints: GET/xxx
 
         for (let endpoint of endpoints) {
             let service = this._net_.resolve(endpoint)
@@ -673,7 +677,7 @@ export class Item {
             }
         }
 
-        request.throwNotFound(`no service found for [${endpoints}]`)
+        request.throwNotFound(`endpoint(s) not found in the target object: [${endpoints}]`)
     }
 
 
