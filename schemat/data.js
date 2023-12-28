@@ -156,9 +156,13 @@ export class Catalog {
     }
 
     constructor(...entries) {
+        /* Each argument can be a Catalog, or an object whose attributes will be used as entries,
+           or a [key, value] pair, or a {key, value} entry.
+         */
         entries = entries.map(ent =>
                         (ent instanceof Catalog) ? ent._entries
                         : T.isDict(ent) ? Object.entries(ent).map(([key, value]) => ({key, value}))
+                        : T.isArray(ent) ? {key: ent[0], value: ent[1]}
                         : ent
                     )
         this.init(concat(entries), true)
