@@ -607,7 +607,7 @@ export class Item {
     }
 
     dump_data() {
-        /* Encode and stringify this._data_ object through JSONx. Nested values are recursively encoded. */
+        /* Encode and stringify this._data_ through JSONx. Nested values are recursively encoded. */
         return JSONx.stringify(this._data_)
     }
 
