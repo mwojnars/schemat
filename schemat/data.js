@@ -579,9 +579,27 @@ export class Catalog {
             return entry
         })
 
-        if (!this.hasUniqueKeys()) return entries
+        assert(!this.hasAnnot())
+
+        if (!this.hasUniqueKeys()) {
+            // if (this.hasAnnot()) return entries
+            let counts = new Map()                                  // no. of occurrences of each key, so far
+
+            // convert entries with repeated values to [key/X, value] tuples
+            entries = entries.map(([key, value]) => {
+                assert(!key.includes('/'))
+                if (counts.has(key)) {
+                    let rep = counts.get(key) + 1
+                    counts.set(key, rep)
+                    return [`${key}/${rep}`, value]
+                }
+                counts.set(key, 1)
+                return [key, value]
+            })
+        }
 
         let irregular = entries.filter(e => e.length !== 2 || typeof e[0] !== 'string')
+        assert(irregular.length === 0)
 
         return irregular.length > 0 ? entries : Object.fromEntries(entries)
     }
