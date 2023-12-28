@@ -170,13 +170,10 @@
     "@": 1004
   "@": Data
 - __id: 1016
-  =:
-    - - title
-      - Ala ma kota Sierściucha i psa Kłapoucha.
-    - - title
-      - drugi tytuł...
-    - - _category_
-      - "@": 1000
+  title: Ala ma kota Sierściucha i psa Kłapoucha.
+  title/2: drugi tytuł...
+  _category_:
+    "@": 1000
   "@": Data
 - __id: 1017
   title: ąłęÓŁŻŹŚ
