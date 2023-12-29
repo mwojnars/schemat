@@ -274,6 +274,16 @@ export class Types {
     static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
     static isPromise      = (obj) => (obj instanceof Promise)
 
+    static getAllProperties = (obj) => {
+        /* Return an array of all property names of `obj`, including inherited ones, also the ones from Object like toString(), constructor etc. */
+        let attrs = []
+        do {
+            attrs.push(...Object.getOwnPropertyNames(obj))
+            obj = Object.getPrototypeOf(obj)
+        } while (obj)
+        return Array.from(new Set(attrs))
+    }
+
     static deleteFirst = (arr, x) => {
         let i = arr.indexOf(x);
         if (i > -1) arr.splice(i, 1);
