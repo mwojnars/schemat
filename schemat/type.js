@@ -964,7 +964,7 @@ export class CATALOG extends Type {
         //       through combine() of props.values type
     }
 
-    displayTable(props) { return e(this.constructor.Table, {path: [], type: this, ...props}) }
+    display_table(props) { return e(this.constructor.Table, {path: [], type: this, ...props}) }
 
     static KeyWidget = class extends STRING.Widget {
         /* A special type of STRING widget for displaying keys in a catalog. */
@@ -1393,7 +1393,7 @@ export class DATA extends CATALOG {
         return fields.sort()
     }
 
-    displayTable(props)     { return super.displayTable({value: props.item._data_, start_color: 1, ...props}) }
+    display_table(props)   { return super.display_table({value: props.item._data_, start_color: 1, ...props}) }
 }
 
 export class DATA_GENERIC extends DATA {

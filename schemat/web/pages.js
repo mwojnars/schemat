@@ -265,7 +265,7 @@ export class ItemAdminView extends ReactPage.View {
         /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
         // let changes = new Changes(this)
         return FRAGMENT(
-                this._schema_.displayTable({item: this}),
+                this._schema_.display_table({item: this}),
                 // e(changes.Buttons.bind(changes)),
             )
     }
