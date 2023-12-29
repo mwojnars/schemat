@@ -964,7 +964,7 @@ export class CATALOG extends Type {
         //       through combine() of props.values type
     }
 
-    displayTable(props) { return e(this.constructor.Table, {...props, path: [], type: this}) }
+    displayTable(props) { return e(this.constructor.Table, {path: [], type: this, ...props}) }
 
     static KeyWidget = class extends STRING.Widget {
         /* A special type of STRING widget for displaying keys in a catalog. */
@@ -997,7 +997,7 @@ export class CATALOG extends Type {
 }
 
 CATALOG.Table = class extends Component {
-    /* A set of function components for displaying a Catalog in a tabular form. */
+    /* A set of functional React components for displaying a Catalog in a tabular form. */
 
     static scope = 'Type-CATALOG'
     static style = () => this.safeCSS({stopper: '|'})
@@ -1393,7 +1393,7 @@ export class DATA extends CATALOG {
         return fields.sort()
     }
 
-    displayTable(props)     { return super.displayTable({...props, value: props.item._data_, start_color: 1}) }
+    displayTable(props)     { return super.displayTable({value: props.item._data_, start_color: 1, ...props}) }
 }
 
 export class DATA_GENERIC extends DATA {
