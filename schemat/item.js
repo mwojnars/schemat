@@ -660,24 +660,11 @@ export class Item {
         */
         request.target = this
 
-        // let {methods: names, protocol} = request
-        //
-        // if (!names.length) {
-        //     let defaults = this._category_?.default_endpoints.getValues(protocol) || []
-        //     names.push(...defaults)
-        // }
-        //
-        // if (!names.length) {
-        //     let defaults = {GET: ['main', 'admin'], CALL: ['self']}
-        //     names.push(...defaults[protocol] || [])
-        // }
-        //
-        // if (!names.length) return request.throwNotFound(`endpoint not specified (protocol ${protocol}`)
-
         // convert endpoint names to full protocol-qualified endpoints: GET/xxx
         let names = this._get_endpoints(request)
         let endpoints = names.map(e => `${request.protocol}/${e}`)
 
+        // find the first endpoint that has a corresponding service defined and launch its server() handler
         for (let endpoint of endpoints) {
             let service = this._net_.resolve(endpoint)
             if (service) {
@@ -691,7 +678,7 @@ export class Item {
     }
 
     _get_endpoints(request) {
-        /* Return a list of endpoints to be tried for this request. */
+        /* Return a list of endpoint names (no protocol included) to be tried for this request. */
 
         // use request's endpoint if specified in the URL (::endpoint)
         let {methods: endpoints, protocol} = request
