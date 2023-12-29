@@ -251,8 +251,6 @@ export class ItemAdminView extends ReactPage.View {
         )
     }
 
-    // standard components for Item pages...
-
     Title() {
         /* <H1> element to be displayed as a page title. */
         let name = this.name
@@ -272,14 +270,6 @@ export class ItemAdminView extends ReactPage.View {
             )
     }
 }
-
-
-// _mui_test() {
-//     return e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST')
-//     // WARN: when _mui_test() is used repeatedly in Page, a <style> block is output EACH time (!!!)
-//     //       A class name of the form .css-HASH is assigned, where HASH is a stable 6-letter hash of the styles
-// }
-
 
 /**********************************************************************************************************************/
 
@@ -366,3 +356,12 @@ export class CategoryAdminView extends ItemAdminView {
         ))
     }
 }
+
+
+
+// _mui_test() {
+//     return e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST')
+//     // WARN: when _mui_test() is used repeatedly in Page, a <style> block is output EACH time (!!!)
+//     //       A class name of the form .css-HASH is assigned, where HASH is a stable 6-letter hash of the styles
+// }
+
