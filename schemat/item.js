@@ -658,22 +658,25 @@ export class Item {
            - a string if there's one occurrence of PARAM in a query string,
            - an array [val1, val2, ...] if PARAM occurs multiple times.
         */
-        let {methods: names, protocol} = request
         request.target = this
 
-        if (!names.length) {
-            let defaults = this._category_?.default_endpoints.getValues(protocol) || []
-            names.push(...defaults)
-        }
+        // let {methods: names, protocol} = request
+        //
+        // if (!names.length) {
+        //     let defaults = this._category_?.default_endpoints.getValues(protocol) || []
+        //     names.push(...defaults)
+        // }
+        //
+        // if (!names.length) {
+        //     let defaults = {GET: ['main', 'admin'], CALL: ['self']}
+        //     names.push(...defaults[protocol] || [])
+        // }
+        //
+        // if (!names.length) return request.throwNotFound(`endpoint not specified (protocol ${protocol}`)
 
-        if (!names.length) {
-            let defaults = {GET: ['main', 'admin'], CALL: ['self']}
-            names.push(...defaults[protocol] || [])
-        }
-
-        if (!names.length) return request.throwNotFound(`endpoint not specified (protocol ${protocol}`)
-
-        let endpoints = names.map(e => `${protocol}/${e}`)        // convert endpoint names to full protocol-qualified endpoints: GET/xxx
+        // convert endpoint names to full protocol-qualified endpoints: GET/xxx
+        let names = this._get_endpoints(request)
+        let endpoints = names.map(e => `${request.protocol}/${e}`)
 
         for (let endpoint of endpoints) {
             let service = this._net_.resolve(endpoint)
@@ -685,6 +688,25 @@ export class Item {
         }
 
         request.throwNotFound(`endpoint(s) not found in the target object: [${endpoints}]`)
+    }
+
+    _get_endpoints(request) {
+        /* Return a list of endpoints to be tried for this request. */
+
+        // use request's endpoint if specified in the URL (::endpoint)
+        let {methods: endpoints, protocol} = request
+        if (endpoints.length) return endpoints
+
+        // otherwise, use category defaults
+        endpoints = this._category_?.default_endpoints.getValues(protocol) || []
+        if (endpoints.length) return endpoints
+
+        // otherwise, use global defaults
+        let defaults = {GET: ['main', 'admin'], CALL: ['self']}
+        endpoints = defaults[protocol] || []
+        if (endpoints.length) return endpoints
+
+        request.throwNotFound(`endpoint not specified (protocol ${protocol})`)
     }
 
 
