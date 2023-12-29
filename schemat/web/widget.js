@@ -68,9 +68,11 @@ export class Component extends React.Component {
 
     constructor(props) {
         super(props)
+
+        // for CSS scoping, replace this.render() with a wrapper that adds an extra DIV around the rendered element
         if (this.constructor.scope) {
             this._renderOriginal_ = this.render.bind(this)
-            this.render = this._renderReplacement_.bind(this)
+            this.render = this._render_wrapped.bind(this)
         }
     }
 
@@ -90,6 +92,16 @@ export class Component extends React.Component {
         let chain = proto._prototypes()
         chain.push(this)
         return chain
+    }
+
+    _render_wrapped() {
+        /* Wrap up the element returned by this.render() in a <div> of an appropriate "start-at" css class(es).
+           This method is assigned to this.render in the constructor, so that subclasses can still
+           override the render() as usual, but React calls this wrapper instead.
+         */
+        let elem = this._renderOriginal_()
+        if (elem === null || typeof elem === 'string') return elem
+        return this._wrap(elem, true)
     }
 
     _wrap(elem, prolog = true) {
@@ -126,15 +138,6 @@ export class Component extends React.Component {
         // let embedDisplay ...
         if (typeof component === 'function') component = e(component, ...args)      // convert a component (class/function) to an element
         return this._wrap(component, false)
-    }
-    _renderReplacement_() {
-        /* Wrap up the element returned by this.render() in a <div> of an appropriate "start-at" css class(es).
-           This method is assigned to this.render in the constuctor, so that subclasses can still
-           override the render() as usual, but that React calls this wrapper instead.
-         */
-        let elem = this._renderOriginal_()
-        if (elem === null || typeof elem === 'string') return elem
-        return this._wrap(elem, true)
     }
 
     static safeCSS(params = {}, css) {

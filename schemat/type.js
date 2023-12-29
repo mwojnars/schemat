@@ -997,7 +997,7 @@ export class CATALOG extends Type {
 }
 
 CATALOG.Table = class extends Component {
-    /* A set of functional React components for displaying a Catalog in a tabular form. */
+    /* React class component that displays a Catalog in a tabular form. */
 
     static scope = 'Type-CATALOG'
     static style = () => this.safeCSS({stopper: '|'})
@@ -1309,7 +1309,7 @@ CATALOG.Table = class extends Component {
 
     Catalog({item, value, type, path, color, start_color}) {
         /* If `start_color` is undefined, the same `color` is used for all rows. */
-        assert(value  instanceof Catalog)
+        assert(value instanceof Catalog)
         assert(type.instanceof(CATALOG))
 
         let catalog  = value
