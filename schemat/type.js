@@ -477,7 +477,7 @@ export class TEXT extends Textual
 {
     static Widget = class extends Textual.Widget {
 
-        static scope = 'Widget-TEXT'
+        static scope = 'TEXT'
         static style = () => this.safeCSS()
         `
             .editor {
@@ -549,7 +549,7 @@ export class CODE extends TEXT
         <script>ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/")</script>
         `
 
-        static scope = 'Widget-CODE'
+        static scope = 'CODE'
         static style = () => this.safeCSS()
         `
         .ace-viewer, .ace-editor {
@@ -716,7 +716,7 @@ export class TYPE extends GENERIC {
     static defaultProps = {class: Type}
 
     static Widget = class extends GENERIC.Widget {
-        scope = 'Type-TYPE'
+        scope = 'TYPE'
         static style = () => this.safeCSS({stopper: '|'})
         `
             .default|   { color: #888; }
@@ -999,7 +999,7 @@ export class CATALOG extends Type {
 CATALOG.Table = class extends Component {
     /* React class component that displays a Catalog in a tabular form. */
 
-    static scope = 'Type-CATALOG'
+    static scope = 'CATALOG'
     static style = () => this.safeCSS({stopper: '|'})
     `
         .catalog-d0       { width: 100%; font-size: 1rem; }
