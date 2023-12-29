@@ -1079,13 +1079,6 @@ CATALOG.Table = class extends Component {
         undelete: ↺ U+21BA
     */
 
-    constructor(props) {
-        super(props)
-        this.EntryAtomic = this.EntryAtomic.bind(this)
-        this.EntrySubcat = this.EntrySubcat.bind(this)
-        this.Catalog = this.Catalog.bind(this)
-    }
-
     move(up, down) {
         let hide = st({visibility: 'hidden'})
         return DIV(cl('move'),

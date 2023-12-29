@@ -74,6 +74,11 @@ export class Component extends React.Component {
             this._renderOriginal_ = this.render.bind(this)
             this.render = this._render_wrapped.bind(this)
         }
+
+        // bind all the methods (own or inherited) that start with a capital letter, possibly prefixed by underscore(s)
+        // - they are assumed to be React functional components
+        for (let name of Object.getOwnPropertyNames(this.constructor.prototype))
+            if (name.match(/^_*[A-Z]/)) this[name] = this[name].bind(this)
     }
 
     static collect(assets) {
