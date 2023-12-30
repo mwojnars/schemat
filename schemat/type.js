@@ -187,7 +187,7 @@ export class Type {
 
     // Clients should call getAssets() and display(), other methods & attrs are for internal use ...
 
-    static Widget       // "view-edit" widget that displays and lets users edit values of this type
+    // static Widget       // "view-edit" widget that displays and lets users edit values of this type
 
     getAssets() {
         /* Walk through all nested Type objects, collect their CSS styles and assets and return as an Assets instance.
@@ -1121,7 +1121,7 @@ class CatalogTable extends Component {
                     ops.insert && this.insert(ops.insert),
                     ops.delete && this.delete(ops.delete),
                     flashBox, errorBox,
-        )
+                )
     }
 
     static KeyWidget = class extends STRING.Widget {
@@ -1143,7 +1143,7 @@ class CatalogTable extends Component {
                     onBlur:         e => this.reject(e),
                     autoFocus:      true,
                     // size:           5,                  // enforces a list box instead of a dropdown, no need for "select key..." pseudo-option
-                    }, options)
+            }, options)
         }
     }
 
