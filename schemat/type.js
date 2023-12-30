@@ -929,7 +929,7 @@ export class CATALOG extends Type {
     collect(assets) {
         this.props.keys.collect(assets)
         this.props.values.collect(assets)
-        this.constructor.Table.collect(assets)
+        CatalogTable.collect(assets)
     }
 
     toString() {
@@ -964,7 +964,7 @@ export class CATALOG extends Type {
         //       through combine() of props.values type
     }
 
-    display_table(props) { return e(this.constructor.Table, {path: [], type: this, ...props}) }
+    display_table(props) { return e(CatalogTable, {path: [], type: this, ...props}) }
 
     static KeyWidget = class extends STRING.Widget {
         /* A special type of STRING widget for displaying keys in a catalog. */
@@ -996,7 +996,7 @@ export class CATALOG extends Type {
     }
 }
 
-CATALOG.Table = class extends Component {
+class CatalogTable extends Component {
     /* React class component that displays a Catalog in a tabular form. */
 
     static scope = 'CATALOG'
@@ -1376,7 +1376,7 @@ export class DATA extends CATALOG {
     collect(assets) {
         for (let type of this._all_subtypes())
             type.collect(assets)
-        this.constructor.Table.collect(assets)
+        CatalogTable.collect(assets)
     }
     _all_subtypes() { return Object.values(this.props.fields) }
 
