@@ -965,35 +965,6 @@ export class CATALOG extends Type {
     }
 
     display_table(props) { return e(CatalogTable, {path: [], type: this, ...props}) }
-
-    static KeyWidget = class extends STRING.Widget {
-        /* A special type of STRING widget for displaying keys in a catalog. */
-        static defaultProps = {
-            keyNames: undefined,    // array of predefined key names to choose from
-        }
-        empty(value)   { return !value && I(cl('key-missing'), "(empty)") }
-        editor() {
-            let {keyNames} = this.props
-            if (!keyNames) return super.editor()
-            // let options = keyNames.map(key => OPTION({value: key}, key))
-            let options = [OPTION("select key ...", {value: ""}), ...keyNames.map(key => OPTION({value: key}, key))]
-            return SELECT({
-                    defaultValue:   this.default,
-                    ref:            this.input,
-                    onKeyDown:      e => this.key(e),
-                    onChange:       e => e.target.value === "" ?  this.reject(e) : this.accept(e),
-                    onBlur:         e => this.reject(e),
-                    autoFocus:      true,
-                    // size:           5,                  // enforces a list box instead of a dropdown, no need for "select key..." pseudo-option
-                    }, options)
-        }
-    }
-    static NewKeyWidget = class extends CATALOG.KeyWidget {
-        static defaultProps = {
-            editing:  true,         // this widget starts in edit mode
-        }
-        reject(e)   { this.props.save(undefined) }      // save() must be called to inform that no initial value was provided
-    }
 }
 
 class CatalogTable extends Component {
@@ -1139,7 +1110,7 @@ class CatalogTable extends Component {
         let [error, errorBox] = this.error()
 
         let {initKey, keyNames} = ops
-        let widget = (entry.id === 'new') ? CATALOG.NewKeyWidget : CATALOG.KeyWidget
+        let widget = (entry.id === 'new') ? CatalogTable.NewKeyWidget : CatalogTable.KeyWidget
         let props  = {value: current, flash, error, save: initKey || save, keyNames, type: generic_string}
 
         return FRAGMENT(
@@ -1151,6 +1122,36 @@ class CatalogTable extends Component {
                     ops.delete && this.delete(ops.delete),
                     flashBox, errorBox,
         )
+    }
+
+    static KeyWidget = class extends STRING.Widget {
+        /* A special type of STRING widget for displaying keys in a catalog. */
+        static defaultProps = {
+            keyNames: undefined,    // array of predefined key names to choose from
+        }
+        empty(value)   { return !value && I(cl('key-missing'), "(empty)") }
+        editor() {
+            let {keyNames} = this.props
+            if (!keyNames) return super.editor()
+            // let options = keyNames.map(key => OPTION({value: key}, key))
+            let options = [OPTION("select key ...", {value: ""}), ...keyNames.map(key => OPTION({value: key}, key))]
+            return SELECT({
+                    defaultValue:   this.default,
+                    ref:            this.input,
+                    onKeyDown:      e => this.key(e),
+                    onChange:       e => e.target.value === "" ?  this.reject(e) : this.accept(e),
+                    onBlur:         e => this.reject(e),
+                    autoFocus:      true,
+                    // size:           5,                  // enforces a list box instead of a dropdown, no need for "select key..." pseudo-option
+                    }, options)
+        }
+    }
+
+    static NewKeyWidget = class extends CatalogTable.KeyWidget {
+        static defaultProps = {
+            editing:  true,         // this widget starts in edit mode
+        }
+        reject(e)   { this.props.save(undefined) }      // save() must be called to inform that no initial value was provided
     }
 
     EntryAtomic({item, path, entry, type, ops}) {
