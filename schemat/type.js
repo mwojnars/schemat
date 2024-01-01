@@ -202,9 +202,9 @@ export class Type {
         this.constructor.Widget.collect(assets)
     }
 
-    display(props) {
-        return e(this.constructor.Widget, {...props, type: this})
-    }
+    // display(props) {
+    //     return e(this.constructor.Widget, {...props, type: this})
+    // }
 }
 
 
@@ -454,7 +454,7 @@ export class Textual extends Primitive {
         // charcase: false,         // 'upper'/'lower' - only upper/lower case characters allowed
     }
 
-    static Widget = class extends Primitive.Widget {
+    static Widget = class extends Type.Widget {
         empty(value)    { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
         encode(v)       { return v }
         decode(v)       { return v }
@@ -1160,7 +1160,7 @@ class CatalogTable extends Component {
            `entry.value` and `type` can be undefined for a newly created entry, then no value widget is displayed.
            If value is undefined, but type is present, the value is displayed as "missing".
          */
-        // useState() treats function arguments in a special way, that's why we have to wrap up classes and functions with an array
+        // useState() treats function arguments in a special way, that's why we must wrap up classes and functions in an array
         let wrap = (T.isClass(entry.value) || T.isFunction(entry.value))
 
         let [value, setValue] = useState(wrap ? [entry.value] : entry.value)
@@ -1176,11 +1176,15 @@ class CatalogTable extends Component {
         let [error, errorBox] = this.error()
         let props = {value: wrap && T.isArray(value) ? value[0] : value,
                      editing: isnew,                    // a newly created entry (no value) starts in edit mode
-                     save, flash, error}
+                     save, flash, error, type}
+
+        // let valueElement = type && this.embed(type.display(props))
+        // let valueElement = type && this.embed(type.Widget.bind(type), props)
+        let valueElement = type && this.embed(type.constructor.Widget, props)
 
         return DIV(cl('entry-head'),
                   DIV(cl('cell cell-key'),   this.key(entry, type?.props.info, ops)),
-                  DIV(cl('cell cell-value'), type && this.embed(type.display(props)), flashBox, errorBox),
+                  DIV(cl('cell cell-value'), valueElement, flashBox, errorBox),
                )
     }
 

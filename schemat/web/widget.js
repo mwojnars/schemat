@@ -132,7 +132,7 @@ export class Component extends React.Component {
     }
 
     embed(component, ...args) {
-        /* Embed another React `component` (can be an element) into this one by wrapping it up
+        /* Safely embed a React `component` (or element) inside this one by wrapping it up
            in a "stop-at" <div> with an appropriate css class for modular scoping.
            Also, check if `this` declares the `component` in its assets and throw an exception if not (TODO).
            IMPORTANT: clients should always use this method instead of createElement() to insert Components into a document;
