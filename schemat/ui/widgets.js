@@ -5,7 +5,7 @@ import {Catalog} from '../data.js'
 
 import {MaterialUI} from "./resources.js";
 import {e, cl, st, createRef, useState, ItemLoadingHOC} from './react-utils.js'
-import {A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP} from './react-utils.js'
+import {A, B, I, P, PRE, DIV, SPAN, INPUT, SELECT, OPTION, TEXTAREA, FLEX, FRAGMENT, HTML, NBSP} from './react-utils.js'
 
 import {Component} from "./component.js"
 
