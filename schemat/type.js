@@ -183,11 +183,17 @@ export class Type {
     }
 
 
-    /***  UI  ***/
+    /***  User Interface  ***/
 
     // Clients should call getAssets() and display(), other methods & attrs are for internal use ...
 
-    // static Widget       // "view-edit" widget that displays and lets users edit values of this type
+    get Widget() {
+        /* React component that displays a value of this Type and allows its editing.
+           Can be a class component, or a function component, or a plain method that takes `props` and returns
+           a React element (such method is effectively a function component).
+         */
+        return this.constructor.Widget
+    }
 
     getAssets() {
         /* Walk through all nested Type objects, collect their CSS styles and assets and return as an Assets instance.
@@ -197,14 +203,11 @@ export class Type {
         this.collect(assets)
         return assets
     }
+
     collect(assets) {
         /* For internal use. Override in subclasses to provide a custom way of collecting CSS styles & assets from all nested schemas. */
-        this.constructor.Widget.collect(assets)
+        this.Widget.collect(assets)
     }
-
-    // display(props) {
-    //     return e(this.constructor.Widget, {...props, type: this})
-    // }
 }
 
 
@@ -1178,9 +1181,7 @@ class CatalogTable extends Component {
                      editing: isnew,                    // a newly created entry (no value) starts in edit mode
                      save, flash, error, type}
 
-        // let valueElement = type && this.embed(type.display(props))
-        // let valueElement = type && this.embed(type.Widget.bind(type), props)
-        let valueElement = type && this.embed(type.constructor.Widget, props)
+        let valueElement = type && this.embed(type.Widget, props)
 
         return DIV(cl('entry-head'),
                   DIV(cl('cell cell-key'),   this.key(entry, type?.props.info, ops)),
