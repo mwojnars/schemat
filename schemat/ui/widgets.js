@@ -110,3 +110,45 @@ export class TextualWidget extends TypeWidget {
     encode(v)       { return v }
     decode(v)       { return v }
 }
+
+/**********************************************************************************************************************/
+
+export class TEXT_Widget extends TextualWidget {
+
+    static scope = 'TEXT'
+    static style = () => this.safeCSS()
+    `
+        .editor {
+            min-height: 2em;
+            height: 10em;
+            width: 100%;
+            outline: none;
+            resize: vertical;
+        }
+    `
+    //     .use-scroll {
+    //         overflow: auto;   /*scroll*/
+    //         max-height: 12rem;
+    //         border-bottom: 1px solid rgba(0,0,0,0.1);
+    //         border-right:  1px solid rgba(0,0,0,0.1);
+    //         resize: vertical;
+    //     }
+    //     .use-scroll[style*="height"] {
+    //         max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
+    //     }
+
+    viewer() { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
+    editor() {
+        return TEXTAREA({
+            className:      'editor',
+            defaultValue:   this.default,
+            ref:            this.input,
+            onKeyDown:      e => this.key(e),
+            autoFocus:      true,
+            rows:           1,
+            // onBlur:         e => this.reject(e),
+            // wrap:           'off',
+        })
+    }
+    keyAccept(e) { return e.key === "Enter" && e.ctrlKey }       //e.shiftKey
+}

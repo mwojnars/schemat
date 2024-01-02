@@ -9,7 +9,7 @@ import {DataError, NotImplemented, ValueError} from './common/errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
 import { Assets, Component } from './ui/component.js'
-import {TypeWidget, TextualWidget} from './ui/widgets.js'
+import {TypeWidget, TextualWidget, TEXT_Widget} from './ui/widgets.js'
 import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
 
 // print('Temporal:', Temporal)
@@ -370,11 +370,6 @@ export class Textual extends Primitive {
     }
 
     static Widget = TextualWidget
-    // static Widget = class extends TypeWidget {
-    //     empty(value)    { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
-    //     encode(v)       { return v }
-    //     decode(v)       { return v }
-    // }
 }
 
 export class STRING extends Textual {
@@ -391,46 +386,9 @@ export class URL extends STRING {
 
 export class TEXT extends Textual
 {
-    static Widget = class extends TextualWidget {
-
-        static scope = 'TEXT'
-        static style = () => this.safeCSS()
-        `
-            .editor {
-                min-height: 2em;
-                height: 10em;
-                width: 100%;
-                outline: none;
-                resize: vertical;
-            }
-        `
-        //     .use-scroll {
-        //         overflow: auto;   /*scroll*/
-        //         max-height: 12rem;
-        //         border-bottom: 1px solid rgba(0,0,0,0.1);
-        //         border-right:  1px solid rgba(0,0,0,0.1);
-        //         resize: vertical;
-        //     }
-        //     .use-scroll[style*="height"] {
-        //         max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
-        //     }
-
-        viewer() { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
-        editor() {
-            return TEXTAREA({
-                className:      'editor',
-                defaultValue:   this.default,
-                ref:            this.input,
-                onKeyDown:      e => this.key(e),
-                autoFocus:      true,
-                rows:           1,
-                // onBlur:         e => this.reject(e),
-                // wrap:           'off',
-            })
-        }
-        keyAccept(e) { return e.key === "Enter" && e.ctrlKey }       //e.shiftKey
-    }
+    static Widget = TEXT_Widget
 }
+
 export class CODE extends TEXT
 {
     /*
@@ -453,7 +411,7 @@ export class CODE extends TEXT
       editor.focus()
     */
 
-    static Widget = class extends TEXT.Widget {
+    static Widget = class extends TEXT_Widget {
         static assets =                                             // import ACE Editor
         `
         <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ace.min.js" integrity="sha512-jB1NOQkR0yLnWmEZQTUW4REqirbskxoYNltZE+8KzXqs9gHG5mrxLR5w3TwUn6AylXkhZZWTPP894xcX/X8Kbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -612,7 +570,7 @@ export class GENERIC extends Type {
         // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
     }
 
-    static Widget = class extends TEXT.Widget {
+    static Widget = class extends TEXT_Widget {
         /* Display raw JSON representation of a value using a standard text editor */
         empty(value)    { return TypeWidget.prototype.empty.call(this, value) }
         view(value)     { return JSONx.stringify(value) }               // JSON string is pretty-printed for edit
