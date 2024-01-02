@@ -9,7 +9,7 @@ import {DataError, NotImplemented, ValueError} from './common/errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
 import { Assets, Component } from './ui/component.js'
-import { TypeWidget } from './ui/widgets.js'
+import {TypeWidget, TextualWidget} from './ui/widgets.js'
 import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
 
 // print('Temporal:', Temporal)
@@ -369,11 +369,12 @@ export class Textual extends Primitive {
         // charcase: false,         // 'upper'/'lower' - only upper/lower case characters allowed
     }
 
-    static Widget = class extends TypeWidget {
-        empty(value)    { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
-        encode(v)       { return v }
-        decode(v)       { return v }
-    }
+    static Widget = TextualWidget
+    // static Widget = class extends TypeWidget {
+    //     empty(value)    { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
+    //     encode(v)       { return v }
+    //     decode(v)       { return v }
+    // }
 }
 
 export class STRING extends Textual {
@@ -383,14 +384,14 @@ export class STRING extends Textual {
 }
 export class URL extends STRING {
     /* For now, URL type does NOT check if the string is a valid URL, only modifies the display to make the string a hyperlink. */
-    static Widget = class extends Textual.Widget {
+    static Widget = class extends TextualWidget {
         view(v) { return A({href: v}, v) }
     }
 }
 
 export class TEXT extends Textual
 {
-    static Widget = class extends Textual.Widget {
+    static Widget = class extends TextualWidget {
 
         static scope = 'TEXT'
         static style = () => this.safeCSS()
@@ -1039,7 +1040,7 @@ class CatalogTable extends Component {
                 )
     }
 
-    static KeyWidget = class extends Textual.Widget {
+    static KeyWidget = class extends TextualWidget {
         /* A special type of STRING widget for displaying keys in a catalog. */
         static defaultProps = {
             keyNames: undefined,    // array of predefined key names to choose from

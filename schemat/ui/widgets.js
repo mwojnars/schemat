@@ -102,3 +102,11 @@ export class TypeWidget extends Component {
         return this.editor()
     }
 }
+
+/**********************************************************************************************************************/
+
+export class TextualWidget extends TypeWidget {
+    empty(value)    { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
+    encode(v)       { return v }
+    decode(v)       { return v }
+}
