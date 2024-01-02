@@ -9,7 +9,7 @@ import {DataError, NotImplemented, ValueError} from './common/errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
 import { Assets, Component } from './ui/component.js'
-import {TypeWidget, TextualWidget, TEXT_Widget, CODE_Widget, GENERIC_Widget} from './ui/widgets.js'
+import {TypeWidget, TextualWidget, TEXT_Widget, CODE_Widget, GENERIC_Widget, TYPE_Widget} from './ui/widgets.js'
 import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
 
 // print('Temporal:', Temporal)
@@ -455,30 +455,7 @@ export let generic_string = new STRING()
 
 export class TYPE extends GENERIC {
     static defaultProps = {class: Type}
-
-    static Widget = class extends GENERIC_Widget {
-        scope = 'TYPE'
-        static style = () => this.safeCSS({stopper: '|'})
-        `
-            .default|   { color: #888; }
-            .info|      { font-style: italic; }
-        `
-        viewer()  { return TypeWidget.prototype.viewer.call(this) }
-        view() {
-            let {value: type} = this.props
-            if (type instanceof TypeWrapper) {
-                if (!type.real_type) return "TypeWrapper (not loaded)"
-                type = type.real_type
-            }
-            let dflt = `${type.props.default}`
-            return SPAN(`${type}`,
-                    type.props.default !== undefined &&
-                        SPAN(cl('default'), {title: `default value: ${truncate(dflt,1000)}`}, ` (${truncate(dflt,100)})`),
-                    type.props.info &&
-                        SPAN(cl('info'), ` • ${type.props.info}`),   // smaller dot: &middot;  larger dot: •
-                    )
-        }
-    }
+    static Widget = TYPE_Widget
 }
 
 export class CLASS extends GENERIC {

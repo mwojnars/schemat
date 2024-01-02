@@ -1,10 +1,11 @@
-import {assert, T} from '../common/utils.js'
+import {assert, T, truncate} from '../common/utils.js'
 import { JSONx } from '../serialize.js'
 
 import { e, cl, st, createRef, useState } from './react-utils.js'
 import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './react-utils.js'
 
 import {Component} from "./component.js"
+import {TypeWrapper} from "../type.js";
 
 
 /**********************************************************************************************************************/
@@ -292,4 +293,30 @@ export class GENERIC_Widget extends TEXT_Widget {
     view(value)     { return JSONx.stringify(value) }               // JSON string is pretty-printed for edit
     encode(value)   { return JSONx.stringify(value, null, 2) }      // JSON string is pretty-printed for edit
     decode(value)   { return JSONx.parse(value) }
+}
+
+/**********************************************************************************************************************/
+
+export class TYPE_Widget extends GENERIC_Widget {
+    scope = 'TYPE'
+    static style = () => this.safeCSS({stopper: '|'})
+    `
+        .default|   { color: #888; }
+        .info|      { font-style: italic; }
+    `
+    viewer()  { return TypeWidget.prototype.viewer.call(this) }
+    view() {
+        let {value: type} = this.props
+        if (type instanceof TypeWrapper) {
+            if (!type.real_type) return "TypeWrapper (not loaded)"
+            type = type.real_type
+        }
+        let dflt = `${type.props.default}`
+        return SPAN(`${type}`,
+                type.props.default !== undefined &&
+                    SPAN(cl('default'), {title: `default value: ${truncate(dflt,1000)}`}, ` (${truncate(dflt,100)})`),
+                type.props.info &&
+                    SPAN(cl('info'), ` • ${type.props.info}`),   // smaller dot: &middot;  larger dot: •
+                )
+    }
 }
