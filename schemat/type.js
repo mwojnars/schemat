@@ -1,15 +1,15 @@
 // import { Temporal } from './libs/js-temporal/polyfill.js'
 
-import { e, cl, st, useState } from './ui/react-utils.js'
-import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './ui/react-utils.js'
-import { T, assert, print, trycatch, concat } from './common/utils.js'
+import {e} from './ui/react-utils.js'
+import {A} from './ui/react-utils.js'
+import {T, assert, print, concat } from './common/utils.js'
 import {DataError, NotImplemented, ValueError} from './common/errors.js'
-import { Catalog, Path } from './data.js'
-import { Assets } from './ui/component.js'
+import {Catalog, Path} from './data.js'
+import {Assets} from './ui/component.js'
 import {TypeWidget, TextualWidget, TEXT_Widget, CODE_Widget, GENERIC_Widget, TYPE_Widget, ITEM_Widget, CatalogTable} from './ui/widgets.js'
 import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
 
-// print('Temporal:', Temporal)
+// print('Temporal:', Temporal)  -- improved data struct for date/time handling
 
 export function is_valid_field_name(name) {
     /* Check if a string is a valid field name. Dash "-" is allowed except for the 1st character. */
