@@ -8,7 +8,7 @@ import {JSONx} from './serialize.js'
 import {Path, Catalog, Data} from './data.js'
 import {DATA, DATA_GENERIC, ITEM} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
-import {ReactPage, CategoryAdminView, ItemAdminView} from "./web/pages.js";
+import {ReactPage, CategoryAdminView, ItemAdminView} from "./ui/pages.js";
 import {ItemRecord} from "./db/records.js";
 import {DataRequest} from "./db/data_request.js";
 
