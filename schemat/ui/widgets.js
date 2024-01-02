@@ -4,7 +4,7 @@ import { JSONx } from '../serialize.js'
 import { e, cl, st, createRef, useState } from './react-utils.js'
 import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './react-utils.js'
 
-import {Component} from "./base.js"
+import {Component} from "./component.js"
 
 
 /**********************************************************************************************************************/

@@ -1,13 +1,13 @@
-import { T, assert, print, tryimport, dedentFull } from '../common/utils.js'
+import { T, assert, print, tryimport } from '../common/utils.js'
 import { e, cssPrepend, interpolate, DIV } from './react-utils.js'
-import { React, Resources } from './resources.js'
+import { React } from './resources.js'
 
 let csso = await tryimport('csso')
 
 
 /**********************************************************************************************************************
  **
- **  ASSETS & WIDGET
+ **  ASSETS
  **
  */
 
@@ -46,7 +46,11 @@ export class Assets {
 }
 
 
-/**********************************************************************************************************************/
+/**********************************************************************************************************************
+ **
+ **  COMPONENT
+ **
+ */
 
 export class Component extends React.Component {
     /* A React component with an API for defining and collecting dependencies (assets) and CSS styles.

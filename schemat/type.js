@@ -8,7 +8,7 @@ import { T, assert, print, trycatch, truncate, concat } from './common/utils.js'
 import {DataError, NotImplemented, ValueError} from './common/errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
-import { Assets, Component } from './ui/base.js'
+import { Assets, Component } from './ui/component.js'
 import { TypeWidget } from './ui/widgets.js'
 import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
 
