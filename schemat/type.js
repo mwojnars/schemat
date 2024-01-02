@@ -9,7 +9,7 @@ import {DataError, NotImplemented, ValueError} from './common/errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
 import { Assets, Component } from './ui/component.js'
-import {TypeWidget, TextualWidget, TEXT_Widget, CODE_Widget, GENERIC_Widget, TYPE_Widget} from './ui/widgets.js'
+import {TypeWidget, TextualWidget, TEXT_Widget, CODE_Widget, GENERIC_Widget, TYPE_Widget, ITEM_Widget} from './ui/widgets.js'
 import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
 
 // print('Temporal:', Temporal)
@@ -508,47 +508,7 @@ export class ITEM extends Type {
         category:  undefined,       // base category for all the items to be encoded
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
     }
-
-    static Widget = ItemLoadingHOC(class extends TypeWidget {
-        view() {
-            let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
-            if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
-                return SPAN({suppressHydrationWarning: true}, "loading...")
-
-            let url = item.url()
-            let name = item.name
-            let stamp = HTML(item.make_stamp({html: false, brackets: false}))
-
-            if (name && url) {
-                let note = item._category_.name || null
-                return SPAN(
-                    url ? A({href: url}, name) : name,
-                    SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : stamp)}, note)
-                )
-            } else
-                return SPAN('[', url ? A({href: url, ...stamp}) : SPAN(stamp), ']')
-        }
-    })
-
-    // widget({value: item}) {
-    //
-    //     let loaded = useItemLoading()
-    //     if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
-    //         return SPAN({suppressHydrationWarning: true}, "loading...")
-    //
-    //     let url  = item.url()
-    //     let name = item.get('name', '')
-    //     let stamp = HTML(item.make_stamp({html: false, brackets: false}))
-    //
-    //     if (name && url) {
-    //         let note = item.category.get('name', null)
-    //         return SPAN(
-    //             url ? A({href: url}, name) : name,
-    //             SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : stamp)}, note)
-    //         )
-    //     } else
-    //         return SPAN('[', url ? A({href: url, ...stamp}) : SPAN(stamp), ']')
-    // }
+    static Widget = ITEM_Widget
 }
 
 

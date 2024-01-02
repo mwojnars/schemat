@@ -1,7 +1,7 @@
 import {assert, T, truncate} from '../common/utils.js'
 import { JSONx } from '../serialize.js'
 
-import { e, cl, st, createRef, useState } from './react-utils.js'
+import {e, cl, st, createRef, useState, ItemLoadingHOC} from './react-utils.js'
 import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './react-utils.js'
 
 import {Component} from "./component.js"
@@ -320,3 +320,47 @@ export class TYPE_Widget extends GENERIC_Widget {
                 )
     }
 }
+
+/**********************************************************************************************************************/
+
+export const ITEM_Widget = ItemLoadingHOC(class extends TypeWidget {
+
+    view() {
+        let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
+        if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
+            return SPAN({suppressHydrationWarning: true}, "loading...")
+
+        let url = item.url()
+        let name = item.name
+        let stamp = HTML(item.make_stamp({html: false, brackets: false}))
+
+        if (name && url) {
+            let note = item._category_.name || null
+            return SPAN(
+                url ? A({href: url}, name) : name,
+                SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : stamp)}, note)
+            )
+        } else
+            return SPAN('[', url ? A({href: url, ...stamp}) : SPAN(stamp), ']')
+    }
+
+    // widget({value: item}) {
+    //
+    //     let loaded = useItemLoading()
+    //     if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
+    //         return SPAN({suppressHydrationWarning: true}, "loading...")
+    //
+    //     let url  = item.url()
+    //     let name = item.get('name', '')
+    //     let stamp = HTML(item.make_stamp({html: false, brackets: false}))
+    //
+    //     if (name && url) {
+    //         let note = item.category.get('name', null)
+    //         return SPAN(
+    //             url ? A({href: url}, name) : name,
+    //             SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : stamp)}, note)
+    //         )
+    //     } else
+    //         return SPAN('[', url ? A({href: url, ...stamp}) : SPAN(stamp), ']')
+    // }
+})
