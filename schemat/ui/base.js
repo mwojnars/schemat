@@ -181,4 +181,3 @@ export class Component extends React.Component {
     }
 }
 
-export class TypeWidget extends Component {}
