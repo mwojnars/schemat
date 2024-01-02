@@ -181,4 +181,4 @@ export class Component extends React.Component {
     }
 }
 
-export class Widget extends Component {}
+export class TypeWidget extends Component {}

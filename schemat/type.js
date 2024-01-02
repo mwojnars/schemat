@@ -8,7 +8,7 @@ import { T, assert, print, trycatch, truncate, concat } from './common/utils.js'
 import {DataError, NotImplemented, ValueError} from './common/errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
-import { Assets, Component, Widget } from './ui/base.js'
+import { Assets, Component, TypeWidget } from './ui/base.js'
 import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
 
 // print('Temporal:', Temporal)
@@ -202,16 +202,16 @@ export class Type {
     }
 
     get Widget() {
-        /* React component that displays a value of this Type and allows its editing.
-           Can be a class component, or a function component, or a plain method that takes `props` and returns
-           a React element (such method is effectively a function component).
+        /* React component, a subclass of TypeWidget, that displays a value of this Type and allows its editing.
+           In addition to rendering, it must provide a static method collect(assets) that collects CSS styles and assets,
+           that is why it cannot be a function component.
          */
         return this.constructor.Widget
     }
 }
 
 
-Type.Widget = class extends Widget {
+Type.Widget = class extends TypeWidget {
     /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog) values
        of a particular data type.
      */
