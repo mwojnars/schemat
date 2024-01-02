@@ -472,7 +472,7 @@ export class STRING extends Textual {
 }
 export class URL extends STRING {
     /* For now, URL type does NOT check if the string is a valid URL, only modifies the display to make the string a hyperlink. */
-    static Widget = class extends STRING.Widget {
+    static Widget = class extends Textual.Widget {
         view(v) { return A({href: v}, v) }
     }
 }
@@ -1128,7 +1128,7 @@ class CatalogTable extends Component {
                 )
     }
 
-    static KeyWidget = class extends STRING.Widget {
+    static KeyWidget = class extends Textual.Widget {
         /* A special type of STRING widget for displaying keys in a catalog. */
         static defaultProps = {
             keyNames: undefined,    // array of predefined key names to choose from
