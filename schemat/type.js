@@ -369,7 +369,7 @@ export class Textual extends Primitive {
         // charcase: false,         // 'upper'/'lower' - only upper/lower case characters allowed
     }
 
-    static Widget = class extends Type.Widget {
+    static Widget = class extends TypeWidget {
         empty(value)    { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
         encode(v)       { return v }
         decode(v)       { return v }
@@ -613,7 +613,7 @@ export class GENERIC extends Type {
 
     static Widget = class extends TEXT.Widget {
         /* Display raw JSON representation of a value using a standard text editor */
-        empty(value)    { return Type.Widget.prototype.empty.call(this, value) }
+        empty(value)    { return TypeWidget.prototype.empty.call(this, value) }
         view(value)     { return JSONx.stringify(value) }               // JSON string is pretty-printed for edit
         encode(value)   { return JSONx.stringify(value, null, 2) }      // JSON string is pretty-printed for edit
         decode(value)   { return JSONx.parse(value) }
@@ -637,7 +637,7 @@ export class TYPE extends GENERIC {
             .default|   { color: #888; }
             .info|      { font-style: italic; }
         `
-        viewer()  { return Type.Widget.prototype.viewer.call(this) }
+        viewer()  { return TypeWidget.prototype.viewer.call(this) }
         view() {
             let {value: type} = this.props
             if (type instanceof TypeWrapper) {
@@ -706,7 +706,7 @@ export class ITEM extends Type {
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
     }
 
-    static Widget = ItemLoadingHOC(class extends Type.Widget {
+    static Widget = ItemLoadingHOC(class extends TypeWidget {
         view() {
             let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
             if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
