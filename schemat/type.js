@@ -8,7 +8,7 @@ import { T, assert, print, trycatch, truncate, concat } from './common/utils.js'
 import {DataError, NotImplemented, ValueError} from './common/errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
-import { Assets, Component, Widget } from './ui/widget.js'
+import { Assets, Component, Widget } from './ui/base.js'
 import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
 
 // print('Temporal:', Temporal)
@@ -187,14 +187,6 @@ export class Type {
 
     // Clients should call getAssets() and display(), other methods & attrs are for internal use ...
 
-    get Widget() {
-        /* React component that displays a value of this Type and allows its editing.
-           Can be a class component, or a function component, or a plain method that takes `props` and returns
-           a React element (such method is effectively a function component).
-         */
-        return this.constructor.Widget
-    }
-
     getAssets() {
         /* Walk through all nested Type objects, collect their CSS styles and assets and return as an Assets instance.
            this.collect() is called internally - it should be overriden in subclasses instead of this method.
@@ -208,6 +200,14 @@ export class Type {
         /* For internal use. Override in subclasses to provide a custom way of collecting CSS styles & assets from all nested schemas. */
         this.Widget.collect(assets)
     }
+
+    get Widget() {
+        /* React component that displays a value of this Type and allows its editing.
+           Can be a class component, or a function component, or a plain method that takes `props` and returns
+           a React element (such method is effectively a function component).
+         */
+        return this.constructor.Widget
+    }
 }
 
 
@@ -218,7 +218,7 @@ Type.Widget = class extends Widget {
     static scope = 'Type'
 
     static defaultProps = {
-        type:   undefined,      // parent Type object
+        type:   undefined,      // Type of the `value` to be displayed
         value:  undefined,      // value object to be displayed by render()
         save:   undefined,      // callback save(newValue), called after `value` was edited by user
         flash:  undefined,      // callback flash(message, positive) for displaying confirmation messages after edits
