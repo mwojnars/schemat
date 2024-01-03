@@ -294,7 +294,6 @@ export class Item {
         let assets = new Assets()
         this._schema_.collect(assets)
         return this.CACHED_PROP(assets)
-        // return this.CACHED_PROP(this._schema_.getAssets())
     }
 
 
