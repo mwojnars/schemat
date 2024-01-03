@@ -186,16 +186,14 @@ export class Type {
 
     /***  User Interface  ***/
 
-    // Clients should call getAssets() and display(), other methods & attrs are for internal use ...
-
-    getAssets() {
-        /* Walk through all nested Type objects, collect their CSS styles and assets and return as an Assets instance.
-           this.collect() is called internally - it should be overriden in subclasses instead of this method.
-         */
-        let assets = new Assets()
-        this.collect(assets)
-        return assets
-    }
+    // getAssets() {
+    //     /* Walk through all nested Type objects, collect their CSS styles and assets and return as an Assets instance.
+    //        this.collect() is called internally - it should be overriden in subclasses instead of this method.
+    //      */
+    //     let assets = new Assets()
+    //     this.collect(assets)
+    //     return assets
+    // }
 
     collect(assets) {
         /* For internal use. Override in subclasses to provide a custom way of collecting CSS styles & assets from all nested schemas. */

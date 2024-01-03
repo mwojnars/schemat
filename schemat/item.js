@@ -5,12 +5,15 @@ import {print, assert, T, escape_html, splitLast, concat, unique, delay} from '.
 import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
 
 import {JSONx} from './serialize.js'
-import {Path, Catalog, Data} from './data.js'
+import {Catalog, Data} from './data.js'
 import {DATA, DATA_GENERIC, ITEM} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
-import {ReactPage, CategoryAdminView, ItemAdminView} from "./ui/pages.js";
+
 import {ItemRecord} from "./db/records.js";
 import {DataRequest} from "./db/data_request.js";
+
+import {Assets} from "./ui/component.js";
+import {ReactPage, CategoryAdminView, ItemAdminView} from "./ui/pages.js";
 
 export const ROOT_ID = 0
 export const SITE_CATEGORY_ID = 1
@@ -287,7 +290,12 @@ export class Item {
         return this.CACHED_PROP(ancestors)
     }
 
-    get _assets_()  { return this.CACHED_PROP(this._schema_.getAssets()) }
+    get _assets_()  {
+        let assets = new Assets()
+        this._schema_.collect(assets)
+        return this.CACHED_PROP(assets)
+        // return this.CACHED_PROP(this._schema_.getAssets())
+    }
 
 
     CACHED_PROP(value) {
