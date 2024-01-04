@@ -76,6 +76,12 @@ export class HtmlPage extends HttpService {
            as they are shared between all views created from a given page class.
         */
 
+        // _page_          // (DRAFT) parent HtmlPage instance; may contain extra information for view rendering, typically the endpoint-specific configuration when an object exposes different pages on multiple endpoints
+        //
+        // constructor(page) {
+        //     this._page_ = page
+        // }
+
         async prepare(side) {
             /* Prepare/collect extra information before the page generation (view rendering) starts. These are typically
                asynchronous operations to load data from the DB or await for URLs, so that actual generation/rendering
