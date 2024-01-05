@@ -58,7 +58,7 @@
         objects of this category when requested via a URL with no explicit
         endpoint.
       default:
-        GET: main
+        GET: home
         GET/2: admin
         CALL: self
         "@": Catalog

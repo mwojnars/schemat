@@ -696,7 +696,7 @@ export class Item {
         if (endpoints.length) return endpoints
 
         // otherwise, use global defaults
-        let defaults = {GET: ['main', 'admin'], CALL: ['self']}
+        let defaults = {GET: ['home', 'admin'], CALL: ['self']}
         endpoints = defaults[protocol] || []
         if (endpoints.length) return endpoints
 
