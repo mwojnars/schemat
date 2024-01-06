@@ -60,7 +60,7 @@
 - __id: 203
   sequence:
     "@": 201
-  filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../../app-demo/data/db-paperity.idx_category_item.jl
+  filename: ./cluster/../../app-demo/data/db-paperity.idx_category_item.jl
   format: index-jl
   _class_:
     =: db.IndexBlock
@@ -69,7 +69,7 @@
 - __id: 204
   sequence:
     "@": 202
-  filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../../app-demo/data/db-paperity.yaml
+  filename: ./cluster/../../app-demo/data/db-paperity.yaml
   format: data-yaml
   _class_:
     =: db.DataBlock
@@ -137,7 +137,7 @@
 - __id: 208
   sequence:
     "@": 206
-  filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../data/db-demo.idx_category_item.jl
+  filename: ./cluster/../data/db-demo.idx_category_item.jl
   format: index-jl
   _class_:
     =: db.IndexBlock
@@ -146,7 +146,7 @@
 - __id: 209
   sequence:
     "@": 207
-  filename: /home/marcin/Documents/Catalog/schemat/src/schemat/cluster/../data/db-demo.yaml
+  filename: ./cluster/../data/db-demo.yaml
   format: data-yaml
   _class_:
     =: db.DataBlock
