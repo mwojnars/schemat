@@ -19,7 +19,7 @@ export class SchematProcess {
     }
 
     async _create_registry(registry_class, ...args) {
-        let registry = new registry_class(this, ...args)
+        let registry = new registry_class(...args)
         this.registry = registry
         set_global({registry})
 

@@ -102,9 +102,8 @@ export class Registry {
     server_side = true
     get client_side() { return !this.server_side }
 
-    get db() { return this.schemat.db }
+    get db() { return globalThis.schemat.db }
 
-    schemat                 // SchematProcess that owns this registry
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests
     is_closing = false      // true if the Schemat node is in the process of shutting down
@@ -113,10 +112,6 @@ export class Registry {
 
 
     /***  Initialization  ***/
-
-    constructor(schemat) {
-        this.schemat = schemat
-    }
 
     async init_classpath() {
         // print('initClasspath() started...')
