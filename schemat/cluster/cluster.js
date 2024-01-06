@@ -59,7 +59,7 @@ export class Cluster { //extends Item {
         // this._id_ = CLUSTER_ID
         // this.load()
         // registry.setDB(this.prop('db'))
-        // await schemat.registry.boot()   // reload `root` and `site`
+        // await registry.boot()   // reload `root` and `site`
     }
 }
 

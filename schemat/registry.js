@@ -102,7 +102,7 @@ export class Registry {
     server_side = true
     get client_side() { return !this.server_side }
 
-    get db() { return globalThis.schemat.db }
+    get db() { return schemat.db }
 
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests

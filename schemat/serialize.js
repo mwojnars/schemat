@@ -51,7 +51,6 @@ export class JSONx {
         with a special attribute "@" to hold the class name or item ID. Nested objects are encoded recursively.
         Optional `transform` function preprocesses the `obj` and every nested object before they get encoded.
         */
-        let registry = globalThis.schemat.registry
         let state
 
         if (this.transform) obj = this.transform(obj)
@@ -102,7 +101,6 @@ export class JSONx {
         WARNING: the returned object may contain `state` or a part of it internally - any modifications in `state`
                  object after this call may indirectly change the result (!).
         */
-        let registry = globalThis.schemat.registry
         let isdict = T.isDict(state)
         let cls
 
