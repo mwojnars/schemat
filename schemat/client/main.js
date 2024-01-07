@@ -41,7 +41,7 @@ class ClientRegistry extends Registry {
 
         let record = await category.action.create_item(data)
         if (record) {
-            this.db.cache(record)                       // record == {id: id, data: data-encoded}
+            schemat.db.cache(record)                        // record == {id: id, data: data-encoded}
             return this.getItem(record.id)
         }
         throw new Error(`cannot create item ${item}`)

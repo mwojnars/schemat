@@ -102,8 +102,6 @@ export class Registry {
     server_side = true
     get client_side() { return !this.server_side }
 
-    get db() { return schemat.db }
-
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests
     is_closing = false      // true if the Schemat node is in the process of shutting down
@@ -161,7 +159,7 @@ export class Registry {
         // print("Registry: root category loaded from DB")
 
         // // try loading `root` from the DB first...
-        // if (this.db)
+        // if (schemat.db)
         //     try {
         //         await root.load()
         //         root.assert_loaded()
@@ -183,7 +181,7 @@ export class Registry {
 
     async _init_site(site_id) {
         /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
-        if (!this.db) return
+        if (!schemat.db) return
         try {
             // if (!site_id)
             //     if (this.client_side) return
@@ -239,7 +237,7 @@ export class Registry {
     async *scan_all({limit} = {}) {
         /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
         let count = 0
-        let records = this.db.scan_all()
+        let records = schemat.db.scan_all()
 
         for await (const record of records) {                   // stream of ItemRecords
             if (limit !== undefined && count++ >= limit) break
@@ -252,7 +250,7 @@ export class Registry {
         let target_cid = category?._id_
         let start = category ? [target_cid] : null
         let stop = category ? [target_cid + 1] : null
-        let records = this.db.scan_index('idx_category_item', {start, stop})        // stream of plain Records
+        let records = schemat.db.scan_index('idx_category_item', {start, stop})         // stream of plain Records
 
         for await (const record of records) {
             let {cid, id} = record.object_key
