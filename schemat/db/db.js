@@ -13,8 +13,12 @@ import {Data} from "../data.js";
 
 /**********************************************************************************************************************/
 
-export function object_to_item_data(obj) {
-    /* Convert a plain object to a Data instance that can be assigned to item's _data_. */
+export function object_to_item(obj) {
+    /* Convert a plain object to a Data instance that can be assigned to item's _data_.
+       The returned Data instance will have all own properties of `obj` except for those starting with '_',
+       or having undefined value, or Item's special attributes (like `action`).
+       Properties defined by getters are also ignored.
+     */
 
     // filter out undefined values, private props (starting with '_'), and Item's special attributes
     let entries = Object.entries(obj).filter(([k, v]) =>
@@ -26,7 +30,7 @@ export function object_to_item_data(obj) {
     if (obj.constructor !== Object && obj.constructor !== Item)
         entries.push(['_class_', obj.constructor])
 
-    // print(`object_to_item_data(${obj}) =>`, entries)
+    // print(`object_to_item(${obj}) =>`, entries)
     return new Data(Object.fromEntries(entries))
 }
 
@@ -148,7 +152,7 @@ export class Ring extends Item {
         // 2nd phase: update items with actual data
         for (let item of items) {
             // if item has no _data_, create it from the object's properties
-            item._data_ = item._data_ || object_to_item_data(item)
+            item._data_ = item._data_ || object_to_item(item)
             await this.update(item)
         }
     }
