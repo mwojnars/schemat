@@ -198,8 +198,8 @@ class PlainRing extends Ring {
  **
  */
 
-export class ServerDB {
-    /* Container for a number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
+export class Database {
+    /* A number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
        ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
        If ItemNotFound/ReadOnly is caught, the next ring is tried.
      */

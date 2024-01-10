@@ -5,7 +5,7 @@ import {assert, print} from "../common/utils.js"
 /**********************************************************************************************************************/
 
 export class ClientDB {
-    /* Client-side thin DB interface that communicates with the server via AJAX calls, used as a drop-in replacement for ServerDB.
+    /* Client-side thin DB interface that communicates with the server via AJAX calls, used as a drop-in replacement for Database.
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
 

@@ -3,7 +3,7 @@ import {fileURLToPath} from "url"
 
 import {print, T} from "../common/utils.js"
 import {Item} from "../item.js"
-import {Ring, ServerDB} from "../db/db.js"
+import {Ring, Database} from "../db/db.js"
 import {DataRequest} from "../db/data_request.js";
 import fs from "fs";
 
@@ -51,7 +51,7 @@ export class Cluster { //extends Item {
         // let cluster_ring = Ring.create(cluster_ring_spec)  //new Ring(cluster_ring_spec)
         // await cluster_ring.open(req)
 
-        this.db = new ServerDB()
+        this.db = new Database()
         return this.db.init_as_cluster_database(rings)  //, cluster_ring)
 
         // // load the cluster's full and ultimate data from the bootstrap DB;
