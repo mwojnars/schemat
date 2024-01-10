@@ -51,7 +51,10 @@ export class Cluster { //extends Item {
         // let cluster_ring = Ring.create(cluster_ring_spec)  //new Ring(cluster_ring_spec)
         // await cluster_ring.open(req)
 
-        this.db = new Database()
+        // bootstrap_db = Database.create(rings)
+        // bootstrap_db.open()
+
+        this.db = Database.create()
         return this.db.init_as_cluster_database(rings)  //, cluster_ring)
 
         // // load the cluster's full and ultimate data from the bootstrap DB;
