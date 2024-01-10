@@ -6,7 +6,7 @@ import bodyParser from 'body-parser'
 
 import {assert, print} from '../common/utils.js'
 import {set_global} from "../common/globals.js";
-import {thread_local_variable} from "./local.js";
+import {thread_local_variable} from "./thread.js";
 import {Request} from "../item.js";
 
 
