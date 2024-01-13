@@ -53,9 +53,10 @@ export class Cluster { //extends Item {
 
         // bootstrap_db = Database.create(rings)
         // bootstrap_db.open()
+        // this.db = registry.site.database         // the ultimate database
 
-        this.db = Database.create()
-        return this.db.init_as_cluster_database(rings)  //, cluster_ring)
+        let bootstrap_db = this.db = Database.create()
+        await bootstrap_db.open(rings)  //, cluster_ring)
 
         // // load the cluster's full and ultimate data from the bootstrap DB;
         // // this may override the db property with the ultimate DB object
