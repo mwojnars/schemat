@@ -219,12 +219,16 @@ export class Database extends Item {
     get bottom()    { return this.rings[0] }
     get reversed()  { return this.rings.slice().reverse() }
 
-    async open(rings, cluster_ring = null) {
+    __create__(rings) {
+        this.ring_specs = rings
+    }
+
+    async open(cluster_ring = null) {
         /* Set and load rings for self while updating the global registry, so that subsequent ring objects (items)
            can be loaded from lower rings.
          */
         let req = new DataRequest(this, 'open')
-        for (const spec of rings) {
+        for (const spec of this.ring_specs) {
             let ring
 
             if (spec.item) ring = await registry.getLoaded(spec.item)
@@ -242,14 +246,18 @@ export class Database extends Item {
             if (!ring.is_linked())
                 await ring._init_indexes(req.clone())   // TODO: temporary
         }
+    }
 
+    async insert_self(target_ring) {
+        /* Insert this database object and its rings into `target_ring` as items. */
         for (let ring of this.rings.slice(2))
-            if (cluster_ring && !ring._id_) {
+            if (!ring._id_) {
                 // if `ring` is newly created, insert it as an item to the `cluster_ring`, together with its sequences and blocks
                 let sequences = [...ring.indexes.values(), ring.data_sequence]
                 let blocks = sequences.map(seq => seq.blocks[0])
-                await cluster_ring.insert_many(ring, ...sequences, ...blocks)
+                await target_ring.insert_many(ring, ...sequences, ...blocks)
             }
+        // return target_ring.insert(null, this.dump_data())
     }
 
     append(ring) {
