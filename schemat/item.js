@@ -257,7 +257,9 @@ export class Item {
 
     */
 
-    // it is assumed that if this._id_ exists, the object is ALREADY stored in the DB (is "linked")
+    // it is assumed that if this._id_ exists, the object is ALREADY stored in the DB (is "linked");
+    // for a newly created object that already has an ID assigned, but is not yet (fully) saved to DB, the ID must be kept
+    // in _meta_.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
     get _id_()   { return undefined }
     set _id_(id) {
         if (id === undefined) return
@@ -320,6 +322,7 @@ export class Item {
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         mutable:   false,       // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
         expiry:    undefined,   // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
+        provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
