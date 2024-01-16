@@ -30,8 +30,9 @@ export class Cluster { //extends Item {
         {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: false},
         {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
         Cluster.cluster_ring_spec,
-        {item: 200, readonly: false},
-        {item: 205, readonly: false},
+        {item: 200, readonly: false},       // db-paperity.yaml
+        {item: 205, readonly: false},       // db-demo.yaml
+
         // {file: __dirname + '/../app-demo/data/db-paperity.yaml', start_iid: 1000, stop_iid: null, readonly: false},
         // {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
 
@@ -53,7 +54,7 @@ export class Cluster { //extends Item {
 
         let bootstrap_db = this.db = Database.create(rings)
         await bootstrap_db.open()
-        // await bootstrap_db.insert_self(cluster_ring)
+        // await bootstrap_db.insert_self()
 
         // this.db = registry.site.database         // the ultimate database
 

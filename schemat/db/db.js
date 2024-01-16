@@ -176,7 +176,7 @@ export class Ring extends Item {
     }
 }
 
-class PlainRing extends Ring {
+export class PlainRing extends Ring {
     /* A plain ring object that is NOT stored in DB. Only this kind of object needs __create__() and open(). */
 
     __create__({name, ...opts}) {
@@ -219,8 +219,8 @@ export class Database extends Item {
     get bottom()    { return this.rings[0] }
     get reversed()  { return this.rings.slice().reverse() }
 
-    __create__(rings) {
-        this.ring_specs = rings
+    __create__(specs) {
+        this.ring_specs = specs
     }
 
     async open(cluster_ring = null) {
@@ -248,11 +248,12 @@ export class Database extends Item {
         }
     }
 
-    async insert_self(target_ring) {
+    async insert_self() {
         /* Insert this database object and its rings into `target_ring` as items. */
-        for (let ring of this.rings.slice(2))
+        let target_ring = this.top
+        for (let ring of this.rings)
             if (!ring._id_) {
-                // if `ring` is newly created, insert it as an item to the `cluster_ring`, together with its sequences and blocks
+                // if `ring` is newly created, insert it as an item to the `target_ring`, together with its sequences and blocks
                 let sequences = [...ring.indexes.values(), ring.data_sequence]
                 let blocks = sequences.map(seq => seq.blocks[0])
                 await target_ring.insert_many(ring, ...sequences, ...blocks)
