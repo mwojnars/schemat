@@ -132,7 +132,7 @@ export class Ring extends Item {
     async update(id_or_item, data = null, req = null) {
         req = req || new DataRequest()
         let item = T.isNumber(id_or_item) ? null : id_or_item
-        let id = item ? item._id_ : id_or_item
+        let id = item ? item._get_write_id() : id_or_item
         if (!data) data = item.dump_data()
         let edits = [new EditData(data)]
         return this.handle(req.safe_step(this, 'update', {id, edits}))
@@ -147,13 +147,15 @@ export class Ring extends Item {
 
         // 1st phase: insert stubs
         for (let item of items)
-            item._set_id(await this.insert(item._id_, empty_data))
+            item._meta_.provisional_id = await this.insert(null, empty_data)
+            // item._set_id(await this.insert(item._id_, empty_data))
 
         // 2nd phase: update items with actual data
         for (let item of items) {
             // if item has no _data_, create it from the object's properties
             item._data_ = item._data_ || object_to_item(item)
             await this.update(item)
+            item._id_ = item._meta_.provisional_id
         }
     }
 

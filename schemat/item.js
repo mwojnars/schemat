@@ -412,6 +412,11 @@ export class Item {
         return id
     }
 
+    _get_write_id() {
+        /* Either _id_ or _meta_.provisional_id. */
+        return this._id_ !== undefined ? this._id_ : this._meta_.provisional_id
+    }
+
 
     /***  Loading & initialization ***/
 
