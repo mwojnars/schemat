@@ -18,7 +18,8 @@ export class JSONx {
 
     constructor(transform) {
         // for now, this constructor is only used internally in static encode() & static decode()
-        this.transform = transform      // optional preprocessing function applied to every nested object before it gets encoded
+        this.transform = transform      // optional preprocessing function applied to every nested object before it gets encoded;
+                                        // can also be used to collect information about the objects being encoded
     }
 
     static stringify(obj, ...opts) {
@@ -34,7 +35,7 @@ export class JSONx {
     static decode(state)                    { return new JSONx().decode(state) }
 
     static transform(json, transform) {
-        /* Parse and decode a JSONx-encoded object, then encode and stringify is again while applying
+        /* Parse and decode a JSONx-encoded object, then encode and stringify it again while applying
            the `transform` function to all its (sub)objects. */
         let jsonx  = new JSONx(transform)
         let state1 = JSON.parse(json)

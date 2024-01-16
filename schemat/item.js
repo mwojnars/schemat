@@ -257,6 +257,7 @@ export class Item {
 
     */
 
+    // it is assumed that if this._id_ exists, the object is ALREADY stored in the DB (is "linked")
     get _id_()   { return undefined }
     set _id_(id) {
         if (id === undefined) return
