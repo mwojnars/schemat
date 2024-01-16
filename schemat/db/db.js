@@ -325,8 +325,9 @@ export class Database extends Item {
     async insert(item, ring_name = null) {
         /* Find the top-most ring where the item's ID is writable and insert there. If a new ID is assigned,
            it is written to item._id_. `ring` is an optional name of a ring to use.
+           TODO: simplify the code if predefined ID is never used (id=undefined below); .save() can be used instead
          */
-        let id = item._id_          // can be undefined
+        let id //= item._id_          // can be undefined
         let req = new DataRequest(this, 'insert', {id, data: item.dump_data()})
         let ring
 
