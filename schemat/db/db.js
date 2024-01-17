@@ -143,7 +143,7 @@ export class Ring extends Item {
            The insertion proceeds in two phases: 1) the items are inserted with empty data, to obtain their IDs if missing;
            2) the items are updated with their actual data, with all references (incl. bidirectional) correctly replaced with IDs.
          */
-        let empty_data = JSONx.stringify(new Data({_status_: 'draft'}))     // empty data
+        let empty_data = JSONx.stringify(new Data({_status_: 'DRAFT'}))     // empty data
 
         // 1st phase: insert stubs
         for (let item of items)
