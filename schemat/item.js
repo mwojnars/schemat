@@ -446,9 +446,7 @@ export class Item {
             let proto = this._init_prototypes()                 // load prototypes
             if (proto instanceof Promise) await proto
 
-            if (this._status_) {
-                print(`WARNING: object [${this._id_}] has status ${this._status_}`)
-            }
+            if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
 
             // // root category's class must be set here in a special way - this is particularly needed inside DB blocks,
             // // while instantiating temporary items from data records (so new Item() is called, not new RootCategory())

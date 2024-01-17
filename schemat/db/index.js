@@ -119,8 +119,8 @@ export class BasicIndex extends Index {
     category            // category of items allowed in this index
 
     async *map_record(input_record /*Record*/) {
-        let item = await Item.from_binary(input_record)
-        yield* this.generate_records(item)
+        let obj = await Item.from_binary(input_record)
+        yield* this.generate_records(obj)
     }
 
     *generate_records(item) {

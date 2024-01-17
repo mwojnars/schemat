@@ -154,8 +154,9 @@ export class Ring extends Item {
         for (let item of items) {
             // if item has no _data_, create it from the object's properties
             item._data_ = item._data_ || object_to_item(item)
-            await this.update(item)
             item._id_ = item._meta_.provisional_id
+            registry.register(item)     // before the update is fully completed (below), the item may already be referenced by other items (during change propagation), hence it needs to be registered to avoid creating incomplete duplicates
+            await this.update(item)
         }
     }
 
