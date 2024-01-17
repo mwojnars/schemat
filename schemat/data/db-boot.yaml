@@ -106,6 +106,9 @@
             be converted to a canonical URL path of the object by removing blank
             segments.
           "@": ITEM
+        _status_:
+          info: Set to "DRAFT" if the object's record is not yet fully initialized in the database.
+          "@": STRING
         name:
           info: Display name of the item. May contain spaces, punctuation, non-latin
             characters.
