@@ -66,9 +66,11 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
         }
 
-        if (obj instanceof Item)
-            if(obj.is_linked()) return {[JSONx.ATTR_CLASS]: obj._get_write_id()}
+        if (obj instanceof Item) {
+            let id = obj._get_write_id()
+            if(id !== undefined) return {[JSONx.ATTR_CLASS]: id}
             else throw new Error(`Can't encode an unlinked item: ${obj}`)
+        }
 
         if (T.isClass(obj)) {
             state = registry.getPath(obj)
