@@ -230,6 +230,7 @@ export class Item {
 
     name
     info
+    _status_
 
     /***  Special properties:
 
@@ -249,7 +250,8 @@ export class Item {
 
     _class_                 JS class of this item; assigned AFTER object creation during .load()
     _category_              category of this item, as a Category object
-    _container_
+    _container_             Container of this item, for canonical URL generation
+    _status_                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
 
     _path_
     _url_                   absolute URL path of this object; calculated right *after* __init__(); to be sure that _url_ is computed, await _ready_.url first
@@ -443,6 +445,10 @@ export class Item {
 
             let proto = this._init_prototypes()                 // load prototypes
             if (proto instanceof Promise) await proto
+
+            if (this._status_) {
+                print(`WARNING: object [${this._id_}] has status ${this._status_}`)
+            }
 
             // // root category's class must be set here in a special way - this is particularly needed inside DB blocks,
             // // while instantiating temporary items from data records (so new Item() is called, not new RootCategory())

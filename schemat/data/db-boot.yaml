@@ -108,6 +108,7 @@
           "@": ITEM
         _status_:
           info: Set to "DRAFT" if the object's record is not yet fully initialized in the database.
+          inherit: false
           "@": STRING
         name:
           info: Display name of the item. May contain spaces, punctuation, non-latin
