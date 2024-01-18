@@ -534,7 +534,7 @@ export class Item {
 
         if (!container) {
             let url = default_path()
-            print('missing _container_:', url, `(${this.name})`)
+            // print('missing _container_:', url, `(${this.name})`)
             return this._url_ = this._path_ = url
         }
         // let container = await registry.site.resolve(this.container_path, true)
