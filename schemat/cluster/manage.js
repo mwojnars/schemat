@@ -35,7 +35,9 @@ async function main() {
             //     .positional('id')
             //     .positional('newid')
         )
-        .command('reinsert <id> <ring>', 'remove an object from its current ring and insert into `ring` under a new ID')
+        .command('reinsert <ids> [ring]',
+            'remove object(s) from their current ring(s) and insert under new IDs into `ring`, or to the top-most ring if `ring` is not specified; ' +
+            '`ids` is a comma-separated list of specifiers, each one being an ID value (123) or an X-Y range (100-105), no spaces allowed!')
 
         // .command('build [path_db_boot]', 'generate the core "db-boot" database anew')
         //     .option('bottom', {

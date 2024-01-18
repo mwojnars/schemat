@@ -136,22 +136,37 @@ export class AdminProcess extends BackendProcess {
         print('move: done')
     }
 
-    async CLI_reinsert({id, ring: ring_name}) {
-        /* Remove an object from its current ring and insert into `ring` under a new ID. */
+    async CLI_reinsert({ids, ring: ring_name}) {
+        /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring. */
 
         await this.cluster.startup()
-        print(`\nreinserting item [${id}]...`)
+        print(`\nreinserting object(s) [${ids}]...`)
 
-        id = Number(id)
+        let id_list = []
         let db = this.db
-        let item = await registry.getLoaded(id)
         let ring = ring_name ? await db.find_ring({name: ring_name}) : db.top_ring
-        let new_id = await ring.insert(null, item.dump_data())
 
-        await db.delete(id)
-        await this._update_references(id, new_id)
+        // parse the list of `ids`, which is a comma-separated list of integers or "X-Y" value ranges
+        for (let id of ids.split(','))
+            if (id.includes('-')) {
+                let [start, stop] = id.split('-')
+                start = Number(start)
+                stop = Number(stop)
+                for (let i = start; i <= stop; i++) id_list.push(i)
+            }
+            else id_list.push(Number(id))
 
-        print(`...reinserted item [${id}] as [${new_id}]\n`)
+        // reinsert each object
+        for (let id of id_list) {
+            let obj = await registry.getLoaded(id)
+            let new_id = await ring.insert(null, obj.dump_data())
+
+            await db.delete(id)
+            await this._update_references(id, new_id)
+
+            print(`...reinserted object [${id}] as [${new_id}]`)
+        }
+        print()
     }
 
     async _update_references(old_id, new_id) {
