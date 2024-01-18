@@ -116,7 +116,7 @@ export class AdminProcess extends BackendProcess {
         if (source.readonly) throw new Error(`the ring '${source.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
 
         // identify the target ring
-        let target = ring_name ? await db.find_ring({name: ring_name}) : bottom ? db.bottom : source
+        let target = ring_name ? await db.find_ring({name: ring_name}) : bottom ? db.bottom_ring : source
 
         if (sameID && source === target)
             throw new Error(`trying to move a record [${id}] to the same ring (${source.name}) without change of ID`)
@@ -145,7 +145,7 @@ export class AdminProcess extends BackendProcess {
         id = Number(id)
         let db = this.db
         let item = await registry.getLoaded(id)
-        let ring = await db.find_ring({name: ring_name})
+        let ring = ring_name ? await db.find_ring({name: ring_name}) : db.top_ring
         let new_id = await ring.insert(null, item.dump_data())
 
         await db.delete(id)

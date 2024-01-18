@@ -155,7 +155,7 @@ export class Ring extends Item {
             // if item has no _data_, create it from the object's properties
             item._data_ = item._data_ || object_to_item(item)
             item._id_ = item._meta_.provisional_id
-            registry.register(item)     // before the update is fully completed (below), the item may already be referenced by other items (during change propagation), hence it needs to be registered to avoid creating incomplete duplicates
+            registry.register(item)     // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
             await this.update(item)
         }
     }
@@ -218,9 +218,9 @@ export class Database extends Item {
 
     /***  Rings manipulation  ***/
 
-    get top()       { return this.rings.at(-1) }
-    get bottom()    { return this.rings[0] }
-    get reversed()  { return this.rings.slice().reverse() }
+    get top_ring()      { return this.rings.at(-1) }
+    get bottom_ring()   { return this.rings[0] }
+    get reversed()      { return this.rings.slice().reverse() }
 
     __create__(specs) {
         this.ring_specs = specs
@@ -253,7 +253,7 @@ export class Database extends Item {
 
     async insert_self() {
         /* Insert this database object and its rings into `target_ring` as items. */
-        let target_ring = this.top
+        let target_ring = this.top_ring
         for (let ring of this.rings)
             if (!ring._id_) {
                 // if `ring` is newly created, insert it as an item to the `target_ring`, together with its sequences and blocks
@@ -266,7 +266,7 @@ export class Database extends Item {
 
     append(ring) {
         /* The ring must be already open. */
-        // if (this.top) this.top.stack(ring)
+        // if (this.top_ring) this.top_ring.stack(ring)
         this.rings.push(ring)
     }
 
@@ -288,7 +288,7 @@ export class Database extends Item {
         /* Find a ring that directly precedes `ring` in this.rings. Return the top ring if `ring` if undefined,
            or undefined if `ring` has no predecessor, or throw RingUnknown if `ring` cannot be found.
          */
-        if (!ring) return this.top
+        if (!ring) return this.top_ring
         let pos = this.rings.indexOf(ring)
         if (pos < 0) throw new DatabaseError(`reference ring not found in the database`)
         if (pos > 0) return this.rings[pos-1]
@@ -298,7 +298,7 @@ export class Database extends Item {
         /* Find a ring that directly succeeds `ring` in this.rings. Return the bottom ring if `ring` is undefined,
            or undefined if `ring` has no successor, or throw RingUnknown if `ring` cannot be found.
          */
-        if (!ring) return this.bottom
+        if (!ring) return this.bottom_ring
         let pos = this.rings.indexOf(ring)
         if (pos < 0) throw new DatabaseError(`reference ring not found in the database`)
         if (pos < this.rings.length-1) return this.rings[pos+1]
@@ -428,7 +428,7 @@ export class Database extends Item {
         /* Save an item update (args = {id,key,value}) to the lowest ring starting at current_ring that's writable and allows this ID.
            Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
          */
-        let ring = req.current_ring || this.bottom
+        let ring = req.current_ring || this.bottom_ring
         let id = req.args.id
 
         // find the ring that's writable and allows this ID
