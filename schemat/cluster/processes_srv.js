@@ -164,7 +164,7 @@ export class AdminProcess extends BackendProcess {
             try { obj = await registry.getLoaded(id) }
             catch (ex) {
                 if (ex instanceof ItemNotFound) {
-                    print(`... WARNING: object [${id}] not found, skipping`)
+                    print(`...WARNING: object [${id}] not found, skipping`)
                     continue
                 }
             }
@@ -173,7 +173,7 @@ export class AdminProcess extends BackendProcess {
             await db.delete(id)
             await this._update_references(id, new_id)
 
-            print(`... reinserted object [${id}] as [${new_id}]`)
+            print(`...reinserted object [${id}] as [${new_id}]`)
         }
         print()
     }
