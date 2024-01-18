@@ -218,9 +218,9 @@ export class Database extends Item {
 
     /***  Rings manipulation  ***/
 
-    get top_ring()      { return this.rings.at(-1) }
-    get bottom_ring()   { return this.rings[0] }
-    get reversed()      { return this.rings.slice().reverse() }
+    get top_ring()          { return this.rings.at(-1) }
+    get bottom_ring()       { return this.rings[0] }
+    get rings_reversed()    { return this.rings.slice().reverse() }
 
     __create__(specs) {
         this.ring_specs = specs
@@ -275,7 +275,7 @@ export class Database extends Item {
            Return undefined if not found. Can be called to check if an item ID or a ring name exists.
          */
         let req = new DataRequest(this, 'find_ring', {id})
-        for (const ring of this.reversed) {
+        for (const ring of this.rings_reversed) {
             if (name && ring.name === name) return ring
             if (id) {
                 let data = await ring.handle(req.clone(), 'get')
@@ -339,7 +339,7 @@ export class Database extends Item {
             if (!ring) return req.error_access(`target ring not found: '${ring_name}'`)
             if (!ring.writable(id)) return req.error_access(`the ring '${ring_name}' is read-only or the ID is not writable`)
         }
-        else ring = this.reversed.find(r => r.writable(id))         // find the first ring where `id` can be written
+        else ring = this.rings_reversed.find(r => r.writable(id))         // find the first ring where `id` can be written
 
         if (ring) {
             id = await ring.handle(req)
@@ -357,7 +357,7 @@ export class Database extends Item {
     //        2) the items are updated with their actual data, with all references (incl. bidirectional) correctly replaced with IDs.
     //      */
     //     let req = new DataRequest(this, 'insert_many')
-    //     let rings = this.reversed
+    //     let rings = this.rings_reversed
     //     let empty_data = JSONx.stringify(new Data({_status_: 'draft'}))     // empty data
     //
     //     if (target_ring) {
