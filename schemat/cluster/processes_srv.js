@@ -10,6 +10,7 @@ import {DataServer, WebServer} from "./servers.js";
 import {SchematProcess} from "../processes.js";
 import {ServerRegistry} from "../registry_srv.js";
 import {DataRequest} from "../db/data_request.js";
+import {ItemNotFound} from "../common/errors.js";
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
 const __dirname  = path.dirname(__filename) + '/..'
@@ -140,11 +141,13 @@ export class AdminProcess extends BackendProcess {
         /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring. */
 
         await this.cluster.startup()
-        print(`\nreinserting object(s) [${ids}]...`)
+        ids = String(ids)
+        print(`\nreinserting object(s) [${ids}] ...`)
 
         let id_list = []
         let db = this.db
         let ring = ring_name ? await db.find_ring({name: ring_name}) : db.top_ring
+        let obj
 
         // parse the list of `ids`, which is a comma-separated list of integers or "X-Y" value ranges
         for (let id of ids.split(','))
@@ -158,13 +161,19 @@ export class AdminProcess extends BackendProcess {
 
         // reinsert each object
         for (let id of id_list) {
-            let obj = await registry.getLoaded(id)
-            let new_id = await ring.insert(null, obj.dump_data())
+            try { obj = await registry.getLoaded(id) }
+            catch (ex) {
+                if (ex instanceof ItemNotFound) {
+                    print(`... WARNING: object [${id}] not found, skipping`)
+                    continue
+                }
+            }
 
+            let new_id = await ring.insert(null, obj.dump_data())
             await db.delete(id)
             await this._update_references(id, new_id)
 
-            print(`...reinserted object [${id}] as [${new_id}]`)
+            print(`... reinserted object [${id}] as [${new_id}]`)
         }
         print()
     }

@@ -2,7 +2,7 @@
     Launch & manage a Schemat cluster.
     TODO: move out static CLI functionality to another class & file.
 
-    Usage:   node --experimental-vm-modules cluster/manage.js [run|build|move] [options]
+    Usage:   node --experimental-vm-modules cluster/manage.js [run|move|reinsert] [options]
 */
 
 import yargs from 'yargs'
