@@ -133,7 +133,7 @@ export class BasicIndex extends Index {
         let item_record = item._record_
 
         if (!this.accept(item_record)) return
-        const value = this.generate_value(item)
+        const value = this.generate_value(item_record)
         for (const key of this.generate_keys(item_record))
             yield new PlainRecord(this.schema, key, value)
     }
@@ -142,12 +142,13 @@ export class BasicIndex extends Index {
         return !this.category || this.category.is_equivalent(record.data.get('_category_'))
     }
 
-    generate_value(item) {
+    generate_value(item_record) {
         /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
            If undefined is returned, the record will consist of a key only.
          */
         if (this.schema.no_value()) return undefined
-        return T.subset(item, ...this.schema.properties)
+        let entries = this.schema.properties.map(prop => [prop, item_record.get(prop)])     // only the first value of a repeated field is included (!)
+        return Object.fromEntries(entries)
     }
 
     *generate_keys(item_record) {
