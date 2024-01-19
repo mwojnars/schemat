@@ -598,7 +598,7 @@ export class Item {
         return values
     }
 
-    _own_values(prop)  { return this._data_.get_array(prop) }
+    _own_values(prop)  { return this._data_.get_all(prop) }
 
     async refresh() {
         /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
@@ -705,7 +705,7 @@ export class Item {
         if (endpoints.length) return endpoints
 
         // otherwise, use category defaults
-        endpoints = this._category_?.default_endpoints.get_array(protocol) || []
+        endpoints = this._category_?.default_endpoints.get_all(protocol) || []
         if (endpoints.length) return endpoints
 
         // otherwise, use global defaults

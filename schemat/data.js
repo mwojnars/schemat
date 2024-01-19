@@ -241,8 +241,8 @@ export class Catalog {
         }
     }
 
-    get_array(key) {
-        /* Return an array of all values associated with a given top-level key(s). */
+    get_all(key) {
+        /* Return an array of all values associated with a given top-level key. */
         return this.getEntries(key).map(e => e.value)
     }
 
