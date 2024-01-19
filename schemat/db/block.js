@@ -305,18 +305,16 @@ export class YamlDataStorage extends MemoryStorage {
     async open() {
         /* Load records from this block's file. */
 
-        this.data_sequence = this.block.sequence
-        this.ring = this.data_sequence.ring
-
         // let ring = req.current_ring
         // let block = req.current_block
         // this.data_sequence = req.current_data
 
         createFileIfNotExists(this.filename)
 
+        this.data_sequence = this.block.sequence
+        let ring = this.data_sequence.ring
         let content = fs.readFileSync(this.filename, 'utf8')
         let records = yaml.parse(content) || []
-
         let max_id = 0
         this._records.clear()
 
@@ -324,7 +322,7 @@ export class YamlDataStorage extends MemoryStorage {
             let id = T.pop(record, '__id')
             let key = this.data_sequence.encode_key(id)
 
-            this.ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
+            ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.block.assert_unique(key, id, `duplicate item ID loaded from ${this.filename}`)
 
             max_id = Math.max(max_id, id)
