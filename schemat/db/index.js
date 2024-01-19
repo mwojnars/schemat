@@ -130,16 +130,16 @@ export class BasicIndex extends Index {
            - 0, if the item is not allowed in this index or doesn't contain the required fields,
            - 2+, if some of the item's fields to be used in the key contain repeated values.
          */
-        if (!this.accept(item)) return
+        let item_record = item._record_
+
+        if (!this.accept(item_record)) return
         const value = this.generate_value(item)
-        for (const key of this.generate_keys(item._record_))
+        for (const key of this.generate_keys(item_record))
             yield new PlainRecord(this.schema, key, value)
     }
 
-    accept(item) {
-        let record = item?._record_
-        // return record && (!this.category || schemat.equivalent(record.get('_category_'), this.category))
-        return item && (!this.category || this.category.is_equivalent(item._category_))
+    accept(record) {
+        return !this.category || this.category.is_equivalent(record.data.get('_category_'))
     }
 
     generate_value(item) {
