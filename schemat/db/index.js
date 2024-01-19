@@ -151,12 +151,14 @@ export class BasicIndex extends Index {
 
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
+        let data = item._data_
 
-        for (const name of this.schema.field_names) {
-            const values = item[`${name}_array`]
+        for (const field of this.schema.field_names) {
+            // const values = item[`${field}_array`]
+            const values = data.get_all(field)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && field_values.length)
-                throw new Error(`key field ${name} has multiple values, which is allowed only for the first field in the index`)
+                throw new Error(`key field ${field} has multiple values, which is allowed only for the first field in the index`)
             field_values.push(values)
         }
 
