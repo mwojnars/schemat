@@ -51,7 +51,7 @@ export class Block extends Item {
         if      (this.format === 'data-yaml') storage_class = YamlDataStorage
         else if (this.format === 'index-jl')  storage_class = JsonIndexStorage
         else
-            throw new Error(`unsupported storage type, '${this.format}', for ${this.filename}`)
+            throw new Error(`[${this._id_}] unsupported storage type, '${this.format}', for ${this.filename}`)
 
         this._storage = new storage_class(this.filename, this)
         return this._storage.open()
