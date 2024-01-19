@@ -650,16 +650,16 @@ export class Item {
         /* Check whether this item belongs to a `category`, or its subcategory.
            All comparisons along the way use item IDs, not object identity. The item must be loaded.
         */
-        return this._category_.inherits(category)
+        return this._category_.inherits_from(category)
     }
 
-    inherits(parent) {
+    inherits_from(parent) {
         /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
            True if parent==this. All comparisons by item ID.
          */
         if (this.is_equivalent(parent)) return true
         for (const proto of this._prototypes_)
-            if (proto.inherits(parent)) return true
+            if (proto.inherits_from(parent)) return true
         return false
     }
 

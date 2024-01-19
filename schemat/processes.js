@@ -25,12 +25,4 @@ export class SchematProcess {
         // await registry.boot()
         return this
     }
-
-    // equivalent(obj1, obj2) {
-    //     /* True if `obj1` and `obj2` are equivalent in terms of ID; they still can be two different instances
-    //        AND may contain different data (!), for example, if one them contains more recent updates than the other.
-    //        Each of the arguments can be null or undefined - such values, or missing ID, are considered NOT equivalent.
-    //      */
-    //     return obj1?._id_ !== undefined && obj1?._id_ === obj2?._id_
-    // }
 }
