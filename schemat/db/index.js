@@ -64,7 +64,7 @@ export class Index extends Sequence {
         }
     }
 
-    async *map_record(input_record) {
+    *map_record(input_record) {
         /* Perform transformation of the input Record, as defined by this index, and yield any number (0+)
            of output Records to be stored in the index.
          */
@@ -117,22 +117,20 @@ export class BasicIndex extends Index {
 
     category            // category of items allowed in this index
 
-    async *map_record(input_record /*Record*/) {
-        // let item_record = ItemRecord.from_binary(input_record)
-        let item = await Item.from_binary(input_record)
-        yield* this.generate_records(item)
-    }
-
-    *generate_records(item) {
-        /* Generate a stream of records, each record being a {key, value} pair, NOT encoded.
+    *map_record(input_record /*Record*/) {
+        /* Generate a stream of records, each one being a {key, value} pair, NOT encoded.
            The key is an array of field values; the value is a plain JS object that can be stringified through JSON.
            The result stream can be of any size, including:
-           - 0, if the item is not allowed in this index or doesn't contain the required fields,
-           - 2+, if some of the item's fields to be used in the key contain repeated values.
+           - 0, if the input_record is not allowed in this index or doesn't contain the required fields,
+           - 2+, if some of the fields to be used in the key contain repeated values.
          */
-        let item_record = item._record_
+        // let item = await Item.from_binary(input_record)
+        // yield* this.generate_records(item)
+        // let item_record = item._record_
 
-        if (!this.accept(item_record)) return
+        let item_record = ItemRecord.from_binary(input_record)
+        if (!this.accept(item_record)) return undefined
+
         const value = this.generate_value(item_record)
         for (const key of this.generate_keys(item_record))
             yield new PlainRecord(this.schema, key, value)
