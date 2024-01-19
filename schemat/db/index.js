@@ -124,10 +124,6 @@ export class BasicIndex extends Index {
            - 0, if the input_record is not allowed in this index or doesn't contain the required fields,
            - 2+, if some of the fields to be used in the key contain repeated values.
          */
-        // let item = await Item.from_binary(input_record)
-        // yield* this.generate_records(item)
-        // let item_record = item._record_
-
         let item_record = ItemRecord.from_binary(input_record)
         if (!this.accept(item_record)) return undefined
 
