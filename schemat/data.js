@@ -241,9 +241,9 @@ export class Catalog {
         }
     }
 
-    getValues(keys) {
+    get_array(key) {
         /* Return an array of all values associated with a given top-level key(s). */
-        return this.getEntries(keys).map(e => e.value)
+        return this.getEntries(key).map(e => e.value)
     }
 
     getEntries(keys) { return [...this.readEntries(keys)] }
