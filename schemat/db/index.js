@@ -1,7 +1,7 @@
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
-import {PlainRecord, SequenceSchema} from "./records.js";
+import {ItemRecord, PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
 import {IndexBlock} from "./block.js";
 import {Sequence} from "./sequence.js";
@@ -106,7 +106,6 @@ export class Index extends Sequence {
                 del_records.delete(key)
             }
     }
-
 }
 
 export class BasicIndex extends Index {
@@ -119,6 +118,7 @@ export class BasicIndex extends Index {
     category            // category of items allowed in this index
 
     async *map_record(input_record /*Record*/) {
+        // let data = ItemRecord.from_binary(input_record).data
         let obj = await Item.from_binary(input_record)
         yield* this.generate_records(obj)
     }
