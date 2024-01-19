@@ -146,7 +146,7 @@ export class BasicIndex extends Index {
         /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
            If undefined is returned, the record will consist of a key only.
          */
-        if (this.schema.empty_value()) return undefined
+        if (this.schema.no_value()) return undefined
         return T.subset(item, ...this.schema.properties)
     }
 

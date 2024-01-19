@@ -234,7 +234,7 @@ export class SequenceSchema {
         this.properties = properties
     }
 
-    empty_value()       { return !this.properties?.length }
+    no_value()          { return !this.properties?.length }     // true if no value part is stored in records
 
     encode_key(key) {
         /* `key` is an array of field values. The array can be shorter than this.field_types ("partial key")
