@@ -47,7 +47,7 @@ export class Index extends Sequence {
         let req = new DataRequest(this, 'apply', {change})
 
         // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
-        const [del_records, put_records] = await this._make_plan(change)
+        const [del_records, put_records] = this._make_plan(change)
 
         // delete old records
         for (let [key, value] of del_records || []) {
@@ -71,7 +71,7 @@ export class Index extends Sequence {
         throw new Error('not implemented')
     }
 
-    async _make_plan(change) {
+    _make_plan(change) {
         /* Make an update execution plan in response to a `change` in the source sequence.
            The plan is a pair of BinaryMaps, {key: value}, one for records to be deleted, and one for records
            to be written to the index sequence.
@@ -81,8 +81,8 @@ export class Index extends Sequence {
         let in_record_new = change.record_new(source_schema)
 
         // map each source record (old & new) to an array of 0+ output records to be saved/removed in the index
-        let out_records_old = in_record_old && await T.arrayFromAsync(this.map_record(in_record_old))
-        let out_records_new = in_record_new && await T.arrayFromAsync(this.map_record(in_record_new))
+        let out_records_old = in_record_old && [...this.map_record(in_record_old)]
+        let out_records_new = in_record_new && [...this.map_record(in_record_new)]
 
         // del/put plan: records to be deleted from, or written to, the index
         let del_records = out_records_old && new BinaryMap(out_records_old.map(rec => [rec.binary_key, rec.string_value]))
