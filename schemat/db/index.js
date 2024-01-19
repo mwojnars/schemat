@@ -118,7 +118,7 @@ export class BasicIndex extends Index {
     category            // category of items allowed in this index
 
     async *map_record(input_record /*Record*/) {
-        // let data = ItemRecord.from_binary(input_record).data
+        // let item_record = ItemRecord.from_binary(input_record)
         let obj = await Item.from_binary(input_record)
         yield* this.generate_records(obj)
     }
@@ -151,7 +151,7 @@ export class BasicIndex extends Index {
 
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
-        let data = item._data_
+        let data = item._record_.data
 
         for (const field of this.schema.field_names) {
             // const values = item[`${field}_array`]
@@ -180,7 +180,10 @@ export class IndexByCategory extends BasicIndex {
     ]));
 
     *generate_keys(item) {
-        yield [item._category_?._id_, item._id_]
+        let record = item._record_
+        let category_id = record.data.get('_category_')?._id_       // can be undefined, such records are also included in the index
+        yield [category_id, record.id]
+        // yield [item._category_?._id_, item._id_]
     }
 }
 
