@@ -346,6 +346,13 @@ export class Item {
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
 
+    is_equivalent(other) {
+        /* True if `this` and `other` object have the same ID; they still can be two different instances
+           AND may contain different data (!), for example, if one of them contains more recent updates than the other.
+           If `other` is undefined or any of the objects has a missing ID, they are considered NOT equivalent.
+         */
+        return this._id_ !== undefined && this._id_ === other?._id_
+    }
 
     /***  Instantiation  ***/
 
@@ -650,7 +657,7 @@ export class Item {
         /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
            True if parent==this. All comparisons by item ID.
          */
-        if (schemat.equivalent(this, parent)) return true
+        if (this.is_equivalent(parent)) return true
         for (const proto of this._prototypes_)
             if (proto.inherits(parent)) return true
         return false

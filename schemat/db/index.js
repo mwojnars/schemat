@@ -119,8 +119,8 @@ export class BasicIndex extends Index {
 
     async *map_record(input_record /*Record*/) {
         // let item_record = ItemRecord.from_binary(input_record)
-        let obj = await Item.from_binary(input_record)
-        yield* this.generate_records(obj)
+        let item = await Item.from_binary(input_record)
+        yield* this.generate_records(item)
     }
 
     *generate_records(item) {
@@ -136,7 +136,11 @@ export class BasicIndex extends Index {
             yield new PlainRecord(this.schema, key, value)
     }
 
-    accept(item) { return item && (!this.category || schemat.equivalent(item._category_, this.category)) }
+    accept(item) {
+        let record = item?._record_
+        // return record && (!this.category || schemat.equivalent(record.get('_category_'), this.category))
+        return item && (!this.category || this.category.is_equivalent(item._category_))
+    }
 
     generate_value(item) {
         /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
