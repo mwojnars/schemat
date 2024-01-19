@@ -132,7 +132,7 @@ export class BasicIndex extends Index {
          */
         if (!this.accept(item)) return
         const value = this.generate_value(item)
-        for (const key of this.generate_keys(item))
+        for (const key of this.generate_keys(item._record_))
             yield new PlainRecord(this.schema, key, value)
     }
 
@@ -146,15 +146,14 @@ export class BasicIndex extends Index {
         return T.subset(item, ...this.schema.properties)
     }
 
-    *generate_keys(item) {
+    *generate_keys(item_record) {
         /* Generate a stream of keys, each being an array of field values (not encoded). */
 
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
-        let data = item._record_.data
+        let data = item_record.data
 
         for (const field of this.schema.field_names) {
-            // const values = item[`${field}_array`]
             const values = data.get_all(field)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && field_values.length)
@@ -179,11 +178,9 @@ export class IndexByCategory extends BasicIndex {
         ['id',  new INTEGER()],
     ]));
 
-    *generate_keys(item) {
-        let record = item._record_
-        let category_id = record.data.get('_category_')?._id_       // can be undefined, such records are also included in the index
-        yield [category_id, record.id]
-        // yield [item._category_?._id_, item._id_]
+    *generate_keys(item_record) {
+        let category_id = item_record.data.get('_category_')?._id_      // can be undefined, such records are also included in the index
+        yield [category_id, item_record.id]
     }
 }
 
