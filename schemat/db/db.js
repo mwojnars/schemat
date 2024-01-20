@@ -23,7 +23,7 @@ export function object_to_item(obj) {
     const KEEP = ['_class_', '_category_']
     const DROP = ['action']
 
-    obj = {...obj}                  // make a copy to enable modifications
+    // convert category ID to Category object (this modifies the original object!)
     if (T.isNumber(obj._category_)) obj._category_ = registry.get_item(obj._category_)
 
     // filter out undefined values, private props (starting with '_'), and Item's special attributes except for those listed in KEEP
