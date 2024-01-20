@@ -1,14 +1,16 @@
 - __id: 200
+  name: db-paperity
   data_sequence:
     "@": 202
   indexes:
     idx_category_item:
       "@": 201
     "@": Map
-  name: db-paperity
   readonly: false
   start_id: 1000
   stop_id: null
+  _category_:
+    "@": 12
   _class_:
     =: db.Ring
     "@": (class)
@@ -76,16 +78,18 @@
     "@": (class)
   "@": Data
 - __id: 205
+  name: db-demo
   data_sequence:
     "@": 207
   indexes:
     idx_category_item:
       "@": 206
     "@": Map
-  name: db-demo
   readonly: false
   start_id: 1000
   stop_id: null
+  _category_:
+    "@": 12
   _class_:
     =: db.Ring
     "@": (class)

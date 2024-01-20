@@ -310,16 +310,16 @@
   _category_:
     "@": 0
   "@": Data
+- __id: 11
+  name: Database
+  _category_:
+    "@": 0
+  "@": Data
 - __id: 12
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
   allow_custom_fields: true
-  _category_:
-    "@": 0
-  "@": Data
-- __id: 11
-  name: Database
   _category_:
     "@": 0
   "@": Data
