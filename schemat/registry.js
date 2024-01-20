@@ -218,7 +218,7 @@ export class Registry {
             this._cache.delete(item._id_)
     }
 
-    getItem(id, {version = null} = {}) {
+    get_item(id, {version = null} = {}) {
         /* Get a registered instance of an item with a given ID, possibly a stub. An existing instance is returned,
            this._cache, or a stub is created anew and saved for future calls.
          */
@@ -232,7 +232,7 @@ export class Registry {
         return item
     }
 
-    async getLoaded(id)     { return this.getItem(id).load() }
+    async getLoaded(id)     { return this.get_item(id).load() }
 
     async *scan_all({limit} = {}) {
         /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */

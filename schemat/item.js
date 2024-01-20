@@ -609,7 +609,7 @@ export class Item {
 
     async refresh() {
         /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
-        return registry.getItem(this._id_).load()
+        return registry.get_item(this._id_).load()
     }
 
     dump_data() {

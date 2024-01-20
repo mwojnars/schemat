@@ -134,7 +134,7 @@ export class JSONx {
                 state = state_attr
             }
             if (T.isNumber(classname))                      // `classname` can be an item ID instead of a class
-                return registry.getItem(classname)
+                return registry.get_item(classname)
             cls = registry.getClass(classname)
         }
         else cls = Object
@@ -150,7 +150,7 @@ export class JSONx {
             return new Map(Object.entries(this.decode_object(state)))
 
         if (T.isSubclass(cls, Item) && state instanceof Array)      // all Item instances except unlinked ones are created/loaded through Registry
-            return registry.getItem(state)
+            return registry.get_item(state)
 
         state = this.decode(state)
 

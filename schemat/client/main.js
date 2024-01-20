@@ -20,7 +20,7 @@ class ClientRegistry extends Registry {
         for (let rec of data.items)
             await this.getLoaded(rec.id)            // preload all boot items from copies passed in constructor()
 
-        return this.getItem(data.target_id)
+        return this.get_item(data.target_id)
     }
 
     directImportPath(path) { return this.remoteImportPath(path) }
@@ -42,7 +42,7 @@ class ClientRegistry extends Registry {
         let record = await category.action.create_item(data)
         if (record) {
             schemat.db.cache(record)                        // record == {id: id, data: data-encoded}
-            return this.getItem(record.id)
+            return this.get_item(record.id)
         }
         throw new Error(`cannot create item ${item}`)
     }
