@@ -160,7 +160,7 @@ export class DataBlock extends Block {
         let {id, key, data} = req.args
 
         if (id === undefined || id === null) {
-            id = Math.max(this._autoincrement + 1, req.current_ring.start_iid)      // no ID? use _autoincrement with the next available ID
+            id = Math.max(this._autoincrement + 1, req.current_ring.start_id)      // no ID? use _autoincrement with the next available ID
             key = req.current_data.encode_key(id)
         }
         else await this.assert_unique(key, id)                  // fixed ID provided by the caller? perform a uniqueness check

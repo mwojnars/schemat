@@ -24,17 +24,17 @@ export class Cluster { //extends Item {
     // get db() { return this.prop('db') }
 
     static cluster_ring_spec =
-        {file: DB_ROOT + '/db-cluster.yaml', start_iid: 200, stop_iid: 300}
+        {file: DB_ROOT + '/db-cluster.yaml', start_id: 200, stop_id: 300}
 
     static ring_specs = [
-        {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: false},
-        {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
+        {file: DB_ROOT + '/db-boot.yaml', start_id:    0, stop_id:  100, readonly: false},
+        {file: DB_ROOT + '/db-base.yaml', start_id:  100, stop_id: 1000, readonly: false},
         Cluster.cluster_ring_spec,
         {item: 200, readonly: false},       // db-paperity.yaml
         {item: 205, readonly: false},       // db-demo.yaml
 
-        // {file: __dirname + '/../app-demo/data/db-paperity.yaml', start_iid: 1000, stop_iid: null, readonly: false},
-        // {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
+        // {file: __dirname + '/../app-demo/data/db-paperity.yaml', start_id: 1000, stop_id: null, readonly: false},
+        // {file: DB_ROOT + '/db-demo.yaml', start_id: 1000, stop_id: null, readonly: false},
 
         // {item: 1015, name: 'mysql', readonly: true},
     ]

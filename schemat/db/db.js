@@ -58,8 +58,8 @@ export class Ring extends Item {
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
-    start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different rings stacked together
-    stop_iid                // (optional) maximum IID of all items
+    start_id = 0            // minimum ID of all items; helps maintain separation of IDs between different rings stacked together
+    stop_id                 // (optional) maximum ID of all items
 
 
     async __init__() {
@@ -102,9 +102,9 @@ export class Ring extends Item {
     /***  Errors & internal checks  ***/
 
     writable(id)    { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be written here
-    valid_id(id)    { return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
+    valid_id(id)    { return this.start_id <= id && (!this.stop_id || id < this.stop_id) }
 
-    assert_valid_id(id, msg) { if (!this.valid_id(id)) throw new DataAccessError(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
+    assert_valid_id(id, msg) { if (!this.valid_id(id)) throw new DataAccessError(msg, {id, start_id: this.start_id, stop_id: this.stop_id}) }
     assert_writable(id, msg) { if (!this.writable(id)) throw new DataAccessError(msg, {id}) }
 
 
@@ -196,10 +196,10 @@ export class PlainRing extends Ring {
         this._file = file
         this.name = name || (file && path.basename(file, path.extname(file)))
 
-        let {readonly = false, start_iid = 0, stop_iid} = opts
+        let {readonly = false, start_id = 0, stop_id} = opts
         this.readonly = readonly
-        this.start_iid = start_iid
-        this.stop_iid = stop_iid
+        this.start_id = start_id
+        this.stop_id = stop_id
     }
 
     async open() {

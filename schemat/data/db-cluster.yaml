@@ -7,8 +7,8 @@
     "@": Map
   name: db-paperity
   readonly: false
-  start_iid: 1000
-  stop_iid: null
+  start_id: 1000
+  stop_id: null
   _class_:
     =: db.Ring
     "@": (class)
@@ -84,8 +84,8 @@
     "@": Map
   name: db-demo
   readonly: false
-  start_iid: 1000
-  stop_iid: null
+  start_id: 1000
+  stop_id: null
   _class_:
     =: db.Ring
     "@": (class)
