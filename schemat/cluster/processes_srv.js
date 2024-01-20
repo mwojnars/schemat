@@ -56,7 +56,7 @@ export class WorkerProcess extends BackendProcess {
     async CLI_run({host, port, workers}) {
         await this.cluster.startup()
 
-        // node = registry.getLoaded(this_node_ID)
+        // node = registry.get_loaded(this_node_ID)
         // return node.activate()     // start the lifeloop and all worker processes (servers)
 
         // await this._update_all()
@@ -161,7 +161,7 @@ export class AdminProcess extends BackendProcess {
 
         // reinsert each object
         for (let id of id_list) {
-            try { obj = await registry.getLoaded(id) }
+            try { obj = await registry.get_loaded(id) }
             catch (ex) {
                 if (ex instanceof ItemNotFound) {
                     print(`...WARNING: object [${id}] not found, skipping`)

@@ -1093,7 +1093,7 @@ Category.create_api(
                             schemat.db.cache(rec)                   // need to cache the item in ClientDB
                             // registry.unregister(rec.id)          // evict the item from the Registry to allow re-loading
                         }
-                        items.push(await registry.getLoaded(rec.id))
+                        items.push(await registry.get_loaded(rec.id))
                     }
                     return items
                 }

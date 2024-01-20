@@ -243,7 +243,7 @@ export class Database extends Item {
         for (const spec of this.ring_specs) {
             let ring
 
-            if (spec.item) ring = await registry.getLoaded(spec.item)
+            if (spec.item) ring = await registry.get_loaded(spec.item)
             else if (spec instanceof Ring) ring = spec
             else {
                 ring = PlainRing.create(spec)           // a plain ring object that is NOT stored in DB

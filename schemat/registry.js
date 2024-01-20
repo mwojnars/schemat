@@ -186,7 +186,7 @@ export class Registry {
             // if (!site_id)
             //     if (this.client_side) return
             //     else site_id = await this._find_site()
-            return await this.getLoaded(site_id)
+            return await this.get_loaded(site_id)
         } catch (ex) {
             if (!(ex instanceof ItemNotFound)) throw ex
         }
@@ -195,7 +195,7 @@ export class Registry {
     // async _find_site() {
     //     /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
     //     assert(this.server_side)
-    //     let Site = await this.getLoaded(SITE_CATEGORY_ID)
+    //     let Site = await this.get_loaded(SITE_CATEGORY_ID)
     //     let scan = this.scan(Site, {limit: 1})
     //     let ret  = await scan.next()
     //     if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
@@ -232,7 +232,7 @@ export class Registry {
         return item
     }
 
-    async getLoaded(id)     { return this.get_item(id).load() }
+    async get_loaded(id)     { return this.get_item(id).load() }
 
     async *scan_all({limit} = {}) {
         /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
@@ -255,7 +255,7 @@ export class Registry {
         for await (const record of records) {
             let {cid, id} = record.object_key
             assert(target_cid === undefined || target_cid === cid)
-            yield this.getLoaded(id)
+            yield this.get_loaded(id)
         }
     }
 

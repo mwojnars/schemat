@@ -7,7 +7,6 @@ import {SchematProcess} from "../processes.js";
 /**********************************************************************************************************************/
 
 class ClientRegistry extends Registry {
-    /* Client-side registry: getItem() pulls items from server. */
 
     server_side = false
 
@@ -18,7 +17,7 @@ class ClientRegistry extends Registry {
         assert(this.site)
 
         for (let rec of data.items)
-            await this.getLoaded(rec.id)            // preload all boot items from copies passed in constructor()
+            await this.get_loaded(rec.id)               // preload all boot items from copies passed in constructor()
 
         return this.get_item(data.target_id)
     }
@@ -65,10 +64,6 @@ export class ClientProcess extends SchematProcess {
         await this._create_registry(ClientRegistry)
         let item = await registry.client_boot(data)
         item.assert_loaded()
-
-        // print('root:', await registry.getItem([0,0], {load: true}))
-        // print('[0,10]:', await registry.getItem([0,10], {load: true}))
-        // print('[10,1]:', await registry.getItem([10,1], {load: true}))
 
         let root = document.querySelector("#page-component")
 
