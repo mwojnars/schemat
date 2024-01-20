@@ -107,7 +107,8 @@
             segments.
           "@": ITEM
         _status_:
-          info: Set to "DRAFT" if the object's record is not yet fully initialized in the database.
+          info: Set to "DRAFT" if the object's record is not yet fully initialized in the
+            database.
           inherit: false
           "@": STRING
         name:
@@ -309,10 +310,10 @@
   _category_:
     "@": 0
   "@": Data
-- __id: 11
+- __id: 12
   name: Ring
-  info: Base category for items that represent data rings (stackable database
-    layers).
+  info: Category for data rings, i.e., stackable database layers in a Database
+    object.
   allow_custom_fields: true
   _category_:
     "@": 0

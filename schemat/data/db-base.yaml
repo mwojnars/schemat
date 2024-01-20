@@ -1,8 +1,6 @@
 - __id: 100
   name: YAML
   info: Data stored in a YAML file.
-  _extends_:
-    "@": 11
   fields:
     filename:
       "@": STRING
@@ -12,8 +10,6 @@
   "@": Data
 - __id: 101
   name: MysqlDB
-  _extends_:
-    "@": 11
   class_path: /system/local/db/mysql.js:MySQL
   fields:
     host:
