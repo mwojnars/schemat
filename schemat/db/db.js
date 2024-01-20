@@ -20,14 +20,18 @@ export function object_to_item(obj) {
        Properties defined by getters are also ignored.
      */
 
-    // filter out undefined values, private props (starting with '_'), and Item's special attributes
+    const KEEP = ['_class_', '_category_']
+    const DROP = ['action']
+
+    // filter out undefined values, private props (starting with '_'), and Item's special attributes except for those listed in KEEP
     let entries = Object.entries(obj).filter(([k, v]) =>
         (v !== undefined) &&
-        !k.startsWith('_') &&
-        !['registry','action'].includes(k))
+        (k[0] !== '_' || KEEP.includes(k)) &&
+        !DROP.includes(k)
+    )
 
-    // if `obj` has a class, and it's not Item, store it in the _class_ attribute
-    if (obj.constructor !== Object && obj.constructor !== Item)
+    // if `obj` has a JS class, and it's not Item, store it in the _class_ attribute
+    if (!obj._class_ && obj.constructor !== Object && obj.constructor !== Item)
         entries.push(['_class_', obj.constructor])
 
     // print(`object_to_item(${obj}) =>`, entries)
@@ -181,6 +185,8 @@ export class Ring extends Item {
 
 export class PlainRing extends Ring {
     /* A plain ring object that is NOT stored in DB. Only this kind of object needs __create__() and open(). */
+
+    _class_ = Ring          // the class that to be saved in the DB
 
     __create__({name, ...opts}) {
         let {file} = opts
