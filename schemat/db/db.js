@@ -30,7 +30,7 @@ export function object_to_item(obj) {
     if (!obj._class_ && obj.constructor !== Object && obj.constructor !== Item)
         obj._class_ = obj.constructor
 
-    if (obj._class_) obj._class_ = registry.getPath(obj._class_)            // convert _class_ to a class path string
+    if (obj._class_) obj._class_ = registry.get_class_path(obj._class_)         // convert _class_ to a class path string
 
     // filter out undefined values, private props (starting with '_'), and Item's special attributes except for those listed in KEEP
     let entries = Object.entries(obj).filter(([k, v]) =>

@@ -262,7 +262,7 @@ export class Registry {
 
     /***  Object <=> classpath mapping (for de/serialization)  ***/
 
-    getPath(cls) {
+    get_class_path(cls) {
         /* Return a dotted module path of a given class or function as stored in a global Classpath.
            `cls` should be either a constructor function, or a prototype with .constructor property.
          */
