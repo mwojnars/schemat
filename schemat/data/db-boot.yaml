@@ -187,9 +187,7 @@
   info: File located on a local disk, identified by its local file path.
   _extends_:
     "@": 3
-  item_class:
-    =: std.FileLocal
-    "@": (class)
+  item_class: std.FileLocal
   fields:
     local_path:
       "@": STRING
@@ -201,9 +199,7 @@
   name: Directory
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
-  item_class:
-    =: std.Directory
-    "@": (class)
+  item_class: std.Directory
   fields:
     entries:
       values:
@@ -223,9 +219,7 @@
     Gives access to all files and folders beneath the path.
   _extends_:
     "@": 5
-  item_class:
-    =: std.LocalFolder
-    "@": (class)
+  item_class: std.LocalFolder
   fields:
     local_path:
       "@": STRING
@@ -237,9 +231,7 @@
   name: Namespace
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
-  item_class:
-    =: std.Namespace
-    "@": (class)
+  item_class: std.Namespace
   _category_:
     "@": 0
   "@": Data
@@ -247,9 +239,7 @@
   name: ID_Namespace
   info: Namespace that serves items on simple URLs of the form /IID. Mainly used
     for system & admin purposes, or as a last-resort default for URL generation.
-  item_class:
-    =: std.ID_Namespace
-    "@": (class)
+  item_class: std.ID_Namespace
   fields:
     category:
       category:
@@ -265,9 +255,7 @@
   info: "Namespace for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
-  item_class:
-    =: std.CategoryID_Namespace
-    "@": (class)
+  item_class: std.CategoryID_Namespace
   fields:
     spaces:
       values:
@@ -313,9 +301,7 @@
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
-#  item_class:
-#    =: db.Ring
-#    "@": (class)
+#  item_class: db.Ring
   allow_custom_fields: true
   fields:
     readonly:
