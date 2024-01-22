@@ -11,9 +11,7 @@
   stop_id: null
   _category_:
     "@": 12
-  _class_:
-    =: db.Ring
-    "@": (class)
+  _class_: db.Ring
   "@": Data
 - __id: 201
   ring:
@@ -34,9 +32,7 @@
   flush_delay: 1
   source:
     "@": 202
-  _class_:
-    =: db.IndexByCategory
-    "@": (class)
+  _class_: db.IndexByCategory
   "@": Data
 - __id: 202
   ring:
@@ -55,27 +51,21 @@
   derived:
     - "@": 201
   flush_delay: 1
-  _class_:
-    =: db.DataSequence
-    "@": (class)
+  _class_: db.DataSequence
   "@": Data
 - __id: 203
   sequence:
     "@": 201
   filename: ./cluster/../../app-demo/data/db-paperity.idx_category_item.jl
   format: index-jl
-  _class_:
-    =: db.IndexBlock
-    "@": (class)
+  _class_: db.IndexBlock
   "@": Data
 - __id: 204
   sequence:
     "@": 202
   filename: ./cluster/../../app-demo/data/db-paperity.yaml
   format: data-yaml
-  _class_:
-    =: db.DataBlock
-    "@": (class)
+  _class_: db.DataBlock
   "@": Data
 - __id: 205
   name: db-demo
@@ -90,9 +80,7 @@
   stop_id: null
   _category_:
     "@": 12
-  _class_:
-    =: db.Ring
-    "@": (class)
+  _class_: db.Ring
   "@": Data
 - __id: 206
   ring:
@@ -113,9 +101,7 @@
   flush_delay: 1
   source:
     "@": 207
-  _class_:
-    =: db.IndexByCategory
-    "@": (class)
+  _class_: db.IndexByCategory
   "@": Data
 - __id: 207
   ring:
@@ -134,25 +120,19 @@
   derived:
     - "@": 206
   flush_delay: 1
-  _class_:
-    =: db.DataSequence
-    "@": (class)
+  _class_: db.DataSequence
   "@": Data
 - __id: 208
   sequence:
     "@": 206
   filename: ./cluster/../data/db-demo.idx_category_item.jl
   format: index-jl
-  _class_:
-    =: db.IndexBlock
-    "@": (class)
+  _class_: db.IndexBlock
   "@": Data
 - __id: 209
   sequence:
     "@": 207
   filename: ./cluster/../data/db-demo.yaml
   format: data-yaml
-  _class_:
-    =: db.DataBlock
-    "@": (class)
+  _class_: db.DataBlock
   "@": Data
