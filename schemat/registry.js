@@ -275,7 +275,7 @@ export class Registry {
 
     getClass(path) {
         /* Get a global object - class or function from a virtual package (Classpath) - pointed to by `path`. */
-        return this.classpath.decode(path)  //this.site.getObject(path)
+        return this.classpath.decode(path)
     }
 
 

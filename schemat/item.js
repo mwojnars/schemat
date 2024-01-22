@@ -520,6 +520,7 @@ export class Item {
         // T.setClass(this, await this.getClass() || Item)
         if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
         let cls = this._class_ || this._category_?.item_class || await this._category_?._item_class_
+        if (typeof cls === 'string') cls = await registry.getClass(cls)
         T.setClass(this, cls || Item)
     }
 
