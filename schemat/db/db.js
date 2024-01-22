@@ -189,7 +189,7 @@ export class Ring extends Item {
 export class PlainRing extends Ring {
     /* A plain ring object that is NOT stored in DB. Only this kind of object needs __create__() and open(). */
 
-    _class_ = Ring          // the class that to be saved in the DB
+    _class_ = Ring          // the class to be saved in the DB
 
     __create__({name, ...opts}) {
         let {file} = opts

@@ -248,7 +248,7 @@ export class Item {
     _prototypes_            array of direct ancestors (prototypes) of this object; alias for `_extends__array`
     _ancestors_             array of all ancestors, deduplicated and linearized, with `this` at the first position
 
-    _class_                 JS class of this item; assigned AFTER object creation during .load()
+    _class_                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
     _category_              category of this item, as a Category object
     _container_             Container of this item, for canonical URL generation
     _status_                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state

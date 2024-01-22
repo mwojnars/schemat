@@ -84,8 +84,8 @@
           inherit: false
           "@": ITEM
         _class_:
-          info: Javascript class to be assigned to the item after loading to provide
-            custom methods for the item.
+          info: Javascript class (or its class path string) to be assigned to the item after loading. 
+            Provides custom methods and behavior for the item.
           "@": CLASS
         _extends_:
           info: An item that serves as a prototype for this one, that is, provides default
