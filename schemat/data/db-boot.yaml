@@ -300,7 +300,7 @@
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
-#  item_class: db.Ring
+  item_class: db.Ring
   allow_custom_fields: true
   fields:
     readonly:
