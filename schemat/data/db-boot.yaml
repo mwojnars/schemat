@@ -10,7 +10,7 @@
       "@": ITEM
     item_class:
       info: Javascript class for the objects of this category.
-      "@": CLASS
+      "@": STRING
     class_path:
       info: SUN path to a Javascript file that contains a (base) class for this
         category. May contain an optional class name appended after colon ':'.
