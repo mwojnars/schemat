@@ -1,9 +1,7 @@
 - __id: 0
   name: Category
   info: Category of items that represent categories
-  item_class:
-    =: Category
-    "@": (class)
+  item_class: Category
   cache_ttl: 60
   fields:
     _container_:
@@ -139,9 +137,7 @@
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
     startup.
-  item_class:
-    =: std.Site
-    "@": (class)
+  item_class: std.Site
   fields:
     base_url:
       info: "Base URL at which the website is served: protocol + domain + root path
@@ -167,9 +163,7 @@
 - __id: 3
   name: File
   info: File with a text content.
-  item_class:
-    =: std.File
-    "@": (class)
+  item_class: std.File
   fields:
     content:
       "@": CODE
