@@ -26,7 +26,7 @@
     class_init:
       repeated: true
       info: Module-level initialization for this category's Javascript class.
-        Typically contains import statements and global variables. Preceeds the
+        Typically contains import statements and global variables. Precedes the
         Class definition (`class_body`, `views`) in the category's module code.
       "@": CODE
     class_body:
@@ -319,7 +319,14 @@
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
+#  item_class:
+#    =: db.Ring
+#    "@": (class)
   allow_custom_fields: true
+  fields:
+    readonly:
+      "@": BOOLEAN
+    "@": Catalog
   _category_:
     "@": 0
   "@": Data
