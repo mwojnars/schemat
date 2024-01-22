@@ -117,7 +117,7 @@ export class JSONx {
         // decoding of a class object
         if (isdict && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_TYPE)) {
             let classname = state[JSONx.ATTR_STATE]
-            return registry.getClass(classname)
+            return registry.get_class(classname)
         }
 
         // determine the expected class (constructor function) for the output object
@@ -135,7 +135,7 @@ export class JSONx {
             }
             if (T.isNumber(classname))                      // `classname` can be an item ID instead of a class
                 return registry.get_item(classname)
-            cls = registry.getClass(classname)
+            cls = registry.get_class(classname)
         }
         else cls = Object
 

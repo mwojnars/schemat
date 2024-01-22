@@ -517,10 +517,9 @@ export class Item {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass,
            known after loading the item's data.
          */
-        // T.setClass(this, await this.getClass() || Item)
         if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
         let cls = this._class_ || this._category_?.item_class || await this._category_?._item_class_
-        if (typeof cls === 'string') cls = await registry.getClass(cls)
+        if (typeof cls === 'string') cls = await registry.get_class(cls)
         T.setClass(this, cls || Item)
     }
 
@@ -751,7 +750,7 @@ export class Item {
     //        by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
     //      */
     //     let name = this.get('_boot_class')
-    //     if (name) base = registry.getClass(name)
+    //     if (name) base = registry.get_class(name)
     //
     //     let body = this.route_internal(('class')           // full class body from concatenated `code` and `code_*` snippets
     //     if (!body) return base
