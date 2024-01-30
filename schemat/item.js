@@ -169,11 +169,37 @@ class ItemProxy {
         if (multiple) prop = prop.slice(0, -suffix.length)      // use the base property name without the suffix
 
         let values = target._compute_property(prop)
+
+        // if (values.length || target.is_loaded)                  // undefined (empty) value is not cached unless the object is fully loaded
+        ItemProxy._cache_property(target, prop, values)
+
+        // let single = values[0]
+        // let single_cached = (single !== undefined) ? single : ItemProxy.UNDEFINED
+        //
+        // // cache the result in target._self_; _self_ is used instead of `target` because the latter
+        // // can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
+        // let self = target._self_
+        // let writable = (prop[0] === '_' && prop[prop.length - 1] !== '_')       // only private props, _xxx, remain writable after caching
+        //
+        // if (writable) {
+        //     self[prop] = single_cached
+        //     self[prop + suffix] = values
+        // } else {
+        //     Object.defineProperty(self, prop, {value: single_cached, writable, configurable: true})
+        //     Object.defineProperty(self, prop + suffix, {value: values, writable, configurable: true})
+        // }
+
+        return multiple ? values : values[0]
+    }
+
+    static _cache_property(target, prop, values) {
+        /* Cache the result in target._self_; _self_ is used instead of `target` because the latter
+           can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
+         */
+        let suffix = ItemProxy.MULTIPLE_SUFFIX
         let single = values[0]
         let single_cached = (single !== undefined) ? single : ItemProxy.UNDEFINED
 
-        // cache the result in target._self_; _self_ is used instead of `target` because the latter
-        // can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
         let self = target._self_
         let writable = (prop[0] === '_' && prop[prop.length - 1] !== '_')       // only private props, _xxx, remain writable after caching
 
@@ -184,8 +210,6 @@ class ItemProxy {
             Object.defineProperty(self, prop, {value: single_cached, writable, configurable: true})
             Object.defineProperty(self, prop + suffix, {value: values, writable, configurable: true})
         }
-
-        return multiple ? values : single
     }
 }
 
@@ -341,7 +365,7 @@ export class Item {
     /***  Object status  ***/
 
     is_linked()     { return this._id_ !== undefined }                  // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
-    is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized
+    is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized (except _url_ & _path_ which are allowed to be delayed)
 
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
@@ -465,13 +489,13 @@ export class Item {
             if (category && !category.is_loaded() && category !== this)
                 await category.load()
 
+            this._set_expiry(category?.cache_ttl)
+
             await this._init_class()                        // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
             this._init_network()
 
             let init = this.__init__()                      // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init         // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
-
-            this._set_expiry(category?.cache_ttl)
 
             if (this.is_linked())
                 this._ready_.url = this._init_url()         // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
@@ -524,7 +548,9 @@ export class Item {
     }
 
     async _init_url() {
-        /* Initialize this item's URL path, this._url_. */
+        /* Initialize this item's URL path (this._url_) and container path (this._path_). */
+
+        if (this._url_ && this._path_) return this._url_        // already initialized (e.g., for Site object)
 
         let site = registry.site
 
