@@ -481,14 +481,14 @@ export class Item {
 
             this._set_expiry(category?.cache_ttl)
 
+            if (this.is_linked())
+                this._ready_.url = this._init_url()         // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
+
             await this._init_class()                        // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
             this._init_network()
 
             let init = this.__init__()                      // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init         // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
-
-            if (this.is_linked())
-                this._ready_.url = this._init_url()         // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
             return this
 
