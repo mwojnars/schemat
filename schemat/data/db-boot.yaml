@@ -142,6 +142,12 @@
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
       "@": STRING
+    _url_:
+      default: /
+      "@": STRING
+    _path_:
+      default: /
+      "@": STRING
     default_path:
       info: URL path of a default container that can be used to access any object via
         its ID. For internal purposes. Should contain a leading slash and no
