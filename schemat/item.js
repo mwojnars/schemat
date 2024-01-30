@@ -484,13 +484,15 @@ export class Item {
             if (this.is_linked())
                 this._ready_.url = this._init_url()         // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
-            await this._init_class()                        // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
-            this._init_network()
+            return await this.activate()
 
-            let init = this.__init__()                      // optional custom initialization after the data is loaded
-            if (init instanceof Promise) await init         // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
-
-            return this
+            // await this._init_class()                        // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
+            // this._init_network()
+            //
+            // let init = this.__init__()                      // optional custom initialization after the data is loaded
+            // if (init instanceof Promise) await init         // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
+            //
+            // return this
 
         } finally {
             this._meta_.loading = false                     // cleanup to allow another load attempt, even after an error
@@ -505,6 +507,20 @@ export class Item {
         let json = await schemat.db.select(req)
         assert(typeof json === 'string', json)
         return new ItemRecord(this._id_, json)
+    }
+
+    async activate() {
+        /* After this object's props are loaded, attach a JS class to it (provides custom behavior) and call the initializer. */
+
+        assert(this._data_)
+
+        await this._init_class()                        // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
+        this._init_network()
+
+        let init = this.__init__()                      // optional custom initialization after the data is loaded
+        if (init instanceof Promise) await init         // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
+
+        return this
     }
 
     _set_expiry(ttl) {
