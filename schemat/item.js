@@ -122,8 +122,11 @@ class ItemProxy {
     // the suffix appended to a property name when an array of *all* values of this property is requested, not a single value
     static MULTIPLE_SUFFIX = '_array'
 
-    // these props can never be found inside item's schema and should always be accessed as regular object attributes
-    static RESERVED = ['_id_', '_meta_', '_data_', '_record_', '_url_', '_path_', '_ready_']
+    // these special props are always read from regular POJO attributes and NEVER from object's _data_
+    static RESERVED = ['_id_', '_meta_', '_data_', '_record_', '_ready_']
+
+    // these special props can still be written to after the value read from _data_ was undefined
+    static WRITABLE_IF_UNDEFINED = ['_url_', '_path_']
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
@@ -170,7 +173,7 @@ class ItemProxy {
 
         let values = target._compute_property(prop)
 
-        // if (values.length || target.is_loaded)                  // undefined (empty) value is not cached unless the object is fully loaded
+        // if (values.length || target.is_loaded)                  // ?? undefined (empty) value is not cached unless the object is fully loaded
         ItemProxy._cache_property(target, prop, values)
 
         return multiple ? values : values[0]
@@ -186,6 +189,9 @@ class ItemProxy {
 
         let self = target._self_
         let writable = (prop[0] === '_' && prop[prop.length - 1] !== '_')       // only private props, _xxx, remain writable after caching
+
+        if (single === undefined && ItemProxy.WRITABLE_IF_UNDEFINED.includes(prop))
+            writable = true
 
         if (writable) {
             self[prop] = single_cached
