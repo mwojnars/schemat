@@ -351,7 +351,7 @@ export class CatalogTable extends Component {
         }
     }}
 
-    Main({item, catalog, type, path, color, start_color}) {
+    Main({item, catalog, type, path = [], color, start_color}) {
         /* If `start_color` is undefined, the same `color` is used for all rows. */
 
         assert(catalog instanceof Catalog)
