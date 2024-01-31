@@ -633,7 +633,7 @@ export class CATALOG extends Type {
         //       through combine() of props.values type
     }
 
-    display_table(props) { return e(CatalogTable, {path: [], type: this, ...props}) }
+    // display_table(props) { return e(CatalogTable, {path: [], type: this, ...props}) }
 }
 
 
@@ -674,7 +674,7 @@ export class DATA extends CATALOG {
         return fields.sort()
     }
 
-    display_table(props)   { return super.display_table({value: props.item._data_, start_color: 1, ...props}) }
+    // display_table(props)   { return super.display_table({value: props.item._data_, start_color: 1, ...props}) }
 }
 
 export class DATA_GENERIC extends DATA {

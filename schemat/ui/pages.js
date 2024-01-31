@@ -5,6 +5,7 @@ import { e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FI
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
 import {HttpService} from "../services.js";
 import {Data} from "../data.js";
+import {CatalogTable} from "./catalog.js";
 
 
 /**********************************************************************************************************************/
@@ -270,10 +271,16 @@ export class ItemAdminView extends ReactPage.View {
     Properties() {
         /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
         // let changes = new Changes(this)
-        return FRAGMENT(
-                this._schema_.display_table({item: this}),
-                // e(changes.Buttons.bind(changes)),
-            )
+
+        // e(CatalogTable, {path: [], type: this, ...props})
+        // super.display_table({value: props.item._data_, start_color: 1, ...props})
+
+        return e(CatalogTable, {item: this, type: this._schema_, value: this._data_, start_color: 1, path: []})
+
+        // return FRAGMENT(
+        //         this._schema_.display_table({item: this}),
+        //         // e(changes.Buttons.bind(changes)),
+        //     )
     }
 }
 
