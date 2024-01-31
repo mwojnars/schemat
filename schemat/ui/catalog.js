@@ -248,7 +248,7 @@ export class CatalogTable extends Component {
                 DIV(cl('cell cell-value'))
             ),
             DIV({key: 'cat'}, folded && st({display: 'none'}),
-                e(CatalogTable, {item, path, value: subcat, type, color})),
+                e(CatalogTable, {item, path, catalog: subcat, type, color})),
         )
     }
     EntryAddNew({hide = true, insert}) {
@@ -351,12 +351,12 @@ export class CatalogTable extends Component {
         }
     }}
 
-    Main({item, value, type, path, color, start_color}) {
+    Main({item, catalog, type, path, color, start_color}) {
         /* If `start_color` is undefined, the same `color` is used for all rows. */
-        // assert(type.instanceof(CATALOG))
-        assert(value instanceof Catalog)
 
-        let catalog  = value
+        assert(catalog instanceof Catalog)
+        // assert(type.instanceof(CATALOG))
+
         let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
 
         // `id` of an entry is used to identify subcomponents through React's "key" property
