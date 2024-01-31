@@ -248,7 +248,7 @@ export class CatalogTable extends Component {
                 DIV(cl('cell cell-value'))
             ),
             DIV({key: 'cat'}, folded && st({display: 'none'}),
-                e(this.Catalog, {item, path, value: subcat, type, color})),
+                e(CatalogTable, {item, path, value: subcat, type, color})),
         )
     }
     EntryAddNew({hide = true, insert}) {
@@ -351,7 +351,7 @@ export class CatalogTable extends Component {
         }
     }}
 
-    Catalog({item, value, type, path, color, start_color}) {
+    Main({item, value, type, path, color, start_color}) {
         /* If `start_color` is undefined, the same `color` is used for all rows. */
         // assert(type.instanceof(CATALOG))
         assert(value instanceof Catalog)
@@ -399,6 +399,6 @@ export class CatalogTable extends Component {
         return DIV(cl(`catalog catalog-d${depth}`), empty && cl('is-empty'), ...rows)
     }
 
-    render()    { return e(this.Catalog, this.props) }
+    render()    { return e(this.Main, this.props) }
 }
 
