@@ -598,7 +598,7 @@ export class CATALOG extends Type {
     collect(assets) {
         this.props.keys.collect(assets)
         this.props.values.collect(assets)
-        CatalogTable.collect(assets)
+        CatalogTable.collect(assets)            // CatalogTable is the widget used to display catalogs in the UI
     }
 
     toString() {
@@ -632,8 +632,6 @@ export class CATALOG extends Type {
         // TODO: inside Catalog.merge(), if repeated=false, overlapping values should be merged recursively
         //       through combine() of props.values type
     }
-
-    // display_table(props) { return e(CatalogTable, {path: [], type: this, ...props}) }
 }
 
 
@@ -673,8 +671,6 @@ export class DATA extends CATALOG {
         fields = fields.filter(f => this.props.fields[f].isEditable())      // only keep user-editable fields
         return fields.sort()
     }
-
-    // display_table(props)   { return super.display_table({value: props.item._data_, start_color: 1, ...props}) }
 }
 
 export class DATA_GENERIC extends DATA {
