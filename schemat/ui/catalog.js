@@ -1,7 +1,7 @@
 import {T, assert, trycatch} from "../common/utils.js";
 import {JSONx} from "../serialize.js";
 import {Catalog} from '../data.js'
-import {generic_string} from "../type.js";
+import {CATALOG, generic_string} from "../type.js";
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "./react-utils.js";
 import {MaterialUI} from "./resources.js";
@@ -355,7 +355,7 @@ export class CatalogTable extends Component {
         /* If `start_color` is undefined, the same `color` is used for all rows. */
 
         assert(catalog instanceof Catalog)
-        // assert(type.instanceof(CATALOG))
+        assert(type instanceof(CATALOG))
 
         let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
 
