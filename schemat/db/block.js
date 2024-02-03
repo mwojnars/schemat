@@ -1,5 +1,3 @@
-import yaml from 'yaml';
-
 import {assert, print, T} from '../common/utils.js'
 import {DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {Item} from '../item.js'
@@ -306,6 +304,7 @@ export class YamlDataStorage extends MemoryStorage {
     async open() {
         /* Load records from this block's file. */
         this._mod_fs = await import('node:fs')
+        this._mod_yaml = (await import('yaml')).default
 
         // let ring = req.current_ring
         // let block = req.current_block
@@ -316,7 +315,7 @@ export class YamlDataStorage extends MemoryStorage {
         this.data_sequence = this.block.sequence
         let ring = this.data_sequence.ring
         let content = this._mod_fs.readFileSync(this.filename, 'utf8')
-        let records = yaml.parse(content) || []
+        let records = this._mod_yaml.parse(content) || []
         let max_id = 0
         this._records.clear()
 
@@ -345,7 +344,7 @@ export class YamlDataStorage extends MemoryStorage {
             let data = JSON.parse(data_json)
             return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
         })
-        let out = yaml.stringify(recs)
+        let out = this._mod_yaml.stringify(recs)
         this._mod_fs.writeFileSync(this.filename, out, 'utf8')
     }
 }
