@@ -84,7 +84,7 @@ export class FileLocal extends File {
 
     local_path
 
-    async __init__()  { if (registry.server_side) this._mod_fs = await import('fs') }
+    async __init__()  { if (registry.server_side) this._mod_fs = await import('node:fs') }
 
     _content(encoding) {
         let path = this.local_path

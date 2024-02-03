@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import yaml from 'yaml';
 
 import {assert, print, T} from '../common/utils.js'
@@ -10,7 +9,7 @@ import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
 // import { Kafka } from 'kafkajs'
 
 
-function createFileIfNotExists(filename) {
+function createFileIfNotExists(filename, fs) {
     /* Create an empty file if it doesn't exist yet. Do nothing otherwise. */
     try { fs.writeFileSync(filename, '', {flag: 'wx'}) }
     catch(ex) {}
@@ -45,6 +44,8 @@ export class Block extends Item {
     }
 
     async __init__() {
+        if (registry.client_side) return            // don't initialize the storage on the client side
+
         let storage_class
         // print(`Block.__init__() for ${this.filename}...`)
 
@@ -304,16 +305,17 @@ export class YamlDataStorage extends MemoryStorage {
 
     async open() {
         /* Load records from this block's file. */
+        this._mod_fs = await import('node:fs')
 
         // let ring = req.current_ring
         // let block = req.current_block
         // this.data_sequence = req.current_data
 
-        createFileIfNotExists(this.filename)
+        createFileIfNotExists(this.filename, this._mod_fs)
 
         this.data_sequence = this.block.sequence
         let ring = this.data_sequence.ring
-        let content = fs.readFileSync(this.filename, 'utf8')
+        let content = this._mod_fs.readFileSync(this.filename, 'utf8')
         let records = yaml.parse(content) || []
         let max_id = 0
         this._records.clear()
@@ -344,7 +346,7 @@ export class YamlDataStorage extends MemoryStorage {
             return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
         })
         let out = yaml.stringify(recs)
-        fs.writeFileSync(this.filename, out, 'utf8')
+        this._mod_fs.writeFileSync(this.filename, out, 'utf8')
     }
 }
 
@@ -366,10 +368,11 @@ export class JsonIndexStorage extends MemoryStorage {
 
     async open() {
         /* Load records from this.filename file into this.records. */
+        this._mod_fs = await import('node:fs')
 
-        createFileIfNotExists(this.filename)
+        createFileIfNotExists(this.filename, this._mod_fs)
 
-        let content = fs.readFileSync(this.filename, 'utf8')
+        let content = this._mod_fs.readFileSync(this.filename, 'utf8')
         let lines = content.split('\n').filter(line => line.trim().length > 0)
         let records = lines.map(line => JSON.parse(line))
 
@@ -387,7 +390,7 @@ export class JsonIndexStorage extends MemoryStorage {
             let key = JSON.stringify(Array.from(binary_key))
             return json_value ? `[${key}, ${json_value}]` : `[${key}]`
         })
-        fs.writeFileSync(this.filename, lines.join('\n') + '\n', 'utf8')
+        this._mod_fs.writeFileSync(this.filename, lines.join('\n') + '\n', 'utf8')
     }
 }
 
