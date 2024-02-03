@@ -1,10 +1,9 @@
-import path from 'node:path'
 import {DataAccessError, DatabaseError} from "../common/errors.js"
-import {T, assert, print, merge} from '../common/utils.js'
+import {T, assert, print, merge, fileBaseName} from '../common/utils.js'
 import {Item} from "../item.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory} from "./index.js";
-import {Record, ItemRecord, ChangeRequest} from "./records.js";
+import {Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
 import {JSONx} from "../serialize.js";
@@ -200,7 +199,12 @@ export class PlainRing extends Ring {
     __create__({name, ...opts}) {
         let {file} = opts
         this._file = file
-        this.name = name || (file && path.basename(file, path.extname(file)))
+        this.name = name || fileBaseName(file)
+
+        // if (!name && file)
+        //     this.name = file.replace(/^.*\/|\.[^.]*$/g, '')         // extract the name from the file path (no directory, no extension)
+        //     // this.name = file.substring(file.lastIndexOf('/') + 1, file.lastIndexOf('.') >= 0 ? file.lastIndexOf('.') : undefined)
+        //     // this.name = path.basename(file, path.extname(file))
 
         let {readonly = false, start_id = 0, stop_id} = opts
         this.readonly = readonly

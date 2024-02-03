@@ -2,7 +2,6 @@ import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {ItemRecord, PlainRecord, SequenceSchema} from "./records.js";
-import {Item} from "../item.js";
 import {IndexBlock} from "./block.js";
 import {Sequence} from "./sequence.js";
 import {DataRequest} from "./data_request.js";

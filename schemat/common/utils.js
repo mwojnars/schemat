@@ -169,6 +169,14 @@ export function splitLast(s, sep = ' ') {
     return [left, right]
 }
 
+export function fileBaseName(filepath) {
+    /* Extract the file name from the file path: drop the directory path and extension.
+       Similar (although not identical) to: path.basename(filepath, path.extname(filepath))
+       without importing the 'path' module.
+     */
+    return filepath.replace(/^.*\/|\.[^.]*$/g, '')
+}
+
 
 export function concat(arrays) {
     /* Concatenate multiple arrays into a new array. */
