@@ -1,8 +1,9 @@
 import {assert, print, T} from '../common/utils.js'
 import {DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {Item} from '../item.js'
-import {ChangeRequest} from "./records.js";
+import {ChangeRequest, SequenceSchema} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
+import {INTEGER} from "../type.js";
 
 // import { Kafka } from 'kafkajs'
 
@@ -237,10 +238,8 @@ export class Storage {
     block
 
     constructor(block) {
+        assert(block)
         this.block = block
-        assert(this.block)
-        assert(this.block.sequence)
-        assert(this.block.sequence.ring)
     }
 
     // all the methods below can be ASYNC in subclasses... (!)
@@ -296,6 +295,9 @@ export class YamlDataStorage extends MemoryStorage {
 
     filename
 
+    static sequence_schema = new SequenceSchema(new Map([['id', new INTEGER()]]))        // schema of a data sequence (temporary solution)
+
+
     constructor(filename, block) {
         super(block)
         this.filename = filename
@@ -305,15 +307,22 @@ export class YamlDataStorage extends MemoryStorage {
         /* Load records from this block's file. */
         this._mod_fs = await import('node:fs')
         this._mod_yaml = (await import('yaml')).default
+        let schema = YamlDataStorage.sequence_schema
+
+        // assert(this.sequence = this.block.sequence)
+        // assert(this.block.sequence.ring)
+
+        // if (!this.sequence.is_loaded() && this.sequence.is_linked())
+        //     await this.sequence.load()
+        // if (!this.sequence.ring) await this.sequence.load()
+        // let ring = this.sequence.ring
 
         // let ring = req.current_ring
         // let block = req.current_block
-        // this.data_sequence = req.current_data
+        // this.sequence = req.current_data
 
         createFileIfNotExists(this.filename, this._mod_fs)
 
-        this.data_sequence = this.block.sequence
-        let ring = this.data_sequence.ring
         let content = this._mod_fs.readFileSync(this.filename, 'utf8')
         let records = this._mod_yaml.parse(content) || []
         let max_id = 0
@@ -321,9 +330,10 @@ export class YamlDataStorage extends MemoryStorage {
 
         for (let record of records) {
             let id = T.pop(record, '__id')
-            let key = this.data_sequence.encode_key(id)
+            let key = schema.encode_key([id])
+            // let key = this.sequence.encode_key(id)
 
-            ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
+            // ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.block.assert_unique(key, id, `duplicate item ID loaded from ${this.filename}`)
 
             max_id = Math.max(max_id, id)
@@ -338,9 +348,11 @@ export class YamlDataStorage extends MemoryStorage {
     async flush() {
         /* Save the entire database (this.records) to a file. */
         print(`YamlDataStorage flushing ${this._records.size} items to ${this.filename}...`)
+        let schema = YamlDataStorage.sequence_schema
         let flat = [...this._records.entries()]
         let recs = flat.map(([key, data_json]) => {
-            let __id = this.data_sequence.decode_key(key)
+            // let __id = this.sequence.decode_key(key)
+            let __id = schema.decode_key(key)[0]
             let data = JSON.parse(data_json)
             return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
         })
