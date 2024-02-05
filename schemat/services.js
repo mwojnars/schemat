@@ -121,7 +121,10 @@ export class HttpService extends Service {
             if (isPromise(result)) result = await result
             return this.send_result(target, request, result, ...args)
         }
-        catch (ex) { this.send_error(target, request, ex) }
+        catch (ex) {
+            print('ERROR in HttpService.serve():', ex)
+            this.send_error(target, request, ex)
+        }
     }
 
     // the methods below are typically overridden in subclasses...
