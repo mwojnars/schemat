@@ -123,12 +123,11 @@ export class Registry {
         await classpath.setModule("std", "./std/site.js")
         await classpath.setModule("std", "./std/urls.js")
 
-        if (this.server_side) {
-            await classpath.setModule("db", "./db/block.js")
-            await classpath.setModule("db", "./db/sequence.js")
-            await classpath.setModule("db", "./db/index.js")
-            await classpath.setModule("db", "./db/db.js")
-        }
+        // if (this.server_side) {
+        await classpath.setModule("db", "./db/block.js")
+        await classpath.setModule("db", "./db/sequence.js")
+        await classpath.setModule("db", "./db/index.js")
+        await classpath.setModule("db", "./db/db.js")
 
         // add all Type subtypes (all-caps class names) + TypeWrapper
         await classpath.setModule("", "./type.js", {accept: (name) =>
