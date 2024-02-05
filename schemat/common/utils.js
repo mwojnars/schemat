@@ -231,12 +231,18 @@ export class CustomMap extends Map {
 
 
 export class Counter extends Map {
-    /* A Map that holds counts of key occurrences. */
-    add(key, increment = 1) {
+    /* A Map that holds counts of key occurrences. If a count drops to zero (or below), the key is removed. */
+    increment(key, increment = 1) {
         let count = (this.get(key) || 0) + increment
         this.set(key, count)
         return count
     }
+    decrement(key, decrement = 1) {
+        let count = this.increment(key, -decrement)
+        if (count <= 0) this.delete(key)
+        return count
+    }
+
     total()     { let t = 0; this.forEach(v => t += v); return t }
 }
 
