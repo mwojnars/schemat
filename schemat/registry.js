@@ -13,18 +13,8 @@ import { Item, RootCategory, ROOT_ID, SITE_CATEGORY_ID } from './item.js'
 
 const SITE_ID = 1004        // fixed ID of the Site item to be loaded upon startup
 
-/**********************************************************************************************************************/
-
 export function isRoot(id) { return id === ROOT_ID }
 
-
-class LoadingCounter extends Counter {
-    /* A counter of objects currently loading from the DB. */
-    print_all() {
-        /* Print a list of IDs that are currently being loaded. */
-        print(`Currently loading: [${[...this.keys()]}]`)
-    }
-}
 
 /**********************************************************************************************************************
  **
@@ -116,7 +106,11 @@ export class Registry {
     is_closing = false      // true if the Schemat node is in the process of shutting down
 
     _cache = new ItemsCache()
-    _loading = new LoadingCounter()     // IDs of objects currently being loaded/initialized with a call to .load()
+
+    // IDs of objects currently being loaded/initialized with a call to .load()
+    _loading = new class extends Counter {
+        print_all() { print(`currently loading: [${[...this.keys()]}]`) }     // print all IDs currently being loaded
+    }
 
 
     /***  Initialization  ***/
