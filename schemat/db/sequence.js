@@ -34,9 +34,13 @@ export class Sequence extends Item {    // Series?
         this.ring = ring
     }
 
-    // TODO: drop __init__() and perform lazy loading of blocks
-    //  (block.load() must only use lower rings to search for the block, otherwise infinite recursion occurs)
     async __init__() {
+        // TODO: drop __init__() and perform lazy loading of blocks
+        //  (but block.load() must only use lower rings to search for the block! otherwise infinite recursion occurs)
+        // ...
+        // doing load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
+        // doing the same later on may cause infinite recursion, because the load() request for a block may be directed
+        // to the current sequence (which has an unloaded block!), and cause another block.load(), and so on...
         return this.blocks[0].load()
     }
 
@@ -62,7 +66,8 @@ export class Sequence extends Item {    // Series?
         stop = stop && this.schema.encode_key(stop)
 
         let block = this._find_block(start)
-        if (!block.is_loaded()) block = await block.load()
+        assert(block.is_loaded() || !block.is_linked())
+        // if (!block.is_loaded()) block = await block.load()
 
         for await (let [key, value] of block.scan({start, stop}))
             yield new BinaryRecord(this.schema, key, value)
@@ -123,11 +128,13 @@ export class DataSequence extends Sequence {
             req.make_step(this)
 
         let block = this._find_block(key)
-        if (!block.is_loaded()) block = await block.load()
+        assert(block.is_loaded() || !block.is_linked())
+        // if (!block.is_loaded()) block = await block.load()
 
         return block[command].call(block, req)
     }
 
-    async erase(req)   { return Promise.all(this.blocks.map(async b => (await b.load()).erase(req.make_step(this)))) }
+    async erase(req)   { return Promise.all(this.blocks.map(b => b.erase(req.make_step(this)))) }
+    // async erase(req)   { return Promise.all(this.blocks.map(async b => (await b.load()).erase(req.make_step(this)))) }
     // async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
 }
