@@ -115,6 +115,8 @@ export class Registry {
     // _load_running -- IDs of objects whose .load() is currently being executed (at most one per ID)
     // _load_awaited -- IDs of objects whose .load() is being awaited, with the number of awaiters
 
+    get db() { return schemat.db }
+
 
     /***  Initialization  ***/
 
@@ -165,7 +167,7 @@ export class Registry {
         // print("Registry: root category loaded from DB")
 
         // // try loading `root` from the DB first...
-        // if (schemat.db)
+        // if (this.db)
         //     try {
         //         await root.load()
         //         root.assert_loaded()
@@ -187,7 +189,7 @@ export class Registry {
 
     async _init_site(site_id) {
         /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
-        if (!schemat.db) return
+        if (!this.db) return
         try {
             // if (!site_id)
             //     if (this.client_side) return
@@ -243,7 +245,7 @@ export class Registry {
     async *scan_all({limit} = {}) {
         /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
         let count = 0
-        let records = schemat.db.scan_all()
+        let records = this.db.scan_all()
 
         for await (const record of records) {                   // stream of ItemRecords
             if (limit !== undefined && count++ >= limit) break
@@ -256,7 +258,7 @@ export class Registry {
         let target_cid = category?._id_
         let start = category ? [target_cid] : null
         let stop = category ? [target_cid + 1] : null
-        let records = schemat.db.scan_index('idx_category_item', {start, stop})         // stream of plain Records
+        let records = this.db.scan_index('idx_category_item', {start, stop})        // stream of plain Records
 
         for await (const record of records) {
             let {cid, id} = record.object_key

@@ -504,7 +504,7 @@ export class Item {
         // registry.session?.countLoaded(this._id_)
 
         let req = new DataRequest(this, 'load', {id: this._id_})
-        let json = await schemat.db.select(req)
+        let json = await registry.db.select(req)
         assert(typeof json === 'string', json)
         return new ItemRecord(this._id_, json)
     }
@@ -838,7 +838,7 @@ Item.create_api(
         // item's edit actions for use in the admin interface...
         'POST/edit':  new TaskService({
 
-            delete_self(request)   { return schemat.db.delete(this) },
+            delete_self(request)   { return registry.db.delete(this) },
 
             // TODO: in all the methods below, `this` should be copied and reloaded after modifications
 
@@ -847,13 +847,13 @@ Item.create_api(
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.mark_editable()
                 this._data_.insert(path, pos, entry)
-                return schemat.db.update_full(this)
+                return registry.db.update_full(this)
             },
 
             delete_field(request, path) {
                 this.mark_editable()
                 this._data_.delete(path)
-                return schemat.db.update_full(this)
+                return registry.db.update_full(this)
             },
 
             update_field(request, path, entry) {
@@ -861,13 +861,13 @@ Item.create_api(
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.mark_editable()
                 this._data_.update(path, entry)
-                return schemat.db.update_full(this)
+                return registry.db.update_full(this)
             },
 
             move_field(request, path, pos1, pos2) {
                 this.mark_editable()
                 this._data_.move(path, pos1, pos2)
-                return schemat.db.update_full(this)
+                return registry.db.update_full(this)
             },
 
         }),
@@ -1122,7 +1122,7 @@ Category.create_api(
                     for (const rec of records) {                    // rec's shape: {id, data}
                         if (rec.data) {
                             rec.data = JSON.stringify(rec.data)
-                            schemat.db.cache(rec)                   // need to cache the item in ClientDB
+                            registry.db.cache(rec)                   // need to cache the item in ClientDB
                             // registry.unregister(rec.id)          // evict the item from the Registry to allow re-loading
                         }
                         items.push(await registry.get_loaded(rec.id))
@@ -1137,7 +1137,7 @@ Category.create_api(
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)
-                await schemat.db.insert(item)
+                await registry.db.insert(item)
                 return item._record_.encoded()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },
