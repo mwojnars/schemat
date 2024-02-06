@@ -59,9 +59,11 @@ export class ClientProcess extends SchematProcess {
 
         let data = this._read_data('#page-data', 'json+base64')
         print('page data:', data)
-        this.client_db = new ClientDB(data.items)
 
         await this._create_registry(ClientRegistry)
+        registry.set_db(new ClientDB(data.items))
+        // this.client_db = new ClientDB(data.items)
+
         let item = await registry.client_boot(data)
         item.assert_loaded()
 

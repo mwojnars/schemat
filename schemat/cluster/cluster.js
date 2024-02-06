@@ -53,6 +53,8 @@ export class Cluster { //extends Item {
         // await cluster_ring.open(req)
 
         let bootstrap_db = this.db = Database.create(rings)
+        registry.set_db(bootstrap_db)
+
         await bootstrap_db.open()
         // await bootstrap_db.insert_self()
 
