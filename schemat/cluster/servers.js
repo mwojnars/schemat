@@ -66,13 +66,13 @@ export class WebServer extends Server {
             let deadline = timeout(this.REQUEST_TIMEOUT * 1000, new ServerTimeoutError())
             let request = new Request({req, res})
             let handler = registry.site.route(request)
-            let result = await Promise.race([handler, deadline])            // the request is abandoned if it takes longer than REQUEST_TIMEOUT to be served
+            let result = await Promise.race([handler, deadline])            // the request is abandoned if it takes longer than REQUEST_TIMEOUT
             if (typeof result === 'string') res.send(result)
         }
         catch (ex) {
             print(ex)
             try { res.sendStatus(ex.code || 500) } catch(e){}               // sending an error code is impossible if the response was already (partially) sent before the error occurred
-            // TODO: send cancellation signal (StopRequest interrupt) to the Schemat/Registry to terminate all pending load-object operations, or simply stop the remaining computation on ServerTimeoutError
+            // TODO: send cancellation signal (StopRequest interrupt) to the Schemat/Registry to terminate all pending load-object operations and stop the remaining computation (esp. on timeout)
         }
 
         // // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
