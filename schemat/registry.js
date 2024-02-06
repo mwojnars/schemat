@@ -115,7 +115,7 @@ export class Registry {
     // _load_running -- IDs of objects whose .load() is currently being executed (at most one per ID)
     // _load_awaited -- IDs of objects whose .load() is being awaited, with the number of awaiters
 
-    get db() { return schemat.db }
+    get db()    { return schemat.cluster?.db || schemat.client_db }
 
 
     /***  Initialization  ***/

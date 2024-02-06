@@ -9,10 +9,6 @@ export class SchematProcess {
     cluster         // the cluster this process belongs to; only defined in backend processes
     client_db       // the client DB of the cluster; only defined in client-side processes (in a browser)
 
-    get db() {
-        return this.cluster?.db || this.client_db
-    }
-
     constructor() {
         set_global({schemat: this})
     }
