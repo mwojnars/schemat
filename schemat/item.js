@@ -489,6 +489,10 @@ export class Item {
 
             return await this.activate()
 
+        } catch (ex) {
+            this._data_ = undefined                         // on error, clear the data to mark this object as not loaded
+            throw ex
+
         } finally {
             this._meta_.loading = false                     // cleanup to allow another load attempt, even after an error
             registry.load_finished(_id)
