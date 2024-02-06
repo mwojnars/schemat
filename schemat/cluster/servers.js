@@ -66,7 +66,7 @@ export class WebServer extends Server {
             let deadline = timeout(this.REQUEST_TIMEOUT * 1000, new ServerTimeoutError())
             let request = new Request({req, res})
             let handler = registry.site.route(request)
-            let result = await Promise.race([handler, deadline])            // the request is abandoned if it takes longer than REQUEST_TIMEOUT
+            let result = await Promise.race([handler, deadline])            // the request is abandoned if it takes longer than REQUEST_TIMEOUT to process
             if (typeof result === 'string') res.send(result)
         }
         catch (ex) {
