@@ -112,6 +112,9 @@ export class Registry {
         print_all() { print(`currently loading: [${[...this.keys()]}]`) }     // print all IDs currently being loaded
     }
 
+    // _load_running -- IDs of objects whose .load() is currently being executed (at most one per ID)
+    // _load_awaited -- IDs of objects whose .load() is being awaited, with the number of awaiters
+
 
     /***  Initialization  ***/
 
@@ -307,14 +310,14 @@ export class Registry {
 
     /***  Debugging  ***/
 
-    load_started(id, MAX_LOADING = 10) {
+    mark_load_started(id, MAX_LOADING = 10) {
         /* Called when an item with a given ID starts loading. */
         this._loading.increment(id)
         // this._loading.print_all()
         // if (count > MAX_LOADING) throw new Error(`Too many objects loading at once: ${count}`)
     }
 
-    load_finished(id) {
+    mark_load_finished(id) {
         /* Called when an item with a given ID finishes loading. */
         this._loading.decrement(id)
         // this._loading.print_all()

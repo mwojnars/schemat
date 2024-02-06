@@ -457,7 +457,7 @@ export class Item {
     async _load(record = null /*ItemRecord*/) {
         /* Load this._data_ from `record` or DB. Set up the class and prototypes. Call __init__(). */
         let _id = this._id_
-        registry.load_started(_id)
+        registry.mark_load_started(_id)
 
         try {
             record = record || await this._load_record()
@@ -495,7 +495,7 @@ export class Item {
 
         } finally {
             this._meta_.loading = false                     // cleanup to allow another load attempt, even after an error
-            registry.load_finished(_id)
+            registry.mark_load_finished(_id)
         }
     }
 
