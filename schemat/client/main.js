@@ -62,7 +62,6 @@ export class ClientProcess extends SchematProcess {
 
         await this._create_registry(ClientRegistry)
         registry.set_db(new ClientDB(data.items))
-        // this.client_db = new ClientDB(data.items)
 
         let item = await registry.client_boot(data)
         item.assert_loaded()

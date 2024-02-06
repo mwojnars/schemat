@@ -19,9 +19,7 @@ export const DB_ROOT   = __dirname + '/data'
 export class Cluster { //extends Item {
     /* Managing the cluster's infrastructure. */
 
-    db
-
-    // get db() { return this.prop('db') }
+    // db  (property)
 
     static cluster_ring_spec =
         {file: DB_ROOT + '/db-cluster.yaml', start_id: 200, stop_id: 300}
@@ -52,7 +50,7 @@ export class Cluster { //extends Item {
         // let cluster_ring = Ring.create(cluster_ring_spec)  //new Ring(cluster_ring_spec)
         // await cluster_ring.open(req)
 
-        let bootstrap_db = this.db = Database.create(rings)
+        let bootstrap_db = Database.create(rings)
         registry.set_db(bootstrap_db)
 
         await bootstrap_db.open()

@@ -101,6 +101,8 @@ export class Registry {
     server_side = true
     get client_side() { return !this.server_side }
 
+    db                      // the database instance, either a Database (on server) or a ClientDB (on client)
+
     root_category           // site-wide RootCategory object
     site                    // fully loaded Site instance that will handle all web requests
     is_closing = false      // true if the Schemat node is in the process of shutting down
@@ -115,11 +117,10 @@ export class Registry {
     // _load_running -- IDs of objects whose .load() is currently being executed (at most one per ID)
     // _load_awaited -- IDs of objects whose .load() is being awaited, with the number of awaiters
 
-    // get db()    { return schemat.cluster?.db || schemat.client_db }
-    set_db(db)  { this.db = db }
-
 
     /***  Initialization  ***/
+
+    set_db(db)  { this.db = db }
 
     async init_classpath() {
         // print('initClasspath() started...')
