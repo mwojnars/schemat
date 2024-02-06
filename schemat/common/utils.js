@@ -191,6 +191,12 @@ export function unique(array) {
 export const delay = async ms => new Promise(resolve => setTimeout(resolve, ms))
 export const sleep = delay
 
+export function timeout(ms, error = new Error('Timeout')) {
+    /* Return a promise that rejects with `error` after `ms` milliseconds. */
+    return new Promise((_, reject) => setTimeout(() => reject(error), ms))
+}
+
+
 export function detect_nodejs() {
     /* Return true if the process is (likely) running on a Node.js server rather than in a browser. */
     return (typeof window === 'undefined' && typeof process === 'object' && process.versions && process.versions.node)

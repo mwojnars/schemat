@@ -4,7 +4,8 @@ import express from 'express'
 import bodyParser from 'body-parser'
 // import http from 'http'
 
-import {assert, print} from '../common/utils.js'
+import {assert, print, timeout} from '../common/utils.js'
+import {ServerTimeoutError} from "../common/errors.js";
 import {set_global} from "../common/globals.js";
 import {thread_local_variable} from "./thread.js";
 import {Request} from "../item.js";
@@ -47,6 +48,8 @@ export class WebServer extends Server {
        - https://stackoverflow.com/a/47067787/1202674
      */
 
+    REQUEST_TIMEOUT = 60                // [sec] 60 seconds
+
     constructor(node, {host, port, workers}) {
         super()
         this.host = host
@@ -60,13 +63,16 @@ export class WebServer extends Server {
         // await session.start()
 
         try {
+            let deadline = timeout(this.REQUEST_TIMEOUT * 1000, new ServerTimeoutError())
             let request = new Request({req, res})
-            let result = await registry.site.route(request)
+            let handler = registry.site.route(request)
+            let result = await Promise.race([handler, deadline])            // the request is abandoned if it takes longer than REQUEST_TIMEOUT to be served
             if (typeof result === 'string') res.send(result)
         }
         catch (ex) {
             print(ex)
-            try { res.sendStatus(ex.code || 500) } catch(e){}
+            try { res.sendStatus(ex.code || 500) } catch(e){}               // sending an error code is impossible if the response was already (partially) sent before the error occurred
+            // TODO: send cancellation signal (StopRequest interrupt) to the Schemat/Registry to terminate all pending load-object operations, or simply stop the remaining computation on ServerTimeoutError
         }
 
         // // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future

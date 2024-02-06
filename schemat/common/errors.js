@@ -85,4 +85,7 @@ export class RequestFailed extends BaseError {
     }
 }
 
-
+export class ServerTimeoutError extends BaseError {
+    static message = "response generation took too long"
+    static code    = 504
+}
