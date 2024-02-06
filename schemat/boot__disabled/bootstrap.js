@@ -157,7 +157,7 @@ async function create_categories(Category) {
 export async function bootstrap(db) {
     /* Create core items and store in DB. All existing items in DB are removed! */
     
-    let Category = registry.root
+    let Category = registry.root_category
     let cats  = await create_categories(Category)               // create non-root categories & leaf items
     // let items = await create_items(cats, Category)
 

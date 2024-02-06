@@ -63,7 +63,7 @@ export class MySQL extends DataBlock {
             assert(path)
             let category = await registry.site.find_item(path)
             assert(category.is_loaded())
-            assert(category.instanceof(registry.root))
+            assert(category.instanceof(registry.root_category))
 
             this._sqlTables.push(sqlTable)
             this._categories.push(category)

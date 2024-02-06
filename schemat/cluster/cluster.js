@@ -63,7 +63,7 @@ export class Cluster { //extends Item {
         // this._id_ = CLUSTER_ID
         // this.load()
         // registry.setDB(this.prop('db'))
-        // await registry.boot()   // reload `root` and `site`
+        // await registry.boot()   // reload `root_category` and `site`
     }
 }
 

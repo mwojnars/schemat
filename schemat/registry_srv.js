@@ -53,7 +53,7 @@ export class ServerRegistry extends Registry {
     async evict_cache() {
         /* Evict expired objects in _cache. */
         await this._cache.evict()
-        if (!this._cache.has(ROOT_ID))              // if `root` is no longer present in _cache, call _init_root() once again
-            await this._init_root()                 // WARN: between evict() and _init_root() there's no root defined! problem if a request comes in
+        if (!this._cache.has(ROOT_ID))              // if root category is no longer present in _cache, call _init_root() once again
+            await this._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in
     }
 }

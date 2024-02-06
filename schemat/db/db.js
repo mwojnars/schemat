@@ -263,7 +263,7 @@ export class Database extends Item {
             this.append(ring)
             print(`...opened ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'read-write'})`)
 
-            await registry.boot()                       // reload `root` and `site` to have the most relevant objects after a next ring is added
+            await registry.boot()                       // reload `root_category` and `site` to have the most relevant objects after a next ring is added
 
             if (!ring.is_linked())
                 await ring._init_indexes(req.clone())   // TODO: temporary

@@ -101,7 +101,7 @@ export class Registry {
     server_side = true
     get client_side() { return !this.server_side }
 
-    root                    // permanent reference to a singleton root Category object, kept here instead of cache
+    root_category           // site-wide RootCategory object
     site                    // fully loaded Site instance that will handle all web requests
     is_closing = false      // true if the Schemat node is in the process of shutting down
 
@@ -146,18 +146,18 @@ export class Registry {
     }
 
     async boot(site_id = SITE_ID) {
-        /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
-        this.root = await this._init_root()             // always returns a valid object, possibly created from `root_data`
-        this.site = await this._init_site(site_id)      // may return undefined if the record not found in DB (!)
+        /* (Re)create/load `this.root_category` and `this.site`. The latter will be left undefined if not present in the DB. */
+        this.root_category = await this._init_root()        // always returns a valid object, possibly created from `root_data`
+        this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
         // if (this.site) print("Registry: site loaded")
     }
 
     async _init_root() {
-        /* Create the RootCategory object, ID=0, and load its contents from the DB.  The root object must be present
+        /* Create the RootCategory object, ID=0, and load its contents from the DB. The root_category must be present
            in the lowest ring already, possibly overwritten by newer variants in higher rings.
          */
-        // if (this.root) return this.root                  // warn: this is incorrect during startup if root is redefined in higher rings
-        let root = this.root = RootCategory.create()
+        // if (this.root_category) return this.root_category        // warn: this is incorrect during startup if root is redefined in higher rings
+        let root = this.root_category = RootCategory.create()
         this.register(root)
 
         await root.load()

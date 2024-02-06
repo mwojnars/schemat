@@ -96,7 +96,7 @@ export class Request {
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
         let site  = registry.site
-        let items = [this.target, this.target._category_, registry.root, site, site._category_]
+        let items = [this.target, this.target._category_, registry.root_category, site, site._category_]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(it => it._record_.encoded())
 
