@@ -104,7 +104,7 @@ export class AdminProcess extends BackendProcess {
         id = Number(id)
         newid = Number(newid)
 
-        let db = this.db
+        let db = registry.db
         let sameID = (id === newid)
         let req = new DataRequest(this, 'CLI_move', {id})
 
@@ -145,7 +145,7 @@ export class AdminProcess extends BackendProcess {
         print(`\nreinserting object(s) [${ids}] ...`)
 
         let id_list = []
-        let db = this.db
+        let db = registry.db
         let ring = ring_name ? await db.find_ring({name: ring_name}) : db.top_ring
         let obj
 
@@ -186,7 +186,7 @@ export class AdminProcess extends BackendProcess {
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
         let transform = (it => it?._id_ === old_id ? item : it)
 
-        for (let ring of this.db.rings) {
+        for (let ring of registry.db.rings) {
             for await (const record of ring.scan_all()) {               // search for references to `old_id` in all records
                 let id = record.id
                 let json = record.data_json
@@ -210,12 +210,12 @@ export class AdminProcess extends BackendProcess {
            of an item in another ring instead of updating in place.
          */
         for await (let item of globalThis.registry.scan_all())
-            await this.db.update_full(item)
+            await registry.db.update_full(item)
     }
 
     async _reinsert_all() {
         /* Re-insert every item to the same ring so that it receives a new ID. Update references in other items. */
-        let db = this.db
+        let db = registry.db
 
         for (let ring of db.rings) {
             if (ring.readonly) continue
