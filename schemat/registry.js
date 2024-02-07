@@ -101,7 +101,7 @@ export class Registry {
     server_side = true
     get client_side() { return !this.server_side }
 
-    db                      // the database instance, either a Database (on server) or a ClientDB (on client)
+    db                      // the site's database instance, either a Database (on server) or a ClientDB (on client); TODO: use site.database instead
 
     root_category           // site-wide RootCategory object
     site                    // fully loaded Site instance that will handle all web requests
@@ -119,8 +119,6 @@ export class Registry {
 
 
     /***  Initialization  ***/
-
-    set_db(db)  { this.db = db }
 
     async init_classpath() {
         // print('initClasspath() started...')
@@ -148,6 +146,8 @@ export class Registry {
         this.classpath = classpath
         // print('initClasspath() done')
     }
+
+    set_db(db)  { this.db = db }
 
     async boot(site_id = SITE_ID) {
         /* (Re)create/load `this.root_category` and `this.site`. The latter will be left undefined if not present in the DB. */

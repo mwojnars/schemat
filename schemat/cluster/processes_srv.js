@@ -21,6 +21,8 @@ const __dirname  = path.dirname(__filename) + '/..'
 export class BackendProcess extends SchematProcess {
     CLI_PREFIX = 'CLI_'
 
+    cluster         // the Cluster this process belongs to; only defined in backend processes
+
     async start(cmd, opts = {}) {
         await this._create_registry(ServerRegistry, __dirname)
 
@@ -28,6 +30,8 @@ export class BackendProcess extends SchematProcess {
         assert(this[method], `unknown command: ${cmd}`)
 
         this.cluster = new Cluster()
+        await this.cluster.startup()
+
         return this[method](opts)
     }
 }
@@ -54,7 +58,6 @@ export class WorkerProcess extends BackendProcess {
     }
 
     async CLI_run({host, port, workers}) {
-        await this.cluster.startup()
 
         // node = registry.get_loaded(this_node_ID)
         // return node.activate()     // start the lifeloop and all worker processes (servers)
@@ -99,8 +102,6 @@ export class AdminProcess extends BackendProcess {
     async CLI_move({id, newid, bottom, ring: ring_name}) {
         /* Move an item to a different ring, or change its ID. */
 
-        await this.cluster.startup()
-
         id = Number(id)
         newid = Number(newid)
 
@@ -140,7 +141,6 @@ export class AdminProcess extends BackendProcess {
     async CLI_reinsert({ids, ring: ring_name}) {
         /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring. */
 
-        await this.cluster.startup()
         ids = String(ids)
         print(`\nreinserting object(s) [${ids}] ...`)
 
