@@ -1,5 +1,5 @@
 import {print, assert, T} from "../common/utils.js";
-import {Cluster, DB_ROOT} from "./cluster.js";
+import {Cluster} from "./cluster.js";
 import {Item} from "../item.js";
 import {JSONx} from "../serialize.js";
 import {DataServer, WebServer} from "./servers.js";

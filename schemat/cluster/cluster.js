@@ -12,8 +12,6 @@ const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
 const __dirname  = path.dirname(__filename) + '/..'
 
 
-export const DB_ROOT   = __dirname + '/data'
-
 /**********************************************************************************************************************/
 
 export class Cluster { //extends Item {
@@ -21,26 +19,28 @@ export class Cluster { //extends Item {
 
     // db  (property)
 
-    static cluster_ring_spec =
-        {file: DB_ROOT + '/db-cluster.yaml', start_id: 200, stop_id: 300}
-
-    static ring_specs = [
-        {file: DB_ROOT + '/db-boot.yaml', start_id:    0, stop_id:  100, readonly: false},
-        {file: DB_ROOT + '/db-base.yaml', start_id:  100, stop_id: 1000, readonly: false},
-        Cluster.cluster_ring_spec,
-        {item: 200, readonly: false},       // db-paperity.yaml
-        {item: 205, readonly: false},       // db-demo.yaml
-
-        // {file: __dirname + '/../app-demo/data/db-paperity.yaml', start_id: 1000, stop_id: null, readonly: false},
-        // {file: DB_ROOT + '/db-demo.yaml', start_id: 1000, stop_id: null, readonly: false},
-
-        // {item: 1015, name: 'mysql', readonly: true},
-    ]
-
-    async startup(rings = this.constructor.ring_specs) {
+    async startup() {
         /* Load the bootstrap database & create the registry, then load this cluster's complete data from DB,
            which should replace the db object with the ultimate one (TODO).
          */
+
+        const DB_ROOT   = __dirname + '/data'
+
+        const cluster_ring_spec =
+            {file: DB_ROOT + '/db-cluster.yaml', start_id: 200, stop_id: 300}
+
+        const ring_specs = [
+            {file: DB_ROOT + '/db-boot.yaml', start_id:    0, stop_id:  100, readonly: false},
+            {file: DB_ROOT + '/db-base.yaml', start_id:  100, stop_id: 1000, readonly: false},
+            cluster_ring_spec,
+            {item: 200, readonly: false},       // db-paperity.yaml
+            {item: 205, readonly: false},       // db-demo.yaml
+
+            // {file: __dirname + '/../app-demo/data/db-paperity.yaml', start_id: 1000, stop_id: null, readonly: false},
+            // {file: DB_ROOT + '/db-demo.yaml', start_id: 1000, stop_id: null, readonly: false},
+
+            // {item: 1015, name: 'mysql', readonly: true},
+        ]
 
         // let req = new DataRequest(this, 'startup')
         //
@@ -50,7 +50,7 @@ export class Cluster { //extends Item {
         // let cluster_ring = Ring.create(cluster_ring_spec)  //new Ring(cluster_ring_spec)
         // await cluster_ring.open(req)
 
-        let bootstrap_db = Database.create(rings)
+        let bootstrap_db = Database.create(ring_specs)
         schemat.set_db(bootstrap_db)
 
         await bootstrap_db.open()
