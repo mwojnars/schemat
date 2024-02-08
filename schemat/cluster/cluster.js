@@ -1,15 +1,7 @@
-import path from "path"
-import {fileURLToPath} from "url"
-
 import {print, T} from "../common/utils.js"
 import {Item} from "../item.js"
 import {Ring, Database} from "../db/db.js"
 import {DataRequest} from "../db/data_request.js";
-import fs from "fs";
-
-
-const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
-const __dirname  = path.dirname(__filename) + '/..'
 
 
 /**********************************************************************************************************************/
@@ -23,6 +15,11 @@ export class Cluster { //extends Item {
         /* Load the bootstrap database & create the registry, then load this cluster's complete data from DB,
            which should replace the db object with the ultimate one (TODO).
          */
+        const mod_url  = await import('node:url')
+        const mod_path = await import('node:path')
+
+        const __filename = mod_url.fileURLToPath(import.meta.url)       // or: process.argv[1]
+        const __dirname  = mod_path.dirname(__filename) + '/..'
 
         const DB_ROOT   = __dirname + '/data'
 
