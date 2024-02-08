@@ -40,7 +40,7 @@ class ClientRegistry extends Registry {
 
         let record = await category.action.create_item(data)
         if (record) {
-            registry.db.cache(record)                        // record == {id: id, data: data-encoded}
+            schemat.db.cache(record)                         // record == {id: id, data: data-encoded}
             return this.get_item(record.id)
         }
         throw new Error(`cannot create item ${item}`)
@@ -61,9 +61,9 @@ export class ClientProcess extends SchematProcess {
         print('page data:', data)
 
         await this._create_registry(ClientRegistry)
-        registry.set_db(new ClientDB(data.items))
+        schemat.set_db(new ClientDB(data.items))
 
-        let item = await registry.client_boot(data)
+        let item = await schemat.client_boot(data)
         item.assert_loaded()
 
         let root = document.querySelector("#page-component")

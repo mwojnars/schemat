@@ -43,7 +43,7 @@ export class Block extends Item {
     }
 
     async __init__() {
-        if (registry.client_side) return            // don't initialize the storage on the client side
+        if (schemat.client_side) return             // don't initialize the storage on the client side
 
         let storage_class
         // print(`Block.__init__() for ${this.filename}...`)

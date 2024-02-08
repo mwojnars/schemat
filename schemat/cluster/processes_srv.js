@@ -53,13 +53,13 @@ export class WorkerProcess extends BackendProcess {
             print('\nReceived kill signal, shutting down gracefully...')
             this._server.close(() => { print('Server closed') })
         }
-        registry.is_closing = true
+        schemat.is_closing = true
         setTimeout(() => process.exit(0), 10)
     }
 
     async CLI_run({host, port, workers}) {
 
-        // node = registry.get_loaded(this_node_ID)
+        // node = schemat.get_loaded(this_node_ID)
         // return node.activate()     // start the lifeloop and all worker processes (servers)
 
         // await this._update_all()
@@ -96,7 +96,7 @@ export class AdminProcess extends BackendProcess {
     //
     //     let {bootstrap} = await import('../boot/bootstrap.js')
     //     await bootstrap(db)
-    //     registry.is_closing = true
+    //     schemat.is_closing = true
     // }
 
     async CLI_move({id, newid, bottom, ring: ring_name}) {
@@ -105,7 +105,7 @@ export class AdminProcess extends BackendProcess {
         id = Number(id)
         newid = Number(newid)
 
-        let db = registry.db
+        let db = schemat.db
         let sameID = (id === newid)
         let req = new DataRequest(this, 'CLI_move', {id})
 
@@ -145,7 +145,7 @@ export class AdminProcess extends BackendProcess {
         print(`\nreinserting object(s) [${ids}] ...`)
 
         let id_list = []
-        let db = registry.db
+        let db = schemat.db
         let ring = ring_name ? await db.find_ring({name: ring_name}) : db.top_ring
         let obj
 
@@ -161,7 +161,7 @@ export class AdminProcess extends BackendProcess {
 
         // reinsert each object
         for (let id of id_list) {
-            try { obj = await registry.get_loaded(id) }
+            try { obj = await schemat.get_loaded(id) }
             catch (ex) {
                 if (ex instanceof ItemNotFound) {
                     print(`...WARNING: object [${id}] not found, skipping`)
@@ -186,7 +186,7 @@ export class AdminProcess extends BackendProcess {
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
         let transform = (it => it?._id_ === old_id ? item : it)
 
-        for (let ring of registry.db.rings) {
+        for (let ring of schemat.db.rings) {
             for await (const record of ring.scan_all()) {               // search for references to `old_id` in all records
                 let id = record.id
                 let json = record.data_json
@@ -209,13 +209,13 @@ export class AdminProcess extends BackendProcess {
            to a new format. All rings in the DB must be set as writable (!), otherwise the update will write a copy
            of an item in another ring instead of updating in place.
          */
-        for await (let item of globalThis.registry.scan_all())
-            await registry.db.update_full(item)
+        for await (let item of schemat.scan_all())
+            await schemat.db.update_full(item)
     }
 
     async _reinsert_all() {
         /* Re-insert every item to the same ring so that it receives a new ID. Update references in other items. */
-        let db = registry.db
+        let db = schemat.db
 
         for (let ring of db.rings) {
             if (ring.readonly) continue

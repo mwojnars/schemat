@@ -23,13 +23,13 @@ export function object_to_item(obj) {
     const DROP = ['action']
 
     // convert category ID to Category object (this modifies the original object!)
-    if (T.isNumber(obj._category_)) obj._category_ = registry.get_item(obj._category_)
+    if (T.isNumber(obj._category_)) obj._category_ = schemat.get_item(obj._category_)
 
     // if `obj` has a JS class, and it's not Item, store it in the _class_ attribute
     if (!obj._class_ && obj.constructor !== Object && obj.constructor !== Item)
         obj._class_ = obj.constructor
 
-    if (obj._class_) obj._class_ = registry.get_class_path(obj._class_)         // convert _class_ to a class path string
+    if (obj._class_) obj._class_ = schemat.get_class_path(obj._class_)          // convert _class_ to a class path string
 
     // filter out undefined values, private props (starting with '_'), and Item's special attributes except for those listed in KEEP
     let entries = Object.entries(obj).filter(([k, v]) =>
@@ -167,7 +167,7 @@ export class Ring extends Item {
             // if item has no _data_, create it from the object's properties
             item._data_ = item._data_ || object_to_item(item)
             item._id_ = item._meta_.provisional_id
-            registry.register(item)     // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
+            schemat.register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
             await this.update(item)
         }
     }
@@ -253,7 +253,7 @@ export class Database extends Item {
         for (const spec of this.ring_specs) {
             let ring
 
-            if (spec.item) ring = await registry.get_loaded(spec.item)
+            if (spec.item) ring = await schemat.get_loaded(spec.item)
             else if (spec instanceof Ring) ring = spec
             else {
                 ring = PlainRing.create(spec)           // a plain ring object that is NOT stored in DB
@@ -263,7 +263,7 @@ export class Database extends Item {
             this.append(ring)
             print(`...opened ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'read-write'})`)
 
-            await registry.boot()                       // reload `root_category` and `site` to have the most relevant objects after a next ring is added
+            await schemat.boot()                        // reload `root_category` and `site` to have the most relevant objects after a next ring is added
 
             if (!ring.is_linked())
                 await ring._init_indexes(req.clone())   // TODO: temporary

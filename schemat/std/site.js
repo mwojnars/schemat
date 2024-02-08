@@ -32,7 +32,7 @@ export class Site extends Directory {
 
 
     async __init__()  {
-        if (registry.client_side) return
+        if (schemat.client_side) return
         this._vm = await import('vm')
         this._check_default_container()                 // no await to avoid blocking the site's startup
     }
@@ -41,7 +41,7 @@ export class Site extends Directory {
     /***  URL generation  ***/
 
     async _check_default_container() {
-        while (!registry.site) await delay()
+        while (!schemat.site) await delay()
         let default_container = await this.resolve(this.default_path)
 
         assert(this._url_[0] === '/', `site's _url_ path must start with '/'`)
@@ -138,7 +138,7 @@ export class Site extends Directory {
         // TODO: cache module objects, parameter Site:cache_modules_ttl
         // TODO: for circular dependency return an unfinished module (use cache for this)
 
-        assert(registry.server_side)
+        assert(schemat.server_side)
 
         // make `path` absolute
         if (path[0] === '.') {
@@ -154,9 +154,9 @@ export class Site extends Directory {
         if (path[0] !== '/') return this.localImport(path)
 
         // local import if `path` starts with PATH_LOCAL_SUN
-        let local = registry.PATH_LOCAL_SUN
+        let local = schemat.PATH_LOCAL_SUN
         if (path.startsWith(local + '/'))
-            return this.localImport(registry.directImportPath(path))
+            return this.localImport(schemat.directImportPath(path))
 
         let source = await this.route_internal(path + '::text')
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)

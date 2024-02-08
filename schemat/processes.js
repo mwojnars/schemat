@@ -7,11 +7,11 @@ export class SchematProcess {
     /* The main Schemat process, on a worker node or in a user browser. */
 
     async _create_registry(registry_class, ...args) {
-        let registry = new registry_class(...args)
-        set_global({registry})
+        let schemat = new registry_class(...args)
+        set_global({schemat, registry: schemat})
 
-        await registry.init_classpath()
-        // await registry.boot()
+        await schemat.init_classpath()
+        // await schemat.boot()
         return this
     }
 }

@@ -116,7 +116,7 @@ export class ID_Namespace extends Namespace {
         try {
             let id = Number(path)
             assert(!isNaN(id))
-            return registry.get_loaded(id)
+            return schemat.get_loaded(id)
         }
         catch (ex) { throw new UrlPathNotFound({path}) }
     }
@@ -143,7 +143,7 @@ export class CategoryID_Namespace extends Namespace {
         let [space, id, ...rest] = path.split(sep)
         let category = this.spaces.get(space)               // decode space identifier and convert to a category object
         if (!category || rest.length) throw new UrlPathNotFound({path})
-        return registry.get_loaded(Number(id))
+        return schemat.get_loaded(Number(id))
     }
 
     identify(item) {

@@ -14,13 +14,13 @@ export class TypeItem extends Item {
 
     // async __init__() {
     //     let [path, name] = this._split_classpath(this.class_path)
-    //     this.type_class = await registry.import(path, name || 'default')
+    //     this.type_class = await schemat.import(path, name || 'default')
     //     assert(T.isClass(this.type_class))
     // }
 
     async create_real_type(props) {
         let [path, name] = this._split_classpath(this.class_path)
-        this.type_class = await registry.import(path, name || 'default')
+        this.type_class = await schemat.import(path, name || 'default')
         assert(T.isClass(this.type_class))
 
         let type = new this.type_class()

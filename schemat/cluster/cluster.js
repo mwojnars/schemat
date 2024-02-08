@@ -51,19 +51,19 @@ export class Cluster { //extends Item {
         // await cluster_ring.open(req)
 
         let bootstrap_db = Database.create(rings)
-        registry.set_db(bootstrap_db)
+        schemat.set_db(bootstrap_db)
 
         await bootstrap_db.open()
         // await bootstrap_db.insert_self()
 
-        // this.db = registry.site.database         // the ultimate database
+        // this.db = schemat.site.database         // the ultimate database
 
         // // load the cluster's full and ultimate data from the bootstrap DB;
         // // this may override the db property with the ultimate DB object
         // this._id_ = CLUSTER_ID
         // this.load()
-        // registry.setDB(this.prop('db'))
-        // await registry.boot()   // reload `root_category` and `site`
+        // schemat.setDB(this.prop('db'))
+        // await schemat.boot()   // reload `root_category` and `site`
     }
 }
 

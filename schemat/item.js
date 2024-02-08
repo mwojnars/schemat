@@ -95,8 +95,8 @@ export class Request {
 
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
-        let site  = registry.site
-        let items = [this.target, this.target._category_, registry.root_category, site, site._category_]
+        let site  = schemat.site
+        let items = [this.target, this.target._category_, schemat.root_category, site, site._category_]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(it => it._record_.encoded())
 
@@ -457,7 +457,7 @@ export class Item {
     async _load(record = null /*ItemRecord*/) {
         /* Load this._data_ from `record` or DB. Set up the class and prototypes. Call __init__(). */
         let _id = this._id_
-        registry.mark_load_started(_id)
+        schemat.mark_load_started(_id)
 
         try {
             record = record || await this._load_record()
@@ -495,16 +495,16 @@ export class Item {
 
         } finally {
             this._meta_.loading = false                     // cleanup to allow another load attempt, even after an error
-            registry.mark_load_finished(_id)
+            schemat.mark_load_finished(_id)
         }
     }
 
     async _load_record() {
         this.assert_linked()
-        // registry.session?.countLoaded(this._id_)
+        // schemat.session?.countLoaded(this._id_)
 
         let req = new DataRequest(this, 'load', {id: this._id_})
-        let json = await registry.db.select(req)
+        let json = await schemat.db.select(req)
         assert(typeof json === 'string', json)
         return new ItemRecord(this._id_, json)
     }
@@ -549,7 +549,7 @@ export class Item {
          */
         if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
         let cls = this._class_ || this._category_?.item_class || await this._category_?._item_class_
-        if (typeof cls === 'string') cls = await registry.get_class(cls)
+        if (typeof cls === 'string') cls = await schemat.get_class(cls)
         T.setClass(this, cls || Item)
     }
 
@@ -558,14 +558,14 @@ export class Item {
 
         if (this._url_ && this._path_) return this._url_        // already initialized (e.g., for Site object)
 
-        let site = registry.site
+        let site = schemat.site
 
         while (!site) {                                         // wait until the site is created (important for bootstrap objects)
-            // print('no registry.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
+            // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
             await delay()
             if (this._url_) return this._url_                   // already initialized?
-            if (registry.is_closing) return undefined           // site is closing? no need to wait any longer
-            site = registry.site
+            if (schemat.is_closing) return undefined            // site is closing? no need to wait any longer
+            site = schemat.site
         }
 
         let container = this._container_
@@ -576,7 +576,7 @@ export class Item {
             // print('missing _container_:', url, `(${this.name})`)
             return this._url_ = this._path_ = url
         }
-        // let container = await registry.site.resolve(this.container_path, true)
+        // let container = await schemat.site.resolve(this.container_path, true)
         // print(`_init_url() container: '${container.name}'`)
 
         if (!container.is_loaded()) await container.load()          // container must be fully loaded
@@ -591,7 +591,7 @@ export class Item {
 
     _init_network() {
         /* Create a .net connector and .action triggers for this item's network API. */
-        let role = registry.server_side ? 'server' : 'client'
+        let role = schemat.server_side ? 'server' : 'client'
         this._net_ = new Network(this, role, this.constructor.api)
         this.action = this._net_.create_triggers(this.constructor.actions)
     }
@@ -641,7 +641,7 @@ export class Item {
 
     async refresh() {
         /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
-        return registry.get_item(this._id_).load()
+        return schemat.get_item(this._id_).load()
     }
 
     dump_data() {
@@ -697,7 +697,7 @@ export class Item {
 
     mark_editable() {
         /* Mark this item as editable and remove it from the Registry. */
-        registry.unregister(this)
+        schemat.unregister(this)
         this._meta_.mutable = true
         return this
     }
@@ -782,7 +782,7 @@ export class Item {
     //        by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
     //      */
     //     let name = this.get('_boot_class')
-    //     if (name) base = registry.get_class(name)
+    //     if (name) base = schemat.get_class(name)
     //
     //     let body = this.route_internal(('class')           // full class body from concatenated `code` and `code_*` snippets
     //     if (!body) return base
@@ -790,7 +790,7 @@ export class Item {
     //     let url = this.sourceURL('class')
     //     let import_ = (path) => {
     //         if (path[0] === '.') throw Error(`relative import not allowed in dynamic code of a category (${url}), path='${path}'`)
-    //         return registry.site.import(path)
+    //         return schemat.site.import(path)
     //     }
     //     let source = `return class extends base {${body}}` + `\n//# sourceURL=${url}`
     //     return new Function('base', 'import_', source) (base, import_)
@@ -838,7 +838,7 @@ Item.create_api(
         // item's edit actions for use in the admin interface...
         'POST/edit':  new TaskService({
 
-            delete_self(request)   { return registry.db.delete(this) },
+            delete_self(request)   { return schemat.db.delete(this) },
 
             // TODO: in all the methods below, `this` should be copied and reloaded after modifications
 
@@ -847,13 +847,13 @@ Item.create_api(
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.mark_editable()
                 this._data_.insert(path, pos, entry)
-                return registry.db.update_full(this)
+                return schemat.db.update_full(this)
             },
 
             delete_field(request, path) {
                 this.mark_editable()
                 this._data_.delete(path)
-                return registry.db.update_full(this)
+                return schemat.db.update_full(this)
             },
 
             update_field(request, path, entry) {
@@ -861,13 +861,13 @@ Item.create_api(
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.mark_editable()
                 this._data_.update(path, entry)
-                return registry.db.update_full(this)
+                return schemat.db.update_full(this)
             },
 
             move_field(request, path, pos1, pos2) {
                 this.mark_editable()
                 this._data_.move(path, pos1, pos2)
-                return registry.db.update_full(this)
+                return schemat.db.update_full(this)
             },
 
         }),
@@ -954,12 +954,12 @@ export class Category extends Item {
         /* Parse the source code of this category (from _source_) and return as a module's namespace object.
            This method uses this._url_ as the module's path for linking nested imports in parseModule().
          */
-        let site = registry.site
-        let client_side = registry.client_side
+        let site = schemat.site
+        let client_side = schemat.client_side
         let [classPath, name] = this.getClassPath()
 
         if (!site) {
-            // when booting up, a couple of core items must be created before registry.site becomes available
+            // when booting up, a couple of core items must be created before schemat.site becomes available
             if (!classPath) throw new Error(`missing 'class_path' property for a core category, ID=${this._id_}`)
             if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a core category, ID=${this._id_}`)
             return {Class: await this.getDefaultClass(classPath, name)}
@@ -970,7 +970,7 @@ export class Category extends Item {
 
         try {
             return await (client_side ?
-                            registry.import(path) :
+                            schemat.import(path) :
                             site.parseModule(this._source_, path)
             )
         }
@@ -990,7 +990,7 @@ export class Category extends Item {
             let proto = this._prototypes_[0]
             return proto ? proto._item_class_ : Item
         }
-        return registry.importDirect(path, name || 'default')
+        return schemat.importDirect(path, name || 'default')
     }
 
     getClassPath() {
@@ -1050,7 +1050,7 @@ export class Category extends Item {
            including the environment-specific {key}_client OR {key}_server keys; assumes the values are strings.
            Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets.
          */
-        // let side = registry.server_side ? 'server' : 'client'
+        // let side = schemat.server_side ? 'server' : 'client'
         // let snippets = this.getMany([key, `${key}_${side}`], params)
         let snippets = this[`${key}_array`].reverse()
         return snippets.join('\n')
@@ -1107,7 +1107,7 @@ Category.create_api(
                    // TODO: use size limit & offset (pagination).
                    // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
                     let items = []
-                    for await (const item of registry.scan_category(this)) {
+                    for await (const item of schemat.scan_category(this)) {
                         await item.load()
                         items.push(item)
                     }
@@ -1122,10 +1122,10 @@ Category.create_api(
                     for (const rec of records) {                    // rec's shape: {id, data}
                         if (rec.data) {
                             rec.data = JSON.stringify(rec.data)
-                            registry.db.cache(rec)                   // need to cache the item in ClientDB
-                            // registry.unregister(rec.id)          // evict the item from the Registry to allow re-loading
+                            schemat.db.cache(rec)                   // need to cache the item in ClientDB
+                            // schemat.unregister(rec.id)          // evict the item from the Registry to allow re-loading
                         }
-                        items.push(await registry.get_loaded(rec.id))
+                        items.push(await schemat.get_loaded(rec.id))
                     }
                     return items
                 }
@@ -1137,7 +1137,7 @@ Category.create_api(
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)
-                await registry.db.insert(item)
+                await schemat.db.insert(item)
                 return item._record_.encoded()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },

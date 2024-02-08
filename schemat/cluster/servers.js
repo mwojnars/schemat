@@ -65,7 +65,7 @@ export class WebServer extends Server {
         try {
             let deadline = timeout(this.REQUEST_TIMEOUT * 1000, new ServerTimeoutError())
             let request = new Request({req, res})
-            let handler = registry.site.route(request)
+            let handler = schemat.site.route(request)
             let result = await Promise.race([handler, deadline])            // the request is abandoned if it takes longer than REQUEST_TIMEOUT to process
             if (typeof result === 'string') res.send(result)
         }
@@ -76,10 +76,10 @@ export class WebServer extends Server {
         }
 
         // // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
-        // let {check} = await registry.site.importModule("/site/widgets.js")
+        // let {check} = await schemat.site.importModule("/site/widgets.js")
         // check()
 
-        await registry.evict_cache()
+        await schemat.evict_cache()
 
         // await sleep(200)                 // for testing
         // session.printCounts()

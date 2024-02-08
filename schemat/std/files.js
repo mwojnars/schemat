@@ -84,7 +84,7 @@ export class FileLocal extends File {
 
     local_path
 
-    async __init__()  { if (registry.server_side) this._mod_fs = await import('node:fs') }
+    async __init__()  { if (schemat.server_side) this._mod_fs = await import('node:fs') }
 
     _content(encoding) {
         let path = this.local_path
@@ -106,7 +106,7 @@ export class LocalFolder extends Directory {
     local_path
 
     async __init__() {
-        if (registry.server_side) {
+        if (schemat.server_side) {
             this._mod_fs = await import('node:fs')
             this._mod_path = await import('node:path')
         }

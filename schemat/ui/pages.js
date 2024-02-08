@@ -182,7 +182,7 @@ export class ReactPage extends RenderedPage {
      */
 
     async render_client(target, html_element) {
-        assert(registry.client_side)
+        assert(schemat.client_side)
         target.assert_loaded()
         let view = this.create_view(target)
         let props = await view.prepare('client') || {}
@@ -344,7 +344,7 @@ export class CategoryAdminView extends ItemAdminView {
             for (let [k, v] of fdata) data.push(k, v)
 
             let draft = await this.new(data)                // item with no IID yet; TODO: validate `data` through category's schema
-            let item = await registry.insert(draft)         // has IID now
+            let item = await schemat.insert(draft)          // has IID now
             await item.load()                               // load() is needed to initialize the item's URL
 
             form.current.reset()                            // clear input fields

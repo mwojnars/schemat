@@ -73,7 +73,7 @@ export class JSONx {
         }
 
         if (T.isClass(obj)) {
-            state = registry.get_class_path(obj)
+            state = schemat.get_class_path(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
         }
         else if (obj instanceof Set)
@@ -92,7 +92,7 @@ export class JSONx {
             state = {[JSONx.ATTR_STATE]: state}
 
         let t = T.getPrototype(obj)
-        state[JSONx.ATTR_CLASS] = registry.get_class_path(t)
+        state[JSONx.ATTR_CLASS] = schemat.get_class_path(t)
 
         return state
     }
@@ -117,7 +117,7 @@ export class JSONx {
         // decoding of a class object
         if (isdict && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_TYPE)) {
             let classname = state[JSONx.ATTR_STATE]
-            return registry.get_class(classname)
+            return schemat.get_class(classname)
         }
 
         // determine the expected class (constructor function) for the output object
@@ -134,8 +134,8 @@ export class JSONx {
                 state = state_attr
             }
             if (T.isNumber(classname))                      // `classname` can be an item ID instead of a class
-                return registry.get_item(classname)
-            cls = registry.get_class(classname)
+                return schemat.get_item(classname)
+            cls = schemat.get_class(classname)
         }
         else cls = Object
 
@@ -150,7 +150,7 @@ export class JSONx {
             return new Map(Object.entries(this.decode_object(state)))
 
         if (T.isSubclass(cls, Item) && state instanceof Array)      // all Item instances except unlinked ones are created/loaded through Registry
-            return registry.get_item(state)
+            return schemat.get_item(state)
 
         state = this.decode(state)
 

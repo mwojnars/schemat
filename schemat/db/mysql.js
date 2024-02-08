@@ -61,9 +61,9 @@ export class MySQL extends DataBlock {
 
         for (let {key: path, value: sqlTable} of tables.entries()) {
             assert(path)
-            let category = await registry.site.find_item(path)
+            let category = await schemat.site.find_item(path)
             assert(category.is_loaded())
-            assert(category.instanceof(registry.root_category))
+            assert(category.instanceof(schemat.root_category))
 
             this._sqlTables.push(sqlTable)
             this._categories.push(category)
