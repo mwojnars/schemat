@@ -11,7 +11,7 @@ import {ROOT_ID} from "./item.js";
  **
  */
 
-export class ServerRegistry extends Schemat {
+export class ServerSchemat extends Schemat {
 
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()

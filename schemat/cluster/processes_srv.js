@@ -8,7 +8,7 @@ import {Item} from "../item.js";
 import {JSONx} from "../serialize.js";
 import {DataServer, WebServer} from "./servers.js";
 import {SchematProcess} from "../processes.js";
-import {ServerRegistry} from "../schemat_srv.js";
+import {ServerSchemat} from "../schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
 import {ItemNotFound} from "../common/errors.js";
 
@@ -24,7 +24,7 @@ export class BackendProcess extends SchematProcess {
     cluster         // the Cluster this process belongs to; only defined in backend processes
 
     async start(cmd, opts = {}) {
-        await this._create_registry(ServerRegistry, __dirname)
+        await this._create_registry(ServerSchemat, __dirname)
 
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
