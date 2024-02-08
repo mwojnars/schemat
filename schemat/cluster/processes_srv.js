@@ -1,7 +1,3 @@
-import fs from 'fs';
-import path from "path";
-import {fileURLToPath} from "url";
-
 import {print, assert, T} from "../common/utils.js";
 import {Cluster, DB_ROOT} from "./cluster.js";
 import {Item} from "../item.js";
@@ -12,9 +8,6 @@ import {ServerSchemat} from "../schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
 import {ItemNotFound} from "../common/errors.js";
 
-const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
-const __dirname  = path.dirname(__filename) + '/..'
-
 
 /**********************************************************************************************************************/
 
@@ -24,6 +17,12 @@ export class BackendProcess extends SchematProcess {
     cluster         // the Cluster this process belongs to; only defined in backend processes
 
     async start(cmd, opts = {}) {
+        const mod_url  = await import('node:url')
+        const mod_path = await import('node:path')
+
+        const __filename = mod_url.fileURLToPath(import.meta.url)       // or: process.argv[1]
+        const __dirname  = mod_path.dirname(__filename) + '/..'
+
         await this._create_registry(ServerSchemat, __dirname)
 
         let method = this.CLI_PREFIX + cmd
