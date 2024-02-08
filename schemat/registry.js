@@ -101,6 +101,8 @@ export class Registry {
     server_side = true
     get client_side() { return !this.server_side }
 
+    // _db                  // client-side or bootstrap DB; regular server-side DB is taken from site.db
+
     db                      // the site's database instance, either a Database (on server) or a ClientDB (on client); TODO: use site.database instead
 
     root_category           // site-wide RootCategory object
