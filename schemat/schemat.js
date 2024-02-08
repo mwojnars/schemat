@@ -96,8 +96,8 @@ class Classpath {
  */
 
 export class Schemat {
-    /* Global (or thread-local) object that exposes Schemat's internal API for the use by the application code:
-       loading and caching of web objects, classpath management, dynamic module import, session management etc.
+    /* Global (or thread-local) object that exposes Schemat internal API for use by the application code:
+       loading and caching of web objects, dynamic module import, classpath management, session management etc.
      */
 
     // global flags server_side/client_side to indicate the environment where the code is executing
