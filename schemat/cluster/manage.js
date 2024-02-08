@@ -59,11 +59,11 @@ async function main() {
     let cmd = argv._[0]
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
 
-    let main = (cmd === 'run') ?
+    let schemat_process = (cmd === 'run') ?
         new WorkerProcess() :
         new AdminProcess()
 
-    return main.start(cmd, {...argv})
+    return schemat_process.start(cmd, {...argv})
 }
 
 await main()
