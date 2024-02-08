@@ -8,7 +8,7 @@ import {Item} from "../item.js";
 import {JSONx} from "../serialize.js";
 import {DataServer, WebServer} from "./servers.js";
 import {SchematProcess} from "../processes.js";
-import {ServerRegistry} from "../registry_srv.js";
+import {ServerRegistry} from "../schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
 import {ItemNotFound} from "../common/errors.js";
 

@@ -1,7 +1,7 @@
 import { Mutex } from 'async-mutex'
 
 import { assert, print, T } from './common/utils.js'
-import { Registry } from './registry.js'
+import { Registry } from './schemat.js'
 import {ROOT_ID} from "./item.js";
 
 

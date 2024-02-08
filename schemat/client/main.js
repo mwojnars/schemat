@@ -1,6 +1,6 @@
 import {assert, print} from "../common/utils.js";
 import {ClientDB} from "./client_db.js";
-import {Registry} from "../registry.js";
+import {Registry} from "../schemat.js";
 import {SchematProcess} from "../processes.js";
 
 

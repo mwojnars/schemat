@@ -32,7 +32,7 @@
     // import {Item} from '/system/local/item.js'
     // import vm from 'vm'
     // check()
-    // console.log('registry:', registry)
+    // console.log('schemat:', schemat)
     // console.log('Item:', Item)
     // console.log('vm:', vm)
   views:
