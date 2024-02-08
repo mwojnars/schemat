@@ -72,7 +72,7 @@ export class WebServer extends Server {
         catch (ex) {
             print(ex)
             try { res.sendStatus(ex.code || 500) } catch(e){}               // sending an error code is impossible if the response was already (partially) sent before the error occurred
-            // TODO: send cancellation signal (StopRequest interrupt) to the Schemat/Registry to terminate all pending load-object operations and stop the remaining computation (esp. on timeout)
+            // TODO: send cancellation signal (StopRequest interrupt) to the Schemat to terminate all pending load-object operations and stop the remaining computation (esp. on timeout)
         }
 
         // // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future

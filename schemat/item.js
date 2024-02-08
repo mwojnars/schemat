@@ -336,8 +336,8 @@ export class Item {
 
     _meta_ = {                  // _meta_ contain system properties of this object...
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
-        mutable:   false,       // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from Registry
-        expiry:    undefined,   // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
+        mutable:   false,       // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from the registry
+        expiry:    undefined,   // timestamp [ms] when this item should be evicted from cache; 0 = NEVER, undefined = immediate
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
         // db         // the origin database of this item; undefined in newborn items
@@ -696,7 +696,7 @@ export class Item {
     }
 
     mark_editable() {
-        /* Mark this item as editable and remove it from the Registry. */
+        /* Mark this item as editable and remove it from the registry. */
         schemat.unregister(this)
         this._meta_.mutable = true
         return this
@@ -708,7 +708,7 @@ export class Item {
            Subclasses may override this method as either sync or async.
          */
     __done__() {}
-        /* Custom clean up to be executed after the item was evicted from the Registry cache. Can be async. */
+        /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 
 
     __handle__(request) {
@@ -1123,7 +1123,7 @@ Category.create_api(
                         if (rec.data) {
                             rec.data = JSON.stringify(rec.data)
                             schemat.db.cache(rec)                   // need to cache the item in ClientDB
-                            // schemat.unregister(rec.id)          // evict the item from the Registry to allow re-loading
+                            // schemat.unregister(rec.id)          // evict the item from the cache to allow re-loading
                         }
                         items.push(await schemat.get_loaded(rec.id))
                     }
@@ -1159,7 +1159,7 @@ export class RootCategory extends Category {
     constructor(_fail_) {
         super(_fail_)
         this._id_ = ROOT_ID
-        this._meta_.expiry = 0                  // never evict from Registry
+        this._meta_.expiry = 0                  // never evict from cache
     }
 
     get _category_() { return this }            // root category is a category for itself

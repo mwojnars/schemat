@@ -1,12 +1,12 @@
 import {assert, print} from "../common/utils.js";
 import {ClientDB} from "./client_db.js";
-import {Registry} from "../schemat.js";
+import {Schemat} from "../schemat.js";
 import {SchematProcess} from "../processes.js";
 
 
 /**********************************************************************************************************************/
 
-class ClientRegistry extends Registry {
+class ClientRegistry extends Schemat {
 
     server_side = false
 

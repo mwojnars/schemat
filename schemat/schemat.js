@@ -91,11 +91,14 @@ class Classpath {
 
 /**********************************************************************************************************************
  **
- **  REGISTRY
+ **  SCHEMAT
  **
  */
 
-export class Registry {
+export class Schemat {
+    /* Global (or thread-local) object that exposes Schemat's internal API for the use by the application code:
+       loading and caching of web objects, classpath management, dynamic module import, session management etc.
+     */
 
     // global flags server_side/client_side to indicate the environment where the code is executing
     server_side = true
@@ -155,7 +158,7 @@ export class Registry {
         /* (Re)create/load `this.root_category` and `this.site`. The latter will be left undefined if not present in the DB. */
         this.root_category = await this._init_root()        // always returns a valid object, possibly created from `root_data`
         this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
-        // if (this.site) print("Registry: site loaded")
+        // if (this.site) print("Schemat: site loaded")
     }
 
     async _init_root() {
@@ -168,14 +171,14 @@ export class Registry {
 
         await root.load()
         root.assert_loaded()
-        // print("Registry: root category loaded from DB")
+        // print("Schemat: root category loaded from DB")
 
         // // try loading `root` from the DB first...
         // if (this.db)
         //     try {
         //         await root.load()
         //         root.assert_loaded()
-        //         print("Registry: root category loaded from DB")
+        //         print("Schemat: root category loaded from DB")
         //     } catch (ex) {
         //         if (!(ex instanceof ItemNotFound)) throw ex
         //     }
@@ -184,10 +187,10 @@ export class Registry {
         // // TODO: this is only used by CLI_build() and bootstrap.js -- can be removed if bootstrap is not supported anymore!
         // if (!root.is_loaded()) {
         //     await root.load(new ItemRecord(ROOT_ID, root_data))
-        //     print("Registry: root category created from root_data")
+        //     print("Schemat: root category created from root_data")
         // }
 
-        // print("Registry: root category created")
+        // print("Schemat: root category created")
         return root
     }
 

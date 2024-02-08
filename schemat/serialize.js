@@ -149,7 +149,7 @@ export class JSONx {
         if (cls === Map)
             return new Map(Object.entries(this.decode_object(state)))
 
-        if (T.isSubclass(cls, Item) && state instanceof Array)      // all Item instances except unlinked ones are created/loaded through Registry
+        if (T.isSubclass(cls, Item) && state instanceof Array)      // all Item instances except unlinked ones are created/loaded through the global Schemat object
             return schemat.get_item(state)
 
         state = this.decode(state)

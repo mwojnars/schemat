@@ -1,7 +1,7 @@
 import { Mutex } from 'async-mutex'
 
 import { assert, print, T } from './common/utils.js'
-import { Registry } from './schemat.js'
+import { Schemat } from './schemat.js'
 import {ROOT_ID} from "./item.js";
 
 
@@ -11,9 +11,9 @@ import {ROOT_ID} from "./item.js";
  **
  */
 
-export class ServerRegistry extends Registry {
+export class ServerRegistry extends Schemat {
 
-    // sessionMutex = new Mutex()  // a mutex to lock Registry for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
+    // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
     PATH_LOCAL_SUN = "/system/local"    // SUN folder that maps to the local filesystem folder, PATH_LOCAL_FS;

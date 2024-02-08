@@ -1,6 +1,3 @@
-/*
-    All the classes defined here are included in the Registry's class path.
- */
 
 export class Edit {
     process(data) {}

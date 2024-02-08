@@ -81,7 +81,7 @@ export class Path {
 
 export class ItemsCache extends Map {
     /* A cache of Item instances; provides manually-invoked eviction by LRU and per-item TTL.
-       Eviction timestamps are stored in items (item.evict) and can be modified externally by the Item or Registry.
+       Eviction timestamps are stored in items and can be modified externally.
        Currently, the implementation scans all items for TTL eviction, which should work well for up to ~1000 entries.
        For larger item sets, a BTree could possibly be used: import BTree from 'sorted-btree'
      */
