@@ -1,11 +1,12 @@
 "use strict";
 
-import { print, assert, Counter } from './common/utils.js'
-import { ItemNotFound, NotImplemented } from './common/errors.js'
-import { JSONx } from './serialize.js'
-import { Catalog, Data, ItemsCache } from './data.js'
-import { Item, RootCategory, ROOT_ID, SITE_CATEGORY_ID } from './item.js'
-// import { root_data } from './boot/root.js'
+import {print, assert, Counter} from './common/utils.js'
+import {ItemNotFound, NotImplemented} from './common/errors.js'
+// import { JSONx } from './serialize.js'
+import {Catalog, Data, ItemsCache} from './data.js'
+import {Item, RootCategory, ROOT_ID, SITE_CATEGORY_ID} from './item.js'
+import {set_global} from "./common/globals.js";
+// import {root_data} from './boot/root.js'
 // import {ItemRecord} from "./db/records.js";
 
 // import * as mod_types from './type.js'
@@ -124,6 +125,18 @@ export class Schemat {
 
 
     /***  Initialization  ***/
+
+    static async create_global(...args) {
+        /* Create a new Schemat instance, perform basic initialization and make it a global object. */
+
+        let schemat = new this(...args)
+        set_global({schemat, registry: schemat})
+
+        await schemat.init_classpath()
+        // await schemat.boot()
+        return schemat
+    }
+
 
     async init_classpath() {
         // print('initClasspath() started...')

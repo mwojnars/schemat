@@ -15,14 +15,14 @@ import {set_global} from "./common/globals.js";
 export class MainProcess {
     /* The main process: on a worker node or in a user browser. Creates the global Schemat object. */
 
-    async _create_schemat(_class, ...args) {
-        let schemat = new _class(...args)
-        set_global({schemat, registry: schemat})
-
-        await schemat.init_classpath()
-        // await schemat.boot()
-        return this
-    }
+    // async _create_schemat(_class, ...args) {
+    //     let schemat = new _class(...args)
+    //     set_global({schemat, registry: schemat})
+    //
+    //     await schemat.init_classpath()
+    //     // await schemat.boot()
+    //     return this
+    // }
 }
 
 
@@ -40,7 +40,8 @@ export class BackendProcess extends MainProcess {
         const __filename = mod_url.fileURLToPath(import.meta.url)       // or: process.argv[1]
         const __dirname  = mod_path.dirname(__filename)
 
-        await this._create_schemat(ServerSchemat, __dirname)
+        await ServerSchemat.create_global(__dirname)
+        // await this._create_schemat(ServerSchemat, __dirname)
 
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
