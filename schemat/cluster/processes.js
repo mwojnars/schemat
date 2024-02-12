@@ -13,8 +13,6 @@ import {DataServer, WebServer} from "./servers.js";
 export class BackendProcess {
     CLI_PREFIX = 'CLI_'
 
-    // cluster         // the Cluster this process belongs to; only defined in backend processes
-
     async start(cmd, opts = {}) {
         const mod_url  = await import('node:url')
         const mod_path = await import('node:path')
