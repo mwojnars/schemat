@@ -7,22 +7,10 @@ import {DataRequest} from "./db/data_request.js";
 import {Cluster} from "./cluster/cluster.js";
 import {DataServer, WebServer} from "./cluster/servers.js";
 
-import {set_global} from "./common/globals.js";
-
 
 /**********************************************************************************************************************/
 
 export class MainProcess {
-    /* The main process: on a worker node or in a user browser. Creates the global Schemat object. */
-
-    // async _create_schemat(_class, ...args) {
-    //     let schemat = new _class(...args)
-    //     set_global({schemat, registry: schemat})
-    //
-    //     await schemat.init_classpath()
-    //     // await schemat.boot()
-    //     return this
-    // }
 }
 
 
@@ -41,7 +29,6 @@ export class BackendProcess extends MainProcess {
         const __dirname  = mod_path.dirname(__filename)
 
         await ServerSchemat.create_global(__dirname)
-        // await this._create_schemat(ServerSchemat, __dirname)
 
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)

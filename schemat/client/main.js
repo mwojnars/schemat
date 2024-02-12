@@ -58,7 +58,6 @@ export class ClientProcess extends MainProcess {
         let data = this._read_data('#page-data', 'json+base64')
         print('page data:', data)
 
-        // await this._create_schemat(ClientSchemat)
         await ClientSchemat.create_global()
         schemat.set_db(new ClientDB(data.items))
 
