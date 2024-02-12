@@ -6,48 +6,12 @@ import {Schemat} from "../schemat.js";
 /**********************************************************************************************************************/
 
 export class ClientSchemat extends Schemat {
+    /* Client-side global Schemat object. */
 
     server_side = false
 
-    async client_boot(data) {
-        /* Load response data from state-encoded `data.session` as produced by Request.dump(). */
 
-        await this.boot(data.site_id)
-        assert(this.site)
-
-        for (let rec of data.items)
-            await this.get_loaded(rec.id)               // preload all boot items from copies passed in constructor()
-
-        return this.get_item(data.target_id)
-    }
-
-    directImportPath(path) { return this.remoteImportPath(path) }
-    remoteImportPath(path) { return path + '::import' }
-
-    async import(path, name) {
-        /* High-level import of a module and (optionally) its element, `name`, from a SUN path. */
-        let module = import(this.remoteImportPath(path))
-        return name ? (await module)[name] : module
-    }
-
-    async insert(item) {
-        let data = item._data_.__getstate__()
-        delete data['_category_']
-
-        let category = item._category_
-        assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items
-
-        let record = await category.action.create_item(data)
-        if (record) {
-            schemat.db.cache(record)                         // record == {id: id, data: data-encoded}
-            return this.get_item(record.id)
-        }
-        throw new Error(`cannot create item ${item}`)
-    }
-
-
-    /******************************************************************************************************************/
-
+    /***  startup  ***/
 
     static async start_client() {
         /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
@@ -88,6 +52,45 @@ export class ClientSchemat extends Schemat {
         if (format === "json+base64") return JSON.parse(decodeURIComponent(atob(value)))
 
         return value
+    }
+
+    async client_boot(data) {
+        /* Load response data from state-encoded `data.session` as produced by Request.dump(). */
+
+        await this.boot(data.site_id)
+        assert(this.site)
+
+        for (let rec of data.items)
+            await this.get_loaded(rec.id)               // preload all boot items from copies passed in constructor()
+
+        return this.get_item(data.target_id)
+    }
+
+
+    /***  import & DB  ***/
+
+    directImportPath(path) { return this.remoteImportPath(path) }
+    remoteImportPath(path) { return path + '::import' }
+
+    async import(path, name) {
+        /* High-level import of a module and (optionally) its element, `name`, from a SUN path. */
+        let module = import(this.remoteImportPath(path))
+        return name ? (await module)[name] : module
+    }
+
+    async insert(item) {
+        let data = item._data_.__getstate__()
+        delete data['_category_']
+
+        let category = item._category_
+        assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items
+
+        let record = await category.action.create_item(data)
+        if (record) {
+            schemat.db.cache(record)                         // record == {id: id, data: data-encoded}
+            return this.get_item(record.id)
+        }
+        throw new Error(`cannot create item ${item}`)
     }
 }
 
