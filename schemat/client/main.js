@@ -1,7 +1,7 @@
 import {assert, print} from "../common/utils.js";
 import {ClientDB} from "./client_db.js";
 import {Schemat} from "../schemat.js";
-import {SchematProcess} from "../processes.js";
+import {MainProcess} from "../processes.js";
 
 
 /**********************************************************************************************************************/
@@ -50,9 +50,7 @@ class ClientSchemat extends Schemat {
 
 /**********************************************************************************************************************/
 
-export class ClientProcess extends SchematProcess {
-
-    // async init() { return this._create_registry(ClientSchemat) }
+export class ClientProcess extends MainProcess {
 
     async start() {
         /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
@@ -60,7 +58,7 @@ export class ClientProcess extends SchematProcess {
         let data = this._read_data('#page-data', 'json+base64')
         print('page data:', data)
 
-        await this._create_registry(ClientSchemat)
+        await this._create_schemat(ClientSchemat)
         schemat.set_db(new ClientDB(data.items))
 
         let item = await schemat.client_boot(data)
