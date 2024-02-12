@@ -44,7 +44,7 @@ export class WebServer extends Server {
 
     REQUEST_TIMEOUT = 60                // [sec] 60 seconds
 
-    constructor(node, {host, port, workers}) {
+    constructor({host, port, workers}) {
         super()
         this.host = host
         this.port = port

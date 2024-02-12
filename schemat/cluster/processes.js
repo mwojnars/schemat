@@ -13,7 +13,7 @@ import {DataServer, WebServer} from "./servers.js";
 export class BackendProcess {
     CLI_PREFIX = 'CLI_'
 
-    cluster         // the Cluster this process belongs to; only defined in backend processes
+    // cluster         // the Cluster this process belongs to; only defined in backend processes
 
     async start(cmd, opts = {}) {
         const mod_url  = await import('node:url')
@@ -27,8 +27,8 @@ export class BackendProcess {
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
 
-        this.cluster = new Cluster()
-        await this.cluster.startup()
+        let cluster = new Cluster()
+        await cluster.startup()
 
         return this[method](opts)
     }
@@ -63,7 +63,7 @@ export class WorkerProcess extends BackendProcess {
         // await this._update_all()
         // await this._reinsert_all()
 
-        let web = new WebServer(this.cluster, {host, port, workers})
+        let web = new WebServer({host, port, workers})
         this._server = await web.start()
 
         process.on('SIGTERM', () => this.shutdown())        // listen for TERM signal, e.g. kill
