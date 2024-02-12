@@ -249,26 +249,28 @@ export class Database extends Item {
         /* Set and load rings for self while updating the global registry, so that subsequent ring objects (items)
            can be loaded from lower rings.
          */
-        let req = new DataRequest(this, 'open')
         for (const spec of this.ring_specs) {
-            // let ring
-            //
-            // if (spec.item) ring = await schemat.get_loaded(spec.item)
-            // else if (spec instanceof Ring) ring = spec
-            // else {
-            //     ring = PlainRing.create(spec)           // a plain ring object that is NOT stored in DB
-            //     await ring.open()
-            // }
-            //
-            // this.add_ring(ring)
-            // print(`...opened ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'read-write'})`)
-            //
-            // if (!ring.is_linked())
-            //     await ring._init_indexes(req.clone())   // TODO: temporary
-
-            await this.add_ring(spec, req)
-            await schemat.boot()                        // reload `root_category` and `site` to have the most relevant objects after a next ring is added
+            await this.add_ring(spec)
+            await schemat.boot()                    // reload `root_category` and `site` to have the most relevant objects after a next ring is added
         }
+    }
+
+    async add_ring(spec) {
+        assert(!this.is_linked())                   // add_ring() is a mutable operation, so it can only be called on a newborn object (not in DB)
+        let ring
+
+        if (spec.item) ring = await schemat.get_loaded(spec.item)
+        else if (spec instanceof Ring) ring = spec
+        else {
+            ring = PlainRing.create(spec)           // a plain ring object that is NOT stored in DB
+            await ring.open()
+        }
+        this.rings.push(ring)
+
+        print(`...opened ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'read-write'})`)
+
+        if (!ring.is_linked())
+            await ring._init_indexes(new DataRequest(this, 'add_ring'))   // TODO: temporary
     }
 
     async insert_self() {
@@ -282,30 +284,6 @@ export class Database extends Item {
                 await target_ring.insert_many(ring, ...sequences, ...blocks)
             }
         // return target_ring.insert(null, this.dump_data())
-    }
-
-    async add_ring(spec, req) {
-        /* The ring must be already open. */
-        // if (this.top_ring) this.top_ring.stack(ring)
-        assert(!this.is_linked())
-        let ring
-
-        if (spec.item) ring = await schemat.get_loaded(spec.item)
-        else if (spec instanceof Ring) ring = spec
-        else {
-            ring = PlainRing.create(spec)           // a plain ring object that is NOT stored in DB
-            await ring.open()
-        }
-
-        this.rings.push(ring)
-
-        // this.add_ring(ring)
-        print(`...opened ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'read-write'})`)
-
-        if (!ring.is_linked())
-            await ring._init_indexes(req.clone())   // TODO: temporary
-
-        // this.rings.push(ring)
     }
 
     async find_ring({id, name}) {
