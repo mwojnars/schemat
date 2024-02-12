@@ -1,22 +1,16 @@
-import {print, assert, T} from "./common/utils.js";
-import {ItemNotFound} from "./common/errors.js";
-import {Item} from "./item.js";
-import {JSONx} from "./serialize.js";
-import {ServerSchemat} from "./schemat_srv.js";
-import {DataRequest} from "./db/data_request.js";
-import {Cluster} from "./cluster/cluster.js";
-import {DataServer, WebServer} from "./cluster/servers.js";
+import {print, assert, T} from "../common/utils.js";
+import {ItemNotFound} from "../common/errors.js";
+import {Item} from "../item.js";
+import {JSONx} from "../serialize.js";
+import {ServerSchemat} from "../schemat_srv.js";
+import {DataRequest} from "../db/data_request.js";
+import {Cluster} from "./cluster.js";
+import {DataServer, WebServer} from "./servers.js";
 
 
 /**********************************************************************************************************************/
 
-export class MainProcess {
-}
-
-
-/**********************************************************************************************************************/
-
-export class BackendProcess extends MainProcess {
+export class BackendProcess {
     CLI_PREFIX = 'CLI_'
 
     cluster         // the Cluster this process belongs to; only defined in backend processes
