@@ -213,7 +213,7 @@ export class ReactPage extends RenderedPage {
         }
 
         page_script(props) {
-            return `import {ClientProcess} from "/system/local/client/main.js"; new ClientProcess().start();`
+            return `import {ClientSchemat} from "/system/local/client/main.js"; ClientSchemat.start_client();`
         }
 
         component() {

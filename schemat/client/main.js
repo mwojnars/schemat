@@ -1,12 +1,11 @@
 import {assert, print} from "../common/utils.js";
 import {ClientDB} from "./client_db.js";
 import {Schemat} from "../schemat.js";
-import {MainProcess} from "../processes.js";
 
 
 /**********************************************************************************************************************/
 
-class ClientSchemat extends Schemat {
+export class ClientSchemat extends Schemat {
 
     server_side = false
 
@@ -45,14 +44,12 @@ class ClientSchemat extends Schemat {
         }
         throw new Error(`cannot create item ${item}`)
     }
-}
 
 
-/**********************************************************************************************************************/
+    /******************************************************************************************************************/
 
-export class ClientProcess extends MainProcess {
 
-    async start() {
+    static async start_client() {
         /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
 
         let data = this._read_data('#page-data', 'json+base64')
@@ -75,7 +72,7 @@ export class ClientProcess extends MainProcess {
         // check()
     }
 
-    _read_data(node, format = "json") {
+    static _read_data(node, format = "json") {
         /* Extract text contents of an element pointed to by a given selector.
            If `format` is given, or the element has `format` attribute, and the format is "json",
            the extracted string is JSON-decoded to an object.
