@@ -20,7 +20,7 @@ export class BackendProcess {
         const mod_path = await import('node:path')
 
         const __filename = mod_url.fileURLToPath(import.meta.url)       // or: process.argv[1]
-        const __dirname  = mod_path.dirname(__filename)
+        const __dirname  = mod_path.dirname(mod_path.dirname(__filename))
 
         await ServerSchemat.create_global(__dirname)
 
