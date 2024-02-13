@@ -19,7 +19,7 @@ import {Data} from "../data.js";
 export class Ring extends Item {
 
     static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
-    static _category_ = null // ......
+    static _category_ = 12  // ID of Ring category
 
     data_sequence           // the main DataSequence containing all primary data of this ring
     indexes = new Map()     // {name: Index} map of all derived indexes of this ring
@@ -206,14 +206,14 @@ export class Database extends Item {
     get rings_reversed()    { return this.rings.slice().reverse() }
 
     __create__(specs) {
-        this.ring_specs = specs
+        this._ring_specs = specs
     }
 
     async open(cluster_ring = null) {
         /* Set and load rings for self while updating the global registry, so that subsequent ring objects (items)
            can be loaded from lower rings.
          */
-        for (const spec of this.ring_specs) {
+        for (const spec of this._ring_specs) {
             await this.add_ring(spec)
             await schemat.boot()                    // reload `root_category` and `site` to have the most relevant objects after a next ring is added
         }
@@ -239,15 +239,21 @@ export class Database extends Item {
 
     async insert_self() {
         /* Insert this database object and its rings into `target_ring` as items. */
-        let target_ring = this.top_ring
+        let target = this.top_ring
+        let objects = []
+
+        if (!this._id_) objects.push(this)
+
         for (let ring of this.rings)
             if (!ring._id_) {
                 // if `ring` is newly created, insert it as an item to the `target_ring`, together with its sequences and blocks
                 let sequences = [...ring.indexes.values(), ring.data_sequence]
                 let blocks = sequences.map(seq => seq.blocks[0])
-                await target_ring.insert_many(ring, ...sequences, ...blocks)
+                objects.push(ring, ...sequences, ...blocks)
+                // await target.insert_many(ring, ...sequences, ...blocks)
             }
-        // return target_ring.insert(null, this.dump_data())
+        await target.insert_many(...objects)
+        // return target.insert(null, this.dump_data())
     }
 
     async __insert_self(referrers = new Set()) {
