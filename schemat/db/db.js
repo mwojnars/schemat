@@ -129,7 +129,7 @@ export class Ring extends Item {
         // 2nd phase: update items with actual data
         for (let item of items) {
             // if item has no _data_, create it from the object's properties
-            item._data_ = item._data_ || Data.from_object(item)
+            item._data_ = item._data_ || await Data.from_object(item)
             item._id_ = item._meta_.provisional_id
             schemat.register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
             await this.update(item)

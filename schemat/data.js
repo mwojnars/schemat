@@ -625,7 +625,7 @@ export class Data extends Catalog {
        - derived features (and subfeatures?)
     */
 
-    static from_object(obj) {
+    static async from_object(obj) {
         /* Convert a plain object - POJO or a newborn Item containing plain JS attributes - to a Data instance,
            which contains all own properties of `obj` except for those starting with '_',
            or having undefined value, or Item's special attributes (like `action`).
@@ -637,15 +637,18 @@ export class Data extends Catalog {
         const KEEP = ['_class_', '_category_']
         const DROP = ['action']
 
-        // infer _category_ and _class_ of the object
+        // identify _category_ & _class_ of the object and perform conversions if needed
         let _category_ = obj._category_ || obj.constructor._category_ || undefined
         let _class_    = obj._class_    || obj.constructor._class_ || obj.constructor || undefined
 
         if (T.isString(_category_)) _category_ = Number(_category_)
-        if (T.isNumber(_category_)) _category_ = schemat.get_item(_category_)
+        if (T.isNumber(_category_)) _category_ = await schemat.get_loaded(_category_) //schemat.get_item(_category_)
 
         if (_class_ === Object || _class_ === Item) _class_ = undefined
         if (_class_ && !T.isString(_class_)) _class_ = schemat.get_classpath(_class_)     // convert _class_ to a classpath string
+
+        // drop _class_ if it's already defined through _category_.item_class (by literal equality of classpath strings) - this doesn't detect a default on _class_ property
+        if (_class_ === _category_?.item_class) _class_ = undefined
 
         let props = {...obj, _category_, _class_}
 
