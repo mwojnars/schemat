@@ -10,50 +10,9 @@ import {JSONx} from "../serialize.js";
 import {Data} from "../data.js";
 
 
-/**********************************************************************************************************************/
-
-// export function object_to_item(obj) {
-//     /* Convert a plain object to a Data instance that can be assigned to item's _data_.
-//        The returned Data instance will have all own properties of `obj` except for those starting with '_',
-//        or having undefined value, or Item's special attributes (like `action`).
-//        Properties defined by getters are ignored.
-//      */
-//     assert(!obj.is_linked?.())
-//
-//     const KEEP = ['_class_', '_category_']
-//     const DROP = ['action']
-//
-//     // if _category_ is defined at a class level (as static) instead of object level, move it to the object level
-//     if (!obj._category_) obj._category_ = obj.constructor._category_
-//
-//     // convert category ID to a Category object/stub - this modifies the original object!
-//     if (T.isNumber(obj._category_)) obj._category_ = schemat.get_item(obj._category_)
-//
-//     // if `obj` has a JS class, and it's not Item, store it in the _class_ attribute
-//     if (!obj._class_ && obj.constructor !== Object && obj.constructor !== Item)
-//         obj._class_ = obj.constructor
-//
-//     if (obj._class_) obj._class_ = schemat.get_class_path(obj._class_)          // convert _class_ to a class path string
-//
-//     // filter out undefined values, private props (starting with '_'), and Item's special attributes except for those listed in KEEP
-//     let entries = Object.entries(obj).filter(([k, v]) =>
-//         (v !== undefined) &&
-//         (k[0] !== '_' || KEEP.includes(k)) &&
-//         !DROP.includes(k)
-//     )
-//
-//     // // if `obj` has a JS class, and it's not Item, store it in the _class_ attribute
-//     // if (!obj._class_ && obj.constructor !== Object && obj.constructor !== Item)
-//     //     entries.push(['_class_', obj.constructor])
-//
-//     // print(`object_to_item(${obj}) =>`, entries)
-//     return new Data(Object.fromEntries(entries))
-// }
-
-
 /**********************************************************************************************************************
  **
- **  Data RING
+ **  Database RING
  **
  */
 
