@@ -12,39 +12,43 @@ import {Data} from "../data.js";
 
 /**********************************************************************************************************************/
 
-export function object_to_item(obj) {
-    /* Convert a plain object to a Data instance that can be assigned to item's _data_.
-       The returned Data instance will have all own properties of `obj` except for those starting with '_',
-       or having undefined value, or Item's special attributes (like `action`).
-       Properties defined by getters are also ignored.
-     */
-
-    const KEEP = ['_class_', '_category_']
-    const DROP = ['action']
-
-    // convert category ID to Category object (this modifies the original object!)
-    if (T.isNumber(obj._category_)) obj._category_ = schemat.get_item(obj._category_)
-
-    // if `obj` has a JS class, and it's not Item, store it in the _class_ attribute
-    if (!obj._class_ && obj.constructor !== Object && obj.constructor !== Item)
-        obj._class_ = obj.constructor
-
-    if (obj._class_) obj._class_ = schemat.get_class_path(obj._class_)          // convert _class_ to a class path string
-
-    // filter out undefined values, private props (starting with '_'), and Item's special attributes except for those listed in KEEP
-    let entries = Object.entries(obj).filter(([k, v]) =>
-        (v !== undefined) &&
-        (k[0] !== '_' || KEEP.includes(k)) &&
-        !DROP.includes(k)
-    )
-
-    // // if `obj` has a JS class, and it's not Item, store it in the _class_ attribute
-    // if (!obj._class_ && obj.constructor !== Object && obj.constructor !== Item)
-    //     entries.push(['_class_', obj.constructor])
-
-    // print(`object_to_item(${obj}) =>`, entries)
-    return new Data(Object.fromEntries(entries))
-}
+// export function object_to_item(obj) {
+//     /* Convert a plain object to a Data instance that can be assigned to item's _data_.
+//        The returned Data instance will have all own properties of `obj` except for those starting with '_',
+//        or having undefined value, or Item's special attributes (like `action`).
+//        Properties defined by getters are ignored.
+//      */
+//     assert(!obj.is_linked?.())
+//
+//     const KEEP = ['_class_', '_category_']
+//     const DROP = ['action']
+//
+//     // if _category_ is defined at a class level (as static) instead of object level, move it to the object level
+//     if (!obj._category_) obj._category_ = obj.constructor._category_
+//
+//     // convert category ID to a Category object/stub - this modifies the original object!
+//     if (T.isNumber(obj._category_)) obj._category_ = schemat.get_item(obj._category_)
+//
+//     // if `obj` has a JS class, and it's not Item, store it in the _class_ attribute
+//     if (!obj._class_ && obj.constructor !== Object && obj.constructor !== Item)
+//         obj._class_ = obj.constructor
+//
+//     if (obj._class_) obj._class_ = schemat.get_class_path(obj._class_)          // convert _class_ to a class path string
+//
+//     // filter out undefined values, private props (starting with '_'), and Item's special attributes except for those listed in KEEP
+//     let entries = Object.entries(obj).filter(([k, v]) =>
+//         (v !== undefined) &&
+//         (k[0] !== '_' || KEEP.includes(k)) &&
+//         !DROP.includes(k)
+//     )
+//
+//     // // if `obj` has a JS class, and it's not Item, store it in the _class_ attribute
+//     // if (!obj._class_ && obj.constructor !== Object && obj.constructor !== Item)
+//     //     entries.push(['_class_', obj.constructor])
+//
+//     // print(`object_to_item(${obj}) =>`, entries)
+//     return new Data(Object.fromEntries(entries))
+// }
 
 
 /**********************************************************************************************************************
@@ -165,7 +169,7 @@ export class Ring extends Item {
         // 2nd phase: update items with actual data
         for (let item of items) {
             // if item has no _data_, create it from the object's properties
-            item._data_ = item._data_ || object_to_item(item)
+            item._data_ = item._data_ || Data.from_object(item)  //object_to_item(item)
             item._id_ = item._meta_.provisional_id
             schemat.register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
             await this.update(item)
@@ -276,6 +280,30 @@ export class Database extends Item {
     async insert_self() {
         /* Insert this database object and its rings into `target_ring` as items. */
         let target_ring = this.top_ring
+        for (let ring of this.rings)
+            if (!ring._id_) {
+                // if `ring` is newly created, insert it as an item to the `target_ring`, together with its sequences and blocks
+                let sequences = [...ring.indexes.values(), ring.data_sequence]
+                let blocks = sequences.map(seq => seq.blocks[0])
+                await target_ring.insert_many(ring, ...sequences, ...blocks)
+            }
+        // return target_ring.insert(null, this.dump_data())
+    }
+
+    async __insert_self(referrers = new Set()) {
+        /* Insert this (unlinked) object and, recursively, all the unliked objects referenced by this one, to the database. */
+
+        assert(!this.is_linked(), 'trying to insert an object that is already stored in the database')
+        if (referrers.has(this)) throw new Error(`circular reference detected`)
+
+        referrers.add(this)
+
+        // find referenced objects in this object's properties...
+
+        referrers.delete(this)
+
+        let db = schemat.db
+
         for (let ring of this.rings)
             if (!ring._id_) {
                 // if `ring` is newly created, insert it as an item to the `target_ring`, together with its sequences and blocks
