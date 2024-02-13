@@ -195,6 +195,7 @@ export class Database extends Item {
        This class is only instantiated on the server, while the client uses a ClientDB proxy instead.
      */
     static role = 'db'      // for use in ProcessingStep and DataRequest
+    static _category_ = 11  // ID of Database category
 
     rings = []              // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
 

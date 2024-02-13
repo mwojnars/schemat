@@ -84,7 +84,8 @@
           inherit: false
           "@": ITEM
         _class_:
-          info: Javascript class (identified by a class path) to be assigned to the object after it is loaded from DB.
+          info: Javascript class (identified by a class path) to be assigned to the object
+            after it is loaded from DB.
           "@": STRING
         _extends_:
           info: An item that serves as a prototype for this one, that is, provides default
@@ -299,6 +300,7 @@
   "@": Data
 - __id: 11
   name: Database
+  item_class: db.Database
   _category_:
     "@": 0
   "@": Data
