@@ -280,8 +280,9 @@ export class Types {
     static getClass     = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor      // reading constructor from prototype is slightly safer than directly from obj
     static setClass     = (obj,cls) => Object.setPrototypeOf(obj, cls.prototype)
 
-    static isPrimitiveObj = (obj) => ["number", "string", "boolean"].includes(typeof obj) || obj === null
-    static isPrimitiveCls = (cls) => [Number, String, Boolean, null].includes(cls)
+    static isPrimitive      = (obj) => ["number", "string", "boolean"].includes(typeof obj) || obj === null
+    static isPrimitiveClass = (cls) => [Number, String, Boolean, null].includes(cls)
+    static isString       = (obj) => (typeof obj === 'string')
     static isNumber       = (obj) => (typeof obj === 'number' && !isNaN(obj))                 // test if obj is a valid number, not NaN
     static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
     static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype) // test if obj is a plain object (POJO), no class assigned

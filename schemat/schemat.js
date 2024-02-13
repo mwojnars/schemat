@@ -290,7 +290,7 @@ export class Schemat {
 
     /***  Object <=> classpath mapping (for de/serialization)  ***/
 
-    get_class_path(cls) {
+    get_classpath(cls) {
         /* Return a dotted module path of a given class or function as stored in a global Classpath.
            `cls` should be either a constructor function, or a prototype with .constructor property.
          */

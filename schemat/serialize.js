@@ -56,9 +56,9 @@ export class JSONx {
 
         if (this.transform) obj = this.transform(obj)
 
-        if (obj === undefined)      throw new Error("Can't encode an undefined value")
-        if (T.isPrimitiveObj(obj))  return obj
-        if (T.isArray(obj))         return this.encode_array(obj)
+        if (obj === undefined)   throw new Error("Can't encode an undefined value")
+        if (T.isPrimitive(obj))  return obj
+        if (T.isArray(obj))      return this.encode_array(obj)
 
         if (T.isDict(obj)) {
             obj = this.encode_object(obj)
@@ -73,7 +73,7 @@ export class JSONx {
         }
 
         if (T.isClass(obj)) {
-            state = schemat.get_class_path(obj)
+            state = schemat.get_classpath(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
         }
         else if (obj instanceof Set)
@@ -92,7 +92,7 @@ export class JSONx {
             state = {[JSONx.ATTR_STATE]: state}
 
         let t = T.getPrototype(obj)
-        state[JSONx.ATTR_CLASS] = schemat.get_class_path(t)
+        state[JSONx.ATTR_CLASS] = schemat.get_classpath(t)
 
         return state
     }
@@ -142,10 +142,10 @@ export class JSONx {
         console.assert(cls !== undefined, {msg: "`cls` is undefined", state})
 
         // instantiate the output object; special handling for standard JSON types and Item
-        if (T.isPrimitiveCls(cls))  return state
-        if (cls === Array)          return this.decode_array(state)
-        if (cls === Object)         return this.decode_object(state)
-        if (cls === Set)            return new Set(this.decode_array(state))
+        if (T.isPrimitiveClass(cls))  return state
+        if (cls === Array)            return this.decode_array(state)
+        if (cls === Object)           return this.decode_object(state)
+        if (cls === Set)              return new Set(this.decode_array(state))
         if (cls === Map)
             return new Map(Object.entries(this.decode_object(state)))
 
