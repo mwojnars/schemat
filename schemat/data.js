@@ -637,30 +637,26 @@ export class Data extends Catalog {
         const KEEP = ['_class_', '_category_']
         const DROP = ['action']
 
-        // if _category_ is defined at a class level (as static) instead of object level, move it to the object level
-        if (!obj._category_) obj._category_ = obj.constructor._category_
+        // infer _category_ and _class_ of the object
+        let _category_ = obj._category_ || obj.constructor._category_ || undefined
+        let _class_    = obj._class_    || obj.constructor._class_ || obj.constructor || undefined
 
-        // convert category ID to a Category object/stub - this modifies the original object!
-        if (T.isNumber(obj._category_)) obj._category_ = schemat.get_item(obj._category_)
+        if (T.isString(_category_)) _category_ = Number(_category_)
+        if (T.isNumber(_category_)) _category_ = schemat.get_item(_category_)
 
-        // if `obj` has a JS class, and it's not Item, store it in the _class_ attribute
-        if (!obj._class_ && obj.constructor !== Object && obj.constructor !== Item)
-            obj._class_ = obj.constructor
+        if (_class_ === Object || _class_ === Item) _class_ = undefined
+        if (_class_ && !T.isString(_class_)) _class_ = schemat.get_classpath(_class_)     // convert _class_ to a classpath string
 
-        if (obj._class_) obj._class_ = schemat.get_class_path(obj._class_)          // convert _class_ to a class path string
+        let props = {...obj, _category_, _class_}
 
-        // filter out undefined values, private props (starting with '_'), and Item's special attributes except for those listed in KEEP
-        let entries = Object.entries(obj).filter(([k, v]) =>
+        // filter out undefined values, private props (starting with '_'), and special attributes except for those listed in KEEP
+        let entries = Object.entries(props).filter(([k, v]) =>
             (v !== undefined) &&
             (k[0] !== '_' || KEEP.includes(k)) &&
             !DROP.includes(k)
         )
 
-        // // if `obj` has a JS class, and it's not Item, store it in the _class_ attribute
-        // if (!obj._class_ && obj.constructor !== Object && obj.constructor !== Item)
-        //     entries.push(['_class_', obj.constructor])
-
-        print(`from_object(${obj}) =>`, entries)
+        // print(`from_object(${obj}) =>`, entries)
         return new Data(Object.fromEntries(entries))
     }
 }
