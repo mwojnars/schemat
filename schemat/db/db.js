@@ -325,7 +325,9 @@ export class Database extends Item {
 
     async update(id, ...edits) {
         /* Apply `edits` to an item's data and store under the `id` in top-most ring that allows writing this particular `id`.
-           FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
+           FUTURE: `edits` may perform tests or create side effects, for example, to check for a specific item version
+                   to apply the edits to; or to perform a sensitive operation inside the record-level exclusive lock,
+                   even without changing the record's data.
          */
         assert(edits.length, 'missing edits')
         return this.forward_down(new DataRequest(this, 'update', {id, edits}))
@@ -411,7 +413,7 @@ export class Database extends Item {
         /* Scan each ring and merge the sorted streams of entries. */
         // TODO: remove duplicates while merging
         let streams = this.rings.map(r => r.scan_all())
-        yield* merge(compare_by_id, ...streams)
+        yield* merge(Item.compare, ...streams)
     }
 
     async *scan_index(name, opts) {
@@ -451,7 +453,3 @@ export class Database extends Item {
     }
 }
 
-function compare_by_id(obj1, obj2) {
-    /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
-    return obj1._id_ - obj2._id_
-}
