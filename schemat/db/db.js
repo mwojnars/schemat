@@ -257,28 +257,34 @@ export class Database extends Item {
         // return target.insert(null, this.dump_data())
     }
 
-    async __insert_self(referrers = new Set()) {
+    async __insert_self() {
         /* Insert this (unlinked) object and, recursively, all the unliked objects referenced by this one, to the database. */
 
         assert(!this.is_linked(), 'trying to insert an object that is already stored in the database')
-        if (referrers.has(this)) throw new Error(`circular reference detected`)
+        // if (referrers.has(this)) throw new Error(`circular reference detected`)
+        // referrers.add(this)
 
-        referrers.add(this)
+        // find recursively all the objects referenced (directly or indirectly) by this one that are still
+        // not persisted in the database; the graph of such objects may contain circular references -
+        // including a reference of this object to itself (!)
+        let refs = this._find_unlinked_references()
 
-        // find referenced objects in this object's properties...
+        // if no references need to be inserted together with this object, use the regular 1-phase insertion
+        if (refs.length === 0) return schemat.db.insert(this)
 
-        referrers.delete(this)
-
-        let db = schemat.db
-
-        for (let ring of this.rings)
-            if (!ring._id_) {
-                // if `ring` is newly created, insert it as an item to the `target_ring`, together with its sequences and blocks
-                let sequences = [...ring.indexes.values(), ring.data_sequence]
-                let blocks = sequences.map(seq => seq.blocks[0])
-                await target_ring.insert_many(ring, ...sequences, ...blocks)
-            }
-        // return target_ring.insert(null, this.dump_data())
+        // otherwise, perform a 2-phase insertion of 1+ of cross/self-referencing objects
+        let objects = new Set([this, ...refs])
+        return schemat.db.insert_many(...objects)
+    }
+    _find_unlinked_references(visited = new Set()) {
+        /* Find recursively all unlinked (non-persisted) objects that are referenced - directly or indirectly - by this object. */
+        let refs = this._data_.find_references()
+        let unlinked_refs = refs.filter(obj => !obj.is_linked() && !visited.has(obj))
+        for (let ref of unlinked_refs) {
+            visited.add(ref)
+            ref._find_unlinked_references(visited)
+        }
+        return visited
     }
 
     async find_ring({id, name}) {
