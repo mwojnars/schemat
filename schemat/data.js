@@ -1,6 +1,7 @@
 // import BTree from 'sorted-btree'
 import { T, print, assert, concat, splitFirst } from './common/utils.js'
 import {Item} from "./item.js";
+import {JSONx} from "./serialize.js";
 
 
 /**********************************************************************************************************************
@@ -661,6 +662,13 @@ export class Data extends Catalog {
 
         // print(`from_object(${obj}) =>`, entries)
         return new Data(Object.fromEntries(entries))
+    }
+
+    find_references() {
+        /* Extract an array of Item objects referenced from within this Data object. */
+        let refs = []
+        JSONx.encode(this, val => {if (val instanceof Item) refs.push(val)})
+        return refs
     }
 }
 

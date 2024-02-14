@@ -54,7 +54,10 @@ export class JSONx {
         */
         let state
 
-        if (this.transform) obj = this.transform(obj)
+        if (this.transform) {
+            let transformed = this.transform(obj)
+            if (transformed !== undefined) obj = transformed
+        }
 
         if (obj === undefined)   throw new Error("Can't encode an undefined value")
         if (T.isPrimitive(obj))  return obj
