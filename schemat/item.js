@@ -649,6 +649,15 @@ export class Item {
         return schemat.get_item(this._id_).load()
     }
 
+    async seal_data() {
+        /* In a newborn (unlinked) object, check that _data_ exists, or create a new one by copying property values
+           from regular POJO attributes of the object.
+         */
+        if (this._data_) return this._data_
+        if (this.is_linked()) throw new Error('cannot seal properties of a linked object')
+        return this._data_ = await Data.from_object(this)
+    }
+
     dump_data() {
         /* Encode and stringify this._data_ through JSONx. Nested values are recursively encoded. */
         return this._data_.dump()
