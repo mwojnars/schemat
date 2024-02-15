@@ -72,7 +72,7 @@ export class JSONx {
         if (obj instanceof Item) {
             let id = obj._get_write_id()
             if(id !== undefined) return {[JSONx.ATTR_CLASS]: id}
-            else throw new Error(`Can't encode an unlinked item: ${obj}`)
+            else throw new Error(`Can't encode a newborn object (no ID): ${obj}`)
         }
 
         if (T.isClass(obj)) {

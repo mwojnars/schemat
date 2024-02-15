@@ -114,27 +114,27 @@ export class Ring extends Item {
         return this.handle(req.safe_step(this, 'update', {id, edits}))
     }
 
-    async insert_many(...items) {
-        /* Insert multiple interconnected items that reference each other and can't be inserted one by one.
-           The insertion proceeds in two phases: 1) the items are inserted with empty data, to obtain their IDs if missing;
-           2) the items are updated with their actual data, with all references (incl. bidirectional) correctly replaced with IDs.
-         */
-        let empty_data = JSONx.stringify(new Data({_status_: 'DRAFT'}))     // empty data
-
-        // 1st phase: insert stubs
-        for (let item of items)
-            item._meta_.provisional_id = await this.insert(null, empty_data)
-            // item._set_id(await this.insert(item._id_, empty_data))
-
-        // 2nd phase: update items with actual data
-        for (let item of items) {
-            // if item has no _data_, create it from the object's properties
-            item._data_ = item._data_ || await Data.from_object(item)
-            item._id_ = item._meta_.provisional_id
-            schemat.register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
-            await this.update(item)
-        }
-    }
+    // async insert_many(...items) {
+    //     /* Insert multiple interconnected items that reference each other and can't be inserted one by one.
+    //        The insertion proceeds in two phases: 1) the items are inserted with empty data, to obtain their IDs if missing;
+    //        2) the items are updated with their actual data, with all references (incl. bidirectional) correctly replaced with IDs.
+    //      */
+    //     let empty_data = JSONx.stringify(new Data({_status_: 'DRAFT'}))     // empty data
+    //
+    //     // 1st phase: insert stubs
+    //     for (let item of items)
+    //         item._meta_.provisional_id = await this.insert(null, empty_data)
+    //         // item._set_id(await this.insert(item._id_, empty_data))
+    //
+    //     // 2nd phase: update items with actual data
+    //     for (let item of items) {
+    //         // if item has no _data_, create it from the object's properties
+    //         item._data_ = item._data_ || await Data.from_object(item)
+    //         item._id_ = item._meta_.provisional_id
+    //         schemat.register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
+    //         await this.update(item)
+    //     }
+    // }
 
     /***  Indexes and Transforms. Change propagation.  ***/
 
@@ -238,53 +238,23 @@ export class Database extends Item {
             await ring._init_indexes(new DataRequest(this, 'add_ring'))   // TODO: temporary
     }
 
-    async insert_self() {
-        /* Insert this database object and its rings into `target_ring` as items. */
-        let target = this.top_ring
-        let objects = []
-
-        if (!this._id_) objects.push(this)
-
-        for (let ring of this.rings)
-            if (!ring._id_) {
-                // if `ring` is newly created, insert it as an item to the `target_ring`, together with its sequences and blocks
-                let sequences = [...ring.indexes.values(), ring.data_sequence]
-                let blocks = sequences.map(seq => seq.blocks[0])
-                objects.push(ring, ...sequences, ...blocks)
-            }
-        await target.insert_many(...objects)
-        // return target.insert(null, this.dump_data())
-    }
-
-    async __insert_self() {
-        /* Insert this (unlinked) object and, recursively, all the unliked objects referenced by this one, to the database. */
-
-        assert(!this.is_linked(), 'trying to insert an object that is already stored in the database')
-        // if (referrers.has(this)) throw new Error(`circular reference detected`)
-        // referrers.add(this)
-
-        // find recursively all the objects referenced (directly or indirectly) by this one that are still
-        // not persisted in the database; the graph of such objects may contain circular references -
-        // including a reference of this object to itself (!)
-        let refs = this._find_unlinked_references()
-
-        // if no references need to be inserted together with this object, use the regular 1-phase insertion
-        if (refs.length === 0) return schemat.db.insert(this)
-
-        // otherwise, perform a 2-phase insertion of 1+ of cross/self-referencing objects
-        let objects = new Set([this, ...refs])
-        return schemat.db.insert_many(...objects)
-    }
-    _find_unlinked_references(visited = new Set()) {
-        /* Find recursively all unlinked (non-persisted) objects that are referenced - directly or indirectly - by this object. */
-        let refs = this._data_.find_references()
-        let unlinked_refs = refs.filter(obj => !obj.is_linked() && !visited.has(obj))
-        for (let ref of unlinked_refs) {
-            visited.add(ref)
-            ref._find_unlinked_references(visited)
-        }
-        return visited
-    }
+    // async insert_self() {
+    //     /* Insert this database object and its rings into `target_ring` as items. */
+    //     let target = this.top_ring
+    //     let objects = []
+    //
+    //     if (!this._id_) objects.push(this)
+    //
+    //     for (let ring of this.rings)
+    //         if (!ring._id_) {
+    //             // if `ring` is newly created, insert it as an item to the `target_ring`, together with its sequences and blocks
+    //             let sequences = [...ring.indexes.values(), ring.data_sequence]
+    //             let blocks = sequences.map(seq => seq.blocks[0])
+    //             objects.push(ring, ...sequences, ...blocks)
+    //         }
+    //     await target.insert_many(...objects)
+    //     // return target.insert(null, this.dump_data())
+    // }
 
     async find_ring({id, name}) {
         /* Return the top-most ring that has a given object `id` in DB, or a given `name`.
@@ -381,7 +351,7 @@ export class Database extends Item {
            2) the objects are updated with actual data, with all references (incl. bidirectional) correctly replaced with IDs.
            This method can also be used to insert a single object that references itself.
          */
-        let empty_data = JSONx.stringify(new Data({_status_: 'DRAFT'}))     // empty data
+        let empty_data = new Data({_status_: 'DRAFT'}).dump()               // empty data
 
         // 1st phase: insert stubs
         for (let item of items)

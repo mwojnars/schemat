@@ -672,7 +672,7 @@ export class Data extends Catalog {
     find_references() {
         /* Extract an array of Item objects referenced from within this Data object. */
         let refs = []
-        JSONx.encode(this, val => {if (val instanceof Item) refs.push(val)})
+        JSONx.encode(this, val => {if (val instanceof Item) { refs.push(val); return null; }})
         return refs
     }
 }
