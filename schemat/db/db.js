@@ -350,7 +350,7 @@ export class Database extends Item {
          */
         let item = (item_or_data instanceof Item) && item_or_data
         let data = item ? item._data_ : item_or_data
-        
+
         if (!T.isString(data)) data = data.dump()
 
         let id //= item._id_          // can be undefined

@@ -651,7 +651,7 @@ export class Item {
 
     dump_data() {
         /* Encode and stringify this._data_ through JSONx. Nested values are recursively encoded. */
-        return JSONx.stringify(this._data_)
+        return this._data_.dump()
     }
 
     url(endpoint, args) {
