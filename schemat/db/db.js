@@ -6,7 +6,6 @@ import {IndexByCategory} from "./index.js";
 import {Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
-import {JSONx} from "../serialize.js";
 import {Data} from "../data.js";
 
 
@@ -114,27 +113,6 @@ export class Ring extends Item {
         return this.handle(req.safe_step(this, 'update', {id, edits}))
     }
 
-    // async insert_many(...items) {
-    //     /* Insert multiple interconnected items that reference each other and can't be inserted one by one.
-    //        The insertion proceeds in two phases: 1) the items are inserted with empty data, to obtain their IDs if missing;
-    //        2) the items are updated with their actual data, with all references (incl. bidirectional) correctly replaced with IDs.
-    //      */
-    //     let empty_data = JSONx.stringify(new Data({_status_: 'DRAFT'}))     // empty data
-    //
-    //     // 1st phase: insert stubs
-    //     for (let item of items)
-    //         item._meta_.provisional_id = await this.insert(null, empty_data)
-    //         // item._set_id(await this.insert(item._id_, empty_data))
-    //
-    //     // 2nd phase: update items with actual data
-    //     for (let item of items) {
-    //         // if item has no _data_, create it from the object's properties
-    //         item._data_ = item._data_ || await Data.from_object(item)
-    //         item._id_ = item._meta_.provisional_id
-    //         schemat.register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
-    //         await this.update(item)
-    //     }
-    // }
 
     /***  Indexes and Transforms. Change propagation.  ***/
 
@@ -238,24 +216,6 @@ export class Database extends Item {
             await ring._init_indexes(new DataRequest(this, 'add_ring'))   // TODO: temporary
     }
 
-    // async insert_self() {
-    //     /* Insert this database object and its rings into `target_ring` as items. */
-    //     let target = this.top_ring
-    //     let objects = []
-    //
-    //     if (!this._id_) objects.push(this)
-    //
-    //     for (let ring of this.rings)
-    //         if (!ring._id_) {
-    //             // if `ring` is newly created, insert it as an item to the `target_ring`, together with its sequences and blocks
-    //             let sequences = [...ring.indexes.values(), ring.data_sequence]
-    //             let blocks = sequences.map(seq => seq.blocks[0])
-    //             objects.push(ring, ...sequences, ...blocks)
-    //         }
-    //     await target.insert_many(...objects)
-    //     // return target.insert(null, this.dump_data())
-    // }
-
     async find_ring({id, name}) {
         /* Return the top-most ring that has a given object `id` in DB, or a given `name`.
            Return undefined if not found. Can be called to check if an item ID or a ring name exists.
@@ -347,17 +307,18 @@ export class Database extends Item {
 
     async insert_many(...items) {
         /* Insert multiple interconnected objects that reference each other and can't be inserted one by one.
-           The insertion proceeds in two phases: 1) the objects are inserted with empty data, to have their IDs assigned if missing;
+           The insertion proceeds in two phases:
+           1) the objects are inserted with empty data, to have their IDs assigned if missing;
            2) the objects are updated with actual data, with all references (incl. bidirectional) correctly replaced with IDs.
-           This method can also be used to insert a single object that references itself.
+           This method can also be used to insert a single object that contains a self-reference.
          */
         let empty_data = new Data({_status_: 'DRAFT'}).dump()               // empty data
 
         // 1st phase: insert stubs
         for (let item of items)
-            item._meta_.provisional_id = await this.insert(empty_data)
+            item._meta_.provisional_id = await this.insert(empty_data)      // TODO: await all in parallel (here and below)
 
-        // 2nd phase: update items with actual data
+        // 2nd phase: update records with actual data
         for (let item of items) {
             item._data_ = item._data_ || await Data.from_object(item)       // if item has no _data_, create it from the object's properties
             item._id_ = item._meta_.provisional_id
@@ -365,43 +326,6 @@ export class Database extends Item {
             await this.update_full(item)
         }
     }
-
-    // async insert_many(target_ring = null, ...items) {
-    //     /* Insert multiple interconnected items that reference each other and can't be inserted one by one.
-    //        The insertion proceeds in two phases: 1) the items are inserted with empty data, to obtain their IDs;
-    //        2) the items are updated with their actual data, with all references (incl. bidirectional) correctly replaced with IDs.
-    //      */
-    //     let req = new DataRequest(this, 'insert_many')
-    //     let rings = this.rings_reversed
-    //     let empty_data = JSONx.stringify(new Data({_status_: 'draft'}))     // empty data
-    //
-    //     if (target_ring) {
-    //         let pos = rings.indexOf(target_ring)
-    //         if (pos < 0) return req.error_access(`target ring not found in the database`)
-    //         rings = rings.slice(pos)
-    //     }
-    //
-    //     // 1st phase: insert stubs, each stub is inserted to the highest possible ring
-    //     for (let item of items) {
-    //         let id = item._id_
-    //         let data = ''  // id > 0 ? empty_data : item.dump_data()
-    //         let req2 = req.safe_step(null, 'insert', {id, data})     // insert stubs with empty data
-    //         let ring = rings.find(r => r.writable(id))
-    //         if (!ring) return req2.error_access(`cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
-    //         item._set_id(await ring.handle(req2))
-    //     }
-    //
-    //     // 2nd phase: update items with actual data
-    //     for (let item of items) {
-    //         // if item has no _data_, impute it from the object's properties; skip private props (starting with '_')
-    //         if (!item._data_) {
-    //             let entries = Object.entries(item).filter(([k]) => !k.startsWith('_'))
-    //             item._data_ = new Data(entries)
-    //             print(`imputed data for item [${item._id_}]:`, entries)
-    //         }
-    //         await this.update_full(item)
-    //     }
-    // }
 
     async delete(item_or_id) {
         /* Find and delete the top-most occurrence of the item or ID.

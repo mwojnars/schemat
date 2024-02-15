@@ -650,7 +650,7 @@ export class Item {
     }
 
     async seal_data() {
-        /* In a newborn (unlinked) object, check that _data_ exists, or create a new one by copying property values
+        /* In a newborn (unlinked) object, create _data_ - if not present yet - by copying property values
            from regular POJO attributes of the object.
          */
         if (this._data_) return this._data_
