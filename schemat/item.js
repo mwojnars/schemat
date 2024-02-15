@@ -359,6 +359,7 @@ export class Item {
 
     /***  Object status  ***/
 
+    is_newborn()    { return this._id_ === undefined }                  // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
     is_linked()     { return this._id_ !== undefined }                  // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized (except _url_ & _path_ which are allowed to be delayed)
 
@@ -455,7 +456,7 @@ export class Item {
          */
         if (this.is_loaded()) { assert(!record); return this }
         if (this._meta_.loading) return assert(!record) && this._meta_.loading    // wait for a previous load to complete instead of starting a new one
-        if (!this.is_linked() && !record) return this           // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
+        if (this.is_newborn() && !record) return this           // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
         return this._meta_.loading = this._load(record)         // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
@@ -719,7 +720,7 @@ export class Item {
     async insert_self() {
         /* Insert this (newborn) object and, recursively, all the newborn objects referenced by this one, to the database. */
 
-        assert(!this.is_linked(), 'trying to insert an object that is already stored in the database')
+        assert(this.is_newborn(), 'trying to insert an object that is already stored in the database')
 
         // find recursively all the objects referenced (directly or indirectly) by this one that are still
         // not persisted in the database; the graph of such objects may contain circular references -
@@ -741,7 +742,7 @@ export class Item {
          */
         let data = await this.seal_data()
         let refs = data.find_references()
-        let unlinked_refs = refs.filter(obj => !obj.is_linked() && !visited.has(obj))
+        let unlinked_refs = refs.filter(obj => obj.is_newborn() && !visited.has(obj))
 
         unlinked_refs.forEach(ref => visited.add(ref))
 

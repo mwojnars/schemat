@@ -199,7 +199,7 @@ export class Database extends Item {
     }
 
     async add_ring(spec) {
-        assert(!this.is_linked())                   // add_ring() is a mutable operation, so it can only be called on a newborn object (not in DB)
+        assert(this.is_newborn())                   // add_ring() is a mutable operation, so it can only be called on a newborn object (not in DB)
         let ring
 
         if (spec.item) ring = await schemat.get_loaded(spec.item)
@@ -212,7 +212,7 @@ export class Database extends Item {
 
         print(`...opened ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'read-write'})`)
 
-        if (!ring.is_linked())
+        if (ring.is_newborn())
             await ring._init_indexes(new DataRequest(this, 'add_ring'))   // TODO: temporary
     }
 
