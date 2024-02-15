@@ -251,7 +251,6 @@ export class Database extends Item {
                 let sequences = [...ring.indexes.values(), ring.data_sequence]
                 let blocks = sequences.map(seq => seq.blocks[0])
                 objects.push(ring, ...sequences, ...blocks)
-                // await target.insert_many(ring, ...sequences, ...blocks)
             }
         await target.insert_many(...objects)
         // return target.insert(null, this.dump_data())
@@ -344,13 +343,18 @@ export class Database extends Item {
         return this.update(item._id_, new EditData(item.dump_data()))
     }
 
-    async insert(item, ring_name = null) {
+    async insert(item_or_data, ring_name = null) {
         /* Find the top-most ring where the item's ID is writable and insert there. If a new ID is assigned,
            it is written to item._id_. `ring` is an optional name of a ring to use.
            TODO: simplify the code if predefined ID is never used (id=undefined below); .save() can be used instead
          */
+        let item = (item_or_data instanceof Item) && item_or_data
+        let data = item ? item._data_ : item_or_data
+        
+        if (!T.isString(data)) data = data.dump()
+
         let id //= item._id_          // can be undefined
-        let req = new DataRequest(this, 'insert', {id, data: item.dump_data()})
+        let req = new DataRequest(this, 'insert', {id, data})
         let ring
 
         if (ring_name) {                                            // find the ring by name
@@ -362,12 +366,34 @@ export class Database extends Item {
 
         if (ring) {
             id = await ring.handle(req)
-            return item._set_id(id)
+            if (item) item._set_id(id)
+            return id
         }
         return req.error_access(id === undefined ?
             "cannot insert the item, the ring(s) are read-only" :
             "cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range"
         )
+    }
+
+    async insert_many(...items) {
+        /* Insert multiple interconnected objects that reference each other and can't be inserted one by one.
+           The insertion proceeds in two phases: 1) the objects are inserted with empty data, to have their IDs assigned if missing;
+           2) the objects are updated with actual data, with all references (incl. bidirectional) correctly replaced with IDs.
+           This method can also be used to insert a single object that references itself.
+         */
+        let empty_data = JSONx.stringify(new Data({_status_: 'DRAFT'}))     // empty data
+
+        // 1st phase: insert stubs
+        for (let item of items)
+            item._meta_.provisional_id = await this.insert(empty_data)
+
+        // 2nd phase: update items with actual data
+        for (let item of items) {
+            item._data_ = item._data_ || await Data.from_object(item)       // if item has no _data_, create it from the object's properties
+            item._id_ = item._meta_.provisional_id
+            schemat.register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
+            await this.update_full(item)
+        }
     }
 
     // async insert_many(target_ring = null, ...items) {

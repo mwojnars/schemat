@@ -664,6 +664,11 @@ export class Data extends Catalog {
         return new Data(Object.fromEntries(entries))
     }
 
+    dump() {
+        /* Encode & stringify self through JSONx. */
+        return JSONx.stringify(this)
+    }
+
     find_references() {
         /* Extract an array of Item objects referenced from within this Data object. */
         let refs = []
