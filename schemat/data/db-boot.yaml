@@ -341,8 +341,23 @@
   name: Index
   info: Base category for (derived) sequences that represent indexes over another
     (source) sequence.
+  fields:
+    "@": Catalog
+  allow_custom_fields: true
   _extends_:
     "@": 13
+  _category_:
+    "@": 0
+  "@": Data
+- __id: 16
+  name: DataIndex
+  info: An Index that receives record updates from the main data sequence, so
+    input records represent objects.
+  fields:
+    "@": Catalog
+  allow_custom_fields: true
+  _extends_:
+    "@": 15
   _category_:
     "@": 0
   "@": Data
