@@ -417,8 +417,16 @@
   info: A continuous subrange of records of a data/index sequence, physically
     located on a single machine.
   fields:
+    sequence:
+      info: parent Sequence this block is a part of
+      "@": ITEM
+    filename:
+      info: path to a local file that contains records of this block
+      "@": STRING
+    format:
+      info: "storage format: data-yaml, index-jl, rocksdb (in the future), ..."
+      "@": STRING
     "@": Catalog
-  allow_custom_fields: true
   _category_:
     "@": 0
   "@": Data
@@ -427,7 +435,6 @@
   info: Block of a DataSequence.
   fields:
     "@": Catalog
-  allow_custom_fields: true
   item_class: db.DataBlock
   _extends_:
     "@": 18
@@ -439,7 +446,6 @@
   info: Block of an Index sequence.
   fields:
     "@": Catalog
-  allow_custom_fields: true
   item_class: db.IndexBlock
   _extends_:
     "@": 18
