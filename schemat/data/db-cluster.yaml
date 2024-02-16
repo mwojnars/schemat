@@ -1,0 +1,301 @@
+- __id: 200
+  rings:
+    - "@": 201
+    - "@": 202
+    - "@": 203
+    - "@": 204
+  _category_:
+    "@": 11
+  "@": Data
+- __id: 201
+  name: db-boot
+  data_sequence:
+    "@": 205
+  indexes:
+    idx_category_item:
+      "@": 206
+    "@": Map
+  readonly: true
+  start_id: 0
+  stop_id: 100
+  _category_:
+    "@": 12
+  "@": Data
+- __id: 202
+  name: db-base
+  data_sequence:
+    "@": 209
+  indexes:
+    idx_category_item:
+      "@": 210
+    "@": Map
+  readonly: true
+  start_id: 100
+  stop_id: 200
+  _category_:
+    "@": 12
+  "@": Data
+- __id: 203
+  name: db-cluster
+  data_sequence:
+    "@": 213
+  indexes:
+    idx_category_item:
+      "@": 214
+    "@": Map
+  readonly: false
+  start_id: 200
+  stop_id: 300
+  _category_:
+    "@": 12
+  "@": Data
+- __id: 204
+  name: db-demo
+  data_sequence:
+    "@": 217
+  indexes:
+    idx_category_item:
+      "@": 218
+    "@": Map
+  readonly: false
+  start_id: 1000
+  stop_id: null
+  _category_:
+    "@": 12
+  "@": Data
+- __id: 205
+  ring:
+    "@": 201
+  schema:
+    fields:
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    _field_types:
+      - "@": INTEGER
+    "@": SequenceSchema
+  blocks:
+    - "@": 207
+  derived:
+    - "@": 206
+  flush_delay: 1
+  _category_:
+    "@": 14
+  "@": Data
+- __id: 206
+  ring:
+    "@": 201
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": INTEGER
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    "@": SequenceSchema
+  blocks:
+    - "@": 208
+  derived: []
+  flush_delay: 1
+  source:
+    "@": 205
+  _category_:
+    "@": 17
+  "@": Data
+- __id: 207
+  sequence:
+    "@": 205
+  filename: ./data/db-boot.yaml
+  format: data-yaml
+  _category_:
+    "@": 19
+  "@": Data
+- __id: 208
+  sequence:
+    "@": 206
+  filename: ./data/db-boot.idx_category_item.jl
+  format: index-jl
+  _category_:
+    "@": 20
+  "@": Data
+- __id: 209
+  ring:
+    "@": 202
+  schema:
+    fields:
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    _field_types:
+      - "@": INTEGER
+    "@": SequenceSchema
+  blocks:
+    - "@": 211
+  derived:
+    - "@": 210
+  flush_delay: 1
+  _category_:
+    "@": 14
+  "@": Data
+- __id: 210
+  ring:
+    "@": 202
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": INTEGER
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    "@": SequenceSchema
+  blocks:
+    - "@": 212
+  derived: []
+  flush_delay: 1
+  source:
+    "@": 209
+  _category_:
+    "@": 17
+  "@": Data
+- __id: 211
+  sequence:
+    "@": 209
+  filename: ./data/db-base.yaml
+  format: data-yaml
+  _category_:
+    "@": 19
+  "@": Data
+- __id: 212
+  sequence:
+    "@": 210
+  filename: ./data/db-base.idx_category_item.jl
+  format: index-jl
+  _category_:
+    "@": 20
+  "@": Data
+- __id: 213
+  ring:
+    "@": 203
+  schema:
+    fields:
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    _field_types:
+      - "@": INTEGER
+    "@": SequenceSchema
+  blocks:
+    - "@": 215
+  derived:
+    - "@": 214
+  flush_delay: 1
+  _category_:
+    "@": 14
+  "@": Data
+- __id: 214
+  ring:
+    "@": 203
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": INTEGER
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    _field_types:
+      - blank: true
+        "@": INTEGER
+      - "@": INTEGER
+    "@": SequenceSchema
+  blocks:
+    - "@": 216
+  derived: []
+  flush_delay: 1
+  source:
+    "@": 213
+  _category_:
+    "@": 17
+  "@": Data
+- __id: 215
+  sequence:
+    "@": 213
+  filename: ./data/db-cluster.yaml
+  format: data-yaml
+  _category_:
+    "@": 19
+  "@": Data
+- __id: 216
+  sequence:
+    "@": 214
+  filename: ./data/db-cluster.idx_category_item.jl
+  format: index-jl
+  _category_:
+    "@": 20
+  "@": Data
+- __id: 217
+  ring:
+    "@": 204
+  schema:
+    fields:
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    _field_types:
+      - "@": INTEGER
+    "@": SequenceSchema
+  blocks:
+    - "@": 219
+  derived:
+    - "@": 218
+  flush_delay: 1
+  _category_:
+    "@": 14
+  "@": Data
+- __id: 218
+  ring:
+    "@": 204
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": INTEGER
+      id:
+        "@": INTEGER
+      "@": Map
+    properties: []
+    "@": SequenceSchema
+  blocks:
+    - "@": 220
+  derived: []
+  flush_delay: 1
+  source:
+    "@": 217
+  _category_:
+    "@": 17
+  "@": Data
+- __id: 219
+  sequence:
+    "@": 217
+  filename: ./data/db-demo.yaml
+  format: data-yaml
+  _category_:
+    "@": 19
+  "@": Data
+- __id: 220
+  sequence:
+    "@": 218
+  filename: ./data/db-demo.idx_category_item.jl
+  format: index-jl
+  _category_:
+    "@": 20
+  "@": Data
