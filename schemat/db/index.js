@@ -171,6 +171,8 @@ export class DataIndex extends Index {
 export class IndexByCategory extends DataIndex {
     /* Index that maps category IDs to item IDs: the key is [category ID, item ID], empty value. */
 
+    static _category_ = 17
+
     schema = new SequenceSchema(new Map([
         ['cid', new INTEGER({blank: true})],
         ['id',  new INTEGER()],

@@ -17,8 +17,8 @@ import {Data} from "../data.js";
 
 export class Ring extends Item {
 
-    static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
     static _category_ = 12  // ID of Ring category
+    static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
 
     data_sequence           // the main DataSequence containing all primary data of this ring
     indexes = new Map()     // {name: Index} map of all derived indexes of this ring
@@ -172,8 +172,8 @@ export class Database extends Item {
        If ItemNotFound/ReadOnly is caught, the next ring is tried.
        This class is only instantiated on the server, while the client uses a ClientDB proxy instead.
      */
-    static role = 'db'      // for use in ProcessingStep and DataRequest
     static _category_ = 11  // ID of Database category
+    static role = 'db'      // for use in ProcessingStep and DataRequest
 
     rings = []              // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
 

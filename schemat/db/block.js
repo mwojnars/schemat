@@ -135,6 +135,8 @@ export class Block extends Item {
 export class DataBlock extends Block {
     /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
 
+    static _category_ = 19
+
     _autoincrement = 0      // current maximum item ID; a new record is assigned id=_autoincrement+1
 
     async __init__() {
@@ -224,7 +226,9 @@ export class DataBlock extends Block {
     }
 }
 
-export class IndexBlock extends Block {}
+export class IndexBlock extends Block {
+    static _category_ = 20
+}
 
 
 /**********************************************************************************************************************
