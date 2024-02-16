@@ -361,3 +361,26 @@
   _category_:
     "@": 0
   "@": Data
+- __id: 17
+  name: IndexByCategory
+  info: "Index that maps categories to member objects: the key is [category ID,
+    item ID], and the value part of a record is empty."
+  fields:
+    "@": Catalog
+  allow_custom_fields: true
+  item_class: db.IndexByCategory
+  _extends_:
+    "@": 16
+  _category_:
+    "@": 0
+  "@": Data
+- __id: 18
+  name: Block
+  info: A continuous subrange of records of a data/index sequence, physically
+    located on a single machine.
+  fields:
+    "@": Catalog
+  allow_custom_fields: true
+  _category_:
+    "@": 0
+  "@": Data
