@@ -326,3 +326,14 @@
   _category_:
     "@": 0
   "@": Data
+- __id: 14
+  name: DataSequence
+  info: Category for the main data sequence that contains serialized web objects.
+  fields:
+    "@": Catalog
+  allow_custom_fields: true
+  _extends_:
+    "@": 13
+  _category_:
+    "@": 0
+  "@": Data
