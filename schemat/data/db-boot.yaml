@@ -337,3 +337,12 @@
   _category_:
     "@": 0
   "@": Data
+- __id: 15
+  name: Index
+  info: Base category for (derived) sequences that represent indexes over another
+    (source) sequence.
+  _extends_:
+    "@": 13
+  _category_:
+    "@": 0
+  "@": Data
