@@ -384,3 +384,15 @@
   _category_:
     "@": 0
   "@": Data
+- __id: 19
+  name: DataBlock
+  info: Block of a DataSequence.
+  fields:
+    "@": Catalog
+  allow_custom_fields: true
+  item_class: db.DataBlock
+  _extends_:
+    "@": 18
+  _category_:
+    "@": 0
+  "@": Data
