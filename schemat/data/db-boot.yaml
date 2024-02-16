@@ -302,8 +302,10 @@
   name: Database
   info: Internal database. An array of data Rings stacked on top of each other.
   fields:
+    rings:
+      info: Array of Ring objects
+      "@": GENERIC
     "@": Catalog
-  allow_custom_fields: true
   item_class: db.Database
   _category_:
     "@": 0
