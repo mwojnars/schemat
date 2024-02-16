@@ -300,6 +300,10 @@
   "@": Data
 - __id: 11
   name: Database
+  info: Internal database. An array of data Rings stacked on top of each other.
+  fields:
+    "@": Catalog
+  allow_custom_fields: true
   item_class: db.Database
   _category_:
     "@": 0
@@ -308,12 +312,12 @@
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
-  item_class: db.Ring
-  allow_custom_fields: true
   fields:
     readonly:
       "@": BOOLEAN
     "@": Catalog
+  allow_custom_fields: true
+  item_class: db.Ring
   _category_:
     "@": 0
   "@": Data
