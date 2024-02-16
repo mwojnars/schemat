@@ -341,8 +341,26 @@
   name: Sequence
   info: Base category for sequences of key-value records, either data or indexes.
   fields:
+    ring:
+      info: parent Ring of this sequence
+      category:
+        "@": 12
+      "@": ITEM
+    schema:
+      info: schema of records in this sequence as SequenceSchema
+      "@": GENERIC
+    blocks:
+      info: array of Blocks containing records of this sequence
+      "@": GENERIC
+    derived:
+      info: array of derived sequences (indexes) that must be updated when this
+        sequence changes
+      "@": GENERIC
+    flush_delay:
+      info: for how long [sec] the local-file data flush can be delayed waiting for
+        more writes to arrive that can be grouped together
+      "@": NUMBER
     "@": Catalog
-  allow_custom_fields: true
   _category_:
     "@": 0
   "@": Data
