@@ -317,3 +317,12 @@
   _category_:
     "@": 0
   "@": Data
+- __id: 13
+  name: Sequence
+  info: Base category for sequences of key-value records, either data or indexes.
+  fields:
+    "@": Catalog
+  allow_custom_fields: true
+  _category_:
+    "@": 0
+  "@": Data
