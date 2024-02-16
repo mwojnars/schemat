@@ -656,7 +656,7 @@ export class DATA extends CATALOG {
     subtype(key) {
         let {fields} = this.props
         if (!fields.hasOwnProperty(key) && this.props.strict)
-            throw new DataError(`unknown data field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
+            throw new DataError(`Unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
         return fields[key] || this.props.values
     }
     collect(assets) {
