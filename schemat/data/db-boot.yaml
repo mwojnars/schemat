@@ -317,8 +317,22 @@
   fields:
     readonly:
       "@": BOOLEAN
+    start_id:
+      info: the lowest ID allowed in this ring
+      "@": INTEGER
+    stop_id:
+      info: upper bound for IDs in this ring (all IDs must be strictly lower than
+        this)
+      "@": INTEGER
+    data_sequence:
+      info: DataSequence that keeps all primary objects of this ring
+      category:
+        "@": 14
+      "@": ITEM
+    indexes:
+      info: Map of Indexes and their names
+      "@": GENERIC
     "@": Catalog
-  allow_custom_fields: true
   item_class: db.Ring
   _category_:
     "@": 0
