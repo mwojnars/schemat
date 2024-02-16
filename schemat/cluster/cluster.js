@@ -29,9 +29,9 @@ export class Cluster { //extends Item {
         const ring_specs = [
             {file: DB_ROOT + '/db-boot.yaml', start_id:    0, stop_id:  100, readonly: false},
             {file: DB_ROOT + '/db-base.yaml', start_id:  100, stop_id: 1000, readonly: true},
-            // {file: DB_ROOT + '/db-cluster.yaml', start_id: 200, stop_id: 300, readonly: true},
-            {file: DB_ROOT + '/../../app-demo/data/db-paperity.yaml', start_id: 1000, stop_id: null, readonly: false},
-            {file: DB_ROOT + '/db-demo.yaml', start_id: 1000, stop_id: null, readonly: false},
+            {file: DB_ROOT + '/db-cluster.yaml', start_id: 200, stop_id: 300, readonly: false},
+            {file: DB_ROOT + '/../../app-demo/data/db-paperity.yaml', start_id: 1000, stop_id: null, readonly: true},
+            {file: DB_ROOT + '/db-demo.yaml', start_id: 1000, stop_id: null, readonly: true},
 
             // {item: 200},       // db-paperity.yaml
             // {item: 205},       // db-demo.yaml
