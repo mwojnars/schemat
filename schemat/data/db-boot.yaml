@@ -369,7 +369,7 @@
 - __id: 17
   name: IndexByCategory
   info: "Index that maps categories to member objects: the key is [category ID,
-    item ID], and the value part of a record is empty."
+    item ID]."
   fields:
     "@": Catalog
   allow_custom_fields: true
