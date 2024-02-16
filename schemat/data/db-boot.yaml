@@ -336,6 +336,7 @@
   fields:
     "@": Catalog
   allow_custom_fields: true
+  item_class: db.DataSequence
   _extends_:
     "@": 13
   _category_:
