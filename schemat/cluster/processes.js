@@ -31,7 +31,7 @@ export class BackendProcess {
     }
 
     async boot_db(config_file = './config.yaml') {
-        /* Create bootstrap database and load the site from it. Create global Schemat object. */
+        /* Create bootstrap database and load the Site object from it. */
 
         let fs = await import('node:fs')
         let yaml = (await import('yaml')).default
@@ -46,6 +46,7 @@ export class BackendProcess {
         schemat.set_db(bootstrap_db)
 
         await bootstrap_db.open()
+        await schemat.boot()                                // load `site` together with the ultimate database
         // await bootstrap_db.insert_self()
     }
 }

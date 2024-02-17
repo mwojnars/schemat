@@ -195,10 +195,8 @@ export class Database extends Item {
            can be loaded from lower rings.
          */
         print(`creating database...`)
-        for (const spec of this._ring_specs) {
+        for (const spec of this._ring_specs)
             await this.add_ring(spec)
-            await schemat.boot()                    // reload `root_category` and `site` to have the most relevant objects after a next ring is added
-        }
     }
 
     async add_ring(spec) {
