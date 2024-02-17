@@ -23,6 +23,17 @@ export class Cluster { //extends Item {
         //
         // const DB_ROOT   = __dirname + '/data'
 
+        let config_filename = './config.yaml'
+
+        let fs = await import('node:fs')
+        let yaml = (await import('yaml')).default
+
+        let content = fs.readFileSync(config_filename, 'utf8')
+        let config = yaml.parse(content)
+
+        print('config:', config)
+
+
         const DB_ROOT   = './data'
 
         const ring_specs = [
@@ -36,28 +47,11 @@ export class Cluster { //extends Item {
             // {item: 205},       // db-demo.yaml
         ]
 
-        // let req = new DataRequest(this, 'startup')
-        //
-        // let cluster_ring_spec = this.constructor.cluster_ring_spec
-        // try { fs.unlinkSync(cluster_ring_spec.file) } catch(ex) {}
-        //
-        // let cluster_ring = Ring.create(cluster_ring_spec)  //new Ring(cluster_ring_spec)
-        // await cluster_ring.open(req)
-
         let bootstrap_db = Database.create(ring_specs)
         schemat.set_db(bootstrap_db)
 
         await bootstrap_db.open()
         // await bootstrap_db.insert_self()
-
-        // this.db = schemat.site.database         // the ultimate database
-
-        // // load the cluster's full and ultimate data from the bootstrap DB;
-        // // this may override the db property with the ultimate DB object
-        // this._id_ = CLUSTER_ID
-        // this.load()
-        // schemat.setDB(this.prop('db'))
-        // await schemat.boot()   // reload `root_category` and `site`
     }
 }
 
