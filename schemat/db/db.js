@@ -217,9 +217,7 @@ export class Database extends Item {
     }
 
     async __init__() {
-        for (let ring of this.rings)
-            await ring.load()
-        // await Promise.all(this.rings.map(ring => ring.load()))              // load all rings
+        await Promise.all(this.rings.map(ring => ring.load()))              // load all rings
     }
 
     async find_ring({id, name}) {
