@@ -2,6 +2,9 @@
 # Startup configuration of the local Schemat process
 #
 
+# ID of the Site object to be loaded at startup
+site: 1004
+
 # bootstrap_database:
 # Configuration of a temporary database that is created at startup, from which the Site and the main Database are loaded.
 # One of the rings should contain the target Site object together with its dependencies.

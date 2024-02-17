@@ -12,7 +12,6 @@ import {set_global} from "./common/globals.js";
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
-const SITE_ID = 1004        // fixed ID of the Site item to be loaded upon startup
 
 export function isRoot(id) { return id === ROOT_ID }
 
@@ -170,7 +169,7 @@ export class Schemat {
 
     set_db(db)  { return this._db = db }
 
-    async boot(site_id = SITE_ID) {
+    async boot(site_id) {
         /* (Re)create/load `this.root_category` and `this.site`. The latter will be left undefined if not present in the DB. */
         this.root_category = await this._init_root()        // always returns a valid object, possibly created from `root_data`
         this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
