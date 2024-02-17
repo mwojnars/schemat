@@ -33,6 +33,7 @@ export class Ring extends Item {
     async __init__() {
         /* Initialize the ring after it's been loaded from DB. */
         if (schemat.client_side) return
+        print(`... ring [${this._id_}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
         await this.data_sequence.load()
         for (let index of this.indexes.values())
             await index.load()
@@ -193,6 +194,7 @@ export class Database extends Item {
         /* Set and load rings for self while updating the global registry, so that subsequent ring objects (items)
            can be loaded from lower rings.
          */
+        print(`creating database...`)
         for (const spec of this._ring_specs) {
             await this.add_ring(spec)
             await schemat.boot()                    // reload `root_category` and `site` to have the most relevant objects after a next ring is added
@@ -211,7 +213,7 @@ export class Database extends Item {
         }
         this.rings.push(ring)
 
-        print(`...opened ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'read-write'})`)
+        print(`... ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
 
         if (ring.is_newborn())
             await ring._init_indexes(new DataRequest(this, 'add_ring'))   // TODO: temporary
@@ -219,7 +221,8 @@ export class Database extends Item {
 
     async __init__() {
         if (schemat.client_side) return
-        await Promise.all(this.rings.map(ring => ring.load()))              // load all rings
+        print(`loading database [${this._id_}] ${this.name}...`)
+        return Promise.all(this.rings.map(ring => ring.load()))             // load all rings
     }
 
     async find_ring({id, name}) {
