@@ -614,19 +614,18 @@ export class Item {
          */
         assert(typeof prop === 'string')
 
-        let data = this._data_
+        let proxy = this._proxy_
+        let data  = this._data_
         if (!data) throw new NotLoaded(this)
 
-        let proxy = this._proxy_
-        let type
+        // find out the Type of the property from this object's _schema_:
+        // 1) _extends_ needs special handling because it is used at an early stage of the loading process (_init_prototypes() > this._prototypes_), before the object's category (and schema) is fully loaded;
+        // 2) _category_ needs special handling because the schema is not yet available (there would be circular dependency between _category_ and _schema_).
 
-        // find out the `type` (Type instance) of the property...
-        // 1) _category_ needs special handling because the schema (which normally is taken from _category_) is not yet available at this point
-        // 2) _extends_ needs special handling because it is used at an early stage of the loading process (through _init_prototypes() > this._prototypes_), before the object's category (and schema) is fully loaded
-
-        if (prop === '_category_') type = new ITEM()
-        else if (prop === '_extends_') type = new ITEM({inherit: false})
-        else type = proxy._schema_.get(prop)
+        let type =
+            prop === '_category_' ? new ITEM() :
+            prop === '_extends_'  ? new ITEM({inherit: false}) :
+                                    proxy._schema_.get(prop)
 
         if (!type) return []
 
