@@ -41,6 +41,7 @@ export class Sequence extends Item {    // Series?
         // doing load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
         // doing the same later on may cause infinite recursion, because the load() request for a block may be directed
         // to the current sequence (which has an unloaded block!), and cause another block.load(), and so on...
+        if (schemat.client_side) return
         return this.blocks[0].load()
     }
 
