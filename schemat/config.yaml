@@ -6,14 +6,10 @@
 site: 1004
 
 # bootstrap_database:
-# Configuration of a temporary database that is created at startup, from which the Site and the main Database are loaded.
+# Configuration of a temporary database from which the Site and the main Database are loaded during startup.
 # One of the rings should contain the target Site object together with its immediate dependencies (e.g., database).
-# Rings are being activated gradually. As soon as the ring containing the target Site gets created,
-# the site is being loaded and the bootstrap database is replaced with the main database
-# (although the remaining bootstrap rings, if any, are still being processed).
-# During activation of rings and loading of the site object, higher-level rings are allowed to request objects
-# from lower-level rings, but not vice versa.
-# Each bootstrap ring is read-only by default, if not specified otherwise below with `readonly: false`.
+# After the Site and its ultimate Database are loaded, the bootstrap database is discarded.
+# Each bootstrap ring is read-only if not declared otherwise (`readonly: false`).
 
 bootstrap_database:
   rings:
