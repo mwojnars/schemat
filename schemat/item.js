@@ -621,10 +621,10 @@ export class Item {
         let type
 
         // find out the `type` (Type instance) of the property...
-        // 1) _category_ needs special handling because the schema is not yet available at this point
-        // 2) _extends_ needs special handling because it's needed at an early stage of the loading process (through _init_prototypes() > this._prototypes_), before the object's category is fully loaded
+        // 1) _category_ needs special handling because the schema (which normally is taken from the category) is not yet available at this point
+        // 2) _extends_ needs special handling because it is used at an early stage of the loading process (through _init_prototypes() > this._prototypes_), before the object's category (hence schema) is fully loaded
 
-        if (prop === '_category_') type = new ITEM({inherit: false})
+        if (prop === '_category_') type = new ITEM()
         else if (prop === '_extends_') type = new ITEM({inherit: false})
         else {
             // let schema = proxy._schema_ || new DATA_GENERIC()    // doesn't work here due to circular deps on properties

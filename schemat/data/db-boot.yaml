@@ -81,7 +81,6 @@
           info: Category of this item. Determines item's behavior and the schema of its
             attributes. Each category should be an item of the Root Category
             (IID=0).
-          inherit: false
           "@": ITEM
         _class_:
           info: Javascript class (identified by a class path) to be assigned to the object
