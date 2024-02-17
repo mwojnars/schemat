@@ -64,7 +64,8 @@
 - __id: 1004
   name: main_site
   base_url: http://127.0.0.1:3000
-  default_path: /system/object
+  database:
+    "@": 200
   entries:
     apps:
       "@": 1009
@@ -77,6 +78,7 @@
     "*":
       "@": 1014
     "@": Catalog
+  default_path: /system/object
   _category_:
     "@": 1
   "@": Data
