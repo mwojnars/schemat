@@ -194,27 +194,26 @@ export class Database extends Item {
         /* Set and load rings for self while updating the global registry, so that subsequent ring objects (items)
            can be loaded from lower rings.
          */
+        assert(this.is_newborn())               // open() is a mutable operation, so it can only be called on a newborn object (not in DB)
         print(`creating database...`)
-        for (const spec of this._ring_specs)
-            await this.add_ring(spec)
-    }
 
-    async add_ring(spec) {
-        assert(this.is_newborn())                   // add_ring() is a mutable operation, so it can only be called on a newborn object (not in DB)
-        let ring
+        for (const spec of this._ring_specs) {
+            let ring
 
-        if (spec.item) ring = await schemat.get_loaded(spec.item)
-        else if (spec instanceof Ring) ring = spec
-        else {
-            ring = PlainRing.create(spec)           // a plain ring object that is NOT stored in DB
-            await ring.open()
+            if (spec.item) ring = await schemat.get_loaded(spec.item)
+            else if (spec instanceof Ring) ring = spec
+            else {
+                ring = PlainRing.create(spec)           // a newborn ring object that is NOT stored in DB
+                await ring.open()
+            }
+
+            this.rings.push(ring)
+
+            print(`... ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
+
+            if (ring.is_newborn())
+                await ring._init_indexes(new DataRequest(this, 'add_ring'))   // TODO: temporary
         }
-        this.rings.push(ring)
-
-        print(`... ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
-
-        if (ring.is_newborn())
-            await ring._init_indexes(new DataRequest(this, 'add_ring'))   // TODO: temporary
     }
 
     async __init__() {
