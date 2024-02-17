@@ -620,7 +620,7 @@ export class Item {
 
         // find out the Type of the property from this object's _schema_:
         // 1) _extends_ needs special handling because it is used at an early stage of the loading process (_init_prototypes() > this._prototypes_), before the object's category (and schema) is fully loaded;
-        // 2) _category_ needs special handling because the schema is not yet available (there would be circular dependency between _category_ and _schema_).
+        // 2) _category_ needs special handling because the schema is not yet available (there would be circular dependency between _category_ and _schema_ otherwise).
 
         let type =
             prop === '_category_' ? new ITEM() :
