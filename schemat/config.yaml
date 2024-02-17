@@ -7,7 +7,7 @@ site: 1004
 
 # bootstrap_database:
 # Configuration of a temporary database that is created at startup, from which the Site and the main Database are loaded.
-# One of the rings should contain the target Site object together with its dependencies.
+# One of the rings should contain the target Site object together with its immediate dependencies (e.g., database).
 # Rings are being activated gradually. As soon as the ring containing the target Site gets created,
 # the site is being loaded and the bootstrap database is replaced with the main database
 # (although the remaining bootstrap rings, if any, are still being processed).
