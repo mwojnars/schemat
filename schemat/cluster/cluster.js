@@ -23,31 +23,34 @@ export class Cluster { //extends Item {
         //
         // const DB_ROOT   = __dirname + '/data'
 
-        let config_filename = './config.yaml'
+        let filename = './config.yaml'
 
         let fs = await import('node:fs')
         let yaml = (await import('yaml')).default
 
-        let content = fs.readFileSync(config_filename, 'utf8')
+        let content = fs.readFileSync(filename, 'utf8')
         let config = yaml.parse(content)
+        let rings = config.bootstrap_database.rings
 
         print('config:', config)
+        print('rings:', rings)
 
+        rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
 
-        const DB_ROOT   = './data'
+        // const DB_ROOT   = './data'
+        //
+        // const ring_specs = [
+        //     {file: DB_ROOT + '/db-boot.yaml',    start_id:    0, stop_id:  100, readonly: true},
+        //     {file: DB_ROOT + '/db-base.yaml',    start_id:  100, stop_id:  200, readonly: true},
+        //     {file: DB_ROOT + '/db-cluster.yaml', start_id:  200, stop_id:  300, readonly: true},
+        //     {file: DB_ROOT + '/db-demo.yaml',    start_id: 1000, stop_id: null, readonly: true},
+        //     // {file: DB_ROOT + '/../../app-demo/data/db-paperity.yaml', start_id: 1000, stop_id: null, readonly: true},
+        //
+        //     // {item: 200},       // db-paperity.yaml
+        //     // {item: 205},       // db-demo.yaml
+        // ]
 
-        const ring_specs = [
-            {file: DB_ROOT + '/db-boot.yaml',    start_id:    0, stop_id:  100, readonly: true},
-            {file: DB_ROOT + '/db-base.yaml',    start_id:  100, stop_id:  200, readonly: true},
-            {file: DB_ROOT + '/db-cluster.yaml', start_id:  200, stop_id:  300, readonly: true},
-            {file: DB_ROOT + '/db-demo.yaml',    start_id: 1000, stop_id: null, readonly: true},
-            // {file: DB_ROOT + '/../../app-demo/data/db-paperity.yaml', start_id: 1000, stop_id: null, readonly: true},
-
-            // {item: 200},       // db-paperity.yaml
-            // {item: 205},       // db-demo.yaml
-        ]
-
-        let bootstrap_db = Database.create(ring_specs)
+        let bootstrap_db = Database.create(rings)
         schemat.set_db(bootstrap_db)
 
         await bootstrap_db.open()
