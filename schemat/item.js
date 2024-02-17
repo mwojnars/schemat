@@ -626,12 +626,7 @@ export class Item {
 
         if (prop === '_category_') type = new ITEM()
         else if (prop === '_extends_') type = new ITEM({inherit: false})
-        else {
-            let schema = proxy._schema_ || new DATA_GENERIC()    // doesn't work here due to circular deps on properties
-            // let category = proxy._category_
-            // let schema = category?.item_schema || new DATA_GENERIC()
-            type = schema.get(prop)
-        }
+        else type = proxy._schema_.get(prop)
 
         if (!type) return []
 
