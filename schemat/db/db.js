@@ -216,6 +216,12 @@ export class Database extends Item {
             await ring._init_indexes(new DataRequest(this, 'add_ring'))   // TODO: temporary
     }
 
+    async __init__() {
+        for (let ring of this.rings)
+            await ring.load()
+        // await Promise.all(this.rings.map(ring => ring.load()))              // load all rings
+    }
+
     async find_ring({id, name}) {
         /* Return the top-most ring that has a given object `id` in DB, or a given `name`.
            Return undefined if not found. Can be called to check if an item ID or a ring name exists.

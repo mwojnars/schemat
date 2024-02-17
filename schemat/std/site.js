@@ -27,12 +27,15 @@ export class Site extends Directory {
     static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
     // properties:
+    database
     entries
     default_path
 
 
     async __init__()  {
         if (schemat.client_side) return
+        await this.database?.load()
+
         this._vm = await import('vm')
         this._check_default_container()                 // no await to avoid blocking the site's startup
     }

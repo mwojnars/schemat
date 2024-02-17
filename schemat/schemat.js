@@ -105,9 +105,12 @@ export class Schemat {
     server_side = true
     get client_side() { return !this.server_side }
 
-    // _db                  // client-side or bootstrap DB; regular server-side DB is taken from site.db
+    _db                  // client-side or bootstrap DB; regular server-side DB is taken from site.database
 
-    db                      // the site's database instance, either a Database (on server) or a ClientDB (on client); TODO: use site.database instead
+    get db() {
+        /* The site's database instance, either a Database (on server) or a ClientDB (on client) */
+        return (this.server_side && this.site?.database) || this._db
+    }
 
     root_category           // site-wide RootCategory object
     site                    // fully loaded Site instance that will handle all web requests
@@ -165,7 +168,7 @@ export class Schemat {
         // print('initClasspath() done')
     }
 
-    set_db(db)  { this.db = db }
+    set_db(db)  { this._db = db }
 
     async boot(site_id = SITE_ID) {
         /* (Re)create/load `this.root_category` and `this.site`. The latter will be left undefined if not present in the DB. */
