@@ -4,8 +4,8 @@ import {Item} from "../item.js";
 import {JSONx} from "../serialize.js";
 import {ServerSchemat} from "../schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
-import {Cluster} from "./cluster.js";
 import {DataServer, WebServer} from "./servers.js";
+import {Database} from "../db/db.js";
 
 
 /**********************************************************************************************************************/
@@ -25,10 +25,28 @@ export class BackendProcess {
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
 
-        let cluster = new Cluster()
-        await cluster.startup()
+        await this.boot_db()
 
         return this[method](opts)
+    }
+
+    async boot_db(config_file = './config.yaml') {
+        /* Create bootstrap database and load the site from it. Create global Schemat object. */
+
+        let fs = await import('node:fs')
+        let yaml = (await import('yaml')).default
+
+        let content = fs.readFileSync(config_file, 'utf8')
+        let config = yaml.parse(content)
+        let rings = config.bootstrap_database.rings
+
+        rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
+
+        let bootstrap_db = Database.create(rings)
+        schemat.set_db(bootstrap_db)
+
+        await bootstrap_db.open()
+        // await bootstrap_db.insert_self()
     }
 }
 
