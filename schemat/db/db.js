@@ -30,16 +30,26 @@ export class Ring extends Item {
     stop_id                 // (optional) maximum ID of all items
 
 
-    async __init__() {
-        /* Initialize the ring after it's been loaded from DB. */
-        if (schemat.client_side) return
-        print(`... ring [${this._id_}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
-        await this.data_sequence.load()
-        for (let index of this.indexes.values())
-            await index.load()
+    async __create__({name, ...opts}) {
+        let {file} = opts
+        this._file = file
+        this.name = name || fileBaseName(file)
+
+        // if (!name && file)
+        //     this.name = file.replace(/^.*\/|\.[^.]*$/g, '')         // extract the name from the file path (no directory, no extension)
+        //     // this.name = file.substring(file.lastIndexOf('/') + 1, file.lastIndexOf('.') >= 0 ? file.lastIndexOf('.') : undefined)
+        //     // this.name = path.basename(file, path.extname(file))
+
+        let {readonly = false, start_id = 0, stop_id} = opts
+        this.readonly = readonly
+        this.start_id = start_id
+        this.stop_id = stop_id
+
+        this.data_sequence = DataSequence.create(this, this._file)
+        return this.data_sequence.open()
     }
 
-    async _init_indexes(req) {
+    async _create_indexes(req) {
         let filename = this._file.replace(/\.yaml$/, '.idx_category_item.jl')
         req = req.safe_step(this)
 
@@ -57,6 +67,15 @@ export class Ring extends Item {
         //         await index.apply(change)
         //     }
         // }
+    }
+
+    async __init__() {
+        /* Initialize the ring after it's been loaded from DB. */
+        if (schemat.client_side) return
+        print(`... ring [${this._id_}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
+        await this.data_sequence.load()
+        for (let index of this.indexes.values())
+            await index.load()
     }
 
     async erase(req) {
@@ -135,30 +154,6 @@ export class Ring extends Item {
     }
 }
 
-export class PlainRing extends Ring {
-    /* A newborn ring object that is NOT stored in DB. Only this kind of object needs __create__() and open(). */
-
-    static _class_ = Ring          // the class to be saved in the DB
-
-    async __create__({name, ...opts}) {
-        let {file} = opts
-        this._file = file
-        this.name = name || fileBaseName(file)
-
-        // if (!name && file)
-        //     this.name = file.replace(/^.*\/|\.[^.]*$/g, '')         // extract the name from the file path (no directory, no extension)
-        //     // this.name = file.substring(file.lastIndexOf('/') + 1, file.lastIndexOf('.') >= 0 ? file.lastIndexOf('.') : undefined)
-        //     // this.name = path.basename(file, path.extname(file))
-
-        let {readonly = false, start_id = 0, stop_id} = opts
-        this.readonly = readonly
-        this.start_id = start_id
-        this.stop_id = stop_id
-
-        this.data_sequence = DataSequence.create(this, this._file)
-        return this.data_sequence.open()
-    }
-}
 
 /**********************************************************************************************************************
  **
@@ -194,13 +189,13 @@ export class Database extends Item {
             let ring =
                 spec instanceof Ring ? spec :
                 spec.item            ? await schemat.get_loaded(spec.item) :
-                                       await PlainRing.create(spec)
+                                       await Ring.create(spec)
 
             this.rings.push(ring)
             print(`... ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
 
             if (ring.is_newborn())
-                await ring._init_indexes(new DataRequest(this, 'open'))     // TODO: temporary
+                await ring._create_indexes(new DataRequest(this, 'open'))   // TODO: temporary
         }
     }
 
