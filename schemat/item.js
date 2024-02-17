@@ -618,9 +618,9 @@ export class Item {
         let data  = this._data_
         if (!data) throw new NotLoaded(this)
 
-        // find out the Type of the property from this object's _schema_:
-        // 1) _extends_ needs special handling because it is used at an early stage of the loading process (_init_prototypes() > this._prototypes_), before the object's category (and schema) is fully loaded;
-        // 2) _category_ needs special handling because the schema is not yet available (there would be circular dependency between _category_ and _schema_ otherwise).
+        // check the Type of the property in this object's _schema_; special handling for:
+        // 1) _extends_: because this property is used at an early stage of the loading process (_init_prototypes() > this._prototypes_), before the object's category (and schema) is fully loaded;
+        // 2) _category_: because the schema is not yet available and reading the type from _schema_ would create circular dependency.
 
         let type =
             prop === '_category_' ? new ITEM() :
