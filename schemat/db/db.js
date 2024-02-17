@@ -136,11 +136,11 @@ export class Ring extends Item {
 }
 
 export class PlainRing extends Ring {
-    /* A plain ring object that is NOT stored in DB. Only this kind of object needs __create__() and open(). */
+    /* A newborn ring object that is NOT stored in DB. Only this kind of object needs __create__() and open(). */
 
     static _class_ = Ring          // the class to be saved in the DB
 
-    __create__({name, ...opts}) {
+    async __create__({name, ...opts}) {
         let {file} = opts
         this._file = file
         this.name = name || fileBaseName(file)
@@ -154,9 +154,7 @@ export class PlainRing extends Ring {
         this.readonly = readonly
         this.start_id = start_id
         this.stop_id = stop_id
-    }
 
-    async open() {
         this.data_sequence = DataSequence.create(this, this._file)
         return this.data_sequence.open()
     }
@@ -193,21 +191,16 @@ export class Database extends Item {
         print(`creating database...`)
 
         for (const spec of ring_specs) {
-            let ring
-
-            if (spec.item) ring = await schemat.get_loaded(spec.item)
-            else if (spec instanceof Ring) ring = spec
-            else {
-                ring = PlainRing.create(spec)           // a newborn ring object that is NOT stored in DB
-                await ring.open()
-            }
+            let ring =
+                spec instanceof Ring ? spec :
+                spec.item            ? await schemat.get_loaded(spec.item) :
+                                       await PlainRing.create(spec)
 
             this.rings.push(ring)
-
             print(`... ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
 
             if (ring.is_newborn())
-                await ring._init_indexes(new DataRequest(this, 'add_ring'))   // TODO: temporary
+                await ring._init_indexes(new DataRequest(this, 'open'))     // TODO: temporary
         }
     }
 
