@@ -5,12 +5,12 @@
 # bootstrap_database:
 # Configuration of a temporary database that is created at startup, from which the Site and the main Database are loaded.
 # One of the rings should contain the target Site object together with its dependencies.
-# Rings are being activated gradually and as soon as the ring containing the target Site object gets created,
+# Rings are being activated gradually. As soon as the ring containing the target Site gets created,
 # the site is being loaded and the bootstrap database is replaced with the main database
 # (although the remaining bootstrap rings, if any, are still being processed).
 # During activation of rings and loading of the site object, higher-level rings are allowed to request objects
 # from lower-level rings, but not vice versa.
-# Each bootstrap ring is read-only by default (`readonly: true`), if not specified otherwise below.
+# Each bootstrap ring is read-only by default, if not specified otherwise below with `readonly: false`.
 
 bootstrap_database:
   rings:
@@ -18,3 +18,4 @@ bootstrap_database:
     - file: ./data/db-base.yaml
     - file: ./data/db-cluster.yaml
     - file: ./data/db-demo.yaml
+    #- file: ../app-demo/data/db-paperity.yaml
