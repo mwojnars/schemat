@@ -1,6 +1,6 @@
 "use strict";
 
-import {print, assert, Counter} from './common/utils.js'
+import {T, print, assert, Counter} from './common/utils.js'
 import {ItemNotFound, NotImplemented} from './common/errors.js'
 // import { JSONx } from './serialize.js'
 import {Catalog, Data, ItemsCache} from './data.js'
@@ -171,6 +171,7 @@ export class Schemat {
 
     async boot(site_id) {
         /* (Re)create/load `this.root_category` and `this.site`. The latter will be left undefined if not present in the DB. */
+        assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         this.root_category = await this._init_root()        // always returns a valid object, possibly created from `root_data`
         this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
         // if (this.site) print("Schemat: site loaded")
