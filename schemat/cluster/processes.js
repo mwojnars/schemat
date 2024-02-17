@@ -26,8 +26,7 @@ export class BackendProcess {
         assert(this[method], `unknown command: ${cmd}`)
 
         await this.boot_db()
-
-        return this[method](opts)
+        await this[method](opts)
     }
 
     async boot_db(config_file = './config.yaml') {
@@ -42,10 +41,8 @@ export class BackendProcess {
 
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
 
-        let bootstrap_db = Database.create(rings)
-        schemat.set_db(bootstrap_db)
-
-        await bootstrap_db.open()
+        let bootstrap_db = schemat.set_db(Database.create())
+        await bootstrap_db.open(rings)
         await schemat.boot()                                // load `site` together with the ultimate database
         // await bootstrap_db.insert_self()
     }

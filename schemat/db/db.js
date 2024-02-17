@@ -186,18 +186,13 @@ export class Database extends Item {
     get bottom_ring()       { return this.rings[0] }
     get rings_reversed()    { return this.rings.slice().reverse() }
 
-    __create__(specs) {
-        this._ring_specs = specs
-    }
+    async open(ring_specs) {
+        /* Set and load all rings, as specified in `ring_specs`. */
 
-    async open() {
-        /* Set and load rings for self while updating the global registry, so that subsequent ring objects (items)
-           can be loaded from lower rings.
-         */
         assert(this.is_newborn())               // open() is a mutable operation, so it can only be called on a newborn object (not in DB)
         print(`creating database...`)
 
-        for (const spec of this._ring_specs) {
+        for (const spec of ring_specs) {
             let ring
 
             if (spec.item) ring = await schemat.get_loaded(spec.item)

@@ -390,7 +390,7 @@ export class Item {
     static create(...args) {
         /* Create an empty newborn item, no ID, and execute its __create__(...args). Return the item.
            This function, or create_stub(id), should be used instead of the constructor.
-           If __create__ is overloaded and returns a Promise, this function returns a Promise too.
+           If __create__() returns a Promise, this function returns a Promise too.
          */
         let item = this.create_stub()
         let created = item.__create__(...args)

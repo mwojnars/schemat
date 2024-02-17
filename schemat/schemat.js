@@ -168,7 +168,7 @@ export class Schemat {
         // print('initClasspath() done')
     }
 
-    set_db(db)  { this._db = db }
+    set_db(db)  { return this._db = db }
 
     async boot(site_id = SITE_ID) {
         /* (Re)create/load `this.root_category` and `this.site`. The latter will be left undefined if not present in the DB. */
