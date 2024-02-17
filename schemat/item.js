@@ -304,7 +304,8 @@ export class Item {
         // TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
         // https://en.wikipedia.org/wiki/C3_linearization
         // http://python-history.blogspot.com/2010/06/method-resolution-order.html
-        let candidates = this._prototypes_.map(proto => proto._ancestors_)
+        let prototypes = this._prototypes_
+        let candidates = prototypes.map(proto => proto._ancestors_)
         let ancestors = [this, ...unique(concat(candidates))]
         return this.CACHED_PROP(ancestors)
     }
@@ -476,8 +477,6 @@ export class Item {
             let proto = this._init_prototypes()                 // load prototypes
             if (proto instanceof Promise) await proto
 
-            if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
-
             // // root category's class must be set here in a special way - this is particularly needed inside DB blocks,
             // // while instantiating temporary items from data records (so new Item() is called, not new RootCategory())
             // if (this._id_ === ROOT_ID) T.setClass(this, RootCategory)
@@ -492,6 +491,8 @@ export class Item {
 
             if (this.is_linked())
                 this._ready_.url = this._init_url()         // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
+
+            if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
 
             return await this.activate()
 
@@ -619,10 +620,12 @@ export class Item {
         let proxy = this._proxy_
         let type
 
-        // find out the `type` (Type instance) of the property ...
-        // _category_ needs special handling because the schema is not yet available at this point
+        // find out the `type` (Type instance) of the property...
+        // 1) _category_ needs special handling because the schema is not yet available at this point
+        // 2) _extends_ needs special handling because it's needed at an early stage of the loading process (through _init_prototypes() > this._prototypes_), before the object's category is fully loaded
 
         if (prop === '_category_') type = new ITEM({inherit: false})
+        else if (prop === '_extends_') type = new ITEM({inherit: false})
         else {
             // let schema = proxy._schema_ || new DATA_GENERIC()    // doesn't work here due to circular deps on properties
             let category = proxy._category_
