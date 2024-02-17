@@ -30,7 +30,7 @@ export class Ring extends Item {
     stop_id                 // (optional) maximum ID of all items
 
 
-    async __create__({name, ...opts}) {
+    async __create__({name, ...opts}, req) {
         let {file} = opts
         this._file = file
         this.name = name || fileBaseName(file)
@@ -45,11 +45,11 @@ export class Ring extends Item {
         this.start_id = start_id
         this.stop_id = stop_id
 
-        this.data_sequence = DataSequence.create(this, this._file)
-        return this.data_sequence.open()
-    }
+        // create sequences: data and indexes...
 
-    async _create_indexes(req) {
+        this.data_sequence = DataSequence.create(this, this._file)
+        await this.data_sequence.open()
+
         let filename = this._file.replace(/\.yaml$/, '.idx_category_item.jl')
         req = req.safe_step(this)
 
@@ -180,7 +180,7 @@ export class Database extends Item {
     get rings_reversed()    { return this.rings.slice().reverse() }
 
     async open(ring_specs) {
-        /* Set and load all rings, as specified in `ring_specs`. */
+        /* After create(), create all rings according to `ring_specs` specification. */
 
         assert(this.is_newborn())               // open() is a mutable operation, so it can only be called on a newborn object (not in DB)
         print(`creating database...`)
@@ -189,13 +189,10 @@ export class Database extends Item {
             let ring =
                 spec instanceof Ring ? spec :
                 spec.item            ? await schemat.get_loaded(spec.item) :
-                                       await Ring.create(spec)
+                                       await Ring.create(spec, new DataRequest(this, 'open'))
 
             this.rings.push(ring)
             print(`... ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
-
-            if (ring.is_newborn())
-                await ring._create_indexes(new DataRequest(this, 'open'))   // TODO: temporary
         }
     }
 
