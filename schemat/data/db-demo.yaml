@@ -189,29 +189,56 @@
 - __id: 1019
   name: /system
   entries:
+    categories:
+      "@": 1022
+    cluster:
+      "@": 1023
+    database:
+      "@": 1024
     default:
       "@": 1021
     local:
       "@": 1020
     "@": Catalog
-  _category_:
-    "@": 5
   _container_:
     "@": 1004
+  _category_:
+    "@": 5
   "@": Data
 - __id: 1020
-  name: /local
+  name: /system/local
   local_path: .
-  _category_:
-    "@": 6
   _container_:
     "@": 1019
+  _category_:
+    "@": 6
   "@": Data
 - __id: 1021
   name: default namespace
   info: All objects accessible by their IDs.
-  _category_:
-    "@": 8
   _container_:
     "@": 1019
+  _category_:
+    "@": 8
+  "@": Data
+- __id: 1022
+  name: /system/categories
+  _container_:
+    "@": 1019
+  _category_:
+    "@": 5
+  "@": Data
+- __id: 1023
+  name: /system/cluster
+  _container_:
+    "@": 1019
+  _category_:
+    "@": 5
+  "@": Data
+- __id: 1024
+  name: /system/database
+  _container_:
+    "@": 1019
+  _category_:
+    "@": 5
   "@": Data
