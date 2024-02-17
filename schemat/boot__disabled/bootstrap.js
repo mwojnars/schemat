@@ -3,7 +3,6 @@ Creating core items from scratch and storing them as initial items in DB.
  */
 
 import {print, assert} from '../common/utils.js'
-import {SITE_CATEGORY_ID} from '../item.js'
 import {GENERIC, TYPE, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {Catalog} from "../data.js"
 import * as urls from "../std/urls.js";
@@ -15,6 +14,8 @@ import * as files from "../std/files.js";
 
 // const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
 // const __dirname  = path.dirname(__filename)
+
+export const SITE_CATEGORY_ID = 1
 
 // conversion of a dict to a Catalog
 export let C = (...data) => new Catalog(...data)
@@ -29,7 +30,6 @@ export let C = (...data) => new Catalog(...data)
 async function create_categories(Category) {
 
     let cat = {}
-    assert(SITE_CATEGORY_ID === 1)
 
     cat.Site = await Category.new(SITE_CATEGORY_ID, {
         name        : "Site",

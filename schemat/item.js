@@ -16,7 +16,6 @@ import {Assets} from "./ui/component.js";
 import {ReactPage, CategoryAdminView, ItemAdminView} from "./ui/pages.js";
 
 export const ROOT_ID = 0
-export const SITE_CATEGORY_ID = 1
 
 
 // import * as utils from 'http://127.0.0.1:3000/system/local/common/utils.js'
