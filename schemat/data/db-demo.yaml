@@ -78,7 +78,7 @@
     "*":
       "@": 1014
     "@": Catalog
-  default_path: /system/object
+  default_path: /system/default
   _category_:
     "@": 1
   "@": Data
@@ -189,7 +189,7 @@
 - __id: 1019
   name: /system
   entries:
-    object:
+    default:
       "@": 1021
     local:
       "@": 1020

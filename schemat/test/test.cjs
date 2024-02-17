@@ -169,12 +169,12 @@ describe('Schemat Tests', function () {
         })
 
         it('varia item', async function () {
-            await test_react_page(page, `${DOMAIN}/system/object/1016`, '#page-component',
+            await test_react_page(page, `${DOMAIN}/system/default/1016`, '#page-component',
                 ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
         })
 
         it('varia item', async function () {
-            await test_react_page(page, `${DOMAIN}/system/object/1017`, '#page-component',
+            await test_react_page(page, `${DOMAIN}/system/default/1017`, '#page-component',
                 ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
         })
 
