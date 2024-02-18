@@ -36,7 +36,7 @@ export class Site extends Directory {
         if (schemat.client_side) return
         await this.database?.load()
 
-        this._vm = await import('vm')
+        this._vm = await import('node:vm')
         this._check_default_container()                 // no await to avoid blocking the site's startup
     }
 
