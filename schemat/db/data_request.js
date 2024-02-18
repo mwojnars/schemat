@@ -45,6 +45,7 @@ export class DataRequest {
     // parent              // parent request that led to the creation of this one (if any)
 
     // user                // user that initiated the request (if any), to check for permissions, user-specific config etc.
+    // hops                // number of hops the request has gone through so far (for debugging and performance monitoring); after too many hops the request should be dropped to avoid infinite loops
 
     trace = []             // array of ProcessingStep(s) that the request has gone through so far
 
