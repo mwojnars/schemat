@@ -13,9 +13,6 @@
       info: Default values for properties of objects in this category. The key cannot
         be empty. Same key can be repeated.
       "@": CATALOG
-    item_class:
-      info: Javascript class for the objects of this category.
-      "@": STRING
     class_path:
       info: SUN path to a Javascript file that contains a (base) class for this
         category. May contain an optional class name appended after colon ':'.
@@ -257,7 +254,9 @@
   name: Namespace
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
-  item_class: std.Namespace
+  defaults:
+    _class_: std.Namespace
+    "@": Catalog
   _category_:
     "@": 0
   "@": Data
@@ -265,13 +264,15 @@
   name: ID_Namespace
   info: Namespace that serves items on simple URLs of the form /IID. Mainly used
     for system & admin purposes, or as a last-resort default for URL generation.
-  item_class: std.ID_Namespace
   fields:
     category:
       category:
         "@": 0
       info: Optional category(ies) of items handled by this application.
       "@": ITEM
+    "@": Catalog
+  defaults:
+    _class_: std.ID_Namespace
     "@": Catalog
   _category_:
     "@": 0
@@ -281,7 +282,6 @@
   info: "Namespace for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
-  item_class: std.CategoryID_Namespace
   fields:
     spaces:
       values:
@@ -289,6 +289,9 @@
           "@": 0
         "@": ITEM
       "@": CATALOG
+    "@": Catalog
+  defaults:
+    _class_: std.CategoryID_Namespace
     "@": Catalog
   _category_:
     "@": 0
@@ -355,7 +358,9 @@
       info: Map of Indexes and their names
       "@": GENERIC
     "@": Catalog
-  item_class: db.Ring
+  defaults:
+    _class_: db.Ring
+    "@": Catalog
   _category_:
     "@": 0
   "@": Data
@@ -391,7 +396,9 @@
   info: Category for the main data sequence that contains serialized web objects.
   fields:
     "@": Catalog
-  item_class: db.DataSequence
+  defaults:
+    _class_: db.DataSequence
+    "@": Catalog
   _extends_:
     "@": 13
   _category_:
@@ -428,7 +435,9 @@
     item ID]."
   fields:
     "@": Catalog
-  item_class: db.IndexByCategory
+  defaults:
+    _class_: db.IndexByCategory
+    "@": Catalog
   _extends_:
     "@": 16
   _category_:
@@ -457,7 +466,9 @@
   info: Block of a DataSequence.
   fields:
     "@": Catalog
-  item_class: db.DataBlock
+  defaults:
+    _class_: db.DataBlock
+    "@": Catalog
   _extends_:
     "@": 18
   _category_:
@@ -468,7 +479,9 @@
   info: Block of an Index sequence.
   fields:
     "@": Catalog
-  item_class: db.IndexBlock
+  defaults:
+    _class_: db.IndexBlock
+    "@": Catalog
   _extends_:
     "@": 18
   _category_:
