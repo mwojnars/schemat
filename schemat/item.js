@@ -636,17 +636,13 @@ export class Item {
         let streams = ancestors.map(proto => proto._own_values(prop))
 
         // read `defaults` from the category and combine them with the `streams`
-        if (prop !== '_extends_' && prop !== '_category_')                  // avoid circular dependency
+        if (prop !== '_extends_' && prop !== '_category_')                  // avoid circular dependency for these special props
         {
-            // print(prop)
             let category = proxy._category_
             if (this === category?._self_) category = undefined             // avoid circular dependency for RootCategory
 
             let defaults = category?.defaults?.get_all(prop)
-            if (defaults?.length) {
-                print('defaults:', defaults)
-                streams = [...streams, defaults]
-            }
+            if (defaults?.length) streams = [...streams, defaults]
         }
 
         return type.combine_inherited(streams, proxy)                       // `default` and `impute` of the `type` are applied here
