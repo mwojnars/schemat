@@ -1,7 +1,6 @@
 - __id: 0
   name: Category
   info: Category of items that represent categories
-  item_class: Category
   cache_ttl: 60
   fields:
     _container_:
@@ -137,12 +136,14 @@
         their schema is GENERIC()
       "@": BOOLEAN
     "@": Catalog
+  defaults:
+    _class_: Category
+    "@": Catalog
   "@": Data
 - __id: 1
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
     startup.
-  item_class: std.Site
   fields:
     base_url:
       info: "Base URL at which the website is served: protocol + domain + root path
@@ -171,13 +172,15 @@
       default: /
       "@": STRING
     "@": Catalog
+  defaults:
+    _class_: std.Site
+    "@": Catalog
   _category_:
     "@": 0
   "@": Data
 - __id: 3
   name: File
   info: File with a text content.
-  item_class: std.File
   fields:
     content:
       "@": CODE
@@ -193,6 +196,9 @@
       default: true
       "@": BOOLEAN
     "@": Catalog
+  defaults:
+    _class_: std.File
+    "@": Catalog
   _category_:
     "@": 0
   "@": Data
@@ -201,10 +207,12 @@
   info: File located on a local disk, identified by its local file path.
   _extends_:
     "@": 3
-  item_class: std.FileLocal
   fields:
     local_path:
       "@": STRING
+    "@": Catalog
+  defaults:
+    _class_: std.FileLocal
     "@": Catalog
   _category_:
     "@": 0
@@ -213,7 +221,6 @@
   name: Directory
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
-  item_class: std.Directory
   fields:
     entries:
       values:
@@ -222,6 +229,9 @@
     _is_folder:
       default: true
       "@": BOOLEAN
+    "@": Catalog
+  defaults:
+    _class_: std.Directory
     "@": Catalog
   _category_:
     "@": 0
@@ -233,10 +243,12 @@
     Gives access to all files and folders beneath the path.
   _extends_:
     "@": 5
-  item_class: std.LocalFolder
   fields:
     local_path:
       "@": STRING
+    "@": Catalog
+  defaults:
+    _class_: std.LocalFolder
     "@": Catalog
   _category_:
     "@": 0
