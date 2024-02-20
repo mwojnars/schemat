@@ -314,7 +314,9 @@
       info: Array of Ring objects
       "@": GENERIC
     "@": Catalog
-  item_class: db.Database
+  defaults:
+    _class_: db.Database
+    "@": Catalog
   _category_:
     "@": 0
   "@": Data
