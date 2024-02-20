@@ -168,12 +168,12 @@ describe('Schemat Tests', function () {
             expect_include_all(await Varia.content(), 'check', 'Varia.code')
         })
 
-        it('varia item', async function () {
+        it('Varia object', async function () {
             await test_react_page(page, `${DOMAIN}/system/default/1016`, '#page-component',
                 ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
         })
 
-        it('varia item', async function () {
+        it('uncategorized object', async function () {
             await test_react_page(page, `${DOMAIN}/system/default/1017`, '#page-component',
                 ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
         })
