@@ -29,7 +29,6 @@ let default_fields = new Catalog({
 
 // fields inside a category instance, including the root category
 let root_fields = new Catalog({
-    item_class   : new CLASS({info: "Javascript class for the objects of this category."}),
     class_path   : new STRING({info: "SUN path to a Javascript file that contains a (base) class for this category. May contain an optional class name appended after colon ':'. If the class name is missing (no colon), default import from the file is used."}),
     class_name   : new STRING({info: "Custom internal name for the Class of this category, for debugging. Also used as an alias when exporting the Class from the category's module."}),
     class_init   : new CODE({repeated: true, info: "Module-level initialization for this category's Javascript class. Typically contains import statements and global variables. Preceeds the Class definition (`class_body`, `views`) in the category's module code."}),
@@ -86,7 +85,6 @@ let root_fields = new Catalog({
 export let root_data = new Data({
     name        : "Category",
     info        : "Category of items that represent categories",
-    item_class  : Category,
     // _boot_class : 'schemat.item.Category',      //  '/system/item.js/Category'
     cache_ttl   : 60.0,
     fields      : root_fields,

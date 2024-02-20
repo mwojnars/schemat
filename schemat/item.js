@@ -554,7 +554,7 @@ export class Item {
            known after loading the item's data.
          */
         if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
-        let cls = this._class_ || this._category_?.item_class || await this._category_?._item_class_
+        let cls = this._class_ || await this._category_?._item_class_
         if (typeof cls === 'string') cls = await schemat.get_class(cls)
         T.setClass(this, cls || Item)
     }

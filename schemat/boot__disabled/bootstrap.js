@@ -34,7 +34,6 @@ async function create_categories(Category) {
     cat.Site = await Category.new(SITE_CATEGORY_ID, {
         name        : "Site",
         info        : "Top-level URL routing + global configuration of applications, servers, startup.",
-        item_class  : site.Site,
         fields      : C({
             base_url        : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             default_path    : new PATH({info: "URL path of a default container that can be used to access any object via its ID. For internal purposes. Should contain a leading slash and no trailing slash."}),
@@ -49,7 +48,6 @@ async function create_categories(Category) {
     cat.File = await Category.new(3, {
         name        : "File",
         info        : "File with a text content.",
-        item_class  : files.File,
         fields      : C({
             content     : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
             mimetype    : new STRING({info: "MIME type string (must include '/') to be set as Content-Type when serving file download; or an extension ('js', 'jpg', ...) to be converted to an appropriate type. If missing, response mimetype is inferred from the URL path extension, if present."}),
@@ -61,7 +59,6 @@ async function create_categories(Category) {
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
         _extends_   : cat.File,
-        item_class  : files.FileLocal,
         fields      : C({
             local_path : new STRING(),          // path to a local file on disk
             //format: new STRING(),             // file format: pdf, xlsx, ...
@@ -70,7 +67,6 @@ async function create_categories(Category) {
     cat.Directory = await Category.new(5, {
         name        : "Directory",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
-        item_class  : urls.Directory,
         fields      : C({
             entries     : new CATALOG({values: new ITEM()}),          // file & directory names mapped to item IDs
             _is_folder  : new BOOLEAN({default: true}),
@@ -80,19 +76,16 @@ async function create_categories(Category) {
         name        : "LocalFolder",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
         _extends_   : cat.Directory,
-        item_class  : files.LocalFolder,
         fields      : C({local_path: new STRING()}),
     })
 
     cat.Namespace = await Category.new(7, {
         name        : "Namespace",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
-        item_class  : urls.Namespace,
     })
     cat.ID_Namespace = await Category.new(8, {
         name        : "ID_Namespace",
         info        : "Namespace that serves items on simple URLs of the form /IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
-        item_class  : urls.ID_Namespace,
         fields      : C({
             category    : new ITEM({category: Category, info: "Optional category(ies) of items handled by this application."}),
         }),
@@ -101,7 +94,6 @@ async function create_categories(Category) {
         name        : "CategoryID_Namespace",
         info        : "Namespace for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         fields      : C({spaces: new CATALOG({values: new ITEM({category: Category})})}),
-        item_class  : urls.CategoryID_Namespace,
     })
 
     cat.Type = await Category.new(10, {

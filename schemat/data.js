@@ -648,8 +648,8 @@ export class Data extends Catalog {
         if (_class_ === Object || _class_ === Item) _class_ = undefined
         if (_class_ && !T.isString(_class_)) _class_ = schemat.get_classpath(_class_)     // convert _class_ to a classpath string
 
-        // drop _class_ if it's already defined through _category_.item_class (by literal equality of classpath strings) - this doesn't detect a default on _class_ property
-        if (_class_ === _category_?.item_class) _class_ = undefined
+        // drop _class_ if it's already defined through category's default (by literal equality of classpath strings)
+        if (_class_ === _category_?.defaults?.get('_class_')) _class_ = undefined
 
         let props = {...obj, _category_, _class_}
 
