@@ -618,7 +618,7 @@ export class Item {
         if (!data) throw new NotLoaded(this)
 
         // check the Type of the property in this object's _schema_; special handling for:
-        // 1) _extends_: because this property is used at an early stage of the loading process (_init_prototypes() > this._prototypes_), before the object's category (and schema) is fully loaded;
+        // 1) _extends_: because it is used at an early stage of the loading process (_init_prototypes() > this._prototypes_), before the object's category (and schema) is fully loaded;
         // 2) _category_: because the schema is not yet available and reading the type from _schema_ would create circular dependency.
 
         let type =
@@ -1205,10 +1205,10 @@ export class RootCategory extends Category {
     constructor(_fail_) {
         super(_fail_)
         this._id_ = ROOT_ID
-        this._meta_.expiry = 0                  // never evict from cache
+        this._meta_.expiry = 0                      // never evict from cache
     }
 
-    get _category_() { return this }            // root category is a category for itself
+    get _category_() { return this._proxy_ }        // root category is a category for itself
 
     get item_schema() {
         /* In RootCategory, this == this._category_, and to avoid infinite recursion we must perform schema inheritance manually. */
