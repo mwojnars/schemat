@@ -634,9 +634,14 @@ export class Item {
 
         let ancestors = type.props.inherit ? proxy._ancestors_ : [proxy]    // `this` is always included as the first ancestor
         let streams = ancestors.map(proto => proto._own_values(prop))
-        let values = type.combine_inherited(streams, proxy)                 // `default` and `impute` of the schema is applied here
 
-        return values
+        // let defaults = this._category_?.defaults?.get_all(prop)
+        // if (defaults !== undefined) {
+        //     print('defaults:', defaults)
+        //     streams = [...streams, defaults]
+        // }
+
+        return type.combine_inherited(streams, proxy)                       // type's `default` and `impute` are applied here
     }
 
     _own_values(prop)  { return this._data_.get_all(prop) }

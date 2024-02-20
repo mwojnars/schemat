@@ -8,6 +8,12 @@
       default:
         "@": 1014
       "@": ITEM
+    defaults:
+      values:
+        "@": GENERIC
+      info: Default values for properties of objects in this category. The key cannot
+        be empty. Same key can be repeated.
+      "@": CATALOG
     item_class:
       info: Javascript class for the objects of this category.
       "@": STRING

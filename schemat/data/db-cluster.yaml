@@ -16,7 +16,7 @@
     idx_category_item:
       "@": 206
     "@": Map
-  readonly: true
+  readonly: false
   start_id: 0
   stop_id: 100
   _category_:
