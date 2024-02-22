@@ -1223,7 +1223,6 @@ export class RootCategory extends Category {
         /* In RootCategory, this == this._category_, and to avoid infinite recursion we must perform schema inheritance manually. */
         let root_fields = this._data_.get('fields')
         let default_fields = this._data_.get('defaults').get('fields')
-        // let default_fields = root_fields.get('fields').props.default
         let fields = new Catalog(root_fields, default_fields)
         let custom = this._data_.get('allow_custom_fields')
         return new DATA({fields: fields.object(), strict: custom !== true})
