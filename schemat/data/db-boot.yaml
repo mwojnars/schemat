@@ -3,10 +3,6 @@
   info: Category of items that represent categories
   cache_ttl: 60
   fields:
-    _container_:
-      default:
-        "@": 1014
-      "@": ITEM
     defaults:
       values:
         "@": GENERIC
@@ -91,6 +87,8 @@
     "@": Catalog
   defaults:
     _class_: Category
+    _container_:
+      "@": 1014
     fields:
       _category_:
         info: Category of this item. Determines item's behavior and the schema of its
