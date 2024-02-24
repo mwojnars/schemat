@@ -355,7 +355,7 @@ export class Item {
         url: undefined,         // resolves with this._url_ when this._url_ is computed
     }
 
-    static _api_                // API instance that defines this item's endpoints and protocols; created lazily in _create_api() when the first instance is initialized
+    static _api_                // API instance that defines this item's endpoints and protocols; created lazily in _create_api() when the first instance is loaded, then reused for other instances
 
 
     /***  Object status  ***/
@@ -599,7 +599,7 @@ export class Item {
     }
 
     _init_network() {
-        /* Create a .net connector and .action triggers for this item's network API. */
+        /* Create a network interface, _net_, and .action triggers for this item's network API. */
         let role = schemat.server_side ? 'server' : 'client'
         let api = this.constructor._api_ || this.constructor._create_api()
         this._net_ = new Network(this, role, api)
