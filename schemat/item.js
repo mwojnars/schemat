@@ -895,7 +895,7 @@ Item.create_api(
         'POST/edit':  new JsonService(function(request, task, path, {pos, pos_new, entry} = {})
         {
             if (entry?.value !== undefined) entry.value = JSONx.decode(entry.value)
-            this.mark_editable()
+            this.mark_editable()            // TODO: `this` object should be copied and then reloaded after modifications
 
             if (task === "delete_self") return schemat.db.delete(this)
             switch (task) {
@@ -906,42 +906,6 @@ Item.create_api(
             }
             return schemat.db.update_full(this)
         }),
-
-        // 'POST/edit':  new TaskService({
-        //
-        //     delete_self(request)   { return schemat.db.delete(this) },
-        //
-        //     // TODO: in all the methods below, `this` should be copied and reloaded after modifications
-        //
-        //     insert_field(request, path, pos, entry) {
-        //         // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-        //         if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
-        //         this.mark_editable()
-        //         this._data_.insert(path, pos, entry)
-        //         return schemat.db.update_full(this)
-        //     },
-        //
-        //     delete_field(request, path) {
-        //         this.mark_editable()
-        //         this._data_.delete(path)
-        //         return schemat.db.update_full(this)
-        //     },
-        //
-        //     update_field(request, path, entry) {
-        //         // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-        //         if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
-        //         this.mark_editable()
-        //         this._data_.update(path, entry)
-        //         return schemat.db.update_full(this)
-        //     },
-        //
-        //     move_field(request, path, pos1, pos2) {
-        //         this.mark_editable()
-        //         this._data_.move(path, pos1, pos2)
-        //         return schemat.db.update_full(this)
-        //     },
-        //
-        // }),
     }
 )
 // print(`Item.api.endpoints:`, Item.api.endpoints)
