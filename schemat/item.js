@@ -356,7 +356,6 @@ export class Item {
     }
 
     static api        = null    // API instance that defines this item's endpoints and protocols
-    static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
 
 
     /***  Object status  ***/
@@ -427,12 +426,11 @@ export class Item {
         return item.load(record)
     }
 
-    static create_api(endpoints, actions = {}) {
-        /* Create .api and .actions of this Item (sub)class. */
+    static create_api(endpoints) {
+        /* Create .api of this Item (sub)class. */
         let base = Object.getPrototypeOf(this)
         if (!T.isSubclass(base, Item)) base = undefined
         this.api = new API(base ? [base.api] : [], endpoints)
-        this.actions = base ? {...base.actions, ...actions} : actions
     }
 
     _set_id(id) {
