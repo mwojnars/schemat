@@ -13,7 +13,7 @@ site: 1004
 
 bootstrap_database:
   rings:
-    - file: ./data/db-boot.yaml                    # core categories
+    - file: ./data/db-boot.yaml                    # core categories; practically immutable (very rarely changed)
     - file: ./data/db-base.yaml
     - file: ./data/db-cluster.yaml                 # physical layer: nodes, rings, database
     - file: ./data/db-site.yaml                    # logical layer: site, system folders, system objects
