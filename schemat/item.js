@@ -410,11 +410,6 @@ export class Item {
         return Item.from_record(new ItemRecord(id, data))
     }
 
-    // static async from_binary(binary_record /*Record*/) {
-    //     let item_record = ItemRecord.from_binary(binary_record)
-    //     return Item.from_record(item_record)
-    // }
-
     static async from_record(record /*ItemRecord*/, use_registry = true) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no ID yet);
            or an instance loaded from DB and filled out with data from `record` (an ItemRecord).
