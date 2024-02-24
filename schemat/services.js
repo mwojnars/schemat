@@ -402,7 +402,7 @@ export class Network {
         // create a trigger for each action and store in `this.action`
         for (let [name, spec] of Object.entries(actions)) {
             if (name in triggers) throw new Error(`duplicate action name: '${name}'`)
-            // if (typeof spec === 'string') spec = [spec]
+            if (typeof spec === 'string') spec = spec.split(':')
             let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
             let service = this.get_service(endpoint)
             if (!service) throw new Error(`undeclared API service: '${endpoint}'`)
