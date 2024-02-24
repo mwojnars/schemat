@@ -76,8 +76,6 @@ export class File extends Item {
     })
 }
 
-File.create_api()
-
 
 export class FileLocal extends File {
 

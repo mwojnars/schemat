@@ -355,7 +355,7 @@ export class Item {
         url: undefined,         // resolves with this._url_ when this._url_ is computed
     }
 
-    static _api_                // API instance that defines this item's endpoints and protocols;
+    static _api_                // API instance that defines this item's endpoints and protocols; created lazily in _create_api() when the first instance is initialized
 
 
     /***  Object status  ***/
@@ -426,14 +426,14 @@ export class Item {
         return item.load(record)
     }
 
-    static create_api() {
-        /* Collect endpoints defined as static properties of the class and named "PROTO/endpoint" (PROTO in uppercase)
-           and return as an API instance.
+    static _create_api() {
+        /* Collect endpoints defined as static properties of the clas, named "PROTO/endpoint" (PROTO in uppercase),
+           and return as an API instance. The result is cached in this._api_ to avoid re-creating the API object.
          */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
         let names = T.getAllPropertyNames(this).filter(is_endpoint)
         let endpoints = Object.fromEntries(names.map(name => [name, this[name]]))
-        this._api_ = new API(endpoints)
+        return this._api_ = new API(endpoints)
     }
 
     _set_id(id) {
@@ -601,7 +601,8 @@ export class Item {
     _init_network() {
         /* Create a .net connector and .action triggers for this item's network API. */
         let role = schemat.server_side ? 'server' : 'client'
-        this._net_ = new Network(this, role, this.constructor._api_)
+        let api = this.constructor._api_ || this.constructor._create_api()
+        this._net_ = new Network(this, role, api)
         this.action = this._net_.create_triggers(this._actions_?.object())
     }
 
@@ -817,6 +818,12 @@ export class Item {
 
     /***  Endpoints  ***/
 
+    // When endpoint functions (below) are called, `this` is always bound to the Item instance, so they execute
+    // in the context of their item like if they were regular methods of the Item (sub)class.
+    // The first argument, `request`, is a Request instance, followed by action-specific list of arguments.
+    // In a special case when an action is called directly on the server through item.action.XXX(), `request` is null,
+    // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
+
     static ['CALL/self'] = new InternalService(function() { return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)
     static ['GET/json']  = new JsonService(function() { return this._record_.encoded() })
@@ -899,17 +906,6 @@ export class Item {
     //     // return `\n//# sourceURL=${url}`
     // }
 }
-
-/**********************************************************************************************************************/
-
-// When service functions (below) are called, `this` is always bound to the Item instance, so they execute
-// in the context of their item like if they were regular methods of the Item (sub)class.
-// The first argument, `request`, is a Request instance, followed by action-specific list of arguments.
-// In a special case when an action is called directly on the server through item.action.XXX(), `request` is null,
-// which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
-
-Item.create_api()
-// print(`Item.api.endpoints:`, Item.api.endpoints)
 
 
 /**********************************************************************************************************************/
@@ -1167,9 +1163,6 @@ export class Category extends Item {
     // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
     )
 }
-
-
-Category.create_api()
 
 
 /**********************************************************************************************************************/
