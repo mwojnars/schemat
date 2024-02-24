@@ -780,7 +780,7 @@ export class Item {
 
         // find the first endpoint that has a corresponding service defined and launch its server() handler
         for (let endpoint of endpoints) {
-            let service = this._net_.resolve(endpoint)
+            let service = this._net_.get_service(endpoint)
             if (service) {
                 // print(`handle() endpoint: ${endpoint}`)
                 request.endpoint = endpoint

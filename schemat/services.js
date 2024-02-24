@@ -342,7 +342,7 @@ export class API {
             }
     }
 
-    resolve(endpoint) {
+    get_service(endpoint) {
         /* Return the Service instance that's exposed on a given `endpoint`, or undefined if `endpoint` not found. */
         return this.services[endpoint]
     }
@@ -404,7 +404,7 @@ export class Network {
             if (name in triggers) throw new Error(`duplicate action name: '${name}'`)
             // if (typeof spec === 'string') spec = [spec]
             let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
-            let service = this.resolve(endpoint)
+            let service = this.get_service(endpoint)
             if (!service) throw new Error(`undeclared API service: '${endpoint}'`)
 
             triggers[name] = server_side
@@ -415,9 +415,9 @@ export class Network {
         return triggers
     }
 
-    resolve(endpoint) {
+    get_service(endpoint) {
         /* Resolve `endpoint` to a Service instance (a handler). Return undefined if `endpoint` not found. */
-        return this.api.resolve(endpoint)
+        return this.api.get_service(endpoint)
     }
 }
 
