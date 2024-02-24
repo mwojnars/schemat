@@ -31,7 +31,7 @@ export class ClientSchemat extends Schemat {
         // return item.net.render(view, root)
 
         let endpoint = data.endpoint
-        let page = item._net_.api.services[endpoint]
+        let page = item._net_.resolve(endpoint)
         return page.render_client(item, root)
         // check()
     }
