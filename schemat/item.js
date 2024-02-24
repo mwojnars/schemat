@@ -599,10 +599,7 @@ export class Item {
         /* Create a .net connector and .action triggers for this item's network API. */
         let role = schemat.server_side ? 'server' : 'client'
         this._net_ = new Network(this, role, this.constructor.api)
-
-        let actions = this._actions_?.object()
-        // print(this._id_, actions)
-        this.action = this._net_.create_triggers(actions || {})   // || this.constructor.actions)
+        this.action = this._net_.create_triggers(this._actions_?.object())
     }
 
 
@@ -930,16 +927,6 @@ Item.create_api(
             },
 
         }),
-    },
-    {
-        // actions...
-        // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the service
-        //get_json:         'GET/json',
-        delete_self:        'POST/edit:delete_self',
-        insert_field:       'POST/edit:insert_field',
-        delete_field:       'POST/edit:delete_field',
-        update_field:       'POST/edit:update_field',
-        move_field:         'POST/edit:move_field',
     }
 )
 // print(`Item.api.endpoints:`, Item.api.endpoints)
@@ -1202,11 +1189,6 @@ Category.create_api(
             },
         }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
         ),
-    },
-    {
-        // actions...
-        list_items:     'POST/read:list_items',
-        create_item:    'POST/edit:create_item',
     }
 )
 

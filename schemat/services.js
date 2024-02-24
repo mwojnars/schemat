@@ -395,6 +395,8 @@ export class Network {
            to the endpoint on each action call; dynamic arguments, if any, will be appended later, during the call.
            Multiple actions may share the same endpoint, typically with different `fixed-args`.
          */
+        if (!actions) return {}
+
         let triggers = {}
         let target = this.target
         let server_side = (this.role === Network.SERVER)
