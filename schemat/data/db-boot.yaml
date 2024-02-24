@@ -91,7 +91,7 @@
       "@": 1014
     _actions_:
       list_items: POST/read:list_items
-      create_item: POST/edit:create_item
+      create_item: POST/create_item
       "@": Catalog
     fields:
       _category_:

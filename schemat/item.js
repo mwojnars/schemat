@@ -891,6 +891,20 @@ Item.create_api(
         'GET/admin':    new ReactPage(ItemAdminView),
         'GET/json':     new JsonService(function() { return this._record_.encoded() }),
 
+        'POST/edit__':  new JsonService(function(request, task, path, pos, entry) {
+            if (entry?.value !== undefined) entry.value = JSONx.decode(entry.value)
+            this.mark_editable()
+
+            if (task === "delete_self") return schemat.db.delete(this)
+            switch (task) {
+                case "insert_field": this._data_.insert(path, pos, entry); break;
+                case "delete_field": this._data_.delete(path); break;
+                case "update_field": this._data_.update(path, entry); break;
+                case "move_field":   this._data_.move(path, pos, entry); break;     // here, `entry` is a number (the new position)
+            }
+            return schemat.db.update_full(this)
+        }),
+
         // item's edit actions for use in the admin interface...
         'POST/edit':  new TaskService({
 
@@ -1178,8 +1192,9 @@ Category.create_api(
             }),
         }),
 
-        'POST/edit':  new TaskService({
-            async create_item(request, dataState) {
+        // 'POST/edit':  new TaskService({
+        'POST/create_item':  new JsonService(
+            async function(request, dataState) {
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)
@@ -1187,7 +1202,7 @@ Category.create_api(
                 return item._record_.encoded()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },
-        }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
+        // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
         ),
     }
 )
