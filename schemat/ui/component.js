@@ -81,7 +81,7 @@ export class Component extends React.Component {
 
         // bind all the methods (own or inherited) that start with a capital letter, possibly prefixed by underscore(s)
         // - they are assumed to be React functional components
-        for (let name of T.getAllProperties(this.constructor.prototype))
+        for (let name of T.getAllPropertyNames(this.constructor.prototype))
             if (name.match(/^_*[A-Z]/) && typeof this[name] === 'function')
                 this[name] = this[name].bind(this)
     }

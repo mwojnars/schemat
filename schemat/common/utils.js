@@ -295,7 +295,7 @@ export class Types {
     static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
     static isPromise      = (obj) => (obj instanceof Promise)
 
-    static getAllProperties = (obj) => {
+    static getAllPropertyNames = (obj) => {
         /* Return an array of all property names of `obj`, including inherited ones, also the ones from Object like toString(), constructor etc. */
         let attrs = []
         do {
