@@ -51,7 +51,7 @@
     "@": 12
   "@": Data
 - __id: 204
-  name: db-demo
+  name: db-site
   data_sequence:
     "@": 217
   indexes:
@@ -287,7 +287,7 @@
 - __id: 219
   sequence:
     "@": 217
-  filename: ./data/db-demo.yaml
+  filename: ./data/db-site.yaml
   format: data-yaml
   _category_:
     "@": 19
@@ -295,7 +295,7 @@
 - __id: 220
   sequence:
     "@": 218
-  filename: ./data/db-demo.idx_category_item.jl
+  filename: ./data/db-site.idx_category_item.jl
   format: index-jl
   _category_:
     "@": 20
