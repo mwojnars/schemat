@@ -318,15 +318,15 @@ export class API {
 
     services = {}               // {endpoint_string: service_object}
 
-    constructor(parents = [], services = {}) {
-        // this.environment = environment
+    constructor(services = {}) {
         for (let [endpoint, service] of Object.entries(services))
             service.bindAt(endpoint)
-        if (parents && !T.isArray(parents))
-            parents = [parents]
+        this.add(services)
 
-        for (let _services of [...parents.reverse().map(p => p.services), services])
-            this.add(_services)
+        // if (parents && !T.isArray(parents))
+        //     parents = [parents]
+        // for (let _services of [...parents.reverse().map(p => p.services), services])
+        //     this.add(_services)
     }
 
     add(services) {

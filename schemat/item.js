@@ -426,19 +426,19 @@ export class Item {
         return item.load(record)
     }
 
-    static create_api(endpoints = {}) {
+    static create_api() {
         /* Create .api of this Item (sub)class. */
 
         // collect endpoints defined as static properties of this class, having name of the form "PROTO/endpoint",
         // where PROTO must be written in uppercase
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
-        let class_endpoints_names = T.getAllPropertyNames(this).filter(is_endpoint)
-        let class_endpoints = Object.fromEntries(class_endpoints_names.map(name => [name, this[name]]))
-        // print('class_endpoints:', class_endpoints_names)
+        let names = T.getAllPropertyNames(this).filter(is_endpoint)
+        let endpoints = Object.fromEntries(names.map(name => [name, this[name]]))
+        // print('endpoints:', names)
 
-        let base = Object.getPrototypeOf(this)
-        if (!T.isSubclass(base, Item)) base = undefined
-        this.api = new API(base ? [base.api] : [], {...endpoints, ...class_endpoints})
+        // let base = Object.getPrototypeOf(this)
+        // if (!T.isSubclass(base, Item)) base = undefined
+        this.api = new API(endpoints)
     }
 
     _set_id(id) {
