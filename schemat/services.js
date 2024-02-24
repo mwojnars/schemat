@@ -322,11 +322,6 @@ export class API {
         for (let [endpoint, service] of Object.entries(services))
             service.bindAt(endpoint)
         this.add(services)
-
-        // if (parents && !T.isArray(parents))
-        //     parents = [parents]
-        // for (let _services of [...parents.reverse().map(p => p.services), services])
-        //     this.add(_services)
     }
 
     add(services) {

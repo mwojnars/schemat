@@ -355,7 +355,7 @@ export class Item {
         url: undefined,         // resolves with this._url_ when this._url_ is computed
     }
 
-    static api        = null    // API instance that defines this item's endpoints and protocols
+    static _api_                // API instance that defines this item's endpoints and protocols;
 
 
     /***  Object status  ***/
@@ -427,18 +427,13 @@ export class Item {
     }
 
     static create_api() {
-        /* Create .api of this Item (sub)class. */
-
-        // collect endpoints defined as static properties of this class, having name of the form "PROTO/endpoint",
-        // where PROTO must be written in uppercase
+        /* Collect endpoints defined as static properties of the class and named "PROTO/endpoint" (PROTO in uppercase)
+           and return as an API instance.
+         */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
         let names = T.getAllPropertyNames(this).filter(is_endpoint)
         let endpoints = Object.fromEntries(names.map(name => [name, this[name]]))
-        // print('endpoints:', names)
-
-        // let base = Object.getPrototypeOf(this)
-        // if (!T.isSubclass(base, Item)) base = undefined
-        this.api = new API(endpoints)
+        this._api_ = new API(endpoints)
     }
 
     _set_id(id) {
@@ -606,7 +601,7 @@ export class Item {
     _init_network() {
         /* Create a .net connector and .action triggers for this item's network API. */
         let role = schemat.server_side ? 'server' : 'client'
-        this._net_ = new Network(this, role, this.constructor.api)
+        this._net_ = new Network(this, role, this.constructor._api_)
         this.action = this._net_.create_triggers(this._actions_?.object())
     }
 
