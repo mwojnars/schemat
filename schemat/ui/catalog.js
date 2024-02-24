@@ -296,7 +296,7 @@ export class CatalogTable extends Component {
         move: async (pos, delta) => {
             // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
             assert(delta === -1 || delta === +1)
-            await item.action.move_field(path, pos, pos+delta)
+            await item.action.move_field(path, {pos, pos_new: pos+delta})
             setEntries(prev => {
                 // if (pos+delta < 0 || pos+delta >= prev.length) return prev
                 let entries = [...prev];
@@ -331,15 +331,15 @@ export class CatalogTable extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (type.isCatalog()) item.action.insert_field(path, pos, {key, value: JSONx.encode(value) })
+                if (type.isCatalog()) item.action.insert_field(path, {pos, entry: {key, value: JSONx.encode(value)}})
                 else prev[pos].saveNew = (value) =>
-                    item.action.insert_field(path, pos, {key, value: JSONx.encode(value)}).then(() => unnew())
+                    item.action.insert_field(path, {pos, entry: {key, value: JSONx.encode(value)}}).then(() => unnew())
 
                 return [...prev]
             })
         },
         updateKey: (pos, newKey) => {
-            return item.action.update_field([...path, pos], {key: newKey})
+            return item.action.update_field([...path, pos], {entry: {key: newKey}})
             // return item.client.send_field_update([...path, pos], {key: newKey})
             // return item.client.update_field()
             // return item.server.field_update()
@@ -347,7 +347,7 @@ export class CatalogTable extends Component {
             // return item.server.update({field: ...})
         },
         updateValue: (pos, newValue, type) => {
-            return item.action.update_field([...path, pos], {value: JSONx.encode(newValue)})
+            return item.action.update_field([...path, pos], {entry: {value: JSONx.encode(newValue)}})
         }
     }}
 

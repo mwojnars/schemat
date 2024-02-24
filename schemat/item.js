@@ -891,7 +891,9 @@ Item.create_api(
         'GET/admin':    new ReactPage(ItemAdminView),
         'GET/json':     new JsonService(function() { return this._record_.encoded() }),
 
-        'POST/edit__':  new JsonService(function(request, task, path, pos, entry) {
+        // item's edit actions for use in the admin interface...
+        'POST/edit':  new JsonService(function(request, task, path, {pos, pos_new, entry} = {})
+        {
             if (entry?.value !== undefined) entry.value = JSONx.decode(entry.value)
             this.mark_editable()
 
@@ -900,47 +902,46 @@ Item.create_api(
                 case "insert_field": this._data_.insert(path, pos, entry); break;
                 case "delete_field": this._data_.delete(path); break;
                 case "update_field": this._data_.update(path, entry); break;
-                case "move_field":   this._data_.move(path, pos, entry); break;     // here, `entry` is a number (the new position)
+                case "move_field":   this._data_.move(path, pos, pos_new); break;
             }
             return schemat.db.update_full(this)
         }),
 
-        // item's edit actions for use in the admin interface...
-        'POST/edit':  new TaskService({
-
-            delete_self(request)   { return schemat.db.delete(this) },
-
-            // TODO: in all the methods below, `this` should be copied and reloaded after modifications
-
-            insert_field(request, path, pos, entry) {
-                // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-                if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
-                this.mark_editable()
-                this._data_.insert(path, pos, entry)
-                return schemat.db.update_full(this)
-            },
-
-            delete_field(request, path) {
-                this.mark_editable()
-                this._data_.delete(path)
-                return schemat.db.update_full(this)
-            },
-
-            update_field(request, path, entry) {
-                // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-                if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
-                this.mark_editable()
-                this._data_.update(path, entry)
-                return schemat.db.update_full(this)
-            },
-
-            move_field(request, path, pos1, pos2) {
-                this.mark_editable()
-                this._data_.move(path, pos1, pos2)
-                return schemat.db.update_full(this)
-            },
-
-        }),
+        // 'POST/edit':  new TaskService({
+        //
+        //     delete_self(request)   { return schemat.db.delete(this) },
+        //
+        //     // TODO: in all the methods below, `this` should be copied and reloaded after modifications
+        //
+        //     insert_field(request, path, pos, entry) {
+        //         // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+        //         if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
+        //         this.mark_editable()
+        //         this._data_.insert(path, pos, entry)
+        //         return schemat.db.update_full(this)
+        //     },
+        //
+        //     delete_field(request, path) {
+        //         this.mark_editable()
+        //         this._data_.delete(path)
+        //         return schemat.db.update_full(this)
+        //     },
+        //
+        //     update_field(request, path, entry) {
+        //         // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+        //         if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
+        //         this.mark_editable()
+        //         this._data_.update(path, entry)
+        //         return schemat.db.update_full(this)
+        //     },
+        //
+        //     move_field(request, path, pos1, pos2) {
+        //         this.mark_editable()
+        //         this._data_.move(path, pos1, pos2)
+        //         return schemat.db.update_full(this)
+        //     },
+        //
+        // }),
     }
 )
 // print(`Item.api.endpoints:`, Item.api.endpoints)
@@ -1192,7 +1193,6 @@ Category.create_api(
             }),
         }),
 
-        // 'POST/edit':  new TaskService({
         'POST/create_item':  new JsonService(
             async function(request, dataState) {
                 /* Create a new item in this category based on request data. */
