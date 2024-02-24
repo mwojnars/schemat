@@ -599,7 +599,10 @@ export class Item {
         /* Create a .net connector and .action triggers for this item's network API. */
         let role = schemat.server_side ? 'server' : 'client'
         this._net_ = new Network(this, role, this.constructor.api)
-        this.action = this._net_.create_triggers(this._actions_ || this.constructor.actions)
+
+        let actions = this._actions_?.object()
+        // print(this._id_, actions)
+        this.action = this._net_.create_triggers(actions || {})   // || this.constructor.actions)
     }
 
 
@@ -639,7 +642,8 @@ export class Item {
         if (prop !== '_extends_' && prop !== '_category_')                  // avoid circular dependency for these special props
         {
             let category = proxy._category_
-            if (this === category?._self_) category = undefined             // avoid circular dependency for RootCategory
+            if (this === category?._self_ && prop === 'defaults')           // avoid circular dependency for RootCategory
+                category = undefined
 
             let defaults = category?.defaults?.get_all(prop)
             if (defaults?.length) streams = [...streams, defaults]

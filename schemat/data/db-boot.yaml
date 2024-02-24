@@ -89,6 +89,10 @@
     _class_: Category
     _container_:
       "@": 1014
+    _actions_:
+      list_items: POST/read:list_items
+      create_item: POST/edit:create_item
+      "@": Catalog
     fields:
       _category_:
         info: Category of this item. Determines item's behavior and the schema of its
@@ -112,8 +116,8 @@
         "@": ITEM
       _container_:
         info: Parent URL container of this object. The chain of containers leading from
-          Site to the object define the access path of this object, which can
-          be converted to a canonical URL path of the object by removing blank
+          Site to the object define the access path of this object, which can be
+          converted to a canonical URL path of the object by removing blank
           segments.
         "@": ITEM
       _status_:
@@ -121,6 +125,21 @@
           database.
         inherit: false
         "@": STRING
+      _actions_:
+        values:
+          "@": STRING
+        info: Network actions (remote methods). Every declaration consists of a full
+          endpoint name, e.g., "GET/endpoint", possibly followed by a
+          ":"-separated list of arguments, e.g., "GET/endpoint:arg1:arg2". The
+          action name must be unique.
+        default:
+          delete_self: POST/edit:delete_self
+          insert_field: POST/edit:insert_field
+          delete_field: POST/edit:delete_field
+          update_field: POST/edit:update_field
+          move_field: POST/edit:move_field
+          "@": Catalog
+        "@": CATALOG
       name:
         info: Display name of the item. May contain spaces, punctuation, non-latin
           characters.
