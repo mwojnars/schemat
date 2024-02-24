@@ -427,8 +427,8 @@ export class Item {
     }
 
     static _create_api() {
-        /* Collect endpoints defined as static properties of the clas, named "PROTO/endpoint" (PROTO in uppercase),
-           and return as an API instance. The result is cached in this._api_ to avoid re-creating the API object.
+        /* Collect endpoints defined as static properties of the class and named "PROTO/endpoint" (PROTO in uppercase)
+           and return as an API instance. The result is cached in this._api_ for reuse by all objects of this class.
          */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
         let names = T.getAllPropertyNames(this).filter(is_endpoint)
