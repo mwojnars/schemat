@@ -57,26 +57,43 @@ export class File extends Item {
         let ext  = name.split('.').pop()
         if (ext !== name) res.type(ext)
     }
-}
 
-File.create_api({        // endpoints...
-
-    'CALL/text':    new InternalService(function (request)
+    static ['CALL/text'] = new InternalService(function (request)
     {
         /* Plain text of this File for Site.import() etc. */
         let txt = this.content_processed
         if (txt === undefined) request.throwNotFound()
         return txt
-    }),
+    })
 
-    'GET/file':     new HttpService(function (request)
+    static ['GET/file'] = new HttpService(function (request)
     {
         // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
         this.setMimeType(request.res, request.path)
         let txt = this.content_processed
         if (txt === undefined) request.throwNotFound()
         return txt
-    }),
+    })
+}
+
+File.create_api({        // endpoints...
+
+    // 'CALL/text':    new InternalService(function (request)
+    // {
+    //     /* Plain text of this File for Site.import() etc. */
+    //     let txt = this.content_processed
+    //     if (txt === undefined) request.throwNotFound()
+    //     return txt
+    // }),
+    //
+    // 'GET/file':     new HttpService(function (request)
+    // {
+    //     // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
+    //     this.setMimeType(request.res, request.path)
+    //     let txt = this.content_processed
+    //     if (txt === undefined) request.throwNotFound()
+    //     return txt
+    // }),
 })
 
 

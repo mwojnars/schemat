@@ -823,6 +823,24 @@ export class Item {
     /***  Endpoints  ***/
 
     static ['CALL/self'] = new InternalService(function() { return this })
+    static ['GET/admin'] = new ReactPage(ItemAdminView)
+    static ['GET/json']  = new JsonService(function() { return this._record_.encoded() })
+
+    static ['POST/edit'] = new JsonService(function(request, task, path, {pos, pos_new, entry} = {})
+    {
+        // item's edit actions for use in the admin interface...
+        if (entry?.value !== undefined) entry.value = JSONx.decode(entry.value)
+        this.mark_editable()            // TODO: `this` object should be copied and then reloaded after modifications
+
+        if (task === "delete_self") return schemat.db.delete(this)
+        switch (task) {
+            case "insert_field": this._data_.insert(path, pos, entry); break;
+            case "delete_field": this._data_.delete(path); break;
+            case "update_field": this._data_.update(path, entry); break;
+            case "move_field":   this._data_.move(path, pos, pos_new); break;
+        }
+        return schemat.db.update_full(this)
+    })
 
 
     /***  Dynamic loading of source code  ***/
@@ -897,28 +915,28 @@ export class Item {
 
 Item.create_api(
     {
-        // http endpoints...
-
-        'CALL/self':    new InternalService(function() { return this }),
-
-        'GET/admin':    new ReactPage(ItemAdminView),
-        'GET/json':     new JsonService(function() { return this._record_.encoded() }),
-
-        // item's edit actions for use in the admin interface...
-        'POST/edit':  new JsonService(function(request, task, path, {pos, pos_new, entry} = {})
-        {
-            if (entry?.value !== undefined) entry.value = JSONx.decode(entry.value)
-            this.mark_editable()            // TODO: `this` object should be copied and then reloaded after modifications
-
-            if (task === "delete_self") return schemat.db.delete(this)
-            switch (task) {
-                case "insert_field": this._data_.insert(path, pos, entry); break;
-                case "delete_field": this._data_.delete(path); break;
-                case "update_field": this._data_.update(path, entry); break;
-                case "move_field":   this._data_.move(path, pos, pos_new); break;
-            }
-            return schemat.db.update_full(this)
-        }),
+        // // http endpoints...
+        //
+        // 'CALL/self':    new InternalService(function() { return this }),
+        //
+        // 'GET/admin':    new ReactPage(ItemAdminView),
+        // 'GET/json':     new JsonService(function() { return this._record_.encoded() }),
+        //
+        // // item's edit actions for use in the admin interface...
+        // 'POST/edit':  new JsonService(function(request, task, path, {pos, pos_new, entry} = {})
+        // {
+        //     if (entry?.value !== undefined) entry.value = JSONx.decode(entry.value)
+        //     this.mark_editable()            // TODO: `this` object should be copied and then reloaded after modifications
+        //
+        //     if (task === "delete_self") return schemat.db.delete(this)
+        //     switch (task) {
+        //         case "insert_field": this._data_.insert(path, pos, entry); break;
+        //         case "delete_field": this._data_.delete(path); break;
+        //         case "update_field": this._data_.update(path, entry); break;
+        //         case "move_field":   this._data_.move(path, pos, pos_new); break;
+        //     }
+        //     return schemat.db.update_full(this)
+        // }),
     }
 )
 // print(`Item.api.endpoints:`, Item.api.endpoints)
@@ -1122,65 +1140,121 @@ export class Category extends Item {
         if (path !== dpath)
             throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
     }
+
+    /***  Endpoints  ***/
+
+    static ['GET/admin'] = new ReactPage(CategoryAdminView)
+    static ['GET/import'] = new HttpService(function (request) {
+        /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
+        this._checkPath(request)
+        request.res.type('js')
+        return this._source_
+    })
+
+    static ['POST/read'] = new TaskService({
+        list_items: new Task({
+            /* Retrieve all children of `this` category server-side and send them to client as a JSON array
+               of flat, fully loaded records.
+             */
+            async process(request, offset, limit) {
+               // TODO: use size limit & offset (pagination).
+               // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
+                let items = []
+                for await (const item of schemat.scan_category(this)) {
+                    await item.load()
+                    items.push(item)
+                }
+                return items
+            },
+            encode_result(items) {
+                return items.map(item => item._record_.encoded())
+            },
+            async decode_result(records) {
+                /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
+                let items = []
+                for (const rec of records) {                    // rec's shape: {id, data}
+                    if (rec.data) {
+                        rec.data = JSON.stringify(rec.data)
+                        schemat.db.cache(rec)                   // need to cache the item in ClientDB
+                        // schemat.unregister(rec.id)          // evict the item from the cache to allow re-loading
+                    }
+                    items.push(await schemat.get_loaded(rec.id))
+                }
+                return items
+            }
+        }),
+    })
+
+    static ['POST/create_item'] = new JsonService(
+        async function(request, dataState) {
+            /* Create a new item in this category based on request data. */
+            let data = await (new Data).__setstate__(dataState)
+            let item = await this.new(data)
+            await schemat.db.insert(item)
+            return item._record_.encoded()
+            // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
+        },
+    // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
+    )
 }
 
 
 Category.create_api(
     {
-        'GET/admin':    new ReactPage(CategoryAdminView),
-        'GET/import':   new HttpService(function (request)
-            {
-                /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
-                this._checkPath(request)
-                request.res.type('js')
-                return this._source_
-            }),
-
-        'POST/read': new TaskService({
-            list_items: new Task({
-                /* Retrieve all children of `this` category server-side and send them to client as a JSON array
-                   of flat, fully loaded records.
-                 */
-                async process(request, offset, limit) {
-                   // TODO: use size limit & offset (pagination).
-                   // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
-                    let items = []
-                    for await (const item of schemat.scan_category(this)) {
-                        await item.load()
-                        items.push(item)
-                    }
-                    return items
-                },
-                encode_result(items) {
-                    return items.map(item => item._record_.encoded())
-                },
-                async decode_result(records) {
-                    /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
-                    let items = []
-                    for (const rec of records) {                    // rec's shape: {id, data}
-                        if (rec.data) {
-                            rec.data = JSON.stringify(rec.data)
-                            schemat.db.cache(rec)                   // need to cache the item in ClientDB
-                            // schemat.unregister(rec.id)          // evict the item from the cache to allow re-loading
-                        }
-                        items.push(await schemat.get_loaded(rec.id))
-                    }
-                    return items
-                }
-            }),
-        }),
-
-        'POST/create_item':  new JsonService(
-            async function(request, dataState) {
-                /* Create a new item in this category based on request data. */
-                let data = await (new Data).__setstate__(dataState)
-                let item = await this.new(data)
-                await schemat.db.insert(item)
-                return item._record_.encoded()
-                // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
-            },
-        // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
-        ),
+        // 'GET/admin':    new ReactPage(CategoryAdminView),
+        // 'GET/import':   new HttpService(function (request)
+        //     {
+        //         /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
+        //         this._checkPath(request)
+        //         request.res.type('js')
+        //         return this._source_
+        //     }),
+        //
+        // 'POST/read': new TaskService({
+        //     list_items: new Task({
+        //         /* Retrieve all children of `this` category server-side and send them to client as a JSON array
+        //            of flat, fully loaded records.
+        //          */
+        //         async process(request, offset, limit) {
+        //            // TODO: use size limit & offset (pagination).
+        //            // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
+        //             let items = []
+        //             for await (const item of schemat.scan_category(this)) {
+        //                 await item.load()
+        //                 items.push(item)
+        //             }
+        //             return items
+        //         },
+        //         encode_result(items) {
+        //             return items.map(item => item._record_.encoded())
+        //         },
+        //         async decode_result(records) {
+        //             /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
+        //             let items = []
+        //             for (const rec of records) {                    // rec's shape: {id, data}
+        //                 if (rec.data) {
+        //                     rec.data = JSON.stringify(rec.data)
+        //                     schemat.db.cache(rec)                   // need to cache the item in ClientDB
+        //                     // schemat.unregister(rec.id)          // evict the item from the cache to allow re-loading
+        //                 }
+        //                 items.push(await schemat.get_loaded(rec.id))
+        //             }
+        //             return items
+        //         }
+        //     }),
+        // }),
+        //
+        // 'POST/create_item':  new JsonService(
+        //     async function(request, dataState) {
+        //         /* Create a new item in this category based on request data. */
+        //         let data = await (new Data).__setstate__(dataState)
+        //         let item = await this.new(data)
+        //         await schemat.db.insert(item)
+        //         return item._record_.encoded()
+        //         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
+        //     },
+        // // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
+        // ),
     }
 )
 
