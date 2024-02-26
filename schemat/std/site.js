@@ -3,6 +3,8 @@ import {print, assert, T, delay} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Request} from '../item.js'
 import {Container, Directory, ID_Namespace} from "./urls.js";
+import {JsonService} from "../services.js";
+import {JSONx} from "../serialize.js";
 
 
 // Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -218,5 +220,24 @@ export class Site extends Directory {
 
         return lead + parts.join('/')
     }
+
+
+    /***  Endpoints  ***/
+
+    // static ['POST/edit'] = new JsonService(function(request, task, item, path, {pos, pos_new, entry} = {})
+    // {
+    //     // item's edit actions for use in the admin interface...
+    //     if (entry?.value !== undefined) entry.value = JSONx.decode(entry.value)
+    //     item.mark_editable()            // TODO: `item` should be copied and then reloaded after modifications
+    //
+    //     if (task === "delete_self") return schemat.db.delete(item)
+    //     switch (task) {
+    //         case "insert_field": item._data_.insert(path, pos, entry); break;
+    //         case "delete_field": item._data_.delete(path); break;
+    //         case "update_field": item._data_.update(path, entry); break;
+    //         case "move_field":   item._data_.move(path, pos, pos_new); break;
+    //     }
+    //     return schemat.db.update_full(item)
+    // })
 }
 

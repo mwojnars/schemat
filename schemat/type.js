@@ -419,7 +419,7 @@ export class GENERIC extends Type {
     /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
 
     static defaultProps = {
-        class: undefined,
+        class: undefined,         // TODO: rename to `subclass`?
         //types: undefined,
         inherit: false,
     }
