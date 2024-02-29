@@ -140,7 +140,7 @@ export class DataIndex extends Index {
            If undefined is returned, the record will consist of a key only.
          */
         if (this.schema.no_value()) return undefined
-        let entries = this.schema.properties.map(prop => [prop, item_record.get(prop)])     // only the first value of a repeated field is included (!)
+        let entries = this.schema.properties.map(prop => [prop, item_record.data.get(prop)])     // only the first value of a repeated field is included (!)
         return Object.fromEntries(entries)
     }
 

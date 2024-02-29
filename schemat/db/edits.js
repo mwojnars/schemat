@@ -1,5 +1,25 @@
 
 export class Edit {
+    /* Specification of an edit operation that should be performed on an object inside the exclusive lock
+       of its storage Block.
+     */
+
+    op          // name of the operation to be performed on object properties, e.g. 'insert', 'delete', 'move', 'field' (meaning 'update')
+    args        // arguments for the operation, e.g. {field: 'name', value: 'new name'}
+    category    // category of the object to be edited; must have a defaults._class_ property defined - that's where the `EDIT_op` function (static method) is looked up
+
+    apply_to_data(data) {
+        const name = `EDIT_${this.op}`
+        const method = object.constructor[name]
+    }
+
+    apply_to_object(object) {
+        const name = `EDIT_${this.op}`
+        const method = object.constructor[name]
+        if (!method) throw new Error(`object does not support edit operation: ${name}`)
+        return method.call(object, this.args)
+    }
+
     process(data) {}
 }
 
