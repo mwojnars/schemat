@@ -642,8 +642,10 @@ export class Item {
                 category = undefined
 
             let defaults = category?.defaults?.get_all(prop)
-            if (defaults?.length) streams = [...streams, defaults]
+            if (defaults?.length) streams.push(defaults)
         }
+        // else if (prop === '_category_')
+        //     streams.push([schemat.Uncategorized])
 
         return type.combine_inherited(streams, proxy)                       // `default` and `impute` of the `type` are applied here
     }
