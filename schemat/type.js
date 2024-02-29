@@ -119,7 +119,7 @@ export class Type {
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
 
-    combine_inherited(arrays, item) {
+    combine_inherited(arrays, item = null) {
         /* Combine arrays of inherited values that match this type. Return an array of values.
            The arrays are either concatenated, or the values are merged into one, depending on `prop.repeated`.
            In the latter case, the default value (if present) is also included in the merge.
@@ -130,7 +130,7 @@ export class Type {
         return value !== undefined ? [value] : []
     }
 
-    merge_inherited(arrays, item) {
+    merge_inherited(arrays, item = null) {
         /* Only used for single-valued schemas (when prop.repeated == false).
            Merge multiple inherited arrays of values matching this type (TODO: check against incompatible inheritance).
            Return the merged value, or undefined if it cannot be determined.
@@ -145,16 +145,17 @@ export class Type {
             // if (values.length > 1) throw new Error("multiple values present for a key in a single-valued type")
             return values[0]
         }
-        return this.impute(item)                        // if no values were found, impute a value
+        return this.impute(item)                        // if no values were found, use `default` or impute()
     }
 
-    impute(item) {
+    impute(item = null) {
         /* Impute a value for an `item`s field described by this type.
            This may return the default value (if present), or run the props.impute() property function.
          */
         let value = this.props.default
         if (value !== undefined) return value
 
+        if (!item) return undefined
         let impute = this.props.impute
         // if (typeof impute === 'string') { ... compile `impute` to a function ... }
 
@@ -619,7 +620,7 @@ export class CATALOG extends Type {
         })
     }
 
-    merge_inherited(arrays, item) {
+    merge_inherited(arrays, item = null) {
         let values = concat(arrays)
         if (!values.length) return this.impute(item)
 

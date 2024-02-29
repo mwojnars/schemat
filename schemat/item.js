@@ -6,7 +6,7 @@ import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
 
 import {JSONx} from './serialize.js'
 import {Catalog, Data} from './data.js'
-import {DATA, DATA_GENERIC, ITEM} from "./type.js"
+import {DATA, DATA_GENERIC, ITEM, generic_type} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 
 import {ItemRecord} from "./db/records.js";
@@ -965,6 +965,16 @@ export class Category extends Item {
             // print('cls:', cls)
             return cls
         }))
+    }
+
+    get_defaults(prop) {
+        /* Return an array of default value(s) for a given `prop` as defined in this category's `defaults`
+           OR in the type's own `default` property. NO imputation even if defined in the prop's type,
+           because the imputation depends on the target object which is missing here.
+         */
+        let type = this.item_schema.get(prop) || generic_type
+        let defaults = this.defaults?.get_all(prop) || []
+        return type.combine_inherited([defaults])
     }
 
     async getModule() {
