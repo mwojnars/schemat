@@ -191,7 +191,7 @@ export class DataBlock extends Block {
         if (data === undefined) return req.forward_down()
 
         for (const edit of edits)
-            // let ret = edit.apply_to(object)
+            // let ret = edit.apply_to(data)
             // if (T.isPromise(ret)) await ret
             data = edit.process(data)
 
