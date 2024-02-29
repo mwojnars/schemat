@@ -552,7 +552,7 @@ export class Item {
            known after loading the item's data.
          */
         if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
-        let cls = this._class_ || await this._category_?._item_class_
+        let cls = (!this._category_?.class_path && this._class_) || await this._category_?._item_class_     // TODO: `class_path` should be replaced with defaults._class_, so the check here could be removed
         if (typeof cls === 'string') cls = await schemat.get_class(cls)
         T.setClass(this, cls || Item)
     }
@@ -949,6 +949,22 @@ export class Category extends Item {
         return Item.from_data(id, data)
     }
 
+    get_defaults(prop) {
+        /* Return an array of default value(s) for a given `prop` as defined in this category's `defaults`
+           OR in the type's own `default` property. NO imputation even if defined in the prop's type,
+           because the imputation depends on the target object which is missing here.
+         */
+        let type = this.item_schema.get(prop) || generic_type
+        let defaults = this.defaults?.get_all(prop) || []
+        return type.combine_inherited([defaults])
+    }
+
+    get_default(prop) {
+        /* Return the first default value for a given `prop`, or undefined. */
+        return this.get_defaults(prop)[0]
+    }
+
+
     get _item_class_() {
         /* Return a (cached) Promise that resolves to the dynamically created class to be used for items of this category. */
         return this.CACHED_PROP(this.getModule().then(module => {
@@ -965,16 +981,6 @@ export class Category extends Item {
             // print('cls:', cls)
             return cls
         }))
-    }
-
-    get_defaults(prop) {
-        /* Return an array of default value(s) for a given `prop` as defined in this category's `defaults`
-           OR in the type's own `default` property. NO imputation even if defined in the prop's type,
-           because the imputation depends on the target object which is missing here.
-         */
-        let type = this.item_schema.get(prop) || generic_type
-        let defaults = this.defaults?.get_all(prop) || []
-        return type.combine_inherited([defaults])
     }
 
     async getModule() {

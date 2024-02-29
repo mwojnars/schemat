@@ -102,6 +102,7 @@
       _class_:
         info: Javascript class (identified by a class path) to be assigned to the object
           after it is loaded from DB.
+        default: Item
         "@": STRING
       _extends_:
         info: An item that serves as a prototype for this one, that is, provides default
