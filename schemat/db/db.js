@@ -1,7 +1,7 @@
 import {DataAccessError, DatabaseError} from "../common/errors.js"
 import {T, assert, print, merge, fileBaseName} from '../common/utils.js'
 import {Item} from "../item.js"
-import {Edit, EditData} from "./edits.js";
+import {Edit} from "./edits.js";
 import {IndexByCategory} from "./index.js";
 import {Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
@@ -130,7 +130,7 @@ export class Ring extends Item {
         let item = T.isNumber(id_or_item) ? null : id_or_item
         let id = item ? item._get_write_id() : id_or_item
         if (!data) data = item.dump_data()
-        let edits = [new EditData(data)]
+        let edits = [new Edit('overwrite', {data})]      // [new EditData(data)]
         return this.handle(req.safe_step(this, 'update', {id, edits}))
     }
 
