@@ -196,7 +196,7 @@ export class DataBlock extends Block {
             if (edit.op) {
                 let ret = edit.apply_to(object)
                 if (T.isPromise(ret)) await ret
-                data = object._data_
+                data = object._data_.dump()
             }
             else data = edit.process(data)
 

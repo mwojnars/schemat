@@ -664,8 +664,14 @@ export class Data extends Catalog {
         return new Data(Object.fromEntries(entries))
     }
 
+    static load(json) {
+        let data = JSONx.parse(json)
+        assert(data instanceof Data, 'JSON string does not contain a Data object')
+        return data
+    }
+
     dump() {
-        /* Encode & stringify self through JSONx. */
+        /* Encode & stringify self through JSONx. Return a JSON string representing the entire contents of this Data instance. */
         return JSONx.stringify(this)
     }
 

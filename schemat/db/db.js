@@ -1,7 +1,7 @@
 import {DataAccessError, DatabaseError} from "../common/errors.js"
 import {T, assert, print, merge, fileBaseName} from '../common/utils.js'
 import {Item} from "../item.js"
-import {EditData} from "./edits.js";
+import {Edit, EditData} from "./edits.js";
 import {IndexByCategory} from "./index.js";
 import {Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
@@ -256,7 +256,8 @@ export class Database extends Item {
 
     async update_full(item) {
         /* Replace all data inside the item's record in DB with item.data. */
-        return this.update(item._id_, new EditData(item.dump_data()))
+        let data = item.dump_data()
+        return this.update(item._id_, new Edit('overwrite', {data}))
     }
 
     async insert(item_or_data, ring_name = null) {

@@ -17,6 +17,11 @@ export class Edit {
     //     return method.call(data, this.args)
     // }
 
+    constructor(op = null, args = {}) {
+        this.op = op
+        this.args = args
+    }
+
     apply_to(object) {
         const method = object[`EDIT_${this.op}`]
         if (!method) throw new Error(`object does not support edit operation: '${this.op}'`)
