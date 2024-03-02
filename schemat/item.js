@@ -847,14 +847,18 @@ export class Item {
     })
 
 
-    /***  Edit operations  ***/
+    /***  Edit operations - not for direct use, only called on the DB node where the object is stored  ***/
 
     EDIT_overwrite({data}) {
         /* Replace the entire collection of own properties of this item, _data_, with a new Data object. */
-        print('EDIT_overwrite')
         if (typeof data === 'string') data = Data.load(data)
         assert(data instanceof Data, data)
         this._data_ = data
+    }
+
+    EDIT_insert({path, pos, entry}) {
+        /* Insert a new property in the _data_, or a new field inside a nested Catalog. */
+        this._data_.insert(path, pos, entry)
     }
 
 
