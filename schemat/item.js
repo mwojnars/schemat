@@ -106,6 +106,31 @@ export class Request {
 
 /**********************************************************************************************************************
  **
+ **  EDIT container object
+ **
+ */
+
+export class Edit {
+    /* Specification of an edit operation that should be performed on an object inside the exclusive lock of its storage Block. */
+
+    op          // name of the operation to be performed on object properties, e.g. 'insert', 'delete', 'move', 'field' (meaning 'update')
+    args        // arguments for the operation, e.g. {field: 'name', value: 'new name'}
+
+    constructor(op = null, args = {}) {
+        this.op = op
+        this.args = args
+    }
+
+    apply_to(object) {
+        const method = object[`EDIT_${this.op}`]
+        if (!method) throw new Error(`object does not support edit operation: '${this.op}'`)
+        return method.call(object, this.args)       // may return a Promise
+    }
+}
+
+
+/**********************************************************************************************************************
+ **
  **  ITEM & CATEGORY
  **
  */
@@ -847,7 +872,21 @@ export class Item {
     })
 
 
-    /***  Edit operations - not for direct use, only called on the server node where the object is stored  ***/
+    /***  Edit operations  ***/
+
+    edit(op, args) {
+        return schemat.site.action.submit_edit(this, new Edit(op, args))
+    }
+
+    edit_insert(path, pos, entry) {
+        return this.edit('insert', {path, pos, entry})
+    }
+
+
+    /***  Implementations of edit operations. Not for direct use, only called on the server node
+          where the object is stored. Every EDIT_{op} method can be async or return a Promise.
+          The names of methods (the {op} suffix) must match the names of operations passed to .edit().
+     ***/
 
     EDIT_overwrite({data}) {
         /* Replace the entire collection of own properties, _data_, with a new Data object. */

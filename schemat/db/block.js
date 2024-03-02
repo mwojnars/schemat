@@ -192,7 +192,7 @@ export class DataBlock extends Block {
 
         let object = await Item.from_data(id, data, {mutable: true})
 
-        for (const edit of edits) {
+        for (const edit of edits) {                 // `edit` is an instance of Edit
             let ret = edit.apply_to(object)
             if (T.isPromise(ret)) await ret
         }
