@@ -190,9 +190,15 @@ export class DataBlock extends Block {
         let data = await this._storage.get(key)
         if (data === undefined) return req.forward_down()
 
+        let object = await Item.from_data(id, data, {mutable: true})
+
         for (const edit of edits)
             // let ret = edit.apply_to(data)
             // if (T.isPromise(ret)) await ret
+            
+            // let ret = edit.apply_to_object(object)
+            // if (T.isPromise(ret)) await ret
+
             data = edit.process(data)
 
         req = req.make_step(this, 'save', {id, key, value: data})

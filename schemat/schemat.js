@@ -222,6 +222,7 @@ export class Schemat {
     register(item) {
         /* Add `item` to the cache. This may override an existing item instance with the same ID. */
         assert(item._id_ !== undefined, `cannot register an item without an ID: ${item}`)
+        assert(!item._meta_.mutable, `cannot register a mutable item: ${item}`)
         this._cache.set(item._id_, item)
         return item
     }

@@ -118,7 +118,7 @@ class ItemProxy {
        Since a Proxy class can't be subclassed, all methods and properties of ItemProxy are static.
      */
 
-    // the suffix appended to a property name when an array of *all* values of this property is requested, not a single value
+    // the suffix appended to a property name when an array of *all* repeated values of this property is requested, not the first value only
     static MULTIPLE_SUFFIX = '_array'
 
     // these special props are always read from regular POJO attributes and NEVER from object's _data_
@@ -142,10 +142,12 @@ class ItemProxy {
         let value = Reflect.get(target, prop, receiver)
 
         if (typeof value === 'object' && value?.[ItemProxy.CACHED]) {
-            // the value comes from a getter and should be cached
+            // the value comes from a getter and is labelled to be "CACHED"? save it in the target object
             value = value.value
-            let stored = (value === undefined) ? ItemProxy.UNDEFINED : value
-            Object.defineProperty(target._self_, prop, {value: stored, writable: false, configurable: true})
+            if (!target._meta_.mutable) {           // caching is only allowed in immutable objects
+                let stored = (value === undefined) ? ItemProxy.UNDEFINED : value
+                Object.defineProperty(target._self_, prop, {value: stored, writable: false, configurable: true})
+            }
             return value
         }
 
@@ -173,7 +175,8 @@ class ItemProxy {
         let values = target._compute_property(prop)
 
         // if (values.length || target.is_loaded)                  // ?? undefined (empty) value is not cached unless the object is fully loaded
-        ItemProxy._cache_property(target, prop, values)
+        if (!target._meta_.mutable)                             // caching is only allowed in immutable objects
+            ItemProxy._cache_property(target, prop, values)
 
         return multiple ? values : values[0]
     }
@@ -398,26 +401,28 @@ export class Item {
         return item
     }
 
-    static create_stub(id) {
+    static create_stub(id, {mutable = false} = {}) {
         /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
         let core = new this(false)
         let item = core._proxy_ = ItemProxy.wrap(core)
         if (id !== undefined) core._id_ = id
+        if (mutable) core._meta_.mutable = true     // this allows EDIT_xxx operations on the object and prevents caching in Schemat's registry
         return item
     }
 
-    static async from_data(id, data) {
-        return Item.from_record(new ItemRecord(id, data))
+    static async from_data(id, data, opts = {}) {
+        /* Create a new Item instance; `data` is a Data object, or an encoded JSON string. */
+        return Item.from_record(new ItemRecord(id, data), opts)
     }
 
-    static async from_record(record /*ItemRecord*/, use_registry = true) {
+    static async from_record(record /*ItemRecord*/, opts = {}) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no ID yet);
            or an instance loaded from DB and filled out with data from `record` (an ItemRecord).
-           In any case, the item returned is *booted* (this._data_ is initialized).
+           In any case, the item returned is *booted* (this._data_ is initialized) and activated (__init__() was called).
          */
         // TODO: if the record is already cached in binary registry, return the cached item...
         // TODO: otherwise, create a new item and cache it in binary registry
-        let item = Item.create_stub(record.id)
+        let item = Item.create_stub(record.id, opts)
         return item.load(record)
     }
 
@@ -840,6 +845,13 @@ export class Item {
         }
         return schemat.db.update_full(this)
     })
+
+
+    /***  Edit operations  ***/
+
+    static EDIT_overwrite(data, args) {
+    }
+
 
 
     /***  Dynamic loading of source code  ***/
