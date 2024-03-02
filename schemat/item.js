@@ -830,7 +830,7 @@ export class Item {
     static ['GET/admin'] = new ReactPage(ItemAdminView)
     static ['GET/json']  = new JsonService(function() { return this._record_.encoded() })
 
-    static ['POST/edit'] = new JsonService(function(request, task, path, {pos, pos_new, entry} = {})
+    static ['POST/edit'] = new JsonService(function(request, task, {path, pos, pos_new, entry} = {})
     {
         // item's edit actions for use in the admin interface...
         if (entry?.value !== undefined) entry.value = JSONx.decode(entry.value)
@@ -847,17 +847,17 @@ export class Item {
     })
 
 
-    /***  Edit operations - not for direct use, only called on the DB node where the object is stored  ***/
+    /***  Edit operations - not for direct use, only called on the server node where the object is stored  ***/
 
     EDIT_overwrite({data}) {
-        /* Replace the entire collection of own properties of this item, _data_, with a new Data object. */
+        /* Replace the entire collection of own properties, _data_, with a new Data object. */
         if (typeof data === 'string') data = Data.load(data)
         assert(data instanceof Data, data)
         this._data_ = data
     }
 
     EDIT_insert({path, pos, entry}) {
-        /* Insert a new property in the _data_, or a new field inside a nested Catalog. */
+        /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
         this._data_.insert(path, pos, entry)
     }
 
