@@ -193,13 +193,12 @@ export class DataBlock extends Block {
         let object = await Item.from_data(id, data, {mutable: true})
 
         for (const edit of edits)
-            // let ret = edit.apply_to(data)
-            // if (T.isPromise(ret)) await ret
-            
-            // let ret = edit.apply_to_object(object)
-            // if (T.isPromise(ret)) await ret
-
-            data = edit.process(data)
+            if (edit.op) {
+                let ret = edit.apply_to(object)
+                if (T.isPromise(ret)) await ret
+                data = object._data_
+            }
+            else data = edit.process(data)
 
         req = req.make_step(this, 'save', {id, key, value: data})
 

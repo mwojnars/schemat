@@ -849,7 +849,10 @@ export class Item {
 
     /***  Edit operations  ***/
 
-    static EDIT_overwrite(data, args) {
+    EDIT_overwrite(args) {
+        /* Replace the entire collection of own properties, _data_, of this item with a new Data object. */
+        assert(args.data instanceof Data)
+        this._data_ = args.data
     }
 
 
