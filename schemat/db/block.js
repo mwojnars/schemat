@@ -192,15 +192,13 @@ export class DataBlock extends Block {
 
         let object = await Item.from_data(id, data, {mutable: true})
 
-        for (const edit of edits)
-            if (edit.op) {
-                let ret = edit.apply_to(object)
-                if (T.isPromise(ret)) await ret
-                data = object._data_.dump()
-            }
-            else data = edit.process(data)
+        for (const edit of edits) {
+            let ret = edit.apply_to(object)
+            if (T.isPromise(ret)) await ret
+        }
 
-        req = req.make_step(this, 'save', {id, key, value: data})
+        let value = object._data_.dump()
+        req = req.make_step(this, 'save', {id, key, value})
 
         if (req.current_ring.readonly)              // can't write the update here in this ring? forward to a higher ring
             return req.forward_save()

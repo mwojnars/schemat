@@ -27,19 +27,4 @@ export class Edit {
         if (!method) throw new Error(`object does not support edit operation: '${this.op}'`)
         return method.call(object, this.args)       // may return a Promise
     }
-
-    process(data) {}
 }
-
-// export class EditData extends Edit {
-//     /* Full item.data overwrite. */
-//
-//     constructor(data) {
-//         super()
-//         this.data = data
-//     }
-//
-//     process(data) {
-//         return this.data
-//     }
-// }
