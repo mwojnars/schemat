@@ -871,6 +871,9 @@ export class Item {
         return schemat.db.update_full(this)
     })
 
+    static ['POST/submit_edit'] = new JsonService(function(request, {target, edits})
+    {
+    })
 
     /***  Edit operations  ***/
 
