@@ -885,6 +885,10 @@ export class Item {
     edit_update(path, entry)            { return this.edit('update', {path, entry}) }
     edit_move(path, pos, pos_new)       { return this.edit('move', {path, pos, pos_new}) }
 
+    delete_self() {
+        /* Delete this object from the database. This can be called client-side or server-side. */
+        return schemat.site.action.delete_object(this._id_)
+    }
 
     /***  Implementations of edit operations. NOT for direct use!
           The methods below are only called on the server where the object is stored, inside the block's object-level lock.

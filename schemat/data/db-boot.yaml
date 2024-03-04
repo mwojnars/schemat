@@ -191,6 +191,7 @@
     _class_: std.Site
     _actions_:
       submit_edits: POST/submit_edits
+      delete_object: POST/delete_object
       "@": base.Catalog
     "@": base.Catalog
   _category_:
