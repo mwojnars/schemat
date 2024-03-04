@@ -133,13 +133,6 @@
           endpoint name, e.g., "GET/endpoint", possibly followed by a
           ":"-separated list of arguments, e.g., "GET/endpoint:arg1:arg2". The
           action name must be unique.
-        default:
-          delete_self: POST/edit:delete_self
-          insert_field: POST/edit:insert_field
-          delete_field: POST/edit:delete_field
-          update_field: POST/edit:update_field
-          move_field: POST/edit:move_field
-          "@": base.Catalog
         "@": type.CATALOG
       name:
         info: Display name of the item. May contain spaces, punctuation, non-latin

@@ -856,24 +856,8 @@ export class Item {
     static ['GET/admin'] = new ReactPage(ItemAdminView)
     static ['GET/json']  = new JsonService(function() { return this._record_.encoded() })
 
-    static ['POST/edit'] = new JsonService(function(request, task, {path, pos, pos_new, entry} = {})
-    {
-        // item's edit actions for use in the admin interface...
-        if (entry?.value !== undefined) entry.value = JSONx.decode(entry.value)
-        this.mark_editable()            // TODO: `this` object should be copied and then reloaded after modifications
 
-        if (task === "delete_self") return schemat.db.delete(this)
-        switch (task) {
-            case "insert_field": this._data_.insert(path, pos, entry); break;
-            case "delete_field": this._data_.delete(path); break;
-            case "update_field": this._data_.update(path, entry); break;
-            case "move_field":   this._data_.move(path, pos, pos_new); break;
-        }
-        return schemat.db.update_full(this)
-    })
-
-
-    /***  Edit operations. All return a Promise  ***/
+    /***  Edit operations. Can be called on a client or a server. All return a Promise.  ***/
 
     edit(op, args) {
         // print('edit:', this._id_, op)
@@ -886,9 +870,10 @@ export class Item {
     edit_move(path, pos, pos_new)       { return this.edit('move', {path, pos, pos_new}) }
 
     delete_self() {
-        /* Delete this object from the database. This can be called client-side or server-side. */
+        /* Delete this object from the database. */
         return schemat.site.action.delete_object(this._id_)
     }
+
 
     /***  Implementations of edit operations. NOT for direct use!
           The methods below are only called on the server where the object is stored, inside the block's object-level lock.
