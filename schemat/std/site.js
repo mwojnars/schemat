@@ -233,7 +233,7 @@ export class Site extends Directory {
         for (let edit of plain_edits) {
             let [id, op, args] = edit
             await schemat.db.update(id, new Edit(op, args))
-            // schemat.unregister(id)
+            schemat.unregister(id)          // TODO: read the newest version of the object from update()'s feedback and reinsert it into the cache
         }
     })
 

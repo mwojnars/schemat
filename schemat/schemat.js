@@ -226,10 +226,14 @@ export class Schemat {
         return item
     }
 
-    unregister(item) {
-        /* Remove an object with a given ID from the cache, but only if this exact object is still there. */
-        if (this._cache.get(item._id_) === item)
-            this._cache.delete(item._id_)
+    unregister(item_or_id) {
+        /* Remove an object with a given ID from the cache. If the argument is an object not ID,
+           it gets removed from the cache only if this exact instance (not another copy with the same ID) is there.
+         */
+        let item = T.isNumber(item_or_id) ? null : item_or_id
+        let id = item ? item_or_id._id_ : item_or_id
+        if (!item || this._cache.get(id) === item)
+            this._cache.delete(id)
     }
 
     get_item(id, {version = null} = {}) {
