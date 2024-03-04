@@ -3,7 +3,7 @@
   info: Data stored in a YAML file.
   fields:
     filename:
-      "@": STRING
+      "@": type.STRING
     "@": base.Catalog
   _category_:
     "@": 0
@@ -13,27 +13,27 @@
   class_path: /system/local/db/mysql.js:MySQL
   fields:
     host:
-      "@": STRING
+      "@": type.STRING
     port:
-      "@": STRING
+      "@": type.STRING
     user:
-      "@": STRING
+      "@": type.STRING
     database:
-      "@": STRING
+      "@": type.STRING
     password:
-      "@": STRING
+      "@": type.STRING
     connection:
       info: Javascript object containing connection parameters.
-      "@": GENERIC
+      "@": type.GENERIC
     tables:
       info: Mapping of categories (their paths) to names of sql tables.
       values:
-        "@": STRING
-      "@": CATALOG
+        "@": type.STRING
+      "@": type.CATALOG
     offset:
-      "@": INTEGER
+      "@": type.INTEGER
     readonly:
-      "@": BOOLEAN
+      "@": type.BOOLEAN
     "@": base.Catalog
   _category_:
     "@": 0

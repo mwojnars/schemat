@@ -151,7 +151,7 @@ export class Schemat {
         await classpath.setModule("db", "./db/db.js")
 
         // add all Type subtypes (all-caps class names) + TypeWrapper
-        await classpath.setModule("", "./type.js", {accept: (name) =>
+        await classpath.setModule("type", "./type.js", {accept: (name) =>
                 name.toUpperCase() === name || name === 'TypeWrapper'
         })
 

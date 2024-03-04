@@ -5,51 +5,51 @@
   fields:
     defaults:
       values:
-        "@": GENERIC
+        "@": type.GENERIC
       info: Default values for properties of objects in this category. The key cannot
         be empty. Same key can be repeated.
-      "@": CATALOG
+      "@": type.CATALOG
     class_path:
       info: SUN path to a Javascript file that contains a (base) class for this
         category. May contain an optional class name appended after colon ':'.
         If the class name is missing (no colon), default import from the file is
         used.
-      "@": STRING
+      "@": type.STRING
     class_name:
       info: Custom internal name for the Class of this category, for debugging. Also
         used as an alias when exporting the Class from the category's module.
-      "@": STRING
+      "@": type.STRING
     class_init:
       repeated: true
       info: Module-level initialization for this category's Javascript class.
         Typically contains import statements and global variables. Precedes the
         Class definition (`class_body`, `views`) in the category's module code.
-      "@": CODE
+      "@": type.CODE
     class_body:
       repeated: true
       info: Source code of the class (a body without heading) that will be created for
         this category. The class inherits from the `class_path` class, or the
         class of the first base category, or the top-level Item.
-      "@": CODE
+      "@": type.CODE
     pages:
       values:
-        "@": CODE
+        "@": type.CODE
       info: Source code of functions that generate static HTML response for particular
         access methods of this category's items.
-      "@": CATALOG
+      "@": type.CATALOG
     views:
       values:
-        "@": CODE
+        "@": type.CODE
       info: "Body of React functional components (no function header) to be added
         dynamically to the category's Class body as VIEW_name(props) methods for
         rendering item views. Inside the function body, `this` refers the item
         to be rendered. Alternatively, the code of each view may consist of a
         method header, view() {...}, and be accompanied by supporting methods:
         title(), assets() - like in a class body."
-      "@": CATALOG
+      "@": type.CATALOG
     default_endpoints:
       values:
-        "@": STRING
+        "@": type.STRING
       info: List of [PROTOCOL, endpoint] pairs that define default endpoint(s) for
         objects of this category when requested via a URL with no explicit
         endpoint.
@@ -58,32 +58,32 @@
         GET/2: admin
         CALL: self
         "@": base.Catalog
-      "@": CATALOG
+      "@": type.CATALOG
     html_assets:
       info: HTML code to be inserted in the html/head section of every page that is
         rendered from a view function of this category.
-      "@": CODE
+      "@": type.CODE
     cache_ttl:
       default: 5
       info: Time To Live (TTL). Determines for how long (in seconds) an item of this
         category is kept in a server-side cache after being loaded from DB, for
         reuse by subsequent requests. A real number. If zero, the items are
         evicted immediately after each request.
-      "@": NUMBER
+      "@": type.NUMBER
     fields:
       values:
-        "@": TYPE
+        "@": type.TYPE
       info: Fields must have unique names.
-      "@": CATALOG
+      "@": type.CATALOG
     item_schema:
       info: The DATA schema for this category's items. A virtual (non-editable) field
         automatically imputed from the `fields` property.
-      "@": ITEM_SCHEMA
+      "@": type.ITEM_SCHEMA
     allow_custom_fields:
       default: false
       info: If true, it is allowed to use undefined (out-of-schema) fields in items -
         their schema is GENERIC()
-      "@": BOOLEAN
+      "@": type.BOOLEAN
     "@": base.Catalog
   defaults:
     _class_: base.Category
@@ -98,12 +98,12 @@
         info: Category of this item. Determines item's behavior and the schema of its
           attributes. Each category should be an item of the Root Category
           (IID=0).
-        "@": ITEM
+        "@": type.ITEM
       _class_:
         info: Javascript class (identified by a class path) to be assigned to the object
           after it is loaded from DB.
         default: base.Item
-        "@": STRING
+        "@": type.STRING
       _extends_:
         info: An item that serves as a prototype for this one, that is, provides default
           values for missing properties of this item. Multiple prototypes are
@@ -114,21 +114,21 @@
           Item.getInherited(). In this way, subcategories inherit individual
           field schemas as defined in base categories.
         inherit: false
-        "@": ITEM
+        "@": type.ITEM
       _container_:
         info: Parent URL container of this object. The chain of containers leading from
           Site to the object define the access path of this object, which can be
           converted to a canonical URL path of the object by removing blank
           segments.
-        "@": ITEM
+        "@": type.ITEM
       _status_:
         info: Set to "DRAFT" if the object's record is not yet fully initialized in the
           database.
         inherit: false
-        "@": STRING
+        "@": type.STRING
       _actions_:
         values:
-          "@": STRING
+          "@": type.STRING
         info: Network actions (remote methods). Every declaration consists of a full
           endpoint name, e.g., "GET/endpoint", possibly followed by a
           ":"-separated list of arguments, e.g., "GET/endpoint:arg1:arg2". The
@@ -140,18 +140,18 @@
           update_field: POST/edit:update_field
           move_field: POST/edit:move_field
           "@": base.Catalog
-        "@": CATALOG
+        "@": type.CATALOG
       name:
         info: Display name of the item. May contain spaces, punctuation, non-latin
           characters.
         default: ""
-        "@": STRING
+        "@": type.STRING
       info:
         info: Description of the item.
-        "@": TEXT
+        "@": type.TEXT
       html_title:
         info: HTML title to be used for when this item is rendered.
-        "@": STRING
+        "@": type.STRING
       "@": base.Catalog
     "@": base.Catalog
   "@": base.Data
@@ -163,29 +163,29 @@
     base_url:
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
-      "@": STRING
+      "@": type.STRING
     database:
       info: Database instance that contains all data of this site
-      "@": ITEM
+      "@": type.ITEM
     entries:
       values:
-        "@": ITEM
+        "@": type.ITEM
       repeated: true
       info: URL prefixes (as keys) mapped to items that shall perform routing of
         requests whose URLs start with a given prefix. NO leading/trailing
         slashes.
-      "@": CATALOG
+      "@": type.CATALOG
     default_path:
       info: URL path of a default container that can be used to access any object via
         its ID. For internal purposes. Should contain a leading slash and no
         trailing slash.
-      "@": PATH
+      "@": type.PATH
     _path_:
       default: /
-      "@": STRING
+      "@": type.STRING
     _url_:
       default: /
-      "@": STRING
+      "@": type.STRING
     "@": base.Catalog
   defaults:
     _class_: std.Site
@@ -198,18 +198,18 @@
   info: File with a text content.
   fields:
     content:
-      "@": CODE
+      "@": type.CODE
     mimetype:
       info: MIME type string (must include '/') to be set as Content-Type when serving
         file download; or an extension ('js', 'jpg', ...) to be converted to an
         appropriate type. If missing, response mimetype is inferred from the URL
         path extension, if present.
-      "@": STRING
+      "@": type.STRING
     format:
-      "@": STRING
+      "@": type.STRING
     _is_file:
       default: true
-      "@": BOOLEAN
+      "@": type.BOOLEAN
     "@": base.Catalog
   defaults:
     _class_: std.File
@@ -224,7 +224,7 @@
     "@": 3
   fields:
     local_path:
-      "@": STRING
+      "@": type.STRING
     "@": base.Catalog
   defaults:
     _class_: std.FileLocal
@@ -239,11 +239,11 @@
   fields:
     entries:
       values:
-        "@": ITEM
-      "@": CATALOG
+        "@": type.ITEM
+      "@": type.CATALOG
     _is_folder:
       default: true
-      "@": BOOLEAN
+      "@": type.BOOLEAN
     "@": base.Catalog
   defaults:
     _class_: std.Directory
@@ -260,7 +260,7 @@
     "@": 5
   fields:
     local_path:
-      "@": STRING
+      "@": type.STRING
     "@": base.Catalog
   defaults:
     _class_: std.LocalFolder
@@ -287,7 +287,7 @@
       category:
         "@": 0
       info: Optional category(ies) of items handled by this application.
-      "@": ITEM
+      "@": type.ITEM
     "@": base.Catalog
   defaults:
     _class_: std.ID_Namespace
@@ -305,8 +305,8 @@
       values:
         category:
           "@": 0
-        "@": ITEM
-      "@": CATALOG
+        "@": type.ITEM
+      "@": type.CATALOG
     "@": base.Catalog
   defaults:
     _class_: std.CategoryID_Namespace
@@ -322,19 +322,19 @@
   class_path: /system/local/type_item.js:TypeItem
   fields:
     class_path:
-      "@": STRING
+      "@": type.STRING
     encode:
       info: Body of a function with the signature `encode(obj,props={})`. Should
         return a state that encodes the input object/value, `obj`.
-      "@": CODE
+      "@": type.CODE
     decode:
-      "@": CODE
+      "@": type.CODE
     initial:
-      "@": GENERIC
+      "@": type.GENERIC
     properties:
       values:
-        "@": TYPE
-      "@": CATALOG
+        "@": type.TYPE
+      "@": type.CATALOG
     "@": base.Catalog
   _category_:
     "@": 0
@@ -345,7 +345,7 @@
   fields:
     rings:
       info: Array of Ring objects
-      "@": GENERIC
+      "@": type.GENERIC
     "@": base.Catalog
   defaults:
     _class_: db.Database
@@ -359,22 +359,22 @@
     object.
   fields:
     readonly:
-      "@": BOOLEAN
+      "@": type.BOOLEAN
     start_id:
       info: the lowest ID allowed in this ring
-      "@": INTEGER
+      "@": type.INTEGER
     stop_id:
       info: upper bound for IDs in this ring (all IDs must be strictly lower than
         this)
-      "@": INTEGER
+      "@": type.INTEGER
     data_sequence:
       info: DataSequence that keeps all primary objects of this ring
       category:
         "@": 14
-      "@": ITEM
+      "@": type.ITEM
     indexes:
       info: Map of Indexes and their names
-      "@": GENERIC
+      "@": type.GENERIC
     "@": base.Catalog
   defaults:
     _class_: db.Ring
@@ -390,21 +390,21 @@
       info: parent Ring of this sequence
       category:
         "@": 12
-      "@": ITEM
+      "@": type.ITEM
     schema:
       info: schema of records in this sequence as SequenceSchema
-      "@": GENERIC
+      "@": type.GENERIC
     blocks:
       info: array of Blocks containing records of this sequence
-      "@": GENERIC
+      "@": type.GENERIC
     derived:
       info: array of derived sequences (indexes) that must be updated when this
         sequence changes
-      "@": GENERIC
+      "@": type.GENERIC
     flush_delay:
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together
-      "@": NUMBER
+      "@": type.NUMBER
     "@": base.Catalog
   _category_:
     "@": 0
@@ -429,7 +429,7 @@
   fields:
     source:
       info: source Sequence that feeds data to this index
-      "@": ITEM
+      "@": type.ITEM
     "@": base.Catalog
   _extends_:
     "@": 13
@@ -468,13 +468,13 @@
   fields:
     sequence:
       info: parent Sequence this block is a part of
-      "@": ITEM
+      "@": type.ITEM
     filename:
       info: path to a local file that contains records of this block
-      "@": STRING
+      "@": type.STRING
     format:
       info: "storage format: data-yaml, index-jl, rocksdb (in the future), ..."
-      "@": STRING
+      "@": type.STRING
     "@": base.Catalog
   _category_:
     "@": 0

@@ -8,7 +8,7 @@
     static error() { throw new Error('Varia/code/error()') }
   fields:
     title:
-      "@": STRING
+      "@": type.STRING
     "@": base.Catalog
   _category_:
     "@": 0
@@ -20,7 +20,7 @@
       =:
         - "@": 102
         - {}
-      "@": TypeWrapper
+      "@": type.TypeWrapper
     "@": base.Catalog
   class_init: |
     // DRAFT...
