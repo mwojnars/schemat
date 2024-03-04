@@ -1,7 +1,7 @@
 import {set_global} from "../common/globals.js"
 import {print, assert, T, delay} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
-import {Request} from '../item.js'
+import {Edit, Request} from '../item.js'
 import {Container, Directory, ID_Namespace} from "./urls.js";
 import {JsonService} from "../services.js";
 import {JSONx} from "../serialize.js";
@@ -224,20 +224,17 @@ export class Site extends Directory {
 
     /***  Endpoints  ***/
 
-    // static ['POST/edit'] = new JsonService(function(request, task, item, path, {pos, pos_new, entry} = {})
-    // {
-    //     // item's edit actions for use in the admin interface...
-    //     if (entry?.value !== undefined) entry.value = JSONx.decode(entry.value)
-    //     item.mark_editable()            // TODO: `item` should be copied and then reloaded after modifications
-    //
-    //     if (task === "delete_self") return schemat.db.delete(item)
-    //     switch (task) {
-    //         case "insert_field": item._data_.insert(path, pos, entry); break;
-    //         case "delete_field": item._data_.delete(path); break;
-    //         case "update_field": item._data_.update(path, entry); break;
-    //         case "move_field":   item._data_.move(path, pos, pos_new); break;
-    //     }
-    //     return schemat.db.update_full(item)
-    // })
+    static ['POST/submit_edits'] = new JsonService(async function(request, ...plain_edits)
+    {
+        /* Submit a list of object edits to the DB. Each plain edit is a 3-element array: [id, op, args],
+           where `id` is the ID of the object to be edited, `op` is the name of the EDIT_* operation to be executed,
+           and `args` is a dictionary of arguments to be passed to the operation.
+         */
+        for (let edit of plain_edits) {
+            let [id, op, args] = edit
+            await schemat.db.update(id, new Edit(op, args))
+        }
+    })
+
 }
 

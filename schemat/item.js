@@ -629,6 +629,7 @@ export class Item {
         let api = this.constructor._api_ || this.constructor._create_api()
         this._net_ = new Network(this, role, api)
         this.action = this._net_.create_triggers(this._actions_?.object())
+        // print('actions:', this._actions_?.object())
     }
 
 
@@ -871,14 +872,11 @@ export class Item {
         return schemat.db.update_full(this)
     })
 
-    static ['POST/submit_edit'] = new JsonService(function(request, {target, edits})
-    {
-    })
 
     /***  Edit operations  ***/
 
     edit(op, args) {
-        return schemat.site.action.submit_edit(this, new Edit(op, args))
+        return schemat.site.action.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
     }
 
     edit_insert(path, pos, entry) {

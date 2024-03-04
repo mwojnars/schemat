@@ -129,7 +129,7 @@
       _actions_:
         values:
           "@": type.STRING
-        info: Network actions (remote methods). Every declaration consists of a full
+        info: Network actions (remote methods) exposed by the object. Every declaration consists of a full
           endpoint name, e.g., "GET/endpoint", possibly followed by a
           ":"-separated list of arguments, e.g., "GET/endpoint:arg1:arg2". The
           action name must be unique.
@@ -189,6 +189,9 @@
     "@": base.Catalog
   defaults:
     _class_: std.Site
+    _actions_:
+      submit_edits: POST/submit_edits
+      "@": base.Catalog
     "@": base.Catalog
   _category_:
     "@": 0
