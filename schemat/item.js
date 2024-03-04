@@ -876,13 +876,13 @@ export class Item {
     /***  Edit operations. All return a Promise  ***/
 
     edit(op, args) {
-        print('edit:', this._id_, op)
+        // print('edit:', this._id_, op)
         return schemat.site.action.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
     }
 
-    edit_insert({path, pos, entry})     { entry.value = JSONx.decode(entry.value); return this.edit('insert', {path, pos, entry}) }
+    edit_insert({path, pos, entry})     { return this.edit('insert', {path, pos, entry}) }
     edit_delete({path})                 { return this.edit('delete', {path}) }
-    edit_update({path, entry})          { if (entry?.value !== undefined) entry.value = JSONx.decode(entry.value); return this.edit('update', {path, entry}) }
+    edit_update({path, entry})          { return this.edit('update', {path, entry}) }
     edit_move({path, pos, pos_new})     { return this.edit('move', {path, pos, pos_new}) }
 
 
