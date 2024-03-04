@@ -137,15 +137,14 @@ export class Schemat {
         // print('initClasspath() started...')
         let classpath = new Classpath
 
-        classpath.setMany("", Map, Catalog, Data)               // add Map, Catalog & Data to the classpath
-        // await classpath.setModule("", "./db/edits.js")          // add all Edit (sub)types for intra-cluster communication
-        await classpath.setModule("", "./db/records.js")
-        await classpath.setModule("", "./item.js")
+        classpath.setMany("base", Map, Catalog, Data)               // add Map, Catalog & Data to the classpath
+        await classpath.setModule("base", "./item.js")
         await classpath.setModule("std", "./std/files.js")
         await classpath.setModule("std", "./std/site.js")
         await classpath.setModule("std", "./std/urls.js")
 
         // if (this.server_side) {
+        await classpath.setModule("db", "./db/records.js")
         await classpath.setModule("db", "./db/block.js")
         await classpath.setModule("db", "./db/sequence.js")
         await classpath.setModule("db", "./db/index.js")

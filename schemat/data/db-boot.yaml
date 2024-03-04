@@ -57,7 +57,7 @@
         GET: home
         GET/2: admin
         CALL: self
-        "@": Catalog
+        "@": base.Catalog
       "@": CATALOG
     html_assets:
       info: HTML code to be inserted in the html/head section of every page that is
@@ -84,15 +84,15 @@
       info: If true, it is allowed to use undefined (out-of-schema) fields in items -
         their schema is GENERIC()
       "@": BOOLEAN
-    "@": Catalog
+    "@": base.Catalog
   defaults:
-    _class_: Category
+    _class_: base.Category
     _container_:
       "@": 1014
     _actions_:
       list_items: POST/read:list_items
       create_item: POST/create_item
-      "@": Catalog
+      "@": base.Catalog
     fields:
       _category_:
         info: Category of this item. Determines item's behavior and the schema of its
@@ -102,7 +102,7 @@
       _class_:
         info: Javascript class (identified by a class path) to be assigned to the object
           after it is loaded from DB.
-        default: Item
+        default: base.Item
         "@": STRING
       _extends_:
         info: An item that serves as a prototype for this one, that is, provides default
@@ -139,7 +139,7 @@
           delete_field: POST/edit:delete_field
           update_field: POST/edit:update_field
           move_field: POST/edit:move_field
-          "@": Catalog
+          "@": base.Catalog
         "@": CATALOG
       name:
         info: Display name of the item. May contain spaces, punctuation, non-latin
@@ -152,9 +152,9 @@
       html_title:
         info: HTML title to be used for when this item is rendered.
         "@": STRING
-      "@": Catalog
-    "@": Catalog
-  "@": Data
+      "@": base.Catalog
+    "@": base.Catalog
+  "@": base.Data
 - __id: 1
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
@@ -186,13 +186,13 @@
     _url_:
       default: /
       "@": STRING
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: std.Site
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 3
   name: File
   info: File with a text content.
@@ -210,13 +210,13 @@
     _is_file:
       default: true
       "@": BOOLEAN
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: std.File
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 4
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
@@ -225,13 +225,13 @@
   fields:
     local_path:
       "@": STRING
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: std.FileLocal
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 5
   name: Directory
   info: A directory of files, each file has a unique name (path). May contain
@@ -244,13 +244,13 @@
     _is_folder:
       default: true
       "@": BOOLEAN
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: std.Directory
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 6
   name: LocalFolder
   info: |-
@@ -261,23 +261,23 @@
   fields:
     local_path:
       "@": STRING
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: std.LocalFolder
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 7
   name: Namespace
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
   defaults:
     _class_: std.Namespace
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 8
   name: ID_Namespace
   info: Namespace that serves items on simple URLs of the form /IID. Mainly used
@@ -288,13 +288,13 @@
         "@": 0
       info: Optional category(ies) of items handled by this application.
       "@": ITEM
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: std.ID_Namespace
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 9
   name: CategoryID_Namespace
   info: "Namespace for accessing public data through verbose paths of the form:
@@ -307,13 +307,13 @@
           "@": 0
         "@": ITEM
       "@": CATALOG
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: std.CategoryID_Namespace
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 10
   name: Type
   info: Category of items that represent data types. Some of the items are
@@ -335,10 +335,10 @@
       values:
         "@": TYPE
       "@": CATALOG
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 11
   name: Database
   info: Internal database. An array of data Rings stacked on top of each other.
@@ -346,13 +346,13 @@
     rings:
       info: Array of Ring objects
       "@": GENERIC
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: db.Database
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 12
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
@@ -375,13 +375,13 @@
     indexes:
       info: Map of Indexes and their names
       "@": GENERIC
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: db.Ring
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 13
   name: Sequence
   info: Base category for sequences of key-value records, either data or indexes.
@@ -405,23 +405,23 @@
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together
       "@": NUMBER
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 14
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
   fields:
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: db.DataSequence
-    "@": Catalog
+    "@": base.Catalog
   _extends_:
     "@": 13
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 15
   name: Index
   info: Base category for (derived) sequences that represent indexes over another
@@ -430,37 +430,37 @@
     source:
       info: source Sequence that feeds data to this index
       "@": ITEM
-    "@": Catalog
+    "@": base.Catalog
   _extends_:
     "@": 13
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 16
   name: DataIndex
   info: An Index that receives record updates from the main data sequence, so
     input records represent objects.
   fields:
-    "@": Catalog
+    "@": base.Catalog
   _extends_:
     "@": 15
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 17
   name: IndexByCategory
   info: "Index that maps categories to member objects: the key is [category ID,
     item ID]."
   fields:
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: db.IndexByCategory
-    "@": Catalog
+    "@": base.Catalog
   _extends_:
     "@": 16
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 18
   name: Block
   info: A continuous subrange of records of a data/index sequence, physically
@@ -475,33 +475,33 @@
     format:
       info: "storage format: data-yaml, index-jl, rocksdb (in the future), ..."
       "@": STRING
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 19
   name: DataBlock
   info: Block of a DataSequence.
   fields:
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: db.DataBlock
-    "@": Catalog
+    "@": base.Catalog
   _extends_:
     "@": 18
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 20
   name: IndexBlock
   info: Block of an Index sequence.
   fields:
-    "@": Catalog
+    "@": base.Catalog
   defaults:
     _class_: db.IndexBlock
-    "@": Catalog
+    "@": base.Catalog
   _extends_:
     "@": 18
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data

@@ -4,10 +4,10 @@
   fields:
     filename:
       "@": STRING
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 101
   name: MysqlDB
   class_path: /system/local/db/mysql.js:MySQL
@@ -34,31 +34,31 @@
       "@": INTEGER
     readonly:
       "@": BOOLEAN
-    "@": Catalog
+    "@": base.Catalog
   _category_:
     "@": 0
-  "@": Data
+  "@": base.Data
 - __id: 102
   name: STRING
   class_path: /system/local/type.js:STRING
   _category_:
     "@": 10
-  "@": Data
+  "@": base.Data
 - __id: 103
   name: NUMBER
   class_path: /system/local/type.js:NUMBER
   _category_:
     "@": 10
-  "@": Data
+  "@": base.Data
 - __id: 104
   name: INTEGER
   class_path: /system/local/type.js:INTEGER
   _category_:
     "@": 10
-  "@": Data
+  "@": base.Data
 - __id: 105
   name: URL
   class_path: /system/local/type.js:URL
   _category_:
     "@": 10
-  "@": Data
+  "@": base.Data
