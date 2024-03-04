@@ -289,14 +289,14 @@ export class CatalogTable extends Component {
         delete: async (pos) => {
             /* delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete */
             // TODO: lock/freeze/suspense the UI until the server responds to prevent user from making multiple modifications at the same time
-            await item.edit_delete({path: [...path, pos]})
+            await item.edit_delete([...path, pos])
             setEntries(prev => [...prev.slice(0,pos), ...prev.slice(pos+1)])
         },
 
         move: async (pos, delta) => {
             // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
             assert(delta === -1 || delta === +1)
-            await item.edit_move({path, pos, pos_new: pos+delta})
+            await item.edit_move(path, pos, pos+delta)
             setEntries(prev => {
                 // if (pos+delta < 0 || pos+delta >= prev.length) return prev
                 let entries = [...prev];
@@ -331,15 +331,15 @@ export class CatalogTable extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (type.isCatalog()) item.edit_insert({path, pos, entry: {key, value}})
+                if (type.isCatalog()) item.edit_insert(path, pos, {key, value})
                 else prev[pos].saveNew = (value) =>
-                    item.edit_insert({path, pos, entry: {key, value}}).then(() => unnew())
+                    item.edit_insert(path, pos, {key, value}).then(() => unnew())
 
                 return [...prev]
             })
         },
         updateKey: (pos, newKey) => {
-            return item.edit_update({path: [...path, pos], entry: {key: newKey}})
+            return item.edit_update([...path, pos], {key: newKey})
             // return item.client.send_field_update([...path, pos], {key: newKey})
             // return item.client.update_field()
             // return item.server.field_update()
@@ -347,7 +347,7 @@ export class CatalogTable extends Component {
             // return item.server.update({field: ...})
         },
         updateValue: (pos, newValue, type) => {
-            return item.edit_update({path: [...path, pos], entry: {value: newValue}})
+            return item.edit_update([...path, pos], {value: newValue})
         }
     }}
 

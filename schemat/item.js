@@ -880,10 +880,10 @@ export class Item {
         return schemat.site.action.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
     }
 
-    edit_insert({path, pos, entry})     { return this.edit('insert', {path, pos, entry}) }
-    edit_delete({path})                 { return this.edit('delete', {path}) }
-    edit_update({path, entry})          { return this.edit('update', {path, entry}) }
-    edit_move({path, pos, pos_new})     { return this.edit('move', {path, pos, pos_new}) }
+    edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
+    edit_delete(path)                   { return this.edit('delete', {path}) }
+    edit_update(path, entry)            { return this.edit('update', {path, entry}) }
+    edit_move(path, pos, pos_new)       { return this.edit('move', {path, pos, pos_new}) }
 
 
     /***  Implementations of edit operations. NOT for direct use!
