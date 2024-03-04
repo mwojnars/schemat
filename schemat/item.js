@@ -876,17 +876,21 @@ export class Item {
     /***  Edit operations  ***/
 
     edit(op, args) {
+        print('edit:', this._id_, op)
         return schemat.site.action.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
     }
 
-    edit_insert(path, pos, entry) {
-        return this.edit('insert', {path, pos, entry})
-    }
+    edit_insert({path, pos, entry})     { return this.edit('insert', {path, pos, entry}) }
+    edit_delete({path})                 { return this.edit('delete', {path}) }
+    edit_update({path, entry})          { return this.edit('update', {path, entry}) }
+    edit_move({path, pos, pos_new})     { return this.edit('move', {path, pos, pos_new}) }
 
 
-    /***  Implementations of edit operations. Not for direct use, only called on the server node
-          where the object is stored. Every EDIT_{op} method can be async or return a Promise.
-          The names of methods (the {op} suffix) must match the names of operations passed to .edit().
+    /***  Implementations of edit operations. NOT for direct use!
+          The methods below are only called on the server where the object is stored, inside the block's object-level lock.
+          New edit ops can be added in subclasses. An EDIT_{op} method can be async or return a Promise.
+          The names of methods (the {op} suffix) must match the names of operations passed by callers to .edit().
+          Typically, when adding a new OP, a corresponding shortcut method, edit_OP(), is added to the subclass.
      ***/
 
     EDIT_overwrite({data}) {
@@ -899,6 +903,21 @@ export class Item {
     EDIT_insert({path, pos, entry}) {
         /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
         this._data_.insert(path, pos, entry)
+    }
+
+    EDIT_delete({path}) {
+        /* Delete a property; or a field inside a nested Catalog in a property. */
+        this._data_.delete(path)
+    }
+
+    EDIT_update({path, entry}) {
+        /* Update a property; or a field inside a nested Catalog. */
+        this._data_.update(path, entry)
+    }
+
+    EDIT_move({path, pos, pos_new}) {
+        /* Move a property or a field inside a nested Catalog. */
+        this._data_.move(path, pos, pos_new)
     }
 
 
