@@ -889,9 +889,9 @@ export class Item {
      ***/
 
     EDIT_overwrite({data}) {
-        /* Replace the entire collection of own properties, _data_, with a new Data object. */
+        /* Replace the entire set of own properties, _data_, with a new Data object. */
         if (typeof data === 'string') data = Data.load(data)
-        assert(data instanceof Data, data)
+        assert(data instanceof Data)
         this._data_ = data
     }
 
