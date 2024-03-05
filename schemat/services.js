@@ -412,15 +412,10 @@ export class Network {
         this.target = target
         this.role = role
         this.api  = api
-        this._create_all_triggers()
-    }
 
-    _create_all_triggers() {
-        /* Create a trigger for each endpoint of the API. */
-
-        let target = this.target
         let server_side = (this.role === Network.SERVER)
 
+        // create triggers for all endpoints in the API
         for (let [endpoint_string, service] of Object.entries(this.api.services))
         {
             let {protocol, name} = new Endpoint(endpoint_string)
