@@ -1,5 +1,4 @@
 import {T, assert, trycatch} from "../common/utils.js";
-import {JSONx} from "../serialize.js";
 import {Catalog} from '../data.js'
 import {CATALOG, generic_string} from "../type.js";
 
@@ -340,11 +339,6 @@ export class CatalogTable extends Component {
         },
         updateKey: (pos, newKey) => {
             return item.edit_update([...path, pos], {key: newKey})
-            // return item.client.send_field_update([...path, pos], {key: newKey})
-            // return item.client.update_field()
-            // return item.server.field_update()
-            // return item.server.update_field()
-            // return item.server.update({field: ...})
         },
         updateValue: (pos, newValue, type) => {
             return item.edit_update([...path, pos], {value: newValue})
