@@ -748,13 +748,6 @@ export class Item {
         return false
     }
 
-    mark_editable() {
-        /* Mark this item as editable and remove it from the registry. */
-        schemat.unregister(this)
-        this._meta_.mutable = true
-        return this
-    }
-
     async insert_self() {
         /* Insert this (newborn) object and, recursively, all the newborn objects referenced by this one, to the database. */
 
