@@ -376,16 +376,16 @@ export class Network {
     target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
     role        // current network role of the `target` for the `api`; typically, 'client' or 'server'
     api         // API to be exposed on this network interface
-    call        // {action: trigger} map of action names to their trigger functions; each trigger is already bound to the target object (!)
+    call        // {action: trigger} map of action trigger functions; each trigger is already bound to the target object (!)
 
     constructor(target, role, api, actions) {
         this.target = target
         this.role = role
         this.api  = api
-        this.call = this.create_triggers(actions)
+        this.call = this._create_triggers(actions)
     }
 
-    create_triggers(actions) {
+    _create_triggers(actions) {
         /* Map selected endpoints of the API to action triggers for the target object and return as {action: trigger}.
            `actions` is a specification of the form: {action-name: [endpoint, ...fixed-args]},
            where `fixed-args` is a list (possibly empty or partial) of the arguments that will be passed
