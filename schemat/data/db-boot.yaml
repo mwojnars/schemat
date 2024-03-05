@@ -390,7 +390,7 @@
         "@": 12
       "@": type.ITEM
     schema:
-      info: schema of records in this sequence as SequenceSchema
+      info: schema of records in this sequence as RecordSchema
       "@": type.GENERIC
     blocks:
       info: array of Blocks containing records of this sequence

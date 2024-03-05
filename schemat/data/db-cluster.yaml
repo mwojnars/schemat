@@ -75,7 +75,7 @@
     properties: []
     _field_types:
       - "@": type.INTEGER
-    "@": db.SequenceSchema
+    "@": db.RecordSchema
   blocks:
     - "@": 207
   derived:
@@ -96,7 +96,7 @@
         "@": type.INTEGER
       "@": base.Map
     properties: []
-    "@": db.SequenceSchema
+    "@": db.RecordSchema
   blocks:
     - "@": 208
   derived: []
@@ -133,7 +133,7 @@
     properties: []
     _field_types:
       - "@": type.INTEGER
-    "@": db.SequenceSchema
+    "@": db.RecordSchema
   blocks:
     - "@": 211
   derived:
@@ -154,7 +154,7 @@
         "@": type.INTEGER
       "@": base.Map
     properties: []
-    "@": db.SequenceSchema
+    "@": db.RecordSchema
   blocks:
     - "@": 212
   derived: []
@@ -191,7 +191,7 @@
     properties: []
     _field_types:
       - "@": type.INTEGER
-    "@": db.SequenceSchema
+    "@": db.RecordSchema
   blocks:
     - "@": 215
   derived:
@@ -216,7 +216,7 @@
       - blank: true
         "@": type.INTEGER
       - "@": type.INTEGER
-    "@": db.SequenceSchema
+    "@": db.RecordSchema
   blocks:
     - "@": 216
   derived: []
@@ -253,7 +253,7 @@
     properties: []
     _field_types:
       - "@": type.INTEGER
-    "@": db.SequenceSchema
+    "@": db.RecordSchema
   blocks:
     - "@": 219
   derived:
@@ -274,7 +274,7 @@
         "@": type.INTEGER
       "@": base.Map
     properties: []
-    "@": db.SequenceSchema
+    "@": db.RecordSchema
   blocks:
     - "@": 220
   derived: []

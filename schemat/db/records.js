@@ -18,7 +18,7 @@ export const EMPTY = Symbol.for('empty')
 
 export class Record {
 
-    schema                  // SequenceSchema of the parent Sequence of this record
+    schema                  // RecordSchema of the parent Sequence of this record
 
     _key                    // array of fields decoded from the binary key
     _value                  // object or plain JS value parsed from JSON string, or EMPTY (empty value)
@@ -80,7 +80,7 @@ export class Record {
     }
 
     constructor(schema, plain = null, binary = null) {
-        assert(schema instanceof SequenceSchema)
+        assert(schema instanceof RecordSchema)
         this.schema = schema
 
         if (plain) {
@@ -217,8 +217,8 @@ export class ChangeRequest {
 
 /**********************************************************************************************************************/
 
-export class SequenceSchema {
-    /* Schema of a Sequence: defines the sequence's key and value. */
+export class RecordSchema {
+    /* Schema of records in a Sequence. Defines the key and value to be stored in records. */
 
     fields              // {name: type}, a Map of names and Types of fields to be included in the sequence's key
     properties          // array of property names to be included in the value object (for repeated props of an item, only the first value is included)

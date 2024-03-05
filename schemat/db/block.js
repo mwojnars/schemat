@@ -1,7 +1,7 @@
 import {assert, print, T} from '../common/utils.js'
 import {DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {Item} from '../item.js'
-import {ChangeRequest, SequenceSchema} from "./records.js";
+import {ChangeRequest, RecordSchema} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
 import {INTEGER} from "../type.js";
 
@@ -304,7 +304,7 @@ export class YamlDataStorage extends MemoryStorage {
 
     filename
 
-    static sequence_schema = new SequenceSchema(new Map([['id', new INTEGER()]]))        // schema of a data sequence (temporary solution)
+    static sequence_schema = new RecordSchema(new Map([['id', new INTEGER()]]))        // schema of a data sequence (temporary solution)
 
 
     constructor(filename, block) {

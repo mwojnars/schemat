@@ -1,4 +1,4 @@
-import {BinaryRecord, SequenceSchema} from "./records.js";
+import {BinaryRecord, RecordSchema} from "./records.js";
 import {INTEGER} from "../type.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock} from "./block.js";
@@ -23,7 +23,7 @@ export class Sequence extends Item {    // Series?
      */
 
     ring                // Ring that this sequence belongs to
-    schema              // SequenceSchema that defines this sequence's key and value
+    schema              // RecordSchema that defines keys and values of records in this Sequence
     splits              // array of split points between blocks
     blocks              // array of Blocks that make up this sequence
     derived = []        // array of derived sequences (indexes) that must be updated when this sequence changes
@@ -94,7 +94,7 @@ export class DataSequence extends Sequence {
     static role       = 'data'          // for use in ProcessingStep and DataRequest
     static COMMANDS   = ['get', 'put', 'select', 'insert', 'update', 'delete']
 
-    schema = new SequenceSchema(
+    schema = new RecordSchema(
         new Map([['id', new INTEGER()]]),
         // value encoding is handled outside schema: through method overloading
     );
