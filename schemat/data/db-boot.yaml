@@ -75,11 +75,11 @@
         "@": type.TYPE
       info: Names and data types of properties of objects in this category.
       "@": type.CATALOG
-    item_schema:
+    data_schema:
       info: A DATA instance that represents the schema of objects in this category.
         This is a virtual (non-editable) field automatically imputed from the
         `schema` property.
-      "@": type.ITEM_SCHEMA
+      "@": type.DATA_SCHEMA
     allow_custom_fields:
       default: false
       info: If true, it is allowed to use undefined (out-of-schema) fields in items -

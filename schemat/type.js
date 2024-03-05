@@ -685,8 +685,8 @@ export class DATA_GENERIC extends DATA {
 }
 
 
-export class ITEM_SCHEMA extends TYPE {
-    /* An (imputed) instance of DATA schema for items in a category (the category's `fields` combined into a DATA instance). */
+export class DATA_SCHEMA extends TYPE {
+    /* An (imputed) instance of DATA that represents schema of objects in a category: category.schema wrapped up in a DATA. */
 
     static defaultProps = {
         editable: false,

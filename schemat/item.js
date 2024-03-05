@@ -323,7 +323,7 @@ export class Item {
     }
 
     get _schema_() {
-        let value = this._category_?.item_schema || new DATA_GENERIC()
+        let value = this._category_?.data_schema || new DATA_GENERIC()
         return this.CACHED_PROP(value)
     }
 
@@ -975,7 +975,7 @@ export class Category extends Item {
 
     /***  Special properties:
 
-    item_schema             ITEM_SCHEMA of items in this category (not the schema of self)
+    data_schema             DATA_SCHEMA of items in this category (not the schema of self)
 
     _source_                module source code of this category: all code snippets combined, including inherited ones
 
@@ -1017,7 +1017,7 @@ export class Category extends Item {
            OR in the type's own `default` property. NO imputation even if defined in the prop's type,
            because the imputation depends on the target object which is missing here.
          */
-        let type = this.item_schema.get(prop) || generic_type
+        let type = this.data_schema.get(prop) || generic_type
         let defaults = this.defaults?.get_all(prop) || []
         return type.combine_inherited([defaults])
     }
@@ -1258,7 +1258,7 @@ export class RootCategory extends Category {
 
     get _category_() { return this._proxy_ }        // root category is a category for itself
 
-    get item_schema() {
+    get data_schema() {
         /* In RootCategory, this == this._category_, and to avoid infinite recursion we must perform schema inheritance manually. */
         let root_fields = this._data_.get('schema')
         let default_fields = this._data_.get('defaults').get('schema')

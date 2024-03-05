@@ -1,5 +1,5 @@
 import {Catalog, Data} from "../data.js"
-import {CATALOG, CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN, ITEM_SCHEMA, CLASS} from "../type.js"
+import {CATALOG, CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN, DATA_SCHEMA, CLASS} from "../type.js"
 import {Category} from "../item.js";
 
 
@@ -45,7 +45,7 @@ let root_fields = new Catalog({
     // todo: rename cache_ttl > refresh-cache (in the future, add refresh-lifeloop etc)
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     fields       : new CATALOG({values: new TYPE(), info: "Fields must have unique names.", default: default_fields}),
-    item_schema  : new ITEM_SCHEMA({info: "The DATA schema for this category's items. A virtual (non-editable) field automatically imputed from the `schema` property."}),
+    data_schema  : new DATA_SCHEMA({info: "The DATA schema for this category's items. A virtual (non-editable) field automatically imputed from the `schema` property."}),
 
     // _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `class_body` is configured, the class is subclassed dynamically to insert the desired code. Should only be used for core Schemat categories."}),
     //custom_class : new BOOLEAN({info: "If true in a category, items of this category are allowed to provide their own `class_body` and `code*` implementations.", default: false}),
