@@ -282,11 +282,11 @@ export class CategoryAdminView extends ItemAdminView {
     async prepare(side) {
         // TODO: on client, items could be pulled from response data to avoid re-scanning on 1st render?
         await super.prepare(side)
-        return {items: await this.action.list_items()}          // preload the items list; `this` is a Category
+        return {items: await this._triggers_.list_items()}      // preload the items list; `this` is a Category
     }
 
     component({items: preloaded}) {
-        const scan = () => this.action.list_items()
+        const scan = () => this._triggers_.list_items()
         const [items, setItems] = useState(preloaded)           // existing child items; state prevents re-scan after every itemAdded()
                                                                 // TODO: use materialized list of items to explicitly control re-scanning
                                                                 //    ...and avoid React's incorrect refresh when Items (below) are called in a different way

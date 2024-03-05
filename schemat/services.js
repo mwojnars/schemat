@@ -33,7 +33,7 @@ export class Service {
     target_service  // a function, f(request, ...args), to be called on the server when the protocol is invoked;
                     // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                     // like a method of the "target"; `request` is a RequestContext, or {} in the case when an action
-                    // is called directly on the server through item.action.XXX() which invokes execute() instead of server()
+                    // is called directly on the server through _triggers_.XXX() which invokes execute() instead of server()
 
     opts = {}           // configuration options
     static opts = {}    // default values of configuration options
@@ -354,7 +354,7 @@ export class Network {
        Typically, a Network adapter is created for an Item object, but it may also be used for other JS objects.
 
        Certain endpoints of the `api` may be used to define "actions", i.e., internal RPC calls, local or remote, that
-       can be invoked on a server or client alike using the exact same syntax: net.action.X() - the caller does NOT
+       can be invoked on a server or client alike using the exact same syntax, so the caller does NOT
        have to check every time whether it plays a role of a client or a server in a given moment, because the action
        automatically chooses the right way to execute itself (locally or remotely), and is properly performed in both cases.
        As such, an action can be viewed as a "network method" of the target object: while a regular method always executes
@@ -396,7 +396,7 @@ export class Network {
         let target = this.target
         let server_side = (this.role === Network.SERVER)
 
-        // create a trigger for each action and store in `this.action`
+        // create a trigger for each action
         for (let [name, spec] of Object.entries(actions)) {
             if (name in triggers) throw new Error(`duplicate action name: '${name}'`)
             if (typeof spec === 'string') spec = spec.split(':')
@@ -459,13 +459,6 @@ export class Network {
 //         /* Override in subclasses to return a list of agents this one directly inherits from. */
 //         throw new Error("not implemented")
 //     }
-//
-//     // setAgentAPI(api) {
-//     //     /* `api` can be an API instance, or a collection {...} of endpoints to be passed to the new API(). */
-//     //     if (!(api instanceof API)) api = new API(api, this._getAgentEnvironment())
-//     //     this.api = api
-//     //     this.action = this.api.getTriggers(this)
-//     // }
 //
 //     url(endpoint) {}
 // }

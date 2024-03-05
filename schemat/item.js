@@ -367,7 +367,7 @@ export class Item {
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
     _data_          // data fields of this item, as a Data object; created during .load()
     _net_           // Network adapter that connects this item to its network API as defined in this.constructor.api
-    action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
+    _triggers_      // triggers of RPC actions of this item; every action can be called from a server or a client via _triggers_.X() call
 
     _meta_ = {                  // _meta_ contain system properties of this object...
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
@@ -624,11 +624,11 @@ export class Item {
     }
 
     _init_network() {
-        /* Create a network interface, _net_, and .action triggers for this item's network API. */
+        /* Create a network interface, _net_, and action _triggers_ for this item's network API. */
         let role = schemat.server_side ? 'server' : 'client'
         let api = this.constructor._api_ || this.constructor._create_api()
         this._net_ = new Network(this, role, api)
-        this.action = this._net_.create_triggers(this._actions_?.object())
+        this._triggers_ = this._net_.create_triggers(this._actions_?.object())
         // print('actions:', this._actions_?.object())
     }
 
@@ -842,7 +842,7 @@ export class Item {
     // When endpoint functions (below) are called, `this` is always bound to the Item instance, so they execute
     // in the context of their item like if they were regular methods of the Item (sub)class.
     // The first argument, `request`, is a Request instance, followed by action-specific list of arguments.
-    // In a special case when an action is called directly on the server through item.action.XXX(), `request` is null,
+    // In a special case when an action is called directly on the server through _triggers_.XXX(), `request` is null,
     // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
 
     static ['CALL/self'] = new InternalService(function() { return this })
@@ -854,7 +854,7 @@ export class Item {
 
     edit(op, args) {
         // print('edit:', this._id_, op)
-        return schemat.site.action.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
+        return schemat.site._triggers_.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
     }
 
     edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
@@ -864,7 +864,7 @@ export class Item {
 
     delete_self() {
         /* Delete this object from the database. */
-        return schemat.site.action.delete_object(this._id_)
+        return schemat.site._triggers_.delete_object(this._id_)
     }
 
 
