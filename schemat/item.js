@@ -1241,6 +1241,7 @@ export class Category extends Item {
 
     /***  Actions  ***/
 
+    // list_items()            { return this._net_.POST.read('list_items') }
     list_items()            { return this._net_.call.list_items() }
     create_item(data)       { return this._net_.call.create_item(data) }
 }

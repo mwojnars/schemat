@@ -5,6 +5,27 @@ import { JSONx } from './serialize.js'
 
 /**********************************************************************************************************************/
 
+class Endpoint {
+    /* A string that represents a network endpoint: PROTOCOL/name. */
+
+    full            // full endpoint string as {protocol}/{name}
+    protocol        // protocol identifier, always in upper case
+    name
+
+    constructor(endpoint) {
+        let parts = endpoint.split('/')
+        if (parts.length !== 2) throw new Error(`incorrect endpoint format: '${endpoint}'`)
+        if (parts[0].toUpperCase() !== parts[0]) throw new Error(`protocol name must be in upper case: '${parts[0]}'`)
+
+        this.full = endpoint
+        this.protocol = parts[0]
+        this.name = parts[1]
+    }
+}
+
+
+/**********************************************************************************************************************/
+
 export class Service {
     /*
        A Service is any server-side functionality that's exposed on a particular (fixed) `endpoint` of a group
@@ -26,9 +47,8 @@ export class Service {
        to create a new service that combines the functionality of the original services.
      */
 
-    endpoint        // the target object's endpoint where this service is exposed; typically, a string of the form
-                    // "METHOD/name", where METHOD is one of GET/POST/CALL/KAFKA..., and the name is a command name,
-                    // a Kafka topic name, etc.
+    endpoint        // the target object's endpoint where this service is exposed; a string of the form "PROTOCOL/name",
+                    // where PROTOCOL is one of GET/POST/CALL/KAFKA..., and the name is a service name, a Kafka topic etc.
 
     target_service  // a function, f(request, ...args), to be called on the server when the protocol is invoked;
                     // inside the call, `this` is bound to a supplied "target" object, so the function behaves
@@ -376,13 +396,38 @@ export class Network {
     target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
     role        // current network role of the `target` for the `api`; typically, 'client' or 'server'
     api         // API to be exposed on this network interface
-    call        // {action: trigger} map of trigger functions; service functions inside each trigger are already bound to the target object (!)
+    call        // {action: trigger} map of trigger functions; trigger functions are internally bound to the target object (!); they may return a Promise
+
+    // a set of action triggers are created for each endpoint in the API, grouped by protocol:
+    // GET = {}
+    // POST = {}
+    // ...
 
     constructor(target, role, api, actions) {
         this.target = target
         this.role = role
         this.api  = api
         this.call = this._create_triggers(actions)
+        this._create_all_triggers()
+    }
+
+    _create_all_triggers() {
+        /* Create a trigger for each endpoint of the API. */
+
+        let target = this.target
+        let server_side = (this.role === Network.SERVER)
+
+        for (let [endpoint_string, service] of Object.entries(this.api.services))
+        {
+            let {protocol, name} = new Endpoint(endpoint_string)
+            let triggers = this[protocol] = this[protocol] || {}
+
+            triggers[name] = server_side
+                ? (...args) => service.execute(target, null, ...args)     // may return a Promise
+                : (...args) => service.client(target, ...args)            // may return a Promise
+
+            // print('trigger created:', protocol, name)
+        }
     }
 
     _create_triggers(actions) {
@@ -404,7 +449,7 @@ export class Network {
             if (typeof spec === 'string') spec = spec.split(':')
             let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
             let service = this.get_service(endpoint)
-            if (!service) throw new Error(`undeclared API service: '${endpoint}'`)
+            if (!service) throw new Error(`unknown API endpoint: '${endpoint}'`)
 
             triggers[name] = server_side
                 ? (...args) => service.execute(target, null, ...fixed, ...args)     // may return a Promise
