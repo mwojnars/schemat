@@ -73,11 +73,12 @@
     schema:
       values:
         "@": type.TYPE
-      info: Fields must have unique names.
+      info: Names and data types of properties of objects in this category.
       "@": type.CATALOG
     item_schema:
-      info: The DATA schema for this category's items. A virtual (non-editable) field
-        automatically imputed from the `fields` property.
+      info: A DATA instance that represents the schema of objects in this category.
+        This is a virtual (non-editable) field automatically imputed from the
+        `schema` property.
       "@": type.ITEM_SCHEMA
     allow_custom_fields:
       default: false
@@ -129,10 +130,10 @@
       _actions_:
         values:
           "@": type.STRING
-        info: Network actions (remote methods) exposed by the object. Every declaration consists of a full
-          endpoint name, e.g., "GET/endpoint", possibly followed by a
-          ":"-separated list of arguments, e.g., "GET/endpoint:arg1:arg2". The
-          action name must be unique.
+        info: Network actions (remote methods) exposed by the object. Every declaration
+          consists of a full endpoint name, e.g., "GET/endpoint", possibly
+          followed by a ":"-separated list of arguments, e.g.,
+          "GET/endpoint:arg1:arg2". The action name must be unique.
         "@": type.CATALOG
       name:
         info: Display name of the item. May contain spaces, punctuation, non-latin
