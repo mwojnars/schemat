@@ -1,7 +1,7 @@
 - __id: 100
   name: YAML
   info: Data stored in a YAML file.
-  fields:
+  schema:
     filename:
       "@": type.STRING
     "@": base.Catalog
@@ -11,7 +11,7 @@
 - __id: 101
   name: MysqlDB
   class_path: /system/local/db/mysql.js:MySQL
-  fields:
+  schema:
     host:
       "@": type.STRING
     port:

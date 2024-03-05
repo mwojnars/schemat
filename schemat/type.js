@@ -693,9 +693,9 @@ export class ITEM_SCHEMA extends TYPE {
         impute() {
             /* `this` is expected to be a Category object that defines items' schema through its `fields` property. */
             // assert(this instanceof Category)
-            let fields = this.fields
+            let fields = this.schema.object()
             let custom = this.allow_custom_fields
-            return new DATA({fields: fields.object(), strict: custom !== true})
+            return new DATA({fields, strict: custom !== true})
         }
     }
 }

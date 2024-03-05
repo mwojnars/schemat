@@ -868,7 +868,7 @@ export class Item {
 
 
     /***  Implementations of edit operations. NOT for direct use!
-          The methods below are only called on the server where the object is stored, inside the block's object-level lock.
+          These methods are only called on the server where the object is stored, inside the block's object-level lock.
           New edit ops can be added in subclasses. An EDIT_{op} method can be async or return a Promise.
           The names of methods (the {op} suffix) must match the names of operations passed by callers to .edit().
           Typically, when adding a new OP, a corresponding shortcut method, edit_OP(), is added to the subclass.
@@ -990,7 +990,7 @@ export class Category extends Item {
         // TODO: move initialization somewhere else; here, we don't have a guarantee that the
         //       initialized type object won't get replaced with a new one at some point
 
-        let fields = this._data_.get('fields') || []
+        let fields = this._data_.get('schema') || []
         let calls  = fields.map(({value: type}) => type.init()).filter(res => res instanceof Promise)
         if (calls.length) return Promise.all(calls)
 
@@ -1260,8 +1260,8 @@ export class RootCategory extends Category {
 
     get item_schema() {
         /* In RootCategory, this == this._category_, and to avoid infinite recursion we must perform schema inheritance manually. */
-        let root_fields = this._data_.get('fields')
-        let default_fields = this._data_.get('defaults').get('fields')
+        let root_fields = this._data_.get('schema')
+        let default_fields = this._data_.get('defaults').get('schema')
         let fields = new Catalog(root_fields, default_fields)
         let custom = this._data_.get('allow_custom_fields')
         return new DATA({fields: fields.object(), strict: custom !== true})

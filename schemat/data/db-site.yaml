@@ -6,7 +6,7 @@
     console.log("Varia.code: imported ", mod)) }
 
     static error() { throw new Error('Varia/code/error()') }
-  fields:
+  schema:
     title:
       "@": type.STRING
     "@": base.Catalog
@@ -15,7 +15,7 @@
   "@": base.Data
 - __id: 1001
   name: TwitterPost
-  fields:
+  schema:
     text:
       =:
         - "@": 102

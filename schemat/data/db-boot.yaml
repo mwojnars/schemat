@@ -2,7 +2,7 @@
   name: Category
   info: Category of items that represent categories
   cache_ttl: 60
-  fields:
+  schema:
     defaults:
       values:
         "@": type.GENERIC
@@ -70,7 +70,7 @@
         reuse by subsequent requests. A real number. If zero, the items are
         evicted immediately after each request.
       "@": type.NUMBER
-    fields:
+    schema:
       values:
         "@": type.TYPE
       info: Fields must have unique names.
@@ -93,7 +93,7 @@
       list_items: POST/read:list_items
       create_item: POST/create_item
       "@": base.Catalog
-    fields:
+    schema:
       _category_:
         info: Category of this item. Determines item's behavior and the schema of its
           attributes. Each category should be an item of the Root Category
@@ -152,7 +152,7 @@
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
     startup.
-  fields:
+  schema:
     base_url:
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
@@ -193,7 +193,7 @@
 - __id: 3
   name: File
   info: File with a text content.
-  fields:
+  schema:
     content:
       "@": type.CODE
     mimetype:
@@ -219,7 +219,7 @@
   info: File located on a local disk, identified by its local file path.
   _extends_:
     "@": 3
-  fields:
+  schema:
     local_path:
       "@": type.STRING
     "@": base.Catalog
@@ -233,7 +233,7 @@
   name: Directory
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
-  fields:
+  schema:
     entries:
       values:
         "@": type.ITEM
@@ -255,7 +255,7 @@
     Gives access to all files and folders beneath the path.
   _extends_:
     "@": 5
-  fields:
+  schema:
     local_path:
       "@": type.STRING
     "@": base.Catalog
@@ -279,7 +279,7 @@
   name: ID_Namespace
   info: Namespace that serves items on simple URLs of the form /IID. Mainly used
     for system & admin purposes, or as a last-resort default for URL generation.
-  fields:
+  schema:
     category:
       category:
         "@": 0
@@ -297,7 +297,7 @@
   info: "Namespace for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
-  fields:
+  schema:
     spaces:
       values:
         category:
@@ -317,7 +317,7 @@
     wrappers around system types (STRING, INTEGER etc.), while some others
     implement new types by themselves using dynamic code.
   class_path: /system/local/type_item.js:TypeItem
-  fields:
+  schema:
     class_path:
       "@": type.STRING
     encode:
@@ -339,7 +339,7 @@
 - __id: 11
   name: Database
   info: Internal database. An array of data Rings stacked on top of each other.
-  fields:
+  schema:
     rings:
       info: Array of Ring objects
       "@": type.GENERIC
@@ -354,7 +354,7 @@
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
-  fields:
+  schema:
     readonly:
       "@": type.BOOLEAN
     start_id:
@@ -382,7 +382,7 @@
 - __id: 13
   name: Sequence
   info: Base category for sequences of key-value records, either data or indexes.
-  fields:
+  schema:
     ring:
       info: parent Ring of this sequence
       category:
@@ -409,7 +409,7 @@
 - __id: 14
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
-  fields:
+  schema:
     "@": base.Catalog
   defaults:
     _class_: db.DataSequence
@@ -423,7 +423,7 @@
   name: Index
   info: Base category for (derived) sequences that represent indexes over another
     (source) sequence.
-  fields:
+  schema:
     source:
       info: source Sequence that feeds data to this index
       "@": type.ITEM
@@ -437,7 +437,7 @@
   name: DataIndex
   info: An Index that receives record updates from the main data sequence, so
     input records represent objects.
-  fields:
+  schema:
     "@": base.Catalog
   _extends_:
     "@": 15
@@ -448,7 +448,7 @@
   name: IndexByCategory
   info: "Index that maps categories to member objects: the key is [category ID,
     item ID]."
-  fields:
+  schema:
     "@": base.Catalog
   defaults:
     _class_: db.IndexByCategory
@@ -462,7 +462,7 @@
   name: Block
   info: A continuous subrange of records of a data/index sequence, physically
     located on a single machine.
-  fields:
+  schema:
     sequence:
       info: parent Sequence this block is a part of
       "@": type.ITEM
@@ -479,7 +479,7 @@
 - __id: 19
   name: DataBlock
   info: Block of a DataSequence.
-  fields:
+  schema:
     "@": base.Catalog
   defaults:
     _class_: db.DataBlock
@@ -492,7 +492,7 @@
 - __id: 20
   name: IndexBlock
   info: Block of an Index sequence.
-  fields:
+  schema:
     "@": base.Catalog
   defaults:
     _class_: db.IndexBlock
