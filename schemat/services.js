@@ -376,7 +376,7 @@ export class Network {
     target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
     role        // current network role of the `target` for the `api`; typically, 'client' or 'server'
     api         // API to be exposed on this network interface
-    call        // {action: trigger} map of action trigger functions; each trigger is already bound to the target object (!)
+    call        // {action: trigger} map of trigger functions; service functions inside each trigger are already bound to the target object (!)
 
     constructor(target, role, api, actions) {
         this.target = target

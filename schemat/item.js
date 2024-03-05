@@ -849,7 +849,7 @@ export class Item {
     static ['GET/json']  = new JsonService(function() { return this._record_.encoded() })
 
 
-    /***  Edit operations. Can be called on a client or a server. All return a Promise.  ***/
+    /***  Actions & edit operations. Can be called on a client or a server. All return a Promise.  ***/
 
     edit(op, args) {
         // print('edit:', this._id_, op)
@@ -1181,6 +1181,7 @@ export class Category extends Item {
             throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
     }
 
+
     /***  Endpoints  ***/
 
     static ['GET/admin'] = new ReactPage(CategoryAdminView)
@@ -1236,6 +1237,11 @@ export class Category extends Item {
         },
     // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
     )
+
+
+    /***  Actions  ***/
+
+    list_items()        { return this._net_.call.list_items() }
 }
 
 
