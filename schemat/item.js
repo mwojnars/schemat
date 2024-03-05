@@ -298,8 +298,6 @@ export class Item {
     _url_                   absolute URL path of this object; calculated right *after* __init__(); to be sure that _url_ is computed, await _ready_.url first
     _assets_                cached web Assets of this object's _schema_
 
-    _actions_               specification of action functions (RPC calls), as {action_name: "PROTO/endpoint"} catalog; each action is accessible from a server or a client
-
     */
 
     // it is assumed that if this._id_ exists, the object is ALREADY stored in the DB (is "linked");
@@ -628,8 +626,7 @@ export class Item {
         /* Create a network interface, _net_, and action _triggers_ for this item's network API. */
         let role = schemat.server_side ? 'server' : 'client'
         let api = this.constructor._api_ || this.constructor._create_api()
-        let actions = this._actions_?.object()
-        this._net_ = new Network(this, role, api, actions)
+        this._net_ = new Network(this, role, api)
     }
 
 

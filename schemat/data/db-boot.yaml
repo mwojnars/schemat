@@ -90,10 +90,6 @@
     _class_: base.Category
     _container_:
       "@": 1014
-    _actions_:
-      list_items: POST/read:list_items
-      create_item: POST/create_item
-      "@": base.Catalog
     schema:
       _category_:
         info: Category of this item. Determines item's behavior and the schema of its
@@ -127,14 +123,6 @@
           database.
         inherit: false
         "@": type.STRING
-      _actions_:
-        values:
-          "@": type.STRING
-        info: Network actions (remote methods) exposed by the object. Every declaration
-          consists of a full endpoint name, e.g., "GET/endpoint", possibly
-          followed by a ":"-separated list of arguments, e.g.,
-          "GET/endpoint:arg1:arg2". The action name must be unique.
-        "@": type.CATALOG
       name:
         info: Display name of the item. May contain spaces, punctuation, non-latin
           characters.
@@ -183,10 +171,6 @@
     "@": base.Catalog
   defaults:
     _class_: std.Site
-    _actions_:
-      submit_edits: POST/submit_edits
-      delete_object: POST/delete_object
-      "@": base.Catalog
     "@": base.Catalog
   _category_:
     "@": 0
