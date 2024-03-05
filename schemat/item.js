@@ -366,8 +366,8 @@ export class Item {
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
     _data_          // data fields of this item, as a Data object; created during .load()
-    _net_           // Network adapter that connects this item to its network API as defined in this.constructor.api
-    _triggers_      // triggers of RPC actions of this item; every action can be called from a server or a client via _triggers_.X() call
+    _net_           // per-instance Network adapter that connects this object to its network API as defined in the class's API (this.constructor._api_)
+    _triggers_      // triggers of RPC actions of this item; every action can be called on a server or client alike via _triggers_.X() call
 
     _meta_ = {                  // _meta_ contain system properties of this object...
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
@@ -383,7 +383,7 @@ export class Item {
         url: undefined,         // resolves with this._url_ when this._url_ is computed
     }
 
-    static _api_                // API instance that defines this item's endpoints and protocols; created lazily in _create_api() when the first instance is loaded, then reused for other instances
+    static _api_                // API instance that defines this class's endpoints and protocols; created lazily in _create_api() when the first instance is loaded, then reused for other instances
 
 
     /***  Object status  ***/
@@ -627,9 +627,9 @@ export class Item {
         /* Create a network interface, _net_, and action _triggers_ for this item's network API. */
         let role = schemat.server_side ? 'server' : 'client'
         let api = this.constructor._api_ || this.constructor._create_api()
-        this._net_ = new Network(this, role, api)
-        this._triggers_ = this._net_.create_triggers(this._actions_?.object())
-        // print('actions:', this._actions_?.object())
+        let actions = this._actions_?.object()
+        this._net_ = new Network(this, role, api, actions)
+        this._triggers_ = this._net_.call  //create_triggers(actions)
     }
 
 
