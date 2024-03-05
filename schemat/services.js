@@ -405,9 +405,9 @@ export class Network {
     GET  = {}           // {endpoint_name: trigger_function}
     POST = {}
     CALL = {}
-    // ... other protocols are added dynamically based on endpoints specification ...
+    // ... other protocols are added dynamically if found in endpoint specification ...
 
-    
+
     constructor(target, role, api) {
         this.target = target
         this.role = role

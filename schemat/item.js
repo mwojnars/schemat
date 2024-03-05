@@ -367,7 +367,8 @@ export class Item {
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
     _data_          // data fields of this item, as a Data object; created during .load()
     _net_           // per-instance Network adapter that connects this object to its network API as defined in the class's API (this.constructor._api_);
-                    // _net_.GET/POST/CALL/... are triggers of RPC actions on this object which can be used on a server and client alike via _net_.PROTO.xxx(args)
+                    // API endpoints of the object can be called programmatically through this._net_.PROTO.xxx(args), where PROTO is GET/POST/CALL/...,
+                    // which works both on the client and server (in the latter case, the call executes the service function directly without network communication)
 
     _meta_ = {                  // _meta_ contain system properties of this object...
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
