@@ -366,8 +366,8 @@ export class Item {
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
     _data_          // data fields of this item, as a Data object; created during .load()
-    _net_           // per-instance Network adapter that connects this object to its network API as defined in the class's API (this.constructor._api_)
-    _triggers_      // triggers of RPC actions of this item; every action can be called on a server or client alike via _triggers_.X() call
+    _net_           // per-instance Network adapter that connects this object to its network API as defined in the class's API (this.constructor._api_);
+                    // _net_.call.* contains triggers of RPC actions of this object, which can be called on a server or client alike via _net_.call.X()
 
     _meta_ = {                  // _meta_ contain system properties of this object...
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
@@ -629,7 +629,6 @@ export class Item {
         let api = this.constructor._api_ || this.constructor._create_api()
         let actions = this._actions_?.object()
         this._net_ = new Network(this, role, api, actions)
-        this._triggers_ = this._net_.call  //create_triggers(actions)
     }
 
 
@@ -854,7 +853,7 @@ export class Item {
 
     edit(op, args) {
         // print('edit:', this._id_, op)
-        return schemat.site._triggers_.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
+        return schemat.site._net_.call.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
     }
 
     edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
@@ -864,7 +863,7 @@ export class Item {
 
     delete_self() {
         /* Delete this object from the database. */
-        return schemat.site._triggers_.delete_object(this._id_)
+        return schemat.site._net_.call.delete_object(this._id_)
     }
 
 
