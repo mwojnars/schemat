@@ -396,19 +396,22 @@ export class Network {
     target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
     role        // current network role of the `target` for the `api`; typically, 'client' or 'server'
     api         // API to be exposed on this network interface
-    call        // {action: trigger} map of trigger functions; trigger functions are internally bound to the target object (!); they may return a Promise
 
-    // action triggers are created for each endpoint in the API, grouped by protocol, for these and any other protocols:
-    GET  = {}
+    // trigger functions are created for each endpoint in the API and are grouped by protocol;
+    // each trigger is internally bound to the target object and may return a Promise;
+    // a trigger function makes a call to the server through the protocol if executed on the client;
+    // or calls the service function directly if executed on the server...
+    //
+    GET  = {}           // {endpoint_name: trigger_function}
     POST = {}
     CALL = {}
-    // ...
+    // ... other protocols are added dynamically based on endpoints specification ...
 
-    constructor(target, role, api, actions) {
+    
+    constructor(target, role, api) {
         this.target = target
         this.role = role
         this.api  = api
-        // this.call = this._create_triggers(actions)
         this._create_all_triggers()
     }
 
@@ -422,43 +425,42 @@ export class Network {
         {
             let {protocol, name} = new Endpoint(endpoint_string)
             let triggers = this[protocol] = this[protocol] || {}
+            // if (!triggers) throw new Error(`unknown protocol: ${protocol}`)
 
             triggers[name] = server_side
                 ? (...args) => service.execute(target, null, ...args)     // may return a Promise
                 : (...args) => service.client(target, ...args)            // may return a Promise
-
-            // print('trigger created:', protocol, name)
         }
     }
 
-    _create_triggers(actions) {
-        /* Map selected endpoints of the API to action triggers for the target object and return as {action: trigger}.
-           `actions` is a specification of the form: {action-name: [endpoint, ...fixed-args]},
-           where `fixed-args` is a list (possibly empty or partial) of the arguments that will be passed
-           to the endpoint on each action call; dynamic arguments, if any, will be appended later, during the call.
-           Multiple actions may share the same endpoint, typically with different `fixed-args`.
-         */
-        if (!actions) return {}
-
-        let triggers = {}
-        let target = this.target
-        let server_side = (this.role === Network.SERVER)
-
-        // create a trigger for each action
-        for (let [name, spec] of Object.entries(actions)) {
-            if (name in triggers) throw new Error(`duplicate action name: '${name}'`)
-            if (typeof spec === 'string') spec = spec.split(':')
-            let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
-            let service = this.get_service(endpoint)
-            if (!service) throw new Error(`unknown API endpoint: '${endpoint}'`)
-
-            triggers[name] = server_side
-                ? (...args) => service.execute(target, null, ...fixed, ...args)     // may return a Promise
-                : (...args) => service.client(target, ...fixed, ...args)            // may return a Promise
-        }
-
-        return triggers
-    }
+    // _create_triggers(actions) {
+    //     /* Map selected endpoints of the API to action triggers for the target object and return as {action: trigger}.
+    //        `actions` is a specification of the form: {action-name: [endpoint, ...fixed-args]},
+    //        where `fixed-args` is a list (possibly empty or partial) of the arguments that will be passed
+    //        to the endpoint on each action call; dynamic arguments, if any, will be appended later, during the call.
+    //        Multiple actions may share the same endpoint, typically with different `fixed-args`.
+    //      */
+    //     if (!actions) return {}
+    //
+    //     let triggers = {}
+    //     let target = this.target
+    //     let server_side = (this.role === Network.SERVER)
+    //
+    //     // create a trigger for each action
+    //     for (let [name, spec] of Object.entries(actions)) {
+    //         if (name in triggers) throw new Error(`duplicate action name: '${name}'`)
+    //         if (typeof spec === 'string') spec = spec.split(':')
+    //         let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
+    //         let service = this.get_service(endpoint)
+    //         if (!service) throw new Error(`unknown API endpoint: '${endpoint}'`)
+    //
+    //         triggers[name] = server_side
+    //             ? (...args) => service.execute(target, null, ...fixed, ...args)     // may return a Promise
+    //             : (...args) => service.client(target, ...fixed, ...args)            // may return a Promise
+    //     }
+    //
+    //     return triggers
+    // }
 
     get_service(endpoint) {
         /* Resolve `endpoint` to a Service instance (a handler). Return undefined if `endpoint` not found. */
