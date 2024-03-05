@@ -853,7 +853,7 @@ export class Item {
 
     edit(op, args) {
         // print('edit:', this._id_, op)
-        return schemat.site._net_.call.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
+        return schemat.site._net_.POST.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
     }
 
     edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
@@ -863,7 +863,7 @@ export class Item {
 
     delete_self() {
         /* Delete this object from the database. */
-        return schemat.site._net_.call.delete_object(this._id_)
+        return schemat.site._net_.POST.delete_object(this._id_)
     }
 
 
@@ -1241,9 +1241,9 @@ export class Category extends Item {
 
     /***  Actions  ***/
 
-    // list_items()            { return this._net_.POST.read('list_items') }
-    list_items()            { return this._net_.call.list_items() }
-    create_item(data)       { return this._net_.call.create_item(data) }
+    // list_items()            { return this._net_.call.list_items() }
+    list_items()            { return this._net_.POST.read('list_items') }
+    create_item(data)       { return this._net_.POST.create_item(data) }
 }
 
 

@@ -398,16 +398,17 @@ export class Network {
     api         // API to be exposed on this network interface
     call        // {action: trigger} map of trigger functions; trigger functions are internally bound to the target object (!); they may return a Promise
 
-    // a set of action triggers are created for each endpoint in the API, grouped by protocol:
-    // GET = {}
-    // POST = {}
+    // action triggers are created for each endpoint in the API, grouped by protocol, for these and any other protocols:
+    GET  = {}
+    POST = {}
+    CALL = {}
     // ...
 
     constructor(target, role, api, actions) {
         this.target = target
         this.role = role
         this.api  = api
-        this.call = this._create_triggers(actions)
+        // this.call = this._create_triggers(actions)
         this._create_all_triggers()
     }
 
