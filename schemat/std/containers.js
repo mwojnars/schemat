@@ -42,7 +42,7 @@ export class Container extends Item {
     }
 
     get_access_path(member) {
-        /* Return an access path to `member` including the path from root to this container.
+        /* Return an access path to `member` that starts at the root (site object).
            The access path is like a URL path, but with explicit blank segments: /*BLANK
          */
         assert(this._path_, `container's _path_ is not initialized (${this.name} ${this._id_})`)
