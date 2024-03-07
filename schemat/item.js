@@ -780,9 +780,25 @@ export class Item {
         return visited
     }
 
-    get_container_path() {
-        /* Return an array of parent containers that lead from the site's root to this object. */
-        // return this._container_?._path_
+    get_container_path(max_len = 10) {
+        /* Return an array of containers that lead from the site's root to this object.
+           The array contains pairs [segment, container] where `segment` is a string that identifies `container`
+           inside its parent; the last pair is [segment, this] (the object itself).
+           If containers are correctly configured, the first pair is [undefined, site_object] (the root).
+         */
+        let path = []
+        let object = this
+
+        while (object) {
+            let parent = object._container_
+            let segment = parent?.identify(object)
+
+            path.push([segment, object])
+
+            if (path.length > max_len) break            // avoid infinite loops
+            object = parent
+        }
+        return path.reverse()
     }
 
 
