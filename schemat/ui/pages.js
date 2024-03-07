@@ -248,11 +248,11 @@ export class ItemAdminView extends ReactPage.View {
 
     Main({extra = null} = {}) {
         /* Detailed (admin) view of an item. */
-        let breadcrumb = this.get_container_path()
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
             // e(this._mui_test),
             this.Title(),
+            this.Breadcrumb(),
             H2('Properties'),
             this.PropertiesTable(),
             extra,
@@ -267,6 +267,14 @@ export class ItemAdminView extends ReactPage.View {
             return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(stamp)}))
         else
             return H1(HTML(stamp))
+    }
+
+    Breadcrumb() {
+        /* A list of links to the parent containers of the object. */
+        let items = this.get_container_path()
+        let links = items.map(([name, obj]) => A({href: obj.url()}, name || 'home'))
+        let elems = links.map((link, i) => [link, i < links.length-1 ? ' » ' : ''])
+        return P(...elems)
     }
 
     PropertiesTable() {
