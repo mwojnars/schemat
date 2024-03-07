@@ -5,7 +5,7 @@ Creating core items from scratch and storing them as initial items in DB.
 import {print, assert} from '../common/utils.js'
 import {GENERIC, TYPE, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {Catalog} from "../data.js"
-import * as urls from "../std/urls.js";
+import * as urls from "../std/containers.js";
 import * as site from "../std/site.js";
 import * as files from "../std/files.js";
 

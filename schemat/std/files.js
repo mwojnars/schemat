@@ -7,7 +7,7 @@
 import {print} from "../common/utils.js"
 import {Item} from "../item.js"
 import {HttpService, InternalService} from "../services.js"
-import {Directory} from "./urls.js";
+import {Directory} from "./containers.js";
 import {UrlPathNotFound} from "../common/errors.js";
 
 

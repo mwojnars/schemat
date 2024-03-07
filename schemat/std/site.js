@@ -2,7 +2,7 @@ import {set_global} from "../common/globals.js"
 import {print, assert, T, delay} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Edit, Request} from '../item.js'
-import {Container, Directory, ID_Namespace} from "./urls.js";
+import {Container, Directory, ID_Namespace} from "./containers.js";
 import {JsonService} from "../services.js";
 import {JSONx} from "../serialize.js";
 

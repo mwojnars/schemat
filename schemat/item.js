@@ -780,6 +780,11 @@ export class Item {
         return visited
     }
 
+    get_container_path() {
+        /* Return an array of parent containers that lead from the site's root to this object. */
+        // return this._container_?._path_
+    }
+
 
     __init__() {}
         /* Optional item-specific initialization after this._data_ is loaded.

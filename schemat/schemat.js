@@ -141,7 +141,7 @@ export class Schemat {
         await classpath.setModule("base", "./item.js")
         await classpath.setModule("std", "./std/files.js")
         await classpath.setModule("std", "./std/site.js")
-        await classpath.setModule("std", "./std/urls.js")
+        await classpath.setModule("std", "./std/containers.js")
 
         // if (this.server_side) {
         await classpath.setModule("db", "./db/records.js")
