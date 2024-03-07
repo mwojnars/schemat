@@ -603,14 +603,14 @@ export class Item {
 
         let container = this._container_
         let default_path = () => site.default_path_of(this)
+        // assert(container, `missing _container_ in [${this._id_}]`)
 
         if (!container) {
             let url = default_path()
-            // print('missing _container_:', url, `(${this.name})`)
+            print('missing _container_:', url, `(${this.name})`)
             return this._url_ = this._path_ = url
         }
-        // let container = await schemat.site.resolve(this.container_path, true)
-        // print(`_init_url() container: '${container.name}'`)
+        // print(`_init_url() container: '${container._id_}'`)
 
         if (!container.is_loaded()) await container.load()          // container must be fully loaded
         if (!container._path_) await container._ready_.url          // container's path must be initialized
@@ -1240,6 +1240,7 @@ export class Category extends Item {
                     }
                     items.push(await schemat.get_loaded(rec.id))
                 }
+                await Promise.all(items.map(item => item._ready_.url))    // on client, objects are usually displayed as hyperlinks, so we need their URLs
                 return items
             }
         }),
