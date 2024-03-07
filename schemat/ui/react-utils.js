@@ -9,6 +9,22 @@ let cssValidator = await tryimport('csstree-validator')
 
 /**********************************************************************************************************************
  **
+ **  UNICODE
+ **
+ */
+
+// a bunch of useful Unicode characters for use on web pages;
+// can be referred to by their names or copy-pasted directly from here
+
+export const CHAR_ARROW_R  =  "»"
+export const CHAR_ARROW_L  =  "«"
+export const CHAR_DOT      =  "•"
+
+// export const NBSP       = '\u00A0'       -- defined down below, plain character equivalent of &nbsp;
+
+
+/**********************************************************************************************************************
+ **
  **  CSS UTILITIES
  **
  */
