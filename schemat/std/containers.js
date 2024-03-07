@@ -70,6 +70,16 @@ export class Container extends Item {
 
 export class Directory extends Container {
 
+    get _entries_rev() {
+        /* Reverse mapping of objects IDs to their names for fast lookups.
+           If an object occurs multiple times in this.entries, the LAST occurrence is recorded (!)
+         */
+        let rev = new Map()
+        for (let {key: name, value: object} of this.entries)
+            rev.set(object._id_, name)
+        return this.CACHED_PROP(rev)
+    }
+
     resolve(path) {
         assert(path, `path must be non-empty`)
         let step = path.split('/')[0]
@@ -88,9 +98,7 @@ export class Directory extends Container {
 
     identify(item) {
         item.assert_linked()
-        let id = item._id_
-        for (let {key: name, value: ref} of this.entries)
-            if (ref._id_ === id) return name
+        return this._entries_rev.get(item._id_)
     }
 
     contains(name) { return this.entries.has(name) }
