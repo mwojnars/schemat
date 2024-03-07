@@ -174,8 +174,8 @@ export class RenderedPage extends HtmlPage {
 }
 
 export class ReactPage extends RenderedPage {
-    /* Generates a React-based HTML page whose main content is rendered from a React component.
-       By default, the component is written to the #page-component element in the page body, and any additional
+    /* Generates a React-based HTML page whose main content is rendered from a React functional component, Main().
+       By default, Main() is written to the #page-component element in the page body, and any additional
        (meta)data is written to the #page-data element. A <script> tag is added to the page to load
        the client-side JS code that will render the same component on the client side.
        The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
@@ -184,10 +184,10 @@ export class ReactPage extends RenderedPage {
     async render_client(target, html_element) {
         assert(schemat.client_side)
         target.assert_loaded()
-        let view = this.create_view(target)
+        let view  = this.create_view(target)
         let props = await view.prepare('client') || {}
-        let component = e(view.component, props)
-        return ReactDOM.createRoot(html_element).render(component)
+        let main  = e(view.Main, props)
+        return ReactDOM.createRoot(html_element).render(main)
     }
 
     static View = class extends RenderedPage.View {
@@ -202,8 +202,8 @@ export class ReactPage extends RenderedPage {
         render_server(props) {
             this.assert_loaded()
             print(`SSR render('${props.request.endpoint}') of ID=${this._id_}`)
-            let view = e(this.component, props)
-            return ReactDOM.renderToString(view)
+            let main = e(this.Main, props)
+            return ReactDOM.renderToString(main)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
         }
 
@@ -216,9 +216,9 @@ export class ReactPage extends RenderedPage {
             return `import {ClientSchemat} from "/system/local/client/main.js"; ClientSchemat.start_client();`
         }
 
-        component() {
-            /* The React component to be rendered as the page's content. */
-            throw new NotImplemented('component() must be implemented in subclasses')
+        Main() {
+            /* The React functional component to be rendered as the page's content. */
+            throw new NotImplemented('Main() component must be implemented in subclasses')
         }
     }
 }
@@ -246,8 +246,9 @@ export class ItemAdminView extends ReactPage.View {
         return assets .filter(a => a?.trim()) .join('\n')
     }
 
-    component({extra = null} = {}) {
+    Main({extra = null} = {}) {
         /* Detailed (admin) view of an item. */
+        let breadcrumb = this.get_container_path()
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
             // e(this._mui_test),
@@ -285,7 +286,7 @@ export class CategoryAdminView extends ItemAdminView {
         return {items: await this.list_items()}                 // preload the items list; `this` is a Category
     }
 
-    component({items: preloaded}) {
+    Main({items: preloaded}) {
         const scan = () => this.list_items()
         const [items, setItems] = useState(preloaded)           // existing child items; state prevents re-scan after every itemAdded()
                                                                 // TODO: use materialized list of items to explicitly control re-scanning
@@ -295,7 +296,7 @@ export class CategoryAdminView extends ItemAdminView {
         const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
         const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
-        return super.component({extra: FRAGMENT(
+        return super.Main({extra: FRAGMENT(
             H2('Items'),
             e(this.Items, {items: items, itemRemoved: async () => setItems(await scan()), key: 'items'}),
             H3('Add item'),
