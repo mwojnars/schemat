@@ -41,7 +41,7 @@ export class Container extends Item {
         throw new Error('not implemented')
     }
 
-    build_path(member) {
+    get_access_path(member) {
         /* Return an access path to `member` including the path from root to this container.
            The access path is like a URL path, but with explicit blank segments: /*BLANK
          */
@@ -63,7 +63,7 @@ export class Container extends Item {
     //        - duplicate=true if the `url` is a duplicate of an ancestor's URL path, due to a terminal blank segment.
     //        The `item` should be a member of this container.
     //      */
-    //     return this.path_to_url(this.build_path(item))
+    //     return this.path_to_url(this.get_access_path(item))
     // }
 }
 

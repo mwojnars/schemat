@@ -615,7 +615,7 @@ export class Item {
         if (!container.is_loaded()) await container.load()          // container must be fully loaded
         if (!container._path_) await container._ready_.url          // container's path must be initialized
 
-        this._path_ = container.build_path(this)
+        this._path_ = container.get_access_path(this)
         let [url, duplicate] = site.path_to_url(this._path_)
         // print('_init_url():', url, ` (duplicate=${duplicate})`)
 
