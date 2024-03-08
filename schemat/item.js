@@ -1240,7 +1240,6 @@ export class Category extends Item {
                     }
                     items.push(await schemat.get_loaded(rec.id))
                 }
-                await Promise.all(items.map(item => item._ready_.url))    // on client, objects are usually displayed as hyperlinks, so we need their URLs
                 return items
             }
         }),

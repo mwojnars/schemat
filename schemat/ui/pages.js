@@ -291,7 +291,9 @@ export class CategoryAdminView extends ItemAdminView {
     async prepare(side) {
         // TODO: on client, items could be pulled from response data to avoid re-scanning on 1st render?
         await super.prepare(side)
-        return {items: await this.list_items()}                 // preload the items list; `this` is a Category
+        let items = await this.list_items()                         // preload the objects that belong to this category
+        await Promise.all(items.map(item => item._ready_.url))      // objects will be displayed as hyperlinks, so we need their URLs
+        return {items}
     }
 
     Main({items: preloaded}) {
