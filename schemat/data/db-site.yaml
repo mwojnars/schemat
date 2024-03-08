@@ -73,9 +73,9 @@
       "@": 1010
     system:
       "@": 1019
-    "*root":
+    "*domain":
       "@": 1011
-    "*":
+    "*main":
       "@": 1014
     "@": base.Catalog
   default_path: /system/default
