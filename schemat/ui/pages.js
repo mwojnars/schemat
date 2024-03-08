@@ -1,8 +1,8 @@
 import {NotImplemented} from "../common/errors.js";
 import {T, print, assert, dedentFull, escape_html} from "../common/utils.js";
 import {Resources, ReactDOM} from './resources.js'
-import { e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
-         TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
+import {e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
+        TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './react-utils.js'
 import {HttpService} from "../services.js";
 import {Data} from "../data.js";
 import {CatalogTable} from "./catalog.js";
@@ -68,7 +68,7 @@ export class HtmlPage extends HttpService {
     }
 
     static View = class {
-        /* A View is a collection of predefined subcomponents that together create a page.
+        /* A View is a collection of predefined components and a generate() method that combines them into a page.
            Methods and properties to be copied to a descendant of the target object to create a "view" that
            combines the regular interface of the target with the page-generation functionality as defined below.
            Inside the page-generation functions, `this` is bound to this combined "view" object, so it can access both

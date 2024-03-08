@@ -53,6 +53,56 @@ export class Assets {
  **
  */
 
+export class Style {
+    /* CSS styles that can be scoped exclusively to the part of DOM where the component is located. */
+
+    scope               // name of the CSS scope; for building names of CSS classes
+    opts = {
+        stopper: '|',   // character or substring that marks the places in `css` where the scope prolog should be inserted
+        replace: {},    // key-value replacement rules for: css.replaceAll(key, value); typically a key is a special character rarely occurring in CSS (&, ?)
+    }
+
+    _class_prolog       // name of the CSS class for the prolog part of the scope
+    _class_epilog       // name of the CSS class for the epilog part of the scope
+
+    css                 // block of CSS text to be scoped and inserted in the output when the component is rendered
+
+    constructor(scope = null, opts = {}, css = '') {
+        this.opts = {...this.opts, ...opts}
+        this.scope = scope
+
+        this._class_prolog = `in-${scope}`
+        this._class_epilog = `out-${scope}`
+
+        for (const [symbol, sub] of Object.entries(opts.replace))
+            css = css.replaceAll(symbol, sub)
+
+        this.css = css
+    }
+
+    safe_css() {
+        /* Extend all the rules in this.css stylesheet with reliable modular scoping by _class_prolog (from above)
+           and _class_epilog (from below) classes.
+
+           WARNINGS:
+           - when an original CSS rule ends with a pseudo-element, like ::before, ::after (or :before, :after),
+             the `stopper` character must be placed *before* the pseudo-element, not after it (!)
+           - epilog must not be used for recursive components (containing nested copies of themselves,
+             directly or indirectly), because the subcomponents of the same type would *not* receive their styling then.
+         */
+        let css = this.css
+        if (!this.scope) return css
+
+        let stopper = this.opts.stopper
+        if (stopper) {
+            let sub = `:not(.${this._class_epilog} *)`      // exclude all DOM nodes located below the <_class_epilog> CSS class
+            css = css.replaceAll(stopper, sub)
+        }
+
+        return cssPrepend(`.${this._class_prolog}`, css)
+    }
+}
+
 export class Component extends React.Component {
     /* A React component with an API for defining and collecting dependencies (assets) and CSS styles.
        A Component subclass itself can be listed as a dependency (in .__assets__ or .assets) of another object.
@@ -74,9 +124,10 @@ export class Component extends React.Component {
     constructor(props) {
         super(props)
 
-        // for CSS scoping, replace this.render() with a wrapper that adds an extra DIV around the rendered element
+        // for CSS scoping, replace this.render() with a wrapper that adds an extra DIV around the rendered element;
+        // directly overriding render() is inconvenient, because subclasses could no longer define their own render() !!
         if (this.constructor.scope) {
-            this._renderOriginal_ = this.render.bind(this)
+            this._render_original = this.render.bind(this)
             this.render = this._render_wrapped.bind(this)
         }
 
@@ -109,10 +160,10 @@ export class Component extends React.Component {
 
     _render_wrapped() {
         /* Wrap up the element returned by this.render() in a <div> of an appropriate "start-at" css class(es).
-           This method is assigned to this.render in the constructor, so that subclasses can still
+           This method is assigned to `this.render` in the constructor, so that subclasses can still
            override the render() as usual, but React calls this wrapper instead.
          */
-        let elem = this._renderOriginal_()
+        let elem = this._render_original()
         if (elem === null || typeof elem === 'string') return elem
         return this._wrap(elem, true)
     }
