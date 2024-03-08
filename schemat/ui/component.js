@@ -87,12 +87,14 @@ export class Component extends React.Component {
     }
 
     static collect(assets) {
-        /* Walk through a prototype chain of `this` (a subclass) to collect .style() and .assets
-           of all base classes into an Assets() object. */
-        for (let proto of this._prototypes()) {
-            let props = Object.keys(proto)
-            if (props.includes('style'))  assets.addStyle(proto.style())
-            if (props.includes('assets')) assets.addAsset(proto.assets)
+        /* Walk through a prototype chain (base classes) of `this` (a subclass)
+           to collect all .style() and .assets into an Assets() object. */
+        for (let cls of this._prototypes()) {
+            let attrs = Object.keys(cls)
+            let style = cls.style()
+            // if (typeof style === 'function') style = style.call(cls)
+            if (attrs.includes('style'))  assets.addStyle(style)
+            if (attrs.includes('assets')) assets.addAsset(cls.assets)
         }
     }
     static _prototypes() {
@@ -159,7 +161,7 @@ export class Component extends React.Component {
                              the scope prolog should be inserted;
            - params.replace: a plain object (default: {}) whose own properties define key-value replacement rules,
                              of the form css.replaceAll(key, value); typically a key is a special character rarely
-                             occuring in CSS, like '&' or '?'.
+                             occurring in CSS, like '&' or '?'.
 
            WARNINGS:
            - when an original CSS rule ends with a pseudo-element, like ::before, ::after (or :before, :after), the epilog

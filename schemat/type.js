@@ -5,7 +5,6 @@ import {DataError, NotImplemented, ValueError} from './common/errors.js'
 import {Catalog, Path} from './data.js'
 import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
 
-import {Assets} from './ui/component.js'
 import {TypeWidget, TextualWidget, TEXT_Widget, CODE_Widget, GENERIC_Widget, TYPE_Widget, ITEM_Widget} from './ui/widgets.js'
 import {CatalogTable} from './ui/catalog.js'
 
