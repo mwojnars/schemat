@@ -1,7 +1,10 @@
 # Architecture
 
 
-- Distributed Object (Web OOP)
+- Network Object / Web Object / Distributed Object (Web OOP)
+  - an object that lives on the network: a collection of instances (copies) of the same local object 
+    existing on different machines; the copies may communicate with each other and assume different behavior (client/server) 
+    depending on the location
   - `Item` class, "item" = "web object"
   - 3x types of objects:  user / application / system objects
   - objects created / stored in DB / transmitted / instantiated / executed -- on any! machine (db/server/client)

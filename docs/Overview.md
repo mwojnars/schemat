@@ -1,4 +1,4 @@
-# Schemat / Hyperweb
+# Schemat
 
 ## Introduction
 

@@ -54,7 +54,14 @@ export class Assets {
  */
 
 export class Style {
-    /* CSS styles that can be scoped exclusively to the part of DOM where the component is located. */
+    /* CSS styles that can be scoped exclusively to the part of DOM where the component is located.
+
+       NOTE:
+       - when an original CSS rule ends with a pseudo-element, like ::before, ::after (or :before, :after),
+         the `stopper` character must be placed *before* the pseudo-element, not after it (!)
+       - epilog must not be used for recursive components (containing nested copies of themselves,
+         directly or indirectly), because the subcomponents of the same type would *not* receive their styling then.
+     */
 
     scope               // name of the CSS scope; for building names of CSS classes
     opts = {
@@ -65,32 +72,29 @@ export class Style {
     _class_prolog       // name of the CSS class for the prolog part of the scope
     _class_epilog       // name of the CSS class for the epilog part of the scope
 
-    css                 // block of CSS text to be scoped and inserted in the output when the component is rendered
+    raw_css             // original block of CSS before scoping and replacements
+    css                 // final block of CSS with the scope and replacements applied
 
     constructor(scope = null, opts = {}, css = '') {
         this.opts = {...this.opts, ...opts}
         this.scope = scope
+        this.raw_css = css
 
-        this._class_prolog = `in-${scope}`
-        this._class_epilog = `out-${scope}`
+        if (scope) {
+            this._class_prolog = `in-${scope}`
+            this._class_epilog = `out-${scope}`
+        }
 
         for (const [symbol, sub] of Object.entries(opts.replace))
             css = css.replaceAll(symbol, sub)
 
-        this.css = css
+        this.css = this._safe_css(css)
     }
 
-    safe_css() {
-        /* Extend all the rules in this.css stylesheet with reliable modular scoping by _class_prolog (from above)
-           and _class_epilog (from below) classes.
-
-           WARNINGS:
-           - when an original CSS rule ends with a pseudo-element, like ::before, ::after (or :before, :after),
-             the `stopper` character must be placed *before* the pseudo-element, not after it (!)
-           - epilog must not be used for recursive components (containing nested copies of themselves,
-             directly or indirectly), because the subcomponents of the same type would *not* receive their styling then.
+    _safe_css(css) {
+        /* Update the rules in `this.css` stylesheet by scoping them with _class_prolog (from above)
+           and _class_epilog (from below) CSS classes.
          */
-        let css = this.css
         if (!this.scope) return css
 
         let stopper = this.opts.stopper
@@ -101,6 +105,8 @@ export class Style {
 
         return cssPrepend(`.${this._class_prolog}`, css)
     }
+
+    wrap() {}
 }
 
 export class Component extends React.Component {
