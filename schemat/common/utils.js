@@ -295,6 +295,20 @@ export class Types {
     static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
     static isPromise      = (obj) => (obj instanceof Promise)
 
+    static getPrototypes = (obj) => {
+        /* Return a prototype chain (an array of all prototypes) of `obj`, starting at `obj` (included) and going upwards.
+           `obj` can be an object (the chain ends at Object.prototype, excluded) or a class (the chain ends at Function.prototype, excluded).
+         */
+        const Object_proto = Object.prototype
+        const Function_proto = Function.prototype
+        let prototypes = []
+        while (obj && obj !== Object_proto && obj !== Function_proto) {
+            prototypes.push(obj)
+            obj = Object.getPrototypeOf(obj)
+        }
+        return prototypes
+    }
+
     static getAllPropertyNames = (obj) => {
         /* Return an array of all property names of `obj`, including inherited ones, also the ones from Object like toString(), constructor etc. */
         let attrs = []
