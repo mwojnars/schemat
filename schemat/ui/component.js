@@ -75,7 +75,8 @@ export class Style {
     raw_css             // original block of CSS before scoping and replacements
     css                 // final block of CSS with the scope and replacements applied
 
-    constructor(scope = null, opts = {}, css = '') {
+    constructor(styled_class, scope = null, opts = {}, css = '') {
+        /* `styled_class` is the owner class of this Style object: styled_class.style == this. */
         this.opts = {...this.opts, ...opts}
         this.scope = scope
         this.raw_css = css
@@ -85,6 +86,14 @@ export class Style {
             this._class_epilog = `out-${scope}`
         }
 
+        // collect all scoping classes from the prototype chain of `styled_class`
+        let prototypes = T.getPrototypes(styled_class)
+        this._all_classes_prolog = [...new Set(prototypes.map(cls => cls._class_prolog).filter(Boolean))].join(' ')
+        this._all_classes_epilog = [...new Set(prototypes.map(cls => cls._class_epilog).filter(Boolean))].join(' ')
+
+        for (let cls of prototypes) {
+        }
+
         for (const [symbol, sub] of Object.entries(opts.replace))
             css = css.replaceAll(symbol, sub)
 
@@ -92,8 +101,8 @@ export class Style {
     }
 
     _safe_css(css) {
-        /* Update the rules in `this.css` stylesheet by scoping them with _class_prolog (from above)
-           and _class_epilog (from below) CSS classes.
+        /* Update the rules in `this.css` stylesheet by scoping them with special CSS classes:
+           <_class_prolog> (from above) and <_class_epilog> (from below).
          */
         if (!this.scope) return css
 
@@ -170,12 +179,12 @@ export class Component extends React.Component {
            override the render() as usual, but React calls this wrapper instead.
          */
         let elem = this._render_original()
-        if (elem === null || typeof elem === 'string') return elem
         return this._wrap(elem, true)
+        // if (elem === null || typeof elem === 'string') return elem
     }
 
     _wrap(elem, prolog = true) {
-        if (!this.constructor.scope) return elem
+        if (!this.constructor.scope || !elem || typeof elem === 'string') return elem
         let names = this._collectScopes(prolog)
         return DIV({className: names.join(' ')}, elem)
         // let name = (prolog ? this.constructor.SCOPE_PROLOG(scopes) : this.constructor.SCOPE_EPILOG(scopes))
