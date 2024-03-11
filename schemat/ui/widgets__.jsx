@@ -7,15 +7,17 @@
 import {TypeWrapper} from "../type.js";
 import {truncate} from "../common/utils.js";
 import {GENERIC_Widget, TypeWidget} from "./widgets.js";
+import {Style} from "./component.js";
 
 
 export class TYPE_Widget__ extends GENERIC_Widget {
-    scope = 'TYPE'
-    static style = () => this.safeCSS({stopper: '|'})
+
+    static style = new Style('TYPE', this, {},
     `
         .default|   { color: #888; }
         .info|      { font-style: italic; }
-    `
+    `)
+
     viewer()  { return TypeWidget.prototype.viewer.call(this) }
     view() {
         let {value: type} = this.props
