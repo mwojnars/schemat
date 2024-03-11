@@ -72,27 +72,26 @@ export class Style {
     _class_prolog       // name of the CSS class for the prolog part of the scope
     _class_epilog       // name of the CSS class for the epilog part of the scope
 
-    raw_css             // original block of CSS before scoping and replacements
-    css                 // final block of CSS with the scope and replacements applied
+    _css_raw            // original block of CSS before scoping and replacements
+    css                 // final CSS with the scope and replacements applied
 
     constructor(styled_class, scope = null, opts = {}, css = '') {
         /* `styled_class` is the owner class of this Style object: styled_class.style == this. */
         this.opts = {...this.opts, ...opts}
         this.scope = scope
-        this.raw_css = css
+        this._css_raw = css
 
         if (scope) {
             this._class_prolog = `in-${scope}`
             this._class_epilog = `out-${scope}`
         }
 
-        // collect all scoping classes from the prototype chain of `styled_class`
-        let prototypes = T.getPrototypes(styled_class)
-        this._all_classes_prolog = [...new Set(prototypes.map(cls => cls._class_prolog).filter(Boolean))].join(' ')
-        this._all_classes_epilog = [...new Set(prototypes.map(cls => cls._class_epilog).filter(Boolean))].join(' ')
+        let prototypes = T.getPrototypes(styled_class).slice(1)
+        let styles = [this, ...prototypes.map(cls => cls.style)].filter(stl => Boolean(stl?.scope))
 
-        for (let cls of prototypes) {
-        }
+        // collect all scoping classes from the prototype chain of `styled_class`
+        this._all_classes_prolog = [...new Set(styles.map(stl => stl._class_prolog))].sort().join(' ')
+        this._all_classes_epilog = [...new Set(styles.map(stl => stl._class_epilog))].sort().join(' ')
 
         for (const [symbol, sub] of Object.entries(opts.replace))
             css = css.replaceAll(symbol, sub)
@@ -115,7 +114,18 @@ export class Style {
         return cssPrepend(`.${this._class_prolog}`, css)
     }
 
-    wrap() {}
+    add_prolog(elem) {
+        let classes = this._all_classes_prolog
+        if (!classes || !elem || typeof elem === 'string') return elem
+        return DIV({className: classes.join(' ')}, elem)
+    }
+
+    add_epilog(elem) {
+        // if (typeof elem === 'function') elem = e(elem, props)               // convert a component (class/function) to an element
+        let classes = this._all_classes_epilog
+        if (!classes || !elem || typeof elem === 'string') return elem
+        return DIV({className: classes.join(' ')}, elem)
+    }
 }
 
 export class Component extends React.Component {
