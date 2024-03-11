@@ -174,11 +174,12 @@ export class Component__ extends React.Component {
     embed(component, props = null) {
         /* Safely embed a React `component` (or element) inside this one by wrapping it up
            in an "epilog" <div> with an appropriate css class for modular scoping.
-           Also, check if `this` declares the `component` in its assets and throw an exception if not (TODO).
-           IMPORTANT: clients should always use this method instead of createElement() to insert Components into a document;
-           the only exceptions are top-level Components, as they do not have parent scopes where to embed into,
-           and the components that may include components of the same type (recursive inclusion, direct OR indirect!).
-           Calling createElement() directly without embed() may result in `this` styles leaking down into the `component`.
+           Also, check if `this` declared the `component` in its assets and throw an exception if not (TODO).
+
+           IMPORTANT: nested components should always be inserted into a page using this method, not createElement();
+           calling createElement() directly may result in the styles of `this` leaking down into the `component`.
+           The only exceptions are top-level Components and the components that may include components of the same type
+           (recursive inclusion, direct OR indirect!).
          */
         // let embedStyle = T.pop(props, 'embedStyle')  // for styling the wrapper DIV, e.g., display:inline
         // let embedDisplay ...
