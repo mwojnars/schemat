@@ -19,7 +19,7 @@ export class Assets {
     assets = new Set()
     styles = new Set()
 
-    addStyle(st)    { if (st && st.trim()) this.styles.add(st.trim()) }
+    addStyle(st)    { if (st?.trim()) this.styles.add(st.trim()) }
     addAsset(asset) {
         /* `asset` can be a plain string to be inserted in the <head> section, or a list of assets,
            or an object with .__assets__ or .assets property. The assets can be nested. */
@@ -49,7 +49,7 @@ export class Assets {
 
 /**********************************************************************************************************************
  **
- **  COMPONENT
+ **  CSS STYLE
  **
  */
 
@@ -114,17 +114,77 @@ export class Style {
         return cssPrepend(`.${this._class_prolog}`, css)
     }
 
-    add_prolog(elem) {
-        let classes = this._all_classes_prolog
+    _wrap(elem, classes) {
         if (!classes || !elem || typeof elem === 'string') return elem
         return DIV({className: classes.join(' ')}, elem)
     }
 
-    add_epilog(elem) {
-        // if (typeof elem === 'function') elem = e(elem, props)               // convert a component (class/function) to an element
-        let classes = this._all_classes_epilog
-        if (!classes || !elem || typeof elem === 'string') return elem
-        return DIV({className: classes.join(' ')}, elem)
+    add_prolog(elem)    { return this._wrap(elem, this._all_classes_prolog) }
+    add_epilog(elem)    { return this._wrap(elem, this._all_classes_epilog) }
+}
+
+
+/**********************************************************************************************************************
+ **
+ **  COMPONENT
+ **
+ */
+
+export class Component__ extends React.Component {
+
+    static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
+                        // property defined, or a Component, or a plain html string to be pasted into the <head> section of a page
+
+    static style        // a Style object that defines the CSS styles for this component, possibly scoped
+
+    constructor(props) {
+        super(props)
+
+        // for CSS scoping, replace this.render() with a wrapper that adds an extra DIV around the rendered element;
+        // directly overriding render() is inconvenient, because subclasses could no longer define their own render() !!
+        if (this.constructor.style) {
+            this._render_original = this.render.bind(this)
+            this.render = this._render_wrapped.bind(this)
+        }
+
+        // bind all the methods (own or inherited) that start with a capital letter, possibly prefixed by underscore(s)
+        // - they are assumed to be React functional components
+        for (let name of T.getAllPropertyNames(this.constructor.prototype))
+            if (name.match(/^_*[A-Z]/) && typeof this[name] === 'function')
+                this[name] = this[name].bind(this)
+    }
+
+    static collect(assets) {
+        /* Walk through a prototype chain of `this` to collect all .style's and .assets into an Assets object. */
+        for (let cls of T.getPrototypes(this)) {
+            assets.addStyle(cls.style?.css)
+            assets.addAsset(cls.assets)
+        }
+    }
+
+    _render_wrapped() {
+        /* Wrap up the element returned by this.render() in a <div> of an appropriate "prolog" CSS class(es) for style scoping.
+           This method is assigned to `this.render` in the constructor, so that subclasses can still
+           override the render() as usual, but React calls this wrapper instead.
+         */
+        let elem = this._render_original()
+        return this.constructor.style.add_prolog(elem)
+    }
+
+    embed(component, props = null) {
+        /* Safely embed a React `component` (or element) inside this one by wrapping it up
+           in an "epilog" <div> with an appropriate css class for modular scoping.
+           Also, check if `this` declares the `component` in its assets and throw an exception if not (TODO).
+           IMPORTANT: clients should always use this method instead of createElement() to insert Components into a document;
+           the only exceptions are top-level Components, as they do not have parent scopes where to embed into,
+           and the components that may include components of the same type (recursive inclusion, direct OR indirect!).
+           Calling createElement() directly without embed() may result in `this` styles leaking down into the `component`.
+         */
+        // let embedStyle = T.pop(props, 'embedStyle')  // for styling the wrapper DIV, e.g., display:inline
+        // let embedDisplay ...
+        if (typeof component === 'function') component = e(component, props)        // convert a component (class/function) to an element if needed
+        let style = this.constructor.style
+        return style ? style.add_epilog(component) : component
     }
 }
 
