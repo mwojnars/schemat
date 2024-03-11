@@ -5,7 +5,7 @@ import {TypeWrapper} from "../type.js";
 import {e, cl, st, createRef, useState, ItemLoadingHOC} from './react-utils.js'
 import {A, B, I, P, PRE, DIV, SPAN, INPUT, TEXTAREA, FLEX, FRAGMENT, HTML, NBSP} from './react-utils.js'
 
-import {Component} from "./component.js"
+import {Component, Style} from "./component.js"
 
 
 /**********************************************************************************************************************/
@@ -116,8 +116,9 @@ export class TextualWidget extends TypeWidget {
 
 export class TEXT_Widget extends TextualWidget {
 
-    static scope = 'TEXT'
-    static style = () => this.safeCSS()
+    // static scope = 'TEXT'
+    // static style = () => this.safeCSS()
+    static style = new Style('TEXT', this, {},
     `
         .editor {
             min-height: 2em;
@@ -126,7 +127,7 @@ export class TEXT_Widget extends TextualWidget {
             outline: none;
             resize: vertical;
         }
-    `
+    `)
     //     .use-scroll {
     //         overflow: auto;   /*scroll*/
     //         max-height: 12rem;
@@ -188,8 +189,9 @@ export class CODE_Widget extends TEXT_Widget {
     <script>ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/")</script>
     `
 
-    static scope = 'CODE'
-    static style = () => this.safeCSS()
+    // static scope = 'CODE'
+    // static style = () => this.safeCSS()
+    static style = new Style('CODE', this, {},
     `
     .ace-viewer, .ace-editor {
         font-size: 1em;
@@ -206,7 +208,7 @@ export class CODE_Widget extends TEXT_Widget {
         background-color: rgba(255,255,255,0.5);
         height: 12em;
     }
-    `
+    `)
 
     static viewer_options = {
         mode:                   "ace/mode/jsx",   // .../javascript
@@ -298,12 +300,13 @@ export class GENERIC_Widget extends TEXT_Widget {
 /**********************************************************************************************************************/
 
 export class TYPE_Widget extends GENERIC_Widget {
-    scope = 'TYPE'
-    static style = () => this.safeCSS({stopper: '|'})
+    // scope = 'TYPE'
+    // static style = () => this.safeCSS({stopper: '|'})
+    static style = new Style('TYPE', this, {},
     `
         .default|   { color: #888; }
         .info|      { font-style: italic; }
-    `
+    `)
     viewer()  { return TypeWidget.prototype.viewer.call(this) }
     view() {
         let {value: type} = this.props

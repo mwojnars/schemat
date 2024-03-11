@@ -5,7 +5,7 @@ import {CATALOG, generic_string} from "../type.js";
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "./react-utils.js";
 import {MaterialUI} from "./resources.js";
 import {TextualWidget} from "./widgets.js";
-import {Component} from "./component.js";
+import {Component, Style} from "./component.js";
 
 
 /**********************************************************************************************************************
@@ -17,8 +17,9 @@ import {Component} from "./component.js";
 export class CatalogTable extends Component {
     /* React component that displays a Catalog in a tabular form. */
 
-    static scope = 'CATALOG'
-    static style = () => this.safeCSS({stopper: '|'})
+    // static scope = 'CATALOG'
+    // static style = () => this.safeCSS({stopper: '|'})
+    static style = new Style('CATALOG', this, {},
     `
         .catalog-d0       { width: 100%; font-size: 1rem; }
         
@@ -81,7 +82,7 @@ export class CatalogTable extends Component {
         .flash-warn|    { background-color: salmon; transition: 0.2s; }
         .flash-stop|    { opacity: 0; z-index: -1; transition: 2s linear 1s; transition-property: opacity, background-color, z-index; }
         .error|         { padding-top:5px; color:red; }
-    `
+    `)
     /* CSS elements:
         .dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
         .entry     -- <TR> of a table, top-level or nested
