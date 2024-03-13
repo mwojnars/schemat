@@ -5,6 +5,7 @@ import {e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIE
         TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './react-utils.js'
 import {HttpService} from "../services.js";
 import {Data} from "../data.js";
+import {Styled} from "./component.js";
 import {CatalogTable} from "./catalog.js";
 
 
@@ -67,7 +68,7 @@ export class HtmlPage extends HttpService {
         })
     }
 
-    static View = class {
+    static View = class extends Styled(Object) {
         /* A View is a collection of predefined components and a generate() method that combines them into a page.
            Methods and properties to be copied to a descendant of the target object to create a "view" that
            combines the regular interface of the target with the page-generation functionality as defined below.
