@@ -12,7 +12,7 @@ import {Style} from "./component.js";
 
 export class TYPE_Widget__ extends GENERIC_Widget {
 
-    static style = new Style('TYPE', this, {},
+    static _style_ = new Style('TYPE', this, {},
     `
         .default|   { color: #888; }
         .info|      { font-style: italic; }
