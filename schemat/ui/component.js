@@ -75,7 +75,7 @@ export class Style {
     _css_raw            // original block of CSS before scoping and replacements
     css                 // final CSS with the scope and replacements applied
 
-    
+
     constructor(scope, styled_class, opts = {}, css = '') {
         /* `styled_class` is the owner class of this Style object (styled_class.style == this);
            `scope` can be null or empty (no scoping).
@@ -127,21 +127,39 @@ export class Style {
 }
 
 
+export const Styled = (baseclass) => class extends baseclass {
+    /* A mixin for a View and Component classes that defines static `style` and `assets` properties and a method for collecting them. */
+
+    static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
+                        // property defined, or a Component, or a plain html string to be pasted into the <head> section of a page
+
+    static style        // a Style object that defines the CSS styles for this component, possibly scoped
+
+    static collect(assets) {
+        /* Walk through a prototype chain of `this` class to collect all .style's and .assets into an Assets object. */
+        for (let cls of T.getPrototypes(this)) {
+            assets.addStyle(cls.style?.css)
+            assets.addAsset(cls.assets)
+        }
+    }
+}
+
+
 /**********************************************************************************************************************
  **
  **  COMPONENT
  **
  */
 
-export class Component extends React.Component {
+export class Component extends Styled(React.Component) {
     /* A React component with an API for defining and collecting dependencies (assets) and CSS styles.
        A Component subclass itself can be listed as a dependency (in .__assets__ or .assets) of another object.
      */
 
-    static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
-                        // property defined, or a Component, or a plain html string to be pasted into the <head> section of a page
-
-    static style        // a Style object that defines the CSS styles for this component, possibly scoped
+    // static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
+    //                     // property defined, or a Component, or a plain html string to be pasted into the <head> section of a page
+    //
+    // static style        // a Style object that defines the CSS styles for this component, possibly scoped
 
     constructor(props) {
         super(props)
@@ -160,13 +178,13 @@ export class Component extends React.Component {
                 this[name] = this[name].bind(this)
     }
 
-    static collect(assets) {
-        /* Walk through a prototype chain of `this` to collect all .style's and .assets into an Assets object. */
-        for (let cls of T.getPrototypes(this)) {
-            assets.addStyle(cls.style?.css)
-            assets.addAsset(cls.assets)
-        }
-    }
+    // static collect(assets) {
+    //     /* Walk through a prototype chain of `this` to collect all .style's and .assets into an Assets object. */
+    //     for (let cls of T.getPrototypes(this)) {
+    //         assets.addStyle(cls.style?.css)
+    //         assets.addAsset(cls.assets)
+    //     }
+    // }
 
     _render_wrapped() {
         /* Wrap up the element returned by this.render() in a <div> of an appropriate "prolog" CSS class(es) for style scoping.
