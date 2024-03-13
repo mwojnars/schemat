@@ -28,12 +28,9 @@ export class Assets {
             for (let a of asset) this.addAsset(a)
 
         else if (typeof asset !== 'string')
-            // if (asset.__assets__ !== undefined)  asset = asset.__assets__
-            // else if (asset._assets_ !== undefined) asset = asset._assets_
-            // else throw new Error(`missing _assets_ in ${asset}`)
             this.addAsset(asset._assets_)               // `asset` may contain nested objects with _assets_ properties
 
-        else if (asset && asset.trim()) this.assets.add(asset.trim())
+        else if (asset.trim()) this.assets.add(asset.trim())
     }
 
     renderAll(mini)     { return `${this._allAssets()}\n${this.renderStyles(mini)}` }
