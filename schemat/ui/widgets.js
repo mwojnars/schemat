@@ -14,8 +14,6 @@ export class TypeWidget extends Component {
     /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog) values
        of a particular data type.
      */
-    static scope = 'Type'
-
     static defaultProps = {
         type:   undefined,      // Type of the `value` to be displayed
         value:  undefined,      // value object to be displayed by render()
@@ -116,7 +114,7 @@ export class TextualWidget extends TypeWidget {
 
 export class TEXT_Widget extends TextualWidget {
 
-    static _style_ = new Style('TEXT', this, {},
+    static style = new Style('TEXT', this, {},
     `
         .editor {
             min-height: 2em;
@@ -176,7 +174,7 @@ export class CODE_Widget extends TEXT_Widget {
       editor.focus()
     */
 
-    static _assets_ =                                             // import ACE Editor
+    static assets =                                             // import ACE Editor
     `
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ace.min.js" integrity="sha512-jB1NOQkR0yLnWmEZQTUW4REqirbskxoYNltZE+8KzXqs9gHG5mrxLR5w3TwUn6AylXkhZZWTPP894xcX/X8Kbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/mode-jsx.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -187,7 +185,7 @@ export class CODE_Widget extends TEXT_Widget {
     <script>ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/")</script>
     `
 
-    static _style_ = new Style('CODE', this, {},
+    static style = new Style('CODE', this, {},
     `
     .ace-viewer, .ace-editor {
         font-size: 1em;
@@ -297,7 +295,7 @@ export class GENERIC_Widget extends TEXT_Widget {
 
 export class TYPE_Widget extends GENERIC_Widget {
 
-    static _style_ = new Style('TYPE', this, {},
+    static style = new Style('TYPE', this, {},
     `
         .default|   { color: #888; }
         .info|      { font-style: italic; }

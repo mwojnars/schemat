@@ -22,13 +22,13 @@ export class Assets {
     addStyle(st)    { if (st?.trim()) this.styles.add(st.trim()) }
     addAsset(asset) {
         /* `asset` can be a plain string to be inserted in the <head> section, or a list of assets,
-           or an object with _assets_ property. The assets can be nested. */
+           or an object with .assets property. The assets can be nested. */
         if (!asset) return
         if (T.isArray(asset))
             for (let a of asset) this.addAsset(a)
 
         else if (typeof asset !== 'string')
-            this.addAsset(asset._assets_)               // `asset` may contain nested objects with _assets_ properties
+            this.addAsset(asset.assets)               // `asset` may contain nested objects with .assets properties
 
         else if (asset.trim()) this.assets.add(asset.trim())
     }
@@ -75,7 +75,7 @@ export class Style {
 
     constructor(scope, styled_class, opts = {}, css = '') {
         /* `styled_class` is the owner class of this Style object and should be derived from the Styled() mixin,
-            so that styled_class._style_==this after the constructor completes. The `scope` can be null/empty (no scoping).
+            so that styled_class.style==this after the constructor completes. The `scope` can be null/empty (no scoping).
          */
         this.opts = {...this.opts, ...opts}
         this.scope = scope
@@ -87,7 +87,7 @@ export class Style {
         }
 
         let prototypes = T.getPrototypes(styled_class).slice(1)
-        let styles = [this, ...prototypes.map(cls => cls._style_)].filter(stl => Boolean(stl?.scope))
+        let styles = [this, ...prototypes.map(cls => cls.style)].filter(stl => Boolean(stl?.scope))
 
         // collect all scoping classes from the prototype chain of `styled_class`
         this._all_classes_prolog = [...new Set(styles.map(stl => stl._class_prolog))].sort().join(' ')
@@ -125,18 +125,18 @@ export class Style {
 
 
 export const Styled = (baseclass) => class extends baseclass {
-    /* A mixin for a View and Component classes that defines static _style_ and _assets_ properties and a method for collecting them. */
+    /* A mixin for a View and Component classes that defines static `style` and `assets` properties and a method for collecting them. */
 
-    static _assets_     // list of assets this widget depends on; each asset should be an object with _assets_ property,
+    static assets       // list of assets this widget depends on; each asset should be an object with .assets property,
                         // or a Component, or a plain html string to be pasted into the <head> section of a page
 
-    static _style_      // a Style object that defines the CSS styles for this component, possibly scoped
+    static style        // a Style object that defines the CSS styles for this component, possibly scoped
 
     static collect(assets) {
-        /* Walk through a prototype chain of `this` class to collect all _style_'s and ._assets_ into an Assets object. */
+        /* Walk through a prototype chain of `this` class to collect all .style's and .assets into an Assets object. */
         for (let cls of T.getPrototypes(this)) {
-            assets.addStyle(cls._style_?.css)
-            assets.addAsset(cls._assets_)
+            assets.addStyle(cls.style?.css)
+            assets.addAsset(cls.assets)
         }
     }
 }
@@ -150,7 +150,7 @@ export const Styled = (baseclass) => class extends baseclass {
 
 export class Component extends Styled(React.Component) {
     /* A React component with scoped CSS styles through Styled() and dependencies (assets).
-       A Component subclass itself can be listed as a dependency (in _assets_) of another object.
+       A Component subclass itself can be listed as a dependency (in .assets) of another object.
      */
 
     constructor(props) {
@@ -158,7 +158,7 @@ export class Component extends Styled(React.Component) {
 
         // for CSS scoping, replace this.render() with a wrapper that adds an extra DIV around the rendered element;
         // directly overriding render() is inconvenient, because subclasses could no longer define their own render() !!
-        if (this.constructor._style_) {
+        if (this.constructor.style) {
             this._render_original = this.render.bind(this)
             this.render = this._render_wrapped.bind(this)
         }
@@ -176,7 +176,7 @@ export class Component extends Styled(React.Component) {
            override the render() as usual, but React calls this wrapper instead.
          */
         let elem = this._render_original()
-        return this.constructor._style_.add_prolog(elem)
+        return this.constructor.style.add_prolog(elem)
     }
 
     embed(component, props = null) {
@@ -192,7 +192,7 @@ export class Component extends Styled(React.Component) {
         // let embedStyle = T.pop(props, 'embedStyle')  // for styling the wrapper DIV, e.g., display:inline
         // let embedDisplay ...
         if (typeof component === 'function') component = e(component, props)        // convert a component (class/function) to an element if needed
-        let style = this.constructor._style_
+        let style = this.constructor.style
         return style ? style.add_epilog(component) : component
     }
 }

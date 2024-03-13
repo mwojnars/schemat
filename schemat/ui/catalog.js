@@ -17,7 +17,7 @@ import {Component, Style} from "./component.js";
 export class CatalogTable extends Component {
     /* React component that displays a Catalog in a tabular form. */
 
-    static _style_ = new Style('CATALOG', this, {},
+    static style = new Style('CATALOG', this, {},
     `
         .catalog-d0       { width: 100%; font-size: 1rem; }
         
