@@ -13,31 +13,31 @@ let csso = await tryimport('csso')
  */
 
 export class Assets {
-    /* Collection of assets and CSS styles that are appended one by one with addStyle() or addAsset(),
+    /* Collection of assets and CSS styles that are appended one by one with add_style() or add_asset(),
        and then deduplicated (!) and merged to a single HTML snippet in display().
      */
     assets = new Set()
     styles = new Set()
 
-    addStyle(st)    { if (st?.trim()) this.styles.add(st.trim()) }
-    addAsset(asset) {
+    add_style(st)    { if (st?.trim()) this.styles.add(st.trim()) }
+    add_asset(asset) {
         /* `asset` can be a plain string to be inserted in the <head> section, or a list of assets,
            or an object with .assets property. The assets can be nested. */
         if (!asset) return
         if (T.isArray(asset))
-            for (let a of asset) this.addAsset(a)
+            for (let a of asset) this.add_asset(a)
 
         else if (typeof asset !== 'string')
-            this.addAsset(asset.assets)               // `asset` may contain nested objects with .assets properties
+            this.add_asset(asset.assets)               // `asset` may contain nested objects with .assets properties
 
         else if (asset.trim()) this.assets.add(asset.trim())
     }
 
-    renderAll(mini)     { return `${this._allAssets()}\n${this.renderStyles(mini)}` }
-    renderStyles(mini)  { return this.styles.size ? `<style>\n${this._allStyles(mini)}\n</style>` : '' }
+    render_all(mini)     { return `${this._all_assets()}\n${this.render_styles(mini)}` }
+    render_styles(mini)  { return this.styles.size ? `<style>\n${this._all_styles(mini)}\n</style>` : '' }
 
-    _allAssets()        { return [...this.assets].join('\n') }
-    _allStyles(mini = false) {
+    _all_assets()        { return [...this.assets].join('\n') }
+    _all_styles(mini = false) {
         let css = [...this.styles].join('\n')
         return mini && csso ? csso.minify(css).css : css
     }
@@ -135,8 +135,8 @@ export const Styled = (baseclass) => class extends baseclass {
     static collect(assets) {
         /* Walk through a prototype chain of `this` class to collect all .style's and .assets into an Assets object. */
         for (let cls of T.getPrototypes(this)) {
-            assets.addStyle(cls.style?.css)
-            assets.addAsset(cls.assets)
+            assets.add_style(cls.style?.css)
+            assets.add_asset(cls.assets)
         }
     }
 }

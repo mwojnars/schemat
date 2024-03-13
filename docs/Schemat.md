@@ -51,6 +51,6 @@
   - Assets:
     - Type.collect()
     - deduplication
-    - renderAll()
+    - render_all()
     - nested styles
     - same assets for all types of pages per object, no differentiation
