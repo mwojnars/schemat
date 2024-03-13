@@ -156,11 +156,6 @@ export class Component extends Styled(React.Component) {
        A Component subclass itself can be listed as a dependency (in .__assets__ or .assets) of another object.
      */
 
-    // static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
-    //                     // property defined, or a Component, or a plain html string to be pasted into the <head> section of a page
-    //
-    // static style        // a Style object that defines the CSS styles for this component, possibly scoped
-
     constructor(props) {
         super(props)
 
@@ -177,14 +172,6 @@ export class Component extends Styled(React.Component) {
             if (name.match(/^_*[A-Z]/) && typeof this[name] === 'function')
                 this[name] = this[name].bind(this)
     }
-
-    // static collect(assets) {
-    //     /* Walk through a prototype chain of `this` to collect all .style's and .assets into an Assets object. */
-    //     for (let cls of T.getPrototypes(this)) {
-    //         assets.addStyle(cls.style?.css)
-    //         assets.addAsset(cls.assets)
-    //     }
-    // }
 
     _render_wrapped() {
         /* Wrap up the element returned by this.render() in a <div> of an appropriate "prolog" CSS class(es) for style scoping.
