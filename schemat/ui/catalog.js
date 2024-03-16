@@ -246,7 +246,7 @@ export class CatalogTable extends Component {
                 DIV(cl('cell cell-value'))
             ),
             DIV({key: 'cat'}, folded && st({display: 'none'}),
-                e(CatalogTable, {item, path, catalog: subcat, type, color})),
+                e(type.Widget, {item, path, catalog: subcat, type, color})),
         )
     }
     EntryAddNew({hide = true, insert}) {

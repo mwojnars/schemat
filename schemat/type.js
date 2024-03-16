@@ -575,6 +575,8 @@ export class CATALOG extends Type {
 
     isCatalog() { return true }
 
+    static Widget = CatalogTable
+
     static defaultProps = {
         keys:       new STRING({blank: true}),      // Type of all keys in the catalog; must be an instance of STRING or its subclass; mainly for validation
         values:     new GENERIC({multi: true}),     // Type of all values in the catalog
