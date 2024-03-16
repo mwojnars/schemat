@@ -1046,6 +1046,11 @@ export class Category extends Item {
         return this.get_defaults(prop)[0]
     }
 
+    // get schema_assets() {
+    //     let assets = new Assets()
+    //     this.data_schema.collect(assets)
+    //     return this.CACHED_PROP(assets)
+    // }
 
     get _item_class_() {
         /* Return a (cached) Promise that resolves to the dynamically created class to be used for items of this category. */

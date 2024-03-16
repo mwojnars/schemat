@@ -40,7 +40,7 @@ let root_fields = new Catalog({
 
     pages        : new CATALOG({values: new CODE(), info: "Source code of functions that generate static HTML response for particular access methods of this category's items."}),
     views        : new CATALOG({values: new CODE(), info: "Body of React functional components (no function header) to be added dynamically to the category's Class body as VIEW_name(props) methods for rendering item views. Inside the function body, `this` refers the item to be rendered. Alternatively, the code of each view may consist of a method header, view() {...}, and be accompanied by supporting methods: title(), assets() - like in a class body."}),
-    html_assets  : new CODE({info: "HTML code to be inserted in the html/head section of every page that is rendered from a view function of this category."}),
+    // html_assets  : new CODE({info: "HTML code to be inserted in the html/head section of every page that is rendered from a view function of this category."}),
 
     // todo: rename cache_ttl > refresh-cache (in the future, add refresh-lifeloop etc)
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
