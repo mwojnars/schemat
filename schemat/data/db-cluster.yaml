@@ -15,7 +15,7 @@
   indexes:
     idx_category_item:
       "@": 206
-    "@": base.Map
+    "@": js.Map
   readonly: false
   start_id: 0
   stop_id: 100
@@ -29,7 +29,7 @@
   indexes:
     idx_category_item:
       "@": 210
-    "@": base.Map
+    "@": js.Map
   readonly: true
   start_id: 100
   stop_id: 200
@@ -43,7 +43,7 @@
   indexes:
     idx_category_item:
       "@": 214
-    "@": base.Map
+    "@": js.Map
   readonly: false
   start_id: 200
   stop_id: 300
@@ -57,7 +57,7 @@
   indexes:
     idx_category_item:
       "@": 218
-    "@": base.Map
+    "@": js.Map
   readonly: false
   start_id: 1000
   stop_id: null
@@ -71,7 +71,7 @@
     fields:
       id:
         "@": type.INTEGER
-      "@": base.Map
+      "@": js.Map
     properties: []
     _field_types:
       - "@": type.INTEGER
@@ -94,7 +94,7 @@
         "@": type.INTEGER
       id:
         "@": type.INTEGER
-      "@": base.Map
+      "@": js.Map
     properties: []
     "@": db.RecordSchema
   blocks:
@@ -129,7 +129,7 @@
     fields:
       id:
         "@": type.INTEGER
-      "@": base.Map
+      "@": js.Map
     properties: []
     _field_types:
       - "@": type.INTEGER
@@ -152,7 +152,7 @@
         "@": type.INTEGER
       id:
         "@": type.INTEGER
-      "@": base.Map
+      "@": js.Map
     properties: []
     "@": db.RecordSchema
   blocks:
@@ -187,7 +187,7 @@
     fields:
       id:
         "@": type.INTEGER
-      "@": base.Map
+      "@": js.Map
     properties: []
     _field_types:
       - "@": type.INTEGER
@@ -210,7 +210,7 @@
         "@": type.INTEGER
       id:
         "@": type.INTEGER
-      "@": base.Map
+      "@": js.Map
     properties: []
     _field_types:
       - blank: true
@@ -249,7 +249,7 @@
     fields:
       id:
         "@": type.INTEGER
-      "@": base.Map
+      "@": js.Map
     properties: []
     _field_types:
       - "@": type.INTEGER
@@ -272,7 +272,7 @@
         "@": type.INTEGER
       id:
         "@": type.INTEGER
-      "@": base.Map
+      "@": js.Map
     properties: []
     "@": db.RecordSchema
   blocks:

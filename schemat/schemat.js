@@ -137,7 +137,9 @@ export class Schemat {
         // print('initClasspath() started...')
         let classpath = new Classpath
 
-        classpath.setMany("base", Map, Catalog, Data)               // add Map, Catalog & Data to the classpath
+        // add standard classes to the classpath
+        classpath.setMany("js", Map)
+        classpath.setMany("base", Catalog, Data)
         await classpath.setModule("base", "./item.js")
         await classpath.setModule("std", "./std/files.js")
         await classpath.setModule("std", "./std/site.js")
