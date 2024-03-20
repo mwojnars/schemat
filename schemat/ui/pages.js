@@ -196,8 +196,8 @@ export class ReactPage extends RenderedPage {
 
         async prepare(side) {
             // print(`prepare() called for [${this._id_}], ${this._category_}`)
-            await this._meta_.pending_url
-            await this._category_?._meta_.pending_url
+            await this.load()   //_meta_.pending_url
+            await this._category_?.load()  //_meta_.pending_url
             return {}
         }
 
@@ -295,7 +295,7 @@ export class CategoryAdminView extends ItemAdminView {
         // TODO: on client, items could be pulled from response data to avoid re-scanning on 1st render?
         await super.prepare(side)
         let items = await this.list_items()                             // preload the objects that belong to this category
-        await Promise.all(items.map(item => item._meta_.pending_url))   // objects will be displayed as hyperlinks, so we need their URLs
+        // await Promise.all(items.map(item => item._meta_.pending_url))   // objects will be displayed as hyperlinks, so we need their URLs
         return {items}
     }
 

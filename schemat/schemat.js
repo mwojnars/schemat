@@ -188,7 +188,7 @@ export class Schemat {
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         this.root_category = await this._init_root()        // always returns a valid object, possibly created from `root_data`
         this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
-        // if (this.site) await this._activate_site()
+        if (this.site) await this._activate_site()
         // if (this.site) print("Schemat: site loaded")
     }
 
@@ -238,10 +238,15 @@ export class Schemat {
         }
     }
 
-    // async _activate_site() {
-    //     await this.site.activate()
-    //     // clear the cache to reload all objects with the site activated, so that their URLs are initialized properly and imports go through the web filesystem
-    // }
+    async _activate_site() {
+        /* When the site is loaded, we can safely await URLs of all the objects created so far. */
+        print("activating site...")
+        for (let obj of this._cache.values())
+            if (obj._data_ && !obj._url_)
+                await obj._meta_.pending_url
+
+        // clear the cache to reload all objects with the site activated, so that their URLs are initialized properly and imports go through the web filesystem
+    }
 
 
     /***  Items manipulation  ***/
