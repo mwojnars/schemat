@@ -518,6 +518,9 @@ export class Item {
             if (this.is_linked())
                 this._ready_.url = this._init_url()         // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
+            if (schemat.site?.is_activated)
+                await this._ready_.url
+
             if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
 
             return await this.activate()

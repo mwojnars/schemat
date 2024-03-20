@@ -4,7 +4,6 @@ import {UrlPathNotFound} from "../common/errors.js"
 import {Edit, Request} from '../item.js'
 import {Container, Directory, ID_Namespace} from "./containers.js";
 import {JsonService} from "../services.js";
-import {JSONx} from "../serialize.js";
 
 
 // Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -33,6 +32,9 @@ export class Site extends Directory {
     entries
     default_path
 
+    // mutable attributes set directly on the proxy wrapper:
+    is_activated                            // true if the site's URL routing is initialized
+
 
     async __init__()  {
         if (schemat.client_side) return
@@ -40,6 +42,10 @@ export class Site extends Directory {
 
         this._vm = await import('node:vm')
         this._check_default_container()                 // no await to avoid blocking the site's startup
+    }
+
+    async _init_url() {
+        return super._init_url().then(url => {this._proxy_.is_activated = true; return url})
     }
 
 
