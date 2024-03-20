@@ -295,7 +295,7 @@ export class Item {
     _status_                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
 
     _path_
-    _url_                   absolute URL path of this object; calculated right *after* __init__(); to be sure that _url_ is computed, await _ready_.url first
+    _url_                   absolute URL path of this object; calculated right *after* __init__(); to be sure that _url_ is computed, await _meta_.pending_url first
     _assets_                cached web Assets of this object's _schema_
 
     */
@@ -485,7 +485,7 @@ export class Item {
         return this._meta_.loading = this._load(record, await_url)          // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
-    async _load(record = null /*ItemRecord*/, await_url = true) {
+    async _load(record /*ItemRecord*/, await_url) {
         /* Load this._data_ from `record` or DB. Set up the class and prototypes. Call __init__(). */
         let _id = this._id_
         schemat.load_started(this)
@@ -522,7 +522,7 @@ export class Item {
             if (this.is_linked())
                 this._meta_.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
-            let init = this.__init__()                      // optional custom initialization after the data is loaded;
+            let init = this.__init__()                      // custom initialization after the data is loaded (optional);
             if (init instanceof Promise) await init         // if this._url_ is needed inside __init__(), _meta_.pending_url must be explicitly awaited there
 
             // if (!schemat.site?.is_activated())
@@ -722,7 +722,7 @@ export class Item {
 
         let path = this._url_
         if (!path) {
-            console.error(`missing _url_ for object [${this._id_}], introduce a delay or await _ready_.url`)
+            console.error(`missing _url_ for object [${this._id_}], introduce a delay or await _meta_.pending_url`)
             return ''
         }
         if (endpoint) path += Request.SEP_ENDPOINT + endpoint               // append ::endpoint and ?args if present...
