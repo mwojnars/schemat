@@ -239,13 +239,14 @@ export class Schemat {
     }
 
     async _activate_site() {
-        /* When the site is loaded, we can safely await URLs of all the objects created so far. */
+        /* When the site is loaded, we can safely await URLs of all the objects created so far.
+           Later on, newly created objects will have their URLs awaited automatically during load().
+           TODO: re-create the objects instead of just awaiting their URLs, so that subsequent dynamic imports all go through the SUN instead of a static classpath.
+         */
         print("activating site...")
         for (let obj of this._cache.values())
             if (obj._data_ && !obj._url_)
                 await obj._meta_.pending_url
-
-        // clear the cache to reload all objects with the site activated, so that their URLs are initialized properly and imports go through the web filesystem
     }
 
 
