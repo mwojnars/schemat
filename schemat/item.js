@@ -447,7 +447,7 @@ export class Item {
         // TODO: if the record is already cached in binary registry, return the cached item...
         // TODO: otherwise, create a new item and cache it in binary registry
         let item = Item.create_stub(record.id, opts)
-        return item.load(record)
+        return item.load({record})
     }
 
     static _create_api() {
@@ -476,7 +476,7 @@ export class Item {
 
     /***  Loading & initialization ***/
 
-    async load(record = null /*ItemRecord*/) {
+    async load({record = null /*ItemRecord*/} = {}) {
         /* Load full data of this item from `record` or from DB, if not loaded yet. Return this object.
            The data can only be loaded ONCE for a given Item instance due to item's immutability.
            If you want to refresh the data, create a new instance or use refresh() instead.
@@ -518,11 +518,6 @@ export class Item {
             if (this.is_linked())
                 this._ready_.url = this._init_url()         // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
-            if (schemat.site?.is_activated) {
-                print(`schemat.site.is_activated=TRUE for [${this._id_}]`)
-                await this._ready_.url
-            }
-
             if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
 
             // after the props are loaded, attach a JS class to this object (to provide custom behavior) and call the initializer
@@ -531,6 +526,11 @@ export class Item {
 
             let init = this.__init__()                      // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init         // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
+
+            if (schemat.site?.is_activated) {
+                print(`schemat.site.is_activated=TRUE for [${this._id_}]`)
+                await this._ready_.url
+            }
 
             return this
             // return await this.activate()

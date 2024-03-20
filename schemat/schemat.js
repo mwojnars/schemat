@@ -352,13 +352,13 @@ export class Schemat {
 
     load_started(obj, MAX_LOADING = 10) {
         /* Called when a web object starts loading. */
-        this._loading.push(obj, true)
+        this._loading.push(obj, false)
         // if (count > MAX_LOADING) throw new Error(`Too many objects loading at once: ${count}`)
     }
 
     load_finished(obj) {
         /* Called when a web object finishes loading. */
-        this._loading.pop(obj, true)
+        this._loading.pop(obj, false)
     }
 }
 
