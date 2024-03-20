@@ -478,6 +478,7 @@ export class Item {
         /* Load full data of this item from `record` or from DB, if not loaded yet. Return this object.
            The data can only be loaded ONCE for a given Item instance due to item's immutability.
            If you want to refresh the data, create a new instance or use refresh() instead.
+           `await_url` works as expected only after the schemat.site is loaded, not during boot up.
          */
         if (this.is_loaded()) { assert(!record); return this }
         if (this._meta_.loading) return assert(!record) && this._meta_.loading    // wait for a previous load to complete instead of starting a new one
