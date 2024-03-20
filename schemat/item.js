@@ -372,14 +372,11 @@ export class Item {
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         mutable:   false,       // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from the registry
         expiry:    undefined,   // timestamp [ms] when this item should be evicted from cache; 0 = NEVER, undefined = immediate
+        pending_url: undefined,     // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
-    }
-
-    _ready_ = {                 // _ready_ contains status flags and promises that resolve when the corresponding data is calculated/loaded; subclasses may add their own...
-        url: undefined,         // resolves with this._url_ when this._url_ is computed
     }
 
     static _api_                // API instance that defines this class's endpoints and protocols; created lazily in _create_api() when the first instance is loaded, then reused for other instances
@@ -390,6 +387,7 @@ export class Item {
     is_newborn()    { return this._id_ === undefined }                  // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
     is_linked()     { return this._id_ !== undefined }                  // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized (except _url_ & _path_ which are allowed to be delayed)
+    is_activated()  { return this.is_loaded() && !this._meta_.pending_url}      // true if the object is loaded AND its URL is already computed
 
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
@@ -516,7 +514,7 @@ export class Item {
             this._set_expiry(category?.cache_ttl)
 
             if (this.is_linked())
-                this._ready_.url = this._init_url()         // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
+                this._meta_.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
             if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
 
@@ -531,7 +529,7 @@ export class Item {
             //     print(`site NOT yet fully activated when calculating url for [${this._id_}]`)
 
             if (await_url && schemat.site)
-                await this._ready_.url
+                await this._meta_.pending_url
 
             return this
             // return await this.activate()
@@ -617,8 +615,8 @@ export class Item {
         }
         // print(`_init_url() container: '${container._id_}'`)
 
-        if (!container.is_loaded()) await container.load()          // container must be fully loaded
-        if (!container._path_) await container._ready_.url          // container's path must be initialized
+        if (!container.is_loaded()) await container.load()              // container must be fully loaded
+        if (!container._path_) await container._meta_.pending_url       // container's path must be initialized
 
         this._path_ = container.get_access_path(this)
         let [url, duplicate] = site.path_to_url(this._path_)
@@ -1100,7 +1098,7 @@ export class Category extends Item {
             return {Class: await this.getDefaultClass(classPath, name)}
         }
 
-        let path = this._url_ || await this._ready_.url                 // wait until the item's URL is initialized
+        let path = this._url_ || await this._meta_.pending_url          // wait until the item's URL is initialized
         assert(path, `missing _url_ for category ID=${this._id_}`)
 
         try {
