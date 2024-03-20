@@ -159,12 +159,6 @@
   spaces:
     sys.category:
       "@": 0
-#    sys.site:
-#      "@": 1
-#    sys.dir:
-#      "@": 5
-#    sys.file:
-#      "@": 3
     "@": base.Catalog
   _category_:
     "@": 9

@@ -33,7 +33,7 @@ export class Site extends Directory {
     default_path
 
     // special mutable attributes:
-    is_activated                            // true if the site's URL routing is initialized
+    is_activated                            // true if the site's URL is already initialized
 
 
     async __init__()  {

@@ -476,18 +476,18 @@ export class Item {
 
     /***  Loading & initialization ***/
 
-    async load({record = null /*ItemRecord*/} = {}) {
+    async load({record = null /*ItemRecord*/, await_url = true} = {}) {
         /* Load full data of this item from `record` or from DB, if not loaded yet. Return this object.
            The data can only be loaded ONCE for a given Item instance due to item's immutability.
            If you want to refresh the data, create a new instance or use refresh() instead.
          */
         if (this.is_loaded()) { assert(!record); return this }
         if (this._meta_.loading) return assert(!record) && this._meta_.loading    // wait for a previous load to complete instead of starting a new one
-        if (this.is_newborn() && !record) return this           // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
-        return this._meta_.loading = this._load(record)         // keep a Promise that will eventually load this item's data to avoid race conditions
+        if (this.is_newborn() && !record) return this                       // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
+        return this._meta_.loading = this._load(record, await_url)          // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
-    async _load(record = null /*ItemRecord*/) {
+    async _load(record = null /*ItemRecord*/, await_url = true) {
         /* Load this._data_ from `record` or DB. Set up the class and prototypes. Call __init__(). */
         let _id = this._id_
         schemat.load_started(this)
@@ -511,7 +511,7 @@ export class Item {
             let category = this._category_
 
             if (category && !category.is_loaded() && category !== this)
-                await category.load()
+                await category.load({await_url: false})     // if category's URL is awaited, a circular dependency may occur between Container subcategories and their objects that comprise the filesystem where these categories are placed
 
             this._set_expiry(category?.cache_ttl)
 
@@ -527,10 +527,12 @@ export class Item {
             let init = this.__init__()                      // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init         // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
 
-            if (schemat.site?.is_activated) {
-                print(`schemat.site.is_activated=TRUE for [${this._id_}]`)
+            if (!schemat.site?.is_activated)
+                print(`site NOT yet fully activated when calculating url for [${this._id_}]`)
+
+            if (await_url && schemat.site?.is_activated)
+                // print(`schemat.site.is_activated=TRUE for [${this._id_}]`)
                 await this._ready_.url
-            }
 
             return this
             // return await this.activate()
