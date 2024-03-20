@@ -527,11 +527,10 @@ export class Item {
             let init = this.__init__()                      // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init         // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
 
-            if (!schemat.site?.is_activated)
-                print(`site NOT yet fully activated when calculating url for [${this._id_}]`)
+            // if (!schemat.site?.is_activated)
+            //     print(`site NOT yet fully activated when calculating url for [${this._id_}]`)
 
-            if (await_url && schemat.site?.is_activated)
-                // print(`schemat.site.is_activated=TRUE for [${this._id_}]`)
+            if (await_url && schemat.site)
                 await this._ready_.url
 
             return this
