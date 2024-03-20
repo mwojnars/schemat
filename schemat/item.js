@@ -480,17 +480,14 @@ export class Item {
            If you want to refresh the data, create a new instance or use refresh() instead.
            `await_url` has effect only after the schemat.site is loaded, not during boot up.
          */
-        if (this._data_ || this._meta_.loading) {           // data is loaded or being loaded right now? do nothing except for awaiting the URL if previous load() was called with await_url=false
+        if (this._data_ || this._meta_.loading) {           // data is loaded or being loaded right now? do nothing except for awaiting the URL (previous load() may have been called with await_url=false)
             assert(!record)
             if (await_url && schemat.site && this._meta_.pending_url)
                 await this._meta_.pending_url
             return this._meta_.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
         }
-        // if (this.is_loaded()) { assert(!record); return this }
-        // if (this._meta_.loading) return assert(!record) && this._meta_.loading    // wait for a previous load to complete instead of starting a new one
-
         if (this.is_newborn() && !record) return this                       // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
-        return this._meta_.loading = this._load(record, await_url)          // keep a Promise that will eventually load this item's data to avoid race conditions
+        return this._meta_.loading = this._load(record, await_url)          // keep a Promise that will eventually load the data; this is needed to avoid race conditions
     }
 
     async _load(record /*ItemRecord*/, await_url) {
