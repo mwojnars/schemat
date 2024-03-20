@@ -1,6 +1,6 @@
 "use strict";
 
-import {T, print, assert, Counter} from './common/utils.js'
+import {T, print, assert, Stack} from './common/utils.js'
 import {ItemNotFound, NotImplemented} from './common/errors.js'
 import {Catalog, Data, ItemsCache} from './data.js'
 import {Item, RootCategory} from './item.js'
@@ -105,14 +105,34 @@ export class Schemat {
     }
 
     root_category           // site-wide RootCategory object
-    site                    // fully loaded Site instance that will handle all web requests
+    site                    // fully loaded and activated Site instance that handles all web requests
     is_closing = false      // true if the Schemat node is in the process of shutting down
 
     _cache = new ItemsCache()
 
     // IDs of objects currently being loaded/initialized with a call to .load()
-    _loading = new class extends Counter {
-        print_all() { print(`currently loading: [${[...this.keys()]}]`) }     // print all IDs currently being loaded
+    _loading = new class extends Stack {
+        push(obj, _print = false) {
+            super.push(obj)
+            if (_print) print(`loading:  + ${this._head(obj)}  ${this._tail()}`)
+        }
+        pop(obj, _print = false) {
+            obj = super.pop(obj)
+            if (_print) print(`loading:  - ${this._head(obj)}  ${this._tail()}`)
+            return obj
+        }
+
+        _head(obj) {
+            let id   = `[${obj._id_}]`.padEnd(6)
+            let name = `${obj._self_.name || obj._data_?.get('name') || ''}`.padEnd(15)
+            return `${id} ${name}`
+        }
+        _tail() {
+            // IDs and names of all objects currently being loaded
+            let ids = this.map(obj => obj._id_)
+            let names = this.map(obj => obj._self_.name || obj._data_?.get('name') || obj._id_)    //(obj.is_loaded ? obj.name : obj._self_.name)
+            return `[${ids}]  --  [${names.join(', ')}]`
+        }
     }
 
     // _load_running -- IDs of objects whose .load() is currently being executed (at most one per ID)
@@ -168,6 +188,7 @@ export class Schemat {
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         this.root_category = await this._init_root()        // always returns a valid object, possibly created from `root_data`
         this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
+        // if (this.site) await this._activate_site()
         // if (this.site) print("Schemat: site loaded")
     }
 
@@ -215,6 +236,11 @@ export class Schemat {
         } catch (ex) {
             if (!(ex instanceof ItemNotFound)) throw ex
         }
+    }
+
+    async _activate_site() {
+        await this.site.activate()
+        // clear the cache to reload all objects with the site activated, so that their URLs are initialized properly and imports go through the web filesystem
     }
 
 
@@ -324,17 +350,15 @@ export class Schemat {
 
     /***  Debugging  ***/
 
-    mark_load_started(id, MAX_LOADING = 10) {
-        /* Called when an item with a given ID starts loading. */
-        this._loading.increment(id)
-        // this._loading.print_all()
+    load_started(obj, MAX_LOADING = 10) {
+        /* Called when a web object starts loading. */
+        this._loading.push(obj, true)
         // if (count > MAX_LOADING) throw new Error(`Too many objects loading at once: ${count}`)
     }
 
-    mark_load_finished(id) {
-        /* Called when an item with a given ID finishes loading. */
-        this._loading.decrement(id)
-        // this._loading.print_all()
+    load_finished(obj) {
+        /* Called when a web object finishes loading. */
+        this._loading.pop(obj, true)
     }
 }
 

@@ -490,7 +490,7 @@ export class Item {
     async _load(record = null /*ItemRecord*/) {
         /* Load this._data_ from `record` or DB. Set up the class and prototypes. Call __init__(). */
         let _id = this._id_
-        schemat.mark_load_started(_id)
+        schemat.load_started(this)
 
         try {
             record = record || await this._load_record()
@@ -518,8 +518,10 @@ export class Item {
             if (this.is_linked())
                 this._ready_.url = this._init_url()         // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
-            if (schemat.site?.is_activated)
+            if (schemat.site?.is_activated) {
+                print(`schemat.site.is_activated=TRUE for [${this._id_}]`)
                 await this._ready_.url
+            }
 
             if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
 
@@ -539,7 +541,7 @@ export class Item {
 
         } finally {
             this._meta_.loading = false                     // cleanup to allow another load attempt, even after an error
-            schemat.mark_load_finished(_id)
+            schemat.load_finished(this)
         }
     }
 
@@ -587,19 +589,10 @@ export class Item {
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))
     }
 
-    async _init_class() {
-        /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass,
-           known after loading the item's data.
-         */
-        if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
-        let cls = (!this._category_?.class_path && this._class_) || await this._category_?._item_class_     // TODO: `class_path` should be replaced with defaults._class_, so the check here could be removed
-        if (typeof cls === 'string') cls = await schemat.get_class(cls)
-        T.setClass(this, cls || Item)
-    }
-
     async _init_url() {
-        /* Initialize this item's URL path (this._url_) and container path (this._path_). */
-
+        /* Initialize this item's URL path (this._url_) and container path (this._path_).
+           This method must NOT be overridden in subclasses, because it gets called BEFORE the proper class is set on the object (!)
+         */
         if (this._url_ && this._path_) return this._url_        // already initialized (e.g., for Site object)
 
         let site = schemat.site
@@ -631,6 +624,16 @@ export class Item {
         // print('_init_url():', url, ` (duplicate=${duplicate})`)
 
         return this._url_ = duplicate ? default_path() : url
+    }
+
+    async _init_class() {
+        /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass,
+           known after loading the item's data.
+         */
+        if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
+        let cls = (!this._category_?.class_path && this._class_) || await this._category_?._item_class_     // TODO: `class_path` should be replaced with defaults._class_, so the check here could be removed
+        if (typeof cls === 'string') cls = await schemat.get_class(cls)
+        T.setClass(this, cls || Item)
     }
 
     _init_network() {

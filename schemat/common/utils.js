@@ -252,6 +252,17 @@ export class Counter extends Map {
     total()     { let t = 0; this.forEach(v => t += v); return t }
 }
 
+export class Stack extends Array {
+    /* A stack with push/pop() that additionally allows to pop a specific element that's buried deeper below the top. */
+
+    pop(elem) {
+        if (elem === undefined) return super.pop()
+        let i = this.lastIndexOf(elem)
+        if (i < 0) throw new Error(`element not found: ${elem}`)
+        return this.splice(i, 1)[0]
+    }
+}
+
 
 /*************************************************************************************************/
 

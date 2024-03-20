@@ -32,7 +32,7 @@ export class Site extends Directory {
     entries
     default_path
 
-    // mutable attributes set directly on the proxy wrapper:
+    // special mutable attributes:
     is_activated                            // true if the site's URL routing is initialized
 
 
@@ -44,8 +44,10 @@ export class Site extends Directory {
         this._check_default_container()                 // no await to avoid blocking the site's startup
     }
 
-    async _init_url() {
-        return super._init_url().then(url => {this._proxy_.is_activated = true; return url})
+    async activate() {
+        assert(this._ready_.url)
+        await this._ready_.url
+        this.is_activated = true
     }
 
 
