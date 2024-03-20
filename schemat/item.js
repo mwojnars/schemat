@@ -384,10 +384,10 @@ export class Item {
 
     /***  Object status  ***/
 
-    is_newborn()    { return this._id_ === undefined }                  // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
-    is_linked()     { return this._id_ !== undefined }                  // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
-    is_loaded()     { return this._data_ && !this._meta_.loading }      // false if still loading, even if data has already been created but object's not fully initialized (except _url_ & _path_ which are allowed to be delayed)
-    is_activated()  { return this.is_loaded() && !this._meta_.pending_url}      // true if the object is loaded AND its URL is already computed
+    is_newborn()    { return this._id_ === undefined }              // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
+    is_linked()     { return this._id_ !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
+    is_loaded()     { return this._data_ && !this._meta_.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except _url_ & _path_ which are allowed to be delayed)
+    is_activated()  { return this.is_loaded() && this._url_}        // true if the object is loaded AND its URL is already computed
 
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
@@ -509,12 +509,9 @@ export class Item {
             let category = this._category_
 
             if (category && !category.is_loaded() && category !== this)
-                await category.load({await_url: false})     // if category's URL is awaited, a circular dependency may occur between Container subcategories and their objects that comprise the filesystem where these categories are placed
+                await category.load({await_url: false})     // if category's URL were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
             this._set_expiry(category?.cache_ttl)
-
-            if (this.is_linked())
-                this._meta_.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
             if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
 
@@ -522,10 +519,13 @@ export class Item {
             await this._init_class()                        // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
             this._init_network()
 
-            let init = this.__init__()                      // optional custom initialization after the data is loaded
-            if (init instanceof Promise) await init         // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
+            if (this.is_linked())
+                this._meta_.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
-            // if (!schemat.site?.is_activated)
+            let init = this.__init__()                      // optional custom initialization after the data is loaded;
+            if (init instanceof Promise) await init         // if this._url_ is needed inside __init__(), _meta_.pending_url must be explicitly awaited there
+
+            // if (!schemat.site?.is_activated())
             //     print(`site NOT yet fully activated when calculating url for [${this._id_}]`)
 
             if (await_url && schemat.site && this._meta_.pending_url)
