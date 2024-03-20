@@ -528,7 +528,7 @@ export class Item {
             // if (!schemat.site?.is_activated)
             //     print(`site NOT yet fully activated when calculating url for [${this._id_}]`)
 
-            if (await_url && schemat.site)
+            if (await_url && schemat.site && this._meta_.pending_url)
                 await this._meta_.pending_url
 
             return this
@@ -592,37 +592,42 @@ export class Item {
         /* Initialize this item's URL path (this._url_) and container path (this._path_).
            This method must NOT be overridden in subclasses, because it gets called BEFORE the proper class is set on the object (!)
          */
-        if (this._url_ && this._path_) return this._url_        // already initialized (e.g., for Site object)
+        try {
+            if (this._url_ && this._path_) return this._url_        // already initialized (e.g., for Site object)
 
-        let site = schemat.site
+            let site = schemat.site
 
-        while (!site) {                                         // wait until the site is created (important for bootstrap objects)
-            // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
-            await delay()
-            if (this._url_) return this._url_                   // already initialized?
-            if (schemat.is_closing) return undefined            // site is closing? no need to wait any longer
-            site = schemat.site
+            while (!site) {                                         // wait until the site is created (important for bootstrap objects)
+                // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
+                await delay()
+                if (this._url_) return this._url_                   // already initialized?
+                if (schemat.is_closing) return undefined            // site is closing? no need to wait any longer
+                site = schemat.site
+            }
+
+            let container = this._container_
+            let default_path = () => site.default_path_of(this)
+            // assert(container, `missing _container_ in [${this._id_}]`)
+
+            if (!container) {
+                let url = default_path()
+                print('missing _container_:', url, `(${this.name})`)
+                return this._url_ = this._path_ = url
+            }
+            // print(`_init_url() container: '${container._id_}'`)
+
+            if (!container.is_loaded()) await container.load()              // container must be fully loaded
+            if (!container._path_) await container._meta_.pending_url       // container's path must be initialized
+
+            this._path_ = container.get_access_path(this)
+            let [url, duplicate] = site.path_to_url(this._path_)
+            // print('_init_url():', url, ` (duplicate=${duplicate})`)
+
+            return this._url_ = duplicate ? default_path() : url
         }
-
-        let container = this._container_
-        let default_path = () => site.default_path_of(this)
-        // assert(container, `missing _container_ in [${this._id_}]`)
-
-        if (!container) {
-            let url = default_path()
-            print('missing _container_:', url, `(${this.name})`)
-            return this._url_ = this._path_ = url
+        finally {
+            this._meta_.pending_url = undefined
         }
-        // print(`_init_url() container: '${container._id_}'`)
-
-        if (!container.is_loaded()) await container.load()              // container must be fully loaded
-        if (!container._path_) await container._meta_.pending_url       // container's path must be initialized
-
-        this._path_ = container.get_access_path(this)
-        let [url, duplicate] = site.path_to_url(this._path_)
-        // print('_init_url():', url, ` (duplicate=${duplicate})`)
-
-        return this._url_ = duplicate ? default_path() : url
     }
 
     async _init_class() {
