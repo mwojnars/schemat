@@ -317,16 +317,6 @@ export class Schemat {
         return obj
     }
 
-    // unregister(item_or_id) {
-    //     /* Remove an object with a given ID from the cache. If the argument is an object not ID,
-    //        it gets removed from the cache only if this exact instance (not another copy with the same ID) is there.
-    //      */
-    //     let item = T.isNumber(item_or_id) ? null : item_or_id
-    //     let id = item ? item_or_id._id_ : item_or_id
-    //     if (!item || this._cache.get(id) === item)
-    //         this._cache.delete(id)
-    // }
-
     async _clear_cache() {
         /* Evict expired objects from this._cache. */
         await this._cache.evict_expired()
