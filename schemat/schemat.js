@@ -112,6 +112,15 @@ export class Schemat {
         return root
     }
 
+    // get site() {
+    //     /* The Site object, if present in the database. */
+    //     if (this.site_id === undefined) return
+    //     let site = this._cache.get(this.site_id)
+    //     let loaded = site?.is_loaded()
+    //     if (loaded) return site
+    // }
+    // site_id                 // ID of the currently active Site
+
     site                    // fully loaded and activated Site instance that handles all web requests
     is_closing = false      // true if the Schemat node is in the process of shutting down
 
@@ -197,7 +206,9 @@ export class Schemat {
     async boot(site_id) {
         /* (Re)create/load root_category object and the `site`. The latter will be left undefined if not present in the DB. */
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
+        // this.site_id = site_id
         await this._init_root()
+        // await this._init_site()             // has no effect if the site's record is not found in DB (during bootstrap when DB is not yet fully created)
         this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
         if (this.site) await this._activate_site()
         // if (this.site) print("Schemat: site loaded")
@@ -215,14 +226,20 @@ export class Schemat {
         return root
     }
 
+    // async _init_site() {
+    //     /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
+    //     // TODO: evict the previous site object from cache
+    //     try {
+    //         if (this.db) await this.get_loaded(this.site_id)
+    //     } catch (ex) {
+    //         if (!(ex instanceof ItemNotFound)) throw ex
+    //     }
+    // }
+
     async _init_site(site_id) {
         /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
-        if (!this.db) return
         try {
-            // if (!site_id)
-            //     if (this.client_side) return
-            //     else site_id = await this._find_site()
-            return await this.get_loaded(site_id)
+            if (this.db) return await this.get_loaded(site_id)
         } catch (ex) {
             if (!(ex instanceof ItemNotFound)) throw ex
         }
