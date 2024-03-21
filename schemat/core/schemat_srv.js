@@ -1,6 +1,6 @@
 // import { Mutex } from 'async-mutex'
 
-import { assert, print, T } from './common/utils.js'
+import { assert, print, T } from '../common/utils.js'
 import { Schemat } from './schemat.js'
 
 

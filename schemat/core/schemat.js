@@ -1,10 +1,10 @@
 "use strict";
 
-import {T, print, assert, Stack} from './common/utils.js'
-import {ItemNotFound, NotImplemented} from './common/errors.js'
-import {Catalog, Data, ObjectsCache} from './data.js'
-import {Item, ROOT_ID, RootCategory} from './item.js'
-import {set_global} from "./common/globals.js";
+import {T, print, assert, Stack} from '../common/utils.js'
+import {ItemNotFound, NotImplemented} from '../common/errors.js'
+import {Catalog, Data, ObjectsCache} from '../data.js'
+import {Item, ROOT_ID, RootCategory} from '../item.js'
+import {set_global} from "../common/globals.js";
 
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
@@ -181,20 +181,20 @@ export class Schemat {
         // add standard classes to the classpath
         classpath.setMany("js", Map)
         classpath.setMany("base", Catalog, Data)
-        await classpath.setModule("base", "./item.js")
-        await classpath.setModule("std", "./std/files.js")
-        await classpath.setModule("std", "./std/site.js")
-        await classpath.setModule("std", "./std/containers.js")
+        await classpath.setModule("base", "../item.js")
+        await classpath.setModule("std", "../std/files.js")
+        await classpath.setModule("std", "../std/site.js")
+        await classpath.setModule("std", "../std/containers.js")
 
         // if (this.server_side) {
-        await classpath.setModule("db", "./db/records.js")
-        await classpath.setModule("db", "./db/block.js")
-        await classpath.setModule("db", "./db/sequence.js")
-        await classpath.setModule("db", "./db/index.js")
-        await classpath.setModule("db", "./db/db.js")
+        await classpath.setModule("db", "../db/records.js")
+        await classpath.setModule("db", "../db/block.js")
+        await classpath.setModule("db", "../db/sequence.js")
+        await classpath.setModule("db", "../db/index.js")
+        await classpath.setModule("db", "../db/db.js")
 
         // add all Type subtypes (all-caps class names) + TypeWrapper
-        await classpath.setModule("type", "./type.js", {accept: (name) =>
+        await classpath.setModule("type", "../type.js", {accept: (name) =>
                 name.toUpperCase() === name || name === 'TypeWrapper'
         })
 
