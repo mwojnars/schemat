@@ -1,5 +1,6 @@
-import {ObjectsCache} from "../data.js";
 import {assert} from "../common/utils.js";
+import {ObjectsCache} from "../data.js";
+import {ROOT_ID} from "../item.js";
 
 
 export class Registry {
@@ -19,5 +20,11 @@ export class Registry {
     }
 
     values()        { return this._cache.values() }
-    purge()         { return this._cache.evict_expired() }
+
+    purge() {
+        const on_evict = (obj) => {
+            if (obj._id_ === ROOT_ID) return schemat.reload(ROOT_ID)     // don't evict the root object
+        }
+        return this._cache.evict_expired(on_evict)
+    }
 }

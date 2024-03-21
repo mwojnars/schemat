@@ -425,6 +425,13 @@ export class Item {
 
     static create_stub(id, {mutable = false} = {}) {
         /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
+
+        // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
+        if (id === ROOT_ID && !this.__is_root_category__) {
+            print('creating a stub for RootCategory')
+            return RootCategory.create_stub(id)
+        }
+
         let core = new this(false)
         let item = core._proxy_ = ItemProxy.wrap(core)
         if (id !== undefined) core._id_ = id
@@ -1278,6 +1285,8 @@ export class Category extends Item {
 /**********************************************************************************************************************/
 
 export class RootCategory extends Category {
+
+    static __is_root_category__ = true
 
     _id_ = ROOT_ID
 
