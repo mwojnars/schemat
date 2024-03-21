@@ -1,7 +1,48 @@
-import {assert, print} from "../common/utils.js";
-import {ObjectsCache} from "../data.js";
-import {ROOT_ID} from "../item.js";
+import {T, assert, print} from "../common/utils.js";
+// import BTree from 'sorted-btree'
 
+
+/**********************************************************************************************************************
+ **
+ **  CACHE of WEB OBJECTS
+ **
+ */
+
+export class ObjectsCache extends Map {
+    /* A cache of {id: object} pairs. Provides manually-invoked eviction by LRU and per-item TTL.
+       Eviction timestamps are stored in items and can be modified externally.
+       Currently, the implementation scans all entries for TTL eviction, which should work well for up to ~1000 entries.
+       For larger sets, a BTree could possibly be used: import BTree from 'sorted-btree'
+     */
+
+    async evict_expired(on_evict = null) {
+        /* on_evict(obj) is an optional callback that may perform custom eviction for specific objects
+           (a truthy value must be returned then); can be async.
+         */
+        let now = Date.now()
+        let cleanup = []
+        for (let [id, obj] of this.entries()) {
+            let expiry = obj._meta_.expiry
+            if (expiry === undefined || expiry > now) continue
+
+            let evicted = on_evict?.(obj)
+            if (T.isPromise(evicted)) evicted = await evicted
+            if (!evicted) this.delete(id)
+            // else print(`custom eviction done for: [${id}]`)
+
+            let done = obj.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
+            if (T.isPromise(done)) cleanup.push(done)
+        }
+        if (cleanup.length) return Promise.all(cleanup)
+    }
+}
+
+
+/**********************************************************************************************************************
+ **
+ **  REGISTRY
+ **
+ */
 
 export class Registry {
     /* Process-local cache of web objects, records and indexes loaded from DB. */
