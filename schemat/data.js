@@ -107,16 +107,7 @@ export class ObjectsCache extends Map {
             let evicted = on_evict?.(obj)
             if (T.isPromise(evicted)) evicted = await evicted
             if (!evicted) this.delete(id)
-            else print(`custom eviction done for: [${id}]`)
-
-            // let new_obj = on_evict?.(obj)
-            // if (T.isPromise(new_obj)) new_obj = await new_obj
-            // if (new_obj) {
-            //     assert(new_obj._id_ === id)
-            //     this.set(id, new_obj)
-            //     print(`renewed in cache: [${id}]`)
-            // }
-            // else this.delete(id)
+            // else print(`custom eviction done for: [${id}]`)
 
             let done = obj.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
             if (T.isPromise(done)) cleanup.push(done)
