@@ -1284,11 +1284,7 @@ export class Category extends Item {
 
 export class RootCategory extends Category {
 
-    constructor(_fail_) {
-        super(_fail_)
-        this._id_ = ROOT_ID
-        // this._meta_.expiry = 0                      // never evict from cache
-    }
+    _id_ = ROOT_ID
 
     _set_expiry() { this._meta_.expiry = undefined }          // never evict from cache
 
@@ -1302,8 +1298,6 @@ export class RootCategory extends Category {
         let custom = this._data_.get('allow_custom_fields')
         return new DATA({fields: fields.object(), strict: custom !== true})
     }
-
-    // _init_class() {}                            // RootCategory's class is already set up, no need to do anything more
 }
 
 
