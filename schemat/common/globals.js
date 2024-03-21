@@ -5,12 +5,11 @@
  */
 
 
-export function set_global({schemat, registry, Item, importLocal} = {})
+export function set_global({schemat, Item, importLocal} = {})
 {
     /* This is a complete list of global variables defined by Schemat. */
 
     if (schemat)     globalThis.schemat = schemat
-    if (registry)    globalThis.registry = registry
     if (Item)        globalThis.Item = Item
     if (importLocal) globalThis.importLocal = importLocal
 }

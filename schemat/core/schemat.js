@@ -159,8 +159,8 @@ export class Schemat {
            This special method has to be used instead of constructor because async operations are performed.
          */
         let schemat = new this(...args)
-        set_global({schemat, registry: schemat})
-        
+        set_global({schemat})
+
         await schemat.init_classpath()
 
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
