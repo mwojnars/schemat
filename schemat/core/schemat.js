@@ -96,7 +96,6 @@ export class Schemat {
 
     _db                             // client-side or bootstrap DB; regular server-side DB is taken from site.database
     site_id                         // ID of the active Site object
-    // site                         // fully loaded and activated Site instance that handles all web requests
 
     registry = new Registry()       // cache of web objects, records and indexes loaded from DB
     is_closing = false              // true if the Schemat node is in the process of shutting down
@@ -161,7 +160,7 @@ export class Schemat {
     }
 
     static async create_global(site_id, db, open_db = null, ...args) {
-        /* Create a new Schemat instance, perform basic initialization and make it a global object. */
+        /* Create a new Schemat instance, perform initialization and make it a global object. */
 
         let schemat = new this(site_id, ...args)
         set_global({schemat, registry: schemat})
@@ -174,18 +173,6 @@ export class Schemat {
 
         return schemat
     }
-
-    // static async create_global(...args) {
-    //     /* Create a new Schemat instance, perform basic initialization and make it a global object. */
-    //
-    //     let schemat = new this(...args)
-    //     set_global({schemat, registry: schemat})
-    //
-    //     await schemat.init_classpath()
-    //     // await schemat.boot()
-    //     return schemat
-    // }
-
 
     async init_classpath() {
         // print('initClasspath() started...')
@@ -215,10 +202,8 @@ export class Schemat {
         // print('initClasspath() done')
     }
 
-    set_db(db)  { return this._db = db }
-
     async boot() {
-        /* (Re)create/load root_category object and the `site`. The latter will be left undefined if not present in the DB. */
+        /* Load the `site` object. The latter will be left undefined if not present in the DB. */
         await this._init_site()             // no effect if the site's record is not found (during bootstrap when DB is not yet fully created)
         // this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
         if (this.site) await this._activate_site()
@@ -233,15 +218,6 @@ export class Schemat {
             if (!(ex instanceof ItemNotFound)) throw ex
         }
     }
-
-    // async _init_site(site_id) {
-    //     /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
-    //     try {
-    //         if (this.db) return await this.reload(site_id)
-    //     } catch (ex) {
-    //         if (!(ex instanceof ItemNotFound)) throw ex
-    //     }
-    // }
 
     async _activate_site() {
         /* When the site is loaded, we can safely await URLs of all the objects created so far.

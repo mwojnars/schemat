@@ -21,11 +21,9 @@ export class BackendProcess {
         const __dirname  = mod_path.dirname(mod_path.dirname(__filename))
         const config = await this.load_config()
 
-        await ServerSchemat.create_global(config.site, Database.create(), db => this._boot(db, config), __dirname)
+        let db = Database.create()
+        await ServerSchemat.create_global(config.site, db, db => this._boot(db, config), __dirname)
         // await schemat.db.insert_self()
-
-        // await ServerSchemat.create_global(config.site, __dirname)
-        // await this.boot_db(config)
 
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
@@ -44,20 +42,6 @@ export class BackendProcess {
         let rings = config.bootstrap_database.rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
         await db.open(rings)
-    }
-
-    async boot_db(config) {
-        /* Create bootstrap database and load the Site object from it. */
-
-        let bootstrap_db = Database.create()
-        schemat.set_db(bootstrap_db)
-
-        let rings = config.bootstrap_database.rings
-        rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
-
-        await bootstrap_db.open(rings)
-        await schemat.boot()                        // load `site` object together with the ultimate database
-        // await bootstrap_db.insert_self()
     }
 }
 
