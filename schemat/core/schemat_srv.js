@@ -42,8 +42,7 @@ export class ServerSchemat extends Schemat {
     async after_request() {
         /* Called after each web request. */
         const min_delay = 1000              // [ms] 1 second
-        if (Date.now() - this.registry._ts_last_purge < min_delay) return
-        return this.registry.purge()
+        return this.registry.purge(min_delay)
     }
 
 

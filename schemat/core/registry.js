@@ -7,7 +7,10 @@ export class Registry {
     /* Process-local cache of web objects, records and indexes loaded from DB. */
 
     _cache = new ObjectsCache()
-    _ts_last_purge = 0                  // timestamp of the last cache purge
+
+    _purging_now   = false
+    _last_purge_ts = 0                  // timestamp of the last cache purge
+
 
     has(id)         { return this._cache.has(id) }
     get(id)         { return this._cache.get(id) }
@@ -22,8 +25,12 @@ export class Registry {
 
     values()        { return this._cache.values() }
 
-    async purge() {
+    async purge(min_delay) {
         /* Evict expired objects from the cache. */
+        if (this._purging_now) return
+        if (Date.now() - this._last_purge_ts < min_delay) return
+
+        this._purging_now = true
         print("cache purging...")
 
         const on_evict = (obj) => {
@@ -34,7 +41,8 @@ export class Registry {
         // if (!this.registry.has(ROOT_ID))            // if root category is no longer present in registry, call _init_root() once again
         //     await schemat._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in
 
-        this._ts_last_purge = Date.now()
         print("cache purging done")
+        this._last_purge_ts = Date.now()
+        this._purging_now = false
     }
 }
