@@ -2,7 +2,7 @@
 
 import {T, print, assert, Stack} from './common/utils.js'
 import {ItemNotFound, NotImplemented} from './common/errors.js'
-import {Catalog, Data, ItemsCache} from './data.js'
+import {Catalog, Data, ObjectsCache} from './data.js'
 import {Item, ROOT_ID, RootCategory} from './item.js'
 import {set_global} from "./common/globals.js";
 
@@ -108,7 +108,7 @@ export class Schemat {
     site                    // fully loaded and activated Site instance that handles all web requests
     is_closing = false      // true if the Schemat node is in the process of shutting down
 
-    _cache = new ItemsCache()
+    _cache = new ObjectsCache()
 
     // IDs of objects currently being loaded/initialized with a call to .load()
     _loading = new class extends Stack {
@@ -316,7 +316,7 @@ export class Schemat {
 
     async _clear_cache() {
         /* Evict expired objects from this._cache. */
-        await this._cache.evict()
+        await this._cache.evict_expired()
         if (!this._cache.has(ROOT_ID))              // if root category is no longer present in _cache, call _init_root() once again
             await this._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in
     }

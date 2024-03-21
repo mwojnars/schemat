@@ -81,11 +81,11 @@ export class Path {
  **
  */
 
-export class ItemsCache extends Map {
-    /* A cache of Item instances; provides manually-invoked eviction by LRU and per-item TTL.
+export class ObjectsCache extends Map {
+    /* A cache of the form {id: object}. Provides manually-invoked eviction by LRU and per-item TTL.
        Eviction timestamps are stored in items and can be modified externally.
-       Currently, the implementation scans all items for TTL eviction, which should work well for up to ~1000 entries.
-       For larger item sets, a BTree could possibly be used: import BTree from 'sorted-btree'
+       Currently, the implementation scans all entries for TTL eviction, which should work well for up to ~1000 entries.
+       For larger sets, a BTree could possibly be used: import BTree from 'sorted-btree'
      */
 
     // set(id, item, ttl) {
@@ -94,16 +94,16 @@ export class ItemsCache extends Map {
     //     super.set(id, item)
     // }
 
-    evict() {
+    evict_expired() {
         let now  = Date.now()
         let cleanup = []
-        for (let [id, item] of this.entries()) {
-            let expiry = item._meta_.expiry
+        for (let [id, obj] of this.entries()) {
+            let expiry = obj._meta_.expiry
             if (expiry === undefined || (0 < expiry && expiry <= now)) {
                 let deleted = this.delete(id)
                 // if (deleted) print('item evicted:', id, item.is_loaded() ? '' : '(stub)' )     // TODO: comment out
                 // else print('item not found for eviction:', id, item.is_loaded() ? '' : '(stub)' )
-                let done = item.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
+                let done = obj.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
                 if (T.isPromise(done)) cleanup.push(done)
             }
         }
