@@ -97,6 +97,7 @@ export class Schemat {
     _db                     // client-side or bootstrap DB; regular server-side DB is taken from site.database
 
     registry = new Registry()
+    _ts_last_purge = 0      // timestamp of the last cache purge
 
     site                    // fully loaded and activated Site instance that handles all web requests
     is_closing = false      // true if the Schemat node is in the process of shutting down
@@ -220,7 +221,7 @@ export class Schemat {
            in the lowest ring already, possibly overwritten by newer variants in higher rings.
          */
         let root = RootCategory.create()
-        this._register(root)
+        this.registry.set(root)
         await root.load()           // here, bootstrap DB (_db) is already available and the data is loaded from there
         root.assert_loaded()
         // print("Schemat: root category loaded from DB")
@@ -265,7 +266,7 @@ export class Schemat {
            If a stub is created anew, it is saved in cache for reuse by other callers.
          */
         // this.session?.countRequested(id)
-        let obj = this.registry.get(id) || this._register(Item.create_stub(id))         // a stub has immediate expiry date (i.e., on next cache purge) unless its data is loaded and TLS is updated
+        let obj = this.registry.get(id) || this.registry.set(Item.create_stub(id))          // a stub has immediate expiry date (i.e., on next cache purge) unless its data is loaded and TLS updated
         assert(!obj._meta_.mutable)
         return obj
     }
@@ -278,7 +279,7 @@ export class Schemat {
          */
         let id  = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id._id_
         let obj = Item.create_stub(id)
-        return obj.load().then(() => this._register(obj))
+        return obj.load().then(() => this.registry.set(obj))
     }
 
 
@@ -290,7 +291,7 @@ export class Schemat {
         for await (const record of this.db.scan_all()) {                            // stream of ItemRecords
             if (limit !== undefined && count++ >= limit) break
             let item = await Item.from_record(record)
-            yield this._register(item)
+            yield this.registry.set(item)
         }
     }
 
@@ -310,22 +311,16 @@ export class Schemat {
 
     /***  Cache management  ***/
 
-    _register(obj) {
-        /* Put `obj` in the registry. This may override an existing instance with the same ID. */
-        assert(obj._id_ !== undefined, `cannot register an object without an ID: ${obj}`)
-        assert(!obj._meta_.mutable, `cannot register a mutable object: ${obj}`)
-        this.registry.set(obj._id_, obj)
-        return obj
-    }
-
     async _purge_cache() {
         /* Evict expired objects from the cache. */
-        print("purging cache...")
-        this._ts_last_purge = Date.now()
-        await this.registry.evict_expired()
+        print("cache purging...")
+
+        await this.registry.purge()
         if (!this.registry.has(ROOT_ID))            // if root category is no longer present in registry, call _init_root() once again
             await this._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in
-        print("purging cache done")
+
+        this._ts_last_purge = Date.now()
+        print("cache purging done")
     }
 
 
