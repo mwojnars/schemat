@@ -210,7 +210,7 @@ export class Schemat {
         // Later on, newly created objects will have their URLs awaited automatically during load().
         // TODO: re-create the objects instead of just awaiting their URLs, so that subsequent dynamic imports all go through the SUN instead of a static classpath.
 
-        for (let obj of this.registry.values())
+        for (let obj of this.registry)
             if (obj._data_ && !obj._url_)
                 await obj._meta_.pending_url
     }
