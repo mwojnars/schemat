@@ -155,8 +155,8 @@ export class Schemat {
     /***  Initialization  ***/
 
     static async create_global(site_id, db, open_db = null, ...args) {
-        /* Create a new Schemat instance, perform initialization and make it a global object.
-           This special method has to be used instead of constructor because async operations are performed.
+        /* Create a new Schemat instance as a global object and perform initialization of classpath, site_id, db.
+           This special method is defined instead of a constructor because async operations are performed.
          */
         let schemat = new this(...args)
         set_global({schemat})
@@ -204,19 +204,10 @@ export class Schemat {
 
     async boot() {
         /* Load the `site` object. The latter will be left undefined if not present in the DB. */
-        await this._init_site()             // no effect if the site's record is not found (during bootstrap when DB is not yet fully created)
-        // this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
+        try { if (this.db) await this.reload(this.site_id) }
+        catch (ex) { if (!(ex instanceof ItemNotFound)) throw ex }
         if (this.site) await this._activate_site()
         // if (this.site) print("Schemat: site loaded")
-    }
-
-    async _init_site() {
-        /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
-        try {
-            if (this.db) await this.reload(this.site_id)
-        } catch (ex) {
-            if (!(ex instanceof ItemNotFound)) throw ex
-        }
     }
 
     async _activate_site() {
