@@ -154,19 +154,19 @@ export class Schemat {
 
     /***  Initialization  ***/
 
-    constructor(site_id) {
-        assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
-        this.site_id = site_id
-    }
-
     static async create_global(site_id, db, open_db = null, ...args) {
-        /* Create a new Schemat instance, perform initialization and make it a global object. */
-
-        let schemat = new this(site_id, ...args)
+        /* Create a new Schemat instance, perform initialization and make it a global object.
+           This special method has to be used instead of constructor because async operations are performed.
+         */
+        let schemat = new this(...args)
         set_global({schemat, registry: schemat})
+        
         await schemat.init_classpath()
 
+        assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
+        schemat.site_id = site_id
         schemat._db = db
+
         await open_db?.(db)
         await schemat.boot()
         assert(schemat.site)
