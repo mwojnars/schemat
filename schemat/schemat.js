@@ -283,12 +283,10 @@ export class Schemat {
 
     /***  Indexes  ***/
 
-    async *scan_all({limit} = {}) {
+    async *_scan_all({limit} = {}) {
         /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
         let count = 0
-        let records = this.db.scan_all()
-
-        for await (const record of records) {                   // stream of ItemRecords
+        for await (const record of this.db.scan_all()) {                            // stream of ItemRecords
             if (limit !== undefined && count++ >= limit) break
             let item = await Item.from_record(record)
             yield this.register(item)

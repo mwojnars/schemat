@@ -221,7 +221,7 @@ export class AdminProcess extends BackendProcess {
            to a new format. All rings in the DB must be set as writable (!), otherwise the update will write a copy
            of an item in another ring instead of updating in place.
          */
-        for await (let item of schemat.scan_all())
+        for await (let item of schemat._scan_all())
             await schemat.db.update_full(item)
     }
 
