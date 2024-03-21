@@ -209,24 +209,11 @@ export class Schemat {
         /* (Re)create/load root_category object and the `site`. The latter will be left undefined if not present in the DB. */
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         // this.site_id = site_id
-        await this.get_loaded(ROOT_ID)
-        // await this._init_root()
+        // await this.get_loaded(ROOT_ID)
         // await this._init_site()             // has no effect if the site's record is not found in DB (during bootstrap when DB is not yet fully created)
         this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
         if (this.site) await this._activate_site()
         // if (this.site) print("Schemat: site loaded")
-    }
-
-    async _init_root() {
-        /* Create the RootCategory object, ID=0, and load its contents from the DB. The root_category must be present
-           in the lowest ring already, possibly overwritten by newer variants in higher rings.
-         */
-        let root = RootCategory.create()
-        this.registry.set(root)
-        await root.load()           // here, bootstrap DB (_db) is already available and the data is loaded from there
-        root.assert_loaded()
-        // print("Schemat: root category loaded from DB")
-        return root
     }
 
     // async _init_site() {
@@ -318,7 +305,7 @@ export class Schemat {
 
         await this.registry.purge()
         // if (!this.registry.has(ROOT_ID))            // if root category is no longer present in registry, call _init_root() once again
-        //     await this._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in
+        //     await schemat._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in
 
         this._ts_last_purge = Date.now()
         print("cache purging done")
