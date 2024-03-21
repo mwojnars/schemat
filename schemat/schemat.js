@@ -219,7 +219,7 @@ export class Schemat {
            in the lowest ring already, possibly overwritten by newer variants in higher rings.
          */
         let root = RootCategory.create()
-        this.register(root)
+        this._register(root)
         await root.load()           // here, bootstrap DB (_db) is already available and the data is loaded from there
         root.assert_loaded()
         // print("Schemat: root category loaded from DB")
@@ -264,7 +264,7 @@ export class Schemat {
            If a stub is created anew, it is saved in cache for reuse by other callers.
          */
         // this.session?.countRequested(id)
-        let obj = this._cache.get(id) || this.register(Item.create_stub(id))            // a stub has immediate expiry date (i.e., on next cache pruning) unless a custom TTL is loaded from DB
+        let obj = this._cache.get(id) || this._register(Item.create_stub(id))            // a stub has immediate expiry date (i.e., on next cache pruning) unless a custom TTL is loaded from DB
         assert(!obj._meta_.mutable)
         return obj
     }
@@ -277,7 +277,7 @@ export class Schemat {
          */
         let id  = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id._id_
         let obj = Item.create_stub(id)
-        return obj.load().then(() => this.register(obj))
+        return obj.load().then(() => this._register(obj))
     }
 
 
@@ -289,7 +289,7 @@ export class Schemat {
         for await (const record of this.db.scan_all()) {                            // stream of ItemRecords
             if (limit !== undefined && count++ >= limit) break
             let item = await Item.from_record(record)
-            yield this.register(item)
+            yield this._register(item)
         }
     }
 
@@ -309,7 +309,7 @@ export class Schemat {
 
     /***  Cache management  ***/
 
-    register(obj) {
+    _register(obj) {
         /* Add `obj` to the cache. This may override an existing instance with the same ID. */
         assert(obj._id_ !== undefined, `cannot register an object without an ID: ${obj}`)
         assert(!obj._meta_.mutable, `cannot register a mutable object: ${obj}`)

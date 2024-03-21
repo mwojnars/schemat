@@ -308,7 +308,8 @@ export class Database extends Item {
         for (let item of items) {
             item._data_ = item._data_ || await Data.from_object(item)       // if item has no _data_, create it from the object's properties
             item._id_ = item._meta_.provisional_id
-            schemat.register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
+            // TODO: check if the line below is needed or not? ultimately need to be removed...
+            // schemat._register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
             await this.update_full(item)
         }
     }
