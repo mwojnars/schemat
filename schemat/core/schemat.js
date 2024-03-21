@@ -217,9 +217,8 @@ export class Schemat {
 
     // async _init_site() {
     //     /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
-    //     // TODO: evict the previous site object from cache
     //     try {
-    //         if (this.db) await this.get_loaded(this.site_id)
+    //         if (this.db) await this.reload(this.site_id)
     //     } catch (ex) {
     //         if (!(ex instanceof ItemNotFound)) throw ex
     //     }
@@ -228,7 +227,7 @@ export class Schemat {
     async _init_site(site_id) {
         /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
         try {
-            if (this.db) return await this.get_loaded(site_id)
+            if (this.db) return await this.reload(site_id)
         } catch (ex) {
             if (!(ex instanceof ItemNotFound)) throw ex
         }
