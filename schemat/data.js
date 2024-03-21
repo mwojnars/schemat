@@ -94,18 +94,29 @@ export class ObjectsCache extends Map {
     //     super.set(id, item)
     // }
 
-    evict_expired() {
+    async evict_expired(on_evict = null) {
+        /* on_evict(obj) is an optional callback that may return a new object to replace `obj` in cache
+           (both objects must have the same _id_); can be async.
+         */
         let now = Date.now()
         let cleanup = []
         for (let [id, obj] of this.entries()) {
             let expiry = obj._meta_.expiry
-            if (expiry !== undefined && expiry <= now) {
-                let deleted = this.delete(id)
-                // if (deleted) print('item evicted:', id, item.is_loaded() ? '' : '(stub)' )     // TODO: comment out
-                // else print('item not found for eviction:', id, item.is_loaded() ? '' : '(stub)' )
-                let done = obj.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
-                if (T.isPromise(done)) cleanup.push(done)
+            if (expiry === undefined || expiry > now) continue
+
+            let new_obj = on_evict?.(obj)
+            if (T.isPromise(new_obj)) new_obj = await new_obj
+
+            if (new_obj) {
+                assert(new_obj._id_ === id)
+                this.set(id, new_obj)
+                print(`renewed in cache: [${id}]`)
             }
+            else this.delete(id)
+            // print('evicted:', id, obj.is_loaded() ? '' : '(stub)' )
+
+            let done = obj.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
+            if (T.isPromise(done)) cleanup.push(done)
         }
         if (cleanup.length) return Promise.all(cleanup)
     }
