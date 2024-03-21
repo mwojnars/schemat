@@ -19,8 +19,8 @@ export class ServerSchemat extends Schemat {
     PATH_LOCAL_SUN = "/system/local"    // SUN folder that maps to the local filesystem folder, PATH_LOCAL_FS;
     PATH_LOCAL_FS                       // scripts from PATH_LOCAL_* can be imported by system items during startup
 
-    constructor(path) {
-        super()
+    constructor(site_id, path) {
+        super(site_id)
         this.PATH_LOCAL_FS = path       // no trailing '/' (!)
     }
 

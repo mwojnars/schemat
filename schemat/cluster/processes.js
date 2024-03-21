@@ -19,31 +19,33 @@ export class BackendProcess {
 
         const __filename = mod_url.fileURLToPath(import.meta.url)       // or: process.argv[1]
         const __dirname  = mod_path.dirname(mod_path.dirname(__filename))
+        const config = await this.load_config()
 
-        await ServerSchemat.create_global(__dirname)
+        await ServerSchemat.create_global(config.site, __dirname)
 
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
 
-        await this.boot_db()
+        await this.boot_db(config.bootstrap_database)
         await this[method](opts)
     }
 
-    async boot_db(config_file = './config.yaml') {
-        /* Create bootstrap database and load the Site object from it. */
-
+    async load_config(file = './config.yaml') {
         let fs = await import('node:fs')
         let yaml = (await import('yaml')).default
+        let content = fs.readFileSync(file, 'utf8')
+        return yaml.parse(content)
+    }
 
-        let content = fs.readFileSync(config_file, 'utf8')
-        let config = yaml.parse(content)
-        let rings = config.bootstrap_database.rings
+    async boot_db(bootstrap_database) {
+        /* Create bootstrap database and load the Site object from it. */
 
+        let rings = bootstrap_database.rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
 
         let bootstrap_db = schemat.set_db(Database.create())
         await bootstrap_db.open(rings)
-        await schemat.boot(config.site)                 // load `site` object together with the ultimate database
+        await schemat.boot()                        // load `site` object together with the ultimate database
         // await bootstrap_db.insert_self()
     }
 }

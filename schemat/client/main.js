@@ -19,7 +19,7 @@ export class ClientSchemat extends Schemat {
         let data = this._read_data('#page-data', 'json+base64')
         print('page data:', data)
 
-        await ClientSchemat.create_global()
+        await ClientSchemat.create_global(data.site_id)
         schemat.set_db(new ClientDB(data.items))
 
         let item = await schemat.client_boot(data)
@@ -57,7 +57,7 @@ export class ClientSchemat extends Schemat {
     async client_boot(data) {
         /* Load response data from state-encoded `data.session` as produced by Request.dump(). */
 
-        await this.boot(data.site_id)
+        await this.boot()
         assert(this.site)
 
         for (let rec of data.items)

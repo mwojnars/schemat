@@ -119,7 +119,6 @@ export class Schemat {
 
     get site() {
         /* The Site object, if present in the database. */
-        if (this.site_id === undefined) return
         let site = this.registry.get(this.site_id)
         if (site?.is_loaded()) return site
     }
@@ -159,6 +158,11 @@ export class Schemat {
 
 
     /***  Initialization  ***/
+
+    constructor(site_id) {
+        assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
+        this.site_id = site_id
+    }
 
     static async create_global(...args) {
         /* Create a new Schemat instance, perform basic initialization and make it a global object. */
@@ -202,12 +206,9 @@ export class Schemat {
 
     set_db(db)  { return this._db = db }
 
-    async boot(site_id) {
+    async boot() {
         /* (Re)create/load root_category object and the `site`. The latter will be left undefined if not present in the DB. */
-        assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
-        this.site_id = site_id
-        // await this.get_loaded(ROOT_ID)
-        await this._init_site()             // has no effect if the site's record is not found in DB (during bootstrap when DB is not yet fully created)
+        await this._init_site()             // no effect if the site's record is not found (during bootstrap when DB is not yet fully created)
         // this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
         if (this.site) await this._activate_site()
         // if (this.site) print("Schemat: site loaded")
