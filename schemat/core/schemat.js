@@ -94,15 +94,14 @@ export class Schemat {
        loading and caching of web objects, dynamic module import, classpath management, session management etc.
      */
 
-    _db                     // client-side or bootstrap DB; regular server-side DB is taken from site.database
+    _db                             // client-side or bootstrap DB; regular server-side DB is taken from site.database
+    site_id                         // ID of the active Site object
+    // site                         // fully loaded and activated Site instance that handles all web requests
 
-    registry = new Registry()
+    registry = new Registry()       // cache of web objects, records and indexes loaded from DB
+    is_closing = false              // true if the Schemat node is in the process of shutting down
 
-    site                    // fully loaded and activated Site instance that handles all web requests
-    is_closing = false      // true if the Schemat node is in the process of shutting down
-
-    // global flags server_side/client_side to indicate the environment where the code is executing
-    server_side = true
+    server_side = true              // the current environment: client / server
     get client_side() { return !this.server_side }
 
     get db() {
@@ -118,14 +117,13 @@ export class Schemat {
         return root
     }
 
-    // get site() {
-    //     /* The Site object, if present in the database. */
-    //     if (this.site_id === undefined) return
-    //     let site = this.registry.get(this.site_id)
-    //     let loaded = site?.is_loaded()
-    //     if (loaded) return site
-    // }
-    // site_id                 // ID of the currently active Site
+    get site() {
+        /* The Site object, if present in the database. */
+        if (this.site_id === undefined) return
+        let site = this.registry.get(this.site_id)
+        if (site?.is_loaded()) return site
+    }
+
 
     // IDs of objects currently being loaded/initialized with a call to .load()
     _loading = new class extends Stack {
@@ -207,31 +205,31 @@ export class Schemat {
     async boot(site_id) {
         /* (Re)create/load root_category object and the `site`. The latter will be left undefined if not present in the DB. */
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
-        // this.site_id = site_id
+        this.site_id = site_id
         // await this.get_loaded(ROOT_ID)
-        // await this._init_site()             // has no effect if the site's record is not found in DB (during bootstrap when DB is not yet fully created)
-        this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
+        await this._init_site()             // has no effect if the site's record is not found in DB (during bootstrap when DB is not yet fully created)
+        // this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
         if (this.site) await this._activate_site()
         // if (this.site) print("Schemat: site loaded")
     }
 
-    // async _init_site() {
-    //     /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
-    //     try {
-    //         if (this.db) await this.reload(this.site_id)
-    //     } catch (ex) {
-    //         if (!(ex instanceof ItemNotFound)) throw ex
-    //     }
-    // }
-
-    async _init_site(site_id) {
+    async _init_site() {
         /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
         try {
-            if (this.db) return await this.reload(site_id)
+            if (this.db) await this.reload(this.site_id)
         } catch (ex) {
             if (!(ex instanceof ItemNotFound)) throw ex
         }
     }
+
+    // async _init_site(site_id) {
+    //     /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
+    //     try {
+    //         if (this.db) return await this.reload(site_id)
+    //     } catch (ex) {
+    //         if (!(ex instanceof ItemNotFound)) throw ex
+    //     }
+    // }
 
     async _activate_site() {
         /* When the site is loaded, we can safely await URLs of all the objects created so far.
