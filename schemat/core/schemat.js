@@ -5,6 +5,7 @@ import {ItemNotFound, NotImplemented} from '../common/errors.js'
 import {Catalog, Data, ObjectsCache} from '../data.js'
 import {Item, ROOT_ID, RootCategory} from '../item.js'
 import {set_global} from "../common/globals.js";
+import {Registry} from "./registry.js";
 
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
@@ -93,11 +94,16 @@ export class Schemat {
        loading and caching of web objects, dynamic module import, classpath management, session management etc.
      */
 
+    _db                     // client-side or bootstrap DB; regular server-side DB is taken from site.database
+
+    registry = new Registry()
+
+    site                    // fully loaded and activated Site instance that handles all web requests
+    is_closing = false      // true if the Schemat node is in the process of shutting down
+
     // global flags server_side/client_side to indicate the environment where the code is executing
     server_side = true
     get client_side() { return !this.server_side }
-
-    _db                  // client-side or bootstrap DB; regular server-side DB is taken from site.database
 
     get db() {
         /* The site's database instance, either a Database (on server) or a ClientDB (on client) */
@@ -106,7 +112,7 @@ export class Schemat {
 
     get root_category() {
         /* The RootCategory object. Always present in cache, always fully loaded. */
-        let root = this._cache.get(ROOT_ID)
+        let root = this.registry.get(ROOT_ID)
         assert(root, `RootCategory not found in cache`)
         assert(root.is_loaded(), `RootCategory not loaded`)
         return root
@@ -115,17 +121,11 @@ export class Schemat {
     // get site() {
     //     /* The Site object, if present in the database. */
     //     if (this.site_id === undefined) return
-    //     let site = this._cache.get(this.site_id)
+    //     let site = this.registry.get(this.site_id)
     //     let loaded = site?.is_loaded()
     //     if (loaded) return site
     // }
     // site_id                 // ID of the currently active Site
-
-    site                    // fully loaded and activated Site instance that handles all web requests
-    is_closing = false      // true if the Schemat node is in the process of shutting down
-
-    _cache = new ObjectsCache()
-    _ts_last_purge = 0      // timestamp of the last cache purge
 
     // IDs of objects currently being loaded/initialized with a call to .load()
     _loading = new class extends Stack {
@@ -252,7 +252,7 @@ export class Schemat {
            TODO: re-create the objects instead of just awaiting their URLs, so that subsequent dynamic imports all go through the SUN instead of a static classpath.
          */
         print("activating site...")
-        for (let obj of this._cache.values())
+        for (let obj of this.registry.values())
             if (obj._data_ && !obj._url_)
                 await obj._meta_.pending_url
     }
@@ -265,7 +265,7 @@ export class Schemat {
            If a stub is created anew, it is saved in cache for reuse by other callers.
          */
         // this.session?.countRequested(id)
-        let obj = this._cache.get(id) || this._register(Item.create_stub(id))            // a stub has immediate expiry date (i.e., on next cache pruning) unless a custom TTL is loaded from DB
+        let obj = this.registry.get(id) || this._register(Item.create_stub(id))         // a stub has immediate expiry date (i.e., on next cache purge) unless its data is loaded and TLS is updated
         assert(!obj._meta_.mutable)
         return obj
     }
@@ -311,10 +311,10 @@ export class Schemat {
     /***  Cache management  ***/
 
     _register(obj) {
-        /* Put `obj` in the cache. This may override an existing instance with the same ID. */
+        /* Put `obj` in the registry. This may override an existing instance with the same ID. */
         assert(obj._id_ !== undefined, `cannot register an object without an ID: ${obj}`)
         assert(!obj._meta_.mutable, `cannot register a mutable object: ${obj}`)
-        this._cache.set(obj._id_, obj)
+        this.registry.set(obj._id_, obj)
         return obj
     }
 
@@ -322,8 +322,8 @@ export class Schemat {
         /* Evict expired objects from the cache. */
         print("purging cache...")
         this._ts_last_purge = Date.now()
-        await this._cache.evict_expired()
-        if (!this._cache.has(ROOT_ID))              // if root category is no longer present in _cache, call _init_root() once again
+        await this.registry.evict_expired()
+        if (!this.registry.has(ROOT_ID))            // if root category is no longer present in registry, call _init_root() once again
             await this._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in
         print("purging cache done")
     }
