@@ -371,7 +371,7 @@ export class Item {
     _meta_ = {                  // _meta_ contain system properties of this object...
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         mutable:   false,       // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from the registry
-        expiry:    undefined,   // timestamp [ms] when this item should be evicted from cache; 0 = NEVER, undefined = immediate
+        expiry:    0,           // timestamp [ms] when this item should be evicted from cache; 0 = immediate, undefined = NEVER
         pending_url: undefined,     // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
@@ -573,14 +573,16 @@ export class Item {
     //     return this
     // }
 
-    _set_expiry(ttl) {
+    _set_expiry(ttl = 'never') {
         /* Time To Live (ttl) is expressed in seconds. */
-        let expiry
-        if (ttl === undefined) return                       // leave the expiry date unchanged
-        if (ttl === 'never' || ttl < 0) expiry = 0          // never evict
-        else if (ttl === 0) expiry = undefined              // immediate eviction at the end of web session
-        else expiry = Date.now() + ttl * 1000
-        this._meta_.expiry = expiry
+        this._meta_.expiry = (ttl === 'never') ? undefined : Date.now() + ttl * 1000
+
+        // let expiry
+        // if (ttl === undefined) return                       // leave the expiry date unchanged
+        // if (ttl === 'never' || ttl < 0) expiry = 0          // never evict
+        // else if (ttl === 0) expiry = undefined              // immediate eviction at the end of web request
+        // else expiry = Date.now() + ttl * 1000
+        // this._meta_.expiry = expiry
     }
 
     _init_prototypes() {
@@ -1300,8 +1302,10 @@ export class RootCategory extends Category {
     constructor(_fail_) {
         super(_fail_)
         this._id_ = ROOT_ID
-        this._meta_.expiry = 0                      // never evict from cache
+        // this._meta_.expiry = 0                      // never evict from cache
     }
+
+    _set_expiry() { this._meta_.expiry = undefined }          // never evict from cache
 
     get _category_() { return this._proxy_ }        // root category is a category for itself
 

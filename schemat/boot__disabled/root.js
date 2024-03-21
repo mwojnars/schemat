@@ -86,7 +86,7 @@ export let root_data = new Data({
     name        : "Category",
     info        : "Category of items that represent categories",
     // _boot_class : 'schemat.item.Category',      //  '/system/item.js/Category'
-    cache_ttl   : 60.0,
+    cache_ttl   : 10.0,
     fields      : root_fields,
 })
 

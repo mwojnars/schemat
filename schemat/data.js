@@ -77,7 +77,7 @@ export class Path {
 
 /**********************************************************************************************************************
  **
- **  CACHE of ITEMS
+ **  CACHE of WEB OBJECTS
  **
  */
 
@@ -95,11 +95,11 @@ export class ObjectsCache extends Map {
     // }
 
     evict_expired() {
-        let now  = Date.now()
+        let now = Date.now()
         let cleanup = []
         for (let [id, obj] of this.entries()) {
             let expiry = obj._meta_.expiry
-            if (expiry === undefined || (0 < expiry && expiry <= now)) {
+            if (expiry !== undefined && expiry <= now) {
                 let deleted = this.delete(id)
                 // if (deleted) print('item evicted:', id, item.is_loaded() ? '' : '(stub)' )     // TODO: comment out
                 // else print('item not found for eviction:', id, item.is_loaded() ? '' : '(stub)' )

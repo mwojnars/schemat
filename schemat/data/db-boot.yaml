@@ -1,7 +1,7 @@
 - __id: 0
   name: Category
   info: Category of items that represent categories
-  cache_ttl: 60
+  cache_ttl: 10
   schema:
     defaults:
       values:
