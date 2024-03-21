@@ -97,7 +97,6 @@ export class Schemat {
     _db                     // client-side or bootstrap DB; regular server-side DB is taken from site.database
 
     registry = new Registry()
-    _ts_last_purge = 0      // timestamp of the last cache purge
 
     site                    // fully loaded and activated Site instance that handles all web requests
     is_closing = false      // true if the Schemat node is in the process of shutting down
@@ -247,7 +246,7 @@ export class Schemat {
     }
 
 
-    /***  Web objects  ***/
+    /***  Access to web objects  ***/
 
     get_object(id, {version = null} = {}) {
         /* Create a stub of an object with a given ID, or return an existing instance (a stub or loaded), if present in the cache.
@@ -294,21 +293,6 @@ export class Schemat {
             assert(target_cid === undefined || target_cid === cid)
             yield this.get_loaded(id)
         }
-    }
-
-
-    /***  Registry management  ***/
-
-    async _purge_cache() {
-        /* Evict expired objects from the cache. */
-        print("cache purging...")
-
-        await this.registry.purge()
-        // if (!this.registry.has(ROOT_ID))            // if root category is no longer present in registry, call _init_root() once again
-        //     await schemat._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in
-
-        this._ts_last_purge = Date.now()
-        print("cache purging done")
     }
 
 
