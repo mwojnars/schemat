@@ -260,8 +260,8 @@ export class Schemat {
     /***  Access to web objects  ***/
 
     get_object(id, {version = null} = {}) {
-        /* Get a registered instance of an object with a given ID, possibly a stub. An existing instance is returned,
-           this._cache, or a stub is created anew and saved for future calls.
+        /* Create a stub of an object with a given ID, or return an existing instance (a stub or loaded), if present in the cache.
+           If a stub is created anew, it is saved in cache and can be reused by other callers.
          */
         // this.session?.countRequested(id)
 
@@ -303,23 +303,32 @@ export class Schemat {
 
     /***  Cache management  ***/
 
-    register(item) {
-        /* Add `item` to the cache. This may override an existing item instance with the same ID. */
-        assert(item._id_ !== undefined, `cannot register an item without an ID: ${item}`)
-        assert(!item._meta_.mutable, `cannot register a mutable item: ${item}`)
-        this._cache.set(item._id_, item)
-        return item
+    async reload(obj_or_id) {
+        /* Create a new instance of the object, load its data from DB, and when it is fully initialized
+           replace the existing instance in the cache. Return the new object.
+         */
+        let id  = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id._id_
+        let obj = Item.create_stub(id)
+        return obj.load().then(() => this.register(obj))
     }
 
-    unregister(item_or_id) {
-        /* Remove an object with a given ID from the cache. If the argument is an object not ID,
-           it gets removed from the cache only if this exact instance (not another copy with the same ID) is there.
-         */
-        let item = T.isNumber(item_or_id) ? null : item_or_id
-        let id = item ? item_or_id._id_ : item_or_id
-        if (!item || this._cache.get(id) === item)
-            this._cache.delete(id)
+    register(obj) {
+        /* Add `obj` to the cache. This may override an existing instance with the same ID. */
+        assert(obj._id_ !== undefined, `cannot register an object without an ID: ${obj}`)
+        assert(!obj._meta_.mutable, `cannot register a mutable object: ${obj}`)
+        this._cache.set(obj._id_, obj)
+        return obj
     }
+
+    // unregister(item_or_id) {
+    //     /* Remove an object with a given ID from the cache. If the argument is an object not ID,
+    //        it gets removed from the cache only if this exact instance (not another copy with the same ID) is there.
+    //      */
+    //     let item = T.isNumber(item_or_id) ? null : item_or_id
+    //     let id = item ? item_or_id._id_ : item_or_id
+    //     if (!item || this._cache.get(id) === item)
+    //         this._cache.delete(id)
+    // }
 
     async _clear_cache() {
         /* Evict expired objects from this._cache. */
