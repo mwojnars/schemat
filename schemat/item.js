@@ -537,7 +537,6 @@ export class Item {
                 await this._meta_.pending_url
 
             return this
-            // return await this.activate()
 
         } catch (ex) {
             this._data_ = undefined                         // on error, clear the data to mark this object as not loaded
@@ -558,20 +557,6 @@ export class Item {
         assert(typeof json === 'string', json)
         return new ItemRecord(this._id_, json)
     }
-
-    // async activate() {
-    //     /* After the props are loaded, attach a JS class to this object (to provide custom behavior) and call the initializer. */
-    //
-    //     assert(this._data_)
-    //
-    //     await this._init_class()                        // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
-    //     this._init_network()
-    //
-    //     let init = this.__init__()                      // optional custom initialization after the data is loaded
-    //     if (init instanceof Promise) await init         // must be called BEFORE this._data_=data to avoid concurrent async code treat this item as initialized
-    //
-    //     return this
-    // }
 
     _set_expiry(ttl = 'never') {
         /* Time To Live (ttl) is expressed in seconds. */
