@@ -104,7 +104,15 @@ export class Schemat {
         return (this.server_side && this.site?.database) || this._db
     }
 
-    root_category           // site-wide RootCategory object
+    get root_category() {
+        /* The RootCategory object. Always present in cache, always fully loaded. */
+        let root = this._cache.get(ROOT_ID)
+        // assert(root, `RootCategory not found in cache`)
+        // assert(root.is_loaded(), `RootCategory not loaded`)
+        return root
+    }
+    // root_category           // site-wide RootCategory object
+
     site                    // fully loaded and activated Site instance that handles all web requests
     is_closing = false      // true if the Schemat node is in the process of shutting down
 
@@ -188,9 +196,9 @@ export class Schemat {
     set_db(db)  { return this._db = db }
 
     async boot(site_id) {
-        /* (Re)create/load `this.root_category` and `this.site`. The latter will be left undefined if not present in the DB. */
+        /* (Re)create/load root_category object and the `site`. The latter will be left undefined if not present in the DB. */
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
-        this.root_category = await this._init_root()        // always returns a valid object, possibly created from `root_data`
+        await this._init_root()
         this.site = await this._init_site(site_id)          // may return undefined if the record not found in DB (!)
         if (this.site) await this._activate_site()
         // if (this.site) print("Schemat: site loaded")
@@ -200,10 +208,8 @@ export class Schemat {
         /* Create the RootCategory object, ID=0, and load its contents from the DB. The root_category must be present
            in the lowest ring already, possibly overwritten by newer variants in higher rings.
          */
-        // if (this.root_category) return this.root_category        // warn: this is incorrect during startup if root is redefined in higher rings
-        let root = this.root_category = RootCategory.create()
+        let root = RootCategory.create()
         this.register(root)
-
         await root.load()
         root.assert_loaded()
         // print("Schemat: root category loaded from DB")
