@@ -40,7 +40,10 @@ export class ServerSchemat extends Schemat {
     /***  Events  ***/
 
     async after_request() {
-        return this._clear_cache()
+        /* Called after each web request. */
+        const min_delay = 1000              // [ms] 1 second
+        if (Date.now() - this._ts_last_purge < min_delay) return
+        return this._purge_cache()
     }
 
 

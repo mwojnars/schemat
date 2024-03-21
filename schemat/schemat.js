@@ -125,6 +125,7 @@ export class Schemat {
     is_closing = false      // true if the Schemat node is in the process of shutting down
 
     _cache = new ObjectsCache()
+    _ts_last_purge = 0      // timestamp of the last cache purge
 
     // IDs of objects currently being loaded/initialized with a call to .load()
     _loading = new class extends Stack {
@@ -310,18 +311,21 @@ export class Schemat {
     /***  Cache management  ***/
 
     _register(obj) {
-        /* Add `obj` to the cache. This may override an existing instance with the same ID. */
+        /* Put `obj` in the cache. This may override an existing instance with the same ID. */
         assert(obj._id_ !== undefined, `cannot register an object without an ID: ${obj}`)
         assert(!obj._meta_.mutable, `cannot register a mutable object: ${obj}`)
         this._cache.set(obj._id_, obj)
         return obj
     }
 
-    async _clear_cache() {
-        /* Evict expired objects from this._cache. */
+    async _purge_cache() {
+        /* Evict expired objects from the cache. */
+        print("purging cache...")
+        this._ts_last_purge = Date.now()
         await this._cache.evict_expired()
         if (!this._cache.has(ROOT_ID))              // if root category is no longer present in _cache, call _init_root() once again
             await this._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in
+        print("purging cache done")
     }
 
 
