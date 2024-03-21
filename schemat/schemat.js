@@ -124,14 +124,18 @@ export class Schemat {
 
         _head(obj) {
             let id   = `[${obj._id_}]`.padEnd(6)
-            let name = `${obj._self_.name || obj._data_?.get('name') || ''}`.padEnd(15)
+            let name = this._name(obj).padEnd(15)
             return `${id} ${name}`
         }
         _tail() {
             // IDs and names of all objects currently being loaded
             let ids = this.map(obj => obj._id_)
-            let names = this.map(obj => obj._self_.name || obj._data_?.get('name') || obj._id_)    //(obj.is_loaded ? obj.name : obj._self_.name)
+            let names = this.map(obj => this._name(obj) || obj._id_)
             return `[${ids}]  --  [${names.join(', ')}]`
+        }
+        _name(obj) {
+            if (typeof obj._self_.name === 'string') return obj._self_.name     // watch out for ItemProxy.UNDEFINED
+            return obj._data_?.get('name') || ''                                //(obj.is_loaded ? obj.name : obj._self_.name)
         }
     }
 
