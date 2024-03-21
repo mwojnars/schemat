@@ -257,23 +257,31 @@ export class Schemat {
     }
 
 
-    /***  Access to web objects  ***/
+    /***  Web objects  ***/
 
     get_object(id, {version = null} = {}) {
         /* Create a stub of an object with a given ID, or return an existing instance (a stub or loaded), if present in the cache.
-           If a stub is created anew, it is saved in cache and can be reused by other callers.
+           If a stub is created anew, it is saved in cache for reuse by other callers.
          */
         // this.session?.countRequested(id)
-
-        // ID requested was already loaded/created? return the existing instance, or create a stub (empty item) otherwise;
-        // a stub has no expiry date until filled with data
-        let item = this._cache.get(id) || this.register(Item.create_stub(id))
-
-        assert(!item._meta_.mutable)
-        return item
+        let obj = this._cache.get(id) || this.register(Item.create_stub(id))            // a stub has immediate expiry date (i.e., on next cache pruning) unless a custom TTL is loaded from DB
+        assert(!obj._meta_.mutable)
+        return obj
     }
 
     async get_loaded(id)     { return this.get_object(id).load() }
+
+    async reload(obj_or_id) {
+        /* Create a new instance of the object, load its data from DB, and when it is fully initialized
+           replace the existing instance in the cache. Return the new object.
+         */
+        let id  = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id._id_
+        let obj = Item.create_stub(id)
+        return obj.load().then(() => this.register(obj))
+    }
+
+
+    /***  Indexes  ***/
 
     async *scan_all({limit} = {}) {
         /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
@@ -302,15 +310,6 @@ export class Schemat {
 
 
     /***  Cache management  ***/
-
-    async reload(obj_or_id) {
-        /* Create a new instance of the object, load its data from DB, and when it is fully initialized
-           replace the existing instance in the cache. Return the new object.
-         */
-        let id  = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id._id_
-        let obj = Item.create_stub(id)
-        return obj.load().then(() => this.register(obj))
-    }
 
     register(obj) {
         /* Add `obj` to the cache. This may override an existing instance with the same ID. */
