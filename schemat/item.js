@@ -690,10 +690,10 @@ export class Item {
 
     _own_values(prop)  { return this._data_.get_all(prop) }
 
-    async refresh() {
-        /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
-        return schemat.get_item(this._id_).load()
-    }
+    // async reload() {
+    //     /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
+    //     return schemat.get_item(this._id_).load()
+    // }
 
     async seal_data() {
         /* In a newborn (unlinked) object, create _data_ - if not present yet - by copying property values

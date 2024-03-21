@@ -94,7 +94,7 @@ export class MySQL extends DataBlock {
         let select = this._query_select(table_id)
         let query = `${select} WHERE id = ? LIMIT 1`
         let [rows, cols] = await this.db.execute(query, [row_id])
-        let category = await this._categories[table_id].refresh()
+        let category = this._categories[table_id]  //await this._categories[table_id].reload()
         if (rows.length) return this._convert(rows[0], category)
     }
 
@@ -110,7 +110,7 @@ export class MySQL extends DataBlock {
             }
 
             let [rows, cols] = await this.db.execute(query)
-            let category = await this._categories[table_id].refresh()
+            let category = this._categories[table_id]   //await this._categories[table_id].reload()
 
             for (let row of rows) {
                 let id = this.iidFromSQL(table_id, row.id)
