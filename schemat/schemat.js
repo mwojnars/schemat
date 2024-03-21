@@ -256,24 +256,6 @@ export class Schemat {
 
     /***  Items manipulation  ***/
 
-    register(item) {
-        /* Add `item` to the cache. This may override an existing item instance with the same ID. */
-        assert(item._id_ !== undefined, `cannot register an item without an ID: ${item}`)
-        assert(!item._meta_.mutable, `cannot register a mutable item: ${item}`)
-        this._cache.set(item._id_, item)
-        return item
-    }
-
-    unregister(item_or_id) {
-        /* Remove an object with a given ID from the cache. If the argument is an object not ID,
-           it gets removed from the cache only if this exact instance (not another copy with the same ID) is there.
-         */
-        let item = T.isNumber(item_or_id) ? null : item_or_id
-        let id = item ? item_or_id._id_ : item_or_id
-        if (!item || this._cache.get(id) === item)
-            this._cache.delete(id)
-    }
-
     get_item(id, {version = null} = {}) {
         /* Get a registered instance of an item with a given ID, possibly a stub. An existing instance is returned,
            this._cache, or a stub is created anew and saved for future calls.
@@ -317,6 +299,24 @@ export class Schemat {
 
 
     /***  Cache management  ***/
+
+    register(item) {
+        /* Add `item` to the cache. This may override an existing item instance with the same ID. */
+        assert(item._id_ !== undefined, `cannot register an item without an ID: ${item}`)
+        assert(!item._meta_.mutable, `cannot register a mutable item: ${item}`)
+        this._cache.set(item._id_, item)
+        return item
+    }
+
+    unregister(item_or_id) {
+        /* Remove an object with a given ID from the cache. If the argument is an object not ID,
+           it gets removed from the cache only if this exact instance (not another copy with the same ID) is there.
+         */
+        let item = T.isNumber(item_or_id) ? null : item_or_id
+        let id = item ? item_or_id._id_ : item_or_id
+        if (!item || this._cache.get(id) === item)
+            this._cache.delete(id)
+    }
 
     async _clear_cache() {
         /* Evict expired objects from this._cache. */
