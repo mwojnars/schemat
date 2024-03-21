@@ -492,7 +492,7 @@ export class Item {
 
     async _load(record /*ItemRecord*/, await_url) {
         /* Load this._data_ from `record` or DB. Set up the class and prototypes. Call __init__(). */
-        let _id = this._id_
+
         schemat.before_data_loading(this)
 
         try {

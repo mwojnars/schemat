@@ -107,11 +107,10 @@ export class Schemat {
     get root_category() {
         /* The RootCategory object. Always present in cache, always fully loaded. */
         let root = this._cache.get(ROOT_ID)
-        // assert(root, `RootCategory not found in cache`)
-        // assert(root.is_loaded(), `RootCategory not loaded`)
+        assert(root, `RootCategory not found in cache`)
+        assert(root.is_loaded(), `RootCategory not loaded`)
         return root
     }
-    // root_category           // site-wide RootCategory object
 
     site                    // fully loaded and activated Site instance that handles all web requests
     is_closing = false      // true if the Schemat node is in the process of shutting down
@@ -210,28 +209,9 @@ export class Schemat {
          */
         let root = RootCategory.create()
         this.register(root)
-        await root.load()
+        await root.load()           // here, bootstrap DB (_db) is already available and the data is loaded from there
         root.assert_loaded()
         // print("Schemat: root category loaded from DB")
-
-        // // try loading `root` from the DB first...
-        // if (this.db)
-        //     try {
-        //         await root.load()
-        //         root.assert_loaded()
-        //         print("Schemat: root category loaded from DB")
-        //     } catch (ex) {
-        //         if (!(ex instanceof ItemNotFound)) throw ex
-        //     }
-        //
-        // // ...only when the above fails due to missing data, load from the predefined `root_data`
-        // // TODO: this is only used by CLI_build() and bootstrap.js -- can be removed if bootstrap is not supported anymore!
-        // if (!root.is_loaded()) {
-        //     await root.load(new ItemRecord(ROOT_ID, root_data))
-        //     print("Schemat: root category created from root_data")
-        // }
-
-        // print("Schemat: root category created")
         return root
     }
 
