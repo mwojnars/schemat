@@ -203,19 +203,13 @@ export class Schemat {
     }
 
     async boot() {
-        /* Load the `site` object. The latter will be left undefined if not present in the DB. */
-        try { if (this.db) await this.reload(this.site_id) }
-        catch (ex) { if (!(ex instanceof ItemNotFound)) throw ex }
-        if (this.site) await this._activate_site()
-        // if (this.site) print("Schemat: site loaded")
-    }
+        /* Load the `site` object and make sure that URLs of existing (system) objects are awaited. */
+        await this.reload(this.site_id)
 
-    async _activate_site() {
-        /* When the site is loaded, we can safely await URLs of all the objects created so far.
-           Later on, newly created objects will have their URLs awaited automatically during load().
-           TODO: re-create the objects instead of just awaiting their URLs, so that subsequent dynamic imports all go through the SUN instead of a static classpath.
-         */
-        print("activating site...")
+        // when the site is loaded, we can safely await URLs of all the objects created so far.
+        // Later on, newly created objects will have their URLs awaited automatically during load().
+        // TODO: re-create the objects instead of just awaiting their URLs, so that subsequent dynamic imports all go through the SUN instead of a static classpath.
+
         for (let obj of this.registry.values())
             if (obj._data_ && !obj._url_)
                 await obj._meta_.pending_url
