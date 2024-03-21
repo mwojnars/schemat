@@ -1,4 +1,4 @@
-import {assert, print, timeout} from '../common/utils.js'
+import {assert, print, timeout, sleep} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {set_global} from "../common/globals.js";
 import {thread_local_variable} from "./thread.js";
@@ -53,10 +53,11 @@ export class WebServer extends Server {
 
     async handle(req, res) {
         if (!['GET','POST'].includes(req.method)) return res.sendStatus(405)    // 405 Method Not Allowed
-        // print(`Server.handle() worker ${process.pid}:`, req.path)
+        // print(`handle() worker ${process.pid} started: ${req.path}`)
         // await session.start()
 
         try {
+            // await sleep(3000)
             let deadline = timeout(this.REQUEST_TIMEOUT * 1000, new ServerTimeoutError())
             let request = new Request({req, res})
             let handler = schemat.site.route(request)
@@ -74,7 +75,8 @@ export class WebServer extends Server {
         // check()
 
         await schemat.after_request()
-
+        // print(`handle() worker ${process.pid} finished: ${req.path}`)
+        
         // await sleep(200)                 // for testing
         // session.printCounts()
         // await session.stop()
