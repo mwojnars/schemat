@@ -117,11 +117,7 @@ export class Schemat {
         return root
     }
 
-    get site() {
-        /* The Site object, if present in the database. */
-        let site = this.registry.get(this.site_id)
-        if (site?.is_loaded()) return site
-    }
+    get site()      { return this.registry.get(this.site_id) }
 
 
     // IDs of objects currently being loaded/initialized with a call to .load()
