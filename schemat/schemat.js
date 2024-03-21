@@ -257,10 +257,10 @@ export class Schemat {
     }
 
 
-    /***  Items manipulation  ***/
+    /***  Access to web objects  ***/
 
-    get_item(id, {version = null} = {}) {
-        /* Get a registered instance of an item with a given ID, possibly a stub. An existing instance is returned,
+    get_object(id, {version = null} = {}) {
+        /* Get a registered instance of an object with a given ID, possibly a stub. An existing instance is returned,
            this._cache, or a stub is created anew and saved for future calls.
          */
         // this.session?.countRequested(id)
@@ -273,7 +273,7 @@ export class Schemat {
         return item
     }
 
-    async get_loaded(id)     { return this.get_item(id).load() }
+    async get_loaded(id)     { return this.get_object(id).load() }
 
     async *scan_all({limit} = {}) {
         /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */

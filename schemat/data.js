@@ -654,7 +654,7 @@ export class Data extends Catalog {
         let _class_    = obj._class_    || obj.constructor._class_ || obj.constructor || undefined
 
         if (T.isString(_category_)) _category_ = Number(_category_)
-        if (T.isNumber(_category_)) _category_ = await schemat.get_loaded(_category_) //schemat.get_item(_category_)
+        if (T.isNumber(_category_)) _category_ = await schemat.get_loaded(_category_) //schemat.get_object(_category_)
 
         if (_class_ === Object || _class_ === Item) _class_ = undefined
         if (_class_ && !T.isString(_class_)) _class_ = schemat.get_classpath(_class_)     // convert _class_ to a classpath string

@@ -63,7 +63,7 @@ export class ClientSchemat extends Schemat {
         for (let rec of data.items)
             await this.get_loaded(rec.id)               // preload all boot items from copies passed in constructor()
 
-        return this.get_item(data.target_id)
+        return this.get_object(data.target_id)
     }
 
 
@@ -88,7 +88,7 @@ export class ClientSchemat extends Schemat {
         let record = await category.create_item(data)
         if (record) {
             schemat.db.cache(record)                         // record == {id: id, data: data-encoded}
-            return this.get_item(record.id)
+            return this.get_object(record.id)
         }
         throw new Error(`cannot create item ${item}`)
     }
