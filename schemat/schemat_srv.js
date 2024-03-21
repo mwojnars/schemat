@@ -37,21 +37,27 @@ export class ServerSchemat extends Schemat {
         return name ? (await module)[name] : module
     }
 
-    // async startSession(session) {
+    /***  Events  ***/
+
+    // async before_request(session) {
     //     let release = await this.sessionMutex.acquire()
     //     assert(!this.session, 'trying to process a new web request when another one is still open')
     //     this.session = session
     //     return release
     // }
-    // async stopSession(releaseMutex) {
+    // async after_request(releaseMutex) {
     //     assert(this.session, 'trying to stop a web session when none was started')
     //     delete this.session
     //     await this.evict_cache()
     //     releaseMutex()
     // }
 
-    async evict_cache() {
-        /* Evict expired objects in _cache. */
+    async after_request() {
+        return this._clear_cache()
+    }
+
+    async _clear_cache() {
+        /* Evict expired objects from this._cache. */
         await this._cache.evict()
         if (!this._cache.has(ROOT_ID))              // if root category is no longer present in _cache, call _init_root() once again
             await this._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in

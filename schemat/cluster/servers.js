@@ -73,7 +73,7 @@ export class WebServer extends Server {
         // let {check} = await schemat.site.importModule("/site/widgets.js")
         // check()
 
-        await schemat.evict_cache()
+        await schemat.after_request()
 
         // await sleep(200)                 // for testing
         // session.printCounts()
