@@ -160,16 +160,31 @@ export class Schemat {
         this.site_id = site_id
     }
 
-    static async create_global(...args) {
+    static async create_global(site_id, db, open_db = null, ...args) {
         /* Create a new Schemat instance, perform basic initialization and make it a global object. */
 
-        let schemat = new this(...args)
+        let schemat = new this(site_id, ...args)
         set_global({schemat, registry: schemat})
-
         await schemat.init_classpath()
-        // await schemat.boot()
+
+        schemat._db = db
+        await open_db?.(db)
+        await schemat.boot()
+        assert(schemat.site)
+
         return schemat
     }
+
+    // static async create_global(...args) {
+    //     /* Create a new Schemat instance, perform basic initialization and make it a global object. */
+    //
+    //     let schemat = new this(...args)
+    //     set_global({schemat, registry: schemat})
+    //
+    //     await schemat.init_classpath()
+    //     // await schemat.boot()
+    //     return schemat
+    // }
 
 
     async init_classpath() {
