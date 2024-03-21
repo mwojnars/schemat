@@ -2,6 +2,7 @@
 
 import { assert, print, T } from '../common/utils.js'
 import { Schemat } from './schemat.js'
+import {ROOT_ID} from "../item.js";
 
 
 /**********************************************************************************************************************
@@ -42,7 +43,12 @@ export class ServerSchemat extends Schemat {
     async after_request() {
         /* Called after each web request. */
         const min_delay = 1000              // [ms] 1 second
-        return this.registry.purge(min_delay)
+        const on_evict = (obj) => {
+            if (obj._id_ === ROOT_ID) return this.reload(ROOT_ID)                       // make sure that a root category object (loaded) is present at all times
+            if (obj._id_ === this.site._id_)
+                return this.reload(this.site).then(site => (this.site = site))          // ...same for the `site` object
+        }
+        return this.registry.purge(min_delay, on_evict)
     }
 
 
