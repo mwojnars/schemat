@@ -59,7 +59,6 @@ export class ClientSchemat extends Schemat {
 
         await this.boot(data.site_id)
         assert(this.site)
-        // assert(this.site.is_activated)
 
         for (let rec of data.items)
             await this.get_loaded(rec.id)               // preload all boot items from copies passed in constructor()

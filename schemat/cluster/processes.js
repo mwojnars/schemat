@@ -44,7 +44,6 @@ export class BackendProcess {
         let bootstrap_db = schemat.set_db(Database.create())
         await bootstrap_db.open(rings)
         await schemat.boot(config.site)                 // load `site` object together with the ultimate database
-        // assert(schemat.site.is_activated)
         // await bootstrap_db.insert_self()
     }
 }

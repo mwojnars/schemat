@@ -387,7 +387,7 @@ export class Item {
     is_newborn()    { return this._id_ === undefined }              // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
     is_linked()     { return this._id_ !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this._data_ && !this._meta_.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except _url_ & _path_ which are allowed to be delayed)
-    is_activated()  { return this.is_loaded() && this._url_}        // true if the object is loaded AND its URL is already computed
+    //is_activated()  { return this.is_loaded() && this._url_}        // true if the object is loaded AND its URL is already computed
 
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
