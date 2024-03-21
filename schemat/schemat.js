@@ -354,16 +354,16 @@ export class Schemat {
     directImportPath(path)  { throw new NotImplemented() }
 
 
-    /***  Debugging  ***/
+    /***  Events & Debugging  ***/
 
-    load_started(obj, MAX_LOADING = 10) {
-        /* Called when a web object starts loading. */
+    before_data_loading(obj, MAX_LOADING = 10) {
+        /* Called at the beginning of data loading in an object, obj._load(). */
         this._loading.push(obj, false)
         // if (count > MAX_LOADING) throw new Error(`Too many objects loading at once: ${count}`)
     }
 
-    load_finished(obj) {
-        /* Called when a web object finishes loading. */
+    after_data_loading(obj) {
+        /* Called at the end of data loading in an object, obj._load(). */
         this._loading.pop(obj, false)
     }
 }

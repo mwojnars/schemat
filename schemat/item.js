@@ -493,7 +493,7 @@ export class Item {
     async _load(record /*ItemRecord*/, await_url) {
         /* Load this._data_ from `record` or DB. Set up the class and prototypes. Call __init__(). */
         let _id = this._id_
-        schemat.load_started(this)
+        schemat.before_data_loading(this)
 
         try {
             record = record || await this._load_record()
@@ -545,7 +545,7 @@ export class Item {
 
         } finally {
             this._meta_.loading = false                     // cleanup to allow another load attempt, even after an error
-            schemat.load_finished(this)
+            schemat.after_data_loading(this)
         }
     }
 
