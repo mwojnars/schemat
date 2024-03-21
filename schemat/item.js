@@ -1290,7 +1290,7 @@ export class RootCategory extends Category {
 
     _id_ = ROOT_ID
 
-    _set_expiry() { this._meta_.expiry = undefined }          // never evict from cache
+    // _set_expiry() { this._meta_.expiry = undefined }          // never evict from cache
 
     get _category_() { return this._proxy_ }        // root category is a category for itself
 

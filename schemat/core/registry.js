@@ -34,7 +34,7 @@ export class Registry {
         print("cache purging...")
 
         const on_evict = (obj) => {
-            if (obj._id_ === ROOT_ID) return schemat.reload(ROOT_ID)     // don't evict the root object
+            if (obj._id_ === ROOT_ID) return schemat.reload(ROOT_ID)     // make sure that a loaded root category object is always present
         }
         await this.objects.evict_expired(on_evict)
 
