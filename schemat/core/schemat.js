@@ -203,16 +203,14 @@ export class Schemat {
     }
 
     async boot() {
-        /* Load the `site` object and make sure that URLs of existing (system) objects are awaited. */
+        /* Load the `site` object and reload the existing (system) objects to make sure that they are fully activated
+           (URLs are awaited, classes are imported dynamically from SUN instead of a static classpath).
+         */
         await this.reload(this.site_id)
-
-        // when the site is loaded, we can safely await URLs of all the objects created so far.
-        // Later on, newly created objects will have their URLs awaited automatically during load().
-        // TODO: re-create the objects instead of just awaiting their URLs, so that subsequent dynamic imports all go through the SUN instead of a static classpath.
-
         for (let obj of this.registry)
-            if (obj._data_ && !obj._url_)
-                await obj._meta_.pending_url
+            if (obj._data_) await this.reload(obj)
+            // if (obj._data_ && !obj._url_)
+            //     await obj._meta_.pending_url
     }
 
 
