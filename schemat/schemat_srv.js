@@ -37,7 +37,13 @@ export class ServerSchemat extends Schemat {
         return name ? (await module)[name] : module
     }
 
+
     /***  Events  ***/
+
+    async after_request() {
+        return this._clear_cache()
+    }
+
 
     // async before_request(session) {
     //     let release = await this.sessionMutex.acquire()
@@ -51,15 +57,4 @@ export class ServerSchemat extends Schemat {
     //     await this.evict_cache()
     //     releaseMutex()
     // }
-
-    async after_request() {
-        return this._clear_cache()
-    }
-
-    async _clear_cache() {
-        /* Evict expired objects from this._cache. */
-        await this._cache.evict()
-        if (!this._cache.has(ROOT_ID))              // if root category is no longer present in _cache, call _init_root() once again
-            await this._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in
-    }
 }

@@ -3,7 +3,7 @@
 import {T, print, assert, Stack} from './common/utils.js'
 import {ItemNotFound, NotImplemented} from './common/errors.js'
 import {Catalog, Data, ItemsCache} from './data.js'
-import {Item, RootCategory} from './item.js'
+import {Item, ROOT_ID, RootCategory} from './item.js'
 import {set_global} from "./common/globals.js";
 
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -309,6 +309,16 @@ export class Schemat {
             assert(target_cid === undefined || target_cid === cid)
             yield this.get_loaded(id)
         }
+    }
+
+
+    /***  Cache management  ***/
+
+    async _clear_cache() {
+        /* Evict expired objects from this._cache. */
+        await this._cache.evict()
+        if (!this._cache.has(ROOT_ID))              // if root category is no longer present in _cache, call _init_root() once again
+            await this._init_root()                 // WARN: between evict() and _init_root() there's no root_category defined! problem if a request comes in
     }
 
 
