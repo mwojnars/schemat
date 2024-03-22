@@ -20,20 +20,20 @@ export class ObjectsCache extends Map {
            (a truthy value must be returned then); can be async.
          */
         let now = Date.now()
-        let cleanup = []
+        let pending = []
+
         for (let [id, obj] of this.entries()) {
-            let expiry = obj._meta_.expiry
-            if (expiry === undefined || expiry > now) continue
+            if (obj._meta_.expiry > now) continue
 
             let evicted = on_evict?.(obj)
-            if (T.isPromise(evicted)) evicted = await evicted
+            if (T.isPromise(evicted)) evicted = await evicted       // TODO: add to `pending` instead of awaiting here
             if (!evicted) this.delete(id)
             // else print(`custom eviction done for: [${id}]`)
 
             let done = obj.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
-            if (T.isPromise(done)) cleanup.push(done)
+            if (T.isPromise(done)) pending.push(done)
         }
-        if (cleanup.length) return Promise.all(cleanup)
+        if (pending.length) return Promise.all(pending)
     }
 }
 

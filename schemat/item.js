@@ -371,7 +371,7 @@ export class Item {
     _meta_ = {                  // _meta_ contain system properties of this object...
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         mutable:   false,       // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from the registry
-        expiry:    0,           // timestamp [ms] when this item should be evicted from cache; 0 = immediate, undefined = NEVER
+        expiry:    0,           // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
         pending_url: undefined,     // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
@@ -388,6 +388,7 @@ export class Item {
     is_linked()     { return this._id_ !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this._data_ && !this._meta_.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except _url_ & _path_ which are allowed to be delayed)
     //is_activated()  { return this.is_loaded() && this._url_}        // true if the object is loaded AND its URL is already computed
+    //is_expired()    { return this._meta_.expiry < Date.now() }
 
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
@@ -523,6 +524,7 @@ export class Item {
             if (category && !category.is_loaded() && category !== this)
                 await category.load({await_url: false})     // if category's URL were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
+            // this._set_expiry(this._ttl_)
             this._set_expiry(category?.cache_ttl)
 
             if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
@@ -568,13 +570,6 @@ export class Item {
     _set_expiry(ttl = 'never') {
         /* Time To Live (ttl) is expressed in seconds. */
         this._meta_.expiry = (ttl === 'never') ? undefined : Date.now() + ttl * 1000
-
-        // let expiry
-        // if (ttl === undefined) return                       // leave the expiry date unchanged
-        // if (ttl === 'never' || ttl < 0) expiry = 0          // never evict
-        // else if (ttl === 0) expiry = undefined              // immediate eviction at the end of web request
-        // else expiry = Date.now() + ttl * 1000
-        // this._meta_.expiry = expiry
     }
 
     _init_prototypes() {

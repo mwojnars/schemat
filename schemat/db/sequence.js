@@ -48,10 +48,11 @@ export class Sequence extends Item {    // Series?
     _find_block(binary_key)     { return this.blocks[0] }
 
     async open() {
+        // this method is only called when the sequence is created anew and its ID is not yet assigned!
         for (let block of this.blocks) {
             await block
             await block.open()
-            block._set_expiry('never')          // prevent eviction of this item from cache (!)
+            // block._set_expiry('never')          // prevent eviction of this block from cache (!)
         }
     }
 
