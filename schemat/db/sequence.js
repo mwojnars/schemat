@@ -27,7 +27,7 @@ export class Sequence extends Item {    // Series?
     splits              // array of split points between blocks
     blocks              // array of Blocks that make up this sequence
     derived = []        // array of derived sequences (indexes) that must be updated when this sequence changes
-    flush_delay = 1.0   // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
+    flush_delay         // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
 
 
     __create__(ring) {

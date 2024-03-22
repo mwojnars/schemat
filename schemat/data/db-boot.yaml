@@ -59,10 +59,6 @@
         CALL: self
         "@": base.Catalog
       "@": type.CATALOG
-#    html_assets:
-#      info: HTML code to be inserted in the html/head section of every page that is
-#        rendered from a view function of this category.
-#      "@": type.CODE
     cache_ttl:
       default: 5
       info: Time To Live (TTL). Determines for how long (in seconds) an item of this
@@ -390,6 +386,9 @@
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together
       "@": type.NUMBER
+    "@": base.Catalog
+  defaults:
+    flush_delay: 0.01
     "@": base.Catalog
   _category_:
     "@": 0
