@@ -429,10 +429,8 @@ export class Item {
         /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
 
         // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
-        if (id === ROOT_ID && !this.__is_root_category__) {
-            print('creating a stub for RootCategory')
+        if (id === ROOT_ID && !this.__is_root_category__)
             return RootCategory.create_stub(id)
-        }
 
         let core = new this(false)
         let item = core._proxy_ = ItemProxy.wrap(core)
@@ -521,9 +519,7 @@ export class Item {
             if (category && !category.is_loaded() && category !== this)
                 await category.load({await_url: false})     // if category's URL were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
-            print(`ttl of [${this._id_}]: ${this._ttl_} sec`)
             this._meta_.expiry = Date.now() + (this._ttl_ || 0) * 1000
-            // this._set_expiry(category?.cache_ttl)
 
             if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
 
@@ -564,11 +560,6 @@ export class Item {
         assert(typeof json === 'string', json)
         return new ItemRecord(this._id_, json)
     }
-
-    // _set_expiry(ttl = 'never') {
-    //     /* Time To Live (ttl) is expressed in seconds. */
-    //     this._meta_.expiry = (ttl === 'never') ? undefined : Date.now() + ttl * 1000
-    // }
 
     _init_prototypes() {
         /* Load all Schemat prototypes of this object. */

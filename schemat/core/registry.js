@@ -35,7 +35,8 @@ export class ObjectsCache extends Map {
             let done = obj.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
             if (T.isPromise(done)) pending.push(done)
         }
-        print(`evicted objects: ${count}`)
+
+        print(`cache evicted objects: ${count}`)
         if (pending.length) return Promise.all(pending)
     }
 }
@@ -73,14 +74,13 @@ export class Registry {
         /* Evict expired objects from the cache. */
         if (this._purging_now) return
         if (Date.now() - this._last_purge_ts < min_delay) return
-
         this._purging_now = true
-        print("cache purging...")
 
-        await this.objects.evict_expired(on_evict)
+        try { await this.objects.evict_expired(on_evict) }
+        finally {
+            this._purging_now = false
+        }
 
-        print("cache purging done")
         this._last_purge_ts = Date.now()
-        this._purging_now = false
     }
 }

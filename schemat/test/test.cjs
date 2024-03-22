@@ -157,7 +157,7 @@ describe('Schemat Tests', function () {
 
         it('Category', async function () {
             await test_react_page(page, `${DOMAIN}/sys.category:0`, '#page-component',
-                ['Category:0', 'Category of items', 'name', 'cache_ttl', 'fields', 'Ring', 'Varia'])
+                ['Category:0', 'Category of items', 'name', '_ttl_', 'fields', 'Ring', 'Varia'])
         })
 
         it('Varia', async function () {
