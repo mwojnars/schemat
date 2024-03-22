@@ -42,17 +42,19 @@ export class ServerSchemat extends Schemat {
 
     async _purge_registry() {
         try {
-            const on_evict = (obj) => {
-                if (obj._id_ === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is loaded
-                if (obj._id_ === this.site._id_)
-                    return this.reload(this.site)                               // ...same for the `site` object
-            }
-            return this.registry.purge(on_evict)
+            return this.registry.purge(this._on_evict.bind(this))
         }
         finally {
             const interval = (this.site?.cache_purge_interval || 1) * 1000      // [ms]
             setTimeout(() => this._purge_registry(), interval)
         }
+    }
+
+    _on_evict(obj) {
+        /* Special handling for the root category and `site` object during registry purge. */
+        if (obj._id_ === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is (re)loaded, even after eviction
+        if (obj._id_ === this.site._id_)
+            return this.reload(this.site)                               // ...same for the `site` object
     }
 
 

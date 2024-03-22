@@ -36,7 +36,7 @@ export class ObjectsCache extends Map {
             if (T.isPromise(done)) pending.push(done)
         }
 
-        print(`cache evicted objects: ${count}`)
+        print(`evicted from registry: ${count}`)
         if (pending.length) return Promise.all(pending)
     }
 }
@@ -54,7 +54,6 @@ export class Registry {
     objects = new ObjectsCache()
 
     _purging_now = false                // if the previous purge is still in progress, a new one is abandoned
-    // _last_purge_ts = 0                  // timestamp of the last cache purge
 
 
     has(id)         { return this.objects.has(id) }
@@ -73,13 +72,11 @@ export class Registry {
     async purge(on_evict) {
         /* Evict expired objects from the cache. */
         if (this._purging_now) return
-        // if (Date.now() - this._last_purge_ts < min_delay) return
         this._purging_now = true
 
         try { await this.objects.evict_expired(on_evict) }
         finally {
             this._purging_now = false
         }
-        // this._last_purge_ts = Date.now()
     }
 }
