@@ -74,7 +74,7 @@ export class WebServer extends Server {
         // let {check} = await schemat.site.importModule("/site/widgets.js")
         // check()
 
-        await schemat.after_request()
+        // await schemat.after_request()
         // print(`handle() worker ${process.pid} finished: ${req.path}`)
 
         // await sleep(200)                 // for testing

@@ -22,6 +22,9 @@ export class ServerSchemat extends Schemat {
     constructor(path) {
         super()
         this.PATH_LOCAL_FS = path       // no trailing '/' (!)
+
+        // schedule periodical cache eviction; the interval is taken from site.cache_purge_interval and may change over time
+        setTimeout(() => this._purge_registry(), 1000)
     }
 
     directImportPath(path) {
@@ -37,20 +40,23 @@ export class ServerSchemat extends Schemat {
         return name ? (await module)[name] : module
     }
 
-
-    /***  Events  ***/
-
-    async after_request() {
-        /* Called after each web request. */
-        const interval = (this.site?.cache_purge_interval || 1) * 1000      // [ms]
-        const on_evict = (obj) => {
-            if (obj._id_ === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is loaded
-            if (obj._id_ === this.site._id_)
-                return this.reload(this.site)                               // ...same for the `site` object
+    async _purge_registry() {
+        try {
+            const on_evict = (obj) => {
+                if (obj._id_ === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is loaded
+                if (obj._id_ === this.site._id_)
+                    return this.reload(this.site)                               // ...same for the `site` object
+            }
+            return this.registry.purge(on_evict)
         }
-        return this.registry.purge(interval, on_evict)
+        finally {
+            const interval = (this.site?.cache_purge_interval || 1) * 1000      // [ms]
+            setTimeout(() => this._purge_registry(), interval)
+        }
     }
 
+
+    /***  Events  ***/
 
     // async before_request(session) {
     //     let release = await this.sessionMutex.acquire()
