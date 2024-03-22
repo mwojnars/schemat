@@ -31,6 +31,7 @@ export class Site extends Directory {
     database
     entries
     default_path
+    cache_purge_interval
 
 
     async __init__()  {

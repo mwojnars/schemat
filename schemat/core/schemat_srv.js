@@ -42,13 +42,13 @@ export class ServerSchemat extends Schemat {
 
     async after_request() {
         /* Called after each web request. */
-        const min_delay = 1000              // [ms] 1 second
+        const interval = (this.site?.cache_purge_interval || 1) * 1000      // [ms]
         const on_evict = (obj) => {
             if (obj._id_ === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is loaded
             if (obj._id_ === this.site._id_)
                 return this.reload(this.site)                               // ...same for the `site` object
         }
-        return this.registry.purge(min_delay, on_evict)
+        return this.registry.purge(interval, on_evict)
     }
 
 
