@@ -293,6 +293,7 @@ export class Item {
     _category_              category of this item, as a Category object
     _container_             Container of this item, for canonical URL generation
     _status_                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
+    _ttl_                   time-to-live of this object in the registry [seconds]; 0 = immediate eviction on the next cache purge
 
     _path_
     _url_                   absolute URL path of this object; calculated right *after* __init__(); to be sure that _url_ is computed, await _meta_.pending_url first
@@ -514,18 +515,15 @@ export class Item {
             let proto = this._init_prototypes()                 // load prototypes
             if (proto instanceof Promise) await proto
 
-            // // root category's class must be set here in a special way - this is particularly needed inside DB blocks,
-            // // while instantiating temporary items from data records (so new Item() is called, not new RootCategory())
-            // if (this._id_ === ROOT_ID) T.setClass(this, RootCategory)
-
-            // this._data_ is already loaded, so _category_ should be available IF defined (except non-categorized objects)
+            // this._data_ is already loaded, so _category_ should be available IF defined (except for non-categorized objects)
             let category = this._category_
 
             if (category && !category.is_loaded() && category !== this)
                 await category.load({await_url: false})     // if category's URL were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
-            // this._set_expiry(this._ttl_)
-            this._set_expiry(category?.cache_ttl)
+            print(`ttl of [${this._id_}]: ${this._ttl_} sec`)
+            this._meta_.expiry = Date.now() + (this._ttl_ || 0) * 1000
+            // this._set_expiry(category?.cache_ttl)
 
             if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
 
@@ -567,10 +565,10 @@ export class Item {
         return new ItemRecord(this._id_, json)
     }
 
-    _set_expiry(ttl = 'never') {
-        /* Time To Live (ttl) is expressed in seconds. */
-        this._meta_.expiry = (ttl === 'never') ? undefined : Date.now() + ttl * 1000
-    }
+    // _set_expiry(ttl = 'never') {
+    //     /* Time To Live (ttl) is expressed in seconds. */
+    //     this._meta_.expiry = (ttl === 'never') ? undefined : Date.now() + ttl * 1000
+    // }
 
     _init_prototypes() {
         /* Load all Schemat prototypes of this object. */

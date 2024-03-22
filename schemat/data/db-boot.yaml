@@ -86,6 +86,7 @@
     _class_: base.Category
     _container_:
       "@": 1014
+    _ttl_: 60
     schema:
       _category_:
         info: Category of this item. Determines item's behavior and the schema of its
@@ -121,16 +122,22 @@
           database.
         inherit: false
         "@": type.STRING
+      _ttl_:
+        default: 10
+        info: Time To Live (TTL) of an object, in seconds. Determines for how long
+          the object is kept in a server-side cache and reused after being loaded from DB.
+          If zero, the object is evicted on the nearest cache purge. A real number.
+        "@": type.NUMBER
       name:
-        info: Display name of the item. May contain spaces, punctuation, non-latin
+        info: Display name of the object. May contain spaces, punctuation, non-latin
           characters.
         default: ""
         "@": type.STRING
       info:
-        info: Description of the item.
+        info: Description or summary of the object.
         "@": type.TEXT
       html_title:
-        info: HTML title to be used for when this item is rendered.
+        info: HTML title to be used for when this object is rendered.
         "@": type.STRING
       "@": base.Catalog
     "@": base.Catalog

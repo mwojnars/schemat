@@ -21,6 +21,7 @@ export class ObjectsCache extends Map {
          */
         let now = Date.now()
         let pending = []
+        let count = 0
 
         for (let [id, obj] of this.entries()) {
             if (obj._meta_.expiry > now) continue
@@ -29,10 +30,12 @@ export class ObjectsCache extends Map {
             if (T.isPromise(evicted)) evicted = await evicted       // TODO: add to `pending` instead of awaiting here
             if (!evicted) this.delete(id)
             // else print(`custom eviction done for: [${id}]`)
+            count++
 
             let done = obj.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
             if (T.isPromise(done)) pending.push(done)
         }
+        print(`evicted objects: ${count}`)
         if (pending.length) return Promise.all(pending)
     }
 }
