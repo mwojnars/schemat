@@ -166,7 +166,7 @@
       default: /
       "@": type.STRING
     cache_purge_interval:
-      default: 5
+      default: 10
       info: Interval [sec] at which the server-side cache is purged from expired objects.
         A real number.
       "@": type.NUMBER
