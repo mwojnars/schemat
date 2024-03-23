@@ -17,10 +17,7 @@
   name: TwitterPost
   schema:
     text:
-      =:
-        - "@": 102
-        - {}
-      "@": type.TypeWrapper
+      "@": type.STRING
     "@": base.Catalog
   class_init: |
     // DRAFT...
