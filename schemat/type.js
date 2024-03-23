@@ -9,8 +9,9 @@ import {TypeWidget, TextualWidget, TEXT_Widget, CODE_Widget, GENERIC_Widget, TYP
 import {CatalogTable} from './ui/catalog.js'
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
-
 // print('Temporal:', Temporal)  -- improved data struct for date/time handling
+
+print('Loading type.js... import.meta:', import.meta.url)
 
 
 export function is_valid_field_name(name) {
@@ -753,8 +754,8 @@ export class TypeWrapper extends Type {
         if (this.real_type) return
         let {type_item, properties} = this.props
         await type_item.load()
-        let {TypeItem} = await import('./type_item.js')
-        assert(type_item instanceof TypeItem)
+        // let {TypeItem} = await import('./type_item.js')
+        // assert(type_item instanceof TypeItem, type_item)
         this.real_type = await type_item.create_real_type(properties)
     }
     instanceof(cls)     { return this.real_type instanceof cls }

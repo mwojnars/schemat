@@ -6,6 +6,8 @@
 import { T, assert, print, splitLast } from './common/utils.js'
 import { Item } from './item.js'
 
+print('Loading type_item.js... import.meta:', import.meta.url)
+
 
 /**********************************************************************************************************************/
 
@@ -20,6 +22,7 @@ export class TypeItem extends Item {
 
     async create_real_type(props) {
         let [path, name] = this._split_classpath(this.class_path)
+        // this.type_class = (await import(path))[name || 'default']
         this.type_class = await schemat.import(path, name || 'default')
         assert(T.isClass(this.type_class))
 

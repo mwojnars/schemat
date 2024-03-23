@@ -1033,20 +1033,20 @@ export class Category extends Item {
         let [path, name] = splitLast(this.class_path || '', ':')
         return schemat.import(path, name)       // a Promise
 
-        return this.CACHED_PROP(this.getModule().then(module => {
-            // below, module.Class is subclassed to allow safe addition of a static _category_ attribute:
-            // when several categories share the `base` class, each one needs a different value of _category_
-            let base = module.Class
-            let name = `${base.name}`
-            let cls = {[name]: class extends base {}}[name]
-            let _category = T.getOwnProperty(cls, '_category_')     // ??? not needed?
-            assert(_category === undefined || _category === this, this, _category)
-            // cls.category_old = this
-
-            // print('base:', base)
-            // print('cls:', cls)
-            return cls
-        }))
+        // return this.CACHED_PROP(this.getModule().then(module => {
+        //     // below, module.Class is subclassed to allow safe addition of a static _category_ attribute:
+        //     // when several categories share the `base` class, each one needs a different value of _category_
+        //     let base = module.Class
+        //     let name = `${base.name}`
+        //     let cls = {[name]: class extends base {}}[name]
+        //     let _category = T.getOwnProperty(cls, '_category_')     // ??? not needed?
+        //     assert(_category === undefined || _category === this, this, _category)
+        //     // cls.category_old = this
+        //
+        //     // print('base:', base)
+        //     // print('cls:', cls)
+        //     return cls
+        // }))
     }
 
     async getModule() {
