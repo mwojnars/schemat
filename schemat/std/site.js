@@ -138,12 +138,16 @@ export class Site extends Directory {
         return object.__handle__(request)
     }
 
+
+    /***  Dynamic imports  ***/
+
     async importModule(path, referrer) {
-        /* Custom import of JS files and code snippets from Schemat's Universal Namespace (SUN). Returns a vm.Module object. */
+        /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
         // TODO: cache module objects, parameter Site:cache_modules_ttl
         // TODO: for circular dependency return an unfinished module (use cache for this)
 
         assert(schemat.server_side)
+        print(`importModule():  ${path}  (ref: ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
 
         // make `path` absolute
         if (path[0] === '.') {
@@ -188,15 +192,15 @@ export class Site extends Directory {
     async parseModule(source, path) {
 
         const vm = this._vm
-        let context = vm.createContext(globalThis)
+        // let context = vm.createContext(globalThis)
         // let context = referrer?.context || vm.createContext({...globalThis, importLocal: p => import(p)})
         // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
 
         let identifier = Site.DOMAIN_SCHEMAT + path
         let linker = async (specifier, ref, extra) => (await this.importModule(specifier, ref)).__vmModule__
-        let initializeImportMeta = (meta) => {meta.url = identifier}
+        let initializeImportMeta = (meta) => {meta.url = identifier}   // also: meta.resolve = ... ??
 
-        let module = new vm.SourceTextModule(source, {context, identifier, initializeImportMeta, importModuleDynamically: linker})
+        let module = new vm.SourceTextModule(source, {identifier, initializeImportMeta, importModuleDynamically: linker})    //context,
 
         await module.link(linker)
         await module.evaluate()

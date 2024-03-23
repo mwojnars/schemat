@@ -6,7 +6,8 @@
 import { T, assert, print, splitLast } from './common/utils.js'
 import { Item } from './item.js'
 
-print('Loading type_item.js... import.meta:', import.meta.url)
+print('Loading type_item.js... import.meta:', import.meta.url)    //, import.meta.resolve
+// print(import.meta.resolve('./type.js'))
 
 
 /**********************************************************************************************************************/

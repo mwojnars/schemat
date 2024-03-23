@@ -11,7 +11,7 @@ import {CatalogTable} from './ui/catalog.js'
 // import { Temporal } from './libs/js-temporal/polyfill.js'
 // print('Temporal:', Temporal)  -- improved data struct for date/time handling
 
-print('Loading type.js... import.meta:', import.meta.url)
+print('Loading type.js... import.meta:', import.meta.url)   //, import.meta.resolve
 
 
 export function is_valid_field_name(name) {
