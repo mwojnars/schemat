@@ -13,6 +13,7 @@ print('Loading type_item.js... import.meta:', import.meta.url)    //, import.met
 /**********************************************************************************************************************/
 
 export class TypeItem extends Item {
+    /* LEGACY code !!! NOT USED !!! */
     /* Data type implemented as an item that's kept in DB. May point back to a plain type class or have dynamic code. */
 
     // async __init__() {

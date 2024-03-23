@@ -1002,20 +1002,20 @@ export class Category extends Item {
         return Item.from_data(id, data)
     }
 
-    get_defaults(prop) {
-        /* Return an array of default value(s) for a given `prop` as defined in this category's `defaults`
-           OR in the type's own `default` property. NO imputation even if defined in the prop's type,
-           because the imputation depends on the target object which is missing here.
-         */
-        let type = this.data_schema.get(prop) || generic_type
-        let defaults = this.defaults?.get_all(prop) || []
-        return type.combine_inherited([defaults])
-    }
-
-    get_default(prop) {
-        /* Return the first default value for a given `prop`, or undefined. */
-        return this.get_defaults(prop)[0]
-    }
+    // get_defaults(prop) {
+    //     /* Return an array of default value(s) for a given `prop` as defined in this category's `defaults`
+    //        OR in the type's own `default` property. NO imputation even if defined in the prop's type,
+    //        because the imputation depends on the target object which is missing here.
+    //      */
+    //     let type = this.data_schema.get(prop) || generic_type
+    //     let defaults = this.defaults?.get_all(prop) || []
+    //     return type.combine_inherited([defaults])
+    // }
+    //
+    // get_default(prop) {
+    //     /* Return the first default value for a given `prop`, or undefined. */
+    //     return this.get_defaults(prop)[0]
+    // }
 
     // get schema_assets() {
     //     let assets = new Assets()
@@ -1027,6 +1027,8 @@ export class Category extends Item {
 
     get _item_class_() {
         /* Return a (cached) Promise that resolves to the dynamically created class to be used for items of this category. */
+        assert(false, 'not used')
+
         print('_item_class_:', this.class_path)
         assert(this.class_path === '/system/local/type_item.js:TypeItem')       // TODO: temporary
 
@@ -1049,48 +1051,50 @@ export class Category extends Item {
         // }))
     }
 
-    async getModule() {
-        /* Parse the source code of this category (from _source_) and return as a module's namespace object.
-           This method uses this._url_ as the module's path for linking nested imports in parseModule().
-         */
-        let site = schemat.site
-        let client_side = schemat.client_side
-        let [classPath, name] = this.getClassPath()
-
-        if (!site) {
-            // when booting up, a couple of core items must be created before schemat.site becomes available
-            if (!classPath) throw new Error(`missing 'class_path' property for a core category, ID=${this._id_}`)
-            if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a core category, ID=${this._id_}`)
-            return {Class: await this.getDefaultClass(classPath, name)}
-        }
-
-        let path = this._url_ || await this._meta_.pending_url          // wait until the item's URL is initialized
-        assert(path, `missing _url_ for category ID=${this._id_}`)
-
-        try {
-            return await (client_side ?
-                            schemat.import(path) :
-                            site.parseModule(this._source_, path)
-            )
-        }
-        catch (ex) {
-            print(`ERROR when parsing dynamic code from "${path}" path for category ID=${this._id_}, will use a default class instead. Cause:\n`, ex)
-            return {Class: await this.getDefaultClass(classPath, name)}
-        }
-    }
-
-    async getDefaultClass(path, name) {
-        /* Return a default class to be used for items of this category when dynamic code is not present or fails to parse.
-           This class is always uniquely created by extending a standard/base class if needed.
-         */
-        let cls
-        if (!path) [path, name] = this.getClassPath()
-        if (!path) {
-            let proto = this._prototypes_[0]
-            return proto ? proto._item_class_ : Item
-        }
-        return schemat.importDirect(path, name || 'default')
-    }
+    // async getModule() {
+    //     /* Parse the source code of this category (from _source_) and return as a module's namespace object.
+    //        This method uses this._url_ as the module's path for linking nested imports in parseModule().
+    //      */
+    //     let site = schemat.site
+    //     let client_side = schemat.client_side
+    //     let [classPath, name] = this.getClassPath()
+    //
+    //     if (!site) {
+    //         // when booting up, a couple of core items must be created before schemat.site becomes available
+    //         if (!classPath) throw new Error(`missing 'class_path' property for a core category, ID=${this._id_}`)
+    //         if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a core category, ID=${this._id_}`)
+    //         return {Class: await this.getDefaultClass(classPath, name)}
+    //     }
+    //
+    //     let path = this._url_ || await this._meta_.pending_url          // wait until the item's URL is initialized
+    //     assert(path, `missing _url_ for category ID=${this._id_}`)
+    //
+    //     try {
+    //         return await (client_side ?
+    //                         schemat.import(path) :
+    //                         site.parseModule(this._source_, path)
+    //         )
+    //     }
+    //     catch (ex) {
+    //         print(`ERROR when parsing dynamic code from "${path}" path for category ID=${this._id_}, will use a default class instead. Cause:\n`, ex)
+    //         return {Class: await this.getDefaultClass(classPath, name)}
+    //     }
+    // }
+    //
+    // async getDefaultClass(path, name) {
+    //     /* Return a default class to be used for items of this category when dynamic code is not present or fails to parse.
+    //        This class is always uniquely created by extending a standard/base class if needed.
+    //      */
+    //     let cls
+    //     if (!path) [path, name] = this.getClassPath()
+    //     if (!path) {
+    //         let proto = this._prototypes_[0]
+    //         return proto ? proto._item_class_ : Item
+    //     }
+    //     return schemat.importDirect(path, name || 'default')
+    // }
+    //
+    // _hasCustomCode() { return this._codeInit() || this._codeBody() }
 
     getClassPath() {
         /* Return import path of this category's items' base class, as a pair [module_path, class_name]. */
@@ -1112,8 +1116,6 @@ export class Category extends Item {
 
         return this.CACHED_PROP(source)
     }
-
-    _hasCustomCode() { return this._codeInit() || this._codeBody() }
 
     _codeInit()      { return this._merge_snippets('class_init') }
     _codeBaseClass() {
