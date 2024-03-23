@@ -4,7 +4,6 @@ import {set_global} from "./common/globals.js"
 import {print, assert, T, escape_html, splitLast, concat, unique, delay} from './common/utils.js'
 import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
 
-import {JSONx} from './serialize.js'
 import {Catalog, Data} from './data.js'
 import {DATA, DATA_GENERIC, ITEM, generic_type} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
@@ -920,24 +919,6 @@ export class Item {
 
     /***  Dynamic loading of source code  ***/
 
-    // async getClass()    {
-    //     if (this.category && !this.category.getItemClass) {
-    //         print('this.category:', this.category)
-    //         print('getItemClass:', this.category.getItemClass)
-    //     }
-    //     return this.category?._item_class_
-    // }
-
-    // getClass() {
-    //     /* Create/parse/load a JS class for this item. If `custom_class` property is true, the item may receive
-    //        a custom subclass (different from the category's default) built from this item's own & inherited `code*` snippets.
-    //      */
-    //     return this.category._item_class_
-    //     // let base = this.category._item_class_
-    //     // let custom = this.category.get('custom_class')
-    //     // return custom ? this.parseClass(base) : base
-    // }
-
     // parseClass(base = Item) {
     //     /* Concatenate all the relevant `code_*` and `code` snippets of this item into a class body string,
     //        and dynamically parse them into a new class object - a subclass of `base` or the base class identified
@@ -1008,12 +989,6 @@ export class Category extends Item {
         let fields = this._data_.get('schema') || []
         let calls  = fields.map(({value: type}) => type.init()).filter(res => res instanceof Promise)
         if (calls.length) return Promise.all(calls)
-
-        // for (const entry of this._raw_entries('fields')) {
-        //     let fields = entry.value
-        //     let calls  = fields.map(({value: type}) => type.init()).filter(res => res instanceof Promise)
-        //     if (calls.length) await Promise.all(calls)
-        // }
     }
 
     async new(data, id) {
@@ -1048,10 +1023,15 @@ export class Category extends Item {
     //     return this.CACHED_PROP(assets)
     // }
 
+    /***  Dynamic loading of source code  ***/
+
     get _item_class_() {
         /* Return a (cached) Promise that resolves to the dynamically created class to be used for items of this category. */
         print('_item_class_:', this.class_path)
-        assert(this.class_path === '/system/local/type_item.js:TypeItem')
+        assert(this.class_path === '/system/local/type_item.js:TypeItem')       // TODO: temporary
+
+        let [path, name] = splitLast(this.class_path || '', ':')
+        return schemat.import(path, name)       // a Promise
 
         return this.CACHED_PROP(this.getModule().then(module => {
             // below, module.Class is subclassed to allow safe addition of a static _category_ attribute:
@@ -1150,8 +1130,6 @@ export class Category extends Item {
         let def  = body ? `class ${name} extends Base {\n${body}\n}` : `let ${name} = Base`
         if (name !== 'Class') def += `\nlet Class = ${name}`
         return def
-        // let views = this._codeViewsHandlers()
-        // let hdlrs = this._codeHandlers()
     }
     _codeBody() {
         /* Source code of this category's dynamic Class body. */
@@ -1174,27 +1152,6 @@ export class Category extends Item {
         let snippets = this[`${key}_array`].reverse()
         return snippets.join('\n')
     }
-
-    // _codeViewsHandlers() {
-    //     let views = this.prop('views')
-    //     if (!views?.length) return
-    //     let names = views.map(({key}) => key)
-    //     let hdlrs = names.map(name => `${name}: new Item.Handler()`)
-    //     let code  = `Class.handlers = {...Class.handlers, ${hdlrs.join(', ')}}`
-    //     print('_codeViewsHandlers():', code)
-    //     return code
-    // }
-    // _codeHandlers() {
-    //     let entries = this.prop('handlers')
-    //     if (!entries?.length) return
-    //     let className = (name) => `Handler_${this._id_}_${name}`
-    //     let handlers = entries.map(({key: name, value: code}) =>
-    //         `  ${name}: new class ${className(name)} extends Item.Handler {\n${indent(code, '    ')}\n  }`
-    //     )
-    //     return `Class.handlers = {...Class.handlers, \n${handlers.join(',\n')}\n}`
-    //     // print('_codeHandlers():', code)
-    //     // return code
-    // }
 
     _checkPath(request) {
         /* Check if the request's path is compatible with the default path of this item. Throw an exception if not. */
