@@ -38,27 +38,3 @@
   _category_:
     "@": 0
   "@": base.Data
-- __id: 102
-  name: STRING
-  class_path: /system/local/type.js:STRING
-  _category_:
-    "@": 10
-  "@": base.Data
-- __id: 103
-  name: NUMBER
-  class_path: /system/local/type.js:NUMBER
-  _category_:
-    "@": 10
-  "@": base.Data
-- __id: 104
-  name: INTEGER
-  class_path: /system/local/type.js:INTEGER
-  _category_:
-    "@": 10
-  "@": base.Data
-- __id: 105
-  name: URL
-  class_path: /system/local/type.js:URL
-  _category_:
-    "@": 10
-  "@": base.Data

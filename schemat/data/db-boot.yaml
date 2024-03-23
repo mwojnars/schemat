@@ -116,9 +116,10 @@
         "@": type.STRING
       _ttl_:
         default: 10
-        info: Time To Live (TTL) of an object, in seconds. Determines for how long
-          the object is kept in a server-side cache and reused after being loaded from DB.
-          If zero, the object is evicted on the nearest cache purge. A real number.
+        info: Time To Live (TTL) of an object, in seconds. Determines for how long the
+          object is kept in a server-side cache and reused after being loaded
+          from DB. If zero, the object is evicted on the nearest cache purge. A
+          real number.
         "@": type.NUMBER
       name:
         info: Display name of the object. May contain spaces, punctuation, non-latin
@@ -167,8 +168,8 @@
       "@": type.STRING
     cache_purge_interval:
       default: 10
-      info: Interval [sec] at which the server-side cache is purged from expired objects.
-        A real number.
+      info: Interval [sec] at which the server-side cache is purged from expired
+        objects. A real number.
       "@": type.NUMBER
     "@": base.Catalog
   defaults:
@@ -295,31 +296,6 @@
     "@": base.Catalog
   defaults:
     _class_: std.CategoryID_Namespace
-    "@": base.Catalog
-  _category_:
-    "@": 0
-  "@": base.Data
-- __id: 10
-  name: Type
-  info: Category of items that represent data types. Some of the items are
-    wrappers around system types (STRING, INTEGER etc.), while some others
-    implement new types by themselves using dynamic code.
-  class_path: /system/local/type_item.js:TypeItem
-  schema:
-    class_path:
-      "@": type.STRING
-    encode:
-      info: Body of a function with the signature `encode(obj,props={})`. Should
-        return a state that encodes the input object/value, `obj`.
-      "@": type.CODE
-    decode:
-      "@": type.CODE
-    initial:
-      "@": type.GENERIC
-    properties:
-      values:
-        "@": type.TYPE
-      "@": type.CATALOG
     "@": base.Catalog
   _category_:
     "@": 0

@@ -30,7 +30,7 @@
     idx_category_item:
       "@": 210
     "@": js.Map
-  readonly: true
+  readonly: false
   start_id: 100
   stop_id: 200
   _category_:
