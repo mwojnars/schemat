@@ -614,8 +614,8 @@ export class Item {
     }
 
     async _init_class() {
-        /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass,
-           known after loading the item's data.
+        /* Initialize this object's class, i.e., substitute the object's temporary Item class with an ultimate subclass,
+           known after loading the object's data.
          */
         if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
         let cls = (!this._category_?.class_path && this._class_) || await this._category_?._item_class_     // TODO: `class_path` should be replaced with defaults._class_, so the check here could be removed
@@ -1050,6 +1050,9 @@ export class Category extends Item {
 
     get _item_class_() {
         /* Return a (cached) Promise that resolves to the dynamically created class to be used for items of this category. */
+        print('_item_class_:', this.class_path)
+        assert(this.class_path === '/system/local/type_item.js:TypeItem')
+
         return this.CACHED_PROP(this.getModule().then(module => {
             // below, module.Class is subclassed to allow safe addition of a static _category_ attribute:
             // when several categories share the `base` class, each one needs a different value of _category_
