@@ -970,11 +970,8 @@ export class Category extends Item {
      */
 
     /***  Special properties:
-
-    data_schema             DATA_SCHEMA of items in this category (not the schema of self)
-
-    _source_                module source code of this category: all code snippets combined, including inherited ones
-
+      data_schema           DATA_SCHEMA of items in this category (not the schema of self)
+      _source_              module source code of this category: all code snippets combined, including inherited ones
     */
 
     __init__()      { return this._init_schema() }
@@ -983,7 +980,7 @@ export class Category extends Item {
         // initialize Type objects inside `schema`; in particular, TypeWrapper requires explicit async initialization to load sublinked items
         let fields = this._data_.get('schema') || []
         let calls  = fields.map(({value: type}) => type.init()).filter(res => res instanceof Promise)
-        assert(!calls.length, 'TypeWrapper is not used for now')
+        assert(!calls.length, 'TypeWrapper shall not be used for now')
         if (calls.length) return Promise.all(calls)
     }
 
