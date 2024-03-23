@@ -977,10 +977,10 @@ export class Category extends Item {
 
     */
 
-    __init__() { return this._initSchema() }
+    __init__() { return this._init_schema() }
 
-    async _initSchema() {
-        // initialize Type objects inside `fields`; in particular, TypeWrapper class requires
+    async _init_schema() {
+        // initialize Type objects inside `schema`; in particular, TypeWrapper class requires
         // explicit async initialization to load sublinked items
 
         // TODO: move initialization somewhere else; here, we don't have a guarantee that the
@@ -988,6 +988,7 @@ export class Category extends Item {
 
         let fields = this._data_.get('schema') || []
         let calls  = fields.map(({value: type}) => type.init()).filter(res => res instanceof Promise)
+        assert(!calls.length, 'TypeWrapper is not used for now')
         if (calls.length) return Promise.all(calls)
     }
 
