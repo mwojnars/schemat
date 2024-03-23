@@ -283,7 +283,7 @@ export class Schemat {
     }
 
 
-    /***  Dynamic JS import over the SUN  ***/
+    /***  Dynamic JS import from SUN files  ***/
 
     import(path, name) {
         /* High-level import of a module and (optionally) its element, `name`, from a SUN path.

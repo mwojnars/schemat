@@ -35,7 +35,7 @@ export class ServerSchemat extends Schemat {
     }
 
     async import(path, name) {
-        assert(this.site, 'the site must be loaded before a high-level import from the SUN is called')
+        assert(this.site, 'the site must be loaded for a dynamic import from the SUN')
         let module = this.site.importModule(path)
         return name ? (await module)[name] : module
     }
