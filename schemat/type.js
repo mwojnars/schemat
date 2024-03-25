@@ -1,4 +1,3 @@
-import {e} from './ui/react-utils.js'
 import {A} from './ui/react-utils.js'
 import {T, assert, print, concat } from './common/utils.js'
 import {DataError, NotImplemented, ValueError} from './common/errors.js'
@@ -12,6 +11,7 @@ import {CatalogTable} from './ui/catalog.js'
 // print('Temporal:', Temporal)  -- improved data struct for date/time handling
 
 print('Loading type.js... import.meta:', import.meta.url)   //, import.meta.resolve
+// print(import.meta.resolve('./styles/type.css'))
 
 
 export function is_valid_field_name(name) {
