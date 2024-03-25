@@ -61,9 +61,7 @@ export class ClientSchemat extends Schemat {
     }
 
 
-    /***  import & DB  ***/
-
-    js_import_path(path) { return path + '::import' }
+    /***  DB  ***/
 
     async insert(item) {
         let data = item._data_.__getstate__()

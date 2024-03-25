@@ -148,8 +148,8 @@ export class Site extends Directory {
 
         print(`import_module():  ${path}  (ref: ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
 
-        // on a client, use standard JS import() via a URL, which still may point to a SUN object
-        if(schemat.client_side) return import(schemat.js_import_path(path))
+        // on a client, use standard import() via a URL, which still may point to a (remote) SUN object - no special handling needed
+        if(schemat.client_side) return import(this.js_import_path(path))
 
         // make `path` absolute
         if (path[0] === '.') {
@@ -162,12 +162,12 @@ export class Site extends Directory {
         path = this._normalize(path)
 
         // standard JS import for non-SUN paths
-        if (path[0] !== '/') return this._import_js(path)
+        if (path[0] !== '/') return this._import_synthetic(path)
 
         // JS import if `path` starts with PATH_LOCAL_SUN; TODO: no custom linker configured in _import_js(), why ??
         let local = schemat.PATH_LOCAL_SUN
         if (path.startsWith(local + '/'))
-            return this._import_js(schemat.js_import_path(path))
+            return this._import_synthetic(this.js_import_path(path))
 
         let source = await this.route_internal(path + '::text')
         if (!source) throw new Error(`Site.import_module(), path not found: ${path}`)
@@ -175,8 +175,8 @@ export class Site extends Directory {
         return this.parse_module(source, path)
     }
 
-    async _import_js(path) {
-        /* Import a module using standard import() and return it as a vm.SyntheticModule (not a regular JS module). */
+    async _import_synthetic(path) {
+        /* Import a module using standard import(), but return it as a vm.SyntheticModule (not a regular JS module). */
         // print('_import_js() path:', path)
         const vm    = this._vm
         let mod_js  = await import(path)
@@ -225,6 +225,18 @@ export class Site extends Directory {
             else parts.push(part)
 
         return lead + parts.join('/')
+    }
+
+    js_import_path(path) {
+        /* Convert a Schemat's import path (from SUN) to a standard JS path that can be used with standard import().
+           On a client, it adds the ::import specifier to the URL; on a server, it converts the SUN path to a local FS path.
+         */
+        if (this.client_side) return path + '::import'
+
+        // on server, convert a /system/local/... import path from SUN to a local filesystem representation
+        let local = schemat.PATH_LOCAL_SUN
+        if (!path.startsWith(local + '/')) throw new Error(`incorrect import path (${path}), should start with "${local}"`)
+        return schemat.PATH_LOCAL_FS + path.slice(local.length)
     }
 
 

@@ -27,13 +27,6 @@ export class ServerSchemat extends Schemat {
         setTimeout(() => this._purge_registry(), 1000)
     }
 
-    js_import_path(path) {
-        /* Convert a /system/local/... import path from SUN to a local filesystem representation. */
-        let local = this.PATH_LOCAL_SUN
-        if (!path.startsWith(local + '/')) throw new Error(`incorrect import path (${path}), should start with "${local}"`)
-        return this.PATH_LOCAL_FS + path.slice(local.length)
-    }
-
     async _purge_registry() {
         try {
             return this.registry.purge(this._on_evict.bind(this))

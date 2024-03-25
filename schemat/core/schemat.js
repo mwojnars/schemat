@@ -290,16 +290,8 @@ export class Schemat {
            Uses the site's routing mechanism to locate the `path` anywhere across the SUN namespace.
            Implemented in subclasses. Can be called client-side and server-side alike.
          */
-        // let module = this.client_side ? import(this.js_import_path(path)) : this.site.import_module(path)
         let module = this.site.import_module(path)
         return name ? (await module)[name] : module
-    }
-
-    js_import_path(path) {
-        /* Convert a Schemat's import path (from SUN) to a standard JS path that can be used with standard import().
-           On a client, it adds the ::import specifier to the URL; on a server, it converts the SUN path to a local FS path.
-         */
-        throw new NotImplemented()
     }
 
 
