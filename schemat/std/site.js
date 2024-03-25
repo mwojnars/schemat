@@ -146,8 +146,10 @@ export class Site extends Directory {
         // TODO: cache module objects, parameter Site:cache_modules_ttl
         // TODO: for circular dependency return an unfinished module (use cache for this)
 
-        assert(schemat.server_side)
         print(`import_module():  ${path}  (ref: ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
+
+        // on a client, use standard JS import() via a URL, which still may point to a SUN object
+        if(schemat.client_side) return import(schemat.js_import_path(path))
 
         // make `path` absolute
         if (path[0] === '.') {
@@ -162,7 +164,7 @@ export class Site extends Directory {
         // standard JS import for non-SUN paths
         if (path[0] !== '/') return this._import_js(path)
 
-        // JS import if `path` starts with PATH_LOCAL_SUN; TODO: no custom linker here in _import_js() !! why ??
+        // JS import if `path` starts with PATH_LOCAL_SUN; TODO: no custom linker configured in _import_js(), why ??
         let local = schemat.PATH_LOCAL_SUN
         if (path.startsWith(local + '/'))
             return this._import_js(schemat.js_import_path(path))

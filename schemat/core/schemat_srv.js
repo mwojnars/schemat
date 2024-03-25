@@ -27,12 +27,6 @@ export class ServerSchemat extends Schemat {
         setTimeout(() => this._purge_registry(), 1000)
     }
 
-    async import(path, name) {
-        assert(this.site, 'the site must be loaded for a dynamic import from the SUN')
-        let module = this.site.import_module(path)
-        return name ? (await module)[name] : module
-    }
-
     js_import_path(path) {
         /* Convert a /system/local/... import path from SUN to a local filesystem representation. */
         let local = this.PATH_LOCAL_SUN
