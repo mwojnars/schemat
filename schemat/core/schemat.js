@@ -285,25 +285,32 @@ export class Schemat {
 
     /***  Dynamic JS import from SUN files  ***/
 
-    import(path, name) {
-        /* High-level import of a module and (optionally) its element, `name`, from a SUN path.
+    async import(path, name) {
+        /* Import of a module and (optionally) its element, `name`, from a SUN path.
            Uses the site's routing mechanism to locate the `path` anywhere across the SUN namespace.
            Implemented in subclasses. Can be called client-side and server-side alike.
          */
-        throw new NotImplemented()
-    }
-
-    async importDirect(path, name) {
-        /* Direct (low-level) import of a module and (optionally) its element, `name`, from a SUN path,
-           using only plain import() rather than the generic routing mechanism - use .import() if the latter is needed.
-           Works on a server and a client; performs any needed path conversion along the way.
-           On a server, the `path` is restricted to subpaths of the PATH_LOCAL_SUN (/system/local) folder.
-         */
-        let module = import(this.directImportPath(path))
+        let module = import(this.js_import_path(path))
         return name ? (await module)[name] : module
     }
 
-    directImportPath(path)  { throw new NotImplemented() }
+    // async importDirect(path, name) {
+    //     /* Direct (low-level) import of a module and (optionally) its element, `name`, from a SUN path,
+    //        using only plain import() rather than the generic routing mechanism - use .import() if the latter is needed.
+    //        Works on a server and a client; performs any needed path conversion along the way.
+    //        On a server, the `path` is restricted to subpaths of the PATH_LOCAL_SUN (/system/local) folder.
+    //      */
+    //     let module = import(this.js_import_path(path))
+    //     return name ? (await module)[name] : module
+    // }
+
+    js_import_path(path) {
+        /* Convert a Schemat's import path (from SUN) to a standard JS path that can be used with standard import(),
+           whether it is called on a client or a server. Implemented differently in each environment:
+           on a client, it adds the ::import specifier to the URL; on a server, it converts the SUN path to a local FS path.
+         */
+        throw new NotImplemented()
+    }
 
 
     /***  Events & Debugging  ***/

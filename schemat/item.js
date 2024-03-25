@@ -1084,7 +1084,7 @@ export class Category extends Item {
     //         let proto = this._prototypes_[0]
     //         return proto ? proto._item_class_ : Item
     //     }
-    //     return schemat.importDirect(path, name || 'default')
+    //     return schemat.import(path, name || 'default')
     // }
     //
     // _hasCustomCode() { return this._codeInit() || this._codeBody() }

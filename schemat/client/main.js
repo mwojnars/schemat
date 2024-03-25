@@ -63,14 +63,7 @@ export class ClientSchemat extends Schemat {
 
     /***  import & DB  ***/
 
-    directImportPath(path) { return this.remoteImportPath(path) }
-    remoteImportPath(path) { return path + '::import' }
-
-    async import(path, name) {
-        /* High-level import of a module and (optionally) its element, `name`, from a SUN path. */
-        let module = import(this.remoteImportPath(path))
-        return name ? (await module)[name] : module
-    }
+    js_import_path(path) { return path + '::import' }
 
     async insert(item) {
         let data = item._data_.__getstate__()

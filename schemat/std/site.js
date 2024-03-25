@@ -165,7 +165,7 @@ export class Site extends Directory {
         // local import if `path` starts with PATH_LOCAL_SUN
         let local = schemat.PATH_LOCAL_SUN
         if (path.startsWith(local + '/'))
-            return this.localImport(schemat.directImportPath(path))
+            return this.localImport(schemat.js_import_path(path))
 
         let source = await this.route_internal(path + '::text')
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
