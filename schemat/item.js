@@ -625,7 +625,7 @@ export class Item {
     _init_network() {
         /* Create a network interface, _net_, and action _triggers_ for this item's network API. */
         let role = schemat.server_side ? 'server' : 'client'
-        let api = this.constructor._api_ || this.constructor._create_api()
+        let api = T.getOwnProperty(this.constructor, '_api_') || this.constructor._create_api()
         this._net_ = new Network(this, role, api)
     }
 
