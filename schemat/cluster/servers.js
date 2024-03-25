@@ -71,7 +71,7 @@ export class WebServer extends Server {
         }
 
         // // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
-        // let {check} = await schemat.site.importModule("/site/widgets.js")
+        // let {check} = await schemat.site.import_module("/site/widgets.js")
         // check()
 
         // await schemat.after_request()

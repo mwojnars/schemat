@@ -6,7 +6,7 @@ import {Container, Directory, ID_Namespace} from "./containers.js";
 import {JsonService} from "../services.js";
 
 
-// Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.
+// Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
 // For this reason, importLocal() is added to the global context, so that the modules imported from DB can use it
 // as an alias for standard (non-VM) import(). Adding this function in a call to vm.createContext() instead of here raises errors.
 
@@ -35,11 +35,11 @@ export class Site extends Directory {
 
 
     async __init__()  {
-        if (schemat.client_side) return
-        await this.database?.load()
-
-        this._vm = await import('node:vm')
-        this._check_default_container()                 // no await to avoid blocking the site's startup
+        if (schemat.server_side) {
+            await this.database?.load()
+            this._vm = await import('node:vm')
+            this._check_default_container()                 // no await to avoid blocking the site's startup
+        }
     }
 
 
@@ -141,13 +141,13 @@ export class Site extends Directory {
 
     /***  Dynamic imports  ***/
 
-    async importModule(path, referrer) {
+    async import_module(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
         // TODO: cache module objects, parameter Site:cache_modules_ttl
         // TODO: for circular dependency return an unfinished module (use cache for this)
 
         assert(schemat.server_side)
-        print(`importModule():  ${path}  (ref: ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
+        print(`import_module():  ${path}  (ref: ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
 
         // make `path` absolute
         if (path[0] === '.') {
@@ -157,31 +157,31 @@ export class Site extends Directory {
 
         // path normalize: drop "schemat:", convert '.' and '..' segments
         path = this._unprefix(path)
-        path = this._normPath(path)
+        path = this._normalize(path)
 
-        // standard local import for non-SUN paths
-        if (path[0] !== '/') return this.localImport(path)
+        // standard JS import for non-SUN paths
+        if (path[0] !== '/') return this._import_js(path)
 
-        // local import if `path` starts with PATH_LOCAL_SUN
+        // JS import if `path` starts with PATH_LOCAL_SUN; TODO: no custom linker here in _import_js() !! why ??
         let local = schemat.PATH_LOCAL_SUN
         if (path.startsWith(local + '/'))
-            return this.localImport(schemat.js_import_path(path))
+            return this._import_js(schemat.js_import_path(path))
 
         let source = await this.route_internal(path + '::text')
-        if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
+        if (!source) throw new Error(`Site.import_module(), path not found: ${path}`)
 
-        return this.parseModule(source, path)
+        return this.parse_module(source, path)
     }
 
-    async localImport(path) {
-        /* Import a module from the local installation (server-side) using standard import(); return a vm.SyntheticModule. */
-        // print('localImport() path:', path)
+    async _import_js(path) {
+        /* Import a module using standard import() and return it as a vm.SyntheticModule (not a regular JS module). */
+        // print('_import_js() path:', path)
         const vm    = this._vm
-        let local   = await import(path)
+        let mod_js  = await import(path)
         let context = vm.createContext(globalThis)
         let module  = new vm.SyntheticModule(
-            Object.keys(local),
-            function() { Object.entries(local).forEach(([k, v]) => this.setExport(k, v)) },
+            Object.keys(mod_js),
+            function() { Object.entries(mod_js).forEach(([k, v]) => this.setExport(k, v)) },
             {context, identifier: Site.DOMAIN_LOCAL + path}
         )
         await module.link(() => {})
@@ -189,7 +189,7 @@ export class Site extends Directory {
         return {...module.namespace, __vmModule__: module}
     }
 
-    async parseModule(source, path) {
+    async parse_module(source, path) {
 
         const vm = this._vm
         // let context = vm.createContext(globalThis)
@@ -197,7 +197,7 @@ export class Site extends Directory {
         // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
 
         let identifier = Site.DOMAIN_SCHEMAT + path
-        let linker = async (specifier, ref, extra) => (await this.importModule(specifier, ref)).__vmModule__
+        let linker = async (specifier, ref, extra) => (await this.import_module(specifier, ref)).__vmModule__
         let initializeImportMeta = (meta) => {meta.url = identifier}   // also: meta.resolve = ... ??
 
         let module = new vm.SourceTextModule(source, {identifier, initializeImportMeta, importModuleDynamically: linker})    //context,
@@ -209,7 +209,7 @@ export class Site extends Directory {
 
     _unprefix(path) { return path.startsWith(Site.DOMAIN_SCHEMAT) ? path.slice(Site.DOMAIN_SCHEMAT.length) : path }
 
-    _normPath(path) {
+    _normalize(path) {
         /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
         path = path.replaceAll('/./', '/')
         let lead = path[0] === '/' ? path[0] : ''

@@ -1046,7 +1046,7 @@ export class Category extends Item {
 
     // async getModule() {
     //     /* Parse the source code of this category (from _source_) and return as a module's namespace object.
-    //        This method uses this._url_ as the module's path for linking nested imports in parseModule().
+    //        This method uses this._url_ as the module's path for linking nested imports.
     //      */
     //     let site = schemat.site
     //     let client_side = schemat.client_side
@@ -1065,7 +1065,7 @@ export class Category extends Item {
     //     try {
     //         return await (client_side ?
     //                         schemat.import(path) :
-    //                         site.parseModule(this._source_, path)
+    //                         site.parse_module(this._source_, path)
     //         )
     //     }
     //     catch (ex) {
