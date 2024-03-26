@@ -1,6 +1,6 @@
 import { T, assert, print, tryimport } from '../common/utils.js'
 import { cssPrepend } from './css.js'
-import { e, DIV } from './react-utils.js'
+import { e, DIV, TEMPLATE } from './react-utils.js'
 import { React } from './resources.js'
 
 let csso = await tryimport('csso')
@@ -153,6 +153,16 @@ export class Component extends Styled(React.Component) {
        A Component subclass itself can be listed as a dependency (in .assets) of another object.
      */
 
+    // If shadow_dom=true, the component is rendered inside a "shadow DOM" that is separate from the main DOM.
+    // This provides style encapsulation (CSS scoping) and prevents styles of different components from interfering.
+    // HOWEVER, note that some styles of the parent DOM can still leak into the shadow DOM, e.g., fonts, colors, etc.:
+    // - inherited CSS properties: font-*, color, line-*, text-*, ...
+    // - global styles and resets (*, body, html), which may influence the inherited styles
+    // - css custom properties (variables)
+    // - :host, :host(), ::slotted()
+
+    shadow_dom = false
+
     constructor(props) {
         super(props)
 
@@ -176,7 +186,13 @@ export class Component extends Styled(React.Component) {
            override the render() as usual, but React calls this wrapper instead.
          */
         let elem = this._render_original()
-        return this.constructor.style.add_prolog(elem)
+        let div  = this.constructor.style.add_prolog(elem)                          // <div> wrapper around `elem` applies a CSS class for style scoping
+        return this.shadow_dom ? TEMPLATE({shadowrootmode: 'open'}, div) : div      // render the component inside a shadow DOM if needed
+        // if (this.shadow_dom) {
+        //     let shadow = this.attachShadow({mode: 'open'})
+        //     shadow.appendChild(div)
+        //     return shadow
+        // }
     }
 
     embed(component, props = null) {
