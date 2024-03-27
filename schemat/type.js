@@ -33,7 +33,7 @@ export class Type {
     isRepeated()    { return this.props.repeated }
     isEditable()    { return this.props.editable }
 
-    // common properties of schemas; can be utilized by subclasses or callers:
+    // common properties of value types; can be utilized by subclasses or callers:
     static defaultProps = {
         info     : undefined,   // human-readable description of this type: what values are accepted and how they are interpreted
         blank    : undefined,   // if true, `null` and `undefined` are treated as a valid value: stored and then decoded as "null"
