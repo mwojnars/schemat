@@ -226,6 +226,8 @@ export class CODE_Widget extends TEXT_Widget {
         useWorker:              false,      // disable syntax checker and warnings
     }
 
+    // shadow_dom = true
+
     viewerRef = createRef()
     viewerAce                       // ACE viewer object
     editorAce                       // ACE editor object
@@ -277,9 +279,9 @@ export class CODE_Widget extends TEXT_Widget {
     value()     { return this.editorAce.session.getValue() }        // retrieve an edited flat value from the editor
     close()     { this.deleteAce(); super.close() }
 
-    componentDidMount()                         { this.initAce() }
-    componentWillUnmount()                      { this.deleteAce() }
-    componentDidUpdate(prevProps, prevState)    { if (this.state.editing !== prevState.editing) this.initAce() }
+    componentDidMount()                         { super.componentDidMount(); this.initAce() }
+    componentWillUnmount()                      { super.componentWillUnmount(); this.deleteAce() }
+    componentDidUpdate(prev_props, prev_state)  { super.componentDidUpdate(prev_props, prev_state); if (this.state.editing !== prev_state.editing) this.initAce() }
 }
 
 /**********************************************************************************************************************/
@@ -301,6 +303,8 @@ export class TYPE_Widget extends GENERIC_Widget {
         .default|   { color: #888; }
         .info|      { font-style: italic; }
     `)
+
+    // shadow_dom = true
 
     viewer()  { return TypeWidget.prototype.viewer.call(this) }
     view() {
