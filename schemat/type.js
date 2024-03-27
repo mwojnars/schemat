@@ -38,7 +38,7 @@ export class Type {
         info     : undefined,   // human-readable description of this type: what values are accepted and how they are interpreted
         blank    : undefined,   // if true, `null` and `undefined` are treated as a valid value: stored and then decoded as "null"
         initial  : undefined,   // initial value assigned to a newly created data element of this type
-        repeated : undefined,   // if true, the field described by this type can be repeated, typically inside a CATALOG/RECORD/DATA
+        repeated : undefined,   // if true, the field described by this type can be repeated, typically inside a CATALOG/RECORD/DATA  (multi?)
         default  : undefined,   // default value to be used for a non-repeated property when no explicit value was provided;
                                 // since repeated properties behave like lists of varying length, and zero is a valid length,
                                 // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
@@ -47,6 +47,8 @@ export class Type {
         impute   : undefined,   // a function to be used for imputation of missing values; `this` references the item;
                                 // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
                                 // the function must be *synchronous* and cannot return a Promise
+
+        // required: undefined,   // if true, the field described by this type must be present in the record or object's data during insert/update
 
         // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
         // hidden   : undefined,   // if true, the field described by this type is not displayed in the UI;
