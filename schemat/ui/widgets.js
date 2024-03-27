@@ -31,6 +31,7 @@ export class TypeWidget extends Component {
         this.state   = {...this.state,
             editing: props.editing,
         }
+        if (this.name.endsWith('_Widget')) this.name = this.name.slice(0, -7)   // remove '_Widget' suffix
     }
 
     empty(v)    { return T.isMissing(v) && I('undefined') }     // view of an empty value, for display() and viewer()
