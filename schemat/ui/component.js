@@ -155,13 +155,17 @@ export class Component extends Styled(React.Component) {
 
     // If shadow_dom=true, the component is rendered inside a "shadow DOM" that is separate from the main DOM.
     // This provides style encapsulation (CSS scoping) and prevents styles of different components from interfering.
-    // HOWEVER, note that some styles of the parent DOM can still leak into the shadow DOM, e.g., fonts, colors, etc.:
+    // HOWEVER, note that some styles of the parent DOM can still pass into the shadow DOM, like:
     // - inherited CSS properties: font-*, color, line-*, text-*, ...
     // - global styles and resets (*, body, html), which may influence the inherited styles
     // - css custom properties (variables)
     // - :host, :host(), ::slotted()
 
     shadow_dom = false
+
+    _portal = null
+    _shadow_root = null
+    _mount_point = null
 
     constructor(props) {
         super(props)
@@ -178,6 +182,48 @@ export class Component extends Styled(React.Component) {
         for (let name of T.getAllPropertyNames(this.constructor.prototype))
             if (name.match(/^_*[A-Z]/) && typeof this[name] === 'function')
                 this[name] = this[name].bind(this)
+
+        this.rootNode = React.createRef()
+    }
+
+    componentDidMount()  { this._update_shadow() }
+
+    // componentDidUpdate() { this._update_shadow() }
+    // componentDidUpdate(prev_props, prev_state) {
+    //     print(`${this.constructor.name}.componentDidUpdate():`)
+    //     print(' prev_props=', prev_props)
+    //     print(' prev_state=', prev_state)
+    //     print(' props=', this.props)
+    //     print(' state=', this.state)
+    //     this._update_shadow()
+    // }
+
+    _update_shadow() {
+        // client-side: hydrate the Shadow DOM only if it's not already there
+        if (!this.shadow_dom) return
+        // if (!this.rootNode.shadowRoot) {
+        if (!this._shadow_root) {
+            print('Creating shadow DOM for', this.constructor.name)
+            const shadowRoot = this._shadow_root = this.rootNode.current.attachShadow({ mode: 'open' })     // attach shadow root and update its content
+            const mountPoint = this._mount_point = document.createElement('div')
+            shadowRoot.appendChild(mountPoint)
+
+            // let content = this._render_original()
+            // this._portal = ReactDOM.createPortal(content, this._mount_point)    // render the content into the shadow DOM
+            this.forceUpdate()                                                  // force update to render the portal
+        }
+        else {
+            print('Updating shadow DOM for', this.constructor.name)
+            let content = this._render_original()
+            this._portal = ReactDOM.createPortal(content, this._mount_point)    // render the content into the shadow DOM
+            // this.forceUpdate()
+        }
+    }
+
+    _make_portal() {
+        if (!this._mount_point) return null
+        let content = this._render_original()
+        return ReactDOM.createPortal(content, this._mount_point)
     }
 
     _render_wrapped() {
@@ -185,14 +231,20 @@ export class Component extends Styled(React.Component) {
            This method is assigned to `this.render` in the constructor, so that subclasses can still
            override the render() as usual, but React calls this wrapper instead.
          */
-        let elem = this._render_original()
-        let div  = this.constructor.style.add_prolog(elem)                          // <div> wrapper around `elem` applies a CSS class for style scoping
-        return this.shadow_dom ? TEMPLATE({shadowrootmode: 'open'}, div) : div      // render the component inside a shadow DOM if needed
-        // if (this.shadow_dom) {
-        //     let shadow = this.attachShadow({mode: 'open'})
-        //     shadow.appendChild(div)
-        //     return shadow
-        // }
+        if (!this.shadow_dom) {
+            let content = this._render_original()
+            return this.constructor.style.add_prolog(content)           // <div> wrapper applies a CSS class for style scoping
+            // return this.shadow_dom ? TEMPLATE({shadowrootmode: 'open'}, div) : div      // render the component inside a shadow DOM if needed
+        }
+
+        if (typeof window === 'undefined') {                // server-side: content rendered inside a <template> tag
+            let content = this._render_original()
+            let template = TEMPLATE({shadowrootmode: 'open'}, content)
+            return DIV({ref: this.rootNode}, template)
+        }
+        else
+            // client-side: initially render just the <div> container, shadow DOM content will be added in componentDidMount
+            return DIV({ref: this.rootNode}, this._make_portal())
     }
 
     embed(component, props = null) {
