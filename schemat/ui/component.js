@@ -1,7 +1,7 @@
-import { T, assert, print, tryimport } from '../common/utils.js'
-import { cssPrepend } from './css.js'
-import { e, DIV, TEMPLATE } from './react-utils.js'
-import { React } from './resources.js'
+import {T, assert, print, tryimport} from '../common/utils.js'
+import {cssPrepend} from './css.js'
+import {e, cl, DIV, TEMPLATE} from './react-utils.js'
+import {React} from './resources.js'
 
 let csso = await tryimport('csso')
 
@@ -82,8 +82,8 @@ export class Style {
         this._css_raw = css
 
         if (scope) {
-            this._class_prolog = `in-${scope}`
-            this._class_epilog = `out-${scope}`
+            this._class_prolog = `${scope}`
+            this._class_epilog = `after-${scope}`
         }
 
         let prototypes = T.getPrototypes(styled_class).slice(1)
@@ -161,6 +161,7 @@ export class Component extends Styled(React.Component) {
     // - css custom properties (variables)
     // - :host, :host(), ::slotted()
 
+    name = this.constructor.name        // name of this component, for creating CSS classes
     shadow_dom = false
 
     constructor(props) {
@@ -192,6 +193,7 @@ export class Component extends Styled(React.Component) {
     }
 
     _portal() {
+        /* Create a React "portal" node that allows the rendered content to be inserted below the shadow DOM root. */
         if (!this._shadow) return null
         let content = this._render_original()
         return ReactDOM.createPortal(content, this._shadow)
@@ -208,14 +210,16 @@ export class Component extends Styled(React.Component) {
             // return this.shadow_dom ? TEMPLATE({shadowrootmode: 'open'}, div) : div      // render the component inside a shadow DOM if needed
         }
 
+        let class_dom = `${this.name}-dom`
+
         if (typeof window === 'undefined') {                // server-side: content rendered inside a <template> tag
             let content = this._render_original()
             let template = TEMPLATE({shadowrootmode: 'open'}, content)
-            return DIV(template)
+            return DIV(cl(class_dom), template)
         }
         else
             // client-side: initially render just the <div> container, shadow DOM content will be added in componentDidMount
-            return DIV({ref: this._root}, this._portal())
+            return DIV(cl(class_dom), {ref: this._root}, this._portal())
     }
 
     embed(component, props = null) {
