@@ -163,10 +163,6 @@ export class Component extends Styled(React.Component) {
 
     shadow_dom = false
 
-    _portal = null
-    _shadow_root = null
-    _mount_point = null
-
     constructor(props) {
         super(props)
 
@@ -183,47 +179,22 @@ export class Component extends Styled(React.Component) {
             if (name.match(/^_*[A-Z]/) && typeof this[name] === 'function')
                 this[name] = this[name].bind(this)
 
-        this.rootNode = React.createRef()
+        this._root = React.createRef()
+        this._shadow = null
     }
 
-    componentDidMount()  { this._update_shadow() }
+    componentDidMount()  { this._create_shadow() }
 
-    // componentDidUpdate() { this._update_shadow() }
-    // componentDidUpdate(prev_props, prev_state) {
-    //     print(`${this.constructor.name}.componentDidUpdate():`)
-    //     print(' prev_props=', prev_props)
-    //     print(' prev_state=', prev_state)
-    //     print(' props=', this.props)
-    //     print(' state=', this.state)
-    //     this._update_shadow()
-    // }
-
-    _update_shadow() {
-        // client-side: hydrate the Shadow DOM only if it's not already there
+    _create_shadow() {
         if (!this.shadow_dom) return
-        // if (!this.rootNode.shadowRoot) {
-        if (!this._shadow_root) {
-            print('Creating shadow DOM for', this.constructor.name)
-            const shadowRoot = this._shadow_root = this.rootNode.current.attachShadow({ mode: 'open' })     // attach shadow root and update its content
-            const mountPoint = this._mount_point = document.createElement('div')
-            shadowRoot.appendChild(mountPoint)
-
-            // let content = this._render_original()
-            // this._portal = ReactDOM.createPortal(content, this._mount_point)    // render the content into the shadow DOM
-            this.forceUpdate()                                                  // force update to render the portal
-        }
-        else {
-            print('Updating shadow DOM for', this.constructor.name)
-            let content = this._render_original()
-            this._portal = ReactDOM.createPortal(content, this._mount_point)    // render the content into the shadow DOM
-            // this.forceUpdate()
-        }
+        this._shadow = this._root.current.attachShadow({ mode: 'open' })        // attach shadow DOM
+        this.forceUpdate()                                                      // force update to render the _portal()
     }
 
-    _make_portal() {
-        if (!this._mount_point) return null
+    _portal() {
+        if (!this._shadow) return null
         let content = this._render_original()
-        return ReactDOM.createPortal(content, this._mount_point)
+        return ReactDOM.createPortal(content, this._shadow)
     }
 
     _render_wrapped() {
@@ -240,11 +211,11 @@ export class Component extends Styled(React.Component) {
         if (typeof window === 'undefined') {                // server-side: content rendered inside a <template> tag
             let content = this._render_original()
             let template = TEMPLATE({shadowrootmode: 'open'}, content)
-            return DIV({ref: this.rootNode}, template)
+            return DIV(template)
         }
         else
             // client-side: initially render just the <div> container, shadow DOM content will be added in componentDidMount
-            return DIV({ref: this.rootNode}, this._make_portal())
+            return DIV({ref: this._root}, this._portal())
     }
 
     embed(component, props = null) {
