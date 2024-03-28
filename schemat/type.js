@@ -1,9 +1,8 @@
 import {A} from './ui/react-utils.js'
-import {T, assert, print, concat } from './common/utils.js'
+import {assert, concat, print, T} from './common/utils.js'
 import {DataError, NotImplemented, ValueError} from './common/errors.js'
 import {Catalog, Path} from './data.js'
-import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
-
+import {byteLengthOfUnsignedInteger} from "./util/binary.js";
 import {TypeWidget, TextualWidget, TEXT_Widget, CODE_Widget, GENERIC_Widget, TYPE_Widget, ITEM_Widget} from './ui/widgets.js'
 import {CatalogTable} from './ui/catalog.js'
 
@@ -70,7 +69,7 @@ export class Type {
 
     static getDefaultProps() {
         /* Return all defaultProps from the prototype chain combined. */
-        return T.inheritedMerge(this, 'defaultProps')
+        return Object.assign({}, ...T.inherited(this, 'defaultProps'))
     }
 
     __props = {}                // own properties, i.e., excluding the defaults; this.props = defaults (with inherited) + __props

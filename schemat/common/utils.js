@@ -366,10 +366,6 @@ export class Types {
         }
         return values.reverse()
     }
-    static inheritedMerge(cls, attr) {
-        /* Like inherited(), but assumes the values are objects and returns them merged into a single object. */
-        return Object.assign({}, ...T.inherited(cls, attr))
-    }
 
     static getstate = (obj) => {
         /* obj's class may define __getstate__() method to have full control over state generation;
