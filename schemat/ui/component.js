@@ -198,15 +198,19 @@ export class Component extends Styled(React.Component) {
         return ReactDOM.createPortal(this._content(), this._shadow)
     }
 
+    _classes() {
+        /* Collect all CSS classes that should be put in the component's root node. */
+        return [this.name]
+    }
+
     _shadow_styles() {
         /* Walk the class's prototype chain to collect all CSS code that should be put inside a shadow DOM. */
-        let styles = T.getInherited(this.constructor, 'style').map(style => style.css)
-        return styles.join('\n')
+        return T.getInherited(this.constructor, 'style') .map(style => style.css) .join('\n')
     }
 
     _content() {
         /* Return the content of the component as a React element wrapped up in a <div> with proper classes for styling. */
-        let classes = cl(this.name, 'component')
+        let classes = cl(...this._classes(), 'component')
         let css = this._shadow_styles()
         let style = css ? STYLE(compact_css(css)) : null
         return FRAGMENT(style, DIV(classes, this._render_original()))
@@ -222,7 +226,7 @@ export class Component extends Styled(React.Component) {
             return this.constructor.style.add_prolog(content)           // <div> wrapper applies a CSS class for style scoping
         }
 
-        let classes = cl(this.name, 'shadow')                           // CSS classes for the shadow DOM container (outer DIV)
+        let classes = cl('shadow')                                      // CSS class(es) for the shadow DOM container (outer DIV)
 
         // render the component inside a shadow DOM
         if (typeof window === 'undefined') {                            // server-side: content rendered inside a <template> tag
