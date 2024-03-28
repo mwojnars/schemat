@@ -87,7 +87,7 @@ export class Style {
         }
 
         let prototypes = T.getPrototypes(styled_class).slice(1)
-        let styles = [this, ...prototypes.map(cls => cls.style)].filter(stl => Boolean(stl?.scope))
+        let styles = [this, ...prototypes.map(cls => T.getOwnProperty(cls, 'style'))] .filter(stl => Boolean(stl?.scope))
 
         // collect all scoping classes from the prototype chain of `styled_class`
         this._all_classes_prolog = [...new Set(styles.map(stl => stl._class_prolog))].sort().join(' ')
@@ -200,7 +200,8 @@ export class Component extends Styled(React.Component) {
 
     _classes() {
         /* Collect all CSS classes that should be put in the component's root node. */
-        return [this.name]
+        let scopes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'style')?.scope) .filter(Boolean)
+        return scopes.length ? scopes : [this.name]
     }
 
     _shadow_styles() {
