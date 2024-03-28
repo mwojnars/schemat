@@ -116,7 +116,7 @@ export class WebServer extends Server {
 
     async start() {
         /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
-        const cluster = await import('cluster')
+        const cluster = await import('node:cluster')
 
         if (this.workers && this.workers > 1 && cluster.isMaster) {
             print(`primary ${process.pid} is starting ${this.workers} workers...`)

@@ -283,10 +283,10 @@ export class Schemat {
     }
 
 
-    /***  Dynamic JS import from SUN files  ***/
+    /***  Dynamic import from SUN  ***/
 
     async import(path, name) {
-        /* Import of a module and (optionally) its element, `name`, from a SUN path.
+        /* Import of a module and (optionally) its element, `name`, from a SUN path, or from a regular JS path.
            Uses the site's routing mechanism to locate the `path` anywhere across the SUN namespace.
            Implemented in subclasses. Can be called client-side and server-side alike.
          */
