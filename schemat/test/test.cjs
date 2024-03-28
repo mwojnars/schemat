@@ -52,11 +52,36 @@ function expect_include_all(content, ...strings) {
     }
 }
 
+function extract_content_of_node(node) {
+    /* Extract plaintext content of a DOM node *including* shadow-DOM subtrees (Puppeteer's page.content() does NOT include them!). */
+    let parts = []
+
+    if (node.shadowRoot)
+        parts.push(extract_content_of_node(node.shadowRoot))
+    else
+        for (const child of node.childNodes)
+            if (child.nodeType === Node.TEXT_NODE)
+                parts.push(child.textContent)
+            else
+                parts.push(extract_content_of_node(child))
+
+    return parts.join('')
+}
+
+async function extract_content(page) {
+    // page.evaluate() executes in the browser context, without access to Node.js scope,
+    // hence the extract_content_of_node() function's code must be pasted directly in the function to be executed
+    return await page.evaluate(new Function(`
+                    ${extract_content_of_node.toString()}
+                    return extract_content_of_node(document.body)
+                `))
+}
+
 async function test_react_page(page, url, selector = null, strings = []) {
     await page.goto(url, { waitUntil: 'domcontentloaded' })
     await expect_status_ok(page)
 
-    expect_include_all(await page.content(), ...strings)
+    expect_include_all(await extract_content(page), ...strings)
 
     if (selector && strings.length) {
         // determining that React has rendered the component in full is tricky, hence we use several methods...
@@ -64,7 +89,8 @@ async function test_react_page(page, url, selector = null, strings = []) {
         await delay(300)                                            // wait for a short time to allow the component to render fully
         // await page.waitForFunction(() => document.querySelector(selector)?.textContent.includes('Expected Text'))
 
-        expect_include_all(await page.content(), ...strings)
+        let content = await extract_content(page)   //await page.content()
+        expect_include_all(content, ...strings)
     }
     return page
 }
@@ -157,15 +183,15 @@ describe('Schemat Tests', function () {
 
         it('Category', async function () {
             await test_react_page(page, `${DOMAIN}/sys.category:0`, '#page-component',
-                ['Category:0', 'Category of items', 'name', '_ttl_', 'fields', 'Ring', 'Varia'])
+                ['Category:0', 'Category of items', 'name', '_ttl_', 'defaults', 'schema', 'Ring', 'Varia'])
         })
 
         it('Varia', async function () {
             let Varia = await test_react_page(page, `${DOMAIN}/sys.category:1000`, '#page-component',
-                ['Category:1000', 'Varia', 'name', '_category_', 'fields', 'Varia:1016', 'Create Item'])
+                ['Category:1000', 'Varia', 'name', '_category_', 'schema', 'Varia:1016', 'Create Item'])
 
             // these strings are only available after client-side rendering, not in HTML source:
-            expect_include_all(await Varia.content(), 'check', 'Varia.code')
+            expect_include_all(await extract_content(Varia), 'check', 'Varia.code')
         })
 
         it('Varia object', async function () {
