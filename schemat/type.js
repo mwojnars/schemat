@@ -3,8 +3,8 @@ import {assert, concat, print, T} from './common/utils.js'
 import {DataError, NotImplemented, ValueError} from './common/errors.js'
 import {Catalog, Path} from './data.js'
 import {byteLengthOfUnsignedInteger} from "./util/binary.js";
-import {TypeWidget, TextualWidget, TEXT_Widget, CODE_Widget, GENERIC_Widget, TYPE_Widget, ITEM_Widget} from './ui/widgets.js'
 import {CatalogTable} from './ui/catalog.js'
+import * as widgets from './ui/widgets.js'
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
 // print('Temporal:', Temporal)  -- improved data struct for date/time handling
@@ -203,7 +203,7 @@ export class Type {
         return this.constructor.Widget
     }
 
-    static Widget = TypeWidget
+    static Widget = widgets.TypeWidget
 }
 
 
@@ -362,7 +362,7 @@ export class Textual extends Primitive {
         // charcase: false,         // 'upper'/'lower' - only upper/lower case characters allowed
     }
 
-    static Widget = TextualWidget
+    static Widget = widgets.TextualWidget
 }
 
 export class STRING extends Textual {
@@ -372,19 +372,19 @@ export class STRING extends Textual {
 }
 export class URL extends STRING {
     /* For now, URL type does NOT check if the string is a valid URL, only modifies the display to make the string a hyperlink. */
-    static Widget = class extends TextualWidget {
+    static Widget = class extends widgets.TextualWidget {
         view(v) { return A({href: v}, v) }
     }
 }
 
 export class TEXT extends Textual
 {
-    static Widget = TEXT_Widget
+    static Widget = widgets.TEXT_Widget
 }
 
 export class CODE extends TEXT
 {
-    static Widget = CODE_Widget
+    static Widget = widgets.CODE_Widget
 }
 
 export class PATH extends STRING {
@@ -436,7 +436,7 @@ export class GENERIC extends Type {
         // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
     }
 
-    static Widget = GENERIC_Widget
+    static Widget = widgets.GENERIC_Widget
 }
 
 // the most generic type for encoding/decoding of objects of any types
@@ -448,7 +448,7 @@ export let generic_string = new STRING()
 
 export class TYPE extends GENERIC {
     static defaultProps = {class: Type}
-    static Widget = TYPE_Widget
+    static Widget = widgets.TYPE_Widget
 }
 
 export class CLASS extends GENERIC {
@@ -501,7 +501,7 @@ export class ITEM extends Type {
         category:  undefined,       // base category for all the items to be encoded
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
     }
-    static Widget = ITEM_Widget
+    static Widget = widgets.ITEM_Widget
 }
 
 
