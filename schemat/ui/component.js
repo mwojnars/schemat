@@ -1,6 +1,6 @@
 import {T, assert, print, tryimport} from '../common/utils.js'
-import {cssPrepend} from './css.js'
-import {e, cl, DIV, TEMPLATE} from './react-utils.js'
+import {compact_css, cssPrepend} from './css.js'
+import {e, cl, DIV, TEMPLATE, STYLE, FRAGMENT} from './react-utils.js'
 import {React} from './resources.js'
 
 let csso = await tryimport('csso')
@@ -198,10 +198,19 @@ export class Component extends Styled(React.Component) {
         return ReactDOM.createPortal(this._content(), this._shadow)
     }
 
+    _shadow_styles() {
+        /* Walk the class's prototype chain to collect all CSS code that should be put inside a shadow DOM. */
+        let classes = T.getPrototypes(this.constructor)
+        let styles = classes.map(cls => T.getOwnProperty(cls, 'style')?.css).filter(Boolean)
+        return styles.reverse().join('\n')
+    }
+
     _content() {
         /* Return the content of the component as a React element wrapped up in a <div> with proper classes for styling. */
         let classes = cl(this.name, 'component')
-        return DIV(classes, this._render_original())
+        let css = this._shadow_styles()
+        let style = css ? STYLE(compact_css(css)) : null
+        return FRAGMENT(style, DIV(classes, this._render_original()))
     }
 
     _render_wrapped() {

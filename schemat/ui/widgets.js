@@ -301,11 +301,12 @@ export class TYPE_Widget extends GENERIC_Widget {
 
     static style = new Style('TYPE', this, {},
     `
+        *|          { color: red; }
         .default|   { color: #888; }
         .info|      { font-style: italic; }
     `)
 
-    // shadow_dom = true
+    shadow_dom = true
 
     viewer()  { return TypeWidget.prototype.viewer.call(this) }
     view() {
