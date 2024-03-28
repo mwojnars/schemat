@@ -114,6 +114,7 @@ export class TextualWidget extends TypeWidget {
 /**********************************************************************************************************************/
 
 export class TEXT_Widget extends TextualWidget {
+    shadow_dom = true
 
     static style = new Style('TEXT', this, {},
     `
@@ -227,7 +228,7 @@ export class CODE_Widget extends TEXT_Widget {
         useWorker:              false,      // disable syntax checker and warnings
     }
 
-    // shadow_dom = true
+    shadow_dom = false              // ACE pastes a part of its <style> into the <head> of the document upon initialization, so it must be a part of the main DOM
 
     viewerRef = createRef()
     viewerAce                       // ACE viewer object
@@ -280,9 +281,9 @@ export class CODE_Widget extends TEXT_Widget {
     value()     { return this.editorAce.session.getValue() }        // retrieve an edited flat value from the editor
     close()     { this.deleteAce(); super.close() }
 
-    componentDidMount()                         { super.componentDidMount(); this.initAce() }
-    componentWillUnmount()                      { super.componentWillUnmount(); this.deleteAce() }
-    componentDidUpdate(prev_props, prev_state)  { super.componentDidUpdate(prev_props, prev_state); if (this.state.editing !== prev_state.editing) this.initAce() }
+    componentDidMount()                         { super.componentDidMount?.(); this.initAce() }
+    componentWillUnmount()                      { this.deleteAce(); super.componentWillUnmount?.() }
+    componentDidUpdate(prev_props, prev_state)  { super.componentDidUpdate?.(prev_props, prev_state); if (this.state.editing !== prev_state.editing) this.initAce() }
 }
 
 /**********************************************************************************************************************/
@@ -304,8 +305,6 @@ export class TYPE_Widget extends GENERIC_Widget {
         .default|   { color: #888; }
         .info|      { font-style: italic; }
     `)
-
-    shadow_dom = true
 
     viewer()  { return TypeWidget.prototype.viewer.call(this) }
     view() {
