@@ -363,17 +363,7 @@ export class Types {
         return T.getPrototypes(obj).map(p => T.getOwnProperty(p, prop)).filter(v => v !== undefined).reverse()
     }
 
-    static inherited(cls, attr) {
-        /* Return an array of all values of a static attribute, `attr`, found in `cls` and its prototype chain.
-           Top base class'es value is placed at the beginning of the array, while the value found in `cls` is at the end. */
-        let values = []
-        while (true) {
-            if (!cls || cls === Object || cls === Object.prototype) break
-            if (Object.getOwnPropertyNames(cls).includes(attr)) values.push(cls[attr])
-            cls = Object.getPrototypeOf(cls)
-        }
-        return values.reverse()
-    }
+    // state management...
 
     static getstate = (obj) => {
         /* obj's class may define __getstate__() method to have full control over state generation;
@@ -381,7 +371,7 @@ export class Types {
         if (obj.__getstate__) return obj.__getstate__()
         if (obj.constructor?.__transient__) {
             let collect = []                            // combine __transient__ arrays from the prototype chain
-            for (const trans of T.inherited(obj.constructor, '__transient__'))
+            for (const trans of T.getInherited(obj.constructor, '__transient__'))
                 if (trans instanceof Array && trans !== collect[collect.length-1]) collect.push(trans)
             let transient = [].concat(...collect)
             if (transient.length) {
@@ -392,6 +382,7 @@ export class Types {
         }
         return obj
     }
+
     static setstate = (cls, state) => {
         // create an object of class `cls` and call its __setstate__() if present, or assign `state` directly;
         // if __setstate__() is async, setstate() returns a promise;
@@ -400,6 +391,7 @@ export class Types {
         if (obj['__setstate__']) return obj['__setstate__'](state)
         return Object.assign(obj, state)
     }
+
     static clone = (obj) => Object.assign(Object.create(Object.getPrototypeOf(obj)), obj)
 }
 

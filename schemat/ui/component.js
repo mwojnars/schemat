@@ -200,9 +200,8 @@ export class Component extends Styled(React.Component) {
 
     _shadow_styles() {
         /* Walk the class's prototype chain to collect all CSS code that should be put inside a shadow DOM. */
-        let classes = T.getPrototypes(this.constructor)
-        let styles = classes.map(cls => T.getOwnProperty(cls, 'style')?.css).filter(Boolean)
-        return styles.reverse().join('\n')
+        let styles = T.getInherited(this.constructor, 'style').map(style => style.css)
+        return styles.join('\n')
     }
 
     _content() {

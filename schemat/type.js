@@ -69,7 +69,7 @@ export class Type {
 
     static getDefaultProps() {
         /* Return all defaultProps from the prototype chain combined. */
-        return Object.assign({}, ...T.inherited(this, 'defaultProps'))
+        return Object.assign({}, ...T.getInherited(this, 'defaultProps'))
     }
 
     __props = {}                // own properties, i.e., excluding the defaults; this.props = defaults (with inherited) + __props
