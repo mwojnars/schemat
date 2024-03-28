@@ -333,7 +333,7 @@ export class Types {
 
     // prototype chain & inheritance...
 
-    static getAllPropertyNames = (obj) => {
+    static getAllPropertyNames(obj) {
         /* Return an array of all property names of `obj`, including inherited ones, also the ones from Object like toString(), constructor etc. */
         let attrs = []
         do {
@@ -343,7 +343,7 @@ export class Types {
         return Array.from(new Set(attrs))
     }
 
-    static getPrototypes = (obj) => {
+    static getPrototypes(obj) {
         /* Return a prototype chain (an array of all prototypes) of `obj`, starting at `obj` (included) and going upwards.
            `obj` can be an object (the chain ends at Object.prototype, excluded) or a class (the chain ends at Function.prototype, excluded).
          */
@@ -355,6 +355,12 @@ export class Types {
             obj = Object.getPrototypeOf(obj)
         }
         return prototypes
+    }
+
+    static getInherited(obj, prop) {
+        /* Return an array of all values of a property, `prop`, found in an object or class, `obj`, and its prototype chain.
+           The array starts with the oldest value (from the top base class) and ends with the newest value (from `obj`). */
+        return T.getPrototypes(obj).map(p => T.getOwnProperty(p, prop)).filter(v => v !== undefined).reverse()
     }
 
     static inherited(cls, attr) {
