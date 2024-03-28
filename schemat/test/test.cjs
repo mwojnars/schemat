@@ -182,12 +182,12 @@ describe('Schemat Tests', function () {
         })
 
         it('Category', async function () {
-            await test_react_page(page, `${DOMAIN}/sys.category:0`, '#page-component',
+            await test_react_page(page, `${DOMAIN}/sys.category:0`, '#page-main',
                 ['Category:0', 'Category of items', 'name', '_ttl_', 'defaults', 'schema', 'Ring', 'Varia'])
         })
 
         it('Varia', async function () {
-            let Varia = await test_react_page(page, `${DOMAIN}/sys.category:1000`, '#page-component',
+            let Varia = await test_react_page(page, `${DOMAIN}/sys.category:1000`, '#page-main',
                 ['Category:1000', 'Varia', 'name', '_category_', 'schema', 'Varia:1016', 'Create Item'])
 
             // these strings are only available after client-side rendering, not in HTML source:
@@ -195,12 +195,12 @@ describe('Schemat Tests', function () {
         })
 
         it('Varia object', async function () {
-            await test_react_page(page, `${DOMAIN}/system/default/1016`, '#page-component',
+            await test_react_page(page, `${DOMAIN}/system/default/1016`, '#page-main',
                 ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
         })
 
         it('uncategorized object', async function () {
-            await test_react_page(page, `${DOMAIN}/system/default/1017`, '#page-component',
+            await test_react_page(page, `${DOMAIN}/system/default/1017`, '#page-main',
                 ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
         })
 

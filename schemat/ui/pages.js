@@ -163,7 +163,7 @@ export class RenderedPage extends HtmlPage {
              */
             let data_string = this._encode_page_data(data)
             return `
-                <div id="page-component">${html}</div>
+                <div id="page-main">${html}</div>
                 <script async type="module">${code}</script>
                 <p id="page-data" style="display:none">${data_string}</p>
             `
@@ -177,7 +177,7 @@ export class RenderedPage extends HtmlPage {
 
 export class ReactPage extends RenderedPage {
     /* Generates a React-based HTML page whose main content is rendered from a React functional component, Main().
-       By default, Main() is written to the #page-component element in the page body, and any additional
+       By default, Main() is written to the #page-main element in the page body, and any additional
        (meta)data is written to the #page-data element. A <script> tag is added to the page to load
        the client-side JS code that will render the same component on the client side.
        The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
