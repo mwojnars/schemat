@@ -3,7 +3,7 @@ import vm from 'node:vm'
 
 
 let _promises = new class extends DependenciesStack {
-    debug = true
+    debug = false
 }
 
 
@@ -28,7 +28,7 @@ export class Loader {
         debug = false
     }
 
-    async import_module(path, referrer) {
+    async import_module(path, referrer, context = null) {
         /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
 
         // print(`import_module():  ${path}  (ref: ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
@@ -43,8 +43,13 @@ export class Loader {
         path = this._unprefix(path)
         path = this._normalize(path)
 
+        if (!context) {
+            context = vm.createContext(globalThis)
+            print('Loader: new global context created')
+        }
+
         // standard JS import from non-SUN paths
-        if (path[0] !== '/') return DBG('P9', path, this._import_synthetic(path))
+        if (path[0] !== '/') return DBG('P9', path, this._import_synthetic(path, context))
 
         let module = this._get_cached(path)
         if (module) return module                   // a promise
@@ -52,16 +57,16 @@ export class Loader {
         let source = await DBG('P1', path + '::text', schemat.site.route_internal(path + '::text'))
         if (!source) throw new Error(`import_module(), path not found: ${path}`)
 
-        return this._parse_module(source, path)
+        return this._parse_module(source, path, context)
     }
 
-    async _import_synthetic(path) {
+    async _import_synthetic(path, context) {
         /* Import a module using standard import(), but return it as a vm.SyntheticModule, because a regular JS module
            object is not accepted by the linker.
          */
         // print('_import_synthetic():', path)
         let mod_js  = await DBG('P2', path, import(path))
-        let context = vm.createContext(globalThis)
+        // let context = vm.createContext(globalThis)
         // let linker = async (specifier, ref, extra) => (await DBG(null, specifier, this.import_module(specifier, ref))).__vmModule__
         let module  = new vm.SyntheticModule(
             Object.keys(mod_js),
@@ -73,18 +78,7 @@ export class Loader {
         return {...module.namespace, __vmModule__: module}
     }
 
-    _get_cached(path) {
-        let module = schemat.registry.get_module(path)
-        if (module) {
-            let {status} = module.__vmModule__
-            // print(`taken from cache:  ${path}  (status: ${status})`)
-            if (status === 'linking')
-                return DBG('P8', path, module.__linking__.then(() => module))        // wait for the module to be linked before returning it (module.__linking__ is a Promise)
-            return module
-        }
-    }
-
-    async _parse_module(source, path) {
+    async _parse_module(source, path, context) {
         // print(`parsing from source:  ${path} ...`)
         try {
 
@@ -98,10 +92,10 @@ export class Loader {
         // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
 
         let identifier = Loader.DOMAIN_SCHEMAT + path
-        let linker = async (specifier, ref, extra) => (await DBG(null, specifier, this.import_module(specifier, ref))).__vmModule__    //print(specifier, ref) ||
+        let linker = async (specifier, ref, extra) => (await DBG(null, specifier, this.import_module(specifier, ref, context))).__vmModule__    //print(specifier, ref) ||
         let initializeImportMeta = (meta) => {meta.url = identifier}   // also: meta.resolve = ... ??
 
-        let __vmModule__ = new vm.SourceTextModule(source, {identifier, initializeImportMeta, importModuleDynamically: linker})  //context,
+        let __vmModule__ = new vm.SourceTextModule(source, {identifier, context, initializeImportMeta, importModuleDynamically: linker})
         let __linking__ = __vmModule__.link(linker)
 
         module = {__vmModule__, __linking__}
@@ -122,11 +116,22 @@ export class Loader {
         }
     }
 
+    _get_cached(path) {
+        let module = schemat.registry.get_module(path)
+        if (module) {
+            let {status} = module.__vmModule__
+            // print(`taken from cache:  ${path}  (${status})`)
+            // if (status === 'linking')
+            //     return DBG('P8', path, module.__linking__.then(() => module))        // wait for the module to be linked before returning it (module.__linking__ is a Promise)
+            return module
+        }
+    }
+
     _unprefix(path) { return path.startsWith(Loader.DOMAIN_SCHEMAT) ? path.slice(Loader.DOMAIN_SCHEMAT.length) : path }
 
     _normalize(path) {
         /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
-        path = path.replaceAll('/./', '/')
+        while (path.includes('/./')) path = path.replaceAll('/./', '/')
         let lead = path[0] === '/' ? path[0] : ''
         if (lead) path = path.slice(1)
 
