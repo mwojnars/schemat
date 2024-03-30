@@ -121,13 +121,14 @@ export class Schemat {
 
     // web objects currently being loaded/initialized with a call to .load()
     _loading_stack = new class extends Stack {
-        push(obj, _print = false) {
+        debug = false
+        push(obj) {
             super.push(obj)
-            if (_print) print(`loading:  + ${this._head(obj)}  ${this._tail()}`)
+            if (this.debug) print(`loading:  + ${this._head(obj)}  ${this._tail()}`)
         }
-        pop(obj, _print = false) {
+        pop(obj) {
             obj = super.pop(obj)
-            if (_print) print(`loading:  - ${this._head(obj)}  ${this._tail()}`)
+            if (this.debug) print(`loading:  - ${this._head(obj)}  ${this._tail()}`)
             return obj
         }
 
@@ -304,13 +305,13 @@ export class Schemat {
 
     before_data_loading(obj, MAX_LOADING = 10) {
         /* Called at the beginning of data loading in an object, obj._load(). */
-        this._loading_stack.push(obj, false)
+        this._loading_stack.push(obj)
         // if (count > MAX_LOADING) throw new Error(`Too many objects loading at once: ${count}`)
     }
 
     after_data_loading(obj) {
         /* Called at the end of data loading in an object, obj._load(). */
-        this._loading_stack.pop(obj, false)
+        this._loading_stack.pop(obj)
     }
 }
 
