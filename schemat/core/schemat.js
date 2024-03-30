@@ -1,6 +1,6 @@
 "use strict";
 
-import {T, print, assert, Stack} from '../common/utils.js'
+import {T, print, assert, DependenciesStack} from '../common/utils.js'
 import {ItemNotFound, NotImplemented} from '../common/errors.js'
 import {Catalog, Data} from '../data.js'
 import {Item, ROOT_ID} from '../item.js'
@@ -120,17 +120,18 @@ export class Schemat {
 
 
     // web objects currently being loaded/initialized with a call to .load()
-    _loading_stack = new class extends Stack {
+    _loading_stack = new class extends DependenciesStack {
         debug = false
-        push(obj) {
-            super.push(obj)
-            if (this.debug) print(`loading:  + ${this._head(obj)}  ${this._tail()}`)
-        }
-        pop(obj) {
-            obj = super.pop(obj)
-            if (this.debug) print(`loading:  - ${this._head(obj)}  ${this._tail()}`)
-            return obj
-        }
+
+        // push(obj) {
+        //     super.push(obj)
+        //     if (this.debug) print(`loading:  + ${this._head(obj)}  ${this._tail()}`)
+        // }
+        // pop(obj) {
+        //     obj = super.pop(obj)
+        //     if (this.debug) print(`loading:  - ${this._head(obj)}  ${this._tail()}`)
+        //     return obj
+        // }
 
         _head(obj) {
             let id   = `[${obj._id_}]`.padEnd(6)

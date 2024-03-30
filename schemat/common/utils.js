@@ -263,6 +263,25 @@ export class Stack extends Array {
     }
 }
 
+export class DependenciesStack extends Stack {
+    /* A list of dependencies (web objects / modules) currently being processed. With printing of debug info. */
+
+    debug = false
+
+    push(obj) {
+        super.push(obj)
+        if (this.debug) print(`loading:  + ${this._head(obj)}  ${this._tail()}`)
+    }
+    pop(obj) {
+        obj = super.pop(obj)
+        if (this.debug) print(`loading:  - ${this._head(obj)}  ${this._tail()}`)
+        return obj
+    }
+
+    _head(obj)  { return `${obj}`.padEnd(25) }
+    _tail()     { return `[${this}]` }
+}
+
 
 /*************************************************************************************************/
 
