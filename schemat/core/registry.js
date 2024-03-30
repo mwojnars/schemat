@@ -81,6 +81,11 @@ export class Registry {
         }
     }
 
-    get_module(path)            { return this.modules.get(path) }
-    set_module(path, module)    { this.modules.set(path, module) }      // `path` should be normalized
+    get_module(path)        { return this.modules.get(path) }
+
+    set_module(path, module) {
+        /* `path` should be normalized already */
+        assert(!this.modules.has(path), `module already registered: ${path}`)
+        this.modules.set(path, module)
+    }
 }
