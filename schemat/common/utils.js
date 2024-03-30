@@ -266,20 +266,21 @@ export class Stack extends Array {
 export class DependenciesStack extends Stack {
     /* A list of dependencies (web objects / modules) currently being processed. With printing of debug info. */
 
-    debug = false
+    debug  = false
+    prefix = 'loading:'
 
     push(obj) {
         super.push(obj)
-        if (this.debug) print(`loading:  + ${this._head(obj)}  ${this._tail()}`)
+        if (this.debug) print(`${this.prefix}  + ${this._head(obj)}  ${this._tail()}`)
     }
     pop(obj) {
         obj = super.pop(obj)
-        if (this.debug) print(`loading:  - ${this._head(obj)}  ${this._tail()}`)
+        if (this.debug) print(`${this.prefix}  - ${this._head(obj)}  ${this._tail()}`)
         return obj
     }
 
     _head(obj)  { return `${obj}`.padEnd(25) }
-    _tail()     { return `[${this}]` }
+    _tail()     { return `[${this.map(obj => `${obj}`).join(', ')}]` }
 }
 
 
