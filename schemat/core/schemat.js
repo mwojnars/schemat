@@ -281,8 +281,10 @@ export class Schemat {
         /* Import a module and (optionally) its element, `name`, from a SUN path, or from a regular JS path.
            Uses the site's routing mechanism to locate the `path` anywhere across the SUN namespace.
            Can be called client-side and server-side alike.
+           IMPORTANT: a new global context is created every time a module is imported using this method,
+                      so this method should be called only ONCE when the process is starting.
          */
-        let module = this.client_side ? import(this._js_import_url(path)) : this.loader.import_module(path) //this.site.import_module(path)
+        let module = this.client_side ? import(this._js_import_url(path)) : this.loader.import_module(path)
         return name ? (await module)[name] : module
     }
 
