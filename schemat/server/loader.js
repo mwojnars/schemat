@@ -49,18 +49,18 @@ export class Loader {
         }
 
         // standard JS import from non-SUN paths
-        if (path[0] !== '/') return DBG('P9', path, this._import_synthetic(path, context))
+        if (path[0] !== '/') return DBG('P9', path, this._import_synthetic(path, context, referrer))
 
-        let module = this._get_cached(path)
+        let module = this._get_cached(path, referrer)
         if (module) return module                   // a promise
 
         let source = await DBG('P1', path + '::text', schemat.site.route_internal(path + '::text'))
         if (!source) throw new Error(`import_module(), path not found: ${path}`)
 
-        return this._parse_module(source, path, context)
+        return this._parse_module(source, path, context, referrer)
     }
 
-    async _import_synthetic(path, context) {
+    async _import_synthetic(path, context, referrer) {
         /* Import a module using standard import(), but return it as a vm.SyntheticModule, because a regular JS module
            object is not accepted by the linker.
          */
@@ -73,16 +73,18 @@ export class Loader {
             function() { Object.entries(mod_js).forEach(([k, v]) => this.setExport(k, v)) },
             {context, identifier: Loader.DOMAIN_LOCAL + path} // importModuleDynamically: linker}
         )
+        module.referrer = referrer
+
         await DBG('P3', path, module.link(() => {}))
         await DBG('P4', path, module.evaluate())
         return {...module.namespace, __vmModule__: module}
     }
 
-    async _parse_module(source, path, context) {
+    async _parse_module(source, path, context, referrer) {
         // print(`parsing from source:  ${path} ...`)
         try {
 
-        let module = this._get_cached(path)     // cache must be checked again here, because the module may have been registered while waiting for the `source` to be loaded
+        let module = this._get_cached(path, referrer)     // cache must be checked again here, because the module may have been registered while waiting for the `source` to be loaded
         if (module) return module
 
         this._loading_modules.push(path)
@@ -96,12 +98,12 @@ export class Loader {
         let initializeImportMeta = (meta) => {meta.url = identifier}   // also: meta.resolve = ... ??
 
         let __vmModule__ = new vm.SourceTextModule(source, {identifier, context, initializeImportMeta, importModuleDynamically: linker})
-        let __linking__ = __vmModule__.link(linker)
 
-        module = {__vmModule__, __linking__}
+        __vmModule__.referrer = referrer
+        module = {__vmModule__}  //__linking__
         schemat.registry.set_module(path, module)      // the module must be registered already here, before linking, to handle circular dependencies
 
-        await DBG(null, path, __linking__)
+        await DBG(null, path, module.__linking__ = __vmModule__.link(linker))
         await DBG('P7', path, __vmModule__.evaluate())
         // print(`parsed from source:  ${path}`)
 
@@ -116,15 +118,32 @@ export class Loader {
         }
     }
 
-    _get_cached(path) {
+    _get_cached(path, referrer) {
         let module = schemat.registry.get_module(path)
         if (module) {
-            let {status} = module.__vmModule__
-            // print(`taken from cache:  ${path}  (${status})`)
-            // if (status === 'linking')
-            //     return DBG('P8', path, module.__linking__.then(() => module))        // wait for the module to be linked before returning it (module.__linking__ is a Promise)
+            let vm_mod = module.__vmModule__
+            // print(`taken from cache:  ${path}  (${vm_mod.status})`)
+            if (vm_mod.status === 'linking') {
+                this._check_circular(referrer, vm_mod)
+                return DBG('P8', path, module.__linking__.then(() => module))        // wait for the module to be linked before returning it (module.__linking__ is a Promise)
+            }
             return module
         }
+    }
+
+    _check_circular(referrer, module) {
+        // print(`_check_circular():`) //, module.identifier)
+        let paths = [module.identifier]
+        let ref = referrer
+
+        while (ref) {
+            let path = ref.identifier
+            paths.push(path)
+            if (path === paths[0])
+                throw new Error(`circular dependency detected:\n ${paths.reverse().join('\n ')}`)
+            ref = ref.referrer
+        }
+        // for (let path of paths.reverse()) print(`  ${path}`)
     }
 
     _unprefix(path) { return path.startsWith(Loader.DOMAIN_SCHEMAT) ? path.slice(Loader.DOMAIN_SCHEMAT.length) : path }
