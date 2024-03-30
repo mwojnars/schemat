@@ -90,7 +90,7 @@
   content: |-
     import {print} from '../site/utils.js'
     export function check() { print('called widgets.js:check()') } 
-    //let fs = await importLocal('fs')
+    //let fs = await import('fs')
     //print('fs:',fs)
   _category_:
     "@": 3
