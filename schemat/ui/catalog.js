@@ -329,7 +329,7 @@ export class CatalogTable extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (type.isCatalog()) item.edit_insert(path, pos, {key, value})
+                if (type.isCATALOG()) item.edit_insert(path, pos, {key, value})
                 else prev[pos].saveNew = (value) =>
                     item.edit_insert(path, pos, {key, value}).then(() => unnew())
 
@@ -348,7 +348,7 @@ export class CatalogTable extends Component {
         /* If `start_color` is undefined, the same `color` is used for all rows. */
 
         assert(catalog instanceof Catalog)
-        assert(type?.isCatalog(), `type ${type} is not a CATALOG`)
+        assert(type?.isCATALOG(), `type ${type} is not a CATALOG`)
 
         let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
 
@@ -377,7 +377,7 @@ export class CatalogTable extends Component {
             ops.updateValue = val => run.updateValue(pos, val, vschema)
 
             let props   = {item, path: [...path, pos], entry, type: vschema, color, ops}
-            let row     = e(vschema?.isCatalog() ? this.EntrySubcat : this.EntryAtomic, props)
+            let row     = e(vschema?.isCATALOG() ? this.EntrySubcat : this.EntryAtomic, props)
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
         })
 

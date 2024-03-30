@@ -27,8 +27,8 @@ export function is_valid_field_name(name) {
 
 export class Type {
 
-    isCatalog()     { return false }
-    isCompound()    { return this.isCatalog() }     // "compound" type implements a custom mergeEntries(), which prevents some optimizations
+    isCATALOG()     { return false }
+    isCompound()    { return this.isCATALOG() }     // "compound" type implements a custom mergeEntries(), which prevents some optimizations
     isRepeated()    { return this.props.repeated }
     isEditable()    { return this.props.editable }
 
@@ -575,7 +575,7 @@ export class CATALOG extends Type {
     - keys not allowed (what about labels then?)
      */
 
-    isCatalog() { return true }
+    isCATALOG() { return true }
 
     static Widget = CatalogTable
 
@@ -618,7 +618,7 @@ export class CATALOG extends Type {
            if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
          */
         return Path.find(this, path, (type, key) => {
-            if (!type.isCatalog()) throw new Error(`data type path not found: ${path}`)
+            if (!type.isCATALOG()) throw new Error(`data type path not found: ${path}`)
             return [type.subtype(key)]
         })
     }
