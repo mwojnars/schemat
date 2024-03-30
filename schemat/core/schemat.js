@@ -119,8 +119,8 @@ export class Schemat {
     get site()      { return this.registry.get(this.site_id) }
 
 
-    // IDs of objects currently being loaded/initialized with a call to .load()
-    _loading = new class extends Stack {
+    // web objects currently being loaded/initialized with a call to .load()
+    _loading_stack = new class extends Stack {
         push(obj, _print = false) {
             super.push(obj)
             if (_print) print(`loading:  + ${this._head(obj)}  ${this._tail()}`)
@@ -304,13 +304,13 @@ export class Schemat {
 
     before_data_loading(obj, MAX_LOADING = 10) {
         /* Called at the beginning of data loading in an object, obj._load(). */
-        this._loading.push(obj, false)
+        this._loading_stack.push(obj, false)
         // if (count > MAX_LOADING) throw new Error(`Too many objects loading at once: ${count}`)
     }
 
     after_data_loading(obj) {
         /* Called at the end of data loading in an object, obj._load(). */
-        this._loading.pop(obj, false)
+        this._loading_stack.pop(obj, false)
     }
 }
 
