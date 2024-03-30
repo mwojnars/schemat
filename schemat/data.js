@@ -1,5 +1,4 @@
 import { T, print, assert, concat, splitFirst } from './common/utils.js'
-import {Item} from "./item.js";
 import {JSONx} from "./serialize.js";
 
 
@@ -597,6 +596,7 @@ export class Data extends Catalog {
            Properties defined by getters are ignored.
          */
         assert(!obj.is_linked?.())
+        assert(Item, "missing globalThis.Item")
 
         const KEEP = ['_class_', '_category_']
         const DROP = ['action']
@@ -640,6 +640,7 @@ export class Data extends Catalog {
 
     find_references() {
         /* Extract an array of Item objects referenced from within this Data object. */
+        assert(Item, "missing globalThis.Item")
         let refs = []
         JSONx.encode(this, val => {if (val instanceof Item) { refs.push(val); return null; }})
         return refs
