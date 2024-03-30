@@ -1065,7 +1065,7 @@ export class Category extends Item {
     //     try {
     //         return await (client_side ?
     //                         schemat.import(path) :
-    //                         site.parse_module(this._source_, path)
+    //                         site._parse_module(this._source_, path)
     //         )
     //     }
     //     catch (ex) {
