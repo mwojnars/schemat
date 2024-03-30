@@ -64,7 +64,7 @@ export class Request {
             this.req.method === 'GET'   ? "GET"  :          // GET  = read access through HTTP GET
                                           "POST"            // POST = write access through HTTP POST
 
-        if (path === undefined) path = this.req.path
+        path ??= this.req.path
         let endp, sep = Request.SEP_ENDPOINT;
         [this.path, endp] = path.includes(sep) ? splitLast(path, sep) : [path, '']
 
