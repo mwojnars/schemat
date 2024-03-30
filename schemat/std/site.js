@@ -161,23 +161,32 @@ export class Site extends Directory {
         path = this._unprefix(path)
         path = this._normalize(path)
 
-        // standard JS import for non-SUN paths
+        // standard JS import from non-SUN paths
         if (path[0] !== '/') return this._import_synthetic(path)
 
-        // JS import if `path` starts with PATH_LOCAL_SUN; TODO: no custom linker configured in _import_js(), why ??
-        let local = schemat.PATH_LOCAL_SUN
-        if (path.startsWith(local + '/'))
-            return this._import_synthetic(this._js_import_file(path))
+        let module = schemat.registry.get_module(path)
+        if (module) {
+            print(`...from cache:  ${path}`)
+            return module
+        }
+
+        // // JS import if `path` starts with PATH_LOCAL_SUN; TODO: no custom linker configured in _import_synthetic(), why ??
+        // let local = schemat.PATH_LOCAL_SUN
+        // if (path.startsWith(local + '/'))
+        //     return this._import_synthetic(this._js_import_file(path))
 
         let source = await this.route_internal(path + '::text')
         if (!source) throw new Error(`Site.import_module(), path not found: ${path}`)
 
-        return this.parse_module(source, path)
+        module = await this._parse_module(source, path)
+        print(`...from source:  ${path}`)
+
+        return module
     }
 
     async _import_synthetic(path) {
         /* Import a module using standard import(), but return it as a vm.SyntheticModule (not a regular JS module). */
-        // print('_import_js() path:', path)
+        // print('_import_synthetic() path:', path)
         const vm    = this._vm
         let mod_js  = await import(path)
         let context = vm.createContext(globalThis)
@@ -191,7 +200,7 @@ export class Site extends Directory {
         return {...module.namespace, __vmModule__: module}
     }
 
-    async parse_module(source, path) {
+    async _parse_module(source, path) {
 
         const vm = this._vm
         // let context = vm.createContext(globalThis)
@@ -199,14 +208,20 @@ export class Site extends Directory {
         // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
 
         let identifier = Site.DOMAIN_SCHEMAT + path
-        let linker = async (specifier, ref, extra) => (await this.import_module(specifier, ref)).__vmModule__
+        let linker = async (specifier, ref, extra) => (print(specifier, ref) || await this.import_module(specifier, ref)).__vmModule__
         let initializeImportMeta = (meta) => {meta.url = identifier}   // also: meta.resolve = ... ??
 
         let module = new vm.SourceTextModule(source, {identifier, initializeImportMeta, importModuleDynamically: linker})    //context,
 
+        let flat_module = {__vmModule__: module}
+        schemat.registry.set_module(path, flat_module)      // the module must be registered already here, before linking, to handle circular dependencies
+
         await module.link(linker)
         await module.evaluate()
-        return {...module.namespace, __vmModule__: module}
+
+        Object.assign(flat_module, module.namespace)
+        return flat_module
+        // return {...module.namespace, __vmModule__: module}
     }
 
     _unprefix(path) { return path.startsWith(Site.DOMAIN_SCHEMAT) ? path.slice(Site.DOMAIN_SCHEMAT.length) : path }
