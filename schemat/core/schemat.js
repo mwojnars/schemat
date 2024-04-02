@@ -97,9 +97,11 @@ export class Schemat {
     site_id                         // ID of the active Site object
 
     registry = new Registry()       // cache of web objects, records and indexes loaded from DB
-    is_closing = false              // true if the Schemat node is in the process of shutting down
+    classpath                       // Classpath containing built-in classes and their paths; only used during bootstrap
 
+    is_closing = false              // true if the Schemat node is in the process of shutting down
     server_side = true              // the current environment: client / server
+
     get client_side() { return !this.server_side }
 
     get db() {
@@ -152,22 +154,23 @@ export class Schemat {
         let schemat = new this(...args)
         set_global({schemat})
 
-        await schemat.init_classpath()
+        await schemat._init_classpath()
 
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         schemat.site_id = site_id
         schemat._db = db
 
         await open_db?.(db)
-        await schemat.boot()
+        await schemat._init_site()
+        await schemat._init_dynamic_imports()
         assert(schemat.site)
 
         return schemat
     }
 
-    async init_classpath() {
+    async _init_classpath() {
         // print('initClasspath() started...')
-        let classpath = new Classpath
+        let classpath = new Classpath()
 
         // add standard classes to the classpath
         classpath.setMany("js", Map)
@@ -194,9 +197,11 @@ export class Schemat {
         // print('initClasspath() done')
     }
 
-    async boot() {
-        /* Load the `site` object and reload the existing (system) objects to make sure that they are fully activated
-           (URLs are awaited, classes are imported dynamically from SUN instead of a static classpath).
+    async _init_dynamic_imports() { /* on the server only */ }
+
+    async _init_site() {
+        /* Load the `site` object and reload the existing (system) objects to make sure that they are fully activated:
+           URLs are awaited, classes are imported dynamically from SUN instead of a static classpath.
          */
         await this.reload(this.site_id)
         for (let obj of this.registry)
