@@ -55,7 +55,8 @@ export class WebServer extends Server {
         /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
 
         // let {ServerSchemat} = await import('/system/local/core/schemat_srv.js')
-        // await schemat._init_dynamic_imports(ServerSchemat)
+        // await schemat._reset_class(ServerSchemat)
+        // await schemat._init_site()
 
         const cluster = await import('node:cluster')
 

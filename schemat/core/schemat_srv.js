@@ -1,7 +1,8 @@
 // import { Mutex } from 'async-mutex'
 
-import { assert, print, T } from '../common/utils.js'
-import { Schemat } from './schemat.js'
+import {assert, print, T} from '../common/utils.js'
+import {set_global} from "../common/globals.js";
+import {Schemat} from './schemat.js'
 import {ROOT_ID} from "../item.js"
 import {Loader} from "../server/loader.js"
 
@@ -31,6 +32,19 @@ export class ServerSchemat extends Schemat {
         // schedule periodical cache eviction; the interval is taken from site.cache_purge_interval and may change over time
         setTimeout(() => this._purge_registry(), 1000)
     }
+
+    async _reset_class(ServerSchemat) {
+        /* Re-import the class of this Schemat object using dynamic imports from the SUN path; in this way,
+           all other imports in the dependant modules will be interpreted as SUN imports, as well.
+           Reinitialize `classpath` so that builtin classes are also imported from the SUN namespace.
+         */
+        // let {ServerSchemat} = await this.import('/system/local/core/schemat_srv.js')
+        T.setClass(this, ServerSchemat)
+        await this._init_classpath()
+        // await this.reload(this.site_id)
+        print('ServerSchemat class reloaded')
+    }
+
 
     async _purge_registry() {
         try {

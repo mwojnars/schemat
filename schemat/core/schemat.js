@@ -162,7 +162,7 @@ export class Schemat {
 
         await open_db?.(db)
         await schemat._init_site()
-        await schemat._init_dynamic_imports()
+        // await schemat._reset_class()
         assert(schemat.site)
 
         return schemat
@@ -197,7 +197,7 @@ export class Schemat {
         // print('initClasspath() done')
     }
 
-    async _init_dynamic_imports() { /* on the server only */ }
+    async _reset_class() { /* on server only */ }
 
     async _init_site() {
         /* Load the `site` object and reload the existing (system) objects to make sure that they are fully activated:
