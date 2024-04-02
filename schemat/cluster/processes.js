@@ -49,14 +49,6 @@ export class WorkerProcess extends BackendProcess {
 
     _server         // the express server to be closed upon shutdown
 
-    // async startCluster(boot_db, cluster_id) {
-    //     let cluster = new Cluster()
-    //     cluster._id_ = cluster_id
-    //     cluster.db = boot_db
-    //     await cluster.startup()
-    //     return cluster
-    // }
-
     async shutdown() {
         if (this._server) {
             print('\nReceived kill signal, shutting down gracefully...')
@@ -77,8 +69,7 @@ export class WorkerProcess extends BackendProcess {
         // let m = await schemat.import('/system/local/test/temp1.js')
         // print('loaded:', m)
 
-        // let module = schemat.import('/system/local/cluster/servers.js')
-        // let {WebServer} = await module
+        // let {WebServer} = await schemat.import('/system/local/cluster/servers.js')
 
         print('Starting the server...')
         let web = new WebServer({host, port, workers})
