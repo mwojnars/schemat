@@ -317,8 +317,8 @@ export class Types {
     static isString       = (obj) => (typeof obj === 'string')
     static isNumber       = (obj) => (typeof obj === 'number' && !isNaN(obj))                 // test if obj is a valid number, not NaN
     static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
-    // static isDict         = (obj) => (obj && !obj?.__proto__?.__proto__)                      // test if obj is a plain object (POJO), no class assigned
-    static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype) // test if obj is a plain object (POJO), no class assigned
+    static isDict         = (obj) => (obj && !obj?.__proto__?.__proto__)                      // test if obj is a plain object (POJO), no class assigned; the only __proto__ in chain is Object.prototype
+    // static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype) // test if obj is a plain object (POJO), no class assigned
     static ofType         = (x, T) => (x && T && Object.getPrototypeOf(x) === T.prototype)    // test if x is an object of class T exactly (NOT of a subclass)
     static isFunction     = (f) => (f instanceof Function)                                    // test if f is a function; accepts class constructors, too (!)
     static isClass        = (C) => (typeof C === "function" && C.prototype !== undefined)     // test if C is a class (a constructor function with .prototype); false for arrays
