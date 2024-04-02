@@ -51,6 +51,23 @@ export class WebServer extends Server {
         this.workers = workers          // no. of worker processes to spawn
     }
 
+    async start() {
+        /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
+
+        // let {ServerSchemat} = await import('/system/local/core/schemat_srv.js')
+        // await schemat._init_dynamic_imports(ServerSchemat)
+
+        const cluster = await import('node:cluster')
+
+        if (this.workers && this.workers > 1 && cluster.isMaster) {
+            print(`primary ${process.pid} is starting ${this.workers} workers...`)
+            for (let i = 0; i < this.workers; i++) cluster.fork()
+            cluster.on('exit', (worker) => print(`Worker ${worker.process.pid} terminated`))
+            return
+        }
+        return this.serve_express()
+    }
+
     async handle(req, res) {
         if (!['GET','POST'].includes(req.method)) return res.sendStatus(405)    // 405 Method Not Allowed
         // print(`handle() worker ${process.pid} started: ${req.path}`)
@@ -112,19 +129,6 @@ export class WebServer extends Server {
         // })
 
         return app.listen(this.port, this.host, () => print(`worker ${process.pid} listening at http://${this.host}:${this.port}`))
-    }
-
-    async start() {
-        /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
-        const cluster = await import('node:cluster')
-
-        if (this.workers && this.workers > 1 && cluster.isMaster) {
-            print(`primary ${process.pid} is starting ${this.workers} workers...`)
-            for (let i = 0; i < this.workers; i++) cluster.fork()
-            cluster.on('exit', (worker) => print(`Worker ${worker.process.pid} terminated`))
-            return
-        }
-        return this.serve_express()
     }
 }
 
