@@ -138,7 +138,7 @@ export class JSONx {
                 state = state_attr
             }
             if (T.isNumber(classname))                      // `classname` can be an item ID instead of a class
-                return schemat.get_object(classname)
+                return schemat.get_object(classname)        // all web objects must be loaded through the global Schemat instance
             cls = schemat.get_class(classname)
         }
         else cls = Object
@@ -153,8 +153,8 @@ export class JSONx {
         if (cls === Map)
             return new Map(Object.entries(this.decode_object(state)))
 
-        if (T.isSubclass(cls, Item) && state instanceof Array)      // all Item instances except unlinked ones are created/loaded through the global Schemat object
-            return schemat.get_object(state)
+        // if (T.isSubclass(cls, Item) && T.isNumber(state))
+        //     return schemat.get_object(state)
 
         state = this.decode(state)
 
