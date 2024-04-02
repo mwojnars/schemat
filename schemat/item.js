@@ -5,7 +5,8 @@ import {print, assert, T, escape_html, splitLast, concat, unique, delay} from '.
 import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
 
 import {Catalog, Data} from './data.js'
-import {DATA, DATA_GENERIC, ITEM, generic_type} from "./types/type.js"
+import {ITEM, generic_type} from "./types/type.js"
+import {DATA, DATA_GENERIC} from "./types/catalog.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 
 import {ItemRecord} from "./db/records.js";

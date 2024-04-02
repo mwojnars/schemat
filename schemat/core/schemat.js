@@ -184,10 +184,11 @@ export class Schemat {
         await classpath.setModule("db", "../db/index.js")
         await classpath.setModule("db", "../db/db.js")
 
+        let accept = (name) => name.toUpperCase() === name || name === 'TypeWrapper'
+
         // add all Type subtypes (all-caps class names) + TypeWrapper
-        await classpath.setModule("type", "../types/type.js", {accept: (name) =>
-                name.toUpperCase() === name || name === 'TypeWrapper'
-        })
+        await classpath.setModule("type", "../types/type.js", {accept})
+        await classpath.setModule("type", "../types/catalog.js", {accept})
 
         this.classpath = classpath
         // print('initClasspath() done')
