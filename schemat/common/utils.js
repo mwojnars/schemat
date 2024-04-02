@@ -23,7 +23,7 @@ export function toString() {
     return `[${this.constructor?.name || 'Object'}${gap}${summary}]`
 }
 
-Object.prototype.toStringOriginal = Object.prototype.toString
+// Object.prototype._toStringOriginal_ = Object.prototype.toString       // this makes React fail because of undeclared property
 Object.prototype.toString = toString
 
 
