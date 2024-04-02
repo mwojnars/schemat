@@ -1,6 +1,6 @@
 /* Serialization of objects of arbitrary classes. */
 
-import {assert, T} from './common/utils.js'
+import {assert, print, T} from './common/utils.js'
 
 
 /*************************************************************************************************/
@@ -69,7 +69,7 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
         }
 
-        if (obj instanceof Item) {
+        if (obj instanceof Item) {         //obj?._id_ !== undefined || obj instanceof schemat.Item ||
             let id = obj._get_write_id()
             if(id !== undefined) return {[JSONx.ATTR_CLASS]: id}
             else throw new Error(`Can't encode a newborn object (no ID): ${obj}`)
@@ -107,7 +107,7 @@ export class JSONx {
         WARNING: the returned object may contain `state` or a part of it internally - any modifications in `state`
                  object after this call may indirectly change the result (!).
         */
-        assert(Item, "missing globalThis.Item")
+        let _state = state
         let isdict = T.isDict(state)
         let cls
 
@@ -150,11 +150,13 @@ export class JSONx {
         if (cls === Array)            return this.decode_array(state)
         if (cls === Object)           return this.decode_object(state)
         if (cls === Set)              return new Set(this.decode_array(state))
-        if (cls === Map)
-            return new Map(Object.entries(this.decode_object(state)))
+        if (cls === Map)              return new Map(Object.entries(this.decode_object(state)))
 
         // if (T.isSubclass(cls, Item) && T.isNumber(state))
         //     return schemat.get_object(state)
+
+        if (state === _state)
+            assert(false, "JSONx.decode(): no actual decoding performed leading to infinite recursion")
 
         state = this.decode(state)
 
