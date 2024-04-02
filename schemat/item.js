@@ -5,7 +5,7 @@ import {print, assert, T, escape_html, splitLast, concat, unique, delay} from '.
 import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
 
 import {Catalog, Data} from './data.js'
-import {DATA, DATA_GENERIC, ITEM, generic_type} from "./type.js"
+import {DATA, DATA_GENERIC, ITEM, generic_type} from "./types/type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 
 import {ItemRecord} from "./db/records.js";
@@ -1023,7 +1023,7 @@ export class Category extends Item {
         assert(false, 'not used')
 
         print('_item_class_:', this.class_path)
-        assert(this.class_path === '/system/local/type_item.js:TypeItem')       // TODO: temporary
+        assert(this.class_path === '/system/local/types/type_item.js:TypeItem')       // TODO: temporary
 
         let [path, name] = splitLast(this.class_path || '', ':')
         return schemat.import(path, name)       // a Promise

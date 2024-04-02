@@ -3,7 +3,7 @@ import {DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {Item} from '../item.js'
 import {ChangeRequest, RecordSchema} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
-import {INTEGER} from "../type.js";
+import {INTEGER} from "../types/type.js";
 
 // import { Kafka } from 'kafkajs'
 

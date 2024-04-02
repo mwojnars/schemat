@@ -1,11 +1,11 @@
 import {T, assert, trycatch} from "../common/utils.js";
 import {Catalog} from '../data.js'
-import {generic_string} from "../type.js";
+import {generic_string} from "./type.js";
 
-import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "./react-utils.js";
-import {MaterialUI} from "./resources.js";
+import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../ui/react-utils.js";
+import {MaterialUI} from "../ui/resources.js";
+import {Component, Style} from "../ui/component.js";
 import {TextualWidget} from "./widgets.js";
-import {Component, Style} from "./component.js";
 
 
 /**********************************************************************************************************************

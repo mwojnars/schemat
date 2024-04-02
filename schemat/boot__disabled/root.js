@@ -1,5 +1,5 @@
 import {Catalog, Data} from "../data.js"
-import {CATALOG, CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN, DATA_SCHEMA, CLASS} from "../type.js"
+import {CATALOG, CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN, DATA_SCHEMA, CLASS} from "../types/type.js"
 import {Category} from "../item.js";
 
 

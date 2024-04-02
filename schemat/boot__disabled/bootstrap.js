@@ -3,7 +3,7 @@ Creating core items from scratch and storing them as initial items in DB.
  */
 
 import {print, assert} from '../common/utils.js'
-import {GENERIC, TYPE, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
+import {GENERIC, TYPE, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../types/type.js'
 import {Catalog} from "../data.js"
 import * as urls from "../std/containers.js";
 import * as site from "../std/site.js";
@@ -99,7 +99,7 @@ async function create_categories(Category) {
     cat.Type = await Category.new(10, {
         name        : "Type",
         info        : "Category of items that represent data types. Some of the items are wrappers around system types (STRING, INTEGER etc.), while some others implement new types by themselves using dynamic code.",
-        class_path  : '/system/local/type_item.js:TypeItem',
+        class_path  : '/system/local/types/type_item.js:TypeItem',
         fields      : C({
             class_path  : new STRING(),
             encode      : new CODE({info: "Body of a function with the signature `encode(obj,props={})`. Should return a state that encodes the input object/value, `obj`."}),
@@ -118,7 +118,7 @@ async function create_categories(Category) {
     // cat.STRING = await Category.new(12, {
     //     name        : "STRING",
     //     _extends_   : cat.Type,
-    //     class_path  : '/system/local/type.js:STRING',
+    //     class_path  : '/system/local/types/type.js:STRING',
     // })
 
     return cat

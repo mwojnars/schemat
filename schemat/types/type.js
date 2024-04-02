@@ -1,10 +1,10 @@
-import {A} from './ui/react-utils.js'
-import {assert, concat, print, T} from './common/utils.js'
-import {DataError, NotImplemented, ValueError} from './common/errors.js'
-import {Catalog, Path} from './data.js'
-import {byteLengthOfUnsignedInteger} from "./util/binary.js";
-import {CatalogTable} from './ui/catalog.js'
-import * as widgets from './ui/widgets.js'
+import {A} from '../ui/react-utils.js'
+import {assert, concat, print, T} from '../common/utils.js'
+import {DataError, NotImplemented, ValueError} from '../common/errors.js'
+import {Catalog, Path} from '../data.js'
+import {byteLengthOfUnsignedInteger} from "../util/binary.js";
+import {CatalogTable} from './catalog.js'
+import * as widgets from './widgets.js'
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
 // print('Temporal:', Temporal)  -- improved data struct for date/time handling

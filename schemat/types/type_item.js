@@ -3,11 +3,11 @@
     - to avoid circular dependencies when some other files (dependencies of item.js) want to import type.js.
  */
 
-import { T, assert, print, splitLast } from './common/utils.js'
-import { Item } from './item.js'
+import { T, assert, print, splitLast } from '../common/utils.js'
+import { Item } from '../item.js'
 
 print('Loading type_item.js... import.meta:', import.meta.url)    //, import.meta.resolve
-// print(import.meta.resolve('./type.js'))
+// print(import.meta.resolve('./types/type.js'))
 
 
 /**********************************************************************************************************************/

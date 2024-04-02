@@ -74,6 +74,13 @@ export class WorkerProcess extends BackendProcess {
         // await this._update_all()
         // await this._reinsert_all()
 
+        // let m = await schemat.import('/system/local/test/temp1.js')
+        // print('loaded:', m)
+
+        // let module = schemat.import('/system/local/cluster/servers.js')
+        // let {WebServer} = await module
+
+        print('Starting the server...')
         let web = new WebServer({host, port, workers})
         this._server = await web.start()
 

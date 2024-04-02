@@ -6,7 +6,7 @@ import {e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIE
 import {HttpService} from "../services.js";
 import {Data} from "../data.js";
 import {Styled} from "./component.js";
-import {CatalogTable} from "./catalog.js";
+import {CatalogTable} from "../types/catalog.js";
 
 
 /**********************************************************************************************************************/
