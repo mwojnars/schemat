@@ -517,7 +517,7 @@ export class Item {
             let category = this._category_
 
             if (category && !category.is_loaded() && category !== this)
-                await category.load({await_url: false})     // if category's URL were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
+                await category.load({await_url: false})         // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
             this._meta_.expiry = Date.now() + (this._ttl_ || 0) * 1000
 
@@ -567,8 +567,10 @@ export class Item {
         // for (const p of prototypes)        // TODO: update the code below to verify ._category_ instead of CIDs
             // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
         prototypes = prototypes.filter(p => !p.is_loaded())
-        if (prototypes.length === 1) return prototypes[0].load()            // performance: trying to avoid unnecessary awaits or Promise.all()
-        if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))
+
+        let opts = {await_url: false}                                       // during boot up, URLs are not awaited to avoid circular dependencies (see category.load(...) inside _load())
+        if (prototypes.length === 1) return prototypes[0].load(opts)        // performance: trying to avoid unnecessary awaits or Promise.all()
+        if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load(opts)))
     }
 
     async _init_url() {
