@@ -21,7 +21,7 @@ export class Loader {
     /* Dynamic imports from SUN namespace. */
 
     static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
-    static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
+    static DOMAIN_SCHEMAT = ''  //'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
     // list of module paths currently being loaded
     _loading_modules = new class extends DependenciesStack {
@@ -31,7 +31,7 @@ export class Loader {
     async import_module(path, referrer, context = null) {
         /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
 
-        // print(`import_module():  ${path}  (ref: ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
+        // print(`import_module():  ${path}  (from ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
 
         // make `path` absolute
         if (path[0] === '.') {
@@ -45,7 +45,11 @@ export class Loader {
 
         if (!context) {
             context = vm.createContext(globalThis)
-            print('Loader: new global context created')
+            // context = vm.createContext({...globalThis, console, process})   // unpacking globalThis does NOT work: ALL system objects inside the module differ from the base module's (Object, Map etc.!)
+            // context = vm.createContext({Item, schemat, Object, Function, Promise, Array, ArrayBuffer, String, Number, Boolean, Date})
+            print('Loader: new global context created:')
+            // print(globalThis)
+            // print({...globalThis})
         }
 
         // standard JS import from non-SUN paths
