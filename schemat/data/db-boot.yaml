@@ -227,8 +227,13 @@
   "@": base.Data
 - __id: 5
   name: Directory
-  info: A directory of files, each file has a unique name (path). May contain
-    nested directories.
+  info: >-
+    A container that keeps an explicit list of named `entries`: regular objects
+    or nested containers. Behaves like a file directory in a local file system,
+    but contains web objects, not just files. 
+
+
+    See also the Namespace containers for unbounded collections of objects with dynamically assigned names.
   schema:
     entries:
       values:
@@ -265,8 +270,11 @@
   "@": base.Data
 - __id: 7
   name: Namespace
-  info: Category of application records. An application groups all spaces &
-    categories available in the system and provides system-level configuration.
+  info: "Unbounded collection of objects: each object that satisfies the criteria
+    of the namespace is accepted and can receive a (dynamically created) unique
+    identifier, typically built from the object's ID. Typically, a namespace is
+    placed as a leaf node on a URL route and does not contain nested
+    containers."
   defaults:
     _class_: std.Namespace
     "@": base.Catalog
