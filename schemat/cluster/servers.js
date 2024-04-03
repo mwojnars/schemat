@@ -54,6 +54,8 @@ export class WebServer extends Server {
     async start() {
         /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
 
+        // print('start() test:', obj instanceof Set)
+
         // let {ServerSchemat} = await import('/system/local/core/schemat_srv.js')
         // await schemat._reset_class(ServerSchemat)
         // await schemat._init_site()
