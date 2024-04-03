@@ -98,7 +98,7 @@ export class Site extends Directory {
             // step into the nested Container only if it potentially contains the `step`
             if (blank) {
                 if (!node.is_loaded()) await node.load()
-                assert(node instanceof Container, "blank route can only point to a Container (Directory, Namespace)")
+                assert(node._is_container, "blank route can only point to a Container (Directory, Namespace)")
                 if (explicit_blank) return rest ? node.resolve(rest, explicit_blank) : node
                 if (node.contains(step)) return node.resolve(path, explicit_blank)
             }
@@ -106,7 +106,7 @@ export class Site extends Directory {
                 if (!node.is_loaded()) await node.load()
                 // print('import.meta.url:', import.meta.url)
                 // print(`resolve():  ${name}  (rest: ${rest})  (${node instanceof Container})`)
-                if (node instanceof Container && rest) return node.resolve(rest, explicit_blank)
+                if (node._is_container && rest) return node.resolve(rest, explicit_blank)
                 else if (rest) throw new UrlPathNotFound({path})
                 else return node
             }
