@@ -205,9 +205,6 @@
       "@": type.STRING
     format:
       "@": type.STRING
-    _is_file:
-      default: true
-      "@": type.BOOLEAN
     "@": base.Catalog
   defaults:
     _class_: std.File
@@ -244,9 +241,6 @@
       values:
         "@": type.ITEM
       "@": type.CATALOG
-    _is_folder:
-      default: true
-      "@": type.BOOLEAN
     "@": base.Catalog
   defaults:
     _class_: std.Directory

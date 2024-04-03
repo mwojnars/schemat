@@ -53,7 +53,6 @@ async function create_categories(Category) {
             content     : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
             mimetype    : new STRING({info: "MIME type string (must include '/') to be set as Content-Type when serving file download; or an extension ('js', 'jpg', ...) to be converted to an appropriate type. If missing, response mimetype is inferred from the URL path extension, if present."}),
             format      : new STRING(),    // ProgrammingLanguage()
-            _is_file    : new BOOLEAN({default: true}),
         }),
     })
     cat.FileLocal = await Category.new(4, {
@@ -70,7 +69,6 @@ async function create_categories(Category) {
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
         fields      : C({
             entries     : new CATALOG({values: new ITEM()}),          // file & directory names mapped to item IDs
-            _is_folder  : new BOOLEAN({default: true}),
         }),
     })
     cat.LocalFolder = await Category.new(6, {
