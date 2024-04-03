@@ -185,6 +185,11 @@
   name: Container
   _category_:
     "@": 0
+  schema:
+    _is_container:
+      default: true
+      "@": type.BOOLEAN
+    "@": base.Catalog
   "@": base.Data
 - __id: 3
   name: File
