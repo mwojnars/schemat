@@ -28,6 +28,10 @@ export class ServerSchemat extends Schemat {
         this.PATH_LOCAL_FS = path       // no trailing '/' (!)
 
         this.loader = new Loader()
+    }
+
+    async _init_site() {
+        await super._init_site()
 
         // schedule periodical cache eviction; the interval is taken from site.cache_purge_interval and may change over time
         setTimeout(() => this._purge_registry(), 1000)
