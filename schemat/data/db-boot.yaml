@@ -176,6 +176,8 @@
     _class_: std.Site
     _container_: null
     "@": base.Catalog
+  _extends_:
+    "@": 5
   _category_:
     "@": 0
   "@": base.Data

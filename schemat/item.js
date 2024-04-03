@@ -94,8 +94,8 @@ export class Request {
 
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
-        let site  = schemat.site
-        let items = [this.target, this.target._category_, schemat.root_category, site, site._category_]
+        let site = schemat.site
+        let items = [this.target, this.target._category_, schemat.root_category, site, ...site._category_._ancestors_]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(it => it._record_.encoded())
 
@@ -1247,4 +1247,8 @@ export class RootCategory extends Category {
 
 /**********************************************************************************************************************/
 
+// if (globalThis.Item) print('globalThis.Item already exists, will be overwritten')
+
 set_global({Item})                  // Item class is available globally without import, for dynamic code
+
+// print('globalThis.Item assigned')
