@@ -317,6 +317,8 @@
   defaults:
     _class_: std.CategoryID_Namespace
     "@": base.Catalog
+  _extends_:
+    "@": 7
   _category_:
     "@": 0
   "@": base.Data
