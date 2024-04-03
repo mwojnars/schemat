@@ -52,10 +52,10 @@ export class Site extends Directory {
         assert(this._url_[0] === '/', `site's _url_ path must start with '/'`)
 
         // check that default_path maps to a container...
-        assert(default_container instanceof Container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
+        assert(default_container._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
 
         // ...and that this container is an ID_Namespace, so it is compatible with the URL generation on the client
-        assert(default_container instanceof ID_Namespace, `the container [${this._id_}] at the default path ('${this.default_path}') must be an ID_Namespace`)
+        assert(default_container._category_.name === 'ID_Namespace', `container [${this._id_}] at the default path ('${this.default_path}') must be an ID_Namespace`)
     }
 
     default_path_of(object_or_id) {
@@ -104,6 +104,8 @@ export class Site extends Directory {
             }
             else if (name === step) {
                 if (!node.is_loaded()) await node.load()
+                // print('import.meta.url:', import.meta.url)
+                // print(`resolve():  ${name}  (rest: ${rest})  (${node instanceof Container})`)
                 if (node instanceof Container && rest) return node.resolve(rest, explicit_blank)
                 else if (rest) throw new UrlPathNotFound({path})
                 else return node

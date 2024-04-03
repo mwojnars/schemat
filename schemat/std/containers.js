@@ -19,6 +19,9 @@ export class Container extends Item {
        these paths are used internally to identify objects within a container, before a final URL is generated.
      */
 
+    // properties:
+    _is_container
+
     contains(name) { return true }
 
     resolve(path, explicit_blank = false) {
