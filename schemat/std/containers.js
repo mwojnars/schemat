@@ -93,7 +93,7 @@ export class Directory extends Container {
         let tail = () => {
             // here, `next` is already loaded
             if (!rest) return next
-            if (!(next instanceof Container)) throw new UrlPathNotFound({path})
+            if (!next._is_container) throw new UrlPathNotFound({path})
             return next.resolve(rest)
         }
         return next.is_loaded() ? tail() : next.load().then(tail)
