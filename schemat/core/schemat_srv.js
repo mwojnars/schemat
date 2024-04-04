@@ -19,14 +19,13 @@ export class ServerSchemat extends Schemat {
     //                             // new requests wait until the current session completes, see Session.start()
 
     PATH_LOCAL_SUN = "/system/local"    // SUN folder that maps to the local filesystem folder, PATH_LOCAL_FS;
-    PATH_LOCAL_FS                       // scripts from PATH_LOCAL_* can be imported by system items during startup
+    // PATH_LOCAL_FS                       // scripts from PATH_LOCAL_* can be imported by system items during startup
 
     loader = null                       // Loader for dynamically loading JS modules from the SUN namespace
 
     constructor(path) {
         super()
-        this.PATH_LOCAL_FS = path       // no trailing '/' (!)
-
+        // this.PATH_LOCAL_FS = path       // no trailing '/' (!)
         this.loader = new Loader()
     }
 

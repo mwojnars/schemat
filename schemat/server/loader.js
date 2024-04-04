@@ -34,6 +34,12 @@ export class Loader {
         this._linker = this._linker.bind(this)
     }
 
+    // async import(path, name = null) {
+    //     /* Import a module and (optionally) its element, `name`, from a SUN path, or from a regular JS path. */
+    //     let module = this.import_module(path)
+    //     return name ? (await module)[name] : module
+    // }
+
     async import_module(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
 

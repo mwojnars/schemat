@@ -249,12 +249,12 @@ export class Site extends Directory {
         return path + '::import'
     }
 
-    _js_import_file(path) {
-        /* Schemat's server-side import path (/system/local/...) converted to a local filesystem path that can be used with standard import(). */
-        let local = schemat.PATH_LOCAL_SUN
-        if (!path.startsWith(local + '/')) throw new Error(`incorrect import path (${path}), should start with "${local}"`)
-        return schemat.PATH_LOCAL_FS + path.slice(local.length)
-    }
+    // _js_import_file(path) {
+    //     /* Schemat's server-side import path (/system/local/...) converted to a local filesystem path that can be used with standard import(). */
+    //     let local = schemat.PATH_LOCAL_SUN
+    //     if (!path.startsWith(local + '/')) throw new Error(`incorrect import path (${path}), should start with "${local}"`)
+    //     return schemat.PATH_LOCAL_FS + path.slice(local.length)
+    // }
 
 
     /***  Endpoints  ***/
