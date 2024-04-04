@@ -23,12 +23,14 @@ export class Loader {
     static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     static DOMAIN_SCHEMAT = ''  //'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
-    // list of module paths currently being loaded
-    _loading_modules = new class extends DependenciesStack {
+    context = null                          // global vm.Context shared by all modules
+
+    _loading_modules = new class extends DependenciesStack {            // list of module paths currently being loaded
         debug = false
     }
 
-    async import_module(path, referrer, context = null) {
+
+    async import_module(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
 
         // print(`import_module():  ${path}  (from ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
@@ -43,17 +45,10 @@ export class Loader {
         path = this._unprefix(path)
         path = this._normalize(path)
 
-        if (!context) {
-            context = vm.createContext(globalThis)
-            // context = vm.createContext({...globalThis, console, process})   // unpacking globalThis does NOT work: ALL system objects inside the module differ from the base module's (Object, Map etc.!)
-            // context = vm.createContext({Item, schemat, Object, Function, Promise, Array, ArrayBuffer, String, Number, Boolean, Date})
-            print('Loader: new global context created:')
-            // print(globalThis)
-            // print({...globalThis})
-        }
+        this.context ??= this._create_context()
 
         // standard JS import from non-SUN paths
-        if (path[0] !== '/') return DBG('P9', path, this._import_synthetic(path, context, referrer))
+        if (path[0] !== '/') return DBG('P9', path, this._import_synthetic(path, referrer))
 
         let module = this._get_cached(path, referrer)
         if (module) return module                   // a promise
@@ -61,21 +56,35 @@ export class Loader {
         let source = await DBG('P1', path + '::text', schemat.site.route_internal(path + '::text'))
         if (!source) throw new Error(`import_module(), path not found: ${path}`)
 
-        return this._parse_module(source, path, context, referrer)
+        return this._parse_module(source, path, referrer)
     }
 
-    async _import_synthetic(path, context, referrer) {
+    _create_context() {
+        let context = vm.createContext(globalThis)
+        // context = vm.createContext({...globalThis, console, process})   // unpacking globalThis does NOT work: ALL system objects inside the module differ from the base module's (Object, Map etc.!)
+        // context = vm.createContext({Item, schemat, Object, Function, Promise, Array, ArrayBuffer, String, Number, Boolean, Date})
+
+        print('Loader: new global context created:')
+        // print(globalThis)
+        // print({...globalThis})
+
+        return context
+
+        // let context = vm.createContext(globalThis)
+        // let context = referrer?.context || vm.createContext({...globalThis, importLocal: p => import(p)})
+        // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
+    }
+
+    async _import_synthetic(path, referrer) {
         /* Import a module using standard import(), but return it as a vm.SyntheticModule, because a regular JS module
            object is not accepted by the linker.
          */
         // print('_import_synthetic():', path)
         let mod_js  = await DBG('P2', path, import(path))
-        // let context = vm.createContext(globalThis)
-        // let linker = async (specifier, ref, extra) => (await DBG(null, specifier, this.import_module(specifier, ref))).__vmModule__
         let module  = new vm.SyntheticModule(
             Object.keys(mod_js),
             function() { Object.entries(mod_js).forEach(([k, v]) => this.setExport(k, v)) },
-            {context, identifier: Loader.DOMAIN_LOCAL + path} // importModuleDynamically: linker}
+            {context: this.context, identifier: Loader.DOMAIN_LOCAL + path} // importModuleDynamically: linker}
         )
         module.referrer = referrer
 
@@ -84,7 +93,7 @@ export class Loader {
         return {...module.namespace, __vmModule__: module}
     }
 
-    async _parse_module(source, path, context, referrer) {
+    async _parse_module(source, path, referrer) {
         // print(`parsing from source:  ${path} ...`)
         try {
 
@@ -93,15 +102,16 @@ export class Loader {
 
         this._loading_modules.push(path)
 
-        // let context = vm.createContext(globalThis)
-        // let context = referrer?.context || vm.createContext({...globalThis, importLocal: p => import(p)})
-        // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
-
         let identifier = Loader.DOMAIN_SCHEMAT + path
-        let linker = async (specifier, ref, extra) => (await DBG(null, specifier, this.import_module(specifier, ref, context))).__vmModule__    //print(specifier, ref) ||
+        let linker = async (specifier, ref, extra) => (await DBG(null, specifier, this.import_module(specifier, ref))).__vmModule__    //print(specifier, ref) ||
         let initializeImportMeta = (meta) => {meta.url = identifier}   // also: meta.resolve = ... ??
 
-        let __vmModule__ = new vm.SourceTextModule(source, {identifier, context, initializeImportMeta, importModuleDynamically: linker})
+        let __vmModule__ = new vm.SourceTextModule(source, {
+            identifier,
+            context: this.context,
+            initializeImportMeta,
+            importModuleDynamically: linker
+        })
 
         __vmModule__.referrer = referrer
         module = {__vmModule__}  //__linking__
@@ -121,6 +131,11 @@ export class Loader {
             throw err
         }
     }
+
+    async _linker(specifier, ref, extra) {
+        return await DBG(null, specifier, this.import_module(specifier, ref)).__vmModule__    //print(specifier, ref) ||
+    }
+
 
     _get_cached(path, referrer) {
         let module = schemat.registry.get_module(path)
