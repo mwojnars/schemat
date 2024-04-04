@@ -30,6 +30,10 @@ export class Loader {
     }
 
 
+    constructor() {
+        this._linker = this._linker.bind(this)
+    }
+
     async import_module(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
 
@@ -84,7 +88,7 @@ export class Loader {
         let module  = new vm.SyntheticModule(
             Object.keys(mod_js),
             function() { Object.entries(mod_js).forEach(([k, v]) => this.setExport(k, v)) },
-            {context: this.context, identifier: Loader.DOMAIN_LOCAL + path} // importModuleDynamically: linker}
+            {context: this.context, identifier: Loader.DOMAIN_LOCAL + path} // importModuleDynamically: this._linker}
         )
         module.referrer = referrer
 
@@ -101,23 +105,20 @@ export class Loader {
         if (module) return module
 
         this._loading_modules.push(path)
-
         let identifier = Loader.DOMAIN_SCHEMAT + path
-        let linker = async (specifier, ref, extra) => (await DBG(null, specifier, this.import_module(specifier, ref))).__vmModule__    //print(specifier, ref) ||
-        let initializeImportMeta = (meta) => {meta.url = identifier}   // also: meta.resolve = ... ??
 
         let __vmModule__ = new vm.SourceTextModule(source, {
             identifier,
-            context: this.context,
-            initializeImportMeta,
-            importModuleDynamically: linker
+            context:                    this.context,
+            initializeImportMeta:       (meta) => {meta.url = identifier},      // also: meta.resolve = ... ??
+            importModuleDynamically:    this._linker,
         })
 
         __vmModule__.referrer = referrer
         module = {__vmModule__}  //__linking__
         schemat.registry.set_module(path, module)      // the module must be registered already here, before linking, to handle circular dependencies
 
-        await DBG(null, path, module.__linking__ = __vmModule__.link(linker))
+        await DBG(null, path, module.__linking__ = __vmModule__.link(this._linker))
         await DBG('P7', path, __vmModule__.evaluate())
         // print(`parsed from source:  ${path}`)
 
@@ -133,7 +134,7 @@ export class Loader {
     }
 
     async _linker(specifier, ref, extra) {
-        return await DBG(null, specifier, this.import_module(specifier, ref)).__vmModule__    //print(specifier, ref) ||
+        return (await DBG(null, specifier, this.import_module(specifier, ref))).__vmModule__    //print(specifier, ref) ||
     }
 
 
