@@ -6,6 +6,7 @@ import {ServerSchemat} from "../core/schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
 import {DataServer, WebServer} from "./servers.js";
 import {Database} from "../db/db.js";
+import {Loader} from "../server/loader.js";
 
 
 /**********************************************************************************************************************/
@@ -20,6 +21,9 @@ export class BackendProcess {
         const __filename = mod_url.fileURLToPath(import.meta.url)       // or: process.argv[1]
         const __dirname  = mod_path.dirname(mod_path.dirname(__filename))
         const config = await this.load_config()
+
+        // let loader = new Loader()
+        // let {ServerSchemat} = await loader.import_initial('../core/schemat_srv.js', '/system/local/core/schemat_srv.js')
 
         let db = Database.create()
         await ServerSchemat.create_global(config.site, db, db => this._boot(db, config), __dirname)
@@ -49,15 +53,6 @@ export class WorkerProcess extends BackendProcess {
 
     _server         // the express server to be closed upon shutdown
 
-    async shutdown() {
-        if (this._server) {
-            print('\nReceived kill signal, shutting down gracefully...')
-            this._server.close(() => { print('Server closed') })
-        }
-        schemat.is_closing = true
-        setTimeout(() => process.exit(0), 10)
-    }
-
     async CLI_run({host, port, workers}) {
 
         // node = schemat.get_loaded(this_node_ID)
@@ -81,6 +76,15 @@ export class WorkerProcess extends BackendProcess {
         // let web = new WebServer(this.cluster, {host, port, workers}).start()
         // let data = new DataServer(this.cluster).start()
         // return Promise.all([web, data])
+    }
+
+    async shutdown() {
+        if (this._server) {
+            print('\nReceived kill signal, shutting down gracefully...')
+            this._server.close(() => { print('Server closed') })
+        }
+        schemat.is_closing = true
+        setTimeout(() => process.exit(0), 10)
     }
 }
 
