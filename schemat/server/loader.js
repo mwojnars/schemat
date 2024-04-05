@@ -64,18 +64,15 @@ export class Loader {
         let module = this._get_cached(path, referrer)
         if (module) return module                   // a promise
 
-        // standard JS import if `path` starts with PATH_LOCAL_SUN: this guarantees that Schemat's system modules
-        // can still be loaded during bootstrap phase before the SUN namespace is set up (!)
-        // TODO: no custom linker configured in _import_synthetic(), why ??
+        // standard JS import if `path` starts with PATH_LOCAL_SUN; this guarantees that Schemat's system modules
+        // can still be loaded during bootstrap before the SUN namespace is set up
         if (path.startsWith(this.PATH_LOCAL_SUN + '/')) {
             let filename = this._js_import_file(path)
             let source = fs.readFileSync(filename, {encoding: 'utf8'})                  // read source code from a local file
             return this._parse_module(source, path, referrer)
-            // return this._import_synthetic(path, this._js_import_file(path), referrer)
         }
 
         let source = await DBG('P1', path + '::text', schemat.site.route_internal(path + '::text'))
-        if (!source) throw new Error(`import_module(), path not found: ${path}`)
 
         return this._parse_module(source, path, referrer)
     }
@@ -141,6 +138,8 @@ export class Loader {
 
     async _parse_module(source, path, referrer) {
         // print(`parsing from source:  ${path} ...`)
+        if (!source) throw new Error(`path not found: ${path}`)
+
         try {
 
         let module = this._get_cached(path, referrer)     // cache must be checked again here, because the module may have been registered while waiting for the `source` to be loaded
