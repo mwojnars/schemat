@@ -20,8 +20,11 @@ function DBG(type, name, promise) {
 export class Loader {
     /* Dynamic imports from SUN namespace. */
 
-    static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
-    static DOMAIN_SCHEMAT = ''  //'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
+    // static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
+    // static DOMAIN_SCHEMAT = ''              // internal server-side domain name prepended to DB import paths for debugging    //'schemat:'
+
+    PATH_LOCAL_SUN = "/system/local"        // SUN folder that maps to the local filesystem folder, PATH_LOCAL_FS;
+    PATH_LOCAL_FS                           // modules from PATH_LOCAL_* can be imported during startup, before the SUN namespace is set up
 
     context = null                          // global vm.Context shared by all modules
     modules = new Map()                     // cache of the modules loaded so far
@@ -32,14 +35,15 @@ export class Loader {
     }
 
 
-    constructor() {
+    constructor(path_local_fs) {
+        this.PATH_LOCAL_FS = path_local_fs
         this._linker = this._linker.bind(this)
     }
 
     async import(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
 
-        // print(`import_module():  ${path}  (from ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
+        print(`import_module():  ${path}  (from ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
 
         // make `path` absolute
         if (path[0] === '.') {
@@ -47,17 +51,22 @@ export class Loader {
             path = referrer.identifier + '/../' + path          // referrer is a vm.Module
         }
 
-        // path normalize: drop "schemat:", convert '.' and '..' segments
-        path = this._unprefix(path)
-        path = this._normalize(path)
+        // path = this._unprefix(path)                  // drop "schemat:"
+        path = this._normalize(path)                    // path normalize: convert '.' and '..' segments
 
         this.context ??= this._create_context()
 
         // standard JS import from non-SUN paths
-        if (path[0] !== '/') return DBG('P9', path, this._import_synthetic(path, referrer))
+        if (path[0] !== '/') return DBG('P9', path, this._import_synthetic(path, path, referrer))
 
         let module = this._get_cached(path, referrer)
         if (module) return module                   // a promise
+
+        // standard JS import if `path` starts with PATH_LOCAL_SUN: this guarantees that Schemat's system modules
+        // can still be loaded during bootstrap phase before the SUN namespace is set up (!)
+        // TODO: no custom linker configured in _import_synthetic(), why ??
+        if (path.startsWith(this.PATH_LOCAL_SUN + '/'))
+            return this._import_synthetic(path, this._js_import_file(path), referrer)
 
         let source = await DBG('P1', path + '::text', schemat.site.route_internal(path + '::text'))
         if (!source) throw new Error(`import_module(), path not found: ${path}`)
@@ -65,7 +74,7 @@ export class Loader {
         return this._parse_module(source, path, referrer)
     }
 
-    _unprefix(path) { return path.startsWith(Loader.DOMAIN_SCHEMAT) ? path.slice(Loader.DOMAIN_SCHEMAT.length) : path }
+    // _unprefix(path) { return path.startsWith(Loader.DOMAIN_SCHEMAT) ? path.slice(Loader.DOMAIN_SCHEMAT.length) : path }
 
     _normalize(path) {
         /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
@@ -81,6 +90,13 @@ export class Loader {
             else parts.push(part)
 
         return lead + parts.join('/')
+    }
+
+    _js_import_file(path) {
+        /* Schemat's server-side import path (/system/local/...) converted to a local filesystem path that can be used with standard import(). */
+        let local = this.PATH_LOCAL_SUN
+        if (!path.startsWith(local + '/')) throw new Error(`incorrect import path (${path}), should start with "${local}"`)
+        return this.PATH_LOCAL_FS + path.slice(local.length)
     }
 
     _create_context() {
@@ -99,21 +115,25 @@ export class Loader {
         // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
     }
 
-    async _import_synthetic(path, referrer) {
+    async _import_synthetic(identifier, local_path, referrer) {
         /* Import a module using standard import(), but return it as a vm.SyntheticModule, because a regular JS module
-           object is not accepted by the linker.
+           object is not accepted by the linker, plus we want the dependencies inside the module to be resolved through this Loader.
          */
-        // print('_import_synthetic():', path)
-        let mod_js  = await DBG('P2', path, import(path))
+        print('_import_synthetic():', identifier, `(from local ${local_path})`)
+        let mod_js  = await DBG('P2', local_path, import(local_path))
         let module  = new vm.SyntheticModule(
             Object.keys(mod_js),
             function() { Object.entries(mod_js).forEach(([k, v]) => this.setExport(k, v)) },
-            {context: this.context, identifier: Loader.DOMAIN_LOCAL + path} // importModuleDynamically: this._linker}
+            {
+                identifier:                 identifier,
+                context:                    this.context,
+                importModuleDynamically:    this._linker,
+            }
         )
         module.referrer = referrer
 
-        await DBG('P3', path, module.link(() => {}))
-        await DBG('P4', path, module.evaluate())
+        await DBG('P3', local_path, module.link(() => {}))
+        await DBG('P4', local_path, module.evaluate())
         return {...module.namespace, __vmModule__: module}
     }
 
@@ -125,12 +145,12 @@ export class Loader {
         if (module) return module
 
         this._loading_modules.push(path)
-        let identifier = Loader.DOMAIN_SCHEMAT + path
+        // let identifier = Loader.DOMAIN_SCHEMAT + path
 
         let __vmModule__ = new vm.SourceTextModule(source, {
-            identifier,
+            identifier:                 path,
             context:                    this.context,
-            initializeImportMeta:       (meta) => {meta.url = identifier},      // also: meta.resolve = ... ??
+            initializeImportMeta:       (meta) => {meta.url = path},        // also: meta.resolve = ... ??
             importModuleDynamically:    this._linker,
         })
 
