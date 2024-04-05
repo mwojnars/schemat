@@ -314,6 +314,8 @@ export class YamlDataStorage extends MemoryStorage {
 
     async open() {
         /* Load records from this block's file. */
+
+        // print(`YamlDataStorage #1 opening ${this.filename}...`)
         this._mod_fs = await import('node:fs')
         this._mod_yaml = (await import('yaml')).default
         let schema = YamlDataStorage.sequence_schema
@@ -351,6 +353,7 @@ export class YamlDataStorage extends MemoryStorage {
 
             this._records.set(key, JSON.stringify(data))
         }
+        // print(`YamlDataStorage loaded ${this._records.size} items from ${this.filename}...`)
         return max_id
     }
 

@@ -1,5 +1,5 @@
 import {DataAccessError, DatabaseError} from "../common/errors.js"
-import {T, assert, print, merge, fileBaseName} from '../common/utils.js'
+import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
 import {Item, Edit} from "../item.js"
 import {IndexByCategory} from "./index.js";
 import {Record, ItemRecord} from "./records.js";
@@ -71,7 +71,7 @@ export class Ring extends Item {
     async __init__() {
         /* Initialize the ring after it's been loaded from DB. */
         if (schemat.client_side) return
-        print(`... ring [${this._id_}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
+        print(`... ring loaded [${this._id_}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
         await this.data_sequence.load()
         for (let index of this.indexes.values())
             await index.load()
@@ -190,8 +190,10 @@ export class Database extends Item {
                 spec.item            ? await schemat.get_loaded(spec.item) :
                                        await Ring.create(spec, new DataRequest(this, 'open'))
 
+            await delay()       // strangely enough, without this delay, Ring.create() above is NOT fully awaited when using the custom module Loader (!?)
+
             this.rings.push(ring)
-            print(`... ring [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
+            print(`... ring created [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
         }
     }
 
