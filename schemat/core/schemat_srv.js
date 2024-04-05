@@ -18,14 +18,10 @@ export class ServerSchemat extends Schemat {
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
-    PATH_LOCAL_SUN = "/system/local"    // SUN folder that maps to the local filesystem folder, PATH_LOCAL_FS;
-    // PATH_LOCAL_FS                       // scripts from PATH_LOCAL_* can be imported by system items during startup
-
     loader = null                       // Loader for dynamically loading JS modules from the SUN namespace
 
-    constructor(path) {
+    constructor() {
         super()
-        // this.PATH_LOCAL_FS = path       // no trailing '/' (!)
         this.loader = new Loader()
     }
 

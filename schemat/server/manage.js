@@ -5,6 +5,9 @@
     Usage:   node --experimental-vm-modules server/manage.js [run|move|reinsert] [options]
 */
 
+import node_url from "node:url";
+import node_path from "node:path";
+
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
@@ -60,8 +63,12 @@ async function main() {
     let cmd = argv._[0]
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
 
-    let loader = new Loader()
-    // let {AdminProcess, WorkerProcess} = loader.import(`file://${path}/processes.js`)
+    const file = node_url.fileURLToPath(import.meta.url)            // or: process.argv[1]
+    const path = node_path.dirname(node_path.dirname(file))         // root folder of the project
+
+    // create custom loader for dynamic module imports from the SUN namespace
+    let loader = new Loader(path)
+    let {AdminProcess, WorkerProcess} = await loader.import('/system/local/server/processes.js')
 
     let main_process = (cmd === 'run') ?
         new WorkerProcess(loader) :

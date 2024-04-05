@@ -19,17 +19,16 @@ export class BackendProcess {
     }
 
     async start(cmd, opts = {}) {
-        const mod_url  = await import('node:url')
-        const mod_path = await import('node:path')
-
-        const __filename = mod_url.fileURLToPath(import.meta.url)       // or: process.argv[1]
-        const __dirname  = mod_path.dirname(mod_path.dirname(__filename))
+        // const mod_url  = await import('node:url')
+        // const mod_path = await import('node:path')
+        // const __filename = mod_url.fileURLToPath(import.meta.url)       // or: process.argv[1]
+        // const __dirname  = mod_path.dirname(mod_path.dirname(__filename))
         const config = await this.load_config()
 
         // let {ServerSchemat} = await loader.bootstrap_import('../core/schemat_srv.js', '/system/local/core/schemat_srv.js')
 
         let db = Database.create()
-        await ServerSchemat.create_global(config.site, db, db => this._boot(db, config), __dirname)
+        await ServerSchemat.create_global(config.site, db, db => this._boot(db, config))
         // await schemat.db.insert_self()
 
         let method = this.CLI_PREFIX + cmd
