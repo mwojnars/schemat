@@ -1,5 +1,5 @@
-import fs from 'node:fs'
 import vm from 'node:vm'
+import {readFile} from 'node:fs/promises'
 
 import {print, DependenciesStack, assert} from '../common/utils.js'
 
@@ -45,7 +45,7 @@ export class Loader {
     async import(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
 
-        print(`import_module():  ${path}  (from ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
+        // print(`import_module():  ${path}  (from ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
 
         // make `path` absolute
         if (path[0] === '.') {
@@ -58,20 +58,21 @@ export class Loader {
 
         this.context ??= this._create_context()
 
-        // standard JS import from non-SUN paths
-        if (path[0] !== '/') return DBG('P9', path, this._import_synthetic(path, referrer))
-
         let module = this._get_cached(path, referrer)
-        if (module) return module                   // a promise
+        if (module) return module                       // a promise
+
+        // standard JS import from non-SUN paths
+        if (path[0] !== '/') return this._import_synthetic(path, referrer)
 
         // standard JS import if `path` starts with PATH_LOCAL_SUN; this guarantees that Schemat's system modules
         // can still be loaded during bootstrap before the SUN namespace is set up
         if (path.startsWith(this.PATH_LOCAL_SUN + '/')) {
             let filename = this._js_import_file(path)
-            let source = fs.readFileSync(filename, {encoding: 'utf8'})                  // read source code from a local file
+            let source = await readFile(filename, {encoding: 'utf8'})               // read source code from a local file
             return this._parse_module(source, path, referrer)
         }
 
+        print(`importing from SUN:  ${path}`)
         let source = await DBG('P1', path + '::text', schemat.site.route_internal(path + '::text'))
 
         return this._parse_module(source, path, referrer)
@@ -122,60 +123,58 @@ export class Loader {
         /* Import a module using standard import(), but return it as a vm.SyntheticModule,
            because a regular JS module object is not accepted by the linker.
          */
+        let cached = this._get_cached(path, referrer)     // cache must be checked again here, because the module may have been registered while waiting for the `source` to be loaded
+        if (cached) return cached
+
         // print('_import_synthetic():', path)
-        let mod_js  = await DBG('P2', path, import(path))
-        let module  = new vm.SyntheticModule(
+
+        let mod_js = await import(path)
+        let vm_mod = new vm.SyntheticModule(
             Object.keys(mod_js),
             function() { Object.entries(mod_js).forEach(([k, v]) => this.setExport(k, v)) },
             {identifier: path, context: this.context}
         )
-        module.referrer = referrer
 
-        await DBG('P3', path, module.link(() => {}))
-        await DBG('P4', path, module.evaluate())
-        return {...module.namespace, __vmModule__: module}
+        return this._wrap_module(vm_mod, path, referrer, this._linker)  //() => {})
     }
 
     async _parse_module(source, path, referrer) {
         // print(`parsing from source:  ${path} ...`)
         if (!source) throw new Error(`path not found: ${path}`)
 
-        try {
+        let cached = this._get_cached(path, referrer)     // cache must be checked again here, because the module may have been registered while waiting for the `source` to be loaded
+        if (cached) return cached
 
-        let module = this._get_cached(path, referrer)     // cache must be checked again here, because the module may have been registered while waiting for the `source` to be loaded
-        if (module) return module
-
-        this._loading_modules.push(path)
-        // let identifier = Loader.DOMAIN_SCHEMAT + path
-
-        let __vmModule__ = new vm.SourceTextModule(source, {
+        let vm_mod = new vm.SourceTextModule(source, {
             identifier:                 path,
             context:                    this.context,
             initializeImportMeta:       (meta) => {meta.url = path},        // also: meta.resolve = ... ??
             importModuleDynamically:    this._linker,
         })
 
-        __vmModule__.referrer = referrer
-        module = {__vmModule__}  //__linking__
+        return this._wrap_module(vm_mod, path, referrer, this._linker)
+    }
+
+    async _wrap_module(vm_mod, path, referrer, linker) {
+
+        this._loading_modules.push(path)
+
+        vm_mod.referrer = referrer
+        let module = {__vmModule__: vm_mod}
         this._save_module(path, module)                     // the module must be registered already here, before linking, to handle circular dependencies
 
-        await DBG(null, path, module.__linking__ = __vmModule__.link(this._linker))
-        await DBG('P7', path, __vmModule__.evaluate())
+        await (module.__linking__ = vm_mod.link(linker))
+        await (module.__evaluating__ = vm_mod.evaluate())
         // print(`parsed from source:  ${path}`)
 
         this._loading_modules.pop(path)
 
-        Object.assign(module, __vmModule__.namespace)
+        Object.assign(module, vm_mod.namespace)
         return module
-
-        } catch (err) {
-            print(`Error parsing module: ${path}`)
-            throw err
-        }
     }
 
     async _linker(specifier, ref, extra) {
-        return (await DBG(null, specifier, this.import(specifier, ref))).__vmModule__    //print(specifier, ref) ||
+        return (await this.import(specifier, ref)).__vmModule__    //print(specifier, ref) ||
     }
 
 
@@ -186,7 +185,7 @@ export class Loader {
             // print(`taken from cache:  ${path}  (${vm_mod.status})`)
             if (vm_mod.status === 'linking') {
                 this._check_circular(referrer, vm_mod)
-                return DBG('P8', path, module.__linking__.then(() => module))        // wait for the module to be linked before returning it (module.__linking__ is a Promise)
+                return module.__linking__.then(() => module)        // wait for the module to be linked before returning it (module.__linking__ is a Promise)
             }
             return module
         }
