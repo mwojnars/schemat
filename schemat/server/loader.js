@@ -1,4 +1,4 @@
-import {print, DependenciesStack} from "../common/utils.js"
+import {print, DependenciesStack, assert} from "../common/utils.js"
 import vm from 'node:vm'
 
 
@@ -24,7 +24,9 @@ export class Loader {
     static DOMAIN_SCHEMAT = ''  //'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
     context = null                          // global vm.Context shared by all modules
-
+    modules = new Map()                     // cache of the modules loaded so far
+    
+    
     _loading_modules = new class extends DependenciesStack {            // list of module paths currently being loaded
         debug = false
     }
@@ -33,12 +35,6 @@ export class Loader {
     constructor() {
         this._linker = this._linker.bind(this)
     }
-
-    // async import(path, name = null) {
-    //     /* Import a module and (optionally) its element, `name`, from a SUN path, or from a regular JS path. */
-    //     let module = this.import_module(path)
-    //     return name ? (await module)[name] : module
-    // }
 
     async import_module(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
@@ -67,6 +63,24 @@ export class Loader {
         if (!source) throw new Error(`import_module(), path not found: ${path}`)
 
         return this._parse_module(source, path, referrer)
+    }
+
+    _unprefix(path) { return path.startsWith(Loader.DOMAIN_SCHEMAT) ? path.slice(Loader.DOMAIN_SCHEMAT.length) : path }
+
+    _normalize(path) {
+        /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
+        while (path.includes('/./')) path = path.replaceAll('/./', '/')
+        let lead = path[0] === '/' ? path[0] : ''
+        if (lead) path = path.slice(1)
+
+        let parts = []
+        for (const part of path.split('/'))
+            if (part === '..')
+                if (!parts.length) throw new Error(`incorrect path: '${path}'`)
+                else parts.pop()
+            else parts.push(part)
+
+        return lead + parts.join('/')
     }
 
     _create_context() {
@@ -122,7 +136,7 @@ export class Loader {
 
         __vmModule__.referrer = referrer
         module = {__vmModule__}  //__linking__
-        schemat.registry.set_module(path, module)      // the module must be registered already here, before linking, to handle circular dependencies
+        this._save_module(path, module)                     // the module must be registered already here, before linking, to handle circular dependencies
 
         await DBG(null, path, module.__linking__ = __vmModule__.link(this._linker))
         await DBG('P7', path, __vmModule__.evaluate())
@@ -145,7 +159,7 @@ export class Loader {
 
 
     _get_cached(path, referrer) {
-        let module = schemat.registry.get_module(path)
+        let module = this.modules.get(path)
         if (module) {
             let vm_mod = module.__vmModule__
             // print(`taken from cache:  ${path}  (${vm_mod.status})`)
@@ -172,21 +186,9 @@ export class Loader {
         // for (let path of paths.reverse()) print(`  ${path}`)
     }
 
-    _unprefix(path) { return path.startsWith(Loader.DOMAIN_SCHEMAT) ? path.slice(Loader.DOMAIN_SCHEMAT.length) : path }
-
-    _normalize(path) {
-        /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
-        while (path.includes('/./')) path = path.replaceAll('/./', '/')
-        let lead = path[0] === '/' ? path[0] : ''
-        if (lead) path = path.slice(1)
-
-        let parts = []
-        for (const part of path.split('/'))
-            if (part === '..')
-                if (!parts.length) throw new Error(`incorrect path: '${path}'`)
-                else parts.pop()
-            else parts.push(part)
-
-        return lead + parts.join('/')
+    _save_module(path, module) {
+        /* `path` should be normalized already */
+        assert(!this.modules.has(path), `module already registered: ${path}`)
+        this.modules.set(path, module)
     }
 }

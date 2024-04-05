@@ -52,7 +52,7 @@ export class Registry {
     /* Process-local cache of web objects, records and indexes loaded from DB, as well as dynamically loaded JS modules. */
 
     objects = new ObjectsCache()        // cache of web objects
-    modules = new Map()                 // dynamically loaded JS modules
+    // modules = new Map()                 // dynamically loaded JS modules
 
     _purging_now = false                // if the previous purge is still in progress, a new one is abandoned
 
@@ -81,11 +81,11 @@ export class Registry {
         }
     }
 
-    get_module(path)        { return this.modules.get(path) }
-
-    set_module(path, module) {
-        /* `path` should be normalized already */
-        assert(!this.modules.has(path), `module already registered: ${path}`)
-        this.modules.set(path, module)
-    }
+    // get_module(path)        { return this.modules.get(path) }
+    //
+    // set_module(path, module) {
+    //     /* `path` should be normalized already */
+    //     assert(!this.modules.has(path), `module already registered: ${path}`)
+    //     this.modules.set(path, module)
+    // }
 }

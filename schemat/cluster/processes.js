@@ -23,7 +23,7 @@ export class BackendProcess {
         const config = await this.load_config()
 
         // let loader = new Loader()
-        // let {ServerSchemat} = await loader.import_initial('../core/schemat_srv.js', '/system/local/core/schemat_srv.js')
+        // let {ServerSchemat} = await loader.bootstrap_import('../core/schemat_srv.js', '/system/local/core/schemat_srv.js')
 
         let db = Database.create()
         await ServerSchemat.create_global(config.site, db, db => this._boot(db, config), __dirname)

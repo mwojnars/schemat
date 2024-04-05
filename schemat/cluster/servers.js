@@ -58,6 +58,8 @@ export class WebServer extends Server {
 
         // let {ServerSchemat} = await import('/system/local/core/schemat_srv.js')
         // await schemat._reset_class(ServerSchemat)
+
+        // schemat.registry.objects.clear()
         // await schemat._init_site()
 
         const cluster = await import('node:cluster')
