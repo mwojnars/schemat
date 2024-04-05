@@ -14,6 +14,10 @@ import {Loader} from "../server/loader.js";
 export class BackendProcess {
     CLI_PREFIX = 'CLI_'
 
+    constructor(loader) {
+        this.loader = loader
+    }
+
     async start(cmd, opts = {}) {
         const mod_url  = await import('node:url')
         const mod_path = await import('node:path')
@@ -22,7 +26,6 @@ export class BackendProcess {
         const __dirname  = mod_path.dirname(mod_path.dirname(__filename))
         const config = await this.load_config()
 
-        // let loader = new Loader()
         // let {ServerSchemat} = await loader.bootstrap_import('../core/schemat_srv.js', '/system/local/core/schemat_srv.js')
 
         let db = Database.create()

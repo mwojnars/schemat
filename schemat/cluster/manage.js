@@ -10,6 +10,7 @@ import {hideBin} from 'yargs/helpers'
 
 import {print, T} from '../common/utils.js'
 import {AdminProcess, WorkerProcess} from "./processes.js"
+import {Loader} from "../server/loader.js";
 
 
 const HOST      = '127.0.0.1'
@@ -59,9 +60,12 @@ async function main() {
     let cmd = argv._[0]
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
 
+    // let loader = new Loader()
+    // let {AdminProcess, WorkerProcess} = loader.import(`file://${path}/processes.js`)
+
     let main_process = (cmd === 'run') ?
-        new WorkerProcess() :
-        new AdminProcess()
+        new WorkerProcess(loader) :
+        new AdminProcess(loader)
 
     return main_process.start(cmd, {...argv})
 }
