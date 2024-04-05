@@ -104,7 +104,7 @@ describe('Schemat Tests', function () {
     // // Start a one-time bootstrap process and check if it completes without errors
     // describe('Bootstrap', function () {
     //     it('bootstrap', function (done) {
-    //         exec('node --experimental-vm-modules cluster/manage.js build', (error, stdout, stderr) => {
+    //         exec('node --experimental-vm-modules server/manage.js build', (error, stdout, stderr) => {
     //             if (error) {
     //                 console.error('Error during bootstrap:', stderr)
     //                 done(error)
@@ -130,7 +130,7 @@ describe('Schemat Tests', function () {
             // The inner "exec" is necessary to pass the SIGTERM signal to the child "node" process, otherwise the kill()
             // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
             // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
-            server = exec(`exec node --experimental-vm-modules cluster/manage.js --port ${PORT} run`, (error, stdout, stderr) => {
+            server = exec(`exec node --experimental-vm-modules server/manage.js --port ${PORT} run`, (error, stdout, stderr) => {
                 if (error) console.error('\nError during server startup:', '\n' + stderr)
                 else       console.error('\nServer stdout:', '\n' + stdout)
             })

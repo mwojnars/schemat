@@ -6,7 +6,7 @@ import {ServerSchemat} from "../core/schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
 import {DataServer, WebServer} from "./servers.js";
 import {Database} from "../db/db.js";
-import {Loader} from "../server/loader.js";
+import {Loader} from "./loader.js";
 
 
 /**********************************************************************************************************************/
@@ -67,7 +67,7 @@ export class WorkerProcess extends BackendProcess {
         // let m = await schemat.import('/system/local/test/temp1.js')
         // print('loaded:', m)
 
-        // let {WebServer} = await schemat.import('/system/local/cluster/servers.js')
+        // let {WebServer} = await schemat.import('/system/local/server/servers.js')
 
         print('Starting the server...')
         let web = new WebServer({host, port, workers})
