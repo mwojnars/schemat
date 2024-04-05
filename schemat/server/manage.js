@@ -5,14 +5,14 @@
     Usage:   node --experimental-vm-modules server/manage.js [run|move|reinsert] [options]
 */
 
-import node_url from "node:url";
-import node_path from "node:path";
-
+import node_path from "node:path"
+import node_url from "node:url"
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {print, T} from '../common/utils.js'
-import {Loader} from "./loader.js";
+import {Loader} from "./loader.js"
+import {AdminProcess, WorkerProcess} from "./processes.js"
 
 
 const HOST      = '127.0.0.1'
@@ -63,11 +63,12 @@ async function main() {
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
 
     const file = node_url.fileURLToPath(import.meta.url)            // or: process.argv[1]
-    const path = node_path.dirname(node_path.dirname(file))         // root folder of the project
+    const root = node_path.dirname(node_path.dirname(file))         // root folder of the project
+    // const root = node_path.dirname(import.meta.dirname)             // root folder of the project  -- this doesn't work in Mocha tests
 
     // create custom loader for dynamic module imports from the SUN namespace
-    let loader = new Loader(path)
-    let {AdminProcess, WorkerProcess} = await loader.import('/system/local/server/processes.js')
+    let loader = new Loader(root)
+    // let {AdminProcess, WorkerProcess} = await loader.import('/system/local/server/processes.js')
 
     let main_process = (cmd === 'run') ?
         new WorkerProcess(loader) :

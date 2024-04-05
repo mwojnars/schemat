@@ -1,5 +1,7 @@
-import {print, DependenciesStack, assert} from "../common/utils.js"
+import fs from 'node:fs'
 import vm from 'node:vm'
+
+import {print, DependenciesStack, assert} from '../common/utils.js'
 
 
 let _promises = new class extends DependenciesStack {
@@ -57,7 +59,7 @@ export class Loader {
         this.context ??= this._create_context()
 
         // standard JS import from non-SUN paths
-        if (path[0] !== '/') return DBG('P9', path, this._import_synthetic(path, path, referrer))
+        if (path[0] !== '/') return DBG('P9', path, this._import_synthetic(path, referrer))
 
         let module = this._get_cached(path, referrer)
         if (module) return module                   // a promise
@@ -65,8 +67,12 @@ export class Loader {
         // standard JS import if `path` starts with PATH_LOCAL_SUN: this guarantees that Schemat's system modules
         // can still be loaded during bootstrap phase before the SUN namespace is set up (!)
         // TODO: no custom linker configured in _import_synthetic(), why ??
-        if (path.startsWith(this.PATH_LOCAL_SUN + '/'))
-            return this._import_synthetic(path, this._js_import_file(path), referrer)
+        if (path.startsWith(this.PATH_LOCAL_SUN + '/')) {
+            let filename = this._js_import_file(path)
+            let source = fs.readFileSync(filename, {encoding: 'utf8'})                  // read source code from a local file
+            return this._parse_module(source, path, referrer)
+            // return this._import_synthetic(path, this._js_import_file(path), referrer)
+        }
 
         let source = await DBG('P1', path + '::text', schemat.site.route_internal(path + '::text'))
         if (!source) throw new Error(`import_module(), path not found: ${path}`)
@@ -115,25 +121,21 @@ export class Loader {
         // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
     }
 
-    async _import_synthetic(identifier, local_path, referrer) {
-        /* Import a module using standard import(), but return it as a vm.SyntheticModule, because a regular JS module
-           object is not accepted by the linker, plus we want the dependencies inside the module to be resolved through this Loader.
+    async _import_synthetic(path, referrer) {
+        /* Import a module using standard import(), but return it as a vm.SyntheticModule,
+           because a regular JS module object is not accepted by the linker.
          */
-        print('_import_synthetic():', identifier, `(from local ${local_path})`)
-        let mod_js  = await DBG('P2', local_path, import(local_path))
+        // print('_import_synthetic():', path)
+        let mod_js  = await DBG('P2', path, import(path))
         let module  = new vm.SyntheticModule(
             Object.keys(mod_js),
             function() { Object.entries(mod_js).forEach(([k, v]) => this.setExport(k, v)) },
-            {
-                identifier:                 identifier,
-                context:                    this.context,
-                importModuleDynamically:    this._linker,
-            }
+            {identifier: path, context: this.context}
         )
         module.referrer = referrer
 
-        await DBG('P3', local_path, module.link(() => {}))
-        await DBG('P4', local_path, module.evaluate())
+        await DBG('P3', path, module.link(() => {}))
+        await DBG('P4', path, module.evaluate())
         return {...module.namespace, __vmModule__: module}
     }
 
