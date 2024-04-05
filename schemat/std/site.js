@@ -143,112 +143,112 @@ export class Site extends Directory {
 
     /***  Dynamic imports  ***/
 
-    async import_module(path, referrer) {
-        /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
-        // TODO: cache module objects, parameter Site:cache_modules_ttl
-        // TODO: for circular dependency return an unfinished module (use cache for this)
-
-        print(`import_module():  ${path}  (ref: ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
-
-        // on a client, use standard import() via a URL, which still may point to a (remote) SUN object - no special handling needed
-        if(schemat.client_side) return import(this._js_import_url(path))
-
-        // make `path` absolute
-        if (path[0] === '.') {
-            if (!referrer) throw new Error(`missing referrer for a relative import path: '${path}'`)
-            path = referrer.identifier + '/../' + path          // referrer is a vm.Module
-        }
-
-        // path normalize: drop "schemat:", convert '.' and '..' segments
-        path = this._unprefix(path)
-        path = this._normalize(path)
-
-        // standard JS import from non-SUN paths
-        if (path[0] !== '/') return this._import_synthetic(path)
-
-        let module = schemat.registry.get_module(path)
-        if (module) {
-            print(`...from cache:  ${path}`)
-            return module
-        }
-
-        // // JS import if `path` starts with PATH_LOCAL_SUN; TODO: no custom linker configured in _import_synthetic(), why ??
-        // let local = schemat.PATH_LOCAL_SUN
-        // if (path.startsWith(local + '/'))
-        //     return this._import_synthetic(this._js_import_file(path))
-
-        let source = await this.route_internal(path + '::text')
-        if (!source) throw new Error(`Site.import_module(), path not found: ${path}`)
-
-        module = await this._parse_module(source, path)
-        print(`...from source:  ${path}`)
-
-        return module
-    }
-
-    async _import_synthetic(path) {
-        /* Import a module using standard import(), but return it as a vm.SyntheticModule (not a regular JS module). */
-        // print('_import_synthetic() path:', path)
-        const vm    = this._vm
-        let mod_js  = await import(path)
-        let context = vm.createContext(globalThis)
-        let module  = new vm.SyntheticModule(
-            Object.keys(mod_js),
-            function() { Object.entries(mod_js).forEach(([k, v]) => this.setExport(k, v)) },
-            {context, identifier: Site.DOMAIN_LOCAL + path}
-        )
-        await module.link(() => {})
-        await module.evaluate()
-        return {...module.namespace, __vmModule__: module}
-    }
-
-    async _parse_module(source, path) {
-
-        const vm = this._vm
-        // let context = vm.createContext(globalThis)
-        // let context = referrer?.context || vm.createContext({...globalThis, importLocal: p => import(p)})
-        // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
-
-        let identifier = Site.DOMAIN_SCHEMAT + path
-        let linker = async (specifier, ref, extra) => (print(specifier, ref) || await this.import_module(specifier, ref)).__vmModule__
-        let initializeImportMeta = (meta) => {meta.url = identifier}   // also: meta.resolve = ... ??
-
-        let module = new vm.SourceTextModule(source, {identifier, initializeImportMeta, importModuleDynamically: linker})    //context,
-
-        let flat_module = {__vmModule__: module}
-        schemat.registry.set_module(path, flat_module)      // the module must be registered already here, before linking, to handle circular dependencies
-
-        await module.link(linker)
-        await module.evaluate()
-
-        Object.assign(flat_module, module.namespace)
-        return flat_module
-        // return {...module.namespace, __vmModule__: module}
-    }
-
-    _unprefix(path) { return path.startsWith(Site.DOMAIN_SCHEMAT) ? path.slice(Site.DOMAIN_SCHEMAT.length) : path }
-
-    _normalize(path) {
-        /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
-        path = path.replaceAll('/./', '/')
-        let lead = path[0] === '/' ? path[0] : ''
-        if (lead) path = path.slice(1)
-
-        let parts = []
-        for (const part of path.split('/'))
-            if (part === '..')
-                if (!parts.length) throw new Error(`incorrect path: '${path}'`)
-                else parts.pop()
-            else parts.push(part)
-
-        return lead + parts.join('/')
-    }
-
-    _js_import_url(path) {
-        /* Schemat's client-side import path converted to a standard JS import URL for importing remote code from SUN namespace. */
-        return path + '::import'
-    }
-
+    // async import_module(path, referrer) {
+    //     /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
+    //     // TODO: cache module objects, parameter Site:cache_modules_ttl
+    //     // TODO: for circular dependency return an unfinished module (use cache for this)
+    //
+    //     print(`import_module():  ${path}  (ref: ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
+    //
+    //     // on a client, use standard import() via a URL, which still may point to a (remote) SUN object - no special handling needed
+    //     if(schemat.client_side) return import(this._js_import_url(path))
+    //
+    //     // make `path` absolute
+    //     if (path[0] === '.') {
+    //         if (!referrer) throw new Error(`missing referrer for a relative import path: '${path}'`)
+    //         path = referrer.identifier + '/../' + path          // referrer is a vm.Module
+    //     }
+    //
+    //     // path normalize: drop "schemat:", convert '.' and '..' segments
+    //     path = this._unprefix(path)
+    //     path = this._normalize(path)
+    //
+    //     // standard JS import from non-SUN paths
+    //     if (path[0] !== '/') return this._import_synthetic(path)
+    //
+    //     let module = schemat.registry.get_module(path)
+    //     if (module) {
+    //         print(`...from cache:  ${path}`)
+    //         return module
+    //     }
+    //
+    //     // // JS import if `path` starts with PATH_LOCAL_SUN; TODO: no custom linker configured in _import_synthetic(), why ??
+    //     // let local = schemat.PATH_LOCAL_SUN
+    //     // if (path.startsWith(local + '/'))
+    //     //     return this._import_synthetic(this._js_import_file(path))
+    //
+    //     let source = await this.route_internal(path + '::text')
+    //     if (!source) throw new Error(`Site.import_module(), path not found: ${path}`)
+    //
+    //     module = await this._parse_module(source, path)
+    //     print(`...from source:  ${path}`)
+    //
+    //     return module
+    // }
+    //
+    // async _import_synthetic(path) {
+    //     /* Import a module using standard import(), but return it as a vm.SyntheticModule (not a regular JS module). */
+    //     // print('_import_synthetic() path:', path)
+    //     const vm    = this._vm
+    //     let mod_js  = await import(path)
+    //     let context = vm.createContext(globalThis)
+    //     let module  = new vm.SyntheticModule(
+    //         Object.keys(mod_js),
+    //         function() { Object.entries(mod_js).forEach(([k, v]) => this.setExport(k, v)) },
+    //         {context, identifier: Site.DOMAIN_LOCAL + path}
+    //     )
+    //     await module.link(() => {})
+    //     await module.evaluate()
+    //     return {...module.namespace, __vmModule__: module}
+    // }
+    //
+    // async _parse_module(source, path) {
+    //
+    //     const vm = this._vm
+    //     // let context = vm.createContext(globalThis)
+    //     // let context = referrer?.context || vm.createContext({...globalThis, importLocal: p => import(p)})
+    //     // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
+    //
+    //     let identifier = Site.DOMAIN_SCHEMAT + path
+    //     let linker = async (specifier, ref, extra) => (print(specifier, ref) || await this.import_module(specifier, ref)).__vmModule__
+    //     let initializeImportMeta = (meta) => {meta.url = identifier}   // also: meta.resolve = ... ??
+    //
+    //     let module = new vm.SourceTextModule(source, {identifier, initializeImportMeta, importModuleDynamically: linker})    //context,
+    //
+    //     let flat_module = {__vmModule__: module}
+    //     schemat.registry.set_module(path, flat_module)      // the module must be registered already here, before linking, to handle circular dependencies
+    //
+    //     await module.link(linker)
+    //     await module.evaluate()
+    //
+    //     Object.assign(flat_module, module.namespace)
+    //     return flat_module
+    //     // return {...module.namespace, __vmModule__: module}
+    // }
+    //
+    // _unprefix(path) { return path.startsWith(Site.DOMAIN_SCHEMAT) ? path.slice(Site.DOMAIN_SCHEMAT.length) : path }
+    //
+    // _normalize(path) {
+    //     /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
+    //     path = path.replaceAll('/./', '/')
+    //     let lead = path[0] === '/' ? path[0] : ''
+    //     if (lead) path = path.slice(1)
+    //
+    //     let parts = []
+    //     for (const part of path.split('/'))
+    //         if (part === '..')
+    //             if (!parts.length) throw new Error(`incorrect path: '${path}'`)
+    //             else parts.pop()
+    //         else parts.push(part)
+    //
+    //     return lead + parts.join('/')
+    // }
+    //
+    // _js_import_url(path) {
+    //     /* Schemat's client-side import path converted to a standard JS import URL for importing remote code from SUN namespace. */
+    //     return path + '::import'
+    // }
+    //
     // _js_import_file(path) {
     //     /* Schemat's server-side import path (/system/local/...) converted to a local filesystem path that can be used with standard import(). */
     //     let local = schemat.PATH_LOCAL_SUN
