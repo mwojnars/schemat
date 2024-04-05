@@ -6,7 +6,6 @@ import {ServerSchemat} from "../core/schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
 import {DataServer, WebServer} from "./servers.js";
 import {Database} from "../db/db.js";
-import {Loader} from "./loader.js";
 
 
 /**********************************************************************************************************************/
@@ -19,15 +18,9 @@ export class BackendProcess {
     }
 
     async start(cmd, opts = {}) {
-        // const mod_url  = await import('node:url')
-        // const mod_path = await import('node:path')
-        // const __filename = mod_url.fileURLToPath(import.meta.url)       // or: process.argv[1]
-        // const __dirname  = mod_path.dirname(mod_path.dirname(__filename))
-        const config = await this.load_config()
-
-        // let {ServerSchemat} = await loader.bootstrap_import('../core/schemat_srv.js', '/system/local/core/schemat_srv.js')
-
+        let config = await this.load_config()
         let db = Database.create()
+
         await ServerSchemat.create_global(config.site, db, db => this._boot(db, config))
         // await schemat.db.insert_self()
 
