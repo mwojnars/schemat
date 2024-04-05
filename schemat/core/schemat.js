@@ -289,7 +289,7 @@ export class Schemat {
            IMPORTANT: a new global context is created every time a module is imported using this method,
                       so this method should be called only ONCE when the process is starting.
          */
-        let module = this.client_side ? import(this._js_import_url(path)) : this.loader.import_module(path)
+        let module = this.client_side ? import(this._js_import_url(path)) : this.loader.import(path)
         return name ? (await module)[name] : module
     }
 

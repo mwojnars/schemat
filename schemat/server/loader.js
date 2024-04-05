@@ -36,7 +36,7 @@ export class Loader {
         this._linker = this._linker.bind(this)
     }
 
-    async import_module(path, referrer) {
+    async import(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
 
         // print(`import_module():  ${path}  (from ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
@@ -154,7 +154,7 @@ export class Loader {
     }
 
     async _linker(specifier, ref, extra) {
-        return (await DBG(null, specifier, this.import_module(specifier, ref))).__vmModule__    //print(specifier, ref) ||
+        return (await DBG(null, specifier, this.import(specifier, ref))).__vmModule__    //print(specifier, ref) ||
     }
 
 
