@@ -97,6 +97,14 @@ async function test_react_page(page, url, selector = null, strings = []) {
 
 /**********************************************************************************************************************/
 
+describe('Node.js Version Test', function() {
+    it('Node.js version', function() {
+        const ver = process.version
+        console.log('Current Node.js version:', ver)
+        assert.ok(ver)
+    })
+})
+
 
 describe('Schemat Tests', function () {
     this.timeout(10000)         // Extended timeout for asynchronous tests
