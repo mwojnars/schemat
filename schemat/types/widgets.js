@@ -185,7 +185,8 @@ export class CODE_Widget extends TEXT_Widget {
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/theme-textmate.min.js" integrity="sha512-VE1d8sDypa2IvfFGVnil5k/xdGWtLTlHk/uM0ojHH8b2RRF75UeUBL9btDB8Hhe7ei0TT8NVuHFxWxh5NhdepQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
     <script>ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/")</script>
     `
-    // static style_path = import.meta.resolve('./widgets.css')
+
+    static style_path = import.meta.resolve('./widgets.css')
 
     static style = new Style('CODE', this, {},
     `

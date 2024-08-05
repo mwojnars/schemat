@@ -19,6 +19,15 @@ export class Assets {
     assets = new Set()
     styles = new Set()
 
+    add_style_path(path) {
+        /* `path` is the full local path to a file, typically retrieved with import.meta.resolve(RELATIVE_FILE_PATH). */
+        if (!path) return
+        if (path.startsWith('file://')) path = path.slice(7)        // trim leading 'file://' from the path if present
+        path = path.replace('/home/marcin/Documents/Catalog/schemat/src/schemat', '/system/local')
+        this.add_asset(`<link href="${path}" rel="stylesheet" />`)
+        // file:///home/marcin/Documents/Catalog/schemat/src/schemat/types/widgets.css  -->  /system/local/types/widgets.css
+    }
+
     add_style(st)    { if (st?.trim()) this.styles.add(st.trim()) }
     add_asset(asset) {
         /* `asset` can be a plain string to be inserted in the <head> section, or a list of assets,
@@ -135,6 +144,7 @@ export const Styled = (baseclass) => class extends baseclass {
     static collect(assets) {
         /* Walk through a prototype chain of `this` class to collect all .style's and .assets into an Assets object. */
         for (let cls of T.getPrototypes(this)) {
+            assets.add_style_path(cls.style_path)
             assets.add_style(cls.style?.css)
             assets.add_asset(cls.assets)
         }
