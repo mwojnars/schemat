@@ -80,6 +80,15 @@ export class Site extends Directory {
         return [url, last_blank]
     }
 
+    translate_local(path) {
+        /* Convert a local file path to its corresponding public URL path. */
+        if (path.startsWith('file://')) path = path.slice(7)                        // trim leading 'file://' if present
+        let root = '/home/marcin/Documents/Catalog/schemat/src/schemat/'
+        if (!path.startsWith(root)) throw new Error(`path is not accessible via URL: ${path}`)
+        return path.replace(root, '/system/local/')
+        // file:///home/marcin/Documents/Catalog/schemat/src/schemat/types/widgets.css  -->  /system/local/types/widgets.css
+    }
+
 
     /***  Request resolution  ***/
 

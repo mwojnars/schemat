@@ -22,10 +22,8 @@ export class Assets {
     add_style_path(path) {
         /* `path` is the full local path to a file, typically retrieved with import.meta.resolve(RELATIVE_FILE_PATH). */
         if (!path) return
-        if (path.startsWith('file://')) path = path.slice(7)        // trim leading 'file://' from the path if present
-        path = path.replace('/home/marcin/Documents/Catalog/schemat/src/schemat', '/system/local')
-        this.add_asset(`<link href="${path}" rel="stylesheet" />`)
-        // file:///home/marcin/Documents/Catalog/schemat/src/schemat/types/widgets.css  -->  /system/local/types/widgets.css
+        let url = schemat.site.translate_local(path)
+        this.add_asset(`<link href="${encodeURI(url)}" rel="stylesheet" />`)
     }
 
     add_style(st)    { if (st?.trim()) this.styles.add(st.trim()) }
