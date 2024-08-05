@@ -2,7 +2,7 @@ import {set_global} from "../common/globals.js"
 import {print, assert, T, delay} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Edit, Request} from '../item.js'
-import {Container, Directory, ID_Namespace} from "./containers.js";
+import {Container, Directory, IID_Namespace} from "./containers.js";
 import {JsonService} from "../services.js";
 
 
@@ -55,7 +55,7 @@ export class Site extends Directory {
         assert(default_container._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
 
         // ...and that this container is an ID_Namespace, so it is compatible with the URL generation on the client
-        assert(default_container._category_.name === 'ID_Namespace', `container [${this._id_}] at the default path ('${this.default_path}') must be an ID_Namespace`)
+        assert(default_container._category_.name === 'IID_Namespace', `container [${this._id_}] at the default path ('${this.default_path}') must be an IID_Namespace`)
     }
 
     default_path_of(object_or_id) {

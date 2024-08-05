@@ -119,7 +119,7 @@ export class Namespace extends Container {
 }
 
 
-export class ID_Namespace extends Namespace {
+export class IID_Namespace extends Namespace {
     /* All objects accessible through the raw numeric ID url path of the form: /ID */
 
     resolve(path) {
@@ -138,7 +138,7 @@ export class ID_Namespace extends Namespace {
     }
 }
 
-export class CategoryID_Namespace extends Namespace {
+export class Category_IID_Namespace extends Namespace {
     /*
     A collection of objects accessible through human-readable paths of the form: CATEGORY:ID,
     where CATEGORY is a category-specific text qualifier defined in `spaces` property.
@@ -150,7 +150,7 @@ export class CategoryID_Namespace extends Namespace {
 
     resolve(path) {
         assert(path, `path must be non-empty`)
-        let sep = CategoryID_Namespace.ID_SEPARATOR
+        let sep = Category_IID_Namespace.ID_SEPARATOR
         let [space, id, ...rest] = path.split(sep)
         let category = this.spaces.get(space)               // decode space identifier and convert to a category object
         if (!category || rest.length) throw new UrlPathNotFound({path})
@@ -158,7 +158,7 @@ export class CategoryID_Namespace extends Namespace {
     }
 
     identify(item) {
-        let sep = CategoryID_Namespace.ID_SEPARATOR
+        let sep = Category_IID_Namespace.ID_SEPARATOR
         let spaces_rev = this.spaces_rev
         let space = spaces_rev.get(item._category_?._id_)
         if (space) return `${space}${sep}${item._id_}`

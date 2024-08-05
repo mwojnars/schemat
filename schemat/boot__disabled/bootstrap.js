@@ -80,17 +80,17 @@ async function create_categories(Category) {
 
     cat.Namespace = await Category.new(7, {
         name        : "Namespace",
-        info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
+        info        : "",
     })
-    cat.ID_Namespace = await Category.new(8, {
-        name        : "ID_Namespace",
+    cat.IID_Namespace = await Category.new(8, {
+        name        : "IID_Namespace",
         info        : "Namespace that serves items on simple URLs of the form /IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
         fields      : C({
-            category    : new ITEM({category: Category, info: "Optional category(ies) of items handled by this application."}),
+            category    : new ITEM({category: Category, info: "Optional category(ies) of items handled by this namespace."}),
         }),
     })
-    cat.CategoryID_Namespace = await Category.new(9, {
-        name        : "CategoryID_Namespace",
+    cat.Category_IID_Namespace = await Category.new(9, {
+        name        : "Category_IID_Namespace",
         info        : "Namespace for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         fields      : C({spaces: new CATALOG({values: new ITEM({category: Category})})}),
     })

@@ -283,18 +283,18 @@
     "@": 0
   "@": base.Data
 - __id: 8
-  name: ID_Namespace
+  name: IID_Namespace
   info: Namespace that serves items on simple URLs of the form /IID. Mainly used
     for system & admin purposes, or as a last-resort default for URL generation.
   schema:
     category:
       category:
         "@": 0
-      info: Optional category(ies) of items handled by this application.
+      info: Optional category(ies) of items handled by this namespace.
       "@": type.ITEM
     "@": base.Catalog
   defaults:
-    _class_: std.ID_Namespace
+    _class_: std.IID_Namespace
     "@": base.Catalog
   _extends_:
     "@": 7
@@ -302,7 +302,7 @@
     "@": 0
   "@": base.Data
 - __id: 9
-  name: CategoryID_Namespace
+  name: Category_IID_Namespace
   info: "Namespace for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
@@ -315,7 +315,7 @@
       "@": type.CATALOG
     "@": base.Catalog
   defaults:
-    _class_: std.CategoryID_Namespace
+    _class_: std.Category_IID_Namespace
     "@": base.Catalog
   _extends_:
     "@": 7
