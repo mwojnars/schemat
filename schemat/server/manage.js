@@ -68,6 +68,8 @@ async function main() {
 
     // create custom loader for dynamic module imports from the SUN namespace
     let loader = new Loader(root)
+
+    // TODO: this line must be uncommented if dynamic code loading is needed (!!!); however, currently the dynamic loading causes errors for unknown reasons
     // let {AdminProcess, WorkerProcess} = await loader.import('/system/local/server/processes.js')
 
     let main_process = (cmd === 'run') ?
