@@ -605,10 +605,10 @@ export class Item {
             if (!container._path_) await container._meta_.pending_url       // container's path must be initialized
 
             this._path_ = container.get_access_path(this)
-            let [url, duplicate] = site.path_to_url(this._path_)
+            let [url, is_duplicate] = site.decode_access_path(this._path_)
             // print('_init_url():', url, ` (duplicate=${duplicate})`)
 
-            return this._url_ = duplicate ? default_path() : url
+            return this._url_ = is_duplicate ? default_path() : url
         }
         finally {
             this._meta_.pending_url = undefined

@@ -67,7 +67,7 @@ export class Site extends Directory {
         return this.default_path + `/${id}`
     }
 
-    path_to_url(path) {
+    decode_access_path(path) {
         /* Convert a container access path to a URL path by removing all blank segments (/*xxx).
            NOTE 1: if the last segment is blank, the result URL can be a duplicate of the URL of a parent or ancestor container (!);
            NOTE 2: even if the last segment is not blank, the result URL can still be a duplicate of the URL of a sibling object,

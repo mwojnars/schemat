@@ -66,7 +66,7 @@ export class Container extends Item {
     //        - duplicate=true if the `url` is a duplicate of an ancestor's URL path, due to a terminal blank segment.
     //        The `item` should be a member of this container.
     //      */
-    //     return this.path_to_url(this.get_access_path(item))
+    //     return this.decode_access_path(this.get_access_path(item))
     // }
 }
 
