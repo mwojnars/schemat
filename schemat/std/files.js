@@ -59,17 +59,6 @@ export class File extends Item {
     //     return module[symbol]
     // }
 
-    // setMimeType(res, path) {
-    //     // use the `mimetype` property if present...
-    //     let mimetype = this.mimetype
-    //     if (mimetype) return res.type(mimetype)
-    //
-    //     // ...otherwise, set Content-Type to match the URL path's extension, like in .../file.EXT
-    //     let name = path.split('/').pop()
-    //     let ext  = name.split('.').pop()
-    //     if (ext !== name) res.type(ext)
-    // }
-
     static ['CALL/text'] = new InternalService(function (request)
     {
         /* Plain text of this File for Site.import() etc. */
@@ -80,8 +69,8 @@ export class File extends Item {
 
     static ['GET/file'] = new HttpService(function (request)
     {
-        // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
-        _set_mimetype(request.res, request.path)
+        // plain text sent over HTTP with a MIME type inferred from URL file extension
+        _set_mimetype(request.res, request.path, this.mimetype)
         let txt = this.content_processed
         if (txt === undefined) request.throwNotFound()
         return txt
