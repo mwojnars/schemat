@@ -31,6 +31,7 @@ export class Site extends Directory {
     database
     entries
     default_path
+    root_folder
     cache_purge_interval
 
 
@@ -83,10 +84,9 @@ export class Site extends Directory {
     translate_local(path) {
         /* Convert a local file path to its corresponding public URL path. */
         if (path.startsWith('file://')) path = path.slice(7)                        // trim leading 'file://' if present
-        let root = '/home/marcin/Documents/Catalog/schemat/src/schemat/'
+        let root = this.root_folder
         if (!path.startsWith(root)) throw new Error(`path is not accessible via URL: ${path}`)
         return path.replace(root, '/system/local/')
-        // file:///home/marcin/Documents/Catalog/schemat/src/schemat/types/widgets.css  -->  /system/local/types/widgets.css
     }
 
 

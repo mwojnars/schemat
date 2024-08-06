@@ -160,6 +160,10 @@
         its ID. For internal purposes. Should contain a leading slash and no
         trailing slash.
       "@": type.PATH
+    root_folder:
+      info: Local filesystem path of the root directory containing source code for
+        this site.
+      "@": type.STRING
     _path_:
       default: /
       "@": type.STRING
