@@ -129,9 +129,6 @@ export class LocalFolder extends Directory {
         let buffer = this._mod_fs.readFileSync(file_path)
         _set_mimetype(res, file_path)
         res.send(buffer)
-
-        // if (res) res.sendFile(file_path)
-        // else return this._mod_fs.readFileSync(file_path, {encoding: 'utf8'})
     }
 }
 
