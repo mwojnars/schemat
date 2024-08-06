@@ -25,9 +25,10 @@ export class Container extends Item {
     contains(name) { return true }
 
     resolve(path, explicit_blank = false) {
-        /* Find an object pointed to by `path` in this or a nested container. Return the object in a loaded state.
-           A Promise can be returned (!) if an async operation has to be performed during the computation;
-           or the final result otherwise - check if the result is a Promise to avoid unnecessary awaiting.
+        /* Find the web object pointed to by `path` and located inside this container or a nested one.
+           Return the object, in loaded state. Alternatively, a function, f(request), can be returned to perform
+           the remaining part of the request handling process.
+           This method may return a Promise if an async operation has to be performed during the computation.
 
            The path is relative to this container's base path and should NOT contain a leading slash.
            If `explicit_blank` is true, the path is an internal "container path" that includes explicit blank segment(s)

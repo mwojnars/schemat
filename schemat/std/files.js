@@ -98,7 +98,7 @@ export class FileLocal extends File {
 }
 
 export class LocalFolder extends Directory {
-    /* A folder on the local filesystem containing a number of files (no objects). */
+    /* A folder on the local filesystem containing files and subfolders (no objects). */
 
     local_path
 
@@ -110,10 +110,7 @@ export class LocalFolder extends Directory {
     }
 
     resolve(path) {
-        // create a fake Item object to wrap up a local file
-        return {
-            __handle__: (request) => this._read_file(path, request.res),
-        }
+        return (request) => this._read_file(path, request.res)
     }
 
     _read_file(url_path, res) {

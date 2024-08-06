@@ -138,7 +138,7 @@ export class Site extends Directory {
     }
 
     async route(request, explicit_blank = false) {
-        /* Find the object pointed by the request's URL path and execute its endpoint function. */
+        /* Find the object pointed to by the request's URL path and execute its endpoint function through __handle__(). */
         let path = request.path.slice(1)                // drop the leading slash
         let object = await this.resolve(path, explicit_blank)
 
@@ -146,7 +146,8 @@ export class Site extends Directory {
         //     // TODO: redirect to the canonical URL
         // }
 
-        return object.__handle__(request)
+        // if `object` is a tail function, call it with the request; otherwise, call its __handle__ method
+        return typeof object === 'function' ? object(request) : object.__handle__(request)
     }
 
 
