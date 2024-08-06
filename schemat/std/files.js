@@ -13,6 +13,18 @@ import {UrlPathNotFound} from "../common/errors.js";
 
 /**********************************************************************************************************************/
 
+function _set_mimetype(res, path, mimetype = null) {
+    /* Set the Content-Type header of the HTTP response `res` based on the file's extension in `path` or `mimetype`. */
+    if (mimetype) return res.type(mimetype)
+
+    let name = path.split('/').pop()
+    let ext = name.split('.').pop()
+    if (ext !== name) res.type(ext)
+}
+
+
+/**********************************************************************************************************************/
+
 export class File extends Item {
 
     content
@@ -47,16 +59,16 @@ export class File extends Item {
     //     return module[symbol]
     // }
 
-    setMimeType(res, path) {
-        // use the `mimetype` property if present...
-        let mimetype = this.mimetype
-        if (mimetype) return res.type(mimetype)
-
-        // ...otherwise, set Content-Type to match the URL path's extension, like in .../file.EXT
-        let name = path.split('/').pop()
-        let ext  = name.split('.').pop()
-        if (ext !== name) res.type(ext)
-    }
+    // setMimeType(res, path) {
+    //     // use the `mimetype` property if present...
+    //     let mimetype = this.mimetype
+    //     if (mimetype) return res.type(mimetype)
+    //
+    //     // ...otherwise, set Content-Type to match the URL path's extension, like in .../file.EXT
+    //     let name = path.split('/').pop()
+    //     let ext  = name.split('.').pop()
+    //     if (ext !== name) res.type(ext)
+    // }
 
     static ['CALL/text'] = new InternalService(function (request)
     {
@@ -69,7 +81,7 @@ export class File extends Item {
     static ['GET/file'] = new HttpService(function (request)
     {
         // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
-        this.setMimeType(request.res, request.path)
+        _set_mimetype(request.res, request.path)
         let txt = this.content_processed
         if (txt === undefined) request.throwNotFound()
         return txt
@@ -119,11 +131,18 @@ export class LocalFolder extends Directory {
 
         if (!root) throw new Error('missing `path` property in a LocalFolder')
         let file_path = this._mod_path.join(root, url_path)         // this reduces the '..' special symbols, so we have to check
-        if (!file_path.startsWith(root))                            // if the final path still falls under the `root`, for security
+        if (!file_path.startsWith(root))                            // if the final path still falls under the `root`, for safety
             throw new UrlPathNotFound({path: url_path})
 
-        if (res) res.sendFile(file_path)
-        else return this._mod_fs.readFileSync(file_path, {encoding: 'utf8'})
+        // TODO: the code below implements CALL requests and should return a buffer instead (no utf-8 decoding) to support all files incl. binary
+        if (!res) return this._mod_fs.readFileSync(file_path, {encoding: 'utf8'})
+
+        let buffer = this._mod_fs.readFileSync(file_path)
+        _set_mimetype(res, file_path)
+        res.send(buffer)
+
+        // if (res) res.sendFile(file_path)
+        // else return this._mod_fs.readFileSync(file_path, {encoding: 'utf8'})
     }
 }
 
