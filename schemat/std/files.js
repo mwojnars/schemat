@@ -19,7 +19,17 @@ function _set_mimetype(res, path, mimetype = null) {
 
     let name = path.split('/').pop()
     let ext = name.split('.').pop()
-    if (ext !== name) res.type(ext)
+    if (ext === name) return                    // no extension found
+
+    const substitutions = {
+        'pcss': 'css',                          // PostCSS
+    }
+
+    // make lowercase and apply substitutions
+    ext = ext.toLowerCase()
+    if (ext in substitutions) ext = substitutions[ext]
+
+    res.type(ext)
 }
 
 
@@ -123,12 +133,55 @@ export class LocalFolder extends Directory {
         if (!file_path.startsWith(root))                            // if the final path still falls under the `root`, for safety
             throw new UrlPathNotFound({path: url_path})
 
-        // TODO: the code below implements CALL requests and should return a buffer instead (no utf-8 decoding) to support all files incl. binary
-        if (!res) return this._mod_fs.readFileSync(file_path, {encoding: 'utf8'})
+        // file transforms to be applied
+        let transforms = [
+            this._transform_postcss.bind(this),
+        ]
 
         let buffer = this._mod_fs.readFileSync(file_path)
+        buffer = this._apply_transforms(transforms, buffer, file_path)
+
+        // TODO: the code below implements CALL requests and should return a buffer instead (no utf-8 decoding) to support all files incl. binary
+        if (!res) {
+            print(`LocalFolder._read_file(): CALL request received for '${file_path}', returning file content as a string not binary`)
+            return this._mod_fs.readFileSync(file_path, {encoding: 'utf8'})
+        }
+
         _set_mimetype(res, file_path)
         res.send(buffer)
+    }
+
+    _apply_transforms(transforms, buffer, file_path) {
+        /* Perform all `transforms` that apply to a given file whose content is provided in a `buffer`. */
+
+        let content = buffer.toString('utf8')
+        let ext = file_path.split('.').pop().toLowerCase()
+
+        try {
+            for (let transform of transforms) {
+                let result = transform(buffer, content, file_path, ext)
+                if (result) {
+                    buffer = result
+                    content = buffer.toString('utf8')
+                }
+            }
+        }
+        catch (e) {
+            print('Error transforming file content:', e)
+        }
+        return buffer
+    }
+
+    _transform_postcss(buffer, content, file_path, ext) {
+        // apply PostCSS transformations
+        let header = content.split('\n').slice(0, 10).join('\n')
+        let postcss_directive = /\/\*\s*(?:@)?postcss\s*\*\/|@use\s+postcss\s*;/i
+
+        let eligible = (ext === 'pcss' || ext === 'postcss' || (ext === 'css' && postcss_directive.test(header)))
+        if (!eligible) return null
+
+        let result = postcss().process(content, {from: file_path})
+        return Buffer.from(result.css, "utf-8")
     }
 }
 
