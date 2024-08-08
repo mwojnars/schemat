@@ -12,8 +12,6 @@ import {UrlPathNotFound} from "../common/errors.js";
 // import {transform_postcss} from "./transforms.js"
 
 let transforms_js = await tryimport(import.meta.resolve('./transforms.js'))
-// print('transforms_js:', transforms_js)
-// print('transform_postcss:', transform_postcss)
 
 
 /**********************************************************************************************************************/
@@ -129,7 +127,7 @@ export class LocalFolder extends Directory {
         return (request) => this._read_file(path, request.res)
     }
 
-    _read_file(url_path, res) {
+    async _read_file(url_path, res) {
         let root = this.local_path
         root = this._mod_path.resolve(root)                         // make `root` an absolute path
 
@@ -144,7 +142,7 @@ export class LocalFolder extends Directory {
         ]
 
         let buffer = this._mod_fs.readFileSync(file_path)
-        buffer = this._apply_transforms(transforms, buffer, file_path)
+        buffer = await this._apply_transforms(transforms, buffer, file_path)
 
         // TODO: the code below implements CALL requests and should return a buffer instead (no utf-8 decoding) to support all files incl. binary
         if (!res) {
@@ -156,7 +154,7 @@ export class LocalFolder extends Directory {
         res.send(buffer)
     }
 
-    _apply_transforms(transforms, buffer, file_path) {
+    async _apply_transforms(transforms, buffer, file_path) {
         /* Perform all eligible `transforms` of the file whose content is provided in a `buffer`. */
 
         let content = buffer.toString('utf8')
@@ -165,6 +163,7 @@ export class LocalFolder extends Directory {
         try {
             for (let transform of transforms) {
                 let result = transform(buffer, content, file_path, ext)
+                if (result instanceof Promise) result = await result
                 if (result) {
                     buffer = result
                     content = buffer.toString('utf8')
@@ -176,22 +175,22 @@ export class LocalFolder extends Directory {
         return buffer
     }
 
-    _transform_postcss(buffer, content, file_path, ext) {
-        /* Transform a css file via PostCSS. */
+    async _transform_postcss(buffer, content, file_path, ext) {
+        /* Transform a css file via PostCSS. The file must either have .scss or .postcss extension, or contain
+           a directive in the first 10 lines: `/* @postcss *\/` or `@use postcss;`.
+         */
 
         let header = content.split('\n').slice(0, 10).join('\n')
-        let postcss_directive = /\/\*\s*(?:@)?postcss\s*\*\/|@use\s+postcss\s*;/i
+        let postcss_directive = /\/\*\s*@postcss\s*\*\/|@use\s+postcss\s*;/i
 
         let eligible = (ext === 'pcss' || ext === 'postcss' || (ext === 'css' && postcss_directive.test(header)))
         if (!eligible) return null
 
         assert(transforms_js, "transforms.js not imported")
-        const transform_postcss = transforms_js.transform_postcss
+        let output = await transforms_js.transform_postcss(content, file_path)
 
-        let output = transform_postcss(content, file_path)
-
-        print('\n_transform_postcss() input:\n', content)
-        print('\n_transform_postcss() output\n:', output)
+        // print('\n_transform_postcss() input:\n', content)
+        // print('\n_transform_postcss() output:\n', output)
 
         return Buffer.from(output, "utf-8")
     }
