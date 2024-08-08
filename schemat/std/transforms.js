@@ -19,10 +19,10 @@ function postcssScoping() {
             let currentWidgetName = null
             let nestedLevel = 0
 
-            root.walkComments(comment => {
-                const match = comment.text.match(/^\s*widget:\s*(\w+)\s*$/)
-                if (match) currentWidgetName = match[1]
-            })
+            // root.walkComments(comment => {
+            //     const match = comment.text.match(/^\s*widget:\s*(\w+)\s*$/)
+            //     if (match) currentWidgetName = match[1]
+            // })
 
             root.walk(node => {
                 if (node.type === "rule") {
@@ -59,39 +59,35 @@ function postcssScoping() {
     }
 }
 
-async function processCss(css) {
-    try {
-        const result = await postcss([
-            postcssImport(),
-            postcssMixins(),
-            postcssNested(),
-            postcssSimpleVars(),
-            postcssCustomProperties(),
-            postcssScoping(),
-        ]).process(css, { from: undefined })
-        return result.css
-    } catch (error) {
-        console.error("CSS processing error:", error)
-    }
+export async function transform_postcss(css, filepath) {
+    const result = await postcss([
+        postcssImport(),
+        postcssMixins(),
+        postcssNested(),
+        postcssSimpleVars(),
+        postcssCustomProperties(),
+        postcssScoping(),
+    ]).process(css, {from: filepath})
+    return result.css
 }
 
-// Example usage
-const inputCss = `
-/* widget: Widget1 */
-.move|                        { margin-right: 10px; visibility: hidden; }
-:is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; }
-.moveup|::after               { content: "△"; }
-
-.Widget2 {
-    .move|                    { margin-left: 10px; visibility: visible; }
-    :is(.moveup,.movedown)|   { font-size: 1em; line-height: 1.2em; }
-    .movedown|::after         { content: "▽"; }
-}
-`
-
-async function main() {
-    const outputCss = await processCss(inputCss)
-    console.log(outputCss)
-}
-
-main()
+// // Example usage
+// const inputCss = `
+// /* widget: Widget1 */
+// .move|                        { margin-right: 10px; visibility: hidden; }
+// :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; }
+// .moveup|::after               { content: "△"; }
+//
+// .Widget2 {
+//     .move|                    { margin-left: 10px; visibility: visible; }
+//     :is(.moveup,.movedown)|   { font-size: 1em; line-height: 1.2em; }
+//     .movedown|::after         { content: "▽"; }
+// }
+// `
+//
+// async function main() {
+//     const outputCss = await processCss(inputCss)
+//     console.log(outputCss)
+// }
+//
+// main()

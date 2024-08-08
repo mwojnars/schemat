@@ -4,11 +4,16 @@
  **
  */
 
-import {print} from "../common/utils.js"
+import {print, assert, tryimport} from "../common/utils.js"
 import {Item} from "../item.js"
 import {HttpService, InternalService} from "../services.js"
 import {Directory} from "./containers.js";
 import {UrlPathNotFound} from "../common/errors.js";
+// import {transform_postcss} from "./transforms.js"
+
+let transforms_js = await tryimport(import.meta.resolve('./transforms.js'))
+// print('transforms_js:', transforms_js)
+// print('transform_postcss:', transform_postcss)
 
 
 /**********************************************************************************************************************/
@@ -143,7 +148,7 @@ export class LocalFolder extends Directory {
 
         // TODO: the code below implements CALL requests and should return a buffer instead (no utf-8 decoding) to support all files incl. binary
         if (!res) {
-            print(`LocalFolder._read_file(): CALL request received for '${file_path}', returning file content as a string not binary`)
+            assert(false, `LocalFolder._read_file(): CALL request received for '${file_path}', returning file content as a string not binary`)
             return this._mod_fs.readFileSync(file_path, {encoding: 'utf8'})
         }
 
@@ -166,21 +171,29 @@ export class LocalFolder extends Directory {
                 }
             }
         }
-        catch (e) { print('Error transforming file content:', e) }
+        catch (e) { console.error('Error transforming file content:', e) }
 
         return buffer
     }
 
     _transform_postcss(buffer, content, file_path, ext) {
-        // apply PostCSS transformations
+        /* Transform a css file via PostCSS. */
+
         let header = content.split('\n').slice(0, 10).join('\n')
         let postcss_directive = /\/\*\s*(?:@)?postcss\s*\*\/|@use\s+postcss\s*;/i
 
         let eligible = (ext === 'pcss' || ext === 'postcss' || (ext === 'css' && postcss_directive.test(header)))
         if (!eligible) return null
 
-        let result = postcss().process(content, {from: file_path})
-        return Buffer.from(result.css, "utf-8")
+        assert(transforms_js, "transforms.js not imported")
+        const transform_postcss = transforms_js.transform_postcss
+
+        let output = transform_postcss(content, file_path)
+
+        print('\n_transform_postcss() input:\n', content)
+        print('\n_transform_postcss() output\n:', output)
+
+        return Buffer.from(output, "utf-8")
     }
 }
 

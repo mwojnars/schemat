@@ -51,11 +51,11 @@ export function trycatch(func, fail = null) {
 }
 
 export async function tryimport(path, property = null) {
-    /* Same as `await import(path)`, but returns undefined if the import fails. */
+    /* Same as `await import(path)`, but returns undefined if the import fails. The path must be absolute (!). */
     try {
+        assert(!path.startsWith('.'), `tryimport(): path must be absolute, got '${path}'`)
         let module = await import(path)
-        if (property) return module[property]
-        return module
+        return property ? module[property] : module
     } catch(ex) {}
 }
 
