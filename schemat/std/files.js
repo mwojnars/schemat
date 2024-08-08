@@ -152,7 +152,7 @@ export class LocalFolder extends Directory {
     }
 
     _apply_transforms(transforms, buffer, file_path) {
-        /* Perform all `transforms` that apply to a given file whose content is provided in a `buffer`. */
+        /* Perform all eligible `transforms` of the file whose content is provided in a `buffer`. */
 
         let content = buffer.toString('utf8')
         let ext = file_path.split('.').pop().toLowerCase()
@@ -166,9 +166,8 @@ export class LocalFolder extends Directory {
                 }
             }
         }
-        catch (e) {
-            print('Error transforming file content:', e)
-        }
+        catch (e) { print('Error transforming file content:', e) }
+
         return buffer
     }
 
