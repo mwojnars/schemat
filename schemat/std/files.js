@@ -4,14 +4,13 @@
  **
  */
 
-import {print, assert, tryimport} from "../common/utils.js"
+import {print, assert} from "../common/utils.js"
 import {Item} from "../item.js"
 import {HttpService, InternalService} from "../services.js"
 import {Directory} from "./containers.js";
 import {UrlPathNotFound} from "../common/errors.js";
-// import {transform_postcss} from "./transforms.js"
 
-let transforms_js = await tryimport(import.meta.resolve('./transforms.js'))
+const {transform_postcss} = !isBrowser && await import("./transforms.js")
 
 
 /**********************************************************************************************************************/
@@ -186,8 +185,8 @@ export class LocalFolder extends Directory {
         let eligible = (ext === 'pcss' || ext === 'postcss' || (ext === 'css' && postcss_directive.test(header)))
         if (!eligible) return null
 
-        assert(transforms_js, "transforms.js not imported")
-        let output = await transforms_js.transform_postcss(content, file_path)
+        assert(transform_postcss, "transforms.js not imported")
+        let output = await transform_postcss(content, file_path)
 
         // print('\n_transform_postcss() input:\n', content)
         // print('\n_transform_postcss() output:\n', output)
