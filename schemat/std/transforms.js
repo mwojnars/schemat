@@ -12,7 +12,7 @@ import postcssCustomProperties from "postcss-custom-properties"
 
 function postcssScoping() {
     return {
-        postcssPlugin: "scope-beyond-plugin",
+        postcssPlugin: "scoping-plugin",
         Root(root) { processNode(root) }
     }
     
