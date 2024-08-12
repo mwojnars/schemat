@@ -36,7 +36,7 @@ function postcssScoping() {
          */
 
         if (node.type === "rule" && widget)
-            node.selector = node.selector.replace(scope_char, `:not(.after-${widget} *)`)
+            node.selector = node.selector.replaceAll(scope_char, `:not(.after-${widget} *)`)
 
         if (node.type === "rule" && node.selector.startsWith("."))
             widget = node.selector.slice(1).split(" ")[0].split(":")[0]
