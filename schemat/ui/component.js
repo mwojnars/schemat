@@ -127,16 +127,16 @@ export const Styled = (baseclass) => class extends baseclass {
     /* A mixin for a View and Component classes that defines static `style` and `assets` properties and a method for collecting them. */
 
     static style_path   // path to a CSS file that contains the styles for this component
-    static style        // plain inline CSS code to be inserted in HTML whenever this component is rendered
+    static css_style    // plain inline CSS code to be inserted in HTML whenever this component is rendered
     static assets       // list of assets this widget depends on; each asset should be an object with .assets property,
                         // or a Component, or a plain html string to be pasted into the <head> section of a page
 
     static collect(assets) {
-        /* Walk through a prototype chain of `this` class to collect all .style's and .assets into an Assets object. */
+        /* Walk through a prototype chain of `this` class to collect all styles and .assets into an Assets object. */
         for (let cls of T.getPrototypes(this)) {
             assets.add_asset(cls.assets)
             assets.add_style_path(cls.style_path)
-            assets.add_style(cls.style)
+            assets.add_style(cls.css_style)
         }
     }
 }
@@ -209,7 +209,7 @@ export class Component extends Styled(React.Component) {
 
     _shadow_styles() {
         /* Walk the class's prototype chain to collect all CSS code that should be put inside a shadow DOM. */
-        return T.getInherited(this.constructor, 'style').join('\n')
+        return T.getInherited(this.constructor, 'css_style').join('\n')
     }
 
     _shadow_links(on_server) {
