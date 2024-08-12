@@ -1,5 +1,28 @@
 /* @postcss */
 
+
+.TEXT {
+    .editor {
+        min-height: 2em;
+        height: 10em;
+        width: 100%;
+        outline: none;
+        resize: vertical;
+    }
+
+    /*
+    .use-scroll {
+        overflow: auto;     // scroll
+        max-height: 12rem;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        border-right:  1px solid rgba(0,0,0,0.1);
+        resize: vertical;
+    }
+    .use-scroll[style*="height"] {
+        max-height: unset;              // this allows manual resizing (resize:vertical) to exceed predefined max-height
+    }*/
+}
+
 .CODE {
     .ace-viewer, .ace-editor {
         font-size: 1em;

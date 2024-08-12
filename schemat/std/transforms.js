@@ -2,13 +2,22 @@
     Standard file transforms to be applied while serving web requests.
  */
 
+
 import postcss from "postcss"
+import postcssScss from "postcss-scss"
+// import postcssLess from "postcss-less"
+
+// import * as sass from 'sass'                     // full SCSS support without PostCSS - does NOT work currently (!)
+// import * as path from "node:path"
+
 import postcssImport from "postcss-import"
 import postcssNested from "postcss-nested"
 import postcssMixins from "postcss-mixins"
-import postcssSimpleVars from "postcss-simple-vars"
+import postcssAdvancedVariables from 'postcss-advanced-variables'
 import postcssCustomProperties from "postcss-custom-properties"
 
+
+/**********************************************************************************************************************/
 
 function postcssScoping() {
     return {
@@ -37,14 +46,24 @@ function postcssScoping() {
     }
 }
 
+/**********************************************************************************************************************/
+
 export async function transform_postcss(css, filepath) {
-    const result = await postcss([
+    /* Transform a `css` stylesheet content that uses SCSS syntax and Schemat's style scoping into plain CSS code. */
+    const preprocessed = await postcss([
         postcssScoping(),
         postcssImport(),
         postcssMixins(),
         postcssNested(),
-        postcssSimpleVars(),
+        postcssAdvancedVariables(),
         postcssCustomProperties(),
-    ]).process(css, {from: filepath})
-    return result.css
+    ]).process(css, {from: filepath, syntax: postcssScss})
+    return preprocessed.css
+
+    // const result = sass.renderSync({
+    //     data:           preprocessed.css,
+    //     includePaths:   [path.dirname(filepath)],
+    //     outputStyle:    'expanded'
+    // })
+    // return result.css.toString()
 }

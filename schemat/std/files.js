@@ -169,7 +169,7 @@ export class LocalFolder extends Directory {
                 }
             }
         }
-        catch (e) { console.error('Error transforming file content:', e) }
+        catch (e) { console.error(`Error transforming content of '${file_path}':`, e) }
 
         return buffer
     }

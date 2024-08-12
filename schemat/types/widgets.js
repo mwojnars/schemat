@@ -115,6 +115,9 @@ export class TextualWidget extends TypeWidget {
 export class TEXT_Widget extends TextualWidget {
     shadow_dom = true
 
+    static class_name = "TEXT"
+    static style_path = import.meta.resolve('./widgets.css')
+
     static style = new Style('TEXT', this, {},
     `
         .editor {
