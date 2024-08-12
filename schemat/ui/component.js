@@ -161,7 +161,6 @@ export class Component extends Styled(React.Component) {
     // - css custom properties (variables)
     // - :host, :host(), ::slotted()
 
-    // name = this.constructor.name        // name of this component, for creating CSS classes
     css_class  = null                   // name of the CSS class for this component
     shadow_dom = false
 
