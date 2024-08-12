@@ -5,7 +5,7 @@ import {GENERIC, generic_string, generic_type, is_valid_field_name, STRING, Type
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../ui/react-utils.js";
 import {MaterialUI} from "../ui/resources.js";
-import {Component, Style} from "../ui/component.js";
+import {Component} from "../ui/component.js";
 import {TextualWidget} from "./widgets.js";
 
 

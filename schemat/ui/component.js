@@ -88,7 +88,6 @@ export class Style {
     _css_raw            // original block of CSS before scoping and replacements
     css                 // final CSS with the scope and replacements applied
 
-
     constructor(scope, styled_class, opts = {}, css = '') {
         /* `styled_class` is the owner class of this Style object and should be derived from the Styled() mixin,
             so that styled_class.style==this after the constructor completes. The `scope` can be null/empty (no scoping).
@@ -101,13 +100,6 @@ export class Style {
             this._class_prolog = `${scope}`
             this._class_epilog = `after-${scope}`
         }
-
-        // let prototypes = T.getPrototypes(styled_class).slice(1)
-        // let styles = [this, ...prototypes.map(cls => T.getOwnProperty(cls, 'style'))] .filter(stl => Boolean(stl?.scope))
-        //
-        // // collect all scoping classes from the prototype chain of `styled_class`
-        // this._all_classes_prolog = [...new Set(styles.map(stl => stl._class_prolog))].sort().join(' ')
-        // this._all_classes_epilog = [...new Set(styles.map(stl => stl._class_epilog))].sort().join(' ')
 
         for (const [symbol, sub] of Object.entries(this.opts.replace))
             css = css.replaceAll(symbol, sub)
@@ -129,14 +121,6 @@ export class Style {
 
         return cssPrepend(`.${this._class_prolog}`, css)
     }
-
-    // _wrap(elem, className) {
-    //     if (!className || !elem || typeof elem === 'string') return elem
-    //     return DIV({className}, elem)
-    // }
-
-    // add_prolog(elem)    { return _wrap(elem, this._all_classes_prolog) }
-    // add_epilog(elem)    { return _wrap(elem, this._all_classes_epilog) }
 }
 
 
