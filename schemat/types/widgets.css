@@ -40,3 +40,8 @@
         height: 12em;
     }
 }
+
+.TYPE {
+    .default|   { color: #888; }
+    .info|      { font-style: italic; }
+}

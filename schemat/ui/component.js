@@ -187,7 +187,7 @@ export class Component extends Styled(React.Component) {
 
         // for CSS scoping, replace this.render() with a wrapper that adds an extra DIV around the rendered element;
         // directly overriding render() is inconvenient, because subclasses could no longer define their own render() !!
-        if (this.constructor.style) {
+        if (this._classes()) {
             this._render_original = this.render.bind(this)
             this.render = this._render_wrapped.bind(this)
         }
@@ -222,7 +222,8 @@ export class Component extends Styled(React.Component) {
         let scopes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'style')?.scope) .filter(Boolean)
         print('classes:', classes, 'of', this.constructor.name, 'with scopes:', scopes)
         classes = [...new Set([...classes, ...scopes])].sort()
-        return classes.length ? classes : [this.name]
+        return classes.join(' ')
+        // return classes.length ? classes : [this.name]
     }
 
     _shadow_styles() {
@@ -232,7 +233,7 @@ export class Component extends Styled(React.Component) {
 
     _content() {
         /* Return the content of the component as a React element wrapped up in a <div> with proper classes for styling. */
-        let classes = cl(...this._classes(), 'component')
+        let classes = cl(this._classes(), 'component')
         let css = this._shadow_styles()
         let style = css ? STYLE(compact_css(css)) : null
         return FRAGMENT(style, DIV(classes, this._render_original()))
@@ -246,7 +247,7 @@ export class Component extends Styled(React.Component) {
         if (!this.shadow_dom) {
             let content = this._render_original()
             // let classes = this.constructor.style._all_classes_prolog
-            let classes = this._classes().join(' ')
+            let classes = this._classes()
             return _wrap(content, classes)                              // <div> wrapper applies a CSS class for style scoping
             // return this.constructor.style.add_prolog(content)           // <div> wrapper applies a CSS class for style scoping
         }
@@ -277,7 +278,7 @@ export class Component extends Styled(React.Component) {
         if (typeof component === 'function') component = e(component, props)        // convert a component (class/function) to an element if needed
         let style = this.constructor.style
         // let classes = style._all_classes_epilog
-        let classes = this._classes().join(' ')
+        let classes = this._classes()
         return style ? _wrap(component, classes) : component
         // return style ? style.add_epilog(component) : component
     }

@@ -128,16 +128,6 @@ export class TEXT_Widget extends TextualWidget {
             resize: vertical;
         }
     `)
-    //     .use-scroll {
-    //         overflow: auto;   /*scroll*/
-    //         max-height: 12rem;
-    //         border-bottom: 1px solid rgba(0,0,0,0.1);
-    //         border-right:  1px solid rgba(0,0,0,0.1);
-    //         resize: vertical;
-    //     }
-    //     .use-scroll[style*="height"] {
-    //         max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
-    //     }
 
     viewer() { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor() {
@@ -303,6 +293,9 @@ export class GENERIC_Widget extends TEXT_Widget {
 /**********************************************************************************************************************/
 
 export class TYPE_Widget extends GENERIC_Widget {
+
+    static class_name = "TYPE"
+    static style_path = import.meta.resolve('./widgets.css')
 
     static style = new Style('TYPE', this, {},
     `
