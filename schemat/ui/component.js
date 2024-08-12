@@ -201,7 +201,7 @@ export class Component extends Styled(React.Component) {
     }
 
     _classes() {
-        /* Collect all CSS classes that should be put in the component's root node. */
+        /* Space-separated string containing all CSS classes that should be put in the component's root node. */
         let classes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'class_name')) .filter(Boolean)
         let scopes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'style')?.scope) .filter(Boolean)
         // print('classes:', classes, 'of', this.constructor.name, 'with scopes:', scopes)
@@ -267,8 +267,7 @@ export class Component extends Styled(React.Component) {
         // let embedStyle = T.pop(props, 'embedStyle')  // for styling the wrapper DIV, e.g., display:inline
         // let embedDisplay ...
         if (typeof component === 'function') component = e(component, props)        // convert a component (class/function) to an element if needed
-        let style = this.constructor.style
         let classes = this._classes()
-        return style ? _wrap(component, classes) : component
+        return classes ? _wrap(component, classes) : component
     }
 }
