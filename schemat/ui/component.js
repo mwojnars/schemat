@@ -6,6 +6,15 @@ import {React} from './resources.js'
 let csso = await tryimport('csso')
 
 
+/**********************************************************************************************************************/
+
+function _wrap(elem, className) {
+    if (!className || !elem || typeof elem === 'string') return elem
+    return DIV({className}, elem)
+}
+
+
+
 /**********************************************************************************************************************
  **
  **  ASSETS
@@ -107,7 +116,7 @@ export class Style {
     }
 
     _safe_css(css) {
-        /* Update the rules in `this.css` stylesheet by scoping them with special CSS classes:
+        /* Update the rules in the `css` stylesheet by scoping them with special CSS classes:
            <_class_prolog> (from above) and <_class_epilog> (from below).
          */
         if (!this.scope) return css
@@ -121,13 +130,13 @@ export class Style {
         return cssPrepend(`.${this._class_prolog}`, css)
     }
 
-    _wrap(elem, className) {
-        if (!className || !elem || typeof elem === 'string') return elem
-        return DIV({className}, elem)
-    }
+    // _wrap(elem, className) {
+    //     if (!className || !elem || typeof elem === 'string') return elem
+    //     return DIV({className}, elem)
+    // }
 
-    add_prolog(elem)    { return this._wrap(elem, this._all_classes_prolog) }
-    add_epilog(elem)    { return this._wrap(elem, this._all_classes_epilog) }
+    add_prolog(elem)    { return _wrap(elem, this._all_classes_prolog) }
+    add_epilog(elem)    { return _wrap(elem, this._all_classes_epilog) }
 }
 
 
@@ -170,6 +179,7 @@ export class Component extends Styled(React.Component) {
     // - :host, :host(), ::slotted()
 
     name = this.constructor.name        // name of this component, for creating CSS classes
+    class_name = null                   // name of the CSS class for this component
     shadow_dom = false
 
     constructor(props) {
@@ -208,8 +218,11 @@ export class Component extends Styled(React.Component) {
 
     _classes() {
         /* Collect all CSS classes that should be put in the component's root node. */
+        let classes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'class_name')) .filter(Boolean)
         let scopes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'style')?.scope) .filter(Boolean)
-        return scopes.length ? scopes : [this.name]
+        print('classes:', classes, 'of', this.constructor.name, 'with scopes:', scopes)
+        classes = [...new Set([...classes, ...scopes])]
+        return classes.length ? classes : [this.name]
     }
 
     _shadow_styles() {
