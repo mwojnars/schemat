@@ -231,11 +231,10 @@ export class Component extends Styled(React.Component) {
         return T.getInherited(this.constructor, 'style') .map(style => style.css) .join('\n')
     }
 
-    _shadow_links() {
+    _shadow_links(on_server) {
         return T.getInherited(this.constructor, 'style_path') .filter(Boolean) .map(path => {
-            // let url = schemat.site.translate_local(path)     // this only works on server, not needed on client-side
-            // print('shadow link:', path)
-            return LINK({href: path, rel: 'stylesheet'})
+            let href = on_server ? schemat.site.translate_local(path) : path        // translation is only needed on server; on client, `path` is already a URL
+            return LINK({href, rel: 'stylesheet'})
         })
     }
 
@@ -244,9 +243,9 @@ export class Component extends Styled(React.Component) {
         let classes = cl(this._classes(), 'component')
         let css = this._shadow_styles()
         let style = css ? STYLE(compact_css(css)) : null
-        let links = on_server ? [] : this._shadow_links()
+        let links = this._shadow_links(on_server)
         let main = DIV(classes, this._render_original())
-        return FRAGMENT(...links, style, main)
+        return FRAGMENT(...links, style, main)      // including links/styles already in server-side HTML prevents the FOUC
     }
 
     _render_wrapped() {
