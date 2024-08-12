@@ -126,7 +126,7 @@ export class Assets {
 export const Styled = (baseclass) => class extends baseclass {
     /* A mixin for a View and Component classes that defines static `style` and `assets` properties and a method for collecting them. */
 
-    static style_path   // path to a CSS file that contains the styles for this component
+    static css_file     // path to a CSS file that contains the styles for this component
     static css_style    // plain inline CSS code to be inserted in HTML whenever this component is rendered
     static assets       // list of assets this widget depends on; each asset should be an object with .assets property,
                         // or a Component, or a plain html string to be pasted into the <head> section of a page
@@ -135,7 +135,7 @@ export const Styled = (baseclass) => class extends baseclass {
         /* Walk through a prototype chain of `this` class to collect all styles and .assets into an Assets object. */
         for (let cls of T.getPrototypes(this)) {
             assets.add_asset(cls.assets)
-            assets.add_style_path(cls.style_path)
+            assets.add_style_path(cls.css_file)
             assets.add_style(cls.css_style)
         }
     }
@@ -213,7 +213,7 @@ export class Component extends Styled(React.Component) {
     }
 
     _shadow_links(on_server) {
-        return T.getInherited(this.constructor, 'style_path') .filter(Boolean) .map(path => {
+        return T.getInherited(this.constructor, 'css_file') .filter(Boolean) .map(path => {
             let href = on_server ? schemat.site.translate_local(path) : path        // translation is only needed on server; on client, `path` is already a URL
             return LINK({href, rel: 'stylesheet'})
         })

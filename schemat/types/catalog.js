@@ -170,7 +170,7 @@ export class CatalogTable extends Component {
     /* React component that displays a Catalog in a tabular form. */
 
     static class_name = "CATALOG"
-    static style_path = import.meta.resolve('./catalog.css')
+    static css_file = import.meta.resolve('./catalog.css')
 
     move(up, down) {
         let hide = st({visibility: 'hidden'})
