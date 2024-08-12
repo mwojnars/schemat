@@ -14,7 +14,6 @@ function _wrap(elem, className) {
 }
 
 
-
 /**********************************************************************************************************************
  **
  **  ASSETS
@@ -66,78 +65,79 @@ export class Assets {
  **
  */
 
-export class Style {
-    /* CSS styles that can be scoped exclusively to the part of DOM where the component is located.
-
-       NOTE:
-       - when an original CSS rule ends with a pseudo-element, like ::before, ::after (or :before, :after),
-         the `stopper` character must be placed *before* the pseudo-element, not after it (!)
-       - epilog must not be used for recursive components (containing nested copies of themselves,
-         directly or indirectly), because the subcomponents of the same type would *not* receive their styling then.
-     */
-
-    scope               // name of the CSS scope; for building names of "prolog" and "epilog" CSS classes
-    opts = {
-        stopper: '|',   // character or substring that marks the places in `css` where the scope prolog should be inserted
-        replace: {},    // key-value replacement rules for: css.replaceAll(key, value); typically a key is a special character rarely occurring in CSS (&, ?)
-    }
-
-    _class_prolog       // name of the CSS class for the prolog part of the scope
-    _class_epilog       // name of the CSS class for the epilog part of the scope
-
-    _css_raw            // original block of CSS before scoping and replacements
-    css                 // final CSS with the scope and replacements applied
-
-    constructor(scope, styled_class, opts = {}, css = '') {
-        /* `styled_class` is the owner class of this Style object and should be derived from the Styled() mixin,
-            so that styled_class.style==this after the constructor completes. The `scope` can be null/empty (no scoping).
-         */
-        this.opts = {...this.opts, ...opts}
-        this.scope = scope
-        this._css_raw = css
-
-        if (scope) {
-            this._class_prolog = `${scope}`
-            this._class_epilog = `after-${scope}`
-        }
-
-        for (const [symbol, sub] of Object.entries(this.opts.replace))
-            css = css.replaceAll(symbol, sub)
-
-        this.css = this._safe_css(css)
-    }
-
-    _safe_css(css) {
-        /* Update the rules in the `css` stylesheet by scoping them with special CSS classes:
-           <_class_prolog> (from above) and <_class_epilog> (from below).
-         */
-        if (!this.scope) return css
-
-        let stopper = this.opts.stopper
-        if (stopper) {
-            let sub = `:not(.${this._class_epilog} *)`      // exclude all DOM nodes located below the <_class_epilog> CSS class
-            css = css.replaceAll(stopper, sub)
-        }
-
-        return cssPrepend(`.${this._class_prolog}`, css)
-    }
-}
+// export class Style {
+//     /* CSS styles that can be scoped exclusively to the part of DOM where the component is located.
+//
+//        NOTE:
+//        - when an original CSS rule ends with a pseudo-element, like ::before, ::after (or :before, :after),
+//          the `stopper` character must be placed *before* the pseudo-element, not after it (!)
+//        - epilog must not be used for recursive components (containing nested copies of themselves,
+//          directly or indirectly), because the subcomponents of the same type would *not* receive their styling then.
+//      */
+//
+//     scope               // name of the CSS scope; for building names of "prolog" and "epilog" CSS classes
+//     opts = {
+//         stopper: '|',   // character or substring that marks the places in `css` where the scope prolog should be inserted
+//         replace: {},    // key-value replacement rules for: css.replaceAll(key, value); typically a key is a special character rarely occurring in CSS (&, ?)
+//     }
+//
+//     _class_prolog       // name of the CSS class for the prolog part of the scope
+//     _class_epilog       // name of the CSS class for the epilog part of the scope
+//
+//     _css_raw            // original block of CSS before scoping and replacements
+//     css                 // final CSS with the scope and replacements applied
+//
+//     constructor(scope, styled_class, opts = {}, css = '') {
+//         /* `styled_class` is the owner class of this Style object and should be derived from the Styled() mixin,
+//             so that styled_class.style==this after the constructor completes. The `scope` can be null/empty (no scoping).
+//          */
+//         this.opts = {...this.opts, ...opts}
+//         this.scope = scope
+//         this._css_raw = css
+//
+//         if (scope) {
+//             this._class_prolog = `${scope}`
+//             this._class_epilog = `after-${scope}`
+//         }
+//
+//         for (const [symbol, sub] of Object.entries(this.opts.replace))
+//             css = css.replaceAll(symbol, sub)
+//
+//         this.css = this._safe_css(css)
+//     }
+//
+//     _safe_css(css) {
+//         /* Update the rules in the `css` stylesheet by scoping them with special CSS classes:
+//            <_class_prolog> (from above) and <_class_epilog> (from below).
+//          */
+//         if (!this.scope) return css
+//
+//         let stopper = this.opts.stopper
+//         if (stopper) {
+//             let sub = `:not(.${this._class_epilog} *)`      // exclude all DOM nodes located below the <_class_epilog> CSS class
+//             css = css.replaceAll(stopper, sub)
+//         }
+//
+//         return cssPrepend(`.${this._class_prolog}`, css)
+//     }
+// }
 
 
 export const Styled = (baseclass) => class extends baseclass {
     /* A mixin for a View and Component classes that defines static `style` and `assets` properties and a method for collecting them. */
 
+    static style_path   // path to a CSS file that contains the styles for this component
     static assets       // list of assets this widget depends on; each asset should be an object with .assets property,
                         // or a Component, or a plain html string to be pasted into the <head> section of a page
 
-    static style        // a Style object that defines the CSS styles for this component, possibly scoped
+    // static style        // a Style object that defines the CSS styles for this component, possibly scoped
 
     static collect(assets) {
         /* Walk through a prototype chain of `this` class to collect all .style's and .assets into an Assets object. */
         for (let cls of T.getPrototypes(this)) {
             assets.add_style_path(cls.style_path)
-            assets.add_style(cls.style?.css)
             assets.add_asset(cls.assets)
+            // assets.add_style(cls.style?.css)
         }
     }
 }
