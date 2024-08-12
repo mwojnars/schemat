@@ -127,17 +127,16 @@ export const Styled = (baseclass) => class extends baseclass {
     /* A mixin for a View and Component classes that defines static `style` and `assets` properties and a method for collecting them. */
 
     static style_path   // path to a CSS file that contains the styles for this component
+    static style        // plain inline CSS code to be inserted in HTML whenever this component is rendered
     static assets       // list of assets this widget depends on; each asset should be an object with .assets property,
                         // or a Component, or a plain html string to be pasted into the <head> section of a page
-
-    // static style        // a Style object that defines the CSS styles for this component, possibly scoped
 
     static collect(assets) {
         /* Walk through a prototype chain of `this` class to collect all .style's and .assets into an Assets object. */
         for (let cls of T.getPrototypes(this)) {
-            assets.add_style_path(cls.style_path)
             assets.add_asset(cls.assets)
-            // assets.add_style(cls.style?.css)
+            assets.add_style_path(cls.style_path)
+            assets.add_style(cls.style)
         }
     }
 }
@@ -203,16 +202,14 @@ export class Component extends Styled(React.Component) {
     _classes() {
         /* Space-separated string containing all CSS classes that should be put in the component's root node. */
         let classes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'class_name')) .filter(Boolean)
-        let scopes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'style')?.scope) .filter(Boolean)
-        // print('classes:', classes, 'of', this.constructor.name, 'with scopes:', scopes)
-        classes = [...new Set([...classes, ...scopes])].sort()
+        // let scopes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'style')?.scope) .filter(Boolean)
+        // classes = [...new Set([...classes, ...scopes])].sort()
         return classes.join(' ')
-        // return classes.length ? classes : [this.name]
     }
 
     _shadow_styles() {
         /* Walk the class's prototype chain to collect all CSS code that should be put inside a shadow DOM. */
-        return T.getInherited(this.constructor, 'style') .map(style => style.css) .join('\n')
+        return T.getInherited(this.constructor, 'style').join('\n')
     }
 
     _shadow_links(on_server) {
@@ -264,8 +261,6 @@ export class Component extends Styled(React.Component) {
            The only exceptions are top-level Components and the components that may include components of the same type
            (recursive inclusion, direct OR indirect!).
          */
-        // let embedStyle = T.pop(props, 'embedStyle')  // for styling the wrapper DIV, e.g., display:inline
-        // let embedDisplay ...
         if (typeof component === 'function') component = e(component, props)        // convert a component (class/function) to an element if needed
         let classes = this._classes()
         return classes ? _wrap(component, classes) : component
