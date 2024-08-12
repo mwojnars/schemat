@@ -118,17 +118,6 @@ export class TEXT_Widget extends TextualWidget {
     static class_name = "TEXT"
     static style_path = import.meta.resolve('./widgets.css')
 
-    // static style = new Style('TEXT', this, {},
-    // `
-    //     .editor {
-    //         min-height: 2em;
-    //         height: 10em;
-    //         width: 100%;
-    //         outline: none;
-    //         resize: vertical;
-    //     }
-    // `)
-
     viewer() { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor() {
         return TEXTAREA({
@@ -180,25 +169,6 @@ export class CODE_Widget extends TEXT_Widget {
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/theme-textmate.min.js" integrity="sha512-VE1d8sDypa2IvfFGVnil5k/xdGWtLTlHk/uM0ojHH8b2RRF75UeUBL9btDB8Hhe7ei0TT8NVuHFxWxh5NhdepQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
     <script>ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/")</script>
     `
-
-    // static style = new Style('CODE', this, {}, '')
-    // `
-    // .ace-viewer, .ace-editor {
-    //     font-size: 1em;
-    //     min-height: 3em;
-    //     line-height: 1.3;
-    //     resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
-    // }
-    // .ace-viewer {
-    //     background-color: rgba(255,255,255,0);
-    //     width: calc(100% + 4px);
-    //     margin-left: -4px;       /* shift the viewer to better align inner text with text of surrounding rows in a catalog */
-    // }
-    // .ace-editor {
-    //     background-color: rgba(255,255,255,0.5);
-    //     height: 12em;
-    // }
-    // `)
 
     static viewer_options = {
         mode:                   "ace/mode/jsx",   // .../javascript
@@ -294,12 +264,6 @@ export class GENERIC_Widget extends TEXT_Widget {
 export class TYPE_Widget extends GENERIC_Widget {
 
     static class_name = "TYPE"
-
-    // static style = new Style('TYPE', this, {},
-    // `
-    //     .default|   { color: #888; }
-    //     .info|      { font-style: italic; }
-    // `)
 
     viewer()  { return TypeWidget.prototype.viewer.call(this) }
     view() {
