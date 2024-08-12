@@ -168,6 +168,8 @@ export class CODE_Widget extends TEXT_Widget {
       editor.focus()
     */
 
+    static class_name = "CODE"
+
     static assets =                                             // import ACE Editor
     `
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ace.min.js" integrity="sha512-jB1NOQkR0yLnWmEZQTUW4REqirbskxoYNltZE+8KzXqs9gHG5mrxLR5w3TwUn6AylXkhZZWTPP894xcX/X8Kbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -178,9 +180,6 @@ export class CODE_Widget extends TEXT_Widget {
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/theme-textmate.min.js" integrity="sha512-VE1d8sDypa2IvfFGVnil5k/xdGWtLTlHk/uM0ojHH8b2RRF75UeUBL9btDB8Hhe7ei0TT8NVuHFxWxh5NhdepQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
     <script>ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/")</script>
     `
-
-    static class_name = "CODE"
-    static style_path = import.meta.resolve('./widgets.css')
 
     // static style = new Style('CODE', this, {}, '')
     // `
@@ -295,13 +294,12 @@ export class GENERIC_Widget extends TEXT_Widget {
 export class TYPE_Widget extends GENERIC_Widget {
 
     static class_name = "TYPE"
-    static style_path = import.meta.resolve('./widgets.css')
 
-    static style = new Style('TYPE', this, {},
-    `
-        .default|   { color: #888; }
-        .info|      { font-style: italic; }
-    `)
+    // static style = new Style('TYPE', this, {},
+    // `
+    //     .default|   { color: #888; }
+    //     .info|      { font-style: italic; }
+    // `)
 
     viewer()  { return TypeWidget.prototype.viewer.call(this) }
     view() {
