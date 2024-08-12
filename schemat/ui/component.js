@@ -239,10 +239,8 @@ export class Component extends Styled(React.Component) {
          */
         if (!this.shadow_dom) {
             let content = this._render_original()
-            // let classes = this.constructor.style._all_classes_prolog
             let classes = this._classes()
             return _wrap(content, classes)                              // <div> wrapper applies a CSS class for style scoping
-            // return this.constructor.style.add_prolog(content)           // <div> wrapper applies a CSS class for style scoping
         }
 
         let classes = cl('shadow')                                      // CSS class(es) for the shadow DOM container (outer DIV)
@@ -270,9 +268,7 @@ export class Component extends Styled(React.Component) {
         // let embedDisplay ...
         if (typeof component === 'function') component = e(component, props)        // convert a component (class/function) to an element if needed
         let style = this.constructor.style
-        // let classes = style._all_classes_epilog
         let classes = this._classes()
         return style ? _wrap(component, classes) : component
-        // return style ? style.add_epilog(component) : component
     }
 }
