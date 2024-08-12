@@ -169,70 +169,73 @@ export class DATA_SCHEMA extends TYPE {
 export class CatalogTable extends Component {
     /* React component that displays a Catalog in a tabular form. */
 
-    static style = new Style('CATALOG', this, {},
-    `
-        .catalog-d0       { width: 100%; font-size: 1rem; }
-        
-        .entry1           { background: #e2eef9; }   /* #D0E4F5 */
-        .entry2           { background: #f6f6f6; }
-        .entry            { padding-left: 15px; }   /* border-collapse: collapse; */
-        .entry-head       { display: flex; }
-        .entry:not(:last-child)          { border-bottom: 1px solid #fff; }
-        .spacer           { flex-grow: 1; }
+    static class_name = "CATALOG"
+    static style_path = import.meta.resolve('./catalog.css')
 
-        .onhover          { width: 25%; height: 20px; margin-top: -20px; position: absolute; top:0; }
-        .addnew           { padding-left: 20px; opacity: 0.4; }
-        .addnew.hide      { max-height: 0; margin-top:-1px; visibility: hidden; transition: 0.2s linear 0.1s; overflow-y: hidden; }
-        .addnew:hover, .onhover:hover + .addnew   
-                          { max-height: 100px; margin-top:0; visibility: visible; transition: max-height 0.3s linear 0.5s; opacity: 1; }
-        .addnew .cell-key { cursor: pointer; border-right: none; }
-
-        .cell             { padding: 14px 20px 11px; position: relative; }
-        .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
-        .cell-value       { width: 800px; }
-        
-        .key              { font-weight: bold; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; }
-        .key:not([title]) { text-decoration-line: none; }
-        .key-missing      { opacity: 0.3; visibility: hidden; }
-        
-        /* show all control icons/info when hovering over the entry: .move, .delete, .insert, .key-missing */
-        .cell-key:hover *|            { visibility: visible; }
-                
-        .cell-value|                  { font-size: 0.8rem; font-family: 'Noto Sans Mono', monospace; /* courier */ }
-        .cell-value :is(input, pre, textarea, .ace-viewer, .ace-editor)      /* NO stopper in this selector, it must apply inside embedded widgets */         
-                                      { font-size: 0.8rem; font-family: 'Noto Sans Mono', monospace; }
-
-        .move|                        { margin-right: 10px; visibility: hidden; }
-        :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
-        .moveup|::after               { content: "△"; }
-        .movedown|::after             { content: "▽"; }
-        .moveup:hover|::after         { content: "▲"; color: mediumblue; } 
-        .movedown:hover|::after       { content: "▼"; color: mediumblue; }
-        
-        .expand                       { padding-left: 10px; }
-        .expand.is-empty|::after      { content: "▿"; }
-        .expand.is-folded|::after     { content: "▸"; cursor: pointer; }
-        .expand.is-expanded|::after   { content: "▾"; cursor: pointer; }
-        
-        .insert|::after               { content: "✚"; }
-        .insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
-        
-        .delete|::after               { content: "✖"; }
-        .delete|                      { padding-left: 10px; }
-        .delete|, .insert|            { color: #777; flex-shrink:0; font-size:1.1em; line-height:1em; visibility: hidden; }
-        .delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
-
-        .catalog-d1                   { padding-left: 25px; margin-top: -10px; }
-        .catalog-d1 .entry            { padding-left: 2px; }
-        .catalog-d1 .key              { font-weight: normal; font-style: italic; }
-        .catalog.is-empty             { margin-top: 0; }
-
-        .flash|         { padding:4px 12px; border-radius: 2px; color:white; opacity:1; position: absolute; top:8px; right:8px; z-index:10; }
-        .flash-info|    { background-color: mediumseagreen; transition: 0.2s; }
-        .flash-warn|    { background-color: salmon; transition: 0.2s; }
-        .flash-stop|    { opacity: 0; z-index: -1; transition: 2s linear 1s; transition-property: opacity, background-color, z-index; }
-        .error|         { padding-top:5px; color:red; }
-    `)
+    // static style = new Style('CATALOG', this, {},
+    // `
+    //     .catalog-d0       { width: 100%; font-size: 1rem; }
+    //
+    //     .entry1           { background: #e2eef9; }   /* #D0E4F5 */
+    //     .entry2           { background: #f6f6f6; }
+    //     .entry            { padding-left: 15px; }   /* border-collapse: collapse; */
+    //     .entry-head       { display: flex; }
+    //     .entry:not(:last-child)          { border-bottom: 1px solid #fff; }
+    //     .spacer           { flex-grow: 1; }
+    //
+    //     .onhover          { width: 25%; height: 20px; margin-top: -20px; position: absolute; top:0; }
+    //     .addnew           { padding-left: 20px; opacity: 0.4; }
+    //     .addnew.hide      { max-height: 0; margin-top:-1px; visibility: hidden; transition: 0.2s linear 0.1s; overflow-y: hidden; }
+    //     .addnew:hover, .onhover:hover + .addnew
+    //                       { max-height: 100px; margin-top:0; visibility: visible; transition: max-height 0.3s linear 0.5s; opacity: 1; }
+    //     .addnew .cell-key { cursor: pointer; border-right: none; }
+    //
+    //     .cell             { padding: 14px 20px 11px; position: relative; }
+    //     .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
+    //     .cell-value       { width: 800px; }
+    //
+    //     .key              { font-weight: bold; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; }
+    //     .key:not([title]) { text-decoration-line: none; }
+    //     .key-missing      { opacity: 0.3; visibility: hidden; }
+    //
+    //     /* show all control icons/info when hovering over the entry: .move, .delete, .insert, .key-missing */
+    //     .cell-key:hover *|            { visibility: visible; }
+    //
+    //     .cell-value|                  { font-size: 0.8rem; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+    //     .cell-value :is(input, pre, textarea, .ace-viewer, .ace-editor)      /* NO stopper in this selector, it must apply inside embedded widgets */
+    //                                   { font-size: 0.8rem; font-family: 'Noto Sans Mono', monospace; }
+    //
+    //     .move|                        { margin-right: 10px; visibility: hidden; }
+    //     :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; }
+    //     .moveup|::after               { content: "△"; }
+    //     .movedown|::after             { content: "▽"; }
+    //     .moveup:hover|::after         { content: "▲"; color: mediumblue; }
+    //     .movedown:hover|::after       { content: "▼"; color: mediumblue; }
+    //
+    //     .expand                       { padding-left: 10px; }
+    //     .expand.is-empty|::after      { content: "▿"; }
+    //     .expand.is-folded|::after     { content: "▸"; cursor: pointer; }
+    //     .expand.is-expanded|::after   { content: "▾"; cursor: pointer; }
+    //
+    //     .insert|::after               { content: "✚"; }
+    //     .insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
+    //
+    //     .delete|::after               { content: "✖"; }
+    //     .delete|                      { padding-left: 10px; }
+    //     .delete|, .insert|            { color: #777; flex-shrink:0; font-size:1.1em; line-height:1em; visibility: hidden; }
+    //     .delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
+    //
+    //     .catalog-d1                   { padding-left: 25px; margin-top: -10px; }
+    //     .catalog-d1 .entry            { padding-left: 2px; }
+    //     .catalog-d1 .key              { font-weight: normal; font-style: italic; }
+    //     .catalog.is-empty             { margin-top: 0; }
+    //
+    //     .flash|         { padding:4px 12px; border-radius: 2px; color:white; opacity:1; position: absolute; top:8px; right:8px; z-index:10; }
+    //     .flash-info|    { background-color: mediumseagreen; transition: 0.2s; }
+    //     .flash-warn|    { background-color: salmon; transition: 0.2s; }
+    //     .flash-stop|    { opacity: 0; z-index: -1; transition: 2s linear 1s; transition-property: opacity, background-color, z-index; }
+    //     .error|         { padding-top:5px; color:red; }
+    // `)
     /* CSS elements:
         .dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
         .entry     -- <TR> of a table, top-level or nested
