@@ -102,12 +102,12 @@ export class Style {
             this._class_epilog = `after-${scope}`
         }
 
-        let prototypes = T.getPrototypes(styled_class).slice(1)
-        let styles = [this, ...prototypes.map(cls => T.getOwnProperty(cls, 'style'))] .filter(stl => Boolean(stl?.scope))
-
-        // collect all scoping classes from the prototype chain of `styled_class`
-        this._all_classes_prolog = [...new Set(styles.map(stl => stl._class_prolog))].sort().join(' ')
-        this._all_classes_epilog = [...new Set(styles.map(stl => stl._class_epilog))].sort().join(' ')
+        // let prototypes = T.getPrototypes(styled_class).slice(1)
+        // let styles = [this, ...prototypes.map(cls => T.getOwnProperty(cls, 'style'))] .filter(stl => Boolean(stl?.scope))
+        //
+        // // collect all scoping classes from the prototype chain of `styled_class`
+        // this._all_classes_prolog = [...new Set(styles.map(stl => stl._class_prolog))].sort().join(' ')
+        // this._all_classes_epilog = [...new Set(styles.map(stl => stl._class_epilog))].sort().join(' ')
 
         for (const [symbol, sub] of Object.entries(this.opts.replace))
             css = css.replaceAll(symbol, sub)
@@ -135,8 +135,8 @@ export class Style {
     //     return DIV({className}, elem)
     // }
 
-    add_prolog(elem)    { return _wrap(elem, this._all_classes_prolog) }
-    add_epilog(elem)    { return _wrap(elem, this._all_classes_epilog) }
+    // add_prolog(elem)    { return _wrap(elem, this._all_classes_prolog) }
+    // add_epilog(elem)    { return _wrap(elem, this._all_classes_epilog) }
 }
 
 
@@ -221,7 +221,7 @@ export class Component extends Styled(React.Component) {
         let classes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'class_name')) .filter(Boolean)
         let scopes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'style')?.scope) .filter(Boolean)
         print('classes:', classes, 'of', this.constructor.name, 'with scopes:', scopes)
-        classes = [...new Set([...classes, ...scopes])]
+        classes = [...new Set([...classes, ...scopes])].sort()
         return classes.length ? classes : [this.name]
     }
 
@@ -245,7 +245,10 @@ export class Component extends Styled(React.Component) {
          */
         if (!this.shadow_dom) {
             let content = this._render_original()
-            return this.constructor.style.add_prolog(content)           // <div> wrapper applies a CSS class for style scoping
+            // let classes = this.constructor.style._all_classes_prolog
+            let classes = this._classes().join(' ')
+            return _wrap(content, classes)                              // <div> wrapper applies a CSS class for style scoping
+            // return this.constructor.style.add_prolog(content)           // <div> wrapper applies a CSS class for style scoping
         }
 
         let classes = cl('shadow')                                      // CSS class(es) for the shadow DOM container (outer DIV)
@@ -273,6 +276,9 @@ export class Component extends Styled(React.Component) {
         // let embedDisplay ...
         if (typeof component === 'function') component = e(component, props)        // convert a component (class/function) to an element if needed
         let style = this.constructor.style
-        return style ? style.add_epilog(component) : component
+        // let classes = style._all_classes_epilog
+        let classes = this._classes().join(' ')
+        return style ? _wrap(component, classes) : component
+        // return style ? style.add_epilog(component) : component
     }
 }

@@ -189,7 +189,7 @@ export class CODE_Widget extends TEXT_Widget {
     static class_name = "CODE"
     static style_path = import.meta.resolve('./widgets.css')
 
-    static style = new Style('CODE', this, {}, '')
+    // static style = new Style('CODE', this, {}, '')
     // `
     // .ace-viewer, .ace-editor {
     //     font-size: 1em;
