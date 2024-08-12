@@ -30,7 +30,7 @@ export class TypeWidget extends Component {
         this.state   = {...this.state,
             editing: props.editing,
         }
-        if (this.name.endsWith('_Widget')) this.name = this.name.slice(0, -7)   // remove '_Widget' suffix
+        // if (this.name.endsWith('_Widget')) this.name = this.name.slice(0, -7)   // remove '_Widget' suffix
     }
 
     empty(v)    { return T.isMissing(v) && I('undefined') }     // view of an empty value, for display() and viewer()
@@ -115,8 +115,8 @@ export class TextualWidget extends TypeWidget {
 export class TEXT_Widget extends TextualWidget {
     shadow_dom = true
 
-    static class_name = "TEXT"
-    static css_file = import.meta.resolve('./widgets.css')
+    static css_class = "TEXT"
+    static css_file  = import.meta.resolve('./widgets.css')
 
     viewer() { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor() {
@@ -157,7 +157,7 @@ export class CODE_Widget extends TEXT_Widget {
       editor.focus()
     */
 
-    static class_name = "CODE"
+    static css_class = "CODE"
 
     static assets =                                             // import ACE Editor
     `
@@ -263,7 +263,7 @@ export class GENERIC_Widget extends TEXT_Widget {
 
 export class TYPE_Widget extends GENERIC_Widget {
 
-    static class_name = "TYPE"
+    static css_class = "TYPE"
 
     viewer()  { return TypeWidget.prototype.viewer.call(this) }
     view() {

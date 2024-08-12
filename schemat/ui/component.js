@@ -161,8 +161,8 @@ export class Component extends Styled(React.Component) {
     // - css custom properties (variables)
     // - :host, :host(), ::slotted()
 
-    name = this.constructor.name        // name of this component, for creating CSS classes
-    class_name = null                   // name of the CSS class for this component
+    // name = this.constructor.name        // name of this component, for creating CSS classes
+    css_class  = null                   // name of the CSS class for this component
     shadow_dom = false
 
     constructor(props) {
@@ -201,7 +201,7 @@ export class Component extends Styled(React.Component) {
 
     _classes() {
         /* Space-separated string containing all CSS classes that should be put in the component's root node. */
-        let classes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'class_name')) .filter(Boolean)
+        let classes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'css_class')) .filter(Boolean)
         // let scopes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'style')?.scope) .filter(Boolean)
         // classes = [...new Set([...classes, ...scopes])].sort()
         return classes.join(' ')

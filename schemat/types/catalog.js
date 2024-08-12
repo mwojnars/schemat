@@ -169,8 +169,8 @@ export class DATA_SCHEMA extends TYPE {
 export class CatalogTable extends Component {
     /* React component that displays a Catalog in a tabular form. */
 
-    static class_name = "CATALOG"
-    static css_file = import.meta.resolve('./catalog.css')
+    static css_class = "CATALOG"
+    static css_file  = import.meta.resolve('./catalog.css')
 
     move(up, down) {
         let hide = st({visibility: 'hidden'})
