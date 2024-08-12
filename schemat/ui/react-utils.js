@@ -98,6 +98,7 @@ export const TEXTAREA = _e('textarea')
 export const FIELDSET = _e('fieldset')
 export const BLOCKQUOTE = _e('blockquote')
 export const TEMPLATE = _e('template')
+export const LINK = _e('link')
 
 export const FLEX  = (...args) => DIV(st({display: 'flex'}), ...args)        // shorthand for DIV(...) with display=flex
 // export const FLEX = (...args) => DIV(st({display: 'flex'}), ...args)        // shorthand for DIV(...) with display=flex

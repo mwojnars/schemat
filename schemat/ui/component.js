@@ -1,6 +1,6 @@
 import {T, assert, print, tryimport} from '../common/utils.js'
 import {compact_css, cssPrepend} from './css.js'
-import {e, cl, DIV, TEMPLATE, STYLE, FRAGMENT} from './react-utils.js'
+import {e, cl, DIV, TEMPLATE, STYLE, FRAGMENT, LINK} from './react-utils.js'
 import {React} from './resources.js'
 
 let csso = await tryimport('csso')
@@ -220,7 +220,7 @@ export class Component extends Styled(React.Component) {
         /* Collect all CSS classes that should be put in the component's root node. */
         let classes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'class_name')) .filter(Boolean)
         let scopes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'style')?.scope) .filter(Boolean)
-        print('classes:', classes, 'of', this.constructor.name, 'with scopes:', scopes)
+        // print('classes:', classes, 'of', this.constructor.name, 'with scopes:', scopes)
         classes = [...new Set([...classes, ...scopes])].sort()
         return classes.join(' ')
         // return classes.length ? classes : [this.name]
@@ -231,12 +231,22 @@ export class Component extends Styled(React.Component) {
         return T.getInherited(this.constructor, 'style') .map(style => style.css) .join('\n')
     }
 
-    _content() {
+    _shadow_links() {
+        return T.getInherited(this.constructor, 'style_path') .filter(Boolean) .map(path => {
+            // let url = schemat.site.translate_local(path)     // this only works on server, not needed on client-side
+            // print('shadow link:', path)
+            return LINK({href: path, rel: 'stylesheet'})
+        })
+    }
+
+    _content(on_server = false) {
         /* Return the content of the component as a React element wrapped up in a <div> with proper classes for styling. */
         let classes = cl(this._classes(), 'component')
         let css = this._shadow_styles()
         let style = css ? STYLE(compact_css(css)) : null
-        return FRAGMENT(style, DIV(classes, this._render_original()))
+        let links = on_server ? [] : this._shadow_links()
+        let main = DIV(classes, this._render_original())
+        return FRAGMENT(...links, style, main)
     }
 
     _render_wrapped() {
@@ -256,7 +266,7 @@ export class Component extends Styled(React.Component) {
 
         // render the component inside a shadow DOM
         if (typeof window === 'undefined') {                            // server-side: content rendered inside a <template> tag
-            let template = TEMPLATE({shadowrootmode: 'open'}, this._content())
+            let template = TEMPLATE({shadowrootmode: 'open'}, this._content(true))
             return DIV(classes, template)
         }
         else                                                            // client-side: initially render the <div> container, shadow DOM content will be added in componentDidMount

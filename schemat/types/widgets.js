@@ -118,16 +118,16 @@ export class TEXT_Widget extends TextualWidget {
     static class_name = "TEXT"
     static style_path = import.meta.resolve('./widgets.css')
 
-    static style = new Style('TEXT', this, {},
-    `
-        .editor {
-            min-height: 2em;
-            height: 10em;
-            width: 100%;
-            outline: none;
-            resize: vertical;
-        }
-    `)
+    // static style = new Style('TEXT', this, {},
+    // `
+    //     .editor {
+    //         min-height: 2em;
+    //         height: 10em;
+    //         width: 100%;
+    //         outline: none;
+    //         resize: vertical;
+    //     }
+    // `)
 
     viewer() { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor() {
