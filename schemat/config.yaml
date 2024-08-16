@@ -2,8 +2,12 @@
 # Startup configuration of the local Schemat process
 #
 
+# ID of the Cluster object to be loaded at startup
+cluster: 1025
+
 # ID of the Site object to be loaded at startup
 site: 1004
+
 
 # bootstrap_database:
 # Configuration of a temporary database from which the Site and the main Database are loaded during startup.

@@ -499,6 +499,12 @@
   name: Cluster
   _category_:
     "@": 0
+  schema:
+    site:
+      info: Site object that specifies the web application(s) to be exposed by this
+        cluster.
+      "@": type.ITEM
+    "@": base.Catalog
   "@": base.Data
 - __id: 22
   name: Node
