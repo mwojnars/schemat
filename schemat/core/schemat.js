@@ -147,7 +147,7 @@ export class Schemat {
 
     /***  Initialization  ***/
 
-    static async create_global(site_id, bootstrap_db, open_bootstrap_db = null) {
+    static async create_global(site_id, bootstrap_db, open_bootstrap_db = null, cluster_id = null) {
         /* Create a new Schemat instance as a global object and perform initialization of classpath, site_id, bootstrap db.
            This special method is defined instead of a constructor because async operations are performed.
          */
@@ -156,8 +156,15 @@ export class Schemat {
 
         await schemat._init_classpath()
 
-        schemat._db = bootstrap_db              // the ultimate DB is opened later, on the first access through schemat.db
+        schemat._db = bootstrap_db              // on server, the ultimate DB is opened later: on the first access to schemat.db
         await open_bootstrap_db?.()
+
+        // if (cluster_id) {
+        //     print(`Loading cluster ${cluster_id}...`)
+        //     let cluster = await schemat.get_loaded(cluster_id)
+        //     site_id = cluster.site._id_
+        //     print(`Cluster ${cluster_id} loaded, site ID: ${site_id}`)
+        // }
 
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         schemat.site_id = site_id
