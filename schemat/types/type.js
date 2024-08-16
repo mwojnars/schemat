@@ -7,9 +7,6 @@ import * as widgets from './widgets.js'
 // import { Temporal } from './libs/js-temporal/polyfill.js'
 // print('Temporal:', Temporal)  -- improved data struct for date/time handling
 
-print('Loading type.js... import.meta:', import.meta.url)   //, import.meta.resolve
-// print(import.meta.resolve('./styles/type.css'))
-
 
 export function is_valid_field_name(name) {
     /* Check if a string is a valid field name. Dash "-" is allowed except for the 1st character. */
