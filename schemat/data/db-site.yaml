@@ -59,7 +59,7 @@
     "@": 0
   "@": base.Data
 - __id: 1004
-  name: main_site
+  name: main-site
   base_url: http://127.0.0.1:3000
   database:
     "@": 200
@@ -233,4 +233,9 @@
     "@": 1019
   _category_:
     "@": 5
+  "@": base.Data
+- __id: 1025
+  name: main-cluster
+  _category_:
+    "@": 21
   "@": base.Data
