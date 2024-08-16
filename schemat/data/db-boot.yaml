@@ -500,8 +500,11 @@
   _category_:
     "@": 0
   schema:
+    database:
+      info: The Database of this cluster.
+      "@": type.ITEM
     site:
-      info: Site object that specifies the web application(s) to be exposed by this
+      info: A Site object that specifies the web application(s) to be exposed by this
         cluster.
       "@": type.ITEM
     "@": base.Catalog
