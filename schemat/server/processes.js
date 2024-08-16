@@ -21,7 +21,7 @@ export class BackendProcess {
         let config = await this.load_config()
         let db = Database.create()
 
-        await ServerSchemat.create_global(config.site, db, db => this._boot(db, config))
+        await ServerSchemat.create_global(config.site, db, () => this._open_bootstrap_db(db, config))
         // await schemat.db.insert_self()
 
         let method = this.CLI_PREFIX + cmd
@@ -37,7 +37,7 @@ export class BackendProcess {
         return yaml.parse(content)
     }
 
-    async _boot(db, config) {
+    async _open_bootstrap_db(db, config) {
         let rings = config.bootstrap_database.rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
         await db.open(rings)
