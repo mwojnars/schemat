@@ -147,20 +147,20 @@ export class Schemat {
 
     /***  Initialization  ***/
 
-    static async create_global(site_id, bootstrap_db, open_bootstrap_db = null, ...args) {
+    static async create_global(site_id, bootstrap_db, open_bootstrap_db = null) {
         /* Create a new Schemat instance as a global object and perform initialization of classpath, site_id, bootstrap db.
            This special method is defined instead of a constructor because async operations are performed.
          */
-        let schemat = new this(...args)
+        let schemat = new this()
         set_global({schemat})
 
         await schemat._init_classpath()
 
+        schemat._db = bootstrap_db              // the ultimate DB is opened later, on the first access through schemat.db
+        await open_bootstrap_db?.()
+
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         schemat.site_id = site_id
-        schemat._db = bootstrap_db              // the ultimate DB is opened later, on first access through schemat.db
-
-        await open_bootstrap_db?.()
         await schemat._init_site()
         // await schemat._reset_class()
         assert(schemat.site)
