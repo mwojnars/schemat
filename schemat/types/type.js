@@ -110,6 +110,10 @@ export class Type {
         if (value === null || value === undefined)
             if (this.props.blank) return null
             else throw new ValueError(`expected a non-blank (non-missing) value, got '${value}' instead`)
+        return this._validate(value)
+    }
+
+    _validate(value) {
         return value
     }
 
@@ -213,10 +217,8 @@ export class Primitive extends Type {
 
     static stype        // the predefined standard type (typeof...) of app-layer values; same type for db-layer values
 
-    validate(value) {
-        if ((value = super.validate(value)) === null) return value
+    _validate(value) {
         let t = this.constructor.stype
-        // if (typeof value === t || (this.props.blank && (value === null || value === undefined))) return value
         if (typeof value !== t) throw new ValueError(`expected a primitive value of type "${t}", got "${typeof value}" instead (${value})`)
         return value
     }
@@ -235,8 +237,8 @@ export class NUMBER extends Primitive {
         min:     undefined,         // minimum value allowed (>=)
         max:     undefined,         // maximum value allowed (<=)
     }
-    validate(value) {
-        if ((value = super.validate(value)) === null) return value
+    _validate(value) {
+        value = super._validate(value)
         let {min, max} = this.props
         if (min !== undefined && value < min) throw new ValueError(`the number (${value}) is out of bounds, should be >= ${min}`)
         if (max !== undefined && value > max) throw new ValueError(`the number (${value}) is out of bounds, should be <= ${max}`)
@@ -254,8 +256,8 @@ export class INTEGER extends NUMBER {
         length:  undefined,     // number of bytes to be used to store values in DB indexes; adaptive encoding if undefined (for uint), or 6 (for signed int)
     }
 
-    validate(value) {
-        if ((value = super.validate(value)) === null) return value
+    _validate(value) {
+        value = super._validate(value)
         if (!Number.isInteger(value)) throw new ValueError(`expected an integer, got ${value} instead`)
         if (!this.props.signed && value < 0) throw new ValueError(`expected a positive integer, got ${value} instead`)
         if (value < Number.MIN_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too small to be stored in JavaScript`)
@@ -361,8 +363,8 @@ export class Textual extends Primitive {
 }
 
 export class STRING extends Textual {
-    validate(value) {
-        return super.validate(value).trim()             // trim leading/trailing whitespace
+    _validate(value) {
+        return super._validate(value).trim()             // trim leading/trailing whitespace
     }
 }
 export class URL extends STRING {
@@ -395,8 +397,8 @@ export class PATH extends STRING {
 export class DATE extends STRING {
     /* Date (no time, no timezone). Serialized to a string "YYYY-MM-DD". */
 
-    validate(value) {
-        if ((value = super.validate(value)) === null) return value
+    _validate(value) {
+        value = super._validate(value)
         if (!(value instanceof Date)) throw new ValueError(`expected a Date, got ${value} instead`)
         return value
     }
@@ -421,8 +423,7 @@ export class GENERIC extends Type {
         inherit: false,
     }
 
-    validate(obj) {
-        if ((obj = super.validate(obj)) === null) return obj
+    _validate(obj) {
         let {class: class_} = this.props
         if (class_ && !(obj instanceof class_))
             throw new ValueError(`invalid object type, expected an instance of ${class_}, got ${obj} instead`)
@@ -449,8 +450,8 @@ export class TYPE extends GENERIC {
 export class CLASS extends GENERIC {
     /* Accept objects that represent classes to be encoded through Classpath. */
 
-    validate(cls) {
-        if ((cls = super.validate(cls)) === null) return cls
+    _validate(cls) {
+        cls = super._validate(cls)
         if (!T.isClass(cls)) throw new ValueError(`expected a class, got ${cls} instead`)
         return cls
     }
@@ -517,8 +518,8 @@ export class ARRAY extends GENERIC {
         this.props.type.collect(assets)
     }
 
-    validate(value) {
-        if ((value = super.validate(value)) === null) return value
+    _validate(value) {
+        value = super._validate(value)
         if (!Array.isArray(value)) throw new ValueError(`expected an array, got ${typeof value}`)
         return value.map(elem => this.props.type.validate(elem))
     }
