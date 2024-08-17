@@ -23,7 +23,7 @@ export function is_valid_field_name(name) {
 export class Type {
 
     isCATALOG()     { return false }
-    isCompound()    { return this.isCATALOG() }     // "compound" type implements a custom mergeEntries(), which prevents some optimizations
+    // isCompound() { return this.isCATALOG() }     // "compound" type implements a custom mergeEntries(), which prevents some optimizations
     isRepeated()    { return this.props.repeated }
     isEditable()    { return this.props.editable }
 
@@ -132,8 +132,8 @@ export class Type {
            Return the merged value, or undefined if it cannot be determined.
            The merged value may include or consist of the type's imputed value (props.impute()) or default (props.default).
            Base class implementation returns the first value of `arrays`, or the default value, or imputed value.
-           Subclasses may provide a different implementation - in such case the type is considered "compound"
-           and should return isCompound() == true to prevent simplified merging in Item._compute_property().
+           Only the CATALOG and its subclasses provide a different implementation that performs a merge of catalogs
+           across all prototypes of a given object.
          */
         assert(!this.isRepeated())
         for (let values of arrays) {
@@ -506,6 +506,29 @@ export class ITEM extends Type {
  **
  */
 
+export class ARRAY extends GENERIC {
+    /* Represents arrays of objects, all of the same type (`type`, generic_type by default). */
+
+    static defaultProps = {
+        type: generic_type,                 // type of all elements in the array, as a Type instance
+    }
+
+    collect(assets) {
+        this.props.type.collect(assets)
+    }
+
+    validate(value) {
+        if ((value = super.validate(value)) === null) return value
+        if (!Array.isArray(value)) throw new ValueError(`expected an array, got ${typeof value}`)
+        return value.map(elem => this.props.type.validate(elem))
+    }
+
+    toString() {
+        return `${this.constructor.name}(${this.props.type})`
+    }
+}
+
+ 
 export class MAP extends Type {
     /*
     Accepts plain objects as data values, or objects of a given `type`.
@@ -516,7 +539,7 @@ export class MAP extends Type {
     static defaultProps = {
         class:      Object,                     // class of input objects
         keys:       new STRING(),               // Type of keys of app-layer dicts
-        values:     generic_type,             // Type of values of app-layer dicts
+        values:     generic_type,               // Type of values of app-layer dicts
     }
 
     collect(assets) {

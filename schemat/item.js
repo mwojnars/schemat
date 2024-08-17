@@ -659,7 +659,7 @@ export class Item {
         if (!type) return []
 
         // if the property is atomic (non-repeated and non-compound) and an own value is present, skip inheritance to speed up
-        if (!type.isRepeated() && !type.isCompound() && data.has(prop))
+        if (!type.isRepeated() && !type.isCATALOG() && data.has(prop))
             return [data.get(prop)]
 
         let ancestors = type.props.inherit ? proxy._ancestors_ : [proxy]    // `this` is always included as the first ancestor
