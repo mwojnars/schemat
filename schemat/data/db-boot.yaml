@@ -144,6 +144,9 @@
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
       "@": type.STRING
+    cluster:
+      info: A Cluster of compute & storage nodes that host this site and database.
+      "@": type.ITEM
     database:
       info: Database instance that contains all data of this site
       "@": type.ITEM
@@ -500,13 +503,6 @@
   _category_:
     "@": 0
   schema:
-    database:
-      info: The Database of this cluster.
-      "@": type.ITEM
-    site:
-      info: A Site object that specifies the web application(s) to be exposed by this
-        cluster.
-      "@": type.ITEM
     "@": base.Catalog
   "@": base.Data
 - __id: 22
