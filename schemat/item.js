@@ -166,6 +166,23 @@ class ItemProxy {
     static proxy_get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
 
+        // if (typeof value === 'object' && value?.[ItemProxy.FROM_CACHE])         // if the value comes from cache return it immediately
+        //     return value.value
+        //
+        // // check if the value comes from a cachable getter?
+        // if (target.constructor.cachable_getters?.has(prop)) {
+        //     if (typeof value === 'object' && value?.[ItemProxy.NO_CACHING])     // this particular value must not be cached for some reason?
+        //         return value.value
+        //     if (typeof value === 'object' && value?.[ItemProxy.CACHED])         // legacy
+        //         value = value.value
+        //
+        //     if (!target._meta_.mutable) {                                       // caching is only allowed in immutable objects
+        //         let stored = {value, [ItemProxy.FROM_CACHE]: true}
+        //         Object.defineProperty(target._self_, prop, {value: stored, writable: false, configurable: true})
+        //     }
+        //     return value
+        // }
+
         if (typeof value === 'object' && value?.[ItemProxy.CACHED]) {
             // the value comes from a getter and is labelled to be "CACHED"? save it in the target object
             value = value.value
@@ -860,6 +877,9 @@ export class Item {
     // The first argument, `request`, is a Request instance, followed by action-specific list of arguments.
     // In a special case when an action is called directly on the server through _triggers_.XXX(), `request` is null,
     // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
+
+    // CALL_self() { return new InternalService(() => this) }
+    // GET_json()  { return new JsonService(() => this._record_.encoded()) }
 
     static ['CALL/self'] = new InternalService(function() { return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)
