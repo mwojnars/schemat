@@ -1,10 +1,8 @@
 // import { Mutex } from 'async-mutex'
 
 import {assert, print, T} from '../common/utils.js'
-import {set_global} from "../common/globals.js";
 import {Schemat} from './schemat.js'
 import {ROOT_ID} from "../item.js"
-import {Loader} from "../server/loader.js"
 
 
 /**********************************************************************************************************************
@@ -18,12 +16,12 @@ export class ServerSchemat extends Schemat {
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
-    loader = null                       // Loader for dynamically loading JS modules from the SUN namespace
-
-    constructor() {
-        super()
-        this.loader = new Loader(import.meta.url)
-    }
+    // loader = null                       // Loader for dynamically loading JS modules from the SUN namespace
+    //
+    // constructor() {
+    //     super()
+    //     this.loader = new Loader(import.meta.url)
+    // }
 
     async _init_site() {
         await super._init_site()

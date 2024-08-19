@@ -13,9 +13,9 @@ import {Database} from "../db/db.js";
 export class BackendProcess {
     CLI_PREFIX = 'CLI_'
 
-    constructor(loader) {
-        this.loader = loader
-    }
+    // constructor(loader) {
+    //     this.loader = loader
+    // }
 
     async start(cmd, opts = {}) {
         let config = await this.load_config()
