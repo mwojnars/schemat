@@ -447,15 +447,15 @@ export class TYPE extends GENERIC {
     static Widget = widgets.TYPE_Widget
 }
 
-export class CLASS extends GENERIC {
-    /* Accept objects that represent classes to be encoded through Classpath. */
-
-    _validate(cls) {
-        cls = super._validate(cls)
-        if (!T.isClass(cls)) throw new ValueError(`expected a class, got ${cls} instead`)
-        return cls
-    }
-}
+// export class CLASS extends GENERIC {
+//     /* Accept objects that represent classes to be encoded through Classpath. */
+//
+//     _validate(cls) {
+//         cls = super._validate(cls)
+//         if (!T.isClass(cls)) throw new ValueError(`expected a class, got ${cls} instead`)
+//         return cls
+//     }
+// }
 
 // export class FIELD extends TYPE {
 //
