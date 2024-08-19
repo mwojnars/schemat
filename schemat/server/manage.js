@@ -9,7 +9,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {print, T} from '../common/utils.js'
-import {create_loader} from "./run.js"
+import {Loader} from "./loader.js"
 import {AdminProcess} from "./processes.js"
 
 
@@ -48,7 +48,7 @@ await (async function main() {
     let cmd = argv._[0]
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
 
-    let loader = create_loader(import.meta.url)
+    let loader = new Loader(import.meta.url)
 
     return new AdminProcess(loader).start(cmd, {...argv})
 })()

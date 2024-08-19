@@ -1,5 +1,7 @@
 import vm from 'node:vm'
 import {readFile} from 'node:fs/promises'
+import node_path from "node:path"
+import node_url from "node:url"
 
 import {print, DependenciesStack, assert} from '../common/utils.js'
 
@@ -37,11 +39,22 @@ export class Loader {
     }
 
 
-    constructor(path_local_fs) {
-        this.PATH_LOCAL_FS = path_local_fs
+    constructor(file_url, depth = 1) {
+        this.PATH_LOCAL_FS = this._get_root_folder(file_url, depth)
         this._linker = this._linker.bind(this)
     }
 
+    _get_root_folder(file_url, depth = 1) {
+        /* Calculate the loader's root folder at `depth` levels up from the file_url's folder and return as plain filesystem path. */
+        let file = node_url.fileURLToPath(file_url)                 // or: process.argv[1]
+        let root = node_path.dirname(file)                          // folder of the file_url
+    
+        for (let i = 0; i < depth; i++)                             // go up `depth` levels to get the root folder of the project
+            root = node_path.dirname(root)
+            
+        return root
+    }
+    
     async import(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
 

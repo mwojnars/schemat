@@ -22,7 +22,7 @@ export class ServerSchemat extends Schemat {
 
     constructor() {
         super()
-        this.loader = new Loader()
+        this.loader = new Loader(import.meta.url)
     }
 
     async _init_site() {
