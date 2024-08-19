@@ -102,13 +102,16 @@ export class Site extends Directory {
            or a URL path of the form "/system/local/.../file.js" or "/.../file.js:ClassName"
            pointing to a module accessible through the SUN namespace or to a particular symbol within such module.
          */
+        // print(`Site.import():  ${path}`)
         if (path[0] !== '/') return schemat.get_builtin_class(path)         // import a builtin class registered in Schemat's Classpath
 
         let [url_path, symbol] = splitLast(path || '', ':')
-        let module = this.client_side ?
-            import(url_path + '::import') :             // client-side import uses the URL path, with ::import appended to get the file in raw format with the proper MIME type
-            import(this.translate_url(url_path))        // server-side import uses the local file path translated from the URL path
+        let import_path = schemat.client_side ?
+            url_path + '::import' :             // client-side import uses the URL path, with ::import appended to get the file in raw format with the proper MIME type
+            this.translate_url(url_path)        // server-side import uses the local file path translated from the URL path
 
+        // print(`...importing:  ${import_path}`)
+        let module = import(import_path)
         return symbol ? (await module)[symbol] : module
     }
 
