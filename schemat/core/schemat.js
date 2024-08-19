@@ -281,7 +281,7 @@ export class Schemat {
         return this.classpath.encode(cls)
     }
 
-    get_builtin_class(path) {
+    get_builtin(path) {
         /* Retrieve a built-in class or function from the Classpath. */
         return this.classpath.decode(path)
     }
