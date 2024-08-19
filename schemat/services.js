@@ -47,13 +47,13 @@ export class Service {
        to create a new service that combines the functionality of the original services.
      */
 
-    endpoint        // the target object's endpoint where this service is exposed; a string of the form "PROTOCOL/name",
-                    // where PROTOCOL is one of GET/POST/CALL/KAFKA..., and the name is a service name, a Kafka topic etc.
+    endpoint            // the target object's endpoint where this service is exposed; a string of the form "PROTOCOL/name",
+                        // where PROTOCOL is one of GET/POST/CALL/KAFKA..., and the name is a service name, a Kafka topic etc.
 
-    target_service  // a function, f(request, ...args), to be called on the server when the protocol is invoked;
-                    // inside the call, `this` is bound to a supplied "target" object, so the function behaves
-                    // like a method of the "target"; `request` is a RequestContext, or {} in the case when an action
-                    // is called directly on the server through _triggers_.XXX() which invokes execute() instead of server()
+    service_function    // a function, f(request, ...args), to be called on the server when the protocol is invoked;
+                        // inside the call, `this` is bound to a supplied "target" object, so the function behaves
+                        // like a method of the "target"; `request` is a RequestContext, or {} in the case when an action
+                        // is called directly on the server through _triggers_.XXX() which invokes execute() instead of server()
 
     opts = {}           // configuration options
     static opts = {}    // default values of configuration options
@@ -62,8 +62,8 @@ export class Service {
     get endpoint_method() { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
     get endpoint_name()   { return this._splitEndpoint()[1] }       // name of the endpoint (function/action to execute)
 
-    constructor(target_service = null, opts = {}) {
-        this.target_service = target_service
+    constructor(service_function = null, opts = {}) {
+        this.service_function = service_function
         this.opts = {...this.constructor.opts, ...opts}
     }
 
@@ -105,7 +105,7 @@ export class Service {
            Here, `request` can be null, so execute() can be called directly *outside* of a web request,
            if only the service supports this.
          */
-        return this.target_service.call(target, request, ...args)
+        return this.service_function.call(target, request, ...args)
     }
 }
 
