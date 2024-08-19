@@ -1043,6 +1043,17 @@ export class Category extends Item {
 
     /***  Dynamic loading of source code  -- DISABLED for now! (not used)  ***/
 
+    // get _item_class_() {
+    //     /* Return a (cached) Promise that resolves to the dynamically created class to be used for items of this category. */
+    //     assert(false, 'not used')
+    //
+    //     print('_item_class_:', this.class_path)
+    //     assert(this.class_path === '/system/local/types/type_item.js:TypeItem')       // TODO: temporary
+    //
+    //     let [path, name] = splitLast(this.class_path || '', ':')
+    //     return schemat.import(path, name)       // a Promise
+    // }
+    //
     // getClassPath() {
     //     /* Return import path of this category's items' base class, as a pair [module_path, class_name]. */
     //     assert(false, 'not used?')
