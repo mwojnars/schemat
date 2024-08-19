@@ -107,7 +107,7 @@ export class Site extends Directory {
 
         let [url_path, symbol] = splitLast(path || '', ':')
         let import_path = schemat.client_side ?
-            url_path + '::import' :             // client-side import uses the URL path, with ::import appended to get the file in raw format with the proper MIME type
+            url_path + '::import' :             // client-side import uses the URL path, with ::import to get the raw file with proper MIME (if the file is a web object, not mapped to a local file)
             this.translate_url(url_path)        // server-side import uses the local file path translated from the URL path
 
         // print(`...importing:  ${import_path}`)

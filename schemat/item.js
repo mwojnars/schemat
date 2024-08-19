@@ -1043,7 +1043,7 @@ export class Category extends Item {
     // }
 
 
-    /***  Dynamic loading of source code  -- DISABLED for now! (not used)  ***/
+    /***  Dynamic loading of source code from web objects -- NOT USED for now (!)  ***/
 
     getClassPath() {
         /* Return import path of this category's items' base class, as a pair [module_path, class_name]. */
@@ -1116,6 +1116,7 @@ export class Category extends Item {
 
     static ['GET/import'] = new HttpService(function (request) {
         /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
+        assert(false, 'not used?')
         this._checkPath(request)
         request.res.type('js')
         return this._source_
