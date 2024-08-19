@@ -22,7 +22,9 @@ function DBG(type, name, promise) {
 
 
 export class Loader {
-    /* Dynamic imports from SUN namespace. */
+    /* Dynamic imports from SUN namespace. All import paths have the form of public url-paths, like "/system/local/.../file.js",
+       no "file://..." like in standard import paths.
+     */
 
     // static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     // static DOMAIN_SCHEMAT = ''              // internal server-side domain name prepended to DB import paths for debugging    //'schemat:'
@@ -47,7 +49,7 @@ export class Loader {
 
     _get_root_folder(file_url, depth = 1) {
         /* Calculate the loader's root folder at `depth` levels up from the file_url's folder and return as plain filesystem path. */
-        let file = node_url.fileURLToPath(file_url)                 // or: process.argv[1]
+        let file = node_url.fileURLToPath(file_url)
         let root = node_path.dirname(file)                          // folder of the file_url
     
         for (let i = 0; i < depth; i++)                             // go up `depth` levels to get the root folder of the project
