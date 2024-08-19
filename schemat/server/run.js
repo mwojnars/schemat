@@ -12,12 +12,14 @@ const PORT    =  3000
 const WORKERS =  1 //Math.floor(os.cpus().length / 2)
 
 
-export function create_loader(file_url) {
-    const file = node_url.fileURLToPath(file_url)                   // or: process.argv[1]
-    const root = node_path.dirname(node_path.dirname(file))         // root folder of the project
-    // const root = node_path.dirname(import.meta.dirname)             // root folder of the project  -- this doesn't work in Mocha tests
-    
-    // create custom loader for dynamic module imports from the SUN namespace
+export function create_loader(file_url, depth = 1) {
+    /* Create a custom loader for dynamic module imports. The loader's root folder will be placed `depth` levels up from the file_url's folder. */
+    let file = node_url.fileURLToPath(file_url)                 // or: process.argv[1]
+    let root = node_path.dirname(file)                          // folder of the file_url
+
+    for (let i = 0; i < depth; i++)                             // go up `depth` levels to get the root folder of the project
+        root = node_path.dirname(root)
+        
     return new Loader(root)
 }
 
