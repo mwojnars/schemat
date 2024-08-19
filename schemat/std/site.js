@@ -1,5 +1,5 @@
 import {set_global} from "../common/globals.js"
-import {print, assert, T, delay} from '../common/utils.js'
+import {print, assert, T, delay, splitLast} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Edit, Request} from '../item.js'
 import {Container, Directory, IID_Namespace} from "./containers.js";
@@ -27,6 +27,8 @@ export class Site extends Directory {
     static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
+    static URL_LOCAL = '/system/local'      // url-path of the application's local filesystem root folder
+
     // properties:
     database
     entries
@@ -43,9 +45,6 @@ export class Site extends Directory {
         }
     }
 
-
-    /***  URL generation  ***/
-
     async _check_default_container() {
         while (!schemat.site) await delay()
         let default_container = await this.resolve(this.default_path)
@@ -58,6 +57,9 @@ export class Site extends Directory {
         // ...and that this container is an ID_Namespace, so it is compatible with the URL generation on the client
         assert(default_container._category_.name === 'IID_Namespace', `container [${this._id_}] at the default path ('${this.default_path}') must be an IID_Namespace`)
     }
+
+
+    /***  URL / URL-path / local file-path conversions  ***/
 
     default_path_of(object_or_id) {
         /* Default absolute URL path ("system path") of a given object. Starts with '/', no domain.
@@ -82,11 +84,32 @@ export class Site extends Directory {
     }
 
     translate_local(path) {
-        /* Convert a local file path to its corresponding public URL path. */
+        /* Convert a local file path to its corresponding url-path. */
         if (path.startsWith('file://')) path = path.slice(7)                        // trim leading 'file://' if present
         let root = this.root_folder
-        if (!path.startsWith(root)) throw new Error(`path is not accessible via URL: ${path}`)
-        return path.replace(root, '/system/local/')
+        if (!path.startsWith(root + '/')) throw new Error(`path is not accessible via URL: ${path}`)
+        return path.replace(root, Site.URL_LOCAL)
+    }
+
+    translate_url(path) {
+        /* Convert a public URL path to its corresponding local file path. */
+        if (path.startsWith(Site.URL_LOCAL + '/')) return path.replace(Site.URL_LOCAL, this.root_folder)
+        throw new Error(`URL path does not point to a local file: ${path}`)
+    }
+
+    async import(path) {
+        /* `path` is either a builtin class path of the form "base.Catalog", interpreted through Classpath,
+           or a URL path of the form "/system/local/.../file.js" or "/.../file.js:ClassName"
+           pointing to a module accessible through the SUN namespace or to a particular symbol within such module.
+         */
+        if (path[0] !== '/') return schemat.get_builtin_class(path)         // import a builtin class registered in Schemat's Classpath
+
+        let [url_path, symbol] = splitLast(path || '', ':')
+        let module = this.client_side ?
+            import(url_path + '::import') :             // client-side import uses the URL path, with ::import appended to get the file in raw format with the proper MIME type
+            import(this.translate_url(url_path))        // server-side import uses the local file path translated from the URL path
+
+        return symbol ? (await module)[symbol] : module
     }
 
 
