@@ -42,6 +42,7 @@ export class Loader {
     constructor(file_url, depth = 1) {
         this.PATH_LOCAL_FS = this._get_root_folder(file_url, depth)
         this._linker = this._linker.bind(this)
+        this.context = this._create_context()
     }
 
     _get_root_folder(file_url, depth = 1) {
@@ -69,7 +70,7 @@ export class Loader {
         // path = this._unprefix(path)                  // drop "schemat:"
         path = this._normalize(path)                    // path normalize: convert '.' and '..' segments
 
-        this.context ??= this._create_context()
+        // this.context ??= this._create_context()
 
         let module = this._get_cached(path, referrer)
         if (module) return module                       // a promise
@@ -161,7 +162,19 @@ export class Loader {
         let vm_mod = new vm.SourceTextModule(source, {
             identifier:                 path,
             context:                    this.context,
-            initializeImportMeta:       (meta) => {meta.url = path},        // also: meta.resolve = ... ??
+            // initializeImportMeta:       (meta) => {meta.url = path},        // also: meta.resolve = ... ??
+
+            initializeImportMeta:       (meta) => {
+                // meta.url = `file://${path}`
+                meta.url = path
+                meta.resolve = (specifier, parent = meta.url) => {
+                    if (parent.startsWith("file://")) parent = node_url.fileURLToPath(parent)   // convert file URL to file path if necessary
+                    let path = node_path.resolve(node_path.dirname(parent), specifier)          // resolve the specifier relative to the parent path
+                    // print(`resolve: ${specifier}  (from ${parent})  ->  ${path}`)
+                    return path
+                    // return `file://${path}`                                                     // convert back to file URL
+                }
+            },
             importModuleDynamically:    this._linker,
         })
 
