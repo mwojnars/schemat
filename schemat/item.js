@@ -642,9 +642,6 @@ export class Item {
         if (typeof cls === 'string')
             cls = (cls[0] !== '/') ? await schemat.get_builtin(cls) : await schemat.site.import(cls)
 
-        // let cls = (!this._category_?.class_path && this._class_) || await this._category_?._item_class_     // TODO: `class_path` should be replaced with defaults._class_, so the check here could be removed
-        // if (typeof cls === 'string') cls = await schemat.get_builtin(cls)
-
         T.setClass(this, cls || Item)
     }
 
@@ -1047,17 +1044,6 @@ export class Category extends Item {
 
 
     /***  Dynamic loading of source code  -- DISABLED for now! (not used)  ***/
-
-    get _item_class_() {
-        /* Return a (cached) Promise that resolves to the dynamically created class to be used for items of this category. */
-        // assert(false, 'not used')
-
-        print('_item_class_:', this.class_path)
-        // assert(this.class_path === '/system/local/types/type_item.js:TypeItem')       // TODO: temporary
-
-        let [path, name] = splitLast(this.class_path || '', ':')
-        return schemat.import(path, name)       // a Promise
-    }
 
     getClassPath() {
         /* Return import path of this category's items' base class, as a pair [module_path, class_name]. */
