@@ -637,9 +637,13 @@ export class Item {
            known after loading the object's data.
          */
         if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
-        let cls = (!this._category_?.class_path && this._class_) || await this._category_?._item_class_     // TODO: `class_path` should be replaced with defaults._class_, so the check here could be removed
+
         // let cls = this._class_
-        if (typeof cls === 'string') cls = await schemat.get_class(cls)
+        // if (typeof cls === 'string') cls = await schemat.get_builtin_class(cls)
+
+        let cls = (!this._category_?.class_path && this._class_) || await this._category_?._item_class_     // TODO: `class_path` should be replaced with defaults._class_, so the check here could be removed
+        if (typeof cls === 'string') cls = await schemat.get_builtin_class(cls)
+
         T.setClass(this, cls || Item)
     }
 
@@ -949,7 +953,7 @@ export class Item {
     //        by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
     //      */
     //     let name = this.get('_boot_class')
-    //     if (name) base = schemat.get_class(name)
+    //     if (name) base = schemat.get_builtin_class(name)
     //
     //     let body = this.route_internal(('class')           // full class body from concatenated `code` and `code_*` snippets
     //     if (!body) return base

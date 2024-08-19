@@ -281,8 +281,8 @@ export class Schemat {
         return this.classpath.encode(cls)
     }
 
-    get_class(path) {
-        /* Get a global object - class or function from a virtual package (Classpath) - pointed to by `path`. */
+    get_builtin_class(path) {
+        /* Retrieve a built-in class or function from the Classpath. */
         return this.classpath.decode(path)
     }
 
