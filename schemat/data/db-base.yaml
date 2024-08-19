@@ -35,6 +35,9 @@
     readonly:
       "@": type.BOOLEAN
     "@": base.Catalog
+  defaults:
+    _class_: /system/local/db/mysql.js:MySQL
+    "@": base.Catalog
   _category_:
     "@": 0
   "@": base.Data
