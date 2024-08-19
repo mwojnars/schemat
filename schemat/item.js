@@ -638,11 +638,12 @@ export class Item {
          */
         if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
 
-        // let cls = this._class_
-        // if (typeof cls === 'string') cls = await schemat.get_builtin_class(cls)
+        let cls = this._class_
+        if (typeof cls === 'string')
+            cls = (cls[0] !== '/') ? await schemat.get_builtin_class(cls) : await schemat.site.import(cls)
 
-        let cls = (!this._category_?.class_path && this._class_) || await this._category_?._item_class_     // TODO: `class_path` should be replaced with defaults._class_, so the check here could be removed
-        if (typeof cls === 'string') cls = await schemat.get_builtin_class(cls)
+        // let cls = (!this._category_?.class_path && this._class_) || await this._category_?._item_class_     // TODO: `class_path` should be replaced with defaults._class_, so the check here could be removed
+        // if (typeof cls === 'string') cls = await schemat.get_builtin_class(cls)
 
         T.setClass(this, cls || Item)
     }
