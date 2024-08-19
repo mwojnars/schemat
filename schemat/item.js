@@ -1040,96 +1040,88 @@ export class Category extends Item {
     //     return this.CACHED_PROP(assets)
     // }
 
-    /***  Dynamic loading of source code  ***/
 
-    // get _item_class_() {
-    //     /* Return a (cached) Promise that resolves to the dynamically created class to be used for items of this category. */
-    //     assert(false, 'not used')
-    //
-    //     print('_item_class_:', this.class_path)
-    //     assert(this.class_path === '/system/local/types/type_item.js:TypeItem')       // TODO: temporary
-    //
-    //     let [path, name] = splitLast(this.class_path || '', ':')
-    //     return schemat.import(path, name)       // a Promise
+    /***  Dynamic loading of source code  -- DISABLED for now! (not used)  ***/
+
+    // getClassPath() {
+    //     /* Return import path of this category's items' base class, as a pair [module_path, class_name]. */
+    //     assert(false, 'not used?')
+    //     return splitLast(this.class_path || '', ':')
     // }
-
-    getClassPath() {
-        /* Return import path of this category's items' base class, as a pair [module_path, class_name]. */
-        return splitLast(this.class_path || '', ':')
-    }
-
-    get _source_() {
-        /* Combine all code snippets of this category, including inherited ones, into a module source code.
-           Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
-         */
-        let name = this.class_name || `Class_${this._id_}`
-        let base = this._codeBaseClass()
-        let init = this._codeInit()
-        let code = this._codeClass(name)
-        let expo = `export {Base, Class, Class as ${name}, Class as default}`
-
-        let snippets = [base, init, code, expo].filter(Boolean)
-        let source = snippets.join('\n')
-
-        return this.CACHED_PROP(source)
-    }
-
-    _codeInit()      { return this._merge_snippets('class_init') }
-    _codeBaseClass() {
-        /* Source code that imports/loads the base class, Base, for a custom Class of this category. */
-        let [path, name] = this.getClassPath()
-        if (name && path) return `import {${name} as Base} from '${path}'`
-        else if (path)    return `import Base from '${path}'`
-        else              return 'let Base = Item'              // Item class is available globally, no need to import
-    }
-    _codeClass(name) {
-        /* Source code that defines a custom Class of this category, possibly in a reduced form of Class=Base. */
-        let body = this._codeBody()
-        // if (!body) return 'let Class = Base'
-        let def  = body ? `class ${name} extends Base {\n${body}\n}` : `let ${name} = Base`
-        if (name !== 'Class') def += `\nlet Class = ${name}`
-        return def
-    }
-    _codeBody() {
-        /* Source code of this category's dynamic Class body. */
-        return this._merge_snippets('class_body')
-        // let body = this.route_internal(('class_body')
-        // let methods = []
-        // let views = this.prop('views')                              // extend body with VIEW_* methods
-        // for (let {key: vname, value: vbody} of views || [])
-        //     methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
-        // return body + methods.join('\n')
-    }
-
-    _merge_snippets(key, params) {
-        /* Retrieve all source code snippets (inherited first & own last) assigned to a given `key`.
-           including the environment-specific {key}_client OR {key}_server keys; assumes the values are strings.
-           Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets.
-         */
-        // let side = schemat.server_side ? 'server' : 'client'
-        // let snippets = this.getMany([key, `${key}_${side}`], params)
-        let snippets = this[`${key}_array`].reverse()
-        return snippets.join('\n')
-    }
-
-    _checkPath(request) {
-        /* Check if the request's path is compatible with the default path of this item. Throw an exception if not. */
-        let path  = request.path
-        let dpath = this._url_                      // `path` must be equal to the canonical URL path of this item
-        if (path !== dpath)
-            throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
-    }
-
+    //
+    // get _source_() {
+    //     /* Combine all code snippets of this category, including inherited ones, into a module source code.
+    //        Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
+    //      */
+    //     assert(false, 'not used?')
+    //     let name = this.class_name || `Class_${this._id_}`
+    //     let base = this._codeBaseClass()
+    //     let init = this._codeInit()
+    //     let code = this._codeClass(name)
+    //     let expo = `export {Base, Class, Class as ${name}, Class as default}`
+    //
+    //     let snippets = [base, init, code, expo].filter(Boolean)
+    //     let source = snippets.join('\n')
+    //
+    //     return this.CACHED_PROP(source)
+    // }
+    //
+    // _codeInit()      { return this._merge_snippets('class_init') }
+    // _codeBaseClass() {
+    //     /* Source code that imports/loads the base class, Base, for a custom Class of this category. */
+    //     let [path, name] = this.getClassPath()
+    //     if (name && path) return `import {${name} as Base} from '${path}'`
+    //     else if (path)    return `import Base from '${path}'`
+    //     else              return 'let Base = Item'              // Item class is available globally, no need to import
+    // }
+    // _codeClass(name) {
+    //     /* Source code that defines a custom Class of this category, possibly in a reduced form of Class=Base. */
+    //     let body = this._codeBody()
+    //     // if (!body) return 'let Class = Base'
+    //     let def  = body ? `class ${name} extends Base {\n${body}\n}` : `let ${name} = Base`
+    //     if (name !== 'Class') def += `\nlet Class = ${name}`
+    //     return def
+    // }
+    // _codeBody() {
+    //     /* Source code of this category's dynamic Class body. */
+    //     return this._merge_snippets('class_body')
+    //     // let body = this.route_internal(('class_body')
+    //     // let methods = []
+    //     // let views = this.prop('views')                              // extend body with VIEW_* methods
+    //     // for (let {key: vname, value: vbody} of views || [])
+    //     //     methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
+    //     // return body + methods.join('\n')
+    // }
+    //
+    // _merge_snippets(key, params) {
+    //     /* Retrieve all source code snippets (inherited first & own last) assigned to a given `key`.
+    //        including the environment-specific {key}_client OR {key}_server keys; assumes the values are strings.
+    //        Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets.
+    //      */
+    //     // let side = schemat.server_side ? 'server' : 'client'
+    //     // let snippets = this.getMany([key, `${key}_${side}`], params)
+    //     let snippets = this[`${key}_array`].reverse()
+    //     return snippets.join('\n')
+    // }
+    //
+    // _checkPath(request) {
+    //     /* Check if the request's path is compatible with the default path of this item. Throw an exception if not. */
+    //     let path  = request.path
+    //     let dpath = this._url_                      // `path` must be equal to the canonical URL path of this item
+    //     if (path !== dpath)
+    //         throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
+    // }
+    //
+    // static ['GET/import'] = new HttpService(function (request) {
+    //     /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
+    //     this._checkPath(request)
+    //     request.res.type('js')
+    //     return this._source_
+    // })
 
     /***  Endpoints  ***/
 
     static ['GET/admin'] = new ReactPage(CategoryAdminView)
-    static ['GET/import'] = new HttpService(function (request) {
-        /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
-        this._checkPath(request)
-        request.res.type('js')
-        return this._source_
-    })
 
     static ['POST/read'] = new TaskService({
         list_items: new Task({
