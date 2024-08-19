@@ -147,7 +147,7 @@ export class Schemat {
 
     /***  Initialization  ***/
 
-    static async create_global(site_id, bootstrap_db, open_bootstrap_db = null, cluster_id = null) {
+    static async create_global(site_id, bootstrap_db, open_bootstrap_db = null) {
         /* Create a new Schemat instance as a global object and perform initialization of classpath, site_id, bootstrap db.
            This special method is defined instead of a constructor because async operations are performed.
          */
