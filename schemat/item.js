@@ -855,7 +855,9 @@ export class Item {
             if (service) {
                 // print(`handle() endpoint: ${endpoint}`)
                 request.endpoint = endpoint
-                return service.server(this, request)
+                let handler = (typeof service === 'function') ? service.bind(this) : (r) => service.server(this, r)
+                return handler(request)
+                // return service.server(this, request)
             }
         }
 
