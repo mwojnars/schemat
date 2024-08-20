@@ -34,7 +34,7 @@ export const ROOT_ID = 0
  **
  */
 
-export class Request {
+export class Request {   // Connection ?
     /* Custom representation of a web request or internal request,
        together with context information that evolves during the routing procedure.
      */
@@ -881,8 +881,8 @@ export class Item {
     // In a special case when an action is called directly on the server through _triggers_.XXX(), `request` is null,
     // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
 
-    // CALL_self() { return new InternalService(() => this) }
-    // GET_json()  { return new JsonService(() => this._record_.encoded()) }
+    // CALL_self()     { return this }
+    // GET_json(conn?) { return JsonProtocol(() => this._record_.encoded()) }
 
     static ['CALL/self'] = new InternalService(function() { return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)
