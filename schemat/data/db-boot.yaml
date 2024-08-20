@@ -56,7 +56,7 @@
         GET: home
         GET/2: admin
         CALL: self
-        "@": base.Catalog
+        "@": schemat:Catalog
       "@": schemat/types/catalog.js:CATALOG
     schema:
       values:
@@ -73,9 +73,9 @@
       info: If true, it is allowed to use undefined (out-of-schema) fields in items -
         their schema is GENERIC()
       "@": schemat/types/type.js:BOOLEAN
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
-    _class_: base.Category
+    _class_: schemat:Category
     _container_:
       "@": 1014
     _ttl_: 60
@@ -132,9 +132,9 @@
       html_title:
         info: HTML title to be used for when this object is rendered.
         "@": schemat/types/type.js:STRING
-      "@": base.Catalog
-    "@": base.Catalog
-  "@": base.Data
+      "@": schemat:Catalog
+    "@": schemat:Catalog
+  "@": schemat:Data
 - __id: 1
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
@@ -178,16 +178,16 @@
       info: Interval [sec] at which the server-side cache is purged from expired
         objects. A real number.
       "@": schemat/types/type.js:NUMBER
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: schemat/std/site.js:Site
     _container_: null
-    "@": base.Catalog
+    "@": schemat:Catalog
   _extends_:
     "@": 5
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 2
   name: Container
   _category_:
@@ -196,8 +196,8 @@
     _is_container:
       default: true
       "@": schemat/types/type.js:BOOLEAN
-    "@": base.Catalog
-  "@": base.Data
+    "@": schemat:Catalog
+  "@": schemat:Data
 - __id: 3
   name: File
   info: File with a text content.
@@ -212,13 +212,13 @@
       "@": schemat/types/type.js:STRING
     format:
       "@": schemat/types/type.js:STRING
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: std.File
-    "@": base.Catalog
+    "@": schemat:Catalog
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 4
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
@@ -227,13 +227,13 @@
   schema:
     local_path:
       "@": schemat/types/type.js:STRING
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: std.FileLocal
-    "@": base.Catalog
+    "@": schemat:Catalog
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 5
   name: Directory
   info: >-
@@ -248,15 +248,15 @@
       values:
         "@": schemat/types/type.js:ITEM
       "@": schemat/types/catalog.js:CATALOG
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: schemat/std/containers.js:Directory
-    "@": base.Catalog
+    "@": schemat:Catalog
   _extends_:
     "@": 2
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 6
   name: LocalFolder
   info: |-
@@ -267,13 +267,13 @@
   schema:
     local_path:
       "@": schemat/types/type.js:STRING
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: std.LocalFolder
-    "@": base.Catalog
+    "@": schemat:Catalog
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 7
   name: Namespace
   info: "Unbounded collection of objects: each object that satisfies the criteria
@@ -283,12 +283,12 @@
     containers."
   defaults:
     _class_: std.Namespace
-    "@": base.Catalog
+    "@": schemat:Catalog
   _extends_:
     "@": 2
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 8
   name: IID_Namespace
   info: Namespace that serves items on simple URLs of the form /IID. Mainly used
@@ -299,15 +299,15 @@
         "@": 0
       info: Optional category(ies) of items handled by this namespace.
       "@": schemat/types/type.js:ITEM
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: schemat/std/containers.js:IID_Namespace
-    "@": base.Catalog
+    "@": schemat:Catalog
   _extends_:
     "@": 7
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 9
   name: Category_IID_Namespace
   info: "Namespace for accessing public data through verbose paths of the form:
@@ -320,15 +320,15 @@
           "@": 0
         "@": schemat/types/type.js:ITEM
       "@": schemat/types/catalog.js:CATALOG
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: schemat/std/containers.js:Category_IID_Namespace
-    "@": base.Catalog
+    "@": schemat:Catalog
   _extends_:
     "@": 7
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 11
   name: Database
   info: Internal database. An array of data Rings stacked on top of each other.
@@ -336,13 +336,13 @@
     rings:
       info: Array of Ring objects
       "@": schemat/types/type.js:GENERIC
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: schemat/db/db.js:Database
-    "@": base.Catalog
+    "@": schemat:Catalog
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 12
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
@@ -365,13 +365,13 @@
     indexes:
       info: Map of Indexes and their names
       "@": schemat/types/type.js:GENERIC
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: schemat/db/db.js:Ring
-    "@": base.Catalog
+    "@": schemat:Catalog
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 13
   name: Sequence
   info: Base category for sequences of key-value records, either data or indexes.
@@ -395,26 +395,26 @@
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together
       "@": schemat/types/type.js:NUMBER
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     flush_delay: 0.01
-    "@": base.Catalog
+    "@": schemat:Catalog
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 14
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
   schema:
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: schemat/db/sequence.js:DataSequence
-    "@": base.Catalog
+    "@": schemat:Catalog
   _extends_:
     "@": 13
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 15
   name: Index
   info: Base category for (derived) sequences that represent indexes over another
@@ -423,37 +423,37 @@
     source:
       info: source Sequence that feeds data to this index
       "@": schemat/types/type.js:ITEM
-    "@": base.Catalog
+    "@": schemat:Catalog
   _extends_:
     "@": 13
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 16
   name: DataIndex
   info: An Index that receives record updates from the main data sequence, so
     input records represent objects.
   schema:
-    "@": base.Catalog
+    "@": schemat:Catalog
   _extends_:
     "@": 15
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 17
   name: IndexByCategory
   info: "Index that maps categories to member objects: the key is [category ID,
     item ID]."
   schema:
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: schemat/db/index.js:IndexByCategory
-    "@": base.Catalog
+    "@": schemat:Catalog
   _extends_:
     "@": 16
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 18
   name: Block
   info: A continuous subrange of records of a data/index sequence, physically
@@ -468,45 +468,45 @@
     format:
       info: "storage format: data-yaml, index-jl, rocksdb (in the future), ..."
       "@": schemat/types/type.js:STRING
-    "@": base.Catalog
+    "@": schemat:Catalog
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 19
   name: DataBlock
   info: Block of a DataSequence.
   schema:
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: schemat/db/block.js:DataBlock
-    "@": base.Catalog
+    "@": schemat:Catalog
   _extends_:
     "@": 18
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 20
   name: IndexBlock
   info: Block of an Index sequence.
   schema:
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: schemat/db/block.js:IndexBlock
-    "@": base.Catalog
+    "@": schemat:Catalog
   _extends_:
     "@": 18
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 21
   name: Cluster
   _category_:
     "@": 0
   schema:
-    "@": base.Catalog
-  "@": base.Data
+    "@": schemat:Catalog
+  "@": schemat:Data
 - __id: 22
   name: Node
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data

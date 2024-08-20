@@ -4,10 +4,10 @@
   schema:
     filename:
       "@": schemat/types/type.js:STRING
-    "@": base.Catalog
+    "@": schemat:Catalog
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 101
   name: MysqlDB
   class_path: /system/local/db/mysql.js:MySQL
@@ -34,10 +34,10 @@
       "@": schemat/types/type.js:INTEGER
     readonly:
       "@": schemat/types/type.js:BOOLEAN
-    "@": base.Catalog
+    "@": schemat:Catalog
   defaults:
     _class_: /system/local/db/mysql.js:MySQL
-    "@": base.Catalog
+    "@": schemat:Catalog
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data

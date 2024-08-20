@@ -98,7 +98,7 @@ export class Site extends Directory {
     }
 
     async import(path) {
-        /* `path` is either a builtin class path of the form "base.Catalog", interpreted through Classpath,
+        /* `path` is either a builtin class path of the form "schemat:Catalog", interpreted through Classpath,
            or a URL path of the form "/system/local/.../file.js" or "/.../file.js:ClassName"
            pointing to a module accessible through the SUN namespace or to a particular symbol within such module.
          */

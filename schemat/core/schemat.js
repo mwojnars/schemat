@@ -93,10 +93,10 @@ class Prefetched {
     cache = new Map()
     inverse = new Map()
 
-    async fetch(module_url, {symbols, accept, exclude_variables = true} = {}) {
+    async fetch(module_url, {path: target_path, symbols, accept, exclude_variables = true} = {}) {
         let module = await import(module_url)
         let prefixed_url = `schemat/core/${module_url}`
-        let normalized_url = normalize_path(prefixed_url)
+        let normalized_url = target_path || normalize_path(prefixed_url)
 
         if (typeof symbols === "string")    symbols = symbols.split(' ')
         else if (!symbols)                  symbols = Object.keys(module)
@@ -267,7 +267,7 @@ export class Schemat {
 
         prefetched.set(":Map", Map)
 
-        await prefetched.fetch("../item.js")
+        await prefetched.fetch("../index.js", {path: 'schemat'})        // Schemat core classes, e.g., "schemat:Item"
         await prefetched.fetch("../std/files.js")
         await prefetched.fetch("../std/site.js")
         await prefetched.fetch("../std/containers.js")

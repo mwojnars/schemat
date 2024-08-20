@@ -19,31 +19,31 @@
       values:
         "@": schemat/types/type.js:TYPE
       "@": schemat/types/catalog.js:CATALOG
-    "@": base.Catalog
+    "@": schemat:Catalog
   _category_:
     "@": 0
-  "@": base.Data
+  "@": schemat:Data
 - __id: 102
   name: STRING
   class_path: /system/local/types/type.js:STRING
   _category_:
     "@": 10
-  "@": base.Data
+  "@": schemat:Data
 - __id: 103
   name: NUMBER
   class_path: /system/local/types/type.js:NUMBER
   _category_:
     "@": 10
-  "@": base.Data
+  "@": schemat:Data
 - __id: 104
   name: INTEGER
   class_path: /system/local/types/type.js:INTEGER
   _category_:
     "@": 10
-  "@": base.Data
+  "@": schemat:Data
 - __id: 105
   name: URL
   class_path: /system/local/types/type.js:URL
   _category_:
     "@": 10
-  "@": base.Data
+  "@": schemat:Data
