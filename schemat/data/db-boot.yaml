@@ -367,7 +367,7 @@
       "@": schemat/types/type.js:GENERIC
     "@": base.Catalog
   defaults:
-    _class_: db.Ring
+    _class_: schemat/db/db.js:Ring
     "@": base.Catalog
   _category_:
     "@": 0
@@ -408,7 +408,7 @@
   schema:
     "@": base.Catalog
   defaults:
-    _class_: db.DataSequence
+    _class_: schemat/db/sequence.js:DataSequence
     "@": base.Catalog
   _extends_:
     "@": 13
@@ -447,7 +447,7 @@
   schema:
     "@": base.Catalog
   defaults:
-    _class_: db.IndexByCategory
+    _class_: schemat/db/index.js:IndexByCategory
     "@": base.Catalog
   _extends_:
     "@": 16
@@ -478,7 +478,7 @@
   schema:
     "@": base.Catalog
   defaults:
-    _class_: db.DataBlock
+    _class_: schemat/db/block.js:DataBlock
     "@": base.Catalog
   _extends_:
     "@": 18
@@ -491,7 +491,7 @@
   schema:
     "@": base.Catalog
   defaults:
-    _class_: db.IndexBlock
+    _class_: schemat/db/block.js:IndexBlock
     "@": base.Catalog
   _extends_:
     "@": 18

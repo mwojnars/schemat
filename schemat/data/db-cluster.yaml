@@ -75,7 +75,7 @@
     properties: []
     _field_types:
       - "@": schemat/types/type.js:INTEGER
-    "@": db.RecordSchema
+    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 207
   derived:
@@ -95,7 +95,7 @@
         "@": schemat/types/type.js:INTEGER
       "@": js.Map
     properties: []
-    "@": db.RecordSchema
+    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 208
   derived: []
@@ -131,7 +131,7 @@
     properties: []
     _field_types:
       - "@": schemat/types/type.js:INTEGER
-    "@": db.RecordSchema
+    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 211
   derived:
@@ -151,7 +151,7 @@
         "@": schemat/types/type.js:INTEGER
       "@": js.Map
     properties: []
-    "@": db.RecordSchema
+    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 212
   derived: []
@@ -187,7 +187,7 @@
     properties: []
     _field_types:
       - "@": schemat/types/type.js:INTEGER
-    "@": db.RecordSchema
+    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 215
   derived:
@@ -211,7 +211,7 @@
       - blank: true
         "@": schemat/types/type.js:INTEGER
       - "@": schemat/types/type.js:INTEGER
-    "@": db.RecordSchema
+    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 216
   derived: []
@@ -247,7 +247,7 @@
     properties: []
     _field_types:
       - "@": schemat/types/type.js:INTEGER
-    "@": db.RecordSchema
+    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 219
   derived:
@@ -267,7 +267,7 @@
         "@": schemat/types/type.js:INTEGER
       "@": js.Map
     properties: []
-    "@": db.RecordSchema
+    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 220
   derived: []
