@@ -6,7 +6,7 @@
   class_path: /system/local/types/type_item.js:TypeItem
   schema:
     class_path:
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     encode:
       info: Body of a function with the signature `encode(obj,props={})`. Should
         return a state that encodes the input object/value, `obj`.

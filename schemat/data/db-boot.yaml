@@ -13,11 +13,11 @@
         category. May contain an optional class name appended after colon ':'.
         If the class name is missing (no colon), default import from the file is
         used.
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     class_name:
       info: Custom internal name for the Class of this category, for debugging. Also
         used as an alias when exporting the Class from the category's module.
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     class_init:
       repeated: true
       info: Module-level initialization for this category's Javascript class.
@@ -48,7 +48,7 @@
       "@": type.CATALOG
     default_endpoints:
       values:
-        "@": type.STRING
+        "@": schemat/types/type.js:STRING
       info: List of [PROTOCOL, endpoint] pairs that define default endpoint(s) for
         objects of this category when requested via a URL with no explicit
         endpoint.
@@ -89,7 +89,7 @@
         info: Javascript class (identified by a class path) to be assigned to the object
           after it is loaded from DB.
         default: base.Item
-        "@": type.STRING
+        "@": schemat/types/type.js:STRING
       _extends_:
         info: An item that serves as a prototype for this one, that is, provides default
           values for missing properties of this item. Multiple prototypes are
@@ -113,7 +113,7 @@
         info: Set to "DRAFT" if the object's record is not yet fully initialized in the
           database.
         inherit: false
-        "@": type.STRING
+        "@": schemat/types/type.js:STRING
       _ttl_:
         default: 10
         info: Time To Live (TTL) of an object, in seconds. Determines for how long the
@@ -125,13 +125,13 @@
         info: Display name of the object. May contain spaces, punctuation, non-latin
           characters.
         default: ""
-        "@": type.STRING
+        "@": schemat/types/type.js:STRING
       info:
         info: Description or summary of the object.
         "@": type.TEXT
       html_title:
         info: HTML title to be used for when this object is rendered.
-        "@": type.STRING
+        "@": schemat/types/type.js:STRING
       "@": base.Catalog
     "@": base.Catalog
   "@": base.Data
@@ -143,7 +143,7 @@
     base_url:
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     cluster:
       info: A Cluster of compute & storage nodes that host this site and database.
       "@": type.ITEM
@@ -166,13 +166,13 @@
     root_folder:
       info: Local filesystem path of the root directory containing source code for
         this site.
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     _path_:
       default: /
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     _url_:
       default: /
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     cache_purge_interval:
       default: 10
       info: Interval [sec] at which the server-side cache is purged from expired
@@ -180,7 +180,7 @@
       "@": type.NUMBER
     "@": base.Catalog
   defaults:
-    _class_: std.Site
+    _class_: schemat/std/site.js:Site
     _container_: null
     "@": base.Catalog
   _extends_:
@@ -209,9 +209,9 @@
         file download; or an extension ('js', 'jpg', ...) to be converted to an
         appropriate type. If missing, response mimetype is inferred from the URL
         path extension, if present.
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     format:
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     "@": base.Catalog
   defaults:
     _class_: std.File
@@ -226,7 +226,7 @@
     "@": 3
   schema:
     local_path:
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     "@": base.Catalog
   defaults:
     _class_: std.FileLocal
@@ -266,7 +266,7 @@
     "@": 5
   schema:
     local_path:
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     "@": base.Catalog
   defaults:
     _class_: std.LocalFolder
@@ -464,10 +464,10 @@
       "@": type.ITEM
     filename:
       info: path to a local file that contains records of this block
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     format:
       info: "storage format: data-yaml, index-jl, rocksdb (in the future), ..."
-      "@": type.STRING
+      "@": schemat/types/type.js:STRING
     "@": base.Catalog
   _category_:
     "@": 0
