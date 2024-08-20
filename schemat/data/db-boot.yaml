@@ -250,7 +250,7 @@
       "@": schemat/types/catalog.js:CATALOG
     "@": base.Catalog
   defaults:
-    _class_: std.Directory
+    _class_: schemat/std/containers.js:Directory
     "@": base.Catalog
   _extends_:
     "@": 2
@@ -301,7 +301,7 @@
       "@": schemat/types/type.js:ITEM
     "@": base.Catalog
   defaults:
-    _class_: std.IID_Namespace
+    _class_: schemat/std/containers.js:IID_Namespace
     "@": base.Catalog
   _extends_:
     "@": 7
@@ -322,7 +322,7 @@
       "@": schemat/types/catalog.js:CATALOG
     "@": base.Catalog
   defaults:
-    _class_: std.Category_IID_Namespace
+    _class_: schemat/std/containers.js:Category_IID_Namespace
     "@": base.Catalog
   _extends_:
     "@": 7
