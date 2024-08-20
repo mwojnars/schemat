@@ -94,6 +94,7 @@ class Prefetched {
     inverse = new Map()
 
     async fetch(module_url, {path: target_path, symbols, accept, exclude_variables = true} = {}) {
+        /* Import symbols from a module and add them to the cache. */
         let module = await import(module_url)
         let prefixed_url = `schemat/core/${module_url}`
         let normalized_url = target_path || normalize_path(prefixed_url)
@@ -152,7 +153,7 @@ export class Schemat {
     site_id                         // ID of the active Site object
 
     registry = new Registry()       // cache of web objects, records and indexes loaded from DB
-    classpath                       // Classpath containing built-in classes and their paths; only used during bootstrap
+    // classpath                       // Classpath containing built-in classes and their paths; only used during bootstrap
     prefetched                      // Prefetched instance containing imported builtin classes and functions
 
     is_closing = false              // true if the Schemat node is in the process of shutting down
@@ -210,7 +211,7 @@ export class Schemat {
         let schemat = new this()
         set_global({schemat})
 
-        await schemat._init_classpath()
+        // await schemat._init_classpath()
         await schemat._init_prefetched()
 
         schemat._db = bootstrap_db              // on server, the ultimate DB is opened later: on the first access to schemat.db
@@ -232,34 +233,34 @@ export class Schemat {
         return schemat
     }
 
-    async _init_classpath() {
-        // print('initClasspath() started...')
-        let classpath = new Classpath()
-
-        // add standard classes to the classpath
-        classpath.setMany("js", Map)
-        classpath.setMany("base", Catalog, Data)
-        await classpath.setModule("base", "../item.js")
-        await classpath.setModule("std", "../std/files.js")
-        await classpath.setModule("std", "../std/site.js")
-        await classpath.setModule("std", "../std/containers.js")
-
-        // if (this.server_side) {
-        await classpath.setModule("db", "../db/records.js")
-        await classpath.setModule("db", "../db/block.js")
-        await classpath.setModule("db", "../db/sequence.js")
-        await classpath.setModule("db", "../db/index.js")
-        await classpath.setModule("db", "../db/db.js")
-
-        let accept = (name) => name.toUpperCase() === name || name === 'TypeWrapper'
-
-        // add all Type subtypes (all-caps class names) + TypeWrapper
-        await classpath.setModule("type", "../types/type.js", {accept})
-        await classpath.setModule("type", "../types/catalog.js", {accept})
-
-        this.classpath = classpath
-        // print('initClasspath() done')
-    }
+    // async _init_classpath() {
+    //     // print('initClasspath() started...')
+    //     let classpath = new Classpath()
+    //
+    //     // add standard classes to the classpath
+    //     classpath.setMany("js", Map)
+    //     classpath.setMany("base", Catalog, Data)
+    //     await classpath.setModule("base", "../item.js")
+    //     await classpath.setModule("std", "../std/files.js")
+    //     await classpath.setModule("std", "../std/site.js")
+    //     await classpath.setModule("std", "../std/containers.js")
+    //
+    //     // if (this.server_side) {
+    //     await classpath.setModule("db", "../db/records.js")
+    //     await classpath.setModule("db", "../db/block.js")
+    //     await classpath.setModule("db", "../db/sequence.js")
+    //     await classpath.setModule("db", "../db/index.js")
+    //     await classpath.setModule("db", "../db/db.js")
+    //
+    //     let accept = (name) => name.toUpperCase() === name || name === 'TypeWrapper'
+    //
+    //     // add all Type subtypes (all-caps class names) + TypeWrapper
+    //     await classpath.setModule("type", "../types/type.js", {accept})
+    //     await classpath.setModule("type", "../types/catalog.js", {accept})
+    //
+    //     this.classpath = classpath
+    //     // print('initClasspath() done')
+    // }
 
     async _init_prefetched() {
         // print('_init_prefetched() started...')
@@ -359,16 +360,20 @@ export class Schemat {
             cls = cls.constructor
         if (!cls) throw `Argument is empty or not a class: ${cls}`
 
-        try { return this.prefetched.get_path(cls) }
-        catch (ex) { return this.classpath.encode(cls) }
+        return this.prefetched.get_path(cls)
+
+        // try { return this.prefetched.get_path(cls) }
+        // catch (ex) { return this.classpath.encode(cls) }
     }
 
     get_builtin(path) {
         /* Retrieve a built-in class or function from the Classpath. */
-        try { return this.classpath.decode(path) }
-        catch (ex) {
-            return this.prefetched.get_object(path)
-        }
+        return this.prefetched.get_object(path)
+
+        // try { return this.classpath.decode(path) }
+        // catch (ex) {
+        //     return this.prefetched.get_object(path)
+        // }
     }
 
 
