@@ -70,11 +70,11 @@
   schema:
     fields:
       id:
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       "@": js.Map
     properties: []
     _field_types:
-      - "@": type.INTEGER
+      - "@": schemat/types/type.js:INTEGER
     "@": db.RecordSchema
   blocks:
     - "@": 207
@@ -90,9 +90,9 @@
     fields:
       cid:
         blank: true
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       id:
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       "@": js.Map
     properties: []
     "@": db.RecordSchema
@@ -126,11 +126,11 @@
   schema:
     fields:
       id:
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       "@": js.Map
     properties: []
     _field_types:
-      - "@": type.INTEGER
+      - "@": schemat/types/type.js:INTEGER
     "@": db.RecordSchema
   blocks:
     - "@": 211
@@ -146,9 +146,9 @@
     fields:
       cid:
         blank: true
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       id:
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       "@": js.Map
     properties: []
     "@": db.RecordSchema
@@ -182,11 +182,11 @@
   schema:
     fields:
       id:
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       "@": js.Map
     properties: []
     _field_types:
-      - "@": type.INTEGER
+      - "@": schemat/types/type.js:INTEGER
     "@": db.RecordSchema
   blocks:
     - "@": 215
@@ -202,15 +202,15 @@
     fields:
       cid:
         blank: true
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       id:
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       "@": js.Map
     properties: []
     _field_types:
       - blank: true
-        "@": type.INTEGER
-      - "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
+      - "@": schemat/types/type.js:INTEGER
     "@": db.RecordSchema
   blocks:
     - "@": 216
@@ -242,11 +242,11 @@
   schema:
     fields:
       id:
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       "@": js.Map
     properties: []
     _field_types:
-      - "@": type.INTEGER
+      - "@": schemat/types/type.js:INTEGER
     "@": db.RecordSchema
   blocks:
     - "@": 219
@@ -262,9 +262,9 @@
     fields:
       cid:
         blank: true
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       id:
-        "@": type.INTEGER
+        "@": schemat/types/type.js:INTEGER
       "@": js.Map
     properties: []
     "@": db.RecordSchema

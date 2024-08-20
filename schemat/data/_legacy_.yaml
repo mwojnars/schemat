@@ -10,11 +10,11 @@
     encode:
       info: Body of a function with the signature `encode(obj,props={})`. Should
         return a state that encodes the input object/value, `obj`.
-      "@": type.CODE
+      "@": schemat/types/type.js:CODE
     decode:
-      "@": type.CODE
+      "@": schemat/types/type.js:CODE
     initial:
-      "@": type.GENERIC
+      "@": schemat/types/type.js:GENERIC
     properties:
       values:
         "@": type.TYPE
