@@ -356,12 +356,16 @@ export class Schemat {
             cls = cls.constructor
         if (!cls) throw `Argument is empty or not a class: ${cls}`
 
-        return this.classpath.encode(cls)
+        try { return this.prefetched.get_path(cls) }
+        catch (ex) { return this.classpath.encode(cls) }
     }
 
     get_builtin(path) {
         /* Retrieve a built-in class or function from the Classpath. */
-        return this.classpath.decode(path)
+        try { return this.classpath.decode(path) }
+        catch (ex) {
+            return this.prefetched.get_object(path)
+        }
     }
 
 
