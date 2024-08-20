@@ -93,7 +93,7 @@ class Prefetched {
     cache = new Map()
     inverse = new Map()
 
-    async setModule(module_url, {symbols, accept, exclude_variables = true} = {}) {
+    async fetch(module_url, {symbols, accept, exclude_variables = true} = {}) {
         let module = await import(module_url)
         let prefixed_url = `schemat/core/${module_url}`
         let normalized_url = normalize_path(prefixed_url)
@@ -106,11 +106,11 @@ class Prefetched {
             let obj = module[name]
             if (accept && !accept(name, obj)) continue
             let path = `${normalized_url}:${name}`
-            this._insert(path, obj)
+            this.set(path, obj)
         }
     }
 
-    _insert(path, obj) {
+    set(path, obj) {
         if (this.cache.has(path)) throw new Error(`the path already exists: ${path}`)
         this.cache.set(path, obj)
 
@@ -265,19 +265,19 @@ export class Schemat {
         // print('_init_prefetched() started...')
         let prefetched = new Prefetched()
 
-        await prefetched.setModule("../item.js")
-        await prefetched.setModule("../std/files.js")
-        await prefetched.setModule("../std/site.js")
-        await prefetched.setModule("../std/containers.js")
-        await prefetched.setModule("../db/records.js")
-        await prefetched.setModule("../db/block.js")
-        await prefetched.setModule("../db/sequence.js")
-        await prefetched.setModule("../db/index.js")
-        await prefetched.setModule("../db/db.js")
+        await prefetched.fetch("../item.js")
+        await prefetched.fetch("../std/files.js")
+        await prefetched.fetch("../std/site.js")
+        await prefetched.fetch("../std/containers.js")
+        await prefetched.fetch("../db/records.js")
+        await prefetched.fetch("../db/block.js")
+        await prefetched.fetch("../db/sequence.js")
+        await prefetched.fetch("../db/index.js")
+        await prefetched.fetch("../db/db.js")
 
         let accept = (name) => name.toUpperCase() === name
-        await prefetched.setModule("../types/type.js", {accept})
-        await prefetched.setModule("../types/catalog.js", {accept})
+        await prefetched.fetch("../types/type.js", {accept})
+        await prefetched.fetch("../types/catalog.js", {accept})
 
         this.prefetched = prefetched
         // print('_init_prefetched() done')
