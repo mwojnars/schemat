@@ -88,10 +88,10 @@ import {Registry} from "./registry.js";
  **
  */
 
-class Prefetched {
+class Classpath {
     /* A cache of built-in Schemat classes that are prefetched from their modules upon startup and made available
-       to *synchronous* class-path resolution calls during serialization and deserialization in JSONx.
-       Provides two-way mapping between classes and their paths. The objects (classes) are mapped to regular paths
+       to *synchronous* class-path resolution during serialization and deserialization in JSONx.
+       Provides two-way mapping between objects and their paths. The objects (classes) are mapped to regular paths
        of the form: `<js-module-path>:<symbol>`, for example, "schemat/db/block.js:Block".
      */
 
@@ -158,7 +158,7 @@ export class Schemat {
     site_id                         // ID of the active Site object
 
     registry = new Registry()       // cache of web objects, records and indexes loaded from DB
-    builtin                         // Prefetched instance containing built-in classes and their paths
+    builtin                         // a Classpath containing built-in classes and their paths
 
     is_closing = false              // true if the Schemat node is in the process of shutting down
     server_side = true              // the current environment: client / server
@@ -237,7 +237,7 @@ export class Schemat {
     }
 
     async _init_builtin() {
-        let builtin = this.builtin = new Prefetched()
+        let builtin = this.builtin = new Classpath()
 
         builtin.set(":Map", Map)                                    // standard JS classes have an empty file part of the path
 
