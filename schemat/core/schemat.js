@@ -1,6 +1,6 @@
 "use strict";
 
-import {T, print, assert, DependenciesStack} from '../common/utils.js'
+import {T, print, assert, DependenciesStack, normalize_path} from '../common/utils.js'
 import {Catalog, Data} from '../data.js'
 import {Item, ROOT_ID} from '../item.js'
 import {set_global} from "../common/globals.js";
@@ -84,6 +84,60 @@ class Classpath {
 
 /**********************************************************************************************************************
  **
+ **  PREFETCHED
+ **
+ */
+
+class Prefetched {
+    cache = new Map()
+    inverse = new Map()
+
+    async setModule(module_url, {symbols, accept, exclude_variables = true} = {}) {
+        let module = await import(module_url)
+        let prefixed_url = `schemat/core/${module_url}`
+        let normalized_url = normalize_path(prefixed_url)
+
+        if (typeof symbols === "string")    symbols = symbols.split(' ')
+        else if (!symbols)                  symbols = Object.keys(module)
+        if (exclude_variables)              symbols = symbols.filter(s => typeof module[s] === "function")
+
+        for (let name of symbols) {
+            let obj = module[name]
+            if (accept && !accept(name, obj)) continue
+            let path = `${normalized_url}:${name}`
+            this._insert(path, obj)
+        }
+    }
+
+    _insert(path, obj) {
+        if (this.cache.has(path)) throw new Error(`the path already exists: ${path}`)
+        this.cache.set(path, obj)
+
+        if (typeof obj === "function") {
+            if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
+            this.inverse.set(obj, path)
+        }
+    }
+
+    get_object(path) {
+        /* Return object pointed to by a given path. */
+        let obj = this.cache.get(path)
+        if (obj === undefined) throw new Error(`Unknown prefetched path: ${path}`)
+        return obj
+    }
+
+    get_path(obj) {
+        /* Return canonical path of a given class or function, `obj`. If `obj` was added multiple times
+           under different names (paths), the most recently assigned path is returned.
+        */
+        let path = this.inverse.get(obj)
+        if (path === undefined) throw new Error(`Not in prefetched: ${obj.name || obj}`)
+        return path
+    }
+}
+
+/**********************************************************************************************************************
+ **
  **  SCHEMAT
  **
  */
@@ -98,6 +152,7 @@ export class Schemat {
 
     registry = new Registry()       // cache of web objects, records and indexes loaded from DB
     classpath                       // Classpath containing built-in classes and their paths; only used during bootstrap
+    prefetched                      // Prefetched instance containing imported builtin classes and functions
 
     is_closing = false              // true if the Schemat node is in the process of shutting down
     server_side = true              // the current environment: client / server
@@ -155,6 +210,7 @@ export class Schemat {
         set_global({schemat})
 
         await schemat._init_classpath()
+        await schemat._init_prefetched()
 
         schemat._db = bootstrap_db              // on server, the ultimate DB is opened later: on the first access to schemat.db
         await open_bootstrap_db?.()
@@ -202,6 +258,28 @@ export class Schemat {
 
         this.classpath = classpath
         // print('initClasspath() done')
+    }
+
+    async _init_prefetched() {
+        // print('_init_prefetched() started...')
+        let prefetched = new Prefetched()
+
+        await prefetched.setModule("../item.js")
+        await prefetched.setModule("../std/files.js")
+        await prefetched.setModule("../std/site.js")
+        await prefetched.setModule("../std/containers.js")
+        await prefetched.setModule("../db/records.js")
+        await prefetched.setModule("../db/block.js")
+        await prefetched.setModule("../db/sequence.js")
+        await prefetched.setModule("../db/index.js")
+        await prefetched.setModule("../db/db.js")
+
+        let accept = (name) => name.toUpperCase() === name
+        await prefetched.setModule("../types/type.js", {accept})
+        await prefetched.setModule("../types/catalog.js", {accept})
+
+        this.prefetched = prefetched
+        // print('_init_prefetched() done')
     }
 
     async _reset_class() { /* on server only */ }
