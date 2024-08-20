@@ -340,7 +340,8 @@ export class API {
 
     constructor(services = {}) {
         for (let [endpoint, service] of Object.entries(services))
-            service.bindAt(endpoint)
+            if (typeof service === 'object')
+                service.bindAt(endpoint)
         this.add(services)
     }
 
@@ -416,11 +417,16 @@ export class Network {
         let server_side = (this.role === Network.SERVER)
 
         // create triggers for all endpoints in the API
-        for (let [endpoint_string, service] of Object.entries(this.api.services))
+        for (let [endpoint, service] of Object.entries(this.api.services))
         {
-            let {protocol, name} = new Endpoint(endpoint_string)
+            let {protocol, name} = new Endpoint(endpoint)
             let triggers = this[protocol] = this[protocol] || {}
             // if (!triggers) throw new Error(`unknown protocol: ${protocol}`)
+
+            if (typeof service === 'function') {
+                service = service.call(target)
+                service.bindAt(endpoint)
+            }
 
             triggers[name] = server_side
                 ? (...args) => service.execute(target, null, ...args)     // may return a Promise
@@ -430,7 +436,12 @@ export class Network {
 
     get_service(endpoint) {
         /* Resolve `endpoint` to a Service instance (a handler). Return undefined if `endpoint` not found. */
-        return this.api.get_service(endpoint)
+        let service = this.api.get_service(endpoint)
+        if (typeof service === 'function') {
+            service = service.call(this.target)
+            service.bindAt(endpoint)
+        }
+        return service
     }
 }
 

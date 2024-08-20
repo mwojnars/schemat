@@ -478,7 +478,16 @@ export class Item {
          */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
         let names = T.getAllPropertyNames(this).filter(is_endpoint)
+
+        let is_endpoint_proto = prop => prop.includes('__') && prop.split('__')[0].length && prop.split('__')[0] === prop.split('__')[0].toUpperCase()
+        let names_proto = T.getAllPropertyNames(this.prototype).filter(is_endpoint_proto)
+
         let endpoints = Object.fromEntries(names.map(name => [name, this[name]]))
+        let endpoints_proto = Object.fromEntries(names_proto.map(name => [name.replace('__','/'), this.prototype[name]]))
+
+        endpoints = {...endpoints, ...endpoints_proto}
+        // print('endpoints:', endpoints)
+
         return this._api_ = new API(endpoints)
     }
 
@@ -881,8 +890,8 @@ export class Item {
     // In a special case when an action is called directly on the server through _triggers_.XXX(), `request` is null,
     // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
 
-    // CALL_self()     { return this }
-    // GET_json(conn?) { return JsonProtocol(() => this._record_.encoded()) }
+    // CALL__self()     { return this }
+    // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this._record_.encoded() }) }
 
     static ['CALL/self'] = new InternalService(function() { return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)
