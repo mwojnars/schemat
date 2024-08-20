@@ -7,7 +7,7 @@
         "@": type.GENERIC
       info: Default values for properties of objects in this category. The key cannot
         be empty. Same key can be repeated.
-      "@": type.CATALOG
+      "@": schemat/types/catalog.js:CATALOG
     class_path:
       info: SUN path to a Javascript file that contains a (base) class for this
         category. May contain an optional class name appended after colon ':'.
@@ -35,7 +35,7 @@
         "@": type.CODE
       info: Source code of functions that generate static HTML response for particular
         access methods of this category's items.
-      "@": type.CATALOG
+      "@": schemat/types/catalog.js:CATALOG
     views:
       values:
         "@": type.CODE
@@ -45,7 +45,7 @@
         to be rendered. Alternatively, the code of each view may consist of a
         method header, view() {...}, and be accompanied by supporting methods:
         title(), assets() - like in a class body."
-      "@": type.CATALOG
+      "@": schemat/types/catalog.js:CATALOG
     default_endpoints:
       values:
         "@": schemat/types/type.js:STRING
@@ -57,12 +57,12 @@
         GET/2: admin
         CALL: self
         "@": base.Catalog
-      "@": type.CATALOG
+      "@": schemat/types/catalog.js:CATALOG
     schema:
       values:
         "@": type.TYPE
       info: Names and data types of properties of objects in this category.
-      "@": type.CATALOG
+      "@": schemat/types/catalog.js:CATALOG
     data_schema:
       info: A DATA instance that represents the schema of objects in this category.
         This is a virtual (non-editable) field automatically imputed from the
@@ -84,7 +84,7 @@
         info: Category of this item. Determines item's behavior and the schema of its
           attributes. Each category should be an item of the Root Category
           (IID=0).
-        "@": type.ITEM
+        "@": schemat/types/type.js:ITEM
       _class_:
         info: Javascript class (identified by a class path) to be assigned to the object
           after it is loaded from DB.
@@ -100,7 +100,7 @@
           Item.getInherited(). In this way, subcategories inherit individual
           field schemas as defined in base categories.
         inherit: false
-        "@": type.ITEM
+        "@": schemat/types/type.js:ITEM
       _container_:
         info: Parent URL container of this object. The chain of containers leading from
           Site to the object define the access path of this object, which can be
@@ -108,7 +108,7 @@
           segments.
         default:
           "@": 1021
-        "@": type.ITEM
+        "@": schemat/types/type.js:ITEM
       _status_:
         info: Set to "DRAFT" if the object's record is not yet fully initialized in the
           database.
@@ -120,7 +120,7 @@
           object is kept in a server-side cache and reused after being loaded
           from DB. If zero, the object is evicted on the nearest cache purge. A
           real number.
-        "@": type.NUMBER
+        "@": schemat/types/type.js:NUMBER
       name:
         info: Display name of the object. May contain spaces, punctuation, non-latin
           characters.
@@ -146,23 +146,23 @@
       "@": schemat/types/type.js:STRING
     cluster:
       info: A Cluster of compute & storage nodes that host this site and database.
-      "@": type.ITEM
+      "@": schemat/types/type.js:ITEM
     database:
       info: Database instance that contains all data of this site
-      "@": type.ITEM
+      "@": schemat/types/type.js:ITEM
     entries:
       values:
-        "@": type.ITEM
+        "@": schemat/types/type.js:ITEM
       repeated: true
       info: URL prefixes (as keys) mapped to items that shall perform routing of
         requests whose URLs start with a given prefix. NO leading/trailing
         slashes.
-      "@": type.CATALOG
+      "@": schemat/types/catalog.js:CATALOG
     default_path:
       info: URL path of a default container that can be used to access any object via
         its ID. For internal purposes. Should contain a leading slash and no
         trailing slash.
-      "@": type.PATH
+      "@": schemat/types/type.js:PATH
     root_folder:
       info: Local filesystem path of the root directory containing source code for
         this site.
@@ -177,7 +177,7 @@
       default: 10
       info: Interval [sec] at which the server-side cache is purged from expired
         objects. A real number.
-      "@": type.NUMBER
+      "@": schemat/types/type.js:NUMBER
     "@": base.Catalog
   defaults:
     _class_: schemat/std/site.js:Site
@@ -246,8 +246,8 @@
   schema:
     entries:
       values:
-        "@": type.ITEM
-      "@": type.CATALOG
+        "@": schemat/types/type.js:ITEM
+      "@": schemat/types/catalog.js:CATALOG
     "@": base.Catalog
   defaults:
     _class_: std.Directory
@@ -298,7 +298,7 @@
       category:
         "@": 0
       info: Optional category(ies) of items handled by this namespace.
-      "@": type.ITEM
+      "@": schemat/types/type.js:ITEM
     "@": base.Catalog
   defaults:
     _class_: std.IID_Namespace
@@ -318,8 +318,8 @@
       values:
         category:
           "@": 0
-        "@": type.ITEM
-      "@": type.CATALOG
+        "@": schemat/types/type.js:ITEM
+      "@": schemat/types/catalog.js:CATALOG
     "@": base.Catalog
   defaults:
     _class_: std.Category_IID_Namespace
@@ -361,7 +361,7 @@
       info: DataSequence that keeps all primary objects of this ring
       category:
         "@": 14
-      "@": type.ITEM
+      "@": schemat/types/type.js:ITEM
     indexes:
       info: Map of Indexes and their names
       "@": type.GENERIC
@@ -380,7 +380,7 @@
       info: parent Ring of this sequence
       category:
         "@": 12
-      "@": type.ITEM
+      "@": schemat/types/type.js:ITEM
     schema:
       info: schema of records in this sequence as RecordSchema
       "@": type.GENERIC
@@ -394,7 +394,7 @@
     flush_delay:
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together
-      "@": type.NUMBER
+      "@": schemat/types/type.js:NUMBER
     "@": base.Catalog
   defaults:
     flush_delay: 0.01
@@ -422,7 +422,7 @@
   schema:
     source:
       info: source Sequence that feeds data to this index
-      "@": type.ITEM
+      "@": schemat/types/type.js:ITEM
     "@": base.Catalog
   _extends_:
     "@": 13
@@ -461,7 +461,7 @@
   schema:
     sequence:
       info: parent Sequence this block is a part of
-      "@": type.ITEM
+      "@": schemat/types/type.js:ITEM
     filename:
       info: path to a local file that contains records of this block
       "@": schemat/types/type.js:STRING

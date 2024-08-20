@@ -78,6 +78,7 @@ class Classpath {
         /* Return object pointed to by a given path. */
         let obj = this.forward.get(path)
         if (obj === undefined) throw new Error(`Unknown class path: ${path}`)
+        print(`decoded with Classpath: ${path}`)
         return obj
     }
 }

@@ -18,7 +18,7 @@
     properties:
       values:
         "@": type.TYPE
-      "@": type.CATALOG
+      "@": schemat/types/catalog.js:CATALOG
     "@": base.Catalog
   _category_:
     "@": 0
