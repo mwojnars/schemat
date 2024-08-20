@@ -265,6 +265,8 @@ export class Schemat {
         // print('_init_prefetched() started...')
         let prefetched = new Prefetched()
 
+        prefetched.set(":Map", Map)
+
         await prefetched.fetch("../item.js")
         await prefetched.fetch("../std/files.js")
         await prefetched.fetch("../std/site.js")
