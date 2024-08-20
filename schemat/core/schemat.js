@@ -90,9 +90,9 @@ import {Registry} from "./registry.js";
 
 class Prefetched {
     /* A cache of built-in Schemat classes that are prefetched from their modules upon startup and made available
-       to *synchronous* class-path resolution during serialization and deserialization in JSONx.
-       The objects (classes) are mapped to their regular JS paths of the form: `<module-path>:<symbol>`,
-       for example, "schemat/db/block.js:Block".
+       to *synchronous* class-path resolution calls during serialization and deserialization in JSONx.
+       Provides two-way mapping between classes and their paths. The objects (classes) are mapped to regular paths
+       of the form: `<js-module-path>:<symbol>`, for example, "schemat/db/block.js:Block".
      */
 
     cache = new Map()
@@ -158,7 +158,7 @@ export class Schemat {
     site_id                         // ID of the active Site object
 
     registry = new Registry()       // cache of web objects, records and indexes loaded from DB
-    prefetched                      // Prefetched instance containing built-in classes and their paths
+    builtin                         // Prefetched instance containing built-in classes and their paths
 
     is_closing = false              // true if the Schemat node is in the process of shutting down
     server_side = true              // the current environment: client / server
@@ -215,8 +215,7 @@ export class Schemat {
         let schemat = new this()
         set_global({schemat})
 
-        // await schemat._init_classpath()
-        await schemat._init_prefetched()
+        await schemat._init_builtin()
 
         schemat._db = bootstrap_db              // on server, the ultimate DB is opened later: on the first access to schemat.db
         await open_bootstrap_db?.()
@@ -235,6 +234,26 @@ export class Schemat {
         assert(schemat.site)
 
         return schemat
+    }
+
+    async _init_builtin() {
+        let builtin = this.builtin = new Prefetched()
+
+        builtin.set(":Map", Map)                                    // standard JS classes have an empty file part of the path
+
+        await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:Item"
+        await builtin.fetch("../std/files.js")
+        await builtin.fetch("../std/site.js")
+        await builtin.fetch("../std/containers.js")
+        await builtin.fetch("../db/records.js")
+        await builtin.fetch("../db/block.js")
+        await builtin.fetch("../db/sequence.js")
+        await builtin.fetch("../db/index.js")
+        await builtin.fetch("../db/db.js")
+
+        let accept = (name) => name.toUpperCase() === name
+        await builtin.fetch("../types/type.js", {accept})
+        await builtin.fetch("../types/catalog.js", {accept})
     }
 
     // async _init_classpath() {
@@ -265,28 +284,6 @@ export class Schemat {
     //     this.classpath = classpath
     //     // print('initClasspath() done')
     // }
-
-    async _init_prefetched() {
-        let prefetched = new Prefetched()
-
-        prefetched.set(":Map", Map)                                     // built-in JS classes have empty file path
-
-        await prefetched.fetch("../index.js", {path: 'schemat'})        // Schemat core classes, e.g., "schemat:Item"
-        await prefetched.fetch("../std/files.js")
-        await prefetched.fetch("../std/site.js")
-        await prefetched.fetch("../std/containers.js")
-        await prefetched.fetch("../db/records.js")
-        await prefetched.fetch("../db/block.js")
-        await prefetched.fetch("../db/sequence.js")
-        await prefetched.fetch("../db/index.js")
-        await prefetched.fetch("../db/db.js")
-
-        let accept = (name) => name.toUpperCase() === name
-        await prefetched.fetch("../types/type.js", {accept})
-        await prefetched.fetch("../types/catalog.js", {accept})
-
-        this.prefetched = prefetched
-    }
 
     async _reset_class() { /* on server only */ }
 
@@ -362,12 +359,12 @@ export class Schemat {
             cls = cls.constructor
         if (!cls) throw `Argument is empty or not a class: ${cls}`
 
-        return this.prefetched.get_path(cls)
+        return this.builtin.get_path(cls)
     }
 
     get_builtin(path) {
-        /* Retrieve a built-in class or function from the Classpath. */
-        return this.prefetched.get_object(path)
+        /* Retrieve a built-in class by its path of the form: <module-path>:<class-name>. */
+        return this.builtin.get_object(path)
     }
 
 
