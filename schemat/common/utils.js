@@ -178,6 +178,21 @@ export function fileBaseName(filepath) {
     return filepath.replace(/^.*\/|\.[^.]*$/g, '')
 }
 
+export function normalize_path(path) {
+    /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
+    while (path.includes('/./')) path = path.replaceAll('/./', '/')
+    let lead = path[0] === '/' ? path[0] : ''
+    if (lead) path = path.slice(1)
+
+    let parts = []
+    for (const part of path.split('/'))
+        if (part === '..')
+            if (!parts.length) throw new Error(`incorrect path: '${path}'`)
+            else parts.pop()
+        else parts.push(part)
+
+    return lead + parts.join('/')
+}
 
 export function concat(arrays) {
     /* Concatenate multiple arrays into a new array. */

@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises'
 import node_path from "node:path"
 import node_url from "node:url"
 
-import {print, DependenciesStack, assert} from '../common/utils.js'
+import {print, DependenciesStack, assert, normalize_path} from '../common/utils.js'
 
 
 let _promises = new class extends DependenciesStack {
@@ -70,7 +70,7 @@ export class Loader {
         }
 
         // path = this._unprefix(path)                  // drop "schemat:"
-        path = this._normalize(path)                    // path normalize: convert '.' and '..' segments
+        path = normalize_path(path)                     // path normalize: convert '.' and '..' segments
 
         // this.context ??= this._create_context()
 
@@ -95,22 +95,6 @@ export class Loader {
     }
 
     // _unprefix(path) { return path.startsWith(Loader.DOMAIN_SCHEMAT) ? path.slice(Loader.DOMAIN_SCHEMAT.length) : path }
-
-    _normalize(path) {
-        /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
-        while (path.includes('/./')) path = path.replaceAll('/./', '/')
-        let lead = path[0] === '/' ? path[0] : ''
-        if (lead) path = path.slice(1)
-
-        let parts = []
-        for (const part of path.split('/'))
-            if (part === '..')
-                if (!parts.length) throw new Error(`incorrect path: '${path}'`)
-                else parts.pop()
-            else parts.push(part)
-
-        return lead + parts.join('/')
-    }
 
     _js_import_file(path) {
         /* Schemat's server-side import path (/system/local/...) converted to a local filesystem path that can be used with standard import(). */
