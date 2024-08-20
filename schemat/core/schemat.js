@@ -1,7 +1,6 @@
 "use strict";
 
 import {T, print, assert, DependenciesStack, normalize_path} from '../common/utils.js'
-import {Catalog, Data} from '../data.js'
 import {Item, ROOT_ID} from '../item.js'
 import {set_global} from "../common/globals.js";
 import {Registry} from "./registry.js";
@@ -15,73 +14,73 @@ import {Registry} from "./registry.js";
  **
  */
 
-class Classpath {
-    forward = new Map()         // dict of objects indexed by paths: (path -> object)
-    inverse = new Map()         // dict of paths indexed by objects: (object -> path)
-
-    set(path, obj) {
-        /*
-        Assign `obj` to a given path. Create an inverse mapping if `obj` is a class or function.
-        Override an existing object if already present.
-        */
-        if (this.forward.has(path)) throw new Error(`the path already exists: ${path}`)
-        this.forward.set(path, obj)
-        // print(`Classpath: ${path}`)
-
-        if (typeof obj === "function") {
-            if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
-            this.inverse.set(obj, path)             // create inverse mapping for classes and functions
-        }
-    }
-    setMany(path, ...objects) {
-        /* Add multiple objects to a given `path`, under names taken from their `obj.name` properties. */
-        let prefix = path ? `${path}.` : ''
-        for (let obj of objects) {
-            let name = obj.name
-            if (!name) throw new Error(`Missing .name of an unnamed object being added to Classpath at path '${path}': ${obj}`)
-            this.set(`${prefix}${name}`, obj)
-        }
-    }
-
-    async setModule(path, module_url, {symbols, accept, exclude_variables = true} = {})
-        /*
-        Add symbols from `module` to a given package `path`.
-        If `symbols` is missing, all symbols found in the module are added, excluding:
-        1) variables (i.e., not classes, not functions), if exclude_variables=true;
-        2) symbols that point to objects whose accept(name, obj) is false, if `accept` function is defined.
-        */
-    {
-        let module = await import(module_url)
-        let prefix = path ? `${path}.` : ''
-
-        if (typeof symbols === "string")    symbols = symbols.split(' ')
-        else if (!symbols)                  symbols = Object.keys(module)
-        if (exclude_variables)              symbols = symbols.filter(s => typeof module[s] === "function")
-
-        for (let name of symbols) {
-            let obj = module[name]
-            if (accept && !accept(name, obj)) continue
-            this.set(`${prefix}${name}`, obj)
-        }
-    }
-
-    encode(obj) {
-        /*
-        Return canonical path of a given class or function, `obj`. If `obj` was added multiple times
-        under different names (paths), the most recently assigned path is returned.
-        */
-        let path = this.inverse.get(obj)
-        if (path === undefined) throw new Error(`Not in classpath: ${obj.name || obj}`)
-        return path
-    }
-    decode(path) {
-        /* Return object pointed to by a given path. */
-        let obj = this.forward.get(path)
-        if (obj === undefined) throw new Error(`Unknown class path: ${path}`)
-        print(`decoded with Classpath: ${path}`)
-        return obj
-    }
-}
+// class Classpath {
+//     forward = new Map()         // dict of objects indexed by paths: (path -> object)
+//     inverse = new Map()         // dict of paths indexed by objects: (object -> path)
+//
+//     set(path, obj) {
+//         /*
+//         Assign `obj` to a given path. Create an inverse mapping if `obj` is a class or function.
+//         Override an existing object if already present.
+//         */
+//         if (this.forward.has(path)) throw new Error(`the path already exists: ${path}`)
+//         this.forward.set(path, obj)
+//         // print(`Classpath: ${path}`)
+//
+//         if (typeof obj === "function") {
+//             if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
+//             this.inverse.set(obj, path)             // create inverse mapping for classes and functions
+//         }
+//     }
+//     setMany(path, ...objects) {
+//         /* Add multiple objects to a given `path`, under names taken from their `obj.name` properties. */
+//         let prefix = path ? `${path}.` : ''
+//         for (let obj of objects) {
+//             let name = obj.name
+//             if (!name) throw new Error(`Missing .name of an unnamed object being added to Classpath at path '${path}': ${obj}`)
+//             this.set(`${prefix}${name}`, obj)
+//         }
+//     }
+//
+//     async setModule(path, module_url, {symbols, accept, exclude_variables = true} = {})
+//         /*
+//         Add symbols from `module` to a given package `path`.
+//         If `symbols` is missing, all symbols found in the module are added, excluding:
+//         1) variables (i.e., not classes, not functions), if exclude_variables=true;
+//         2) symbols that point to objects whose accept(name, obj) is false, if `accept` function is defined.
+//         */
+//     {
+//         let module = await import(module_url)
+//         let prefix = path ? `${path}.` : ''
+//
+//         if (typeof symbols === "string")    symbols = symbols.split(' ')
+//         else if (!symbols)                  symbols = Object.keys(module)
+//         if (exclude_variables)              symbols = symbols.filter(s => typeof module[s] === "function")
+//
+//         for (let name of symbols) {
+//             let obj = module[name]
+//             if (accept && !accept(name, obj)) continue
+//             this.set(`${prefix}${name}`, obj)
+//         }
+//     }
+//
+//     encode(obj) {
+//         /*
+//         Return canonical path of a given class or function, `obj`. If `obj` was added multiple times
+//         under different names (paths), the most recently assigned path is returned.
+//         */
+//         let path = this.inverse.get(obj)
+//         if (path === undefined) throw new Error(`Not in classpath: ${obj.name || obj}`)
+//         return path
+//     }
+//     decode(path) {
+//         /* Return object pointed to by a given path. */
+//         let obj = this.forward.get(path)
+//         if (obj === undefined) throw new Error(`Unknown class path: ${path}`)
+//         print(`decoded with Classpath: ${path}`)
+//         return obj
+//     }
+// }
 
 /**********************************************************************************************************************
  **
@@ -153,8 +152,7 @@ export class Schemat {
     site_id                         // ID of the active Site object
 
     registry = new Registry()       // cache of web objects, records and indexes loaded from DB
-    // classpath                       // Classpath containing built-in classes and their paths; only used during bootstrap
-    prefetched                      // Prefetched instance containing imported builtin classes and functions
+    prefetched                      // Prefetched instance containing built-in classes and their paths
 
     is_closing = false              // true if the Schemat node is in the process of shutting down
     server_side = true              // the current environment: client / server
@@ -263,10 +261,9 @@ export class Schemat {
     // }
 
     async _init_prefetched() {
-        // print('_init_prefetched() started...')
         let prefetched = new Prefetched()
 
-        prefetched.set(":Map", Map)
+        prefetched.set(":Map", Map)                                     // built-in JS classes have empty file path
 
         await prefetched.fetch("../index.js", {path: 'schemat'})        // Schemat core classes, e.g., "schemat:Item"
         await prefetched.fetch("../std/files.js")
@@ -283,7 +280,6 @@ export class Schemat {
         await prefetched.fetch("../types/catalog.js", {accept})
 
         this.prefetched = prefetched
-        // print('_init_prefetched() done')
     }
 
     async _reset_class() { /* on server only */ }
@@ -350,7 +346,7 @@ export class Schemat {
     }
 
 
-    /***  Object <=> classpath mapping (for de/serialization)  ***/
+    /***  Object <> classpath mapping (for de/serialization)  ***/
 
     get_classpath(cls) {
         /* Return a dotted module path of a given class or function as stored in a global Classpath.
@@ -361,19 +357,11 @@ export class Schemat {
         if (!cls) throw `Argument is empty or not a class: ${cls}`
 
         return this.prefetched.get_path(cls)
-
-        // try { return this.prefetched.get_path(cls) }
-        // catch (ex) { return this.classpath.encode(cls) }
     }
 
     get_builtin(path) {
         /* Retrieve a built-in class or function from the Classpath. */
         return this.prefetched.get_object(path)
-
-        // try { return this.classpath.decode(path) }
-        // catch (ex) {
-        //     return this.prefetched.get_object(path)
-        // }
     }
 
 

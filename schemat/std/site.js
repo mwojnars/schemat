@@ -98,9 +98,9 @@ export class Site extends Directory {
     }
 
     async import(path) {
-        /* `path` is either a builtin class path of the form "schemat:Catalog", interpreted through Classpath,
-           or a URL path of the form "/system/local/.../file.js" or "/.../file.js:ClassName"
-           pointing to a module accessible through the SUN namespace or to a particular symbol within such module.
+        /* `path` is either a builtin class path of the form "schemat:Catalog", or a URL path of the form
+           "/system/local/.../file.js" or "/.../file.js:ClassName" pointing to a module accessible through
+           the SUN namespace or to a particular symbol within such module.
          */
         // print(`Site.import():  ${path}`)
         if (path[0] !== '/') return schemat.get_builtin(path)         // import a builtin class registered in Schemat's Classpath
