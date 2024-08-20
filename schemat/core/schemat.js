@@ -89,6 +89,12 @@ import {Registry} from "./registry.js";
  */
 
 class Prefetched {
+    /* A cache of built-in Schemat classes that are prefetched from their modules upon startup and made available
+       to *synchronous* class-path resolution during serialization and deserialization in JSONx.
+       The objects (classes) are mapped to their regular JS paths of the form: `<module-path>:<symbol>`,
+       for example, "schemat/db/block.js:Block".
+     */
+
     cache = new Map()
     inverse = new Map()
 
