@@ -17,7 +17,7 @@
       "@": schemat/types/type.js:GENERIC
     properties:
       values:
-        "@": type.TYPE
+        "@": schemat/types/type.js:TYPE
       "@": schemat/types/catalog.js:CATALOG
     "@": base.Catalog
   _category_:

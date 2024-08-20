@@ -60,7 +60,7 @@
       "@": schemat/types/catalog.js:CATALOG
     schema:
       values:
-        "@": type.TYPE
+        "@": schemat/types/type.js:TYPE
       info: Names and data types of properties of objects in this category.
       "@": schemat/types/catalog.js:CATALOG
     data_schema:
@@ -128,7 +128,7 @@
         "@": schemat/types/type.js:STRING
       info:
         info: Description or summary of the object.
-        "@": type.TEXT
+        "@": schemat/types/type.js:TEXT
       html_title:
         info: HTML title to be used for when this object is rendered.
         "@": schemat/types/type.js:STRING
@@ -338,7 +338,7 @@
       "@": schemat/types/type.js:GENERIC
     "@": base.Catalog
   defaults:
-    _class_: db.Database
+    _class_: schemat/db/db.js:Database
     "@": base.Catalog
   _category_:
     "@": 0
