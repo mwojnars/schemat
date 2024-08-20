@@ -88,7 +88,7 @@
       _class_:
         info: Javascript class (identified by a class path) to be assigned to the object
           after it is loaded from DB.
-        default: base.Item
+        default: schemat:Item
         "@": schemat/types/type.js:STRING
       _extends_:
         info: An item that serves as a prototype for this one, that is, provides default
@@ -214,7 +214,7 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
-    _class_: std.File
+    _class_: schemat/std/files.js:File
     "@": schemat:Catalog
   _category_:
     "@": 0
@@ -229,7 +229,7 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
-    _class_: std.FileLocal
+    _class_: schemat/std/files.js:FileLocal
     "@": schemat:Catalog
   _category_:
     "@": 0
@@ -269,7 +269,7 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
-    _class_: std.LocalFolder
+    _class_: schemat/std/files.js:LocalFolder
     "@": schemat:Catalog
   _category_:
     "@": 0
@@ -282,7 +282,7 @@
     placed as a leaf node on a URL route and does not contain nested
     containers."
   defaults:
-    _class_: std.Namespace
+    _class_: schemat/std/containers.js:Namespace
     "@": schemat:Catalog
   _extends_:
     "@": 2
