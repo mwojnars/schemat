@@ -1,0 +1,3 @@
+/*
+    Web adapters are functions that create handlers for HTTP requests.
+ */

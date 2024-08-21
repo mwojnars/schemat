@@ -424,8 +424,12 @@ export class Network {
             // if (!triggers) throw new Error(`unknown protocol: ${protocol}`)
 
             if (typeof service === 'function') {
-                service = service.call(target)
-                service.bindAt(endpoint)
+                service = {
+                    execute: () => service.call(target),
+                    client:  (request) => service.call(target, request),
+                }
+                // service = service.call(target)
+                // service.bindAt(endpoint)
             }
 
             triggers[name] = server_side
@@ -437,10 +441,10 @@ export class Network {
     get_service(endpoint) {
         /* Resolve `endpoint` to a Service instance (a handler). Return undefined if `endpoint` not found. */
         let service = this.api.get_service(endpoint)
-        if (typeof service === 'function') {
-            service = service.call(this.target)
-            service.bindAt(endpoint)
-        }
+        // if (typeof service === 'function') {
+        //     service = service.call(this.target)
+        //     service.bindAt(endpoint)
+        // }
         return service
     }
 }

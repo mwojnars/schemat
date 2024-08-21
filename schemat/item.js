@@ -857,7 +857,6 @@ export class Item {
                 request.endpoint = endpoint
                 let handler = (typeof service === 'function') ? service.bind(this) : (r) => service.server(this, r)
                 return handler(request)
-                // return service.server(this, request)
             }
         }
 
@@ -892,8 +891,11 @@ export class Item {
     // In a special case when an action is called directly on the server through _triggers_.XXX(), `request` is null,
     // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
 
-    // CALL__self()     { return this }
+    // CALL__self()     { print('CALL__self'); return this }
     // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this._record_.encoded() }) }
+    // GET__admin()     { return react_page(ItemAdminView) }
+    // GET__admin()     { return html_page("item_admin.ejs") }      -- `request` arg can be passed even if not used; then, __handle__ must check if the result is a function and call it with (this, request) again
+    // GET__admin(conn) { return conn.res.sendFile("item_admin.html") }
 
     static ['CALL/self'] = new InternalService(function() { return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)
