@@ -6,7 +6,7 @@
 
 import {print, assert} from "../common/utils.js"
 import {Item} from "../item.js"
-import {HttpService, InternalService} from "../services.js"
+import {HttpService, InternalService} from "../web/services.js"
 import {Directory} from "./containers.js";
 import {UrlPathNotFound} from "../common/errors.js";
 

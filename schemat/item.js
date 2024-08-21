@@ -7,14 +7,14 @@ import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
 import {Catalog, Data} from './data.js'
 import {ITEM, generic_type} from "./types/type.js"
 import {DATA, DATA_GENERIC} from "./types/catalog.js"
-import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 
 import {ItemRecord} from "./db/records.js"
 import {DataRequest} from "./db/data_request.js"
 
+import {html_page} from "./web/adapters.js"
 import {Assets} from "./web/component.js"
 import {ReactPage, CategoryAdminView, ItemAdminView} from "./web/pages.js"
-import {html_page} from "./web/adapters.js"
+import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./web/services.js"
 
 export const ROOT_ID = 0
 

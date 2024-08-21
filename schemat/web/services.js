@@ -1,6 +1,6 @@
-import {print, assert, T, isPromise} from "./common/utils.js"
-import { NotFound, RequestFailed } from './common/errors.js'
-import { JSONx } from './serialize.js'
+import {print, assert, T, isPromise} from "../common/utils.js"
+import { NotFound, RequestFailed } from '../common/errors.js'
+import { JSONx } from '../serialize.js'
 
 
 /**********************************************************************************************************************/

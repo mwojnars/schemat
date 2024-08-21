@@ -3,7 +3,7 @@ import {print, assert, T, delay, splitLast} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Edit, Request} from '../item.js'
 import {Container, Directory, IID_Namespace} from "./containers.js";
-import {JsonService} from "../services.js";
+import {JsonService} from "../web/services.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
