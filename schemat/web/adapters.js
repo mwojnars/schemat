@@ -23,7 +23,7 @@ export function html_page(path, locals = {}, opts = {}) {
             return fs.readFileSync(path, 'utf-8')
         
         if (ext === 'ejs') {
-            opts = {filename: path, ...opts}
+            opts = {filename: path, views: schemat.ROOT_DIRECTORY, ...opts}
             const template = fs.readFileSync(path, 'utf-8')
             return ejs.render(template, locals, opts)
         }
