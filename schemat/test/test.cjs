@@ -77,17 +77,18 @@ async function extract_content(page) {
                 `))
 }
 
-async function test_react_page(page, url, selector = null, strings = []) {
+async function test_page(page, url, react_selector = null, strings = [])
+{
     await page.goto(url, { waitUntil: 'domcontentloaded' })
     await expect_status_ok(page)
 
     expect_include_all(await extract_content(page), ...strings)
 
-    if (selector && strings.length) {
+    if (react_selector && strings.length) {
         // determining that React has rendered the component in full is tricky, hence we use several methods...
-        await page.waitForSelector(selector, {visible: true})       // wait for a React element to be present and visible (non-empty), which means in practice that it started rendering
-        await delay(300)                                            // wait for a short time to allow the component to render fully
-        // await page.waitForFunction(() => document.querySelector(selector)?.textContent.includes('Expected Text'))
+        await page.waitForSelector(react_selector, {visible: true})     // wait for a React element to be present and visible (non-empty), which means in practice that it started rendering
+        await delay(300)                                                // wait for a short time to allow the component to render fully
+        // await page.waitForFunction(() => document.querySelector(react_selector)?.textContent.includes('Expected Text'))
 
         let content = await extract_content(page)   //await page.content()
         expect_include_all(content, ...strings)
@@ -190,12 +191,12 @@ describe('Schemat Tests', function () {
         })
 
         it('Category', async function () {
-            await test_react_page(page, `${DOMAIN}/sys.category:0`, '#page-main',
+            await test_page(page, `${DOMAIN}/sys.category:0`, '#page-main',
                 ['Category:0', 'Category of items', 'name', '_ttl_', 'defaults', 'schema', 'Ring', 'Varia'])
         })
 
         it('Varia', async function () {
-            let Varia = await test_react_page(page, `${DOMAIN}/sys.category:1000`, '#page-main',
+            let Varia = await test_page(page, `${DOMAIN}/sys.category:1000`, '#page-main',
                 ['Category:1000', 'Varia', 'name', '_category_', 'schema', 'Varia:1016', 'Create Item'])
 
             // these strings are only available after client-side rendering, not in HTML source:
@@ -203,14 +204,17 @@ describe('Schemat Tests', function () {
         })
 
         it('Varia object', async function () {
-            await test_react_page(page, `${DOMAIN}/system/default/1016`, '#page-main',
-                ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
+            await test_page(page, `${DOMAIN}/system/default/1016`, '#page-main', ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
         })
 
         it('uncategorized object', async function () {
-            await test_react_page(page, `${DOMAIN}/system/default/1017`, '#page-main',
-                ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
+            await test_page(page, `${DOMAIN}/system/default/1017`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
         })
+        
+        it('static html page', async function () {
+            await test_page(page, `${DOMAIN}/system/default/1016::test_html`, null, ['Test Page', 'Headings', 'Bullet item'])
+        })
+
 
         // describe('UI Actions on sys.category:1000', function () {
         //     before(async function () {
