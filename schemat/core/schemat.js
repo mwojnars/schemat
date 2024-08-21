@@ -248,7 +248,7 @@ export class Schemat {
         await builtin.fetch("../db/records.js")
         await builtin.fetch("../db/block.js")
         await builtin.fetch("../db/sequence.js")
-        await builtin.fetch("../db/index.js")
+        await builtin.fetch("../db/indexes.js")
         await builtin.fetch("../db/db.js")
 
         let accept = (name) => name.toUpperCase() === name
