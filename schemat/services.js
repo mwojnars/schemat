@@ -441,6 +441,7 @@ export class Network {
     get_service(endpoint) {
         /* Resolve `endpoint` to a Service instance (a handler). Return undefined if `endpoint` not found. */
         let service = this.api.get_service(endpoint)
+        // return (service && typeof service === 'object') ? (r) => service.server(this.target, r) : service      // return a handler function, f(request) -> result
         // if (typeof service === 'function') {
         //     service = service.call(this.target)
         //     service.bindAt(endpoint)

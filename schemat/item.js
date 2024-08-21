@@ -856,7 +856,8 @@ export class Item {
                 // print(`handle() endpoint: ${endpoint}`)
                 request.endpoint = endpoint
                 let handler = (typeof service === 'function') ? service.bind(this) : (r) => service.server(this, r)
-                return handler(request)
+                let result = handler(request)
+                return (typeof result === 'function') ? result.call(this, request) : result
             }
         }
 
@@ -898,6 +899,10 @@ export class Item {
     // GET__admin()     { return react_page(ItemAdminView) }
     // GET__admin()     { return html_page("item_admin.ejs") }      -- `request` arg can be passed even if not used; then, __handle__ must check if the result is a function and call it with (this, request) again
     // GET__admin(conn) { return conn.res.sendFile("item_admin.html") }
+
+    GET__test_txt()         { return "TEST txt ..." }                   // works
+    GET__test_fun()         { return () => "TEST function ..." }        // works
+    GET__test_res({res})    { res.send("TEST res.send() ...") }         // works
 
     static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)
