@@ -10,7 +10,7 @@ import {HttpService, InternalService} from "../services.js"
 import {Directory} from "./containers.js";
 import {UrlPathNotFound} from "../common/errors.js";
 
-const {transform_postcss} = !isBrowser && await import("./transforms.js")
+const {transform_postcss} = SERVER && await import("./transforms.js")
 
 
 /**********************************************************************************************************************/

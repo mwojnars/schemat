@@ -7,13 +7,13 @@
 
 // global flags ...
 
-globalThis.isNodeJS =
-    typeof process !== 'undefined' &&               // `process` is a global object in Node.js but not in browsers
-    process.versions != null &&                     // process.versions contains Node.js-specific version information
-    process.versions.node != null                   // process.versions.node is the Node.js version string
+globalThis.SERVER = (typeof window === 'undefined')
+globalThis.CLIENT = !globalThis.SERVER
 
-globalThis.isBrowser = !globalThis.isNodeJS
-
+// globalThis.isNodeJS =
+//     typeof process !== 'undefined' &&               // `process` is a global object in Node.js but not in browsers
+//     process.versions != null &&                     // process.versions contains Node.js-specific version information
+//     process.versions.node != null                   // process.versions.node is the Node.js version string
 
 
 // global objects ...

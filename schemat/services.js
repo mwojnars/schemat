@@ -391,9 +391,6 @@ export class Network {
        different roles (of a client/server) in different APIs, all at the same time. Actions will be defined jointly for all APIs.
      */
 
-    static CLIENT = 'client'
-    static SERVER = 'server'
-
     target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
     role        // current network role of the `target` for the `api`; typically, 'client' or 'server'
     api         // API to be exposed on this network interface
@@ -414,7 +411,7 @@ export class Network {
         this.role = role
         this.api  = api
 
-        let server_side = (this.role === Network.SERVER)
+        let server_side = (this.role === 'server')
 
         // create triggers for all endpoints in the API
         for (let [endpoint, service] of Object.entries(this.api.services))

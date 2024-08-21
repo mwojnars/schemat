@@ -213,11 +213,6 @@ export function timeout(ms, error = new Error('Timeout')) {
 }
 
 
-export function detect_nodejs() {
-    /* Return true if the process is (likely) running on a Node.js server rather than in a browser. */
-    return (typeof window === 'undefined' && typeof process === 'object' && process.versions && process.versions.node)
-}
-
 /*************************************************************************************************/
 
 export class CustomMap extends Map {
