@@ -1,6 +1,6 @@
 /*
     Web adapters are functions that create handlers for HTTP requests.
-    They can only be used on the server side. If executed on the client, they will throw errors.
+    They can only be used on the server side. If executed in a browser, they will throw errors.
  */
 
 
@@ -18,16 +18,16 @@ export function html_page(filename, locals = {}, opts = {}) {
         in the latter case, the template is rendered with `locals` as its variables.
      */
     return () => {
-        // check the file type by extension... load/render the file accordingly...
         const ext = filename.includes('.') ? filename.split('.').pop().toLowerCase() : 'html'
         
+        // check the file type by extension and load/render the file accordingly
         if (ext === 'html' || ext === 'htm')
             return fs.readFileSync(filename, 'utf-8')
         
-        else if (ext === 'ejs') {
+        if (ext === 'ejs') {
             const template = fs.readFileSync(filename, 'utf-8')
             return ejs.render(template, locals, opts)
-        } 
+        }
         throw new Error(`Unsupported file type: ${ext}`)
     }
 }
