@@ -20,10 +20,7 @@ export class ServerSchemat extends Schemat {
 
     constructor() {
         super()
-
-        // initialize ROOT_DIRECTORY from the current working dir
-        this.ROOT_DIRECTORY = process.cwd()
-        print('ROOT_DIRECTORY', this.ROOT_DIRECTORY)
+        this.ROOT_DIRECTORY = process.cwd()             // initialize ROOT_DIRECTORY from the current working dir...
 
         // check that it points to the installation's root folder and contains `schemat` subfolder with `config.yaml` file in it
         assert(fs.existsSync(this.ROOT_DIRECTORY + '/schemat/config.yaml'), 'The current working directory does not contain ./schemat/config.yaml file')
