@@ -9,11 +9,12 @@ import {ITEM, generic_type} from "./types/type.js"
 import {DATA, DATA_GENERIC} from "./types/catalog.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 
-import {ItemRecord} from "./db/records.js";
-import {DataRequest} from "./db/data_request.js";
+import {ItemRecord} from "./db/records.js"
+import {DataRequest} from "./db/data_request.js"
 
-import {Assets} from "./web/component.js";
-import {ReactPage, CategoryAdminView, ItemAdminView} from "./web/pages.js";
+import {Assets} from "./web/component.js"
+import {ReactPage, CategoryAdminView, ItemAdminView} from "./web/pages.js"
+import {html_page} from "./web/adapters.js"
 
 export const ROOT_ID = 0
 
@@ -903,6 +904,7 @@ export class Item {
     GET__test_txt()         { return "TEST txt ..." }                   // works
     GET__test_fun()         { return () => "TEST function ..." }        // works
     GET__test_res({res})    { res.send("TEST res.send() ...") }         // works
+    GET__test_html()        { return html_page(import.meta.resolve('./test/views/page.html')) }
 
     static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)

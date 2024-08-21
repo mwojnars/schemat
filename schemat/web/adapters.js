@@ -3,12 +3,9 @@
     They can only be used on the server side. If executed in a browser, they will throw errors.
  */
 
-
-import { tryimport } from '../common/utils'
-
-// conditionally import the modules
-let fs = await tryimport('node:fs')
-let ejs = await tryimport('ejs')
+// conditionally import the server-side modules
+const fs  = SERVER && await import('fs')
+const ejs = SERVER && await import('ejs')
 
 
 /**********************************************************************************************************************/
@@ -18,6 +15,7 @@ export function html_page(filename, locals = {}, opts = {}) {
         in the latter case, the template is rendered with `locals` as its variables.
      */
     return () => {
+        if (filename.startsWith('file://')) filename = filename.slice(7)
         const ext = filename.includes('.') ? filename.split('.').pop().toLowerCase() : 'html'
         
         // check the file type by extension and load/render the file accordingly
