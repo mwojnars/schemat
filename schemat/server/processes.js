@@ -30,7 +30,7 @@ export class BackendProcess {
         await this[method](opts)
     }
 
-    async load_config(file = './config.yaml') {
+    async load_config(file = './schemat/config.yaml') {
         let fs = await import('node:fs')
         let yaml = (await import('yaml')).default
         let content = fs.readFileSync(file, 'utf8')
@@ -56,10 +56,10 @@ export class WorkerProcess extends BackendProcess {
         // await this._update_all()
         // await this._reinsert_all()
 
-        // let m = await schemat.import('/system/local/test/temp1.js')
+        // let m = await schemat.import('/system/local/schemat/test/temp1.js')
         // print('loaded:', m)
 
-        // let {WebServer} = await schemat.import('/system/local/server/servers.js')
+        // let {WebServer} = await schemat.import('/system/local/schemat/server/servers.js')
 
         print('Starting the server...')
         let web = new WebServer({host, port, workers})

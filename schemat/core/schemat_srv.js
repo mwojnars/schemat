@@ -25,9 +25,8 @@ export class ServerSchemat extends Schemat {
         this.ROOT_DIRECTORY = process.cwd()
         print('ROOT_DIRECTORY', this.ROOT_DIRECTORY)
 
-        // check that it points to the top-level "schemat" folder of the installation and contains the config.yaml file
-        assert(this.ROOT_DIRECTORY.endsWith('schemat'), 'Schemat must be started from the top-level "schemat" folder as the current working directory')
-        assert(fs.existsSync(this.ROOT_DIRECTORY + '/config.yaml'), 'The current working directory does not contain the config.yaml file')
+        // check that it points to the installation's root folder and contains `schemat` subfolder with `config.yaml` file in it
+        assert(fs.existsSync(this.ROOT_DIRECTORY + '/schemat/config.yaml'), 'The current working directory does not contain ./schemat/config.yaml file')
 
         // this.loader = new Loader(import.meta.url)
     }
@@ -44,7 +43,7 @@ export class ServerSchemat extends Schemat {
            all other imports in the dependant modules will be interpreted as SUN imports, as well.
            Reinitialize `classpath` so that builtin classes are also imported from the SUN namespace.
          */
-        // let {ServerSchemat} = await this.import('/system/local/core/schemat_srv.js')
+        // let {ServerSchemat} = await this.import('/system/local/schemat/core/schemat_srv.js')
         T.setClass(this, ServerSchemat)
         await this._init_classpath()
         // await this.reload(this.site_id)

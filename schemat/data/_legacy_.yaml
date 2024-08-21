@@ -3,7 +3,7 @@
   info: Category of items that represent data types. Some of the items are
     wrappers around system types (STRING, INTEGER etc.), while some others
     implement new types by themselves using dynamic code.
-  class_path: /system/local/types/type_item.js:TypeItem
+  class_path: /system/local/schemat/types/type_item.js:TypeItem
   schema:
     class_path:
       "@": schemat/types/type.js:STRING
@@ -25,25 +25,25 @@
   "@": schemat:Data
 - __id: 102
   name: STRING
-  class_path: /system/local/types/type.js:STRING
+  class_path: /system/local/schemat/types/type.js:STRING
   _category_:
     "@": 10
   "@": schemat:Data
 - __id: 103
   name: NUMBER
-  class_path: /system/local/types/type.js:NUMBER
+  class_path: /system/local/schemat/types/type.js:NUMBER
   _category_:
     "@": 10
   "@": schemat:Data
 - __id: 104
   name: INTEGER
-  class_path: /system/local/types/type.js:INTEGER
+  class_path: /system/local/schemat/types/type.js:INTEGER
   _category_:
     "@": 10
   "@": schemat:Data
 - __id: 105
   name: URL
-  class_path: /system/local/types/type.js:URL
+  class_path: /system/local/schemat/types/type.js:URL
   _category_:
     "@": 10
   "@": schemat:Data

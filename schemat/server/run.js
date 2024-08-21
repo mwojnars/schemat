@@ -22,7 +22,7 @@ await (async function main() {
     // let loader = new Loader(import.meta.url)
     
     // TODO: this line must be uncommented if dynamic code loading is needed (!!!); however, currently the dynamic loading causes errors for unknown reasons
-    // let {WorkerProcess} = await loader.import('/system/local/server/processes.js')
+    // let {WorkerProcess} = await loader.import('/system/local/schemat/server/processes.js')
 
     return new WorkerProcess().start('run', argv)
 }())

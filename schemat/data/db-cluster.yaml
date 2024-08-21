@@ -107,7 +107,7 @@
 - __id: 207
   sequence:
     "@": 205
-  filename: ./data/db-boot.yaml
+  filename: ./schemat/data/db-boot.yaml
   format: data-yaml
   _category_:
     "@": 19
@@ -115,7 +115,7 @@
 - __id: 208
   sequence:
     "@": 206
-  filename: ./data/db-boot.idx_category_item.jl
+  filename: ./schemat/data/db-boot.idx_category_item.jl
   format: index-jl
   _category_:
     "@": 20
@@ -163,7 +163,7 @@
 - __id: 211
   sequence:
     "@": 209
-  filename: ./data/db-base.yaml
+  filename: ./schemat/data/db-base.yaml
   format: data-yaml
   _category_:
     "@": 19
@@ -171,7 +171,7 @@
 - __id: 212
   sequence:
     "@": 210
-  filename: ./data/db-base.idx_category_item.jl
+  filename: ./schemat/data/db-base.idx_category_item.jl
   format: index-jl
   _category_:
     "@": 20
@@ -223,7 +223,7 @@
 - __id: 215
   sequence:
     "@": 213
-  filename: ./data/db-cluster.yaml
+  filename: ./schemat/data/db-cluster.yaml
   format: data-yaml
   _category_:
     "@": 19
@@ -231,7 +231,7 @@
 - __id: 216
   sequence:
     "@": 214
-  filename: ./data/db-cluster.idx_category_item.jl
+  filename: ./schemat/data/db-cluster.idx_category_item.jl
   format: index-jl
   _category_:
     "@": 20
@@ -279,7 +279,7 @@
 - __id: 219
   sequence:
     "@": 217
-  filename: ./data/db-site.yaml
+  filename: ./schemat/data/db-site.yaml
   format: data-yaml
   _category_:
     "@": 19
@@ -287,7 +287,7 @@
 - __id: 220
   sequence:
     "@": 218
-  filename: ./data/db-site.idx_category_item.jl
+  filename: ./schemat/data/db-site.idx_category_item.jl
   format: index-jl
   _category_:
     "@": 20

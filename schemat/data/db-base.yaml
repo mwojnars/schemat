@@ -10,7 +10,7 @@
   "@": schemat:Data
 - __id: 101
   name: MysqlDB
-  class_path: /system/local/db/mysql.js:MySQL
+  class_path: /system/local/schemat/db/mysql.js:MySQL
   schema:
     host:
       "@": schemat/types/type.js:STRING
@@ -36,7 +36,7 @@
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   defaults:
-    _class_: /system/local/db/mysql.js:MySQL
+    _class_: /system/local/schemat/db/mysql.js:MySQL
     "@": schemat:Catalog
   _category_:
     "@": 0
