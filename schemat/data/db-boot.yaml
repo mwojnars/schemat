@@ -163,10 +163,6 @@
         its ID. For internal purposes. Should contain a leading slash and no
         trailing slash.
       "@": schemat/types/type.js:PATH
-    root_folder:
-      info: Local filesystem path of the root directory containing source code for
-        this site.
-      "@": schemat/types/type.js:STRING
     _path_:
       default: /
       "@": schemat/types/type.js:STRING

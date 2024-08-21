@@ -33,7 +33,6 @@ export class Site extends Directory {
     database
     entries
     default_path
-    root_folder
     cache_purge_interval
 
 
@@ -86,14 +85,14 @@ export class Site extends Directory {
     translate_local(path) {
         /* Convert a local file path to its corresponding url-path. */
         if (path.startsWith('file://')) path = path.slice(7)                        // trim leading 'file://' if present
-        let root = this.root_folder
+        let root = schemat.ROOT_DIRECTORY
         if (!path.startsWith(root + '/')) throw new Error(`path is not accessible via URL: ${path}`)
         return path.replace(root, Site.URL_LOCAL)
     }
 
     translate_url(path) {
         /* Convert a public URL path to its corresponding local file path. */
-        if (path.startsWith(Site.URL_LOCAL + '/')) return path.replace(Site.URL_LOCAL, this.root_folder)
+        if (path.startsWith(Site.URL_LOCAL + '/')) return path.replace(Site.URL_LOCAL, schemat.ROOT_DIRECTORY)
         throw new Error(`URL path does not point to a local file: ${path}`)
     }
 

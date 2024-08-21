@@ -78,7 +78,6 @@
       "@": 1014
     "@": schemat:Catalog
   default_path: /system/default
-  root_folder: /home/marcin/Documents/Catalog/schemat/src/schemat
   _category_:
     "@": 1
   "@": schemat:Data
