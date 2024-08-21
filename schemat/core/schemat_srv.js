@@ -1,5 +1,7 @@
 // import { Mutex } from 'async-mutex'
 
+import fs from 'node:fs'
+
 import {assert, print, T} from '../common/utils.js'
 import {Schemat} from './schemat.js'
 import {ROOT_ID} from "../item.js"
@@ -16,12 +18,19 @@ export class ServerSchemat extends Schemat {
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
-    // loader = null                       // Loader for dynamically loading JS modules from the SUN namespace
-    //
-    // constructor() {
-    //     super()
-    //     this.loader = new Loader(import.meta.url)
-    // }
+    constructor() {
+        super()
+
+        // initialize ROOT_DIRECTORY from the current working dir
+        this.ROOT_DIRECTORY = process.cwd()
+        print('ROOT_DIRECTORY', this.ROOT_DIRECTORY)
+
+        // check that it points to the top-level "schemat" folder of the installation and contains the config.yaml file
+        assert(this.ROOT_DIRECTORY.endsWith('schemat'), 'Schemat must be started from the top-level "schemat" folder as the current working directory')
+        assert(fs.existsSync(this.ROOT_DIRECTORY + '/config.yaml'), 'The current working directory does not contain the config.yaml file')
+
+        // this.loader = new Loader(import.meta.url)
+    }
 
     async _init_site() {
         await super._init_site()
