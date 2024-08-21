@@ -21,7 +21,7 @@ export class BackendProcess {
         let config = await this.load_config()
         let db = Database.create()
 
-        await ServerSchemat.create_global(config.site, db, () => this._open_bootstrap_db(db, config))
+        await new ServerSchemat().boot(config.site, db, () => this._open_bootstrap_db(db, config))
         // await schemat.db.insert_self()
 
         let method = this.CLI_PREFIX + cmd

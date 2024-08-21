@@ -20,7 +20,7 @@ export class ClientSchemat extends Schemat {
         print('page data:', data)
 
         let db = new ClientDB(data.items)
-        await ClientSchemat.create_global(data.site_id, db)
+        await new ClientSchemat().boot(data.site_id, db)
 
         let target = await schemat._preload_objects(data)
         target.assert_loaded()
