@@ -212,7 +212,7 @@ describe('Schemat Tests', function () {
         })
         
         it('static html page', async function () {
-            await test_page(page, `${DOMAIN}/system/default/1016::test_html`, null, ['Test Page', 'Headings', 'Bullet item'])
+            await test_page(page, `${DOMAIN}/system/default/1016::test_html`, null, ['Test Page', 'Headings', 'First item'])
         })
 
 

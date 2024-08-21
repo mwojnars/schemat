@@ -904,7 +904,7 @@ export class Item {
     GET__test_txt()         { return "TEST txt ..." }                   // works
     GET__test_fun()         { return () => "TEST function ..." }        // works
     GET__test_res({res})    { res.send("TEST res.send() ...") }         // works
-    GET__test_html()        { return html_page(import.meta.resolve('./test/views/page.html')) }
+    GET__test_html()        { return html_page(import.meta.resolve('./test/views/page_02.html')) }
 
     static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)
