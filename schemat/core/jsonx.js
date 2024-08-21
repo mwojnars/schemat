@@ -1,6 +1,6 @@
 /* Serialization of objects of arbitrary classes. */
 
-import {assert, print, T} from './common/utils.js'
+import {assert, print, T} from '../common/utils.js'
 
 
 /*************************************************************************************************/

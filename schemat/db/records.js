@@ -5,7 +5,7 @@
  */
 
 import {assert, print, T} from "../common/utils.js";
-import {JSONx} from "../serialize.js";
+import {JSONx} from "../core/jsonx.js";
 import {BinaryInput, BinaryOutput, compareUint8Arrays, fnv1aHash} from "../util/binary.js";
 import {Data} from "../data.js";
 
