@@ -74,6 +74,7 @@ export class File extends Item {
     static ['CALL/text'] = new InternalService(function (request)
     {
         /* Plain text of this File for Site.import() etc. */
+        assert(false, 'NOT USED: File.CALL/text')
         let txt = this.content_processed
         if (txt === undefined) request.throwNotFound()
         return txt
@@ -82,6 +83,7 @@ export class File extends Item {
     static ['GET/file'] = new HttpService(function (request)
     {
         // plain text sent over HTTP with a MIME type inferred from URL file extension
+        assert(false, 'NOT USED: File.GET/file')
         _set_mimetype(request.res, request.path, this.mimetype)
         let txt = this.content_processed
         if (txt === undefined) request.throwNotFound()

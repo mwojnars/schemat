@@ -893,11 +893,13 @@ export class Item {
 
     // CALL__self()     { print('CALL__self'); return this }
     // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this._record_.encoded() }) }
+
+    // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this._record_.encoded() }) }
     // GET__admin()     { return react_page(ItemAdminView) }
     // GET__admin()     { return html_page("item_admin.ejs") }      -- `request` arg can be passed even if not used; then, __handle__ must check if the result is a function and call it with (this, request) again
     // GET__admin(conn) { return conn.res.sendFile("item_admin.html") }
 
-    static ['CALL/self'] = new InternalService(function() { return this })
+    static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)
     static ['GET/json']  = new JsonService(function() { return this._record_.encoded() })
 
