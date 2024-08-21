@@ -1,10 +1,10 @@
 import {T, assert, truncate} from '../common/utils.js'
 import {JSONx} from '../serialize.js'
 
-import {e, cl, st, createRef, useState, ItemLoadingHOC} from '../ui/react-utils.js'
-import {A, B, I, P, PRE, DIV, SPAN, INPUT, TEXTAREA, FLEX, FRAGMENT, HTML, NBSP} from '../ui/react-utils.js'
+import {e, cl, st, createRef, useState, ItemLoadingHOC} from '../web/react-utils.js'
+import {A, B, I, P, PRE, DIV, SPAN, INPUT, TEXTAREA, FLEX, FRAGMENT, HTML, NBSP} from '../web/react-utils.js'
 
-import {Component} from "../ui/component.js"
+import {Component} from "../web/component.js"
 
 
 /**********************************************************************************************************************/

@@ -12,8 +12,8 @@ import {HttpService, JsonService, API, Task, TaskService, InternalService, Netwo
 import {ItemRecord} from "./db/records.js";
 import {DataRequest} from "./db/data_request.js";
 
-import {Assets} from "./ui/component.js";
-import {ReactPage, CategoryAdminView, ItemAdminView} from "./ui/pages.js";
+import {Assets} from "./web/component.js";
+import {ReactPage, CategoryAdminView, ItemAdminView} from "./web/pages.js";
 
 export const ROOT_ID = 0
 

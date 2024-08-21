@@ -1,4 +1,4 @@
-import {A} from '../ui/react-utils.js'
+import {A} from '../web/react-utils.js'
 import {assert, concat, print, T} from '../common/utils.js'
 import {DataError, NotImplemented, ValueError} from '../common/errors.js'
 import {byteLengthOfUnsignedInteger} from "../util/binary.js";
