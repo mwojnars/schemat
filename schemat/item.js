@@ -899,7 +899,6 @@ export class Item {
     // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this._record_.encoded() }) }
     // GET__admin()     { return react_page(ItemAdminView) }
     // GET__admin()     { return html_page("item_admin.ejs") }      -- `request` arg can be passed even if not used; then, __handle__ must check if the result is a function and call it with (this, request) again
-    // GET__admin(conn) { return conn.res.sendFile("item_admin.html") }
 
     GET__test_txt()         { return "TEST txt ..." }                   // works
     GET__test_fun()         { return () => "TEST function ..." }        // works
@@ -909,6 +908,7 @@ export class Item {
     static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)
     static ['GET/json']  = new JsonService(function() { return this._record_.encoded() })
+    // GET__json()    { return new JsonService(function() { return this._record_.encoded() }) }
 
 
     /***  Actions & edit operations. Can be called on a client or a server. All return a Promise.  ***/

@@ -136,6 +136,12 @@ export class LocalFolder extends Directory {
         let file_path = this._mod_path.join(root, url_path)         // this reduces the '..' special symbols, so we have to check
         if (!file_path.startsWith(root))                            // if the final path still falls under the `root`, for safety
             throw new UrlPathNotFound({path: url_path})
+        
+        // check if the path contains a folder name that starts with "_" (underscore), which indicates a PRIVATE folder; return "not found" in such case
+        if (file_path.includes('/_')) {
+            print(`LocalFolder._read_file(): PRIVATE folder requested: '${file_path}'`)
+            throw new UrlPathNotFound({path: url_path})
+        }
 
         // file transforms to be applied
         let transforms = [
