@@ -46,4 +46,5 @@ nosetests.xml
 .idea/ocr.iml
 
 
+_data_
 app-demo
