@@ -11,8 +11,8 @@ const WORKERS =  1 //Math.floor(os.cpus().length / 2)
 
 /**********************************************************************************************************************/
 
-export async function run(opts = {}) {
-    let cmd_opts = yargs(hideBin(process.argv))
+await (async function run() {
+    let opts = yargs(hideBin(process.argv))
         .option('host',    {type: 'string', default: HOST})
         .option('port',    {type: 'number', default: PORT})
         .option('workers', {type: 'number', default: WORKERS})
@@ -20,12 +20,9 @@ export async function run(opts = {}) {
         .argv
 
     // let loader = new Loader(import.meta.url)
-    
+
     // TODO: this line must be uncommented if dynamic code loading is needed (!!!); however, currently the dynamic loading causes errors for unknown reasons
     // let {WorkerProcess} = await loader.import('/system/local/schemat/server/processes.js')
 
-    return new WorkerProcess().start('run', {...opts, ...cmd_opts})
-}
-
-
-await run()
+    return new WorkerProcess().start('run', opts)
+})()
