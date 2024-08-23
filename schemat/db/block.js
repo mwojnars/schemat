@@ -161,11 +161,10 @@ export class DataBlock extends Block {
         // calculate the `id` if not provided, update _autoincrement and write the data
         let {id, key, data} = req.args
 
-        if (id === undefined || id === null) {
-            id = Math.max(this._autoincrement + 1, req.current_ring.start_id)      // no ID? use _autoincrement with the next available ID
-            key = req.current_data.encode_key(id)
-        }
-        else await this.assert_unique(key, id)                  // fixed ID provided by the caller? perform a uniqueness check
+        if (id === undefined || id === null)                // assign a new ID if not provided for the new item
+            [id, key] = this._assign_id(req)
+        else                                                // fixed ID provided by the caller? check for uniqueness
+            await this.assert_unique(key, id)
 
         req.current_ring.assert_valid_id(id, `candidate ID=${id} for a new item is outside of the valid range for this ring`)
         req.current_ring.assert_writable(id, `cannot write ID=${id} in this ring`)
@@ -179,6 +178,14 @@ export class DataBlock extends Block {
 
         await this.put(req)                         // change propagation is done here inside put()
         return id
+    }
+
+    _assign_id(req) {
+        /* Assign a new `id` for the record to be inserted. Return [id, key]. */
+        let id, key
+        id = Math.max(this._autoincrement + 1, req.current_ring.start_id)      // no ID? use _autoincrement with the next available ID
+        key = req.current_data.encode_key(id)
+        return [id, key]
     }
 
     async update(req) {
