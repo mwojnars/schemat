@@ -13,12 +13,8 @@ import {Database} from "../db/db.js";
 export class BackendProcess {
     CLI_PREFIX = 'CLI_'
 
-    // constructor(loader) {
-    //     this.loader = loader
-    // }
-
     async start(cmd, opts = {}) {
-        let config = await this.load_config()
+        let config = await this.load_config('./schemat/config.yaml')
         let db = Database.create()
 
         await new ServerSchemat().boot(config.site, db, () => this._open_bootstrap_db(db, config))
@@ -30,10 +26,10 @@ export class BackendProcess {
         await this[method](opts)
     }
 
-    async load_config(file = './schemat/config.yaml') {
+    async load_config(filename) {
         let fs = await import('node:fs')
         let yaml = (await import('yaml')).default
-        let content = fs.readFileSync(file, 'utf8')
+        let content = fs.readFileSync(filename, 'utf8')
         return yaml.parse(content)
     }
 
