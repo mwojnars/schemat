@@ -266,7 +266,7 @@ export class Storage {
 export class MemoryStorage extends Storage {
     /* All records stored in a Map in memory. Possibly synchronized with a file on disk (implemented in subclasses). */
 
-    _records = new BinaryMap()       // preloaded records, {binary-key: json-data}
+    _records = new BinaryMap()       // preloaded records, {binary-key: json-data}; unordered, sorting is done during scan()
 
     get(key)            { return this._records.get(key) }
     put(key, value)     { this._records.set(key, value) }
@@ -300,7 +300,7 @@ export class MemoryStorage extends Storage {
  */
 
 export class YamlDataStorage extends MemoryStorage {
-    /* Items stored in a YAML file. For use during development only. */
+    /* Items stored in a YAML file. The file can be unordered. For use during development only. */
 
     filename
 
@@ -380,7 +380,7 @@ export class YamlDataStorage extends MemoryStorage {
  */
 
 export class JsonIndexStorage extends MemoryStorage {
-    /* Items stored in a YAML file. For use during development only. */
+    /* Index records stored in a .jl file (JSON Lines). The file can be unordered. For use during development only. */
 
     filename
 
