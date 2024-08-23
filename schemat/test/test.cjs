@@ -141,7 +141,7 @@ describe('Schemat Tests', function () {
             // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
             server = exec(`cd .. && exec node --experimental-vm-modules schemat/server/run.js --port ${PORT}`, (error, stdout, stderr) => {
                 if (error) console.error('\nError during server startup:', '\n' + stderr)
-                else       console.error('\nServer stdout:', '\n' + stdout)
+                else       console.log('\nServer stdout:', '\n' + stdout)
             })
             // console.log('Server started:', server.pid)
             await delay(1000)                                       // wait for server to start
