@@ -2,9 +2,6 @@
 # Startup configuration of the local Schemat process
 #
 
-# ID of the Cluster object to be loaded at startup
-cluster: 1025
-
 # ID of the Site object to be loaded at startup
 site: 1004
 
