@@ -23,9 +23,18 @@ await (async function main() {
             //     .positional('id')
             //     .positional('newid')
         )
-        .command('reinsert <ids> [ring]',
-            'remove object(s) from their current ring(s) and insert under new IDs into `ring`, or to the top-most ring if `ring` is not specified; ' +
-            '`ids` is a comma-separated list of specifiers, each one being an ID value (123) or an X-Y range (100-105), no spaces allowed!')
+        .command('reinsert <ids>',
+            'remove object(s) from their current ring(s) and insert under new IIDs into `ring`, or to the top-most ring if `ring` is not specified; ' +
+            '`ids` is a comma-separated list of specifiers, each one being an IID value (123) or an X-Y range (100-105), no spaces allowed!')
+
+            .option('new', {
+                description: 'new IID to assign to the object being reinserted; only allowed when reinserting a single object; if not given, a new IID is selected automatically',
+                type: 'number'
+            })
+            .option('ring', {
+                description: 'name of the DB ring where to insert',
+                type: 'string'
+            })
 
         // .command('find-orphans', 'find all objects that are not referenced by any other object; orphan cycles are NOT detected',)
 

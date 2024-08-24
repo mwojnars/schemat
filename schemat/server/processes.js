@@ -140,7 +140,7 @@ export class AdminProcess extends BackendProcess {
         print('move: done')
     }
 
-    async CLI_reinsert({ids, ring: ring_name}) {
+    async CLI_reinsert({ids, new_id, ring: ring_name}) {
         /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring. */
 
         ids = String(ids)
@@ -161,6 +161,8 @@ export class AdminProcess extends BackendProcess {
             }
             else id_list.push(Number(id))
 
+        if (new_id && id_list.length > 1) throw new Error('cannot specify a new ID when reinserting multiple objects')
+
         // reinsert each object
         for (let id of id_list) {
             try { obj = await schemat.get_loaded(id) }
@@ -171,7 +173,7 @@ export class AdminProcess extends BackendProcess {
                 }
             }
 
-            let new_id = await ring.insert(null, obj.dump_data())
+            new_id = await ring.insert(new_id, obj.dump_data())
             await db.delete(id)
             await this._update_references(id, new_id)
 
