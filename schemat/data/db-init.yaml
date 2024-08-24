@@ -145,7 +145,7 @@
   _category_:
     "@": 20
   "@": schemat:Data
-- __id: 1004
+- __id: 1001
   name: main-site
   base_url: http://127.0.0.1:3000
   cluster:
@@ -212,7 +212,7 @@
   _category_:
     "@": 5
   _container_:
-    "@": 1004
+    "@": 1001
   "@": schemat:Data
 - __id: 1010
   name: /site
@@ -225,7 +225,7 @@
   _category_:
     "@": 5
   _container_:
-    "@": 1004
+    "@": 1001
   "@": schemat:Data
 - __id: 1011
   name: domain
@@ -238,7 +238,7 @@
   _category_:
     "@": 5
   _container_:
-    "@": 1004
+    "@": 1001
   "@": schemat:Data
 - __id: 1014
   name: main_space
@@ -249,7 +249,7 @@
   _category_:
     "@": 9
   _container_:
-    "@": 1004
+    "@": 1001
   "@": schemat:Data
 - __id: 1016
   title: Ala ma kota Sierściucha i psa Kłapoucha.
@@ -281,7 +281,7 @@
       "@": 1020
     "@": schemat:Catalog
   _container_:
-    "@": 1004
+    "@": 1001
   _category_:
     "@": 5
   "@": schemat:Data
