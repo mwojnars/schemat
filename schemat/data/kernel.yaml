@@ -574,20 +574,6 @@
   _category_:
     "@": 12
   "@": schemat:Data
-- __id: 203
-  name: db-cluster
-  data_sequence:
-    "@": 213
-  indexes:
-    idx_category_item:
-      "@": 214
-    "@": :Map
-  readonly: false
-  start_id: 200
-  stop_id: 300
-  _category_:
-    "@": 12
-  "@": schemat:Data
 - __id: 205
   ring:
     "@": 201
@@ -696,66 +682,6 @@
   sequence:
     "@": 210
   filename: ./schemat/data/db-base.idx_category_item.jl
-  format: index-jl
-  _category_:
-    "@": 20
-  "@": schemat:Data
-- __id: 213
-  ring:
-    "@": 203
-  schema:
-    fields:
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    _field_types:
-      - "@": schemat/types/type.js:INTEGER
-    "@": schemat/db/records.js:RecordSchema
-  blocks:
-    - "@": 215
-  derived:
-    - "@": 214
-  _category_:
-    "@": 14
-  "@": schemat:Data
-- __id: 214
-  ring:
-    "@": 203
-  schema:
-    fields:
-      cid:
-        blank: true
-        "@": schemat/types/type.js:INTEGER
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    _field_types:
-      - blank: true
-        "@": schemat/types/type.js:INTEGER
-      - "@": schemat/types/type.js:INTEGER
-    "@": schemat/db/records.js:RecordSchema
-  blocks:
-    - "@": 216
-  derived: []
-  source:
-    "@": 213
-  _category_:
-    "@": 17
-  "@": schemat:Data
-- __id: 215
-  sequence:
-    "@": 213
-  filename: ./schemat/data/db-cluster.yaml
-  format: data-yaml
-  _category_:
-    "@": 19
-  "@": schemat:Data
-- __id: 216
-  sequence:
-    "@": 214
-  filename: ./schemat/data/db-cluster.idx_category_item.jl
   format: index-jl
   _category_:
     "@": 20
