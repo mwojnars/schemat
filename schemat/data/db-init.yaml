@@ -42,7 +42,7 @@
     "@": 11
   "@": schemat:Data
 - __id: 201
-  name: db-boot
+  name: kernel
   data_sequence:
     "@": 205
   indexes:
@@ -140,7 +140,7 @@
 - __id: 207
   sequence:
     "@": 205
-  filename: ./schemat/data/db-boot.yaml
+  filename: ./schemat/data/kernel.yaml
   format: data-yaml
   _category_:
     "@": 19
@@ -148,7 +148,7 @@
 - __id: 208
   sequence:
     "@": 206
-  filename: ./schemat/data/db-boot.idx_category_item.jl
+  filename: ./schemat/data/kernel.idx_category_item.jl
   format: index-jl
   _category_:
     "@": 20
