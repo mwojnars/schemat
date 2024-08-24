@@ -5,7 +5,7 @@ import {IndexByCategory} from "./indexes.js";
 import {Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
-import {Data} from "../data.js";
+import {Data} from "../core/data.js";
 
 
 /**********************************************************************************************************************

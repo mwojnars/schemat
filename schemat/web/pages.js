@@ -4,7 +4,7 @@ import {Resources, ReactDOM} from './resources.js'
 import {e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
         TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './react-utils.js'
 import {HttpService} from "../web/services.js";
-import {Data} from "../data.js";
+import {Data} from "../core/data.js";
 import {Styled} from "./component.js";
 import {CatalogTable} from "../types/catalog.js";
 

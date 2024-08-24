@@ -4,7 +4,7 @@ import {set_global} from "./common/globals.js"
 import {print, assert, T, escape_html, splitLast, concat, unique, delay} from './common/utils.js'
 import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
 
-import {Catalog, Data} from './data.js'
+import {Catalog, Data} from './core/data.js'
 import {ITEM, generic_type} from "./types/type.js"
 import {DATA, DATA_GENERIC} from "./types/catalog.js"
 

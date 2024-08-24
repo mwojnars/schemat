@@ -1,4 +1,4 @@
-import {Catalog, Data} from "../data.js"
+import {Catalog, Data} from "../core/data.js"
 import {CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN} from "../types/type.js"
 import {CATALOG, DATA_SCHEMA} from "../types/catalog.js"
 

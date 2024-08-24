@@ -1,6 +1,6 @@
 import {DataError} from "../common/errors.js";
 import {T, assert, trycatch, concat} from "../common/utils.js";
-import {Catalog, Path} from '../data.js'
+import {Catalog, Path} from '../core/data.js'
 import {GENERIC, generic_string, generic_type, is_valid_field_name, STRING, Type, TYPE} from "./type.js";
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../web/react-utils.js";
