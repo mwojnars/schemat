@@ -15,9 +15,9 @@ site: 1004
 
 bootstrap_database:
   rings:
-#    - file: ./schemat/data/all.yaml                    # core categories; practically immutable (very rarely changed)
-    - file: ./schemat/data/db-boot.yaml                    # core categories; practically immutable (very rarely changed)
-    - file: ./schemat/data/db-base.yaml
-    - file: ./schemat/data/db-cluster.yaml                 # physical layer: nodes, rings, database
-    - file: ./schemat/data/db-site.yaml                    # logical layer: site, system folders, system objects
+    - file: ./schemat/data/kernel.yaml                    # core categories; practically immutable (very rarely changed)
+#    - file: ./schemat/data/db-boot.yaml                    # core categories; practically immutable (very rarely changed)
+#    - file: ./schemat/data/db-base.yaml
+#    - file: ./schemat/data/db-cluster.yaml                 # physical layer: nodes, rings, database
+#    - file: ./schemat/data/db-site.yaml                    # logical layer: site, system folders, system objects
     #- file: ../app-demo/data/db-paperity.yaml

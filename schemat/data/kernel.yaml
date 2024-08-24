@@ -1,0 +1,1074 @@
+- __id: 101
+  name: MysqlDB
+  class_path: /system/local/schemat/db/mysql.js:MySQL
+  schema:
+    host:
+      "@": schemat/types/type.js:STRING
+    port:
+      "@": schemat/types/type.js:STRING
+    user:
+      "@": schemat/types/type.js:STRING
+    database:
+      "@": schemat/types/type.js:STRING
+    password:
+      "@": schemat/types/type.js:STRING
+    connection:
+      info: Javascript object containing connection parameters.
+      "@": schemat/types/type.js:GENERIC
+    tables:
+      info: Mapping of categories (their paths) to names of sql tables.
+      values:
+        "@": schemat/types/type.js:STRING
+      "@": schemat/types/catalog.js:CATALOG
+    offset:
+      "@": schemat/types/type.js:INTEGER
+    readonly:
+      "@": schemat/types/type.js:BOOLEAN
+    "@": schemat:Catalog
+  defaults:
+    _class_: /system/local/schemat/db/mysql.js:MySQL
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 0
+  name: Category
+  info: Category of items that represent categories
+  schema:
+    defaults:
+      values:
+        "@": schemat/types/type.js:GENERIC
+      info: Default values for properties of objects in this category. The key cannot
+        be empty. Same key can be repeated.
+      "@": schemat/types/catalog.js:CATALOG
+    class_path:
+      info: SUN path to a Javascript file that contains a (base) class for this
+        category. May contain an optional class name appended after colon ':'.
+        If the class name is missing (no colon), default import from the file is
+        used.
+      "@": schemat/types/type.js:STRING
+    class_name:
+      info: Custom internal name for the Class of this category, for debugging. Also
+        used as an alias when exporting the Class from the category's module.
+      "@": schemat/types/type.js:STRING
+    class_init:
+      repeated: true
+      info: Module-level initialization for this category's Javascript class.
+        Typically contains import statements and global variables. Precedes the
+        Class definition (`class_body`, `views`) in the category's module code.
+      "@": schemat/types/type.js:CODE
+    class_body:
+      repeated: true
+      info: Source code of the class (a body without heading) that will be created for
+        this category. The class inherits from the `class_path` class, or the
+        class of the first base category, or the top-level Item.
+      "@": schemat/types/type.js:CODE
+    pages:
+      values:
+        "@": schemat/types/type.js:CODE
+      info: Source code of functions that generate static HTML response for particular
+        access methods of this category's items.
+      "@": schemat/types/catalog.js:CATALOG
+    views:
+      values:
+        "@": schemat/types/type.js:CODE
+      info: "Body of React functional components (no function header) to be added
+        dynamically to the category's Class body as VIEW_name(props) methods for
+        rendering item views. Inside the function body, `this` refers the item
+        to be rendered. Alternatively, the code of each view may consist of a
+        method header, view() {...}, and be accompanied by supporting methods:
+        title(), assets() - like in a class body."
+      "@": schemat/types/catalog.js:CATALOG
+    default_endpoints:
+      values:
+        "@": schemat/types/type.js:STRING
+      info: List of [PROTOCOL, endpoint] pairs that define default endpoint(s) for
+        objects of this category when requested via a URL with no explicit
+        endpoint.
+      default:
+        GET: home
+        GET/2: admin
+        CALL: self
+        "@": schemat:Catalog
+      "@": schemat/types/catalog.js:CATALOG
+    schema:
+      values:
+        "@": schemat/types/type.js:TYPE
+      info: Names and data types of properties of objects in this category.
+      "@": schemat/types/catalog.js:CATALOG
+    data_schema:
+      info: A DATA instance that represents the schema of objects in this category.
+        This is a virtual (non-editable) field automatically imputed from the
+        `schema` property.
+      "@": schemat/types/catalog.js:DATA_SCHEMA
+    allow_custom_fields:
+      default: false
+      info: If true, it is allowed to use undefined (out-of-schema) fields in items -
+        their schema is GENERIC()
+      "@": schemat/types/type.js:BOOLEAN
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat:Category
+    _container_:
+      "@": 1014
+    _ttl_: 60
+    schema:
+      _category_:
+        info: Category of this item. Determines item's behavior and the schema of its
+          attributes. Each category should be an item of the Root Category
+          (IID=0).
+        "@": schemat/types/type.js:ITEM
+      _class_:
+        info: Javascript class (identified by a class path) to be assigned to the object
+          after it is loaded from DB.
+        default: schemat:Item
+        "@": schemat/types/type.js:STRING
+      _extends_:
+        info: An item that serves as a prototype for this one, that is, provides default
+          values for missing properties of this item. Multiple prototypes are
+          allowed, the first one has priority over subsequent ones. Prototypes
+          can be defined for regular items or categories - the latter case
+          represents category inheritance. Items/categories may inherit
+          individual entries from catalog-valued fields, see
+          Item.getInherited(). In this way, subcategories inherit individual
+          field schemas as defined in base categories.
+        inherit: false
+        "@": schemat/types/type.js:ITEM
+      _container_:
+        info: Parent URL container of this object. The chain of containers leading from
+          Site to the object define the access path of this object, which can be
+          converted to a canonical URL path of the object by removing blank
+          segments.
+        default:
+          "@": 1021
+        "@": schemat/types/type.js:ITEM
+      _status_:
+        info: Set to "DRAFT" if the object's record is not yet fully initialized in the
+          database.
+        inherit: false
+        "@": schemat/types/type.js:STRING
+      _ttl_:
+        default: 10
+        info: Time To Live (TTL) of an object, in seconds. Determines for how long the
+          object is kept in a server-side cache and reused after being loaded
+          from DB. If zero, the object is evicted on the nearest cache purge. A
+          real number.
+        "@": schemat/types/type.js:NUMBER
+      name:
+        info: Display name of the object. May contain spaces, punctuation, non-latin
+          characters.
+        default: ""
+        "@": schemat/types/type.js:STRING
+      info:
+        info: Description or summary of the object.
+        "@": schemat/types/type.js:TEXT
+      html_title:
+        info: HTML title to be used for when this object is rendered.
+        "@": schemat/types/type.js:STRING
+      "@": schemat:Catalog
+    "@": schemat:Catalog
+  "@": schemat:Data
+- __id: 1
+  name: Site
+  info: Top-level URL routing + global configuration of applications, servers,
+    startup.
+  schema:
+    base_url:
+      info: "Base URL at which the website is served: protocol + domain + root path
+        (if any); no trailing '/'."
+      "@": schemat/types/type.js:STRING
+    cluster:
+      info: A Cluster of compute & storage nodes that host this site and database.
+      "@": schemat/types/type.js:ITEM
+    database:
+      info: Database instance that contains all data of this site
+      "@": schemat/types/type.js:ITEM
+    entries:
+      values:
+        "@": schemat/types/type.js:ITEM
+      repeated: true
+      info: URL prefixes (as keys) mapped to items that shall perform routing of
+        requests whose URLs start with a given prefix. NO leading/trailing
+        slashes.
+      "@": schemat/types/catalog.js:CATALOG
+    default_path:
+      info: URL path of a default container that can be used to access any object via
+        its ID. For internal purposes. Should contain a leading slash and no
+        trailing slash.
+      "@": schemat/types/type.js:PATH
+    _path_:
+      default: /
+      "@": schemat/types/type.js:STRING
+    _url_:
+      default: /
+      "@": schemat/types/type.js:STRING
+    cache_purge_interval:
+      default: 10
+      info: Interval [sec] at which the server-side cache is purged from expired
+        objects. A real number.
+      "@": schemat/types/type.js:NUMBER
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/std/site.js:Site
+    _container_: null
+    "@": schemat:Catalog
+  _extends_:
+    "@": 5
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 2
+  name: Container
+  _category_:
+    "@": 0
+  schema:
+    _is_container:
+      default: true
+      "@": schemat/types/type.js:BOOLEAN
+    "@": schemat:Catalog
+  "@": schemat:Data
+- __id: 3
+  name: File
+  info: File with a text content.
+  schema:
+    content:
+      "@": schemat/types/type.js:CODE
+    mimetype:
+      info: MIME type string (must include '/') to be set as Content-Type when serving
+        file download; or an extension ('js', 'jpg', ...) to be converted to an
+        appropriate type. If missing, response mimetype is inferred from the URL
+        path extension, if present.
+      "@": schemat/types/type.js:STRING
+    format:
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/std/files.js:File
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 4
+  name: FileLocal
+  info: File located on a local disk, identified by its local file path.
+  _extends_:
+    "@": 3
+  schema:
+    local_path:
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/std/files.js:FileLocal
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 5
+  name: Directory
+  info: >-
+    A container that keeps an explicit list of named `entries`: regular objects
+    or nested containers. Behaves like a file directory in a local file system,
+    but contains web objects, not just files. 
+
+
+    See also the Namespace containers for unbounded collections of objects with dynamically assigned names.
+  schema:
+    entries:
+      values:
+        "@": schemat/types/type.js:ITEM
+      "@": schemat/types/catalog.js:CATALOG
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/std/containers.js:Directory
+    "@": schemat:Catalog
+  _extends_:
+    "@": 2
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 6
+  name: LocalFolder
+  info: |-
+    File folder located on a local disk, identified by its local file path.
+    Gives access to all files and folders beneath the path.
+  _extends_:
+    "@": 5
+  schema:
+    local_path:
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/std/files.js:LocalFolder
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 7
+  name: Namespace
+  info: "Unbounded collection of objects: each object that satisfies the criteria
+    of the namespace is accepted and can receive a (dynamically created) unique
+    identifier, typically built from the object's ID. Typically, a namespace is
+    placed as a leaf node on a URL route and does not contain nested
+    containers."
+  defaults:
+    _class_: schemat/std/containers.js:Namespace
+    "@": schemat:Catalog
+  _extends_:
+    "@": 2
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 8
+  name: IID_Namespace
+  info: Namespace that serves items on simple URLs of the form /IID. Mainly used
+    for system & admin purposes, or as a last-resort default for URL generation.
+  schema:
+    category:
+      category:
+        "@": 0
+      info: Optional category(ies) of items handled by this namespace.
+      "@": schemat/types/type.js:ITEM
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/std/containers.js:IID_Namespace
+    "@": schemat:Catalog
+  _extends_:
+    "@": 7
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 9
+  name: Category_IID_Namespace
+  info: "Namespace for accessing public data through verbose paths of the form:
+    .../SPACE:IID, where SPACE is a text identifier assigned to a category in
+    `spaces` property."
+  schema:
+    spaces:
+      values:
+        category:
+          "@": 0
+        "@": schemat/types/type.js:ITEM
+      "@": schemat/types/catalog.js:CATALOG
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/std/containers.js:Category_IID_Namespace
+    "@": schemat:Catalog
+  _extends_:
+    "@": 7
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 11
+  name: Database
+  info: Internal database. An array of data Rings stacked on top of each other.
+  schema:
+    rings:
+      info: Array of Ring objects
+      "@": schemat/types/type.js:GENERIC
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/db/db.js:Database
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 12
+  name: Ring
+  info: Category for data rings, i.e., stackable database layers in a Database
+    object.
+  schema:
+    readonly:
+      "@": schemat/types/type.js:BOOLEAN
+    start_id:
+      info: the lowest ID allowed in this ring
+      "@": schemat/types/type.js:INTEGER
+    stop_id:
+      info: upper bound for IDs in this ring (all IDs must be strictly lower than
+        this)
+      "@": schemat/types/type.js:INTEGER
+    data_sequence:
+      info: DataSequence that keeps all primary objects of this ring
+      category:
+        "@": 14
+      "@": schemat/types/type.js:ITEM
+    indexes:
+      info: Map of Indexes and their names
+      "@": schemat/types/type.js:GENERIC
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/db/db.js:Ring
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 13
+  name: Sequence
+  info: Base category for sequences of key-value records, either data or indexes.
+  schema:
+    ring:
+      info: parent Ring of this sequence
+      category:
+        "@": 12
+      "@": schemat/types/type.js:ITEM
+    schema:
+      info: schema of records in this sequence as RecordSchema
+      "@": schemat/types/type.js:GENERIC
+    blocks:
+      info: array of Blocks containing records of this sequence
+      "@": schemat/types/type.js:GENERIC
+    derived:
+      info: array of derived sequences (indexes) that must be updated when this
+        sequence changes
+      "@": schemat/types/type.js:GENERIC
+    flush_delay:
+      info: for how long [sec] the local-file data flush can be delayed waiting for
+        more writes to arrive that can be grouped together
+      "@": schemat/types/type.js:NUMBER
+    "@": schemat:Catalog
+  defaults:
+    flush_delay: 0.01
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 14
+  name: DataSequence
+  info: Category for the main data sequence that contains serialized web objects.
+  schema:
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/db/sequence.js:DataSequence
+    "@": schemat:Catalog
+  _extends_:
+    "@": 13
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 15
+  name: Index
+  info: Base category for (derived) sequences that represent indexes over another
+    (source) sequence.
+  schema:
+    source:
+      info: source Sequence that feeds data to this index
+      "@": schemat/types/type.js:ITEM
+    "@": schemat:Catalog
+  _extends_:
+    "@": 13
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 16
+  name: DataIndex
+  info: An Index that receives record updates from the main data sequence, so
+    input records represent objects.
+  schema:
+    "@": schemat:Catalog
+  _extends_:
+    "@": 15
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 17
+  name: IndexByCategory
+  info: "Index that maps categories to member objects: the key is [category ID,
+    item ID]."
+  schema:
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/db/indexes.js:IndexByCategory
+    "@": schemat:Catalog
+  _extends_:
+    "@": 16
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 18
+  name: Block
+  info: A continuous subrange of records of a data/index sequence, physically
+    located on a single machine.
+  schema:
+    sequence:
+      info: parent Sequence this block is a part of
+      "@": schemat/types/type.js:ITEM
+    filename:
+      info: path to a local file that contains records of this block
+      "@": schemat/types/type.js:STRING
+    format:
+      info: "storage format: data-yaml, index-jl, rocksdb (in the future), ..."
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 19
+  name: DataBlock
+  info: Block of a DataSequence.
+  schema:
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/db/block.js:DataBlock
+    "@": schemat:Catalog
+  _extends_:
+    "@": 18
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 20
+  name: IndexBlock
+  info: Block of an Index sequence.
+  schema:
+    "@": schemat:Catalog
+  defaults:
+    _class_: schemat/db/block.js:IndexBlock
+    "@": schemat:Catalog
+  _extends_:
+    "@": 18
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 21
+  name: Cluster
+  _category_:
+    "@": 0
+  schema:
+    "@": schemat:Catalog
+  "@": schemat:Data
+- __id: 22
+  name: Node
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 200
+  name: DB
+  rings:
+    - "@": 201
+  _category_:
+    "@": 11
+  "@": schemat:Data
+- __id: 201
+  name: kernel
+  data_sequence:
+    "@": 205
+  indexes:
+    idx_category_item:
+      "@": 206
+    "@": :Map
+  readonly: false
+  start_id: 0
+  stop_id: 100
+  _category_:
+    "@": 12
+  "@": schemat:Data
+- __id: 202
+  name: db-base
+  data_sequence:
+    "@": 209
+  indexes:
+    idx_category_item:
+      "@": 210
+    "@": :Map
+  readonly: false
+  start_id: 100
+  stop_id: 200
+  _category_:
+    "@": 12
+  "@": schemat:Data
+- __id: 203
+  name: db-cluster
+  data_sequence:
+    "@": 213
+  indexes:
+    idx_category_item:
+      "@": 214
+    "@": :Map
+  readonly: false
+  start_id: 200
+  stop_id: 300
+  _category_:
+    "@": 12
+  "@": schemat:Data
+- __id: 204
+  name: db-site
+  data_sequence:
+    "@": 217
+  indexes:
+    idx_category_item:
+      "@": 218
+    "@": :Map
+  readonly: false
+  start_id: 1000
+  stop_id: null
+  _category_:
+    "@": 12
+  "@": schemat:Data
+- __id: 205
+  ring:
+    "@": 201
+  schema:
+    fields:
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    _field_types:
+      - "@": schemat/types/type.js:INTEGER
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 207
+  derived:
+    - "@": 206
+  _category_:
+    "@": 14
+  "@": schemat:Data
+- __id: 206
+  ring:
+    "@": 201
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": schemat/types/type.js:INTEGER
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 208
+  derived: []
+  source:
+    "@": 205
+  _category_:
+    "@": 17
+  "@": schemat:Data
+- __id: 207
+  sequence:
+    "@": 205
+  filename: ./schemat/data/kernel.yaml
+  format: data-yaml
+  _category_:
+    "@": 19
+  "@": schemat:Data
+- __id: 208
+  sequence:
+    "@": 206
+  filename: ./schemat/data/kernel.idx_category_item.jl
+  format: index-jl
+  _category_:
+    "@": 20
+  "@": schemat:Data
+- __id: 209
+  ring:
+    "@": 202
+  schema:
+    fields:
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    _field_types:
+      - "@": schemat/types/type.js:INTEGER
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 211
+  derived:
+    - "@": 210
+  _category_:
+    "@": 14
+  "@": schemat:Data
+- __id: 210
+  ring:
+    "@": 202
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": schemat/types/type.js:INTEGER
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 212
+  derived: []
+  source:
+    "@": 209
+  _category_:
+    "@": 17
+  "@": schemat:Data
+- __id: 211
+  sequence:
+    "@": 209
+  filename: ./schemat/data/db-base.yaml
+  format: data-yaml
+  _category_:
+    "@": 19
+  "@": schemat:Data
+- __id: 212
+  sequence:
+    "@": 210
+  filename: ./schemat/data/db-base.idx_category_item.jl
+  format: index-jl
+  _category_:
+    "@": 20
+  "@": schemat:Data
+- __id: 213
+  ring:
+    "@": 203
+  schema:
+    fields:
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    _field_types:
+      - "@": schemat/types/type.js:INTEGER
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 215
+  derived:
+    - "@": 214
+  _category_:
+    "@": 14
+  "@": schemat:Data
+- __id: 214
+  ring:
+    "@": 203
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": schemat/types/type.js:INTEGER
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    _field_types:
+      - blank: true
+        "@": schemat/types/type.js:INTEGER
+      - "@": schemat/types/type.js:INTEGER
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 216
+  derived: []
+  source:
+    "@": 213
+  _category_:
+    "@": 17
+  "@": schemat:Data
+- __id: 215
+  sequence:
+    "@": 213
+  filename: ./schemat/data/db-cluster.yaml
+  format: data-yaml
+  _category_:
+    "@": 19
+  "@": schemat:Data
+- __id: 216
+  sequence:
+    "@": 214
+  filename: ./schemat/data/db-cluster.idx_category_item.jl
+  format: index-jl
+  _category_:
+    "@": 20
+  "@": schemat:Data
+- __id: 217
+  ring:
+    "@": 204
+  schema:
+    fields:
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    _field_types:
+      - "@": schemat/types/type.js:INTEGER
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 219
+  derived:
+    - "@": 218
+  _category_:
+    "@": 14
+  "@": schemat:Data
+- __id: 218
+  ring:
+    "@": 204
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": schemat/types/type.js:INTEGER
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 220
+  derived: []
+  source:
+    "@": 217
+  _category_:
+    "@": 17
+  "@": schemat:Data
+- __id: 219
+  sequence:
+    "@": 217
+  filename: ./schemat/data/db-site.yaml
+  format: data-yaml
+  _category_:
+    "@": 19
+  "@": schemat:Data
+- __id: 220
+  sequence:
+    "@": 218
+  filename: ./schemat/data/db-site.idx_category_item.jl
+  format: index-jl
+  _category_:
+    "@": 20
+  "@": schemat:Data
+- __id: 1000
+  name: Varia
+  info: Category of items that do not belong to any specific category.
+  class_body: >-
+    static check() { import('/system/local/schemat/common/utils.js').then(mod =>
+    console.log("Varia.code: imported ", mod)) }
+
+    static error() { throw new Error('Varia/code/error()') }
+  schema:
+    title:
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 1001
+  name: TwitterPost
+  schema:
+    text:
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  class_init: |
+    // DRAFT...
+    // import {print} from '/site/utils.js'
+    // console.log('print:', print)
+    // console.log('TwitterPost/code executed')
+
+    // import {check} from '/site/widgets.js'
+    // import {Item} from '/system/local/schemat/core/item.js'
+    // import vm from 'vm'
+    // check()
+    // console.log('schemat:', schemat)
+    // console.log('Item:', Item)
+    // console.log('vm:', vm)
+  views:
+    view: |
+      let text = this.text
+      return P('Post:', BR(), text)
+    "@": schemat:Catalog
+  class_body: |-
+    // FOR RECORD ONLY...
+    // this method works OK (no await import)
+    init_OK() {
+        console.log('this.utils #1: started...')
+        return import('/site/utils.js').then(utils => {
+            this.utils = utils
+            console.log('this.utils #1:', this.utils)
+        })
+    }
+    // this method works WRONG: the web request is being completed while 
+    // the method waits on await import below (!?)
+    async init_ERR() {
+        console.log('this.utils #1: started...')
+        let utils = await import('/site/utils.js')
+        this.utils = utils
+        console.log('this.utils #1:', this.utils)
+    }
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 1004
+  name: main-site
+  base_url: http://127.0.0.1:3000
+  cluster:
+    "@": 1025
+  database:
+    "@": 200
+  entries:
+    apps:
+      "@": 1009
+    site:
+      "@": 1010
+    system:
+      "@": 1019
+    "*domain":
+      "@": 1011
+    "*main":
+      "@": 1014
+    "@": schemat:Catalog
+  default_path: /system/default
+  _category_:
+    "@": 1
+  "@": schemat:Data
+- __id: 1005
+  content: export let print = console.log
+  _category_:
+    "@": 3
+  _container_:
+    "@": 1010
+  "@": schemat:Data
+- __id: 1006
+  content: |-
+    import {print} from '../site/utils.js'
+    export function check() { print('called widgets.js:check()') } 
+    //let fs = await import('fs')
+    //print('fs:',fs)
+  _category_:
+    "@": 3
+  _container_:
+    "@": 1010
+  "@": schemat:Data
+- __id: 1007
+  name: favicon.ico
+  local_path: ./assets/favicon.ico
+  _category_:
+    "@": 4
+  _container_:
+    "@": 1011
+  "@": schemat:Data
+- __id: 1008
+  name: /demo
+  _category_:
+    "@": 5
+  _container_:
+    "@": 1009
+  "@": schemat:Data
+- __id: 1009
+  name: /apps
+  entries:
+    demo:
+      "@": 1008
+    paperity:
+      "@": 1012
+    "@": schemat:Catalog
+  _category_:
+    "@": 5
+  _container_:
+    "@": 1004
+  "@": schemat:Data
+- __id: 1010
+  name: /site
+  entries:
+    utils.js:
+      "@": 1005
+    widgets.js:
+      "@": 1006
+    "@": schemat:Catalog
+  _category_:
+    "@": 5
+  _container_:
+    "@": 1004
+  "@": schemat:Data
+- __id: 1011
+  name: domain
+  info: Directory with public static files that must be accessible at the domain
+    root, like .../favicon.ico, /robots.txt etc.
+  entries:
+    favicon.ico:
+      "@": 1007
+    "@": schemat:Catalog
+  _category_:
+    "@": 5
+  _container_:
+    "@": 1004
+  "@": schemat:Data
+- __id: 1014
+  name: main_space
+  spaces:
+    sys.category:
+      "@": 0
+    "@": schemat:Catalog
+  _category_:
+    "@": 9
+  _container_:
+    "@": 1004
+  "@": schemat:Data
+- __id: 1016
+  title: Ala ma kota Sierściucha i psa Kłapoucha.
+  title/2: drugi tytuł...
+  _category_:
+    "@": 1000
+  "@": schemat:Data
+- __id: 1017
+  title: ąłęÓŁŻŹŚ
+  "@": schemat:Data
+- __id: 1018
+  name: Post A
+  text: Ala ma kota
+  _category_:
+    "@": 1001
+  "@": schemat:Data
+- __id: 1019
+  name: /system
+  entries:
+    categories:
+      "@": 1022
+    cluster:
+      "@": 1023
+    database:
+      "@": 1024
+    default:
+      "@": 1021
+    local:
+      "@": 1020
+    "@": schemat:Catalog
+  _container_:
+    "@": 1004
+  _category_:
+    "@": 5
+  "@": schemat:Data
+- __id: 1020
+  name: /system/local
+  local_path: .
+  _container_:
+    "@": 1019
+  _category_:
+    "@": 6
+  "@": schemat:Data
+- __id: 1021
+  name: default namespace
+  info: All objects accessible by their IDs.
+  _container_:
+    "@": 1019
+  _category_:
+    "@": 8
+  "@": schemat:Data
+- __id: 1022
+  name: /system/categories
+  _container_:
+    "@": 1019
+  _category_:
+    "@": 5
+  "@": schemat:Data
+- __id: 1023
+  name: /system/cluster
+  _container_:
+    "@": 1019
+  _category_:
+    "@": 5
+  "@": schemat:Data
+- __id: 1024
+  name: /system/database
+  _container_:
+    "@": 1019
+  _category_:
+    "@": 5
+  "@": schemat:Data
+- __id: 1025
+  name: main-cluster
+  _category_:
+    "@": 21
+  "@": schemat:Data
