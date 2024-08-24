@@ -178,21 +178,6 @@
   _category_:
     "@": 20
   "@": schemat:Data
-- __id: 1000
-  name: Varia
-  info: Category of items that do not belong to any specific category.
-  class_body: >-
-    static check() { import('/system/local/schemat/common/utils.js').then(mod =>
-    console.log("Varia.code: imported ", mod)) }
-
-    static error() { throw new Error('Varia/code/error()') }
-  schema:
-    title:
-      "@": schemat/types/type.js:STRING
-    "@": schemat:Catalog
-  _category_:
-    "@": 0
-  "@": schemat:Data
 - __id: 1001
   name: TwitterPost
   schema:
@@ -348,7 +333,7 @@
   title: Ala ma kota Sierściucha i psa Kłapoucha.
   title/2: drugi tytuł...
   _category_:
-    "@": 1000
+    "@": 1029
   "@": schemat:Data
 - __id: 1017
   title: ąłęÓŁŻŹŚ
@@ -419,4 +404,19 @@
   name: main-cluster
   _category_:
     "@": 21
+  "@": schemat:Data
+- __id: 1029
+  name: Varia
+  info: Category of items that do not belong to any specific category.
+  class_body: >-
+    static check() { import('/system/local/schemat/common/utils.js').then(mod =>
+    console.log("Varia.code: imported ", mod)) }
+
+    static error() { throw new Error('Varia/code/error()') }
+  schema:
+    title:
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
   "@": schemat:Data
