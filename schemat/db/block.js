@@ -371,8 +371,7 @@ export class YamlDataStorage extends MemoryStorage {
         /* Save the entire database (this.records) to a file. */
         print(`YamlDataStorage flushing ${this._records.size} items to ${this.filename}...`)
         let schema = YamlDataStorage.sequence_schema
-        let flat = [...this._records.entries()]
-        let recs = flat.map(([key, data_json]) => {
+        let recs = [...this.scan()].map(([key, data_json]) => {
             // let __id = this.sequence.decode_key(key)
             let __id = schema.decode_key(key)[0]
             let data = JSON.parse(data_json)
@@ -419,7 +418,7 @@ export class JsonIndexStorage extends MemoryStorage {
         /* Save the entire database (this.records) to a file. */
         print(`YamlIndexStorage flushing ${this._records.size} records to ${this.filename}...`)
 
-        let lines = [...this._records.entries()].map(([binary_key, json_value]) => {
+        let lines = [...this.scan()].map(([binary_key, json_value]) => {
             let key = JSON.stringify(Array.from(binary_key))
             return json_value ? `[${key}, ${json_value}]` : `[${key}]`
         })
