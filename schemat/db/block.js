@@ -1,6 +1,6 @@
 import {assert, print, T} from '../common/utils.js'
 import {DataConsistencyError, NotImplemented} from '../common/errors.js'
-import {Item} from '../item.js'
+import {Item} from '../core/item.js'
 import {ChangeRequest, RecordSchema} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
 import {INTEGER} from "../types/type.js";

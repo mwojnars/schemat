@@ -1,6 +1,6 @@
 import {DataAccessError, DatabaseError} from "../common/errors.js"
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
-import {Item, Edit} from "../item.js"
+import {Item, Edit} from "../core/item.js"
 import {IndexByCategory} from "./indexes.js";
 import {Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";

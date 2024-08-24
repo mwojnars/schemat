@@ -26,7 +26,7 @@
     // console.log('TwitterPost/code executed')
 
     // import {check} from '/site/widgets.js'
-    // import {Item} from '/system/local/schemat/item.js'
+    // import {Item} from '/system/local/schemat/core/item.js'
     // import vm from 'vm'
     // check()
     // console.log('schemat:', schemat)

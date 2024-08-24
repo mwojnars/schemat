@@ -1,7 +1,7 @@
 "use strict";
 
 import {T, print, assert, DependenciesStack, normalize_path} from '../common/utils.js'
-import {Item, ROOT_ID} from '../item.js'
+import {Item, ROOT_ID} from './item.js'
 import {set_global} from "../common/globals.js";
 import {Registry} from "./registry.js";
 
@@ -263,7 +263,7 @@ export class Schemat {
     //     // add standard classes to the classpath
     //     classpath.setMany("js", Map)
     //     classpath.setMany("base", Catalog, Data)
-    //     await classpath.setModule("base", "../item.js")
+    //     await classpath.setModule("base", "./item.js")
     //     await classpath.setModule("std", "../std/files.js")
     //     await classpath.setModule("std", "../std/site.js")
     //     await classpath.setModule("std", "../std/containers.js")

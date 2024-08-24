@@ -1,2 +1,2 @@
-export {Item, Category} from './item.js'
+export {Item, Category} from './core/item.js'
 export {Catalog, Data} from './core/data.js'

@@ -2,7 +2,7 @@ import {BinaryRecord, RecordSchema} from "./records.js";
 import {INTEGER} from "../types/type.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock} from "./block.js";
-import {Item} from "../item.js";
+import {Item} from "../core/item.js";
 
 
 /**********************************************************************************************************************

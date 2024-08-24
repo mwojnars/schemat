@@ -1,20 +1,20 @@
 'use strict'
 
-import {set_global} from "./common/globals.js"
-import {print, assert, T, escape_html, splitLast, concat, unique, delay} from './common/utils.js'
-import {UrlPathNotFound, NotLinked, NotLoaded} from './common/errors.js'
+import {set_global} from "../common/globals.js"
+import {print, assert, T, escape_html, splitLast, concat, unique, delay} from '../common/utils.js'
+import {UrlPathNotFound, NotLinked, NotLoaded} from '../common/errors.js'
 
-import {Catalog, Data} from './core/data.js'
-import {ITEM, generic_type} from "./types/type.js"
-import {DATA, DATA_GENERIC} from "./types/catalog.js"
+import {Catalog, Data} from './data.js'
+import {ITEM, generic_type} from "../types/type.js"
+import {DATA, DATA_GENERIC} from "../types/catalog.js"
 
-import {ItemRecord} from "./db/records.js"
-import {DataRequest} from "./db/data_request.js"
+import {ItemRecord} from "../db/records.js"
+import {DataRequest} from "../db/data_request.js"
 
-import {html_page} from "./web/adapters.js"
-import {Assets} from "./web/component.js"
-import {ReactPage, CategoryAdminView, ItemAdminView} from "./web/pages.js"
-import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./web/services.js"
+import {html_page} from "../web/adapters.js"
+import {Assets} from "../web/component.js"
+import {ReactPage, CategoryAdminView, ItemAdminView} from "../web/pages.js"
+import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "../web/services.js"
 
 export const ROOT_ID = 0
 
@@ -903,7 +903,7 @@ export class Item {
     GET__test_txt()         { return "TEST txt ..." }                   // works
     GET__test_fun()         { return () => "TEST function ..." }        // works
     GET__test_res({res})    { res.send("TEST res.send() ...") }         // works
-    GET__test_html()        { return html_page(import.meta.resolve('./test/views/page_02.html')) }
+    GET__test_html()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
 
     static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)
