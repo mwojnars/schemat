@@ -36,8 +36,6 @@
   rings:
     - "@": 201
     - "@": 202
-    - "@": 203
-    - "@": 204
   _category_:
     "@": 11
   "@": schemat:Data
@@ -56,7 +54,7 @@
     "@": 12
   "@": schemat:Data
 - __id: 202
-  name: db-base
+  name: db-init
   data_sequence:
     "@": 209
   indexes:
@@ -196,7 +194,7 @@
 - __id: 211
   sequence:
     "@": 209
-  filename: ./schemat/data/db-base.yaml
+  filename: ./schemat/data/db-init.yaml
   format: data-yaml
   _category_:
     "@": 19
@@ -204,7 +202,7 @@
 - __id: 212
   sequence:
     "@": 210
-  filename: ./schemat/data/db-base.idx_category_item.jl
+  filename: ./schemat/data/db-init.idx_category_item.jl
   format: index-jl
   _category_:
     "@": 20
