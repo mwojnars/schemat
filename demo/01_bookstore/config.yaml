@@ -3,7 +3,7 @@
 #
 
 # ID of the Site object to be loaded at startup
-site: 1004
+site: 1001
 
 
 # bootstrap_database:
