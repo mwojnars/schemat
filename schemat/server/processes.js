@@ -140,7 +140,7 @@ export class AdminProcess extends BackendProcess {
         print('move: done')
     }
 
-    async CLI_reinsert({ids, new_id, ring: ring_name}) {
+    async CLI_reinsert({ids, new: new_id, ring: ring_name}) {
         /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring. */
 
         ids = String(ids)
@@ -173,6 +173,7 @@ export class AdminProcess extends BackendProcess {
                 }
             }
 
+            print(`new_id: ${new_id} (${typeof new_id})`)
             new_id = await ring.insert(new_id, obj.dump_data())
             await db.delete(id)
             await this._update_references(id, new_id)
