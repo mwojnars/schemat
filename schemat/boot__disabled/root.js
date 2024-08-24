@@ -1,7 +1,6 @@
 import {Catalog, Data} from "../data.js"
 import {CODE, ITEM, NUMBER, PATH, TYPE, STRING, TEXT, BOOLEAN} from "../types/type.js"
 import {CATALOG, DATA_SCHEMA} from "../types/catalog.js"
-import {Category} from "../item.js";
 
 
 /**********************************************************************************************************************
