@@ -38,17 +38,6 @@ await (async function main() {
 
         // .command('find-orphans', 'find all objects that are not referenced by any other object; orphan cycles are NOT detected',)
 
-        // .command('build [path_db_boot]', 'generate the core "db-boot" database anew')
-        //     .option('bottom', {
-        //         alias: 'b',
-        //         description: 'if set, new items are inserted at the lowest possible DB level',
-        //         type: 'boolean'
-        //     })
-        //     .option('db', {
-        //         description: 'name of the DB in a stack where insertion of new items should start (can propagate upwards)',
-        //         type: 'string'
-        //     })
-
         .demandCommand(1, 'Please provide a command to run.')
         .help().alias('help', 'h')
         .argv
