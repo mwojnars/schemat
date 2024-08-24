@@ -49,6 +49,7 @@ export class ServerSchemat extends Schemat {
 
 
     async _purge_registry() {
+        if (this.is_closing) return
         try {
             return this.registry.purge(this._on_evict.bind(this))
         }
