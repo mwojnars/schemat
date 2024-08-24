@@ -196,8 +196,8 @@ describe('Schemat Tests', function () {
         })
 
         it('Varia', async function () {
-            let Varia = await test_page(page, `${DOMAIN}/sys.category:1000`, '#page-main',
-                ['Category:1000', 'Varia', 'name', '_category_', 'schema', 'Varia:1016', 'Create Item'])
+            let Varia = await test_page(page, `${DOMAIN}/sys.category:1029`, '#page-main',
+                ['Category:1029', 'Varia', 'name', '_category_', 'schema', 'Varia:1016', 'Create Item'])
 
             // these strings are only available after client-side rendering, not in HTML source:
             expect_include_all(await extract_content(Varia), 'check', 'Varia.code')
