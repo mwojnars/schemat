@@ -78,6 +78,7 @@
     "@": 205
   filename: ./schemat/data/kernel.yaml
   format: data-yaml
+  insert_mode: compact
   _category_:
     "@": 19
   "@": schemat:Data
@@ -134,9 +135,9 @@
     "@": 209
   filename: ./schemat/data/db-init.yaml
   format: data-yaml
+  insert_mode: compact
   _category_:
     "@": 19
-  insert_mode: compact
   "@": schemat:Data
 - __id: 212
   sequence:
