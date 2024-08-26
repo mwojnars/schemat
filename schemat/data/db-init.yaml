@@ -1,33 +1,6 @@
-- __id: 201
-  name: kernel
-  data_sequence:
-    "@": 205
-  indexes:
-    idx_category_item:
-      "@": 206
-    "@": :Map
-  readonly: false
-  start_id: 0
-  stop_id: 1000
-  _category_:
-    "@": 12
-  "@": schemat:Data
-- __id: 202
-  name: db-init
-  data_sequence:
-    "@": 209
-  indexes:
-    idx_category_item:
-      "@": 210
-    "@": :Map
-  readonly: false
-  start_id: 1001
-  _category_:
-    "@": 12
-  "@": schemat:Data
 - __id: 205
   ring:
-    "@": 201
+    "@": 1003
   schema:
     fields:
       id:
@@ -46,7 +19,7 @@
   "@": schemat:Data
 - __id: 206
   ring:
-    "@": 201
+    "@": 1003
   schema:
     fields:
       cid:
@@ -84,7 +57,7 @@
   "@": schemat:Data
 - __id: 209
   ring:
-    "@": 202
+    "@": 1004
   schema:
     fields:
       id:
@@ -103,7 +76,7 @@
   "@": schemat:Data
 - __id: 210
   ring:
-    "@": 202
+    "@": 1004
   schema:
     fields:
       cid:
@@ -165,10 +138,37 @@
 - __id: 1002
   name: DB
   rings:
-    - "@": 201
-    - "@": 202
+    - "@": 1003
+    - "@": 1004
   _category_:
     "@": 11
+  "@": schemat:Data
+- __id: 1003
+  name: kernel
+  data_sequence:
+    "@": 205
+  indexes:
+    idx_category_item:
+      "@": 206
+    "@": :Map
+  readonly: false
+  start_id: 0
+  stop_id: 1000
+  _category_:
+    "@": 12
+  "@": schemat:Data
+- __id: 1004
+  name: db-init
+  data_sequence:
+    "@": 209
+  indexes:
+    idx_category_item:
+      "@": 210
+    "@": :Map
+  readonly: false
+  start_id: 1001
+  _category_:
+    "@": 12
   "@": schemat:Data
 - __id: 1005
   content: export let print = console.log
