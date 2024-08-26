@@ -1,10 +1,158 @@
+- __id: 200
+  name: DB
+  rings:
+    - "@": 201
+    - "@": 202
+  _category_:
+    "@": 11
+  "@": schemat:Data
+- __id: 201
+  name: kernel
+  data_sequence:
+    "@": 205
+  indexes:
+    idx_category_item:
+      "@": 206
+    "@": :Map
+  readonly: false
+  start_id: 0
+  stop_id: 1000
+  _category_:
+    "@": 12
+  "@": schemat:Data
+- __id: 202
+  name: db-init
+  data_sequence:
+    "@": 209
+  indexes:
+    idx_category_item:
+      "@": 210
+    "@": :Map
+  readonly: false
+  start_id: 1001
+  _category_:
+    "@": 12
+  "@": schemat:Data
+- __id: 205
+  ring:
+    "@": 201
+  schema:
+    fields:
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    _field_types:
+      - "@": schemat/types/type.js:INTEGER
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 207
+  derived:
+    - "@": 206
+  _category_:
+    "@": 14
+  "@": schemat:Data
+- __id: 206
+  ring:
+    "@": 201
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": schemat/types/type.js:INTEGER
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 208
+  derived: []
+  source:
+    "@": 205
+  _category_:
+    "@": 17
+  "@": schemat:Data
+- __id: 207
+  sequence:
+    "@": 205
+  filename: ./schemat/data/kernel.yaml
+  format: data-yaml
+  _category_:
+    "@": 19
+  "@": schemat:Data
+- __id: 208
+  sequence:
+    "@": 206
+  filename: ./schemat/data/kernel.idx_category_item.jl
+  format: index-jl
+  _category_:
+    "@": 20
+  "@": schemat:Data
+- __id: 209
+  ring:
+    "@": 202
+  schema:
+    fields:
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    _field_types:
+      - "@": schemat/types/type.js:INTEGER
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 211
+  derived:
+    - "@": 210
+  _category_:
+    "@": 14
+  "@": schemat:Data
+- __id: 210
+  ring:
+    "@": 202
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": schemat/types/type.js:INTEGER
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 212
+  derived: []
+  source:
+    "@": 209
+  _category_:
+    "@": 17
+  "@": schemat:Data
+- __id: 211
+  sequence:
+    "@": 209
+  filename: ./schemat/data/db-init.yaml
+  format: data-yaml
+  _category_:
+    "@": 19
+  insert_mode: compact
+  "@": schemat:Data
+- __id: 212
+  sequence:
+    "@": 210
+  filename: ./schemat/data/db-init.idx_category_item.jl
+  format: index-jl
+  _category_:
+    "@": 20
+  "@": schemat:Data
 - __id: 1001
   name: main-site
   base_url: http://127.0.0.1:3000
   cluster:
     "@": 1025
   database:
-    "@": 1002
+    "@": 200
   entries:
     apps:
       "@": 1009
@@ -20,41 +168,6 @@
   default_path: /system/default
   _category_:
     "@": 1
-  "@": schemat:Data
-- __id: 1002
-  name: DB
-  rings:
-    - "@": 1003
-    - "@": 1004
-  _category_:
-    "@": 11
-  "@": schemat:Data
-- __id: 1003
-  name: kernel
-  data_sequence:
-    "@": 1012
-  indexes:
-    idx_category_item:
-      "@": 1013
-    "@": :Map
-  readonly: false
-  start_id: 0
-  stop_id: 1000
-  _category_:
-    "@": 12
-  "@": schemat:Data
-- __id: 1004
-  name: db-init
-  data_sequence:
-    "@": 1027
-  indexes:
-    idx_category_item:
-      "@": 1028
-    "@": :Map
-  readonly: false
-  start_id: 1001
-  _category_:
-    "@": 12
   "@": schemat:Data
 - __id: 1005
   content: export let print = console.log
@@ -128,46 +241,6 @@
   _container_:
     "@": 1001
   "@": schemat:Data
-- __id: 1012
-  ring:
-    "@": 201
-  schema:
-    fields:
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    _field_types:
-      - "@": schemat/types/type.js:INTEGER
-    "@": schemat/db/records.js:RecordSchema
-  blocks:
-    - "@": 1015
-  derived:
-    - "@": 1013
-  _category_:
-    "@": 14
-  "@": schemat:Data
-- __id: 1013
-  ring:
-    "@": 201
-  schema:
-    fields:
-      cid:
-        blank: true
-        "@": schemat/types/type.js:INTEGER
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    "@": schemat/db/records.js:RecordSchema
-  blocks:
-    - "@": 1026
-  derived: []
-  source:
-    "@": 205
-  _category_:
-    "@": 17
-  "@": schemat:Data
 - __id: 1014
   name: main_space
   spaces:
@@ -178,14 +251,6 @@
     "@": 9
   _container_:
     "@": 1001
-  "@": schemat:Data
-- __id: 1015
-  sequence:
-    "@": 205
-  filename: ./schemat/data/kernel.yaml
-  format: data-yaml
-  _category_:
-    "@": 19
   "@": schemat:Data
 - __id: 1016
   title: Ala ma kota Sierściucha i psa Kłapoucha.
@@ -262,54 +327,6 @@
   name: main-cluster
   _category_:
     "@": 21
-  "@": schemat:Data
-- __id: 1026
-  sequence:
-    "@": 206
-  filename: ./schemat/data/kernel.idx_category_item.jl
-  format: index-jl
-  _category_:
-    "@": 20
-  "@": schemat:Data
-- __id: 1027
-  ring:
-    "@": 202
-  schema:
-    fields:
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    _field_types:
-      - "@": schemat/types/type.js:INTEGER
-    "@": schemat/db/records.js:RecordSchema
-  blocks:
-    - "@": 1032
-  derived:
-    - "@": 1028
-  _category_:
-    "@": 14
-  "@": schemat:Data
-- __id: 1028
-  ring:
-    "@": 202
-  schema:
-    fields:
-      cid:
-        blank: true
-        "@": schemat/types/type.js:INTEGER
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    "@": schemat/db/records.js:RecordSchema
-  blocks:
-    - "@": 1033
-  derived: []
-  source:
-    "@": 209
-  _category_:
-    "@": 17
   "@": schemat:Data
 - __id: 1029
   name: Varia
@@ -403,21 +420,4 @@
     }
   _category_:
     "@": 0
-  "@": schemat:Data
-- __id: 1032
-  sequence:
-    "@": 209
-  filename: ./schemat/data/db-init.yaml
-  format: data-yaml
-  _category_:
-    "@": 19
-  insert_mode: compact
-  "@": schemat:Data
-- __id: 1033
-  sequence:
-    "@": 210
-  filename: ./schemat/data/db-init.idx_category_item.jl
-  format: index-jl
-  _category_:
-    "@": 20
   "@": schemat:Data
