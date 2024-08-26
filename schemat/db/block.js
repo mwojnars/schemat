@@ -164,18 +164,21 @@ export class DataBlock extends Block {
         // calculate the `id` if not provided, update _autoincrement and write the data
         let {id, key, data} = req.args
 
-        if (id === undefined || id === null)                // assign a new ID if not provided for the new item
-            [id, key] = this._assign_id(req)
-        else                                                // fixed ID provided by the caller? check for uniqueness
+        if (id === undefined || id === null) {              // assign a new ID if not provided for the new item
+            id = this._assign_id(req)
+            if (T.isPromise(id)) id = await id
+        } else                                              // fixed ID provided by the caller? check for uniqueness
             await this.assert_unique(key, id)
 
-        req.current_ring.assert_valid_id(id, `candidate ID=${id} for a new item is outside of the valid range for this ring`)
+        req.current_ring.assert_valid_id(id, `candidate ID=${id} for a new item is outside of the valid range(s) for this ring`)
         req.current_ring.assert_writable(id, `cannot write ID=${id} in this ring`)
 
         this._autoincrement = Math.max(id, this._autoincrement)
 
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
+
+        if (key === undefined) key = req.current_data.encode_key(id)
 
         req = req.make_step(this, null, {id, key, value: data})
 
@@ -184,11 +187,25 @@ export class DataBlock extends Block {
     }
 
     _assign_id(req) {
-        /* Assign a new `id` for the record to be inserted. Return [id, key]. */
-        let id, key
-        id = Math.max(this._autoincrement + 1, req.current_ring.start_id)      // no ID? use _autoincrement with the next available ID
-        key = req.current_data.encode_key(id)
-        return [id, key]
+        /* Calculate a new `id` to be assigned to the record being inserted. */
+        if (this.insert_mode === 'compact') return this._assign_id_compact(req)
+        return Math.max(this._autoincrement + 1, req.current_ring.start_id)      // no ID? use _autoincrement with the next available ID
+    }
+
+    _assign_id_compact(req) {
+        /* Scan tihs._storage to find the first available `id` for the record to be inserted, starting at req.current_ring.start_id. 
+           Has large performance implications (O(n)), so it can only be used with MemoryStorage.
+         */
+        if (!(this._storage instanceof MemoryStorage))
+            throw new Error('Compact insert mode is only supported with MemoryStorage')
+
+        let next = req.current_ring.start_id
+        for (const [key, value] of this._storage.scan()) {
+            const id = req.current_data.decode_key(key)[0]
+            if (id > next) return next                          // found a gap? return the first available ID
+            next = id + 1
+        }
+        return next                                             // no gaps found, return the next ID after the last record
     }
 
     async update(req) {
