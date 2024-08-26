@@ -143,7 +143,8 @@ export class AdminProcess extends BackendProcess {
     async CLI_reinsert({ids, new: new_id, ring: ring_name}) {
         /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring.
            WARNING: there's no explicit flushing of changes, so they're done at the end, which may lead to inconsistencies
-                    when multiple objects are reinserted.
+                    when multiple objects are reinserted, esp. when they are system objects (loaded already before reinsert).
+                    In such case, it's better to re-run the command for each object separately.
          */
 
         ids = String(ids)
