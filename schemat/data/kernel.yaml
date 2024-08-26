@@ -472,6 +472,8 @@
   name: DataBlock
   info: Block of a DataSequence.
   schema:
+    insert_mode:
+      "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
     _class_: schemat/db/block.js:DataBlock

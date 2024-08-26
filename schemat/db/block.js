@@ -203,7 +203,8 @@ export class DataBlock extends Block {
 
         let next = req.current_ring.start_id
         for (const [key, value] of this._storage.scan()) {
-            const id = req.current_data.decode_key(key)[0]
+            const id = req.current_data.decode_key(key)
+            if (id < req.current_ring.start_id) continue        // skip records outside the current ring's range
             if (id > next) return next                          // found a gap? return the first available ID
             next = id + 1
         }

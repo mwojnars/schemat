@@ -136,6 +136,7 @@
   format: data-yaml
   _category_:
     "@": 19
+  insert_mode: compact
   "@": schemat:Data
 - __id: 212
   sequence:
