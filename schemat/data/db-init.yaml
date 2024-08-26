@@ -1,20 +1,3 @@
-- __id: 211
-  sequence:
-    "@": 1027
-  filename: ./schemat/data/db-init.yaml
-  format: data-yaml
-  insert_mode: compact
-  _category_:
-    "@": 19
-  "@": schemat:Data
-- __id: 212
-  sequence:
-    "@": 1028
-  filename: ./schemat/data/db-init.idx_category_item.jl
-  format: index-jl
-  _category_:
-    "@": 20
-  "@": schemat:Data
 - __id: 1001
   name: main-site
   base_url: http://127.0.0.1:3000
@@ -302,7 +285,7 @@
       - "@": schemat/types/type.js:INTEGER
     "@": schemat/db/records.js:RecordSchema
   blocks:
-    - "@": 211
+    - "@": 1032
   derived:
     - "@": 1028
   _category_:
@@ -322,7 +305,7 @@
     properties: []
     "@": schemat/db/records.js:RecordSchema
   blocks:
-    - "@": 212
+    - "@": 1033
   derived: []
   source:
     "@": 1027
@@ -421,4 +404,21 @@
     }
   _category_:
     "@": 0
+  "@": schemat:Data
+- __id: 1032
+  sequence:
+    "@": 1027
+  filename: ./schemat/data/db-init.yaml
+  format: data-yaml
+  insert_mode: compact
+  _category_:
+    "@": 19
+  "@": schemat:Data
+- __id: 1033
+  sequence:
+    "@": 1028
+  filename: ./schemat/data/db-init.idx_category_item.jl
+  format: index-jl
+  _category_:
+    "@": 20
   "@": schemat:Data
