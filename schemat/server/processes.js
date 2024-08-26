@@ -173,12 +173,12 @@ export class AdminProcess extends BackendProcess {
                 }
             }
 
-            print(`new_id: ${new_id} (${typeof new_id})`)
             new_id = await ring.insert(new_id, obj.dump_data())
             await db.delete(id)
             await this._update_references(id, new_id)
 
             print(`...reinserted object [${id}] as [${new_id}]`)
+            new_id = undefined
         }
         print()
     }
