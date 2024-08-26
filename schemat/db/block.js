@@ -136,11 +136,13 @@ export class DataBlock extends Block {
     /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
 
     static _category_ = 19
-    static _iid_compact_thresh = 1000       // in 'compact' mode, only categories get inserted below this IID
 
-    insert_mode             // if `compact`, new items are inserted at the lowest possible IID in the block, with categories being put at the bottom; requires MemoryStorage
+    _autoincrement = 0      // current maximum IID of records in this block; a new record is assigned id=_autoincrement+1 unless insert_mode='compact';
+                            // transient field: NOT saved in the block's configuration in DB but re-initialized during block instantiation
 
-    _autoincrement = 0      // current maximum item ID; a new record is assigned id=_autoincrement+1
+    // persistent properties
+    insert_mode             // if `compact`, new objects are inserted at the lowest possible IID in the block, possibly below _autoincrement; requires MemoryStorage
+
 
     async __init__() {
         this._autoincrement = await super.__init__()
