@@ -1,24 +1,3 @@
-- __id: 210
-  ring:
-    "@": 1004
-  schema:
-    fields:
-      cid:
-        blank: true
-        "@": schemat/types/type.js:INTEGER
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    "@": schemat/db/records.js:RecordSchema
-  blocks:
-    - "@": 212
-  derived: []
-  source:
-    "@": 1027
-  _category_:
-    "@": 17
-  "@": schemat:Data
 - __id: 211
   sequence:
     "@": 1027
@@ -30,7 +9,7 @@
   "@": schemat:Data
 - __id: 212
   sequence:
-    "@": 210
+    "@": 1028
   filename: ./schemat/data/db-init.idx_category_item.jl
   format: index-jl
   _category_:
@@ -87,7 +66,7 @@
     "@": 1027
   indexes:
     idx_category_item:
-      "@": 210
+      "@": 1028
     "@": :Map
   readonly: false
   start_id: 1001
@@ -325,9 +304,30 @@
   blocks:
     - "@": 211
   derived:
-    - "@": 210
+    - "@": 1028
   _category_:
     "@": 14
+  "@": schemat:Data
+- __id: 1028
+  ring:
+    "@": 1004
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": schemat/types/type.js:INTEGER
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 212
+  derived: []
+  source:
+    "@": 1027
+  _category_:
+    "@": 17
   "@": schemat:Data
 - __id: 1029
   name: Varia
