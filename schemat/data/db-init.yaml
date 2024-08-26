@@ -1,46 +1,6 @@
-- __id: 205
-  ring:
-    "@": 1003
-  schema:
-    fields:
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    _field_types:
-      - "@": schemat/types/type.js:INTEGER
-    "@": schemat/db/records.js:RecordSchema
-  blocks:
-    - "@": 207
-  derived:
-    - "@": 206
-  _category_:
-    "@": 14
-  "@": schemat:Data
-- __id: 206
-  ring:
-    "@": 1003
-  schema:
-    fields:
-      cid:
-        blank: true
-        "@": schemat/types/type.js:INTEGER
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    "@": schemat/db/records.js:RecordSchema
-  blocks:
-    - "@": 208
-  derived: []
-  source:
-    "@": 205
-  _category_:
-    "@": 17
-  "@": schemat:Data
 - __id: 207
   sequence:
-    "@": 205
+    "@": 1012
   filename: ./schemat/data/kernel.yaml
   format: data-yaml
   insert_mode: compact
@@ -49,7 +9,7 @@
   "@": schemat:Data
 - __id: 208
   sequence:
-    "@": 206
+    "@": 1013
   filename: ./schemat/data/kernel.idx_category_item.jl
   format: index-jl
   _category_:
@@ -146,10 +106,10 @@
 - __id: 1003
   name: kernel
   data_sequence:
-    "@": 205
+    "@": 1012
   indexes:
     idx_category_item:
-      "@": 206
+      "@": 1013
     "@": :Map
   readonly: false
   start_id: 0
@@ -241,6 +201,46 @@
     "@": 5
   _container_:
     "@": 1001
+  "@": schemat:Data
+- __id: 1012
+  ring:
+    "@": 1003
+  schema:
+    fields:
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    _field_types:
+      - "@": schemat/types/type.js:INTEGER
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 207
+  derived:
+    - "@": 1013
+  _category_:
+    "@": 14
+  "@": schemat:Data
+- __id: 1013
+  ring:
+    "@": 1003
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": schemat/types/type.js:INTEGER
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    "@": schemat/db/records.js:RecordSchema
+  blocks:
+    - "@": 208
+  derived: []
+  source:
+    "@": 205
+  _category_:
+    "@": 17
   "@": schemat:Data
 - __id: 1014
   name: main_space
