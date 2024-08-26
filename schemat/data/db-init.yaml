@@ -1,11 +1,3 @@
-- __id: 200
-  name: DB
-  rings:
-    - "@": 201
-    - "@": 202
-  _category_:
-    "@": 11
-  "@": schemat:Data
 - __id: 201
   name: kernel
   data_sequence:
@@ -153,7 +145,7 @@
   cluster:
     "@": 1025
   database:
-    "@": 200
+    "@": 1002
   entries:
     apps:
       "@": 1009
@@ -169,6 +161,14 @@
   default_path: /system/default
   _category_:
     "@": 1
+  "@": schemat:Data
+- __id: 1002
+  name: DB
+  rings:
+    - "@": 201
+    - "@": 202
+  _category_:
+    "@": 11
   "@": schemat:Data
 - __id: 1005
   content: export let print = console.log
