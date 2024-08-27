@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Get the directory of the current script
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR=$SCRIPT_DIR
 
 # Execute Schemat from the root folder of the source code
 cd $ROOT_DIR

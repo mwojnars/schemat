@@ -14,7 +14,7 @@ export class BackendProcess {
     CLI_PREFIX = 'CLI_'
 
     async start(cmd, opts = {}) {
-        let config = await this.load_config('./schemat/config.yaml')
+        let config = await this.load_config(opts.config)
         let db = Database.create()
 
         await new ServerSchemat().boot(config.site, db, () => this._open_bootstrap_db(db, config))

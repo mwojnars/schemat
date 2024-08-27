@@ -13,6 +13,7 @@ const WORKERS =  1 //Math.floor(os.cpus().length / 2)
 
 await (async function run() {
     let opts = yargs(hideBin(process.argv))
+        .option('config',  {type: 'string', default: './schemat/config.yaml'})
         .option('host',    {type: 'string', default: HOST})
         .option('port',    {type: 'number', default: PORT})
         .option('workers', {type: 'number', default: WORKERS})
