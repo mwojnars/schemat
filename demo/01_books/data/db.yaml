@@ -282,7 +282,7 @@
 - __id: 1032
   sequence:
     "@": 1027
-  filename: ./demo/01_books/db.yaml
+  filename: ./demo/01_books/data/db.yaml
   format: data-yaml
   insert_mode: compact
   _category_:
@@ -291,7 +291,7 @@
 - __id: 1033
   sequence:
     "@": 1028
-  filename: ./demo/01_books/db.idx_category_item.jl
+  filename: ./demo/01_books/data/db.idx_category_item.jl
   format: index-jl
   _category_:
     "@": 20

@@ -26,10 +26,6 @@ function _load_data_init() {
     let path = `${root_dir}/schemat/data/db-init.yaml`
     let db = fs.readFileSync(path, 'utf8')
     // let data = yaml.load(db)
-
-    // let ids = [1005, 1006, 1016, 1017, 1018, 1029, 1030, 1031]
-    // for (let id of ids) db = _delete_object(db, id)
-
     return db
 }
 
@@ -53,15 +49,16 @@ async function create_demo_01() {
     let db = _load_data_init()
     
     // replace file paths and object names in `db`
-    db = db.replaceAll('/schemat/data/db-init.', `/demo/${demo_name}/db.`)
-    db = db.replaceAll('db-init', `db`)
     db = db.replaceAll('main-site', `Books Demo`)
 
+    db = db.replaceAll('/schemat/data/db-init.', `/demo/${demo_name}/data/db.`)
+    db = db.replaceAll('db-init', `db`)
+
     // save as db.yaml in the demo folder
-    fs.writeFileSync(`${demo_dir}/db.yaml`, db, 'utf8')
+    fs.writeFileSync(`${demo_dir}/data/db.yaml`, db, 'utf8')
     
     // copy db-init.idx_* files to db.idx_* in the demo folder
-    fs.copyFileSync(`${root_dir}/schemat/data/db-init.idx_category_item.jl`, `${demo_dir}/db.idx_category_item.jl`)
+    fs.copyFileSync(`${root_dir}/schemat/data/db-init.idx_category_item.jl`, `${demo_dir}/data/db.idx_category_item.jl`)
 }
 
 async function create_demo(demo_id) {
