@@ -16,4 +16,4 @@ site: 1001
 bootstrap_database:
   rings:
     - file: ./schemat/data/kernel.yaml
-    - file: ./schemat/demo/01_bookstore/db.yaml
+    - file: ./demo/01_bookstore/db.yaml
