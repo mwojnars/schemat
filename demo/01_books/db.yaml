@@ -279,49 +279,6 @@
   _category_:
     "@": 17
   "@": schemat:Data
-
-    static error() { throw new Error('Varia/code/error()') }
-  schema:
-    title:
-      "@": schemat/types/type.js:STRING
-    "@": schemat:Catalog
-  _category_:
-    "@": 0
-  "@": schemat:Data
-
-    // import {check} from '/site/widgets.js'
-    // import {Item} from '/system/local/schemat/core/item.js'
-    // import vm from 'vm'
-    // check()
-    // console.log('schemat:', schemat)
-    // console.log('Item:', Item)
-    // console.log('vm:', vm)
-  views:
-    view: |
-      let text = this.text
-      return P('Post:', BR(), text)
-    "@": schemat:Catalog
-  class_body: |-
-    // FOR RECORD ONLY...
-    // this method works OK (no await import)
-    init_OK() {
-        console.log('this.utils #1: started...')
-        return import('/site/utils.js').then(utils => {
-            this.utils = utils
-            console.log('this.utils #1:', this.utils)
-        })
-    }
-    // this method works WRONG: the web request is being completed while 
-    // the method waits on await import below (!?)
-    async init_ERR() {
-        console.log('this.utils #1: started...')
-        let utils = await import('/site/utils.js')
-        this.utils = utils
-        console.log('this.utils #1:', this.utils)
-    }
-  _category_:
-    "@": 0
-  "@": schemat:Data
 - __id: 1032
   sequence:
     "@": 1027
