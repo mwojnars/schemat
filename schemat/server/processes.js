@@ -6,7 +6,6 @@ import {ServerSchemat} from "../core/schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
 import {DataServer, WebServer} from "./servers.js";
 import {Database} from "../db/db.js";
-import {create_demo_01} from "../install/demo.js";
 
 
 /**********************************************************************************************************************/
@@ -22,6 +21,8 @@ export class BackendProcess {
 
         await new ServerSchemat().boot(config.site, db, () => this._open_bootstrap_db(db, config))
         // await schemat.db.insert_self()
+
+        if (!cmd) return
 
         let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
         assert(this[method], `unknown command: ${cmd}`)
@@ -103,14 +104,6 @@ export class AdminProcess extends BackendProcess {
     //     await bootstrap(db)
     //     schemat.is_closing = true
     // }
-
-    async CLI_create_demo({demo_id}) {
-        demo_id = Number(demo_id)
-        switch (demo_id) {
-            case 1: return create_demo_01()
-            default: throw new Error(`unknown demo ID: ${demo_id}`)
-        }
-    }
 
     async CLI_move({id, newid, bottom, ring: ring_name}) {
         /* Move an item to a different ring, or change its ID. */
