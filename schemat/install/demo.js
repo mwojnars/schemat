@@ -41,7 +41,7 @@ function _load_data_init() {
 //         FIXME: this approach is incorrect, because references to the objects still stay in indexes.
 //      */
 //     let re = new RegExp(`- __id: ${id}(.*?)\n(?=- __id:|$)`, 's')
-//     return db.replace(re, '')
+//     return db.replaceAll(re, '')
 // }
 
 /**********************************************************************************************************************/
@@ -53,9 +53,9 @@ async function create_demo_01() {
     let db = _load_data_init()
     
     // replace file paths and object names in `db`
-    db = db.replace('/schemat/data/db-init.', `/demo/${demo_name}/db.`)
-    db = db.replace('db-init', `db`)
-    db = db.replace('main-site', `Books Demo`)
+    db = db.replaceAll('/schemat/data/db-init.', `/demo/${demo_name}/db.`)
+    db = db.replaceAll('db-init', `db`)
+    db = db.replaceAll('main-site', `Books Demo`)
 
     // save as db.yaml in the demo folder
     fs.writeFileSync(`${demo_dir}/db.yaml`, db, 'utf8')
