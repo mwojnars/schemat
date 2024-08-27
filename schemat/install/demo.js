@@ -36,7 +36,7 @@ function _delete_object(db, id) {
            ...
         up until the next `- __id:` line.
      */
-    let re = new RegExp(`^- __id: ${id}(.*?)\n(?=- __id:|$)`, 'ms')
+    let re = new RegExp(`- __id: ${id}(.*?)\n(?=- __id:|$)`, 's')
     return db.replace(re, '')
 }
 
