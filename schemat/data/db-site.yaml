@@ -115,7 +115,7 @@
     "@": 12
   "@": schemat:Data
 - __id: 1004
-  name: db-init
+  name: db-site
   data_sequence:
     "@": 1027
   indexes:
@@ -480,7 +480,7 @@
 - __id: 1032
   sequence:
     "@": 1027
-  filename: ./schemat/data/db-init.yaml
+  filename: ./schemat/data/db-site.yaml
   format: data-yaml
   insert_mode: compact
   _category_:
@@ -489,7 +489,7 @@
 - __id: 1033
   sequence:
     "@": 1028
-  filename: ./schemat/data/db-init.idx_category_item.jl
+  filename: ./schemat/data/db-site.idx_category_item.jl
   format: index-jl
   _category_:
     "@": 20

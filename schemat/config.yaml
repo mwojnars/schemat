@@ -16,4 +16,4 @@ site: 1001
 bootstrap_database:
   rings:
     - file: ./schemat/data/kernel.yaml                    # core categories; practically immutable (very rarely changed)
-    - file: ./schemat/data/db-init.yaml
+    - file: ./schemat/data/db-site.yaml

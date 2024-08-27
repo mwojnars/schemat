@@ -1,5 +1,5 @@
 /*
-    Generate demo DBs in ../../demo/XXX folders by copying db-init.* under db.* names and replacing file paths, names etc.
+    Generate demo DBs in ../../demo/XXX folders by copying db-site.* under db.* names and replacing file paths, names etc.
  */
 
 import fs from 'node:fs'
@@ -21,9 +21,9 @@ let demo_names = [null, '01_books', '02_blog', '03_chatter']
 
 
 function _load_data_init() {
-    /* Read db-init.yaml and return its plain-text content. Drop unneeded objects. */
+    /* Read db-site.yaml and return its plain-text content. Drop unneeded objects. */
 
-    let path = `${root_dir}/schemat/data/db-init.yaml`
+    let path = `${root_dir}/schemat/data/db-site.yaml`
     let db = fs.readFileSync(path, 'utf8')
     // let data = yaml.load(db)
     return db
@@ -43,7 +43,7 @@ function _load_data_init() {
 /**********************************************************************************************************************/
 
 async function create_demo_01() {
-    // load initial `db` from db-init.yaml
+    // load initial `db` from db-site.yaml
     let demo_name = demo_names[1]
     let demo_dir = `${root_dir}/demo/${demo_name}`
     let db = _load_data_init()
@@ -51,14 +51,14 @@ async function create_demo_01() {
     // replace file paths and object names in `db`
     db = db.replaceAll('main-site', `Books Demo`)
 
-    db = db.replaceAll('/schemat/data/db-init.', `/demo/${demo_name}/data/db.`)
-    db = db.replaceAll('db-init', `db`)
+    db = db.replaceAll('/schemat/data/db-site.', `/demo/${demo_name}/data/db.`)
+    db = db.replaceAll('db-site', `db`)
 
     // save as db.yaml in the demo folder
     fs.writeFileSync(`${demo_dir}/data/db.yaml`, db, 'utf8')
     
-    // copy db-init.idx_* files to db.idx_* in the demo folder
-    fs.copyFileSync(`${root_dir}/schemat/data/db-init.idx_category_item.jl`, `${demo_dir}/data/db.idx_category_item.jl`)
+    // copy db-site.idx_* files to db.idx_* in the demo folder
+    fs.copyFileSync(`${root_dir}/schemat/data/db-site.idx_category_item.jl`, `${demo_dir}/data/db.idx_category_item.jl`)
 }
 
 async function create_demo(demo_id) {
