@@ -15,6 +15,8 @@ export class BackendProcess {
     CLI_PREFIX = 'CLI_'
 
     async start(cmd, opts = {}) {
+
+        opts.config ??= './schemat/config.yaml'
         let config = await this.load_config(opts.config)
         let db = Database.create()
 

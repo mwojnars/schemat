@@ -44,7 +44,7 @@ await (async function main() {
         .help().alias('help', 'h')
         .argv
 
-    let commands = ['move', 'reinsert']
+    let commands = ['move', 'reinsert', 'create-demo']
 
     let cmd = argv._[0]
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)

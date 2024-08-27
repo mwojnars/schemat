@@ -1,5 +1,5 @@
 - __id: 1001
-  name: main-site
+  name: Books Demo
   base_url: http://127.0.0.1:3000
   cluster:
     "@": 1025
@@ -22,7 +22,7 @@
     "@": 1
   "@": schemat:Data
 - __id: 1002
-  name: DB
+  name: database
   rings:
     - "@": 1003
     - "@": 1004
@@ -44,7 +44,7 @@
     "@": 12
   "@": schemat:Data
 - __id: 1004
-  name: db-init
+  name: db
   data_sequence:
     "@": 1027
   indexes:
@@ -55,24 +55,6 @@
   start_id: 1001
   _category_:
     "@": 12
-  "@": schemat:Data
-- __id: 1005
-  content: export let print = console.log
-  _category_:
-    "@": 3
-  _container_:
-    "@": 1010
-  "@": schemat:Data
-- __id: 1006
-  content: |-
-    import {print} from '../site/utils.js'
-    export function check() { print('called widgets.js:check()') } 
-    //let fs = await import('fs')
-    //print('fs:',fs)
-  _category_:
-    "@": 3
-  _container_:
-    "@": 1010
   "@": schemat:Data
 - __id: 1007
   name: favicon.ico
@@ -188,21 +170,6 @@
   _category_:
     "@": 19
   "@": schemat:Data
-- __id: 1016
-  title: Ala ma kota Sierściucha i psa Kłapoucha.
-  title/2: drugi tytuł...
-  _category_:
-    "@": 1029
-  "@": schemat:Data
-- __id: 1017
-  title: ąłęÓŁŻŹŚ
-  "@": schemat:Data
-- __id: 1018
-  name: Post A
-  text: Ala ma kota
-  _category_:
-    "@": 1031
-  "@": schemat:Data
 - __id: 1019
   name: /system
   entries:
@@ -312,12 +279,6 @@
   _category_:
     "@": 17
   "@": schemat:Data
-- __id: 1029
-  name: Varia
-  info: Category of items that do not belong to any specific category.
-  class_body: >-
-    static check() { import('/system/local/schemat/common/utils.js').then(mod =>
-    console.log("Varia.code: imported ", mod)) }
 
     static error() { throw new Error('Varia/code/error()') }
   schema:
@@ -327,50 +288,6 @@
   _category_:
     "@": 0
   "@": schemat:Data
-- __id: 1030
-  name: MysqlDB
-  class_path: /system/local/schemat/db/mysql.js:MySQL
-  schema:
-    host:
-      "@": schemat/types/type.js:STRING
-    port:
-      "@": schemat/types/type.js:STRING
-    user:
-      "@": schemat/types/type.js:STRING
-    database:
-      "@": schemat/types/type.js:STRING
-    password:
-      "@": schemat/types/type.js:STRING
-    connection:
-      info: Javascript object containing connection parameters.
-      "@": schemat/types/type.js:GENERIC
-    tables:
-      info: Mapping of categories (their paths) to names of sql tables.
-      values:
-        "@": schemat/types/type.js:STRING
-      "@": schemat/types/catalog.js:CATALOG
-    offset:
-      "@": schemat/types/type.js:INTEGER
-    readonly:
-      "@": schemat/types/type.js:BOOLEAN
-    "@": schemat:Catalog
-  defaults:
-    _class_: /system/local/schemat/db/mysql.js:MySQL
-    "@": schemat:Catalog
-  _category_:
-    "@": 0
-  "@": schemat:Data
-- __id: 1031
-  name: TwitterPost
-  schema:
-    text:
-      "@": schemat/types/type.js:STRING
-    "@": schemat:Catalog
-  class_init: |
-    // DRAFT...
-    // import {print} from '/site/utils.js'
-    // console.log('print:', print)
-    // console.log('TwitterPost/code executed')
 
     // import {check} from '/site/widgets.js'
     // import {Item} from '/system/local/schemat/core/item.js'
@@ -408,7 +325,7 @@
 - __id: 1032
   sequence:
     "@": 1027
-  filename: ./schemat/data/db-init.yaml
+  filename: ./demo/01_books/db.yaml
   format: data-yaml
   insert_mode: compact
   _category_:
