@@ -2,8 +2,10 @@
     Generate demo DBs in ../../demo/XXX folders by copying db-init.* under db.* names and replacing file paths, names etc.
  */
 
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
+import {fileURLToPath} from "node:url"
+
 import yaml from 'js-yaml'
 
 
@@ -40,7 +42,7 @@ function _delete_object(db, id) {
 
 /**********************************************************************************************************************/
 
-export function setup_demo_01() {
+export function create_demo_01() {
     // load initial `db` from db-init.yaml
     let demo_name = '01_books'
     let demo_dir = `${root_dir}/demo/${demo_name}`

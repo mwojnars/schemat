@@ -38,6 +38,8 @@ await (async function main() {
 
         // .command('find-orphans', 'find all objects that are not referenced by any other object; orphan cycles are NOT detected',)
 
+        .command('create-demo <demo_id>', 'create a ./demo/... site with a few objects and relations; demo id (1,2,...) is the only obligatory argument')
+
         .demandCommand(1, 'Please provide a command to run.')
         .help().alias('help', 'h')
         .argv
