@@ -169,7 +169,7 @@
     "@": 17
   "@": schemat:Data
 - __id: 1014
-  name: main_space
+  name: main-space
   spaces:
     sys.category:
       "@": 0
