@@ -1,5 +1,6 @@
 /*
     Generate demo DB files in ../../demo/XXX by copying db-site.* ring and replacing file paths, names etc.
+    The other ring, db-app, is left *untouched*, so any app-specific data is preserved (!).
  */
 
 import fs from 'node:fs'
@@ -54,7 +55,7 @@ async function create_demo_01() {
     db = db.replaceAll('/schemat/data/db-', `/demo/${demo_name}/data/db-`)
     // db = db.replaceAll('db-site', `db`)
 
-    // save as db.yaml in the demo folder
+    // save as db-site.yaml in the demo folder
     fs.writeFileSync(`${demo_dir}/data/db-site.yaml`, db, 'utf8')
     
     // copy the index file
