@@ -24,8 +24,8 @@ function _load_data_init() {
     let db = fs.readFileSync(path, 'utf8')
     // let data = yaml.load(db)
 
-    let ids = [1005, 1006, 1016, 1017, 1018, 1029, 1030, 1031]
-    for (let id of ids) db = _delete_object(db, id)
+    // let ids = [1005, 1006, 1016, 1017, 1018, 1029, 1030, 1031]
+    // for (let id of ids) db = _delete_object(db, id)
 
     return db
 }
@@ -35,6 +35,7 @@ function _delete_object(db, id) {
          - __id: <id>
            ...
         up until the next `- __id:` line.
+        FIXME: this approach is incorrect, because references to the objects still stay in indexes.
      */
     let re = new RegExp(`- __id: ${id}(.*?)\n(?=- __id:|$)`, 's')
     return db.replace(re, '')
