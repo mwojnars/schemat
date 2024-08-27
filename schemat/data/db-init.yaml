@@ -260,7 +260,7 @@
     "@": 5
   "@": schemat:Data
 - __id: 1025
-  name: main-cluster
+  name: cluster
   _category_:
     "@": 10
   "@": schemat:Data
