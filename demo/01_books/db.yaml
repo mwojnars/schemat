@@ -56,24 +56,6 @@
   _category_:
     "@": 12
   "@": schemat:Data
-- __id: 1005
-  content: export let print = console.log
-  _category_:
-    "@": 3
-  _container_:
-    "@": 1010
-  "@": schemat:Data
-- __id: 1006
-  content: |-
-    import {print} from '../site/utils.js'
-    export function check() { print('called widgets.js:check()') } 
-    //let fs = await import('fs')
-    //print('fs:',fs)
-  _category_:
-    "@": 3
-  _container_:
-    "@": 1010
-  "@": schemat:Data
 - __id: 1007
   name: favicon.ico
   local_path: ./assets/favicon.ico
@@ -188,21 +170,6 @@
   _category_:
     "@": 19
   "@": schemat:Data
-- __id: 1016
-  title: Ala ma kota Sierściucha i psa Kłapoucha.
-  title/2: drugi tytuł...
-  _category_:
-    "@": 1029
-  "@": schemat:Data
-- __id: 1017
-  title: ąłęÓŁŻŹŚ
-  "@": schemat:Data
-- __id: 1018
-  name: Post A
-  text: Ala ma kota
-  _category_:
-    "@": 1031
-  "@": schemat:Data
 - __id: 1019
   name: /system
   entries:
@@ -312,99 +279,6 @@
   _category_:
     "@": 17
   "@": schemat:Data
-- __id: 1029
-  name: Varia
-  info: Category of items that do not belong to any specific category.
-  class_body: >-
-    static check() { import('/system/local/schemat/common/utils.js').then(mod =>
-    console.log("Varia.code: imported ", mod)) }
-
-    static error() { throw new Error('Varia/code/error()') }
-  schema:
-    title:
-      "@": schemat/types/type.js:STRING
-    "@": schemat:Catalog
-  _category_:
-    "@": 0
-  "@": schemat:Data
-- __id: 1030
-  name: MysqlDB
-  class_path: /system/local/schemat/db/mysql.js:MySQL
-  schema:
-    host:
-      "@": schemat/types/type.js:STRING
-    port:
-      "@": schemat/types/type.js:STRING
-    user:
-      "@": schemat/types/type.js:STRING
-    database:
-      "@": schemat/types/type.js:STRING
-    password:
-      "@": schemat/types/type.js:STRING
-    connection:
-      info: Javascript object containing connection parameters.
-      "@": schemat/types/type.js:GENERIC
-    tables:
-      info: Mapping of categories (their paths) to names of sql tables.
-      values:
-        "@": schemat/types/type.js:STRING
-      "@": schemat/types/catalog.js:CATALOG
-    offset:
-      "@": schemat/types/type.js:INTEGER
-    readonly:
-      "@": schemat/types/type.js:BOOLEAN
-    "@": schemat:Catalog
-  defaults:
-    _class_: /system/local/schemat/db/mysql.js:MySQL
-    "@": schemat:Catalog
-  _category_:
-    "@": 0
-  "@": schemat:Data
-- __id: 1031
-  name: TwitterPost
-  schema:
-    text:
-      "@": schemat/types/type.js:STRING
-    "@": schemat:Catalog
-  class_init: |
-    // DRAFT...
-    // import {print} from '/site/utils.js'
-    // console.log('print:', print)
-    // console.log('TwitterPost/code executed')
-
-    // import {check} from '/site/widgets.js'
-    // import {Item} from '/system/local/schemat/core/item.js'
-    // import vm from 'vm'
-    // check()
-    // console.log('schemat:', schemat)
-    // console.log('Item:', Item)
-    // console.log('vm:', vm)
-  views:
-    view: |
-      let text = this.text
-      return P('Post:', BR(), text)
-    "@": schemat:Catalog
-  class_body: |-
-    // FOR RECORD ONLY...
-    // this method works OK (no await import)
-    init_OK() {
-        console.log('this.utils #1: started...')
-        return import('/site/utils.js').then(utils => {
-            this.utils = utils
-            console.log('this.utils #1:', this.utils)
-        })
-    }
-    // this method works WRONG: the web request is being completed while 
-    // the method waits on await import below (!?)
-    async init_ERR() {
-        console.log('this.utils #1: started...')
-        let utils = await import('/site/utils.js')
-        this.utils = utils
-        console.log('this.utils #1:', this.utils)
-    }
-  _category_:
-    "@": 0
-  "@": schemat:Data
 - __id: 1032
   sequence:
     "@": 1027
@@ -417,7 +291,7 @@
 - __id: 1033
   sequence:
     "@": 1028
-  filename: ./schemat/data/db-init.idx_category_item.jl
+  filename: ./demo/01_books/db.idx_category_item.jl
   format: index-jl
   _category_:
     "@": 20
