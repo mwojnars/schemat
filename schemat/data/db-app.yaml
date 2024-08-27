@@ -26,5 +26,83 @@
   name: Post A
   text: Ala ma kota
   _category_:
-    "@": 1031
+    "@": 5005
+  "@": schemat:Data
+- __id: 5004
+  name: MysqlDB
+  class_path: /system/local/schemat/db/mysql.js:MySQL
+  schema:
+    host:
+      "@": schemat/types/type.js:STRING
+    port:
+      "@": schemat/types/type.js:STRING
+    user:
+      "@": schemat/types/type.js:STRING
+    database:
+      "@": schemat/types/type.js:STRING
+    password:
+      "@": schemat/types/type.js:STRING
+    connection:
+      info: Javascript object containing connection parameters.
+      "@": schemat/types/type.js:GENERIC
+    tables:
+      info: Mapping of categories (their paths) to names of sql tables.
+      values:
+        "@": schemat/types/type.js:STRING
+      "@": schemat/types/catalog.js:CATALOG
+    offset:
+      "@": schemat/types/type.js:INTEGER
+    readonly:
+      "@": schemat/types/type.js:BOOLEAN
+    "@": schemat:Catalog
+  defaults:
+    _class_: /system/local/schemat/db/mysql.js:MySQL
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 5005
+  name: TwitterPost
+  schema:
+    text:
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  class_init: |
+    // DRAFT...
+    // import {print} from '/site/utils.js'
+    // console.log('print:', print)
+    // console.log('TwitterPost/code executed')
+
+    // import {check} from '/site/widgets.js'
+    // import {Item} from '/system/local/schemat/core/item.js'
+    // import vm from 'vm'
+    // check()
+    // console.log('schemat:', schemat)
+    // console.log('Item:', Item)
+    // console.log('vm:', vm)
+  views:
+    view: |
+      let text = this.text
+      return P('Post:', BR(), text)
+    "@": schemat:Catalog
+  class_body: |-
+    // FOR RECORD ONLY...
+    // this method works OK (no await import)
+    init_OK() {
+        console.log('this.utils #1: started...')
+        return import('/site/utils.js').then(utils => {
+            this.utils = utils
+            console.log('this.utils #1:', this.utils)
+        })
+    }
+    // this method works WRONG: the web request is being completed while 
+    // the method waits on await import below (!?)
+    async init_ERR() {
+        console.log('this.utils #1: started...')
+        let utils = await import('/site/utils.js')
+        this.utils = utils
+        console.log('this.utils #1:', this.utils)
+    }
+  _category_:
+    "@": 0
   "@": schemat:Data
