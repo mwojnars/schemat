@@ -6,7 +6,7 @@
 internet applications fully composed of network-level objects (*network-wide OOP*).
 
 It provides a uniform **object space** that can be interacted with across the network from any machine,
-be it a server-side storage (database), a compute node (app server), or a client machine.
+be it a server-side storage (database), a  compute node (app server), or a client machine.
 In addition, Schemat makes application objects **network-aware** and unifies the client and server
 environments to the point where a single object can fully encapsulate a particular web functionality
 -- its _data_, _behavior_ and _appearance_ altogether -- contrary to traditional approaches like MVC, 
