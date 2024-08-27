@@ -1,5 +1,5 @@
 /*
-    Generate demo DBs in ../../demo/XXX folders by copying db-site.* under db.* names and replacing file paths, names etc.
+    Generate demo DB files in ../../demo/XXX by copying db-site.* ring and replacing file paths, names etc.
  */
 
 import fs from 'node:fs'
@@ -51,14 +51,14 @@ async function create_demo_01() {
     // replace file paths and object names in `db`
     db = db.replaceAll('main-site', `Books Demo`)
 
-    db = db.replaceAll('/schemat/data/db-site.', `/demo/${demo_name}/data/db.`)
-    db = db.replaceAll('db-site', `db`)
+    db = db.replaceAll('/schemat/data/db-', `/demo/${demo_name}/data/db-`)
+    // db = db.replaceAll('db-site', `db`)
 
     // save as db.yaml in the demo folder
-    fs.writeFileSync(`${demo_dir}/data/db.yaml`, db, 'utf8')
+    fs.writeFileSync(`${demo_dir}/data/db-site.yaml`, db, 'utf8')
     
-    // copy db-site.idx_* files to db.idx_* in the demo folder
-    fs.copyFileSync(`${root_dir}/schemat/data/db-site.idx_category_item.jl`, `${demo_dir}/data/db.idx_category_item.jl`)
+    // copy the index file
+    fs.copyFileSync(`${root_dir}/schemat/data/db-site.idx_category_item.jl`, `${demo_dir}/data/db-site.idx_category_item.jl`)
 }
 
 async function create_demo(demo_id) {
@@ -81,13 +81,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     // copy initial files to demo folder
     await create_demo(demo_id)
 
-    // start Schemat from the demo folder, so that all modifications are saved in the demo's DB
-    let demo_name = demo_names[demo_id]
-    await new AdminProcess().start(null, {demo_id, config: `${root_dir}/demo/${demo_name}/config.yaml`})
-
-    // drop unneeded objects
-    let ids = [1005, 1006, 5001, 5002, 5003, 5000, 1030, 1031]
-    for (let id of ids) await schemat.db.delete(id)
-
-    schemat.is_closing = true
+    // // start Schemat from the demo folder, so that all modifications are saved in the demo's DB
+    // let demo_name = demo_names[demo_id]
+    // await new AdminProcess().start(null, {demo_id, config: `${root_dir}/demo/${demo_name}/config.yaml`})
+    //
+    // // drop unneeded objects
+    // let ids = [5000, 5001, 5002, 5003, 5004, 5005]    // 1005, 1006  ??
+    // for (let id of ids) await schemat.db.delete(id)
+    //
+    // schemat.is_closing = true
 }
