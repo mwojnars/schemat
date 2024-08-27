@@ -166,8 +166,6 @@
   entries:
     demo:
       "@": 1008
-    paperity:
-      "@": 1012
     "@": schemat:Catalog
   _category_:
     "@": 5
