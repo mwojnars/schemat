@@ -1,1 +1,30 @@
-[]
+- __id: 5000
+  name: Varia
+  info: Category of items that do not belong to any specific category.
+  class_body: >-
+    static check() { import('/system/local/schemat/common/utils.js').then(mod =>
+    console.log("Varia.code: imported ", mod)) }
+
+    static error() { throw new Error('Varia/code/error()') }
+  schema:
+    title:
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 5001
+  title: Ala ma kota Sierściucha i psa Kłapoucha.
+  title/2: drugi tytuł...
+  _category_:
+    "@": 5000
+  "@": schemat:Data
+- __id: 5002
+  title: ąłęÓŁŻŹŚ
+  "@": schemat:Data
+- __id: 5003
+  name: Post A
+  text: Ala ma kota
+  _category_:
+    "@": 1031
+  "@": schemat:Data

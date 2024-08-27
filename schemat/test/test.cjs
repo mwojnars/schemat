@@ -196,23 +196,23 @@ describe('Schemat Tests', function () {
         })
 
         it('Varia', async function () {
-            let Varia = await test_page(page, `${DOMAIN}/sys.category:1029`, '#page-main',
-                ['Category:1029', 'Varia', 'name', '_category_', 'schema', 'Varia:1016', 'Create Item'])
+            let Varia = await test_page(page, `${DOMAIN}/sys.category:5000`, '#page-main',
+                ['Category:5000', 'Varia', 'name', '_category_', 'schema', 'Varia:5001', 'Create Item'])
 
             // these strings are only available after client-side rendering, not in HTML source:
             expect_include_all(await extract_content(Varia), 'check', 'Varia.code')
         })
 
         it('Varia object', async function () {
-            await test_page(page, `${DOMAIN}/system/default/1016`, '#page-main', ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
+            await test_page(page, `${DOMAIN}/system/default/5001`, '#page-main', ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
         })
 
         it('uncategorized object', async function () {
-            await test_page(page, `${DOMAIN}/system/default/1017`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
+            await test_page(page, `${DOMAIN}/system/default/5002`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
         })
         
         it('static html page', async function () {
-            await test_page(page, `${DOMAIN}/system/default/1016::test_html`, null, ['Test Page', 'Headings', 'First item'])
+            await test_page(page, `${DOMAIN}/system/default/5001::test_html`, null, ['Test Page', 'Headings', 'First item'])
         })
 
 

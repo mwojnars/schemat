@@ -86,7 +86,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     await new AdminProcess().start(null, {demo_id, config: `${root_dir}/demo/${demo_name}/config.yaml`})
 
     // drop unneeded objects
-    let ids = [1005, 1006, 1016, 1017, 1018, 1029, 1030, 1031]
+    let ids = [1005, 1006, 5001, 5002, 5003, 5000, 1030, 1031]
     for (let id of ids) await schemat.db.delete(id)
 
     schemat.is_closing = true

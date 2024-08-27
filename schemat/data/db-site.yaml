@@ -260,21 +260,6 @@
   _category_:
     "@": 19
   "@": schemat:Data
-- __id: 1016
-  title: Ala ma kota Sierściucha i psa Kłapoucha.
-  title/2: drugi tytuł...
-  _category_:
-    "@": 1029
-  "@": schemat:Data
-- __id: 1017
-  title: ąłęÓŁŻŹŚ
-  "@": schemat:Data
-- __id: 1018
-  name: Post A
-  text: Ala ma kota
-  _category_:
-    "@": 1031
-  "@": schemat:Data
 - __id: 1019
   name: /system
   entries:
@@ -383,21 +368,6 @@
     "@": 1027
   _category_:
     "@": 17
-  "@": schemat:Data
-- __id: 1029
-  name: Varia
-  info: Category of items that do not belong to any specific category.
-  class_body: >-
-    static check() { import('/system/local/schemat/common/utils.js').then(mod =>
-    console.log("Varia.code: imported ", mod)) }
-
-    static error() { throw new Error('Varia/code/error()') }
-  schema:
-    title:
-      "@": schemat/types/type.js:STRING
-    "@": schemat:Catalog
-  _category_:
-    "@": 0
   "@": schemat:Data
 - __id: 1030
   name: MysqlDB
