@@ -426,8 +426,8 @@
     "@": 0
   "@": schemat:Data
 - __id: 16
-  name: DataIndex
-  info: An Index that receives record updates from the main data sequence, so
+  name: PrimaryIndexSequence
+  info: An index that receives record updates from the main data sequence, so
     input records represent objects.
   schema:
     "@": schemat:Catalog
