@@ -1,7 +1,7 @@
 import {assert, print, T} from '../common/utils.js'
 import {DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {Item} from '../core/item.js'
-import {ChangeRequest, RecordSchema} from "./records.js";
+import {ChangeRequest, data_schema} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
 import {INTEGER} from "../types/type.js";
 
@@ -334,9 +334,6 @@ export class YamlDataStorage extends MemoryStorage {
 
     filename
 
-    static sequence_schema = new RecordSchema(new Map([['id', new INTEGER()]]))        // schema of a data sequence (temporary solution)
-
-
     constructor(filename, block) {
         super(block)
         this.filename = filename
@@ -348,7 +345,6 @@ export class YamlDataStorage extends MemoryStorage {
         // print(`YamlDataStorage #1 opening ${this.filename}...`)
         this._mod_fs = await import('node:fs')
         this._mod_yaml = (await import('yaml')).default
-        let schema = YamlDataStorage.sequence_schema
 
         // assert(this.sequence = this.block.sequence)
         // assert(this.block.sequence.ring)
@@ -371,8 +367,7 @@ export class YamlDataStorage extends MemoryStorage {
 
         for (let record of records) {
             let id = T.pop(record, '__id')
-            let key = schema.encode_key([id])
-            // let key = this.sequence.encode_key(id)
+            let key = data_schema.encode_key([id])
 
             // ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.block.assert_unique(key, id, `duplicate item ID loaded from ${this.filename}`)
@@ -390,10 +385,8 @@ export class YamlDataStorage extends MemoryStorage {
     async flush() {
         /* Save the entire database (this.records) to a file. */
         print(`YamlDataStorage flushing ${this._records.size} items to ${this.filename}...`)
-        let schema = YamlDataStorage.sequence_schema
         let recs = [...this.scan()].map(([key, data_json]) => {
-            // let __id = this.sequence.decode_key(key)
-            let __id = schema.decode_key(key)[0]
+            let __id = data_schema.decode_key(key)[0]
             let data = JSON.parse(data_json)
             return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
         })

@@ -8,6 +8,7 @@ import {assert, print, T} from "../common/utils.js";
 import {JSONx} from "../core/jsonx.js";
 import {BinaryInput, BinaryOutput, compareUint8Arrays, fnv1aHash} from "../util/binary.js";
 import {Data} from "../core/data.js";
+import {INTEGER} from "../types/type.js";
 
 
 // EMPTY token marks an empty value in a record
@@ -273,3 +274,11 @@ export class RecordSchema {
         return key
     }
 }
+
+
+// schema of the data sequence in every DB ring; value encoding is handled outside schema, through method overloading
+export const data_schema = new RecordSchema(new Map([['id', new INTEGER()]]))
+
+
+
+

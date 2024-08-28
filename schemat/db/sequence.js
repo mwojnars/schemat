@@ -1,4 +1,4 @@
-import {BinaryRecord, RecordSchema} from "./records.js";
+import {BinaryRecord, data_schema} from "./records.js";
 import {INTEGER} from "../types/type.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock} from "./block.js";
@@ -95,10 +95,7 @@ export class DataSequence extends Sequence {
     static role       = 'data'          // for use in ProcessingStep and DataRequest
     static COMMANDS   = ['get', 'put', 'select', 'insert', 'update', 'delete']
 
-    schema = new RecordSchema(
-        new Map([['id', new INTEGER()]]),
-        // value encoding is handled outside schema: through method overloading
-    );
+    schema = data_schema
 
     __create__(ring, filename) {
         super.__create__(ring)
