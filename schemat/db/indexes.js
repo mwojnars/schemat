@@ -18,16 +18,16 @@ export class Index extends Sequence {
      */
     static role = 'index'       // for use in ProcessingStep and DataRequest
 
-    source                      // Sequence that this index is derived from
+    // source                      // Sequence that this index is derived from
 
-    __create__(ring, source, filename) {
+    __create__(ring, filename) {
         super.__create__(ring)
         assert(filename.endsWith('.jl'))
-        this.source = source
         this.blocks = [IndexBlock.create(this, filename)]
 
-        assert(source instanceof Sequence)
-        source.add_derived(this)                // make connection: data > index, for change propagation
+        // this.source = source
+        // assert(source instanceof Sequence)
+        // source.add_derived(this)                // make connection: data > index, for change propagation
     }
 
     async apply(change) {
