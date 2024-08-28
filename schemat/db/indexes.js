@@ -163,7 +163,7 @@ export class PrimaryIndexSequence extends Index {
 }
 
 export class IndexByCategory extends PrimaryIndexSequence {
-    /* Index that maps category IDs to item IDs: the key is [category ID, item ID], empty value. */
+    /* An index that maps category IDs to item IDs: the key is [category ID, item ID], empty value. */
 
     static _category_ = 17
 
