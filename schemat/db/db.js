@@ -16,7 +16,7 @@ import {Data} from "../core/data.js";
 
 export class Ring extends Item {
 
-    static _category_ = 12  // ID of Ring category
+    static _category_ = 12  // IID of Ring category in the kernel
     static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
 
     data_sequence           // the main DataSequence containing all primary data of this ring
@@ -25,8 +25,8 @@ export class Ring extends Item {
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
-    start_id = 0            // minimum ID of all items; helps maintain separation of IDs between different rings stacked together
-    stop_id                 // (optional) maximum ID of all items
+    start_id = 0            // minimum IID of all items; helps maintain separation of IIDs between different rings stacked together
+    stop_id                 // (optional) maximum IID of all items
 
 
     async __create__({name, ...opts}, req) {
