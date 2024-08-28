@@ -38,12 +38,14 @@ export class Block extends Item {
 
 
     __create__(sequence, filename) {
+        // assert(sequence.is_loaded() || sequence.is_newborn())
         this.sequence = sequence
         this.filename = filename
     }
 
     async __init__() {
-        if (schemat.client_side) return             // don't initialize the storage on the client side
+        if (CLIENT) return                                          // don't initialize internals when on the client
+        if (!this.sequence.is_loaded()) this.sequence.load()        // intentionally not awaited to avoid deadlock in the case when sequence loading needs to read from this block
 
         let storage_class
         // print(`Block.__init__() for ${this.filename}...`)
@@ -128,7 +130,9 @@ export class Block extends Item {
     async propagate(req, key, value_old = null, value_new = null) {
         /* Propagate a change in this block to all derived Sequences of the parent sequence. */
         const change = new ChangeRequest(key, value_old, value_new)
-        return req.current_sequence.propagate(req, change)
+
+        return this.sequence.propagate(req, change)
+        // return req.current_sequence.propagate(req, change)
     }
 }
 
