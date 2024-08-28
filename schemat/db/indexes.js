@@ -1,7 +1,7 @@
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../types/type.js";
-import {ItemRecord, PlainRecord, RecordSchema} from "./records.js";
+import {ItemRecord, PlainRecord, RecordSchema, data_schema} from "./records.js";
 import {IndexBlock} from "./block.js";
 import {Sequence} from "./sequence.js";
 import {DataRequest} from "./data_request.js";
@@ -57,19 +57,12 @@ export class Index extends Sequence {
         }
     }
 
-    *map_record(input_record) {
-        /* Perform transformation of the input Record, as defined by this index, and yield any number (0+)
-           of output Records to be stored in the index.
-         */
-        throw new Error('not implemented')
-    }
-
     _make_plan(change) {
         /* Make an update execution plan in response to a `change` in the source sequence.
            The plan is a pair of BinaryMaps, {key: value}, one for records to be deleted, and one for records
            to be written to the index sequence.
          */
-        const source_schema = this.source.schema
+        const source_schema = this._source_schema()
         let in_record_old = change.record_old(source_schema)
         let in_record_new = change.record_new(source_schema)
 
@@ -99,6 +92,18 @@ export class Index extends Sequence {
                 del_records.delete(key)
             }
     }
+
+    _source_schema() {
+        throw new Error('not implemented')
+        // return this.source.schema
+    }
+
+    *map_record(input_record) {
+        /* Perform transformation of the input Record, as defined by this index, and yield any number (0+)
+           of output Records to be stored in the index.
+         */
+        throw new Error('not implemented')
+    }
 }
 
 export class PrimaryIndexSequence extends Index {
@@ -109,6 +114,10 @@ export class PrimaryIndexSequence extends Index {
      */
 
     category            // category of items allowed in this index
+
+    _source_schema() {
+        return data_schema
+    }
 
     *map_record(input_record /*Record*/) {
         /* Generate a stream of records, each one being a {key, value} pair, NOT encoded.
