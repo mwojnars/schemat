@@ -54,7 +54,7 @@ export class Ring extends Item {
         req = req.safe_step(this)
 
         this.indexes = new Map([
-            ['idx_category_item', IndexByCategory.create(this, filename)],      // index of item IDs sorted by parent category ID
+            ['idx_category_item', IndexByCategory.create(this, this.data_sequence, filename)],    // index of item IDs sorted by parent category ID
         ])
 
         for (let index of this.indexes.values())
