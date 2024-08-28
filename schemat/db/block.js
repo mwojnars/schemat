@@ -116,7 +116,7 @@ export class Block extends Item {
            seconds (configured in the parent sequence) to combine multiple consecutive updates in one write
            - in such case you do NOT want to await the result.
          */
-        let delay = req.current_sequence.flush_delay
+        let delay = this.sequence.flush_delay
 
         if (with_delay && delay) {
             if (this._pending_flush) return
@@ -130,9 +130,7 @@ export class Block extends Item {
     async propagate(req, key, value_old = null, value_new = null) {
         /* Propagate a change in this block to all derived Sequences of the parent sequence. */
         const change = new ChangeRequest(key, value_old, value_new)
-
         return this.sequence.propagate(req, change)
-        // return req.current_sequence.propagate(req, change)
     }
 }
 
