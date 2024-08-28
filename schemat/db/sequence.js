@@ -81,6 +81,7 @@ export class Sequence extends Item {    // Series?
 
     propagate(req, change /*ChangeRequest*/) {
         /* Propagate a change in this sequence, as submitted by a child block, to all derived sequences. */
+        // for (const index of this.ring.all_indexes)
         for (const sequence of this.derived)
             sequence.apply(change)                      // no need to await, the result is not used
     }
