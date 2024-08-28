@@ -38,13 +38,13 @@ export class Block extends Item {
 
 
     __create__(sequence, filename) {
-        // assert(sequence.is_loaded() || sequence.is_newborn())
+        assert(sequence.is_loaded() || sequence.is_newborn())
         this.sequence = sequence
         this.filename = filename
     }
 
     async __init__() {
-        if (CLIENT) return                                          // don't initialize internals when on the client
+        if (CLIENT) return                                          // don't initialize internals when on client
         if (!this.sequence.is_loaded()) this.sequence.load()        // intentionally not awaited to avoid deadlock in the case when sequence loading needs to read from this block
 
         let storage_class
