@@ -19,13 +19,14 @@ export class Ring extends Item {
     static _category_ = 12  // IID of Ring category in the kernel
     static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
 
-    data_sequence           // the main DataSequence containing all primary data of this ring
+    data_sequence           // DataSequence containing all primary data of this ring
+    index_sequence          // IndexSequence containing all indexes of this ring ordered by index IID and concatenated; each record key is prefixed with its index's IID
     indexes = new Map()     // {name: Index} map of all derived indexes of this ring
 
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
-    start_id = 0            // minimum IID of all items; helps maintain separation of IIDs between different rings stacked together
+    start_id = 0            // minimum IID of all items; to maintain separation of IIDs between different rings stacked together
     stop_id                 // (optional) maximum IID of all items
 
 
