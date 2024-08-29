@@ -30,8 +30,9 @@ export class Index extends Sequence {
         // source.add_derived(this)                // make connection: data > index, for change propagation
     }
 
-    async apply(change, sequence, ring) {
-        /* Update the index to apply a change that originated in the source sequence. */
+    apply(change, sequence, ring) {
+        /* Update the target `sequence` of this operator+ring combination to apply a change that originated
+           in the source sequence of this operator. */
 
         // const {key, value_old, value_new} = change
         // print(`apply(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
@@ -51,20 +52,6 @@ export class Index extends Sequence {
         // (over)write new records
         for (let [key, value] of put_records || [])
             sequence.put(req.safe_step(this, 'put', {key, value})) //|| print(`put [${key}]`)
-
-        // // delete old records
-        // for (let [key, value] of del_records || []) {
-        //     let block = this._find_block(key)
-        //     if (!block.is_loaded()) block = await block.load()
-        //     block.del(req.safe_step(null, 'del', {key})) //|| print(`deleted [${key}]`)
-        // }
-        //
-        // // (over)write new records
-        // for (let [key, value] of put_records || []) {
-        //     let block = this._find_block(key)
-        //     if (!block.is_loaded()) block = await block.load()
-        //     block.put(req.safe_step(null, 'put', {key, value})) //|| print(`put [${key}]`)
-        // }
     }
 
     _make_plan(change) {
