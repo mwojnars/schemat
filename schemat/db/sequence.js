@@ -1,6 +1,6 @@
 import {data_schema} from "./records.js";
 import {assert, print} from "../common/utils.js";
-import {DataBlock} from "./block.js";
+import {DataBlock, IndexBlock} from "./block.js";
 import {Item} from "../core/item.js";
 
 
@@ -90,6 +90,18 @@ export class Sequence extends Item {    // Series?
 }
 
 
+/**********************************************************************************************************************/
+
+export class IndexSequence extends Sequence {
+    /* A Sequence composed of IndexBlock type of blocks. */
+
+    __create__(ring, filename) {
+        super.__create__(ring)
+        assert(filename.endsWith('.jl'))
+        this.blocks = [IndexBlock.create(this, filename)]
+    }
+}
+
 export class LogicalSequence {
     /* A sequence of binary key-value pairs that is physically stored as a subsequence of another Sequence, with keys prefixed
        by a constant: the IID of the Operator that produced this subsequence. As a thin wrapper around the underlying
@@ -97,7 +109,7 @@ export class LogicalSequence {
      */
 }
 
-
+/**********************************************************************************************************************/
 
 export class DataSequence extends Sequence {
     /* Data sequence. The main sequence in the database. Consists of item records, {key: item-id, value: item-data}.
