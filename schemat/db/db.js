@@ -79,6 +79,7 @@ export class Ring extends Item {
         if (schemat.client_side) return
         print(`... ring loaded [${this._id_}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
         await this.data_sequence.load()
+        await this.index_sequence.load()
         for (let index of this.indexes.values())
             await index.load()
     }
@@ -141,8 +142,9 @@ export class Ring extends Item {
 
     propagate(req, change /*ChangeRequest*/) {
         /* Propagate a change in this ring's data to all indexes. The change is submitted by a child block of the data_sequence. */
+        let seq = this.index_sequence
         for (const index of this.indexes.values())      // ... of this.ring.all_indexes
-            index.apply(change, index)                  // no need to await, the result is not used by the caller
+            index.apply(change, seq)                    // no need to await, the result is not used by the caller
     }
 
     async *scan_index(name, {start, stop, limit=null, reverse=false, batch_size=100} = {}) {
@@ -151,8 +153,9 @@ export class Ring extends Item {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
+        let seq = this.index_sequence
         let index = this.indexes.get(name)      // Index object
-        yield* index.scan(index, {start, stop, limit, reverse, batch_size})
+        yield* index.scan(seq, {start, stop, limit, reverse, batch_size})
     }
 
     // async* scan_all() {
