@@ -95,9 +95,6 @@ export class Ring extends Item {
     writable(id)    { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be inserted here (only when inserting a new object, not updating an existing one from a lower ring)
     valid_id(id)    { return this.start_id <= id && (!this.stop_id || id < this.stop_id) }
 
-    // assert_valid_id(id, msg) { if (!this.valid_id(id)) throw new DataAccessError(msg, {id, start_id: this.start_id, stop_id: this.stop_id}) }
-    // assert_writable(id, msg) { if (!this.writable(id)) throw new DataAccessError(msg, {id}) }
-
 
     /***  Data access & modification  ***/
 
@@ -289,7 +286,7 @@ export class Database extends Item {
             if (!ring) return req.error_access(`target ring not found: '${ring_name}'`)
             if (!ring.writable(id)) return req.error_access(`the ring '${ring_name}' is read-only or the ID is not writable`)
         }
-        else ring = this.rings_reversed.find(r => r.writable(id))         // find the first ring where `id` can be written
+        else ring = this.rings_reversed.find(r => r.writable(id))         // find the first ring where `id` can be inserted
 
         if (ring) {
             id = await ring.handle(req)
