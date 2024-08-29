@@ -20,7 +20,7 @@ export class Sequence extends Item {    // Series?
            Database > Ring > Sequence (data/index) > Stream > Block > Storage > Record
      */
 
-    ring                // Ring that this sequence belongs to
+    ring                // parent Ring of this sequence
     schema              // RecordSchema that defines keys and values of records in this Sequence
     splits              // array of split points between blocks
     blocks              // array of Blocks that make up this sequence
@@ -91,7 +91,7 @@ export class Sequence extends Item {    // Series?
 
 
 export class LogicalSequence {
-    /* A sequence of binary key-value pairs that is physically stored as a subsequence of another Sequence, with all the keys prefixed
+    /* A sequence of binary key-value pairs that is physically stored as a subsequence of another Sequence, with keys prefixed
        by a constant: the IID of the Operator that produced this subsequence. As a thin wrapper around the underlying
        physical (sub)sequence, this class is NOT stored in the DB, and does NOT inherit from Sequence nor Item.
      */
