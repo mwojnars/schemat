@@ -372,10 +372,10 @@ export class Item {
         return {[ItemProxy.CACHED]: true, value}
     }
 
-    static compare(obj1, obj2) {
-        /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
-        return obj1._id_ - obj2._id_
-    }
+    // static compare(obj1, obj2) {
+    //     /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
+    //     return obj1._id_ - obj2._id_
+    // }
 
 
     /***  Internal properties  ***/

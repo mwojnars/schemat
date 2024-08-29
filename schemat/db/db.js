@@ -143,12 +143,6 @@ export class Ring extends Item {
             index.apply(change)                         // no need to await, the result is not used by the caller
     }
 
-    async* scan_all() {
-        /* Yield all items of this ring as ItemRecord objects. */
-        for await (let record of this.data_sequence.scan())
-            yield ItemRecord.from_binary(record)
-    }
-
     async *scan_index(name, {start, stop, limit=null, reverse=false, batch_size=100} = {}) {
         /* Scan an index `name` in the range [`start`, `stop`) and yield the results.
            If `limit` is not null, yield at most `limit` items.
@@ -158,6 +152,12 @@ export class Ring extends Item {
         let index = this.indexes.get(name)      // Index object
         yield* index.scan({start, stop, limit, reverse, batch_size})
     }
+
+    // async* scan_all() {
+    //     /* Yield all items of this ring as ItemRecord objects. */
+    //     for await (let record of this.data_sequence.scan())
+    //         yield ItemRecord.from_binary(record)
+    // }
 }
 
 
@@ -331,13 +331,6 @@ export class Database extends Item {
         return this.forward_down(new DataRequest(this, 'delete', {id}))
     }
 
-    async *scan_all() {
-        /* Scan each ring and merge the sorted streams of entries. */
-        // TODO: remove duplicates while merging
-        let streams = this.rings.map(r => r.scan_all())
-        yield* merge(Item.compare, ...streams)
-    }
-
     async *scan_index(name, opts) {
         /* Yield a stream of plain Records from the index, merge-sorted from all the rings. */
         let streams = this.rings.map(r => r.scan_index(name, opts))
@@ -345,6 +338,13 @@ export class Database extends Item {
         // TODO: apply `limit` to the merged stream
         // TODO: apply `batch_size` to the merged stream and yield in batches
     }
+
+    // async *scan_all() {
+    //     /* Scan each ring and merge the sorted streams of entries. */
+    //     // TODO: remove duplicates while merging
+    //     let streams = this.rings.map(r => r.scan_all())
+    //     yield* merge(Item.compare, ...streams)
+    // }
 
 
     /***  Forwarding to other rings  ***/

@@ -325,16 +325,6 @@ export class Schemat {
 
     /***  Indexes  ***/
 
-    async *_scan_all({limit} = {}) {
-        /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
-        let count = 0
-        for await (const record of this.db.scan_all()) {                            // stream of ItemRecords
-            if (limit !== undefined && count++ >= limit) break
-            let item = await Item.from_record(record)
-            yield this.registry.set(item)
-        }
-    }
-
     async *scan_category(category) {
         let target_cid = category?._id_
         let start = category ? [target_cid] : null
@@ -347,6 +337,16 @@ export class Schemat {
             yield this.get_loaded(id)
         }
     }
+
+    // async *_scan_all({limit} = {}) {
+    //     /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
+    //     let count = 0
+    //     for await (const record of this.db.scan_all()) {                            // stream of ItemRecords
+    //         if (limit !== undefined && count++ >= limit) break
+    //         let item = await Item.from_record(record)
+    //         yield this.registry.set(item)
+    //     }
+    // }
 
 
     /***  Object <> classpath mapping (for de/serialization)  ***/
