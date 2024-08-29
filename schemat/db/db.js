@@ -4,7 +4,7 @@ import {Item, Edit} from "../core/item.js"
 import {IndexByCategory} from "./indexes.js";
 import {Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
-import {DataSequence} from "./sequence.js";
+import {DataSequence, IndexSequence} from "./sequence.js";
 import {Data} from "../core/data.js";
 
 
@@ -49,11 +49,14 @@ export class Ring extends Item {
 
         // create sequences: data and indexes...
 
-        this.data_sequence = DataSequence.create(this, this._file)
+        this.data_sequence  = DataSequence.create(this, this._file)
         await this.data_sequence.open()
 
         let filename = this._file.replace(/\.yaml$/, '.idx_category_item.jl')
         req = req.safe_step(this)
+
+        this.index_sequence = IndexSequence.create(this, filename)
+        await this.index_sequence.open()
 
         this.indexes = new Map([
             ['idx_category_item', IndexByCategory.create(this, filename)],      // index of item IDs sorted by parent category ID

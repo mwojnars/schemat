@@ -325,6 +325,13 @@
   _category_:
     "@": 0
   "@": schemat:Data
+- __id: 10
+  name: Cluster
+  _category_:
+    "@": 0
+  schema:
+    "@": schemat:Catalog
+  "@": schemat:Data
 - __id: 11
   name: Database
   info: Internal database. An array of data Rings stacked on top of each other.
@@ -397,8 +404,6 @@
 - __id: 14
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
-  schema:
-    "@": schemat:Catalog
   defaults:
     _class_: schemat/db/sequence.js:DataSequence
     "@": schemat:Catalog
@@ -491,15 +496,19 @@
   _category_:
     "@": 0
   "@": schemat:Data
-- __id: 10
-  name: Cluster
-  _category_:
-    "@": 0
-  schema:
-    "@": schemat:Catalog
-  "@": schemat:Data
 - __id: 21
   name: Node
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 22
+  name: IndexSequence
+  info: Category for sequences of index records.
+  defaults:
+    _class_: schemat/db/sequence.js:IndexSequence
+    "@": schemat:Catalog
+  _extends_:
+    "@": 13
   _category_:
     "@": 0
   "@": schemat:Data
