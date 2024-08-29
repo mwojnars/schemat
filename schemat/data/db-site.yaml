@@ -133,8 +133,6 @@
     "@": 1003
   blocks:
     - "@": 1015
-  derived:
-    - "@": 1013
   _category_:
     "@": 14
   "@": schemat:Data
@@ -195,8 +193,6 @@
     "@": 1016
   blocks:
     - "@": 1029
-  derived:
-    - "@": 1018
   _category_:
     "@": 14
   "@": schemat:Data
@@ -292,8 +288,6 @@
     "@": 1004
   blocks:
     - "@": 1032
-  derived:
-    - "@": 1028
   _category_:
     "@": 14
   "@": schemat:Data

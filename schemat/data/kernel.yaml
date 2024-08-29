@@ -383,10 +383,6 @@
     blocks:
       info: array of Blocks containing records of this sequence
       "@": schemat/types/type.js:GENERIC
-    derived:
-      info: array of derived sequences (indexes) that must be updated when this
-        sequence changes
-      "@": schemat/types/type.js:GENERIC
     flush_delay:
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together
@@ -413,8 +409,7 @@
   "@": schemat:Data
 - __id: 15
   name: Index
-  info: Base category for (derived) sequences that represent indexes over another
-    (source) sequence.
+  info: Base category for indexes over the data sequence.
   schema:
     source:
       info: source Sequence that feeds data to this index
