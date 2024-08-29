@@ -411,6 +411,7 @@ export class Item {
 
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
+    assert_loaded_or_newborn() { if (!this.is_loaded() && !this.is_newborn()) throw new NotLoaded(this) }
 
     is_equivalent(other) {
         /* True if `this` and `other` object have the same ID; they still can be two different instances

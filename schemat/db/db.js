@@ -137,6 +137,12 @@ export class Ring extends Item {
 
     /***  Indexes and Transforms. Change propagation.  ***/
 
+    propagate(req, change /*ChangeRequest*/) {
+        /* Propagate a change in this ring, as submitted by a child block of the data_sequence, over to all indexes. */
+        for (const index of this.indexes.values())      // ... of this.ring.all_indexes
+            index.apply(change)                         // no need to await, the result is not used by the caller
+    }
+
     async* scan_all() {
         /* Yield all items of this ring as ItemRecord objects. */
         for await (let record of this.data_sequence.scan())

@@ -38,7 +38,7 @@ export class Block extends Item {
 
 
     __create__(sequence, filename) {
-        assert(sequence.is_loaded() || sequence.is_newborn())
+        sequence.assert_loaded_or_newborn()
         this.sequence = sequence
         this.filename = filename
     }
@@ -130,7 +130,15 @@ export class Block extends Item {
     async propagate(req, key, value_old = null, value_new = null) {
         /* Propagate a change in this block to all derived Sequences of the parent sequence. */
         const change = new ChangeRequest(key, value_old, value_new)
-        return this.sequence.propagate(req, change)
+
+        if (!this.sequence.ring?.is_loaded()) {
+            await this.sequence.load()
+            await this.sequence.ring.load()
+        }
+        return this.sequence.ring.propagate(req, change)
+
+        // if (!this.sequence.is_loaded()) await this.sequence.load()
+        // return this.sequence.propagate(req, change)
     }
 }
 
