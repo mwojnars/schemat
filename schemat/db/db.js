@@ -26,8 +26,10 @@ export class Ring extends Item {
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
-    start_id = 0            // minimum IID that can be assigned to a NEWLY-INSERTED object in this ring; UPDATED objects (re-inserted here from lower rings) can still have IID < start_id (TODO!)
-    stop_id                 // (optional) upper bound for IIDs in this ring: if present, all IIDs must be strictly lower than this value
+    // validity range [start, stop) for IIDs of NEWLY-INSERTED objects in this ring;
+    // UPDATED objects (re-inserted here from lower rings) can still have IIDs from outside this range (!)
+    start_id = 0
+    stop_id
 
 
     async __create__({name, ...opts}, req) {
@@ -360,16 +362,12 @@ export class Database extends Item {
     }
 
     save(req) {
-        /* Save an item update (args = {id,key,value}) to the lowest ring, starting at current_ring, that's writable and its upper IID limit (stop_id) is >= ID.
+        /* Save an item update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
            Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
+           No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
          */
         let ring = req.current_ring || this.bottom_ring
-        let id = req.args.id
-
-        // find the ring that's writable and allows this ID
-        while (ring && (ring.readonly || id > ring.stop_id))
-            ring = this._next(ring)
-
+        while (ring?.readonly) ring = this._next(ring)              // go upwards to find the first writable ring
         return ring ? ring.handle(req, 'put')
             : req.error_access(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
     }
