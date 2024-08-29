@@ -360,14 +360,14 @@ export class Database extends Item {
     }
 
     save(req) {
-        /* Save an item update (args = {id,key,value}) to the lowest ring starting at current_ring that's writable and allows this ID.
+        /* Save an item update (args = {id,key,value}) to the lowest ring, starting at current_ring, that's writable and its upper IID limit (stop_id) is >= ID.
            Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
          */
         let ring = req.current_ring || this.bottom_ring
         let id = req.args.id
 
         // find the ring that's writable and allows this ID
-        while (ring && !ring.writable(id))
+        while (ring && (ring.readonly || id > ring.stop_id))
             ring = this._next(ring)
 
         return ring ? ring.handle(req, 'put')
