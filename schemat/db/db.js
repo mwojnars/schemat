@@ -26,8 +26,8 @@ export class Ring extends Item {
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
-    start_id = 0            // minimum IID of all items; to maintain separation of IIDs between different rings stacked together
-    stop_id                 // (optional) maximum IID of all items
+    start_id = 0            // minimum IID that can be assigned to a NEWLY-INSERTED object in this ring; UPDATED objects (re-inserted here from lower rings) can still have IID < start_id (TODO!)
+    stop_id                 // (optional) upper bound for IIDs in this ring: if present, all IIDs must be strictly lower than this value
 
 
     async __create__({name, ...opts}, req) {

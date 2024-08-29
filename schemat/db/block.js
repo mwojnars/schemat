@@ -202,8 +202,8 @@ export class DataBlock extends Block {
     }
 
     _assign_id_compact(req) {
-        /* Scan tihs._storage to find the first available `id` for the record to be inserted, starting at req.current_ring.start_id. 
-           Has large performance implications (O(n)), so it can only be used with MemoryStorage.
+        /* Scan this._storage to find the first available `id` for the record to be inserted, starting at req.current_ring.start_id.
+           This method of IID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
         if (!(this._storage instanceof MemoryStorage))
             throw new Error('Compact insert mode is only supported with MemoryStorage')
