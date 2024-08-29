@@ -13,6 +13,7 @@ import {DataRequest} from "./data_request.js";
 /**********************************************************************************************************************/
 
 export class Operator extends Item {
+    schema              // RecordSchema that defines keys and values of records produced by this operator
 }
 
 
@@ -104,6 +105,15 @@ export class Index extends Sequence {
            of output Records to be stored in the index.
          */
         throw new Error('not implemented')
+    }
+
+    async* scan(sequence, opts = {}) {
+        /* Scan this operator's output sequence in the [`start`, `stop`) range. See Sequence.scan() for details. */
+        let {start, stop} = opts
+        start = start && this.schema.encode_key(start)      // convert `start` and `stop` to binary keys (Uint8Array)
+        stop = stop && this.schema.encode_key(stop)
+        yield* sequence.scan_binary({...opts, start, stop})
+        // yield* sequence.scan_binary({...opts, start, stop})
     }
 }
 

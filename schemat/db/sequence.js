@@ -76,19 +76,15 @@ export class Sequence extends Item {    // Series?
         return block.del(req)
     }
 
-    async* scan({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
+    async* scan_binary({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
         /* Scan this sequence in the [`start`, `stop`) range and yield BinaryRecords.
            If `limit` is defined, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is defined, yield items in batches of `batch_size` items.
          */
 
-        // convert `start` and `stop` to binary keys (Uint8Array)
-        start = start && this.schema.encode_key(start)
-        stop = stop && this.schema.encode_key(stop)
-
         let block = this._find_block(start)
-        assert(block.is_loaded() || block.is_newborn())
+        block.assert_loaded_or_newborn()
         // if (!block.is_loaded()) block = await block.load()
 
         for await (let [key, value] of block.scan({start, stop}))
@@ -113,8 +109,6 @@ export class DataSequence extends Sequence {
     static _category_ = 14
     static role       = 'data'          // for use in ProcessingStep and DataRequest
     static COMMANDS   = ['get', 'put', 'select', 'insert', 'update', 'delete']
-
-    // schema = data_schema
 
     __create__(ring, filename) {
         super.__create__(ring)
