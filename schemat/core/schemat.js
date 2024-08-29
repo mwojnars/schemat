@@ -14,80 +14,6 @@ import {Registry} from "./registry.js";
  **
  */
 
-// class Classpath {
-//     forward = new Map()         // dict of objects indexed by paths: (path -> object)
-//     inverse = new Map()         // dict of paths indexed by objects: (object -> path)
-//
-//     set(path, obj) {
-//         /*
-//         Assign `obj` to a given path. Create an inverse mapping if `obj` is a class or function.
-//         Override an existing object if already present.
-//         */
-//         if (this.forward.has(path)) throw new Error(`the path already exists: ${path}`)
-//         this.forward.set(path, obj)
-//         // print(`Classpath: ${path}`)
-//
-//         if (typeof obj === "function") {
-//             if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
-//             this.inverse.set(obj, path)             // create inverse mapping for classes and functions
-//         }
-//     }
-//     setMany(path, ...objects) {
-//         /* Add multiple objects to a given `path`, under names taken from their `obj.name` properties. */
-//         let prefix = path ? `${path}.` : ''
-//         for (let obj of objects) {
-//             let name = obj.name
-//             if (!name) throw new Error(`Missing .name of an unnamed object being added to Classpath at path '${path}': ${obj}`)
-//             this.set(`${prefix}${name}`, obj)
-//         }
-//     }
-//
-//     async setModule(path, module_url, {symbols, accept, exclude_variables = true} = {})
-//         /*
-//         Add symbols from `module` to a given package `path`.
-//         If `symbols` is missing, all symbols found in the module are added, excluding:
-//         1) variables (i.e., not classes, not functions), if exclude_variables=true;
-//         2) symbols that point to objects whose accept(name, obj) is false, if `accept` function is defined.
-//         */
-//     {
-//         let module = await import(module_url)
-//         let prefix = path ? `${path}.` : ''
-//
-//         if (typeof symbols === "string")    symbols = symbols.split(' ')
-//         else if (!symbols)                  symbols = Object.keys(module)
-//         if (exclude_variables)              symbols = symbols.filter(s => typeof module[s] === "function")
-//
-//         for (let name of symbols) {
-//             let obj = module[name]
-//             if (accept && !accept(name, obj)) continue
-//             this.set(`${prefix}${name}`, obj)
-//         }
-//     }
-//
-//     encode(obj) {
-//         /*
-//         Return canonical path of a given class or function, `obj`. If `obj` was added multiple times
-//         under different names (paths), the most recently assigned path is returned.
-//         */
-//         let path = this.inverse.get(obj)
-//         if (path === undefined) throw new Error(`Not in classpath: ${obj.name || obj}`)
-//         return path
-//     }
-//     decode(path) {
-//         /* Return object pointed to by a given path. */
-//         let obj = this.forward.get(path)
-//         if (obj === undefined) throw new Error(`Unknown class path: ${path}`)
-//         print(`decoded with Classpath: ${path}`)
-//         return obj
-//     }
-// }
-
-/**********************************************************************************************************************
- **
- **  PREFETCHED
- **
- */
-
 class Classpath {
     /* A cache of built-in Schemat classes that are prefetched from their modules upon startup and made available
        to *synchronous* class-path resolution during serialization and deserialization in JSONx.
@@ -255,35 +181,6 @@ export class Schemat {
         await builtin.fetch("../types/type.js", {accept})
         await builtin.fetch("../types/catalog.js", {accept})
     }
-
-    // async _init_classpath() {
-    //     // print('initClasspath() started...')
-    //     let classpath = new Classpath()
-    //
-    //     // add standard classes to the classpath
-    //     classpath.setMany("js", Map)
-    //     classpath.setMany("base", Catalog, Data)
-    //     await classpath.setModule("base", "./item.js")
-    //     await classpath.setModule("std", "../std/files.js")
-    //     await classpath.setModule("std", "../std/site.js")
-    //     await classpath.setModule("std", "../std/containers.js")
-    //
-    //     // if (this.server_side) {
-    //     await classpath.setModule("db", "../db/records.js")
-    //     await classpath.setModule("db", "../db/block.js")
-    //     await classpath.setModule("db", "../db/sequence.js")
-    //     await classpath.setModule("db", "../db/index.js")
-    //     await classpath.setModule("db", "../db/db.js")
-    //
-    //     let accept = (name) => name.toUpperCase() === name || name === 'TypeWrapper'
-    //
-    //     // add all Type subtypes (all-caps class names) + TypeWrapper
-    //     await classpath.setModule("type", "../types/type.js", {accept})
-    //     await classpath.setModule("type", "../types/catalog.js", {accept})
-    //
-    //     this.classpath = classpath
-    //     // print('initClasspath() done')
-    // }
 
     async _reset_class() { /* on server only */ }
 
