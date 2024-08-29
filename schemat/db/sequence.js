@@ -46,7 +46,10 @@ export class Sequence extends Item {    // Series?
         return this.blocks[0].load()
     }
 
-    _find_block(binary_key)     { return this.blocks[0] }
+    // add_derived(sequence) {
+    //     /* Add a derived sequence (index) that must be updated when this sequence changes. */
+    //     this.derived.push(sequence)
+    // }
 
     async open() {
         // this method is only called when the sequence is created anew and its ID is not yet assigned!
@@ -55,6 +58,22 @@ export class Sequence extends Item {    // Series?
             await block.open()
             // block._set_expiry('never')          // prevent eviction of this block from cache (!)
         }
+    }
+
+
+    _find_block(binary_key)     { return this.blocks[0] }
+
+
+    async put(req) {
+        let block = this._find_block(req.args.key)
+        if (!block.is_loaded()) block = await block.load()
+        return block.put(req)
+    }
+
+    async del(req) {
+        let block = this._find_block(req.args.key)
+        if (!block.is_loaded()) block = await block.load()
+        return block.del(req)
     }
 
     async* scan({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
@@ -75,12 +94,17 @@ export class Sequence extends Item {    // Series?
         for await (let [key, value] of block.scan({start, stop}))
             yield new BinaryRecord(this.schema, key, value)
     }
-
-    // add_derived(sequence) {
-    //     /* Add a derived sequence (index) that must be updated when this sequence changes. */
-    //     this.derived.push(sequence)
-    // }
 }
+
+
+export class LogicalSequence {
+    /* A sequence of key-value pairs that are stored in another (physical) Sequence with all the keys prefixed
+       by a constant: IID of the Operator that produced this subsequence. As a thin wrapper around the underlying
+       physical sequence, this class is NOT stored in the DB, and for this reason it does NOT inherit from Sequence nor Item.
+     */
+}
+
+
 
 export class DataSequence extends Sequence {
     /* Data sequence. The main sequence in the database. Consists of item records, {key: item-id, value: item-data}.

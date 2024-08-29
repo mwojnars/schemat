@@ -30,11 +30,13 @@ export class Index extends Sequence {
         // source.add_derived(this)                // make connection: data > index, for change propagation
     }
 
-    async apply(change) {
+    async apply(change, sequence, ring) {
         /* Update the index to apply a change that originated in the source sequence. */
 
         // const {key, value_old, value_new} = change
         // print(`apply(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
+
+        // let sequence = ring.get_sequence('index', this.iid)
 
         // TODO: request object, only used when another propagation step is to be done
         let req = new DataRequest(this, 'apply', {change})
@@ -43,18 +45,26 @@ export class Index extends Sequence {
         const [del_records, put_records] = this._make_plan(change)
 
         // delete old records
-        for (let [key, value] of del_records || []) {
-            let block = this._find_block(key)
-            if (!block.is_loaded()) block = await block.load()
-            block.del(req.safe_step(null, 'del', {key})) //|| print(`deleted [${key}]`)
-        }
+        for (let [key, value] of del_records || [])
+            sequence.del(req.safe_step(this, 'del', {key})) //|| print(`deleted [${key}]`)
 
         // (over)write new records
-        for (let [key, value] of put_records || []) {
-            let block = this._find_block(key)
-            if (!block.is_loaded()) block = await block.load()
-            block.put(req.safe_step(null, 'put', {key, value})) //|| print(`put [${key}]`)
-        }
+        for (let [key, value] of put_records || [])
+            sequence.put(req.safe_step(this, 'put', {key, value})) //|| print(`put [${key}]`)
+
+        // // delete old records
+        // for (let [key, value] of del_records || []) {
+        //     let block = this._find_block(key)
+        //     if (!block.is_loaded()) block = await block.load()
+        //     block.del(req.safe_step(null, 'del', {key})) //|| print(`deleted [${key}]`)
+        // }
+        //
+        // // (over)write new records
+        // for (let [key, value] of put_records || []) {
+        //     let block = this._find_block(key)
+        //     if (!block.is_loaded()) block = await block.load()
+        //     block.put(req.safe_step(null, 'put', {key, value})) //|| print(`put [${key}]`)
+        // }
     }
 
     _make_plan(change) {
