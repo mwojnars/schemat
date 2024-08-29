@@ -128,7 +128,7 @@ export class Block extends Item {
     }
 
     async propagate(req, key, value_old = null, value_new = null) {
-        /* Propagate a change in this block to all derived Sequences of the parent sequence. */
+        /* Push a change from this block to derived indexes. */
         const change = new ChangeRequest(key, value_old, value_new)
 
         if (!this.sequence.ring?.is_loaded()) {

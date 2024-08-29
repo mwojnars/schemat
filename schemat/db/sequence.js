@@ -123,7 +123,7 @@ export class DataSequence extends Sequence {
             req.make_step(this)
 
         let block = this._find_block(key)
-        assert(block.is_loaded() || block.is_newborn())
+        block.assert_loaded_or_newborn()
         // if (!block.is_loaded()) block = await block.load()
 
         return block[command].call(block, req)
