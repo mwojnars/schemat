@@ -11,13 +11,13 @@ import {Item} from "../core/item.js";
  */
 
 export class Sequence extends Item {    // Series?
-    /* Ordered sequence of key-value records, possibly distributed and/or replicated (TODO).
+    /* Ordered binary sequence of key-value records, possibly distributed and/or replicated (TODO).
        Keys and values (payload) can be composite.
        May consist of multiple - possibly overlapping (replicated) - Blocks. TODO
        Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks. TODO
        A NoSQL counterpart of a table/index in a relational database.
 
-           Database > Ring > Sequence (data/index) > Block > Storage > Record
+           Database > Ring > Sequence (data/index) > Stream > Block > Storage > Record
      */
 
     ring                // Ring that this sequence belongs to

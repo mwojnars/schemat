@@ -53,9 +53,6 @@ export class WorkerProcess extends BackendProcess {
         // node = schemat.get_loaded(this_node_ID)
         // return node.activate()     // start the lifeloop and all worker processes (servers)
 
-        // await this._update_all()
-        // await this._reinsert_all()
-
         // let m = await schemat.import('/system/local/schemat/test/temp1.js')
         // print('loaded:', m)
 
@@ -107,6 +104,7 @@ export class AdminProcess extends BackendProcess {
 
     async CLI_move({id, newid, bottom, ring: ring_name}) {
         /* Move an item to a different ring, or change its ID. */
+        // TODO: REMOVE. This function is no longer used; all the same things can be done with CLI_reinsert (!)
 
         id = Number(id)
         newid = Number(newid)
@@ -217,39 +215,39 @@ export class AdminProcess extends BackendProcess {
         }
     }
 
-    async _update_all() {
-        /* Perform "update in place" on every item in the database, for instance, to force conversion of the items
-           to a new format. All rings in the DB must be set as writable (!), otherwise the update will write a copy
-           of an item in another ring instead of updating in place.
-         */
-        for await (let item of schemat._scan_all())
-            await schemat.db.update_full(item)
-    }
-
-    async _reinsert_all() {
-        /* Re-insert every item to the same ring so that it receives a new ID. Update references in other items. */
-        let db = schemat.db
-
-        for (let ring of db.rings) {
-            if (ring.readonly) continue
-            let records = await T.arrayFromAsync(ring.scan_all())
-            let ids = records.map(rec => rec.id)
-
-            for (const id of ids) {
-                // the record might have been modified during this loop - must re-read ("select")
-                let data = await ring.select(id)
-                let item = await Item.from_data(id, data)
-
-                print(`reinserting item [${id}]...`)
-                let new_id = await ring.insert(null, item.dump_data())
-                // item = await Item.from_data(new_id, data)
-
-                print(`...new id=[${new_id}]`)
-                await this._update_references(id, new_id)
-                await ring.delete(id)
-                // await ring.flush()
-            }
-        }
-    }
+    // async _update_all() {
+    //     /* Perform "update in place" on every item in the database, for instance, to force conversion of the items
+    //        to a new format. All rings in the DB must be set as writable (!), otherwise the update will write a copy
+    //        of an item in another ring instead of updating in place.
+    //      */
+    //     for await (let item of schemat._scan_all())
+    //         await schemat.db.update_full(item)
+    // }
+    //
+    // async _reinsert_all() {
+    //     /* Re-insert every item to the same ring so that it receives a new ID. Update references in other items. */
+    //     let db = schemat.db
+    //
+    //     for (let ring of db.rings) {
+    //         if (ring.readonly) continue
+    //         let records = await T.arrayFromAsync(ring.scan_all())
+    //         let ids = records.map(rec => rec.id)
+    //
+    //         for (const id of ids) {
+    //             // the record might have been modified during this loop - must re-read ("select")
+    //             let data = await ring.select(id)
+    //             let item = await Item.from_data(id, data)
+    //
+    //             print(`reinserting item [${id}]...`)
+    //             let new_id = await ring.insert(null, item.dump_data())
+    //             // item = await Item.from_data(new_id, data)
+    //
+    //             print(`...new id=[${new_id}]`)
+    //             await this._update_references(id, new_id)
+    //             await ring.delete(id)
+    //             // await ring.flush()
+    //         }
+    //     }
+    // }
 }
 

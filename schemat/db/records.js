@@ -202,6 +202,7 @@ export class ChangeRequest {
        insertion or deletion), and empty string (or undefined) means the record exists, but its value is empty.
      */
 
+    // origin           // the sequence that changed, represented by its Operator's IID
     key                 // binary key (Uint8Array)
     value_old           // null if missing record (insertion); undefined if empty value, but record exists (update)
     value_new           // null if missing record (deletion); undefined if empty value, but record exists (update)
