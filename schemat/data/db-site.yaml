@@ -34,6 +34,8 @@
   name: kernel
   data_sequence:
     "@": 1012
+  index_sequence:
+    "@": 1013
   indexes:
     idx_category_item:
       "@": 1013
@@ -48,6 +50,8 @@
   name: db-site
   data_sequence:
     "@": 1027
+  index_sequence:
+    "@": 1028
   indexes:
     idx_category_item:
       "@": 1028
@@ -178,6 +182,8 @@
   name: db-app
   data_sequence:
     "@": 1017
+  index_sequence:
+    "@": 1018
   indexes:
     idx_category_item:
       "@": 1018
