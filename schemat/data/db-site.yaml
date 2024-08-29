@@ -153,9 +153,6 @@
     "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 1026
-  derived: []
-  source:
-    "@": 1012
   _category_:
     "@": 17
   "@": schemat:Data
@@ -218,9 +215,6 @@
     "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 1030
-  derived: []
-  source:
-    "@": 1017
   _category_:
     "@": 17
   "@": schemat:Data
@@ -318,9 +312,6 @@
     "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 1033
-  derived: []
-  source:
-    "@": 1027
   _category_:
     "@": 17
   "@": schemat:Data
