@@ -1,5 +1,5 @@
 import {assert, print, T} from '../common/utils.js'
-import {DataConsistencyError, NotImplemented} from '../common/errors.js'
+import {DataAccessError, DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {Item} from '../core/item.js'
 import {ChangeRequest, data_schema} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
@@ -179,8 +179,9 @@ export class DataBlock extends Block {
         } else                                              // fixed ID provided by the caller? check for uniqueness
             await this.assert_unique(key, id)
 
-        req.current_ring.assert_valid_id(id, `candidate ID=${id} for a new item is outside of the valid range(s) for this ring`)
-        req.current_ring.assert_writable(id, `cannot write ID=${id} in this ring`)
+        const ring = req.current_ring
+        if (ring.readonly) throw new DataAccessError(`cannot insert a new item, the ring [${ring.iid}] is read-only`)
+        if (!ring.valid_id(id)) throw new DataAccessError(`candidate IID=${id} for a new item is outside of the valid range(s) for the ring [${ring.iid}]`)
 
         this._autoincrement = Math.max(id, this._autoincrement)
 

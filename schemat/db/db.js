@@ -1,4 +1,4 @@
-import {DataAccessError, DatabaseError} from "../common/errors.js"
+import {DatabaseError} from "../common/errors.js"
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
 import {Item, Edit} from "../core/item.js"
 import {IndexByCategory} from "./indexes.js";
@@ -90,11 +90,11 @@ export class Ring extends Item {
 
     /***  Errors & internal checks  ***/
 
-    writable(id)    { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be written here
+    writable(id)    { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be inserted here (only when inserting a new object, not updating an existing one from a lower ring)
     valid_id(id)    { return this.start_id <= id && (!this.stop_id || id < this.stop_id) }
 
-    assert_valid_id(id, msg) { if (!this.valid_id(id)) throw new DataAccessError(msg, {id, start_id: this.start_id, stop_id: this.stop_id}) }
-    assert_writable(id, msg) { if (!this.writable(id)) throw new DataAccessError(msg, {id}) }
+    // assert_valid_id(id, msg) { if (!this.valid_id(id)) throw new DataAccessError(msg, {id, start_id: this.start_id, stop_id: this.stop_id}) }
+    // assert_writable(id, msg) { if (!this.writable(id)) throw new DataAccessError(msg, {id}) }
 
 
     /***  Data access & modification  ***/

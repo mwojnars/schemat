@@ -328,6 +328,8 @@ export class Item {
         Object.defineProperty(this._self_, '_id_', {value: id, writable: false})
     }
 
+    get iid() { return this._id_ }       // alias for _id_
+
     get _record_() {
         this.assert_linked()
         this.assert_loaded()
