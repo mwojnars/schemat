@@ -114,7 +114,7 @@ export class DataSequence extends Sequence {
     static role       = 'data'          // for use in ProcessingStep and DataRequest
     static COMMANDS   = ['get', 'put', 'select', 'insert', 'update', 'delete']
 
-    schema = data_schema
+    // schema = data_schema
 
     __create__(ring, filename) {
         super.__create__(ring)
@@ -123,10 +123,10 @@ export class DataSequence extends Sequence {
 
     encode_key(id) {
         assert(id !== undefined)
-        return this.schema.encode_key([id])
+        return data_schema.encode_key([id])
     }
     decode_key(key) {
-        return this.schema.decode_key(key)[0]
+        return data_schema.decode_key(key)[0]
     }
 
     async handle(req /*DataRequest*/) {

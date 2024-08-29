@@ -12,6 +12,10 @@ import {DataRequest} from "./data_request.js";
 
 /**********************************************************************************************************************/
 
+export class Operator extends Item {
+}
+
+
 export class Index extends Sequence {
     /* Sequence of records consisting of a binary `key` and a json `value`. The sequence is sorted by the key and
        allows to retrieve the value for a given key or range of keys.
