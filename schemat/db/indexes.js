@@ -1,7 +1,7 @@
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../types/type.js";
-import {ItemRecord, PlainRecord, RecordSchema, data_schema} from "./records.js";
+import {ItemRecord, PlainRecord, RecordSchema, BinaryRecord, data_schema} from "./records.js";
 import {IndexBlock} from "./block.js";
 import {Sequence} from "./sequence.js";
 import {DataRequest} from "./data_request.js";
@@ -108,12 +108,15 @@ export class Index extends Sequence {
     }
 
     async* scan(sequence, opts = {}) {
-        /* Scan this operator's output sequence in the [`start`, `stop`) range. See Sequence.scan() for details. */
+        /* Scan this operator's output in the [`start`, `stop`) range and yield BinaryRecords.
+           See Sequence.scan() for details.
+         */
         let {start, stop} = opts
         start = start && this.schema.encode_key(start)      // convert `start` and `stop` to binary keys (Uint8Array)
         stop = stop && this.schema.encode_key(stop)
-        yield* sequence.scan_binary({...opts, start, stop})
-        // yield* sequence.scan_binary({...opts, start, stop})
+
+        for await (let [key, value] of sequence.scan_binary({...opts, start, stop}))
+            yield new BinaryRecord(this.schema, key, value)
     }
 }
 

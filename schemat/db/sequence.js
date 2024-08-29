@@ -1,4 +1,4 @@
-import {BinaryRecord, data_schema} from "./records.js";
+import {data_schema} from "./records.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock} from "./block.js";
 import {Item} from "../core/item.js";
@@ -77,26 +77,23 @@ export class Sequence extends Item {    // Series?
     }
 
     async* scan_binary({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
-        /* Scan this sequence in the [`start`, `stop`) range and yield BinaryRecords.
+        /* Scan this sequence in the [`start`, `stop`) range and yield [key, value] pairs.
            If `limit` is defined, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is defined, yield items in batches of `batch_size` items.
          */
-
         let block = this._find_block(start)
         block.assert_loaded_or_newborn()
         // if (!block.is_loaded()) block = await block.load()
-
-        for await (let [key, value] of block.scan({start, stop}))
-            yield new BinaryRecord(this.schema, key, value)
+        yield* block.scan({start, stop})
     }
 }
 
 
 export class LogicalSequence {
-    /* A sequence of key-value pairs that are stored in another (physical) Sequence with all the keys prefixed
-       by a constant: IID of the Operator that produced this subsequence. As a thin wrapper around the underlying
-       physical sequence, this class is NOT stored in the DB, and for this reason it does NOT inherit from Sequence nor Item.
+    /* A sequence of binary key-value pairs that is physically stored as a subsequence of another Sequence, with all the keys prefixed
+       by a constant: the IID of the Operator that produced this subsequence. As a thin wrapper around the underlying
+       physical (sub)sequence, this class is NOT stored in the DB, and does NOT inherit from Sequence nor Item.
      */
 }
 
