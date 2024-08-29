@@ -1,5 +1,4 @@
 import {BinaryRecord, data_schema} from "./records.js";
-import {INTEGER} from "../types/type.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock} from "./block.js";
 import {Item} from "../core/item.js";
@@ -25,8 +24,8 @@ export class Sequence extends Item {    // Series?
     schema              // RecordSchema that defines keys and values of records in this Sequence
     splits              // array of split points between blocks
     blocks              // array of Blocks that make up this sequence
-    derived = []        // array of derived sequences (indexes) that must be updated when this sequence changes
     flush_delay         // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
+    // derived = []        // array of derived sequences (indexes) that must be updated when this sequence changes
 
 
     __create__(ring) {
@@ -77,10 +76,10 @@ export class Sequence extends Item {    // Series?
             yield new BinaryRecord(this.schema, key, value)
     }
 
-    add_derived(sequence) {
-        /* Add a derived sequence (index) that must be updated when this sequence changes. */
-        this.derived.push(sequence)
-    }
+    // add_derived(sequence) {
+    //     /* Add a derived sequence (index) that must be updated when this sequence changes. */
+    //     this.derived.push(sequence)
+    // }
 }
 
 export class DataSequence extends Sequence {
