@@ -131,15 +131,6 @@
 - __id: 1012
   ring:
     "@": 1003
-  schema:
-    fields:
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    _field_types:
-      - "@": schemat/types/type.js:INTEGER
-    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 1015
   derived:
@@ -205,15 +196,6 @@
 - __id: 1017
   ring:
     "@": 1016
-  schema:
-    fields:
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    _field_types:
-      - "@": schemat/types/type.js:INTEGER
-    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 1029
   derived:
@@ -314,15 +296,6 @@
 - __id: 1027
   ring:
     "@": 1004
-  schema:
-    fields:
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    _field_types:
-      - "@": schemat/types/type.js:INTEGER
-    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 1032
   derived:
