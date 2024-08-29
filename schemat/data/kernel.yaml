@@ -365,6 +365,11 @@
       category:
         "@": 14
       "@": schemat/types/type.js:ITEM
+    index_sequence:
+      info: IndexSequence that keeps all indexes of this ring
+      category:
+        "@": 22
+      "@": schemat/types/type.js:ITEM
     indexes:
       info: Map of Indexes and their names
       "@": schemat/types/type.js:GENERIC
