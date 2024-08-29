@@ -136,9 +136,6 @@ export class Block extends Item {
             await this.sequence.ring.load()
         }
         return this.sequence.ring.propagate(req, change)
-
-        // if (!this.sequence.is_loaded()) await this.sequence.load()
-        // return this.sequence.propagate(req, change)
     }
 }
 

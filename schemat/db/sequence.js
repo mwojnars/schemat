@@ -41,7 +41,8 @@ export class Sequence extends Item {    // Series?
         // doing load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
         // doing the same later on may cause infinite recursion, because the load() request for a block may be directed
         // to the current sequence (which has an unloaded block!), and cause another block.load(), and so on...
-        if (schemat.client_side) return
+        if (CLIENT) return                                          // don't initialize internals when on client
+        if (!this.ring.is_loaded()) this.ring.load()                // intentionally not awaited to avoid deadlocks
         return this.blocks[0].load()
     }
 
@@ -79,13 +80,6 @@ export class Sequence extends Item {    // Series?
         /* Add a derived sequence (index) that must be updated when this sequence changes. */
         this.derived.push(sequence)
     }
-
-    // propagate(req, change /*ChangeRequest*/) {
-    //     /* Propagate a change in this sequence, as submitted by a child block, to all derived sequences. */
-    //     // for (const index of this.ring.all_indexes)
-    //     for (const sequence of this.derived)
-    //         sequence.apply(change)                      // no need to await, the result is not used
-    // }
 }
 
 export class DataSequence extends Sequence {
