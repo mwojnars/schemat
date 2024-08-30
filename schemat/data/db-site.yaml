@@ -38,7 +38,7 @@
     "@": 1013
   indexes:
     idx_category_item:
-      "@": 1013
+      "@": 23
     "@": :Map
   readonly: false
   start_id: 0
@@ -54,7 +54,7 @@
     "@": 1028
   indexes:
     idx_category_item:
-      "@": 1028
+      "@": 23
     "@": :Map
   readonly: false
   start_id: 1001
@@ -186,7 +186,7 @@
     "@": 1018
   indexes:
     idx_category_item:
-      "@": 1018
+      "@": 23
     "@": :Map
   readonly: false
   start_id: 5000
