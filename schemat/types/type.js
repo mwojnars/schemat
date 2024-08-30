@@ -268,26 +268,26 @@ export class INTEGER extends NUMBER {
     binary_encode(value, last = false) {
         value = this.validate(value)
         let {signed, length} = this.props
-        if (!signed) return this._encode_uint(value, length)
+        if (!signed) return this.encode_uint(value, length)
 
         // for signed integers, shift the value range upwards and encode as unsigned
         length = length || this.constructor.DEFAULT_LENGTH_SIGNED
         value += Math.pow(2, 8*length - 1)                  // TODO: memorize all Math.pow(2,k) here and below
         assert(value >= 0)
-        return this._encode_uint(value, length)
+        return this.encode_uint(value, length)
     }
 
     binary_decode(input, last = false) {
         let {signed, length} = this.props
-        if (!signed) return this._decode_uint(input, length)
+        if (!signed) return this.decode_uint(input, length)
 
         // decode as unsigned and shift the value range downwards after decoding to restore the original signed value
         length = length || this.constructor.DEFAULT_LENGTH_SIGNED
         const shift = Math.pow(2, 8*length - 1)
-        return this._decode_uint(input, length) - shift
+        return this.decode_uint(input, length) - shift
     }
 
-    _encode_uint(value, length = 0) {
+    encode_uint(value, length = 0) {
         /* Binary encoding of an unsigned integer in a field of `length` bytes.
            If length is missing or 0, magnitude of the value is detected automatically and the value
            is encoded on the minimum required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER)
@@ -315,7 +315,7 @@ export class INTEGER extends NUMBER {
         return buffer
     }
 
-    _decode_uint(input, length = 0) {
+    decode_uint(input, length = 0) {
         /* `input` must be a BinaryInput. */
         const {blank} = this.props
         const adaptive = !length
