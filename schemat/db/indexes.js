@@ -13,7 +13,9 @@ import {DataRequest} from "./data_request.js";
 /**********************************************************************************************************************/
 
 export class Operator extends Item {
-    schema              // RecordSchema that defines keys and values of records produced by this operator
+    record_schema       // RecordSchema that defines keys and values of records produced by this operator
+
+    get schema() { return this.record_schema }
 }
 
 
