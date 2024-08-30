@@ -2,7 +2,7 @@ import {data_schema} from "./records.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock, IndexBlock} from "./block.js";
 import {Item} from "../core/item.js";
-import {BinaryOutput, BinaryInput} from "../util/binary.js";
+import {BinaryInput} from "../util/binary.js";
 import {INTEGER} from "../types/type.js";
 
 
@@ -118,6 +118,7 @@ export class Subsequence {
     constructor(iid, base_sequence) {
         this.base_sequence = base_sequence
         this.iid = iid
+        this.prefix = Subsequence.iid_type.encode_uint(iid)
     }
 
     async put(req) {
@@ -143,17 +144,17 @@ export class Subsequence {
     }
 
     _prefix_key(key) {
-        let output = new BinaryOutput()
-        Subsequence.iid_type.encode(output, this.iid)
-        output.write(key)
-        return output.result()
+        let result = new Uint8Array(this.prefix.length + key.length)
+        result.set(this.prefix, 0)
+        result.set(key, this.prefix.length)
+        return result
     }
 
     _unprefix_key(prefixed_key) {
         let input = new BinaryInput(prefixed_key)
-        let iid = Subsequence.iid_type.decode(input)
-        assert(iid === this.iid, `invalid subsequence key: ${prefixed_key}, found IID prefix=${iid} instead of ${this.iid}`)
-        return prefixed_key.slice(input.pos)
+        let iid = Subsequence.iid_type.decode_uint(input)
+        assert(iid === this.iid, `invalid subsequence key, found IID prefix=${iid} instead of ${this.iid} in key ${prefixed_key}`)
+        return input.current()
     }
 }
 
