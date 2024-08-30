@@ -17,11 +17,10 @@ export class Sequence extends Item {    // Series?
        Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks. TODO
        A NoSQL counterpart of a table/index in a relational database.
 
-           Database > Ring > Sequence (data/index) > Stream > Block > Storage > Record
+           Database > Ring > Sequence (data/index) > Block > Storage > Record
      */
 
     ring                // parent Ring of this sequence
-    schema              // RecordSchema that defines keys and values of records in this Sequence
     splits              // array of split points between blocks
     blocks              // array of Blocks that make up this sequence
     flush_delay         // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)

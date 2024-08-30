@@ -62,12 +62,10 @@ export class Ring extends Item {
             ['idx_category_item', IndexByCategory.create(this, filename)],      // index of item IDs sorted by parent category ID
         ])
 
-        // for (let index of this.indexes.values())
-        //     await index.open(req.clone())
-
+        // // rebuild all indexes from the data sequence
         // for await (let record /*ItemRecord*/ of this.scan_all()) {
         //     for (let index of this.indexes.values()) {
-        //         const binary_key = this.data.schema.encode_key([record.id])
+        //         const binary_key = data_schema.encode_key([record.id])
         //         const change = new ChangeRequest(binary_key, null, record.data_json)
         //         await index.apply(change)
         //     }
@@ -159,7 +157,7 @@ export class Ring extends Item {
     }
 
     // async* scan_all() {
-    //     /* Yield all items of this ring as ItemRecord objects. */
+    //     /* Yield all items of this ring as ItemRecord objects. For rebuilding of indexes from scratch. */
     //     for await (let record of this.data_sequence.scan())
     //         yield ItemRecord.from_binary(record)
     // }
