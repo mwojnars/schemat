@@ -532,3 +532,14 @@
   _category_:
     "@": 17
   "@": schemat:Data
+- __id: 24
+  name: Operator
+  schema:
+    schema:
+      info: Schema of records produced by this operator, as an instance of
+        RecordSchema
+      "@": schemat/types/type.js:GENERIC
+    "@": schemat:Catalog
+  _category_:
+    "@": 0
+  "@": schemat:Data
