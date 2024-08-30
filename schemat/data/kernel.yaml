@@ -517,3 +517,18 @@
   _category_:
     "@": 0
   "@": schemat:Data
+- __id: 23
+  name: index-by-category
+  schema:
+    fields:
+      cid:
+        blank: true
+        "@": schemat/types/type.js:INTEGER
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    properties: []
+    "@": schemat/db/records.js:RecordSchema
+  _category_:
+    "@": 17
+  "@": schemat:Data
