@@ -389,9 +389,6 @@
       category:
         "@": 12
       "@": schemat/types/type.js:ITEM
-    schema:
-      info: schema of records in this sequence as RecordSchema
-      "@": schemat/types/type.js:GENERIC
     blocks:
       info: array of Blocks containing records of this sequence
       "@": schemat/types/type.js:GENERIC
