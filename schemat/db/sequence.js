@@ -39,7 +39,6 @@ export class Sequence extends Item {    // Series?
 
         if (CLIENT) return                                  // don't initialize internals when on client
         if (!this.ring) return                              // don't initialize internals when not yet assigned to a ring
-
         if (!this.ring.is_loaded()) this.ring.load()        // intentionally not awaited to avoid deadlocks
 
         // doing block.load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
