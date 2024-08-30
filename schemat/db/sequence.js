@@ -37,8 +37,10 @@ export class Sequence extends Item {    // Series?
         // TODO: drop __init__() and perform lazy loading of blocks
         //  (but block.load() must only use lower rings to search for the block! otherwise infinite recursion occurs)
 
-        if (CLIENT) return                                          // don't initialize internals when on client
-        if (!this.ring.is_loaded()) this.ring.load()                // intentionally not awaited to avoid deadlocks
+        if (CLIENT) return                                  // don't initialize internals when on client
+        if (!this.ring) return                              // don't initialize internals when not yet assigned to a ring
+
+        if (!this.ring.is_loaded()) this.ring.load()        // intentionally not awaited to avoid deadlocks
 
         // doing block.load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
         // doing the same later on may cause infinite recursion, because the load() request for a block may be directed
