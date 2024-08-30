@@ -2,6 +2,8 @@ import {data_schema} from "./records.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock, IndexBlock} from "./block.js";
 import {Item} from "../core/item.js";
+import {BinaryOutput, BinaryInput} from "../util/binary.js";
+import {INTEGER} from "../types/type.js";
 
 
 /**********************************************************************************************************************
@@ -107,6 +109,52 @@ export class Subsequence {
        by a constant: the IID of the Operator that produced this subsequence. As a thin wrapper around the underlying
        physical (sub)sequence, this class is NOT stored in the DB, and does NOT inherit from Sequence nor Item.
      */
+
+    base_sequence               // the underlying Sequence
+    iid                         // IID of the Operator that produced this subsequence
+
+    static iid_type = new INTEGER({blank: false})       // for encoding/decoding the IID using variable-length encoding
+
+    constructor(iid, base_sequence) {
+        this.base_sequence = base_sequence
+        this.iid = iid
+    }
+
+    async put(req) {
+        let prefixed_key = this._prefix_key(req.args.key)
+        let modified_req = req.safe_step(this, 'put', {...req.args, key: prefixed_key})
+        return this.base_sequence.put(modified_req)
+    }
+
+    async del(req) {
+        let prefixed_key = this._prefix_key(req.args.key)
+        let modified_req = req.safe_step(this, 'del', {...req.args, key: prefixed_key})
+        return this.base_sequence.del(modified_req)
+    }
+
+    async* scan_binary(opts = {}) {
+        let start = opts.start ? this._prefix_key(opts.start) : null
+        let stop = opts.stop ? this._prefix_key(opts.stop) : null
+
+        let base_scan = this.base_sequence.scan_binary({...opts, start, stop})
+
+        for await (let [key, value] of base_scan)
+            yield [this._unprefix_key(key), value]
+    }
+
+    _prefix_key(key) {
+        let output = new BinaryOutput()
+        Subsequence.iid_type.encode(output, this.iid)
+        output.write(key)
+        return output.result()
+    }
+
+    _unprefix_key(prefixed_key) {
+        let input = new BinaryInput(prefixed_key)
+        let iid = Subsequence.iid_type.decode(input)
+        assert(iid === this.iid, `invalid subsequence key: ${prefixed_key}, found IID prefix=${iid} instead of ${this.iid}`)
+        return prefixed_key.slice(input.pos)
+    }
 }
 
 /**********************************************************************************************************************/
