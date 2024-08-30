@@ -222,6 +222,10 @@ export class ChangeRequest {
 export class RecordSchema {
     /* Schema of records in a Sequence. Defines the key and value to be stored in records. */
 
+    // key_types
+    // key_names
+    // value_names
+
     fields              // {name: type}, a Map of names and Types of fields to be included in the sequence's key
     properties          // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
 

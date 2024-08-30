@@ -141,6 +141,7 @@ export class Ring extends Item {
         /* Propagate a change in this ring's data to all indexes. The change is submitted by a child block of the data_sequence. */
         let seq = this.index_sequence
         for (const index of this.indexes.values())      // ... of this.ring.all_indexes
+            // let seq = Subsequence(index.iid, this.index_sequence)
             index.apply(change, seq)                    // no need to await, the result is not used by the caller
     }
 

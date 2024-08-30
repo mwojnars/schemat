@@ -102,7 +102,7 @@ export class IndexSequence extends Sequence {
     }
 }
 
-export class LogicalSequence {
+export class Subsequence {
     /* A sequence of binary key-value pairs that is physically stored as a subsequence of another Sequence, with keys prefixed
        by a constant: the IID of the Operator that produced this subsequence. As a thin wrapper around the underlying
        physical (sub)sequence, this class is NOT stored in the DB, and does NOT inherit from Sequence nor Item.

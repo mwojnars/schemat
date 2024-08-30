@@ -30,7 +30,7 @@ export class Index extends Operator {
     //     source.add_derived(this)                // make connection: data > index, for change propagation
     // }
 
-    apply(change, sequence, ring) {
+    apply(change, sequence /*Sequence or Subsequence*/, ring) {
         /* Update the target `sequence` of this operator+ring combination to apply a change that originated
            in the source sequence of this operator. */
 
