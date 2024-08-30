@@ -11,9 +11,8 @@ import {DataRequest} from "./data_request.js";
 /**********************************************************************************************************************/
 
 export class Operator extends Item {
-    record_schema       // RecordSchema that defines keys and values of records produced by this operator
 
-    get schema() { return this.record_schema }
+    record_schema       // RecordSchema that defines keys and values of records produced by this operator
 }
 
 
@@ -93,7 +92,7 @@ export class Index extends Operator {
 
     _source_schema() {
         throw new Error('not implemented')
-        // return this.source.schema
+        // return this.source.record_schema
     }
 
     *map_record(input_record) {
@@ -108,11 +107,13 @@ export class Index extends Operator {
            See Sequence.scan() for details.
          */
         let {start, stop} = opts
-        start = start && this.schema.encode_key(start)      // convert `start` and `stop` to binary keys (Uint8Array)
-        stop = stop && this.schema.encode_key(stop)
+        let rschema = this.record_schema
+
+        start = start && rschema.encode_key(start)          // convert `start` and `stop` to binary keys (Uint8Array)
+        stop = stop && rschema.encode_key(stop)
 
         for await (let [key, value] of sequence.scan_binary({...opts, start, stop}))
-            yield new BinaryRecord(this.schema, key, value)
+            yield new BinaryRecord(rschema, key, value)
     }
 }
 
@@ -141,7 +142,7 @@ export class PrimaryIndexSequence extends Index {
 
         const value = this.generate_value(item_record)
         for (const key of this.generate_keys(item_record))
-            yield new PlainRecord(this.schema, key, value)
+            yield new PlainRecord(this.record_schema, key, value)
     }
 
     accept(record) {
@@ -152,8 +153,9 @@ export class PrimaryIndexSequence extends Index {
         /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
            If undefined is returned, the record will consist of a key only.
          */
-        if (this.schema.no_value()) return undefined
-        let entries = this.schema.properties.map(prop => [prop, item_record.data.get(prop)])     // only the first value of a repeated field is included (!)
+        let rschema = this.record_schema
+        if (rschema.no_value()) return undefined
+        let entries = rschema.properties.map(prop => [prop, item_record.data.get(prop)])     // only the first value of a repeated field is included (!)
         return Object.fromEntries(entries)
     }
 
@@ -164,7 +166,7 @@ export class PrimaryIndexSequence extends Index {
         let field_values = []
         let data = item_record.data
 
-        for (const field of this.schema.field_names) {
+        for (const field of this.record_schema.field_names) {
             const values = data.get_all(field)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && field_values.length)
@@ -186,7 +188,7 @@ export class IndexByCategory extends PrimaryIndexSequence {
 
     static _category_ = 17
 
-    schema = new RecordSchema(new Map([
+    record_schema = new RecordSchema(new Map([
         ['cid', new INTEGER({blank: true})],
         ['id',  new INTEGER()],
     ]));
