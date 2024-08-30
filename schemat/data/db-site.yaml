@@ -143,20 +143,10 @@
 - __id: 1013
   ring:
     "@": 1003
-  schema:
-    fields:
-      cid:
-        blank: true
-        "@": schemat/types/type.js:INTEGER
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 1026
   _category_:
-    "@": 17
+    "@": 22
   "@": schemat:Data
 - __id: 1014
   name: main-space
@@ -205,20 +195,10 @@
 - __id: 1018
   ring:
     "@": 1016
-  schema:
-    fields:
-      cid:
-        blank: true
-        "@": schemat/types/type.js:INTEGER
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 1030
   _category_:
-    "@": 17
+    "@": 22
   "@": schemat:Data
 - __id: 1019
   name: /system
@@ -300,20 +280,10 @@
 - __id: 1028
   ring:
     "@": 1004
-  schema:
-    fields:
-      cid:
-        blank: true
-        "@": schemat/types/type.js:INTEGER
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    "@": schemat/db/records.js:RecordSchema
   blocks:
     - "@": 1033
   _category_:
-    "@": 17
+    "@": 22
   "@": schemat:Data
 - __id: 1029
   sequence:
