@@ -57,9 +57,9 @@ export class Ring extends Item {
         this.index_sequence = IndexSequence.create(this, filename)
         await this.index_sequence.open()
 
-        this.indexes = new Map([
-            ['idx_category_item', IndexByCategory.create(this, filename)],      // index of item IDs sorted by parent category ID
-        ])
+        // this.indexes = new Map([
+        //     ['idx_category_item', IndexByCategory.create(this, filename)],      // index of item IDs sorted by parent category ID
+        // ])
 
         // // rebuild all indexes from the data sequence
         // for await (let record /*ItemRecord*/ of this.scan_all()) {
@@ -77,8 +77,14 @@ export class Ring extends Item {
         print(`... ring loaded [${this._id_}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
         await this.data_sequence.load()
         await this.index_sequence.load()
-        for (let index of this.indexes.values())
+
+        this._subsequences = new Map()          // (temporary) a map {iid: Subsequence} of logical sequences for each index
+
+        for (let index of this.indexes.values()) {
             await index.load()
+            let subsequence = new Subsequence(index.iid, this.index_sequence)
+            this._subsequences.set(index.iid, subsequence)
+        }
     }
 
     async erase(req) {
@@ -139,9 +145,8 @@ export class Ring extends Item {
 
     propagate(req, change /*ChangeRequest*/) {
         /* Propagate a change in this ring's data to all indexes. The change is submitted by a child block of the data_sequence. */
-        // let seq = this.index_sequence
-        for (const index of this.indexes.values()) {     // ... of this.ring.all_indexes
-            let seq = new Subsequence(index.iid, this.index_sequence)
+        for (const index of this.indexes.values()) {
+            let seq = this._subsequences.get(index.iid)
             index.apply(change, seq)                    // no need to await, the result is not used by the caller
         }
     }
@@ -152,9 +157,8 @@ export class Ring extends Item {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
-        // let seq = this.index_sequence
-        let index = this.indexes.get(name)      // Index object
-        let seq = new Subsequence(index.iid, this.index_sequence)
+        let index = this.indexes.get(name)              // Index object
+        let seq = this._subsequences.get(index.iid)
         yield* index.scan(seq, {start, stop, limit, reverse, batch_size})
     }
 
