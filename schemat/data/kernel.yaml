@@ -442,8 +442,6 @@
   name: IndexByCategory
   info: "Index that maps categories to member objects: the key is [category ID,
     item ID]."
-  schema:
-    "@": schemat:Catalog
   defaults:
     _class_: schemat/db/indexes.js:IndexByCategory
     "@": schemat:Catalog
