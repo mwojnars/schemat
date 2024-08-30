@@ -426,7 +426,7 @@
       "@": schemat/types/type.js:ITEM
     "@": schemat:Catalog
   _extends_:
-    "@": 13
+    "@": 24
   _category_:
     "@": 0
   "@": schemat:Data

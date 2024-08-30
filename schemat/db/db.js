@@ -62,8 +62,8 @@ export class Ring extends Item {
             ['idx_category_item', IndexByCategory.create(this, filename)],      // index of item IDs sorted by parent category ID
         ])
 
-        for (let index of this.indexes.values())
-            await index.open(req.clone())
+        // for (let index of this.indexes.values())
+        //     await index.open(req.clone())
 
         // for await (let record /*ItemRecord*/ of this.scan_all()) {
         //     for (let index of this.indexes.values()) {
