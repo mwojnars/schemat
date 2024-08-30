@@ -2,8 +2,6 @@ import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../types/type.js";
 import {ItemRecord, PlainRecord, RecordSchema, BinaryRecord, data_schema} from "./records.js";
-import {IndexBlock} from "./block.js";
-import {Sequence} from "./sequence.js";
 import {DataRequest} from "./data_request.js";
 
 
@@ -26,16 +24,12 @@ export class Index extends Operator {
     static role = 'index'       // for use in ProcessingStep and DataRequest
 
     // source                      // Sequence that this index is derived from
-
-    __create__(ring, filename) {
-        super.__create__(ring)
-        assert(filename.endsWith('.jl'))
-        this.blocks = [IndexBlock.create(this, filename)]
-
-        // this.source = source
-        // assert(source instanceof Sequence)
-        // source.add_derived(this)                // make connection: data > index, for change propagation
-    }
+    //
+    // __create__(source) {
+    //     this.source = source
+    //     assert(source instanceof Operator)
+    //     source.add_derived(this)                // make connection: data > index, for change propagation
+    // }
 
     apply(change, sequence, ring) {
         /* Update the target `sequence` of this operator+ring combination to apply a change that originated
