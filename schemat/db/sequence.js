@@ -153,7 +153,7 @@ export class Subsequence {
     _unprefix_key(prefixed_key) {
         let input = new BinaryInput(prefixed_key)
         let iid = Subsequence.iid_type.decode_uint(input)
-        assert(iid === this.iid, `invalid subsequence key, found IID prefix=${iid} instead of ${this.iid} in key ${prefixed_key}`)
+        if (iid !== this.iid) throw new Error(`Invalid subsequence key, found IID prefix=${iid} instead of ${this.iid} in key ${prefixed_key}`)
         return input.current()
     }
 }
