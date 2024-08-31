@@ -39,7 +39,7 @@
   indexes:
     idx_category_item:
       "@": 23
-    "@": :Map
+    "@": schemat:Catalog
   readonly: false
   start_id: 0
   stop_id: 1000
@@ -55,7 +55,7 @@
   indexes:
     idx_category_item:
       "@": 23
-    "@": :Map
+    "@": schemat:Catalog
   readonly: false
   start_id: 1001
   stop_id: 5000
@@ -177,7 +177,7 @@
   indexes:
     idx_category_item:
       "@": 23
-    "@": :Map
+    "@": schemat:Catalog
   readonly: false
   start_id: 5000
   stop_id: null

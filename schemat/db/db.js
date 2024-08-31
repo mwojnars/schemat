@@ -5,7 +5,7 @@ import {IndexByCategory} from "./indexes.js";
 import {Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence, IndexSequence, Subsequence} from "./sequence.js";
-import {Data} from "../core/data.js";
+import {Catalog, Data} from "../core/data.js";
 
 
 /**********************************************************************************************************************
@@ -21,7 +21,7 @@ export class Ring extends Item {
 
     data_sequence           // DataSequence containing all primary data of this ring
     index_sequence          // IndexSequence containing all indexes of this ring ordered by index IID and concatenated; each record key is prefixed with its index's IID
-    indexes = new Map()     // {name: Index} map of all derived indexes of this ring
+    indexes = new Catalog() // {name: Index} map of all derived indexes of this ring
 
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
