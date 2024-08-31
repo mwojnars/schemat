@@ -7,9 +7,9 @@
     "@": 1002
   entries:
     apps:
-      "@": 1009
+      "@": 5006
     site:
-      "@": 1010
+      "@": 5007
     system:
       "@": 1019
     "*domain":
@@ -67,7 +67,7 @@
   _category_:
     "@": 3
   _container_:
-    "@": 1010
+    "@": 5007
   "@": schemat:Data
 - __id: 1006
   content: |-
@@ -78,7 +78,7 @@
   _category_:
     "@": 3
   _container_:
-    "@": 1010
+    "@": 5007
   "@": schemat:Data
 - __id: 1007
   name: favicon.ico
@@ -93,31 +93,7 @@
   _category_:
     "@": 5
   _container_:
-    "@": 1009
-  "@": schemat:Data
-- __id: 1009
-  name: /apps
-  entries:
-    demo:
-      "@": 1008
-    "@": schemat:Catalog
-  _category_:
-    "@": 5
-  _container_:
-    "@": 1001
-  "@": schemat:Data
-- __id: 1010
-  name: /site
-  entries:
-    utils.js:
-      "@": 1005
-    widgets.js:
-      "@": 1006
-    "@": schemat:Catalog
-  _category_:
-    "@": 5
-  _container_:
-    "@": 1001
+    "@": 5006
   "@": schemat:Data
 - __id: 1011
   name: domain

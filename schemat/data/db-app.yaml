@@ -106,3 +106,27 @@
   _category_:
     "@": 0
   "@": schemat:Data
+- __id: 5006
+  name: /apps
+  entries:
+    demo:
+      "@": 1008
+    "@": schemat:Catalog
+  _category_:
+    "@": 5
+  _container_:
+    "@": 1001
+  "@": schemat:Data
+- __id: 5007
+  name: /site
+  entries:
+    utils.js:
+      "@": 1005
+    widgets.js:
+      "@": 1006
+    "@": schemat:Catalog
+  _category_:
+    "@": 5
+  _container_:
+    "@": 1001
+  "@": schemat:Data
