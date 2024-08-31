@@ -62,24 +62,6 @@
   _category_:
     "@": 12
   "@": schemat:Data
-- __id: 1005
-  content: export let print = console.log
-  _category_:
-    "@": 3
-  _container_:
-    "@": 5007
-  "@": schemat:Data
-- __id: 1006
-  content: |-
-    import {print} from '../site/utils.js'
-    export function check() { print('called widgets.js:check()') } 
-    //let fs = await import('fs')
-    //print('fs:',fs)
-  _category_:
-    "@": 3
-  _container_:
-    "@": 5007
-  "@": schemat:Data
 - __id: 1007
   name: favicon.ico
   local_path: ./assets/favicon.ico
@@ -87,13 +69,6 @@
     "@": 4
   _container_:
     "@": 1011
-  "@": schemat:Data
-- __id: 1008
-  name: /demo
-  _category_:
-    "@": 5
-  _container_:
-    "@": 5006
   "@": schemat:Data
 - __id: 1011
   name: domain

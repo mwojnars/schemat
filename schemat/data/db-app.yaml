@@ -110,7 +110,7 @@
   name: /apps
   entries:
     demo:
-      "@": 1008
+      "@": 5010
     "@": schemat:Catalog
   _category_:
     "@": 5
@@ -121,12 +121,37 @@
   name: /site
   entries:
     utils.js:
-      "@": 1005
+      "@": 5008
     widgets.js:
-      "@": 1006
+      "@": 5009
     "@": schemat:Catalog
   _category_:
     "@": 5
   _container_:
     "@": 1001
+  "@": schemat:Data
+- __id: 5008
+  content: export let print = console.log
+  _category_:
+    "@": 3
+  _container_:
+    "@": 5007
+  "@": schemat:Data
+- __id: 5009
+  content: |-
+    import {print} from '../site/utils.js'
+    export function check() { print('called widgets.js:check()') } 
+    //let fs = await import('fs')
+    //print('fs:',fs)
+  _category_:
+    "@": 3
+  _container_:
+    "@": 5007
+  "@": schemat:Data
+- __id: 5010
+  name: /demo
+  _category_:
+    "@": 5
+  _container_:
+    "@": 5006
   "@": schemat:Data
