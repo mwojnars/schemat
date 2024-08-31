@@ -264,7 +264,7 @@
 - __id: 1026
   sequence:
     "@": 1013
-  filename: ./schemat/data/kernel.idx_category_item.jl
+  filename: ./schemat/data/kernel.index.jl
   format: index-jl
   _category_:
     "@": 20
@@ -296,7 +296,7 @@
 - __id: 1030
   sequence:
     "@": 1018
-  filename: ./demo/01_books/data/db-app.idx_category_item.jl
+  filename: ./demo/01_books/data/db-app.index.jl
   format: index-jl
   _category_:
     "@": 20
@@ -313,7 +313,7 @@
 - __id: 1033
   sequence:
     "@": 1028
-  filename: ./demo/01_books/data/db-site.idx_category_item.jl
+  filename: ./demo/01_books/data/db-site.index.jl
   format: index-jl
   _category_:
     "@": 20

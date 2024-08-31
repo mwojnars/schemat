@@ -52,7 +52,7 @@ export class Ring extends Item {
         this.data_sequence = DataSequence.create(this, this._file)
         await this.data_sequence.open()
 
-        let filename = this._file.replace(/\.yaml$/, '.idx_category_item.jl')
+        let filename = this._file.replace(/\.yaml$/, '.index.jl')
 
         this.index_sequence = IndexSequence.create(this, filename)
         await this.index_sequence.open()

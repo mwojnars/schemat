@@ -59,7 +59,7 @@ async function create_demo_01() {
     fs.writeFileSync(`${demo_dir}/data/db-site.yaml`, db, 'utf8')
     
     // copy the index file
-    fs.copyFileSync(`${root_dir}/schemat/data/db-site.idx_category_item.jl`, `${demo_dir}/data/db-site.idx_category_item.jl`)
+    fs.copyFileSync(`${root_dir}/schemat/data/db-site.index.jl`, `${demo_dir}/data/db-site.index.jl`)
 }
 
 async function create_demo(demo_id) {
