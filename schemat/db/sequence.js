@@ -89,6 +89,10 @@ export class Sequence extends Item {    // Series?
         // if (!block.is_loaded()) block = await block.load()
         yield* block.scan({start, stop})
     }
+
+    async erase(req)   { return Promise.all(this.blocks.map(b => b.erase(req.make_step(this)))) }
+    // async erase(req)   { return Promise.all(this.blocks.map(async b => (await b.load()).erase(req.make_step(this)))) }
+    // async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
 }
 
 
@@ -204,8 +208,4 @@ export class DataSequence extends Sequence {
 
         return block[command].call(block, req)
     }
-
-    async erase(req)   { return Promise.all(this.blocks.map(b => b.erase(req.make_step(this)))) }
-    // async erase(req)   { return Promise.all(this.blocks.map(async b => (await b.load()).erase(req.make_step(this)))) }
-    // async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
 }

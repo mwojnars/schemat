@@ -61,14 +61,7 @@ export class Ring extends Item {
         //     ['idx_category_item', IndexByCategory.create(this, filename)],      // index of item IDs sorted by parent category ID
         // ])
 
-        // // rebuild all indexes from the data sequence
-        // for await (let record /*ItemRecord*/ of this.scan_all()) {
-        //     for (let index of this.indexes.values()) {
-        //         const binary_key = data_schema.encode_key([record.id])
-        //         const change = new ChangeRequest(binary_key, null, record.data_json)
-        //         await index.apply(change)
-        //     }
-        // }
+        // await this.rebuild_indexes()
     }
 
     async __init__() {
@@ -86,6 +79,19 @@ export class Ring extends Item {
             this._subsequences.set(index.iid, subsequence)
         }
     }
+
+    // async rebuild_indexes() {
+    //     // rebuild all indexes from the data sequence
+    //     await this.index_sequence.erase()
+    //     for await (let record /*ItemRecord*/ of this.scan_all()) {
+    //         // TODO: use this._subsequences here...
+    //         for (let index of this.indexes.values()) {
+    //             const binary_key = data_schema.encode_key([record.id])
+    //             const change = new ChangeRequest(binary_key, null, record.data_json)
+    //             await index.apply(change)
+    //         }
+    //     }
+    // }
 
     async erase(req) {
         /* Remove all records from this ring; open() should be called first. */
