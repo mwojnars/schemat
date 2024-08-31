@@ -6,10 +6,6 @@
   database:
     "@": 1002
   entries:
-    apps:
-      "@": 1009
-    site:
-      "@": 1010
     system:
       "@": 1019
     "*domain":
@@ -62,24 +58,6 @@
   _category_:
     "@": 12
   "@": schemat:Data
-- __id: 1005
-  content: export let print = console.log
-  _category_:
-    "@": 3
-  _container_:
-    "@": 1010
-  "@": schemat:Data
-- __id: 1006
-  content: |-
-    import {print} from '../site/utils.js'
-    export function check() { print('called widgets.js:check()') } 
-    //let fs = await import('fs')
-    //print('fs:',fs)
-  _category_:
-    "@": 3
-  _container_:
-    "@": 1010
-  "@": schemat:Data
 - __id: 1007
   name: favicon.ico
   local_path: ./assets/favicon.ico
@@ -87,37 +65,6 @@
     "@": 4
   _container_:
     "@": 1011
-  "@": schemat:Data
-- __id: 1008
-  name: /demo
-  _category_:
-    "@": 5
-  _container_:
-    "@": 1009
-  "@": schemat:Data
-- __id: 1009
-  name: /apps
-  entries:
-    demo:
-      "@": 1008
-    "@": schemat:Catalog
-  _category_:
-    "@": 5
-  _container_:
-    "@": 1001
-  "@": schemat:Data
-- __id: 1010
-  name: /site
-  entries:
-    utils.js:
-      "@": 1005
-    widgets.js:
-      "@": 1006
-    "@": schemat:Catalog
-  _category_:
-    "@": 5
-  _container_:
-    "@": 1001
   "@": schemat:Data
 - __id: 1011
   name: domain
