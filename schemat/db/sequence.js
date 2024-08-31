@@ -1,4 +1,4 @@
-import {data_schema} from "./records.js";
+import {BinaryRecord, data_schema} from "./records.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock, IndexBlock} from "./block.js";
 import {Item} from "../core/item.js";
@@ -209,3 +209,31 @@ export class DataSequence extends Sequence {
         return block[command].call(block, req)
     }
 }
+
+
+/**********************************************************************************************************************/
+
+export class Operator extends Item {
+
+    record_schema       // RecordSchema that defines keys and values of records produced by this operator
+
+    async* scan(sequence, opts = {}) {
+        /* Scan this operator's output in the [`start`, `stop`) range and yield BinaryRecords. See Sequence.scan() for details. */
+        let {start, stop} = opts
+        let rschema = this.record_schema
+
+        start = start && rschema.encode_key(start)          // convert `start` and `stop` to binary keys (Uint8Array)
+        stop = stop && rschema.encode_key(stop)
+
+        for await (let [key, value] of sequence.scan_binary({...opts, start, stop}))
+            yield new BinaryRecord(rschema, key, value)
+    }
+}
+
+export class DataOperator extends Operator {
+    /* Operator that scans the main data sequence. */
+
+    record_schema = data_schema
+}
+
+

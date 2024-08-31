@@ -1,20 +1,15 @@
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../types/type.js";
-import {ItemRecord, PlainRecord, RecordSchema, BinaryRecord, data_schema} from "./records.js";
+import {ItemRecord, PlainRecord, RecordSchema, data_schema} from "./records.js";
 import {DataRequest} from "./data_request.js";
+import {Operator} from "./sequence.js";
 
 
 // Section, Block, Partition ... Aggregate
 
 
 /**********************************************************************************************************************/
-
-export class Operator extends Item {
-
-    record_schema       // RecordSchema that defines keys and values of records produced by this operator
-}
-
 
 export class Index extends Operator {
     /* Sequence of records consisting of a binary `key` and a json `value`. The sequence is sorted by the key and
@@ -100,20 +95,6 @@ export class Index extends Operator {
            of output Records to be stored in the index.
          */
         throw new Error('not implemented')
-    }
-
-    async* scan(sequence, opts = {}) {
-        /* Scan this operator's output in the [`start`, `stop`) range and yield BinaryRecords.
-           See Sequence.scan() for details.
-         */
-        let {start, stop} = opts
-        let rschema = this.record_schema
-
-        start = start && rschema.encode_key(start)          // convert `start` and `stop` to binary keys (Uint8Array)
-        stop = stop && rschema.encode_key(stop)
-
-        for await (let [key, value] of sequence.scan_binary({...opts, start, stop}))
-            yield new BinaryRecord(rschema, key, value)
     }
 }
 
