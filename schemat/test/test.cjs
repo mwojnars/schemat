@@ -224,33 +224,34 @@ describe('Schemat Tests', function () {
             await page.waitForSelector(input, {visible: true})
             await delay(100)            // without this delay, the typing of 'TestItem' has no effect and the name submitted is empty!
 
+            const name = `TestItem_${Math.floor(Math.random() * 10000)}`
             await page.focus(input)
-            await page.type(input, 'TestItem_(&$%#@!^)')
+            await page.type(input, `${name}_(&$%#@!^)`)
                     
             // click the "Create Item" button
             await page.click('button[type="submit"]')
             await delay(100)
 
-            // check that the new item's name showed up (but maybe as the contents of the input field, not a static text!)
+            // check that the new item's name showed up
             let page_content = await extract_content(page)
-            expect(page_content).to.include('TestItem')
+            expect(page_content).to.include(name)
 
             // check that the new item's name showed up as a link
-            const test_item_exists = await page.evaluate(() => {
+            const test_item_exists = await page.evaluate((_name) => {
                 const links = Array.from(document.querySelectorAll('a:not(input)'))
-                return links.some(link => link.textContent.includes('TestItem'))
-            })
+                return links.some(link => link.textContent.includes(_name))
+            }, name)
             expect(test_item_exists).to.be.true
 
             // find and click the "Delete" button next to the newly created item
-            let delete_buttons = await page.$x(`//*[contains(text(), 'TestItem')]/following::button`)
+            let delete_buttons = await page.$x(`//*[contains(text(), '${name}')]/following::button`)
             expect(delete_buttons.length).to.be.greaterThan(0)
             await delete_buttons[0].click()
-            await delay(200)
+            await delay(100)
             
             // check that the new item disappeared from the list
             let updated_content = await extract_content(page)
-            expect(updated_content).to.not.include('TestItem')
+            expect(updated_content).to.not.include(name)
         })
 
         
