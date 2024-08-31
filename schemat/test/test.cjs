@@ -215,7 +215,45 @@ describe('Schemat Tests', function () {
             await test_page(page, `${DOMAIN}/system/default/5001::test_html`, null, ['Test Page', 'Headings', 'First item'])
         })
 
+        it('create & delete item in Varia', async function () {
+            // navigate to the Varia category page
+            await test_page(page, `${DOMAIN}/sys.category:5000`, '#page-main')
 
+            // type the name of the new item
+            const input = 'input[name="name"]'
+            await page.waitForSelector(input, {visible: true})
+            await delay(100)            // without this delay, the typing of 'TestItem' has no effect and the name submitted is empty!
+
+            await page.focus(input)
+            await page.type(input, 'TestItem_(&$%#@!^)')
+                    
+            // click the "Create Item" button
+            await page.click('button[type="submit"]')
+            await delay(100)
+
+            // check that the new item's name showed up (but maybe as the contents of the input field, not a static text!)
+            let page_content = await extract_content(page)
+            expect(page_content).to.include('TestItem')
+
+            // check that the new item's name showed up as a link
+            const test_item_exists = await page.evaluate(() => {
+                const links = Array.from(document.querySelectorAll('a:not(input)'))
+                return links.some(link => link.textContent.includes('TestItem'))
+            })
+            expect(test_item_exists).to.be.true
+
+            // find and click the "Delete" button next to the newly created item
+            let delete_buttons = await page.$x(`//*[contains(text(), 'TestItem')]/following::button`)
+            expect(delete_buttons.length).to.be.greaterThan(0)
+            await delete_buttons[0].click()
+            await delay(200)
+            
+            // check that the new item disappeared from the list
+            let updated_content = await extract_content(page)
+            expect(updated_content).to.not.include('TestItem')
+        })
+
+        
         // describe('UI Actions on sys.category:1000', function () {
         //     before(async function () {
         //         await page.goto('http://127.0.0.1:3000/sys.category:1000')
