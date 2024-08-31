@@ -6,10 +6,6 @@
   database:
     "@": 1002
   entries:
-    apps:
-      "@": 5006
-    site:
-      "@": 5007
     system:
       "@": 1019
     "*domain":
