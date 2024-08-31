@@ -57,7 +57,7 @@ export class Ring extends Item {
         this.index_sequence = IndexSequence.create(this, filename)
         await this.index_sequence.open()
 
-        // this.indexes = new Map([
+        // this.indexes = new Catalog([
         //     ['idx_category_item', IndexByCategory.create(this, filename)],      // index of item IDs sorted by parent category ID
         // ])
 
