@@ -417,11 +417,6 @@
 - __id: 15
   name: Index
   info: Base category for indexes over the data sequence.
-  schema:
-    source:
-      info: source Sequence that feeds data to this index
-      "@": schemat/types/type.js:ITEM
-    "@": schemat:Catalog
   _extends_:
     "@": 24
   _category_:
@@ -530,6 +525,9 @@
 - __id: 24
   name: Operator
   schema:
+    source:
+      info: source Sequence that feeds data to this index
+      "@": schemat/types/type.js:ITEM
     record_schema:
       info: Schema of records produced by this operator, as an instance of
         RecordSchema
