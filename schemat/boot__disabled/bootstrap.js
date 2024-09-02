@@ -55,8 +55,8 @@ async function create_categories(Category) {
             format      : new STRING(),    // ProgrammingLanguage()
         }),
     })
-    cat.FileLocal = await Category.new(4, {
-        name        : "FileLocal",
+    cat.LocalFile = await Category.new(4, {
+        name        : "LocalFile",
         info        : "File located on a local disk, identified by its local file path.",
         _extends_   : cat.File,
         fields      : C({

@@ -92,7 +92,7 @@ export class File extends Item {
 }
 
 
-export class FileLocal extends File {
+export class LocalFile extends File {
 
     local_path
 

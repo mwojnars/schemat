@@ -216,7 +216,7 @@
     "@": 0
   "@": schemat:Data
 - __id: 4
-  name: FileLocal
+  name: LocalFile
   info: File located on a local disk, identified by its local file path.
   _extends_:
     "@": 3
@@ -225,7 +225,7 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/std/files.js:FileLocal
+    _class_: schemat/std/files.js:LocalFile
     "@": schemat:Catalog
   _category_:
     "@": 0
