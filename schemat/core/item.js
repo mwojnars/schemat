@@ -168,13 +168,14 @@ class ItemProxy {
     }
 
     static set_cachable_getters(constructor) {
-        return constructor.cachable_getters = new Set(
-            Object.getOwnPropertyNames(constructor.prototype)
+        const prototype = constructor.prototype
+        const parent_getters = constructor.__proto__?.cachable_getters || []
+        const own_getters = Object.getOwnPropertyNames(prototype)
                 .filter(prop => {
-                    const descriptor = Object.getOwnPropertyDescriptor(constructor.prototype, prop)
+                    const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
                     return descriptor && typeof descriptor.get === 'function' && !['_id_', 'iid', '_record_'].includes(prop)
                 })
-        )
+        return constructor.cachable_getters = new Set([...parent_getters, ...own_getters])
     }
 
     static proxy_get(target, prop, receiver) {
@@ -185,10 +186,11 @@ class ItemProxy {
             return value.value
         }
 
-        let getters = target.constructor.hasOwnProperty('cachable_getters') ? target.constructor.cachable_getters : undefined
+        let constructor = target.constructor
+        let getters = constructor.hasOwnProperty('cachable_getters') ? constructor.cachable_getters : undefined
         if (!getters) {
-            getters = ItemProxy.set_cachable_getters(target.constructor)
-            print('cachable_getters:', Array.from(getters))
+            getters = ItemProxy.set_cachable_getters(constructor)
+            // print('cachable_getters:', Array.from(getters))
         }
 
         // check if the value comes from a cachable getter?
