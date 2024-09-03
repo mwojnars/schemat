@@ -352,14 +352,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     get _record_() {
         this.assert_linked()
         this.assert_loaded()
-        let record = this._record_ = new ItemRecord(this._id_, this._data_)
-        return {[ItemProxy.FROM_CACHE]: true, value: record}        // caching in ItemProxy makes the property immutable, while we still may want to store a better record found in _load()
-        // return this._record_ = new ItemRecord(this._id_, this._data_)
+        return new ItemRecord(this._id_, this._data_)
     }
     set _record_(record) {
         assert(record)
         assert(record.id === this._id_)
-        let cached = {[ItemProxy.FROM_CACHE]: true, value: record}
+        let cached = {[ItemProxy.FROM_CACHE]: true, value: record}      // caching in ItemProxy makes the property immutable, while we still may want to store a better record found in _load(), hence manual caching here with writable=true
         Object.defineProperty(this._self_, '_record_', {value: cached, writable: true})
     }
 
