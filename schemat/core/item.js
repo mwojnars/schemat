@@ -173,7 +173,7 @@ class ItemProxy {
         const own_getters = Object.getOwnPropertyNames(prototype)
                 .filter(prop => {
                     const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
-                    return descriptor && typeof descriptor.get === 'function' && !['_id_', 'iid', '_record_'].includes(prop)
+                    return descriptor && typeof descriptor.get === 'function' && !['_record_'].includes(prop)
                 })
         return constructor.cachable_getters = new Set([...parent_getters, ...own_getters])
     }
@@ -315,8 +315,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     (some of the props below have getters defined, so they must be commented out not to mask the getters)
 
-    _id_                    database ID of the object, globally unique; undefined in a newly created item; should never be changed
-                            for an existing item, that's why the property is set to read-only after the first assignment
+    _id_                    database ID of the object, globally unique; undefined in a newly created item; must never be changed for an existing item
 
     _record_                ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
                             undefined in a newborn item; immutable after the first assignment
@@ -342,10 +341,17 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     // it is assumed that if this._id_ exists, the object is ALREADY stored in the DB (is "linked");
     // for a newly created object that already has an ID assigned, but is not yet (fully) saved to DB, the ID must be kept
     // in _meta_.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
-    get _id_()   { return undefined }
+
+    // get _id_()   { return undefined }
+    // set _id_(id) {
+    //     if (id === undefined) return
+    //     Object.defineProperty(this._self_, '_id_', {value: id, writable: false})
+    // }
+
     set _id_(id) {
-        if (id === undefined) return
-        Object.defineProperty(this._self_, '_id_', {value: id, writable: false})
+        let prev = this._id_
+        if (prev !== undefined && prev !== id) throw new Error(`object ID is read-only and can't be changed from ${prev} to ${id}`)
+        if (id !== undefined) Object.defineProperty(this, '_id_', {value: id, writable: false})
     }
 
     get iid() { return this._id_ }       // alias for _id_
@@ -353,6 +359,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     get _record_() {
         this.assert_linked()
         this.assert_loaded()
+        // let record = this._record_ = new ItemRecord(this._id_, this._data_)
+        // return {[ItemProxy.NO_CACHING]: true, value: record}        // auto-caching makes the property immutable, while we still may want to store a "better" record found in _load()
         return this._record_ = new ItemRecord(this._id_, this._data_)
     }
     set _record_(record) {
