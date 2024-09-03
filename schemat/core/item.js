@@ -833,6 +833,15 @@ export class Item {
     }
 
 
+    __validate__() {}
+        /* Validate this object's properties before inserting to the database. Called *after* validation of individual values through their schema. */
+
+    __setup__() {}
+        /* Custom setup after this object is created AND inserted to the database. Called once site-wise right after the insertion is committed. */
+
+    __teardown__() {}
+        /* Custom tear down that is executed right after this object is deleted from the database. */
+
     __init__() {}
         /* Optional item-specific initialization after this._data_ is loaded.
            Subclasses may override this method as either sync or async.
