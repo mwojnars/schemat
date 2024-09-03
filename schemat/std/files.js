@@ -131,9 +131,7 @@ export class LocalDirectory extends Directory {
 
     get _ext_allowed() {
         print('this.extensions_allowed:', this.extensions_allowed)
-        let exts = this.extensions_allowed.toLowerCase().split(/[ ,;:]+/)
-        return exts
-        // return this.CACHED_PROP(exts)
+        return this.extensions_allowed.toLowerCase().split(/[ ,;:]+/)
     }
 
     async _read_file(url_path, res) {
