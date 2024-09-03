@@ -254,7 +254,7 @@
     "@": 0
   "@": schemat:Data
 - __id: 6
-  name: LocalFolder
+  name: LocalDirectory
   info: |-
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
@@ -265,7 +265,7 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/std/files.js:LocalFolder
+    _class_: schemat/std/files.js:LocalDirectory
     "@": schemat:Catalog
   _category_:
     "@": 0

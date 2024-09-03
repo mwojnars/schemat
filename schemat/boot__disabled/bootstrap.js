@@ -39,7 +39,7 @@ async function create_categories(Category) {
             base_url        : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             default_path    : new PATH({info: "URL path of a default container that can be used to access any object via its ID. For internal purposes. Should contain a leading slash and no trailing slash."}),
             entries         : new CATALOG({values: new ITEM(), repeated: true, info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. NO leading/trailing slashes."}),
-            //path_local    : new PATH({info: "URL route of a LocalFolder that maps to the root folder of the Schemat's local installation."}),
+            //path_local    : new PATH({info: "URL route of a LocalDirectory that maps to the root folder of the Schemat's local installation."}),
             //route_default: new ITEM({info: "URL route anchored at the site root, i.e., having empty URL prefix. If there are multiple `route_default` entries, they are being tried in the order of listing in the site's configuration, until a route is found that does NOT raise the Request.NotFound."}),
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({category: cat.Database, info: "Global database layer"}),
@@ -71,8 +71,8 @@ async function create_categories(Category) {
             entries     : new CATALOG({values: new ITEM()}),          // file & directory names mapped to item IDs
         }),
     })
-    cat.LocalFolder = await Category.new(6, {
-        name        : "LocalFolder",
+    cat.LocalDirectory = await Category.new(6, {
+        name        : "LocalDirectory",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
         _extends_   : cat.Directory,
         fields      : C({local_path: new STRING()}),
@@ -128,7 +128,7 @@ async function create_categories(Category) {
 // async function create_items(cat, Category) {
 //     let item = {}
 //     // item.default_namespace = await cat.ID_Namespace.new(14, {name: "default namespace", info: "All objects accessible by their IDs."})
-//     // item.dir_local  = await cat.LocalFolder.new(12, {name: '/local', local_path: '.'})   //path.dirname(__dirname)
+//     // item.dir_local  = await cat.LocalDirectory.new(12, {name: '/local', local_path: '.'})   //path.dirname(__dirname)
 //     //
 //     // item.dir_system = await cat.Directory.new(13, {name: "/system",
 //     //     entries: C({

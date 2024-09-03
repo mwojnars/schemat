@@ -112,7 +112,7 @@ export class LocalFile extends File {
     // }
 }
 
-export class LocalFolder extends Directory {
+export class LocalDirectory extends Directory {
     /* A folder on the local filesystem containing files and subfolders (no objects). */
 
     local_path
@@ -132,14 +132,14 @@ export class LocalFolder extends Directory {
         let root = this.local_path
         root = this._mod_path.resolve(root)                         // make `root` an absolute path
 
-        if (!root) throw new Error('missing `path` property in a LocalFolder')
+        if (!root) throw new Error('missing `path` property in a LocalDirectory')
         let file_path = this._mod_path.join(root, url_path)         // this reduces the '..' special symbols, so we have to check
         if (!file_path.startsWith(root))                            // if the final path still falls under the `root`, for safety
             throw new UrlPathNotFound({path: url_path})
         
         // check if the path contains a folder name that starts with "_" (underscore), which indicates a PRIVATE folder; return "not found" in such case
         if (file_path.includes('/_')) {
-            print(`LocalFolder._read_file(): PRIVATE folder requested: '${file_path}'`)
+            print(`LocalDirectory._read_file(): PRIVATE folder requested: '${file_path}'`)
             throw new UrlPathNotFound({path: url_path})
         }
 
@@ -153,7 +153,7 @@ export class LocalFolder extends Directory {
 
         // TODO: the code below implements CALL requests and should return a buffer instead (no utf-8 decoding) to support all files incl. binary
         if (!res) {
-            assert(false, `LocalFolder._read_file(): CALL request received for '${file_path}', returning file content as a string not binary`)
+            assert(false, `LocalDirectory._read_file(): CALL request received for '${file_path}', returning file content as a string not binary`)
             return this._mod_fs.readFileSync(file_path, {encoding: 'utf8'})
         }
 
