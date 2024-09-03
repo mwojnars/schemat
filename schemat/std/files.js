@@ -135,8 +135,8 @@ export class LocalDirectory extends Directory {
         
         // check if the file extension of `url_path` is in the list of allowed extensions
         let ext = url_path.split('.').pop().toLowerCase()
-        if (!this.extensions_allowed.toLowerCase().split(' ').includes(ext))
-            throw new UrlPathNotFound({path: url_path})
+        let ext_allowed = this.extensions_allowed.toLowerCase().split(/[ ,;:]+/)
+        if (!ext_allowed.includes(ext)) throw new UrlPathNotFound({path: url_path})
 
         // check if the local path still falls under the `root` after ".." reduction
         let file_path = this._mod_path.join(root, url_path)
