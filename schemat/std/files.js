@@ -116,7 +116,7 @@ export class LocalDirectory extends Directory {
     /* File directory on the local filesystem containing files and subfolders (no objects). */
 
     local_path
-    allow_extensions
+    extensions_allowed
 
     async __init__() {
         if (schemat.server_side) {
@@ -130,15 +130,20 @@ export class LocalDirectory extends Directory {
     }
 
     async _read_file(url_path, res) {
-        let root = this.local_path
-        root = this._mod_path.resolve(root)                         // make `root` an absolute path
+        let root = this._mod_path.resolve(this.local_path)                          // make `root` an absolute path
+        if (!root) throw new Error('LocalDirectory.local_path is undefined')
+        
+        // check if the file extension of `url_path` is in the list of allowed extensions
+        let ext = url_path.split('.').pop().toLowerCase()
+        if (!this.extensions_allowed.toLowerCase().split(' ').includes(ext))
+            throw new UrlPathNotFound({path: url_path})
 
-        if (!root) throw new Error('missing `path` property in a LocalDirectory')
-        let file_path = this._mod_path.join(root, url_path)         // this reduces the '..' special symbols, so we have to check
-        if (!file_path.startsWith(root))                            // if the final path still falls under the `root`, for safety
+        // check if the local path still falls under the `root` after ".." reduction
+        let file_path = this._mod_path.join(root, url_path)
+        if (!file_path.startsWith(root))
             throw new UrlPathNotFound({path: url_path})
         
-        // check if the path contains a folder name that starts with "_" (underscore), which indicates a PRIVATE folder; return "not found" in such case
+        // if the path contains a folder name that starts with "_" (underscore), it points to a PRIVATE file
         if (file_path.includes('/_')) {
             print(`LocalDirectory._read_file(): PRIVATE folder requested: '${file_path}'`)
             throw new UrlPathNotFound({path: url_path})
