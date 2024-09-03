@@ -307,7 +307,7 @@ export class Database extends Item {
 
         if (ring) {
             id = await ring.handle(req)
-            if (item) item._set_id(id)
+            if (item) item._id_ = id
             return id
         }
         return req.error_access(id === undefined ?

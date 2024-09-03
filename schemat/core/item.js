@@ -315,7 +315,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     (some of the props below have getters defined, so they must be commented out not to mask the getters)
 
-    _id_                    database ID of the object, globally unique; undefined in a newly created item; must never be changed for an existing item
+    _id_                    database ID of the object, globally unique; undefined in a newly created item; must never be changed for an existing item;
+                            it is assumed that if _id_ exists, the object is ALREADY stored in the DB (is "linked");
+                            for a newly created object that already has an ID assigned, but is not yet (fully) saved to DB, the ID must be kept
+                            in _meta_.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
 
     _record_                ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
                             undefined in a newborn item; immutable after the first assignment
@@ -337,16 +340,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _assets_                cached web Assets of this object's _schema_
 
     */
-
-    // it is assumed that if this._id_ exists, the object is ALREADY stored in the DB (is "linked");
-    // for a newly created object that already has an ID assigned, but is not yet (fully) saved to DB, the ID must be kept
-    // in _meta_.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
-
-    // get _id_()   { return undefined }
-    // set _id_(id) {
-    //     if (id === undefined) return
-    //     Object.defineProperty(this._self_, '_id_', {value: id, writable: false})
-    // }
 
     set _id_(id) {
         let prev = this._id_
@@ -523,14 +516,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // print('endpoints:', endpoints)
 
         return this._api_ = new API(endpoints)
-    }
-
-    _set_id(id) {
-        /* Like obj._id_ = id, but allows re-setting with the same ID value. */
-        let prev = this._id_
-        if (prev !== undefined) assert(prev === id, `ID is read-only and can't be changed from ${prev} to ${id}`)
-        else this._id_ = id
-        return id
     }
 
     _get_write_id() {
