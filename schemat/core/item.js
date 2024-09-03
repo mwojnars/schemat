@@ -155,8 +155,11 @@ class ItemProxy {
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
-    static UNDEFINED = Symbol.for('ItemProxy.UNDEFINED')
-    static CACHED    = Symbol.for('ItemProxy.CACHED')       // marks a wrapper around a value that comes from a getter function and should be cached
+    static UNDEFINED    = Symbol.for('ItemProxy.UNDEFINED')
+    static CACHED       = Symbol.for('ItemProxy.CACHED')       // marks a wrapper around a value that comes from a getter function and should be cached
+
+    static FROM_CACHE   = Symbol.for('ItemProxy.FROM_CACHE')   // marks a wrapper around a value that is stored in cache
+    static NO_CACHING   = Symbol.for('ItemProxy.NO_CACHING')   // marks a wrapper around a value (typically from a getter) that should not be cached
 
 
     static wrap(target) {
@@ -167,22 +170,22 @@ class ItemProxy {
     static proxy_get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
 
-        // if (typeof value === 'object' && value?.[ItemProxy.FROM_CACHE])         // if the value comes from cache return it immediately
-        //     return value.value
-        //
-        // // check if the value comes from a cachable getter?
-        // if (target.constructor.cachable_getters?.has(prop)) {
-        //     if (typeof value === 'object' && value?.[ItemProxy.NO_CACHING])     // this particular value must not be cached for some reason?
-        //         return value.value
-        //     if (typeof value === 'object' && value?.[ItemProxy.CACHED])         // legacy
-        //         value = value.value
-        //
-        //     if (!target._meta_.mutable) {                                       // caching is only allowed in immutable objects
-        //         let stored = {value, [ItemProxy.FROM_CACHE]: true}
-        //         Object.defineProperty(target._self_, prop, {value: stored, writable: false, configurable: true})
-        //     }
-        //     return value
-        // }
+        if (typeof value === 'object' && value?.[ItemProxy.FROM_CACHE])         // if the value comes from cache return it immediately
+            return value.value
+
+        // check if the value comes from a cachable getter?
+        if (target.constructor.cachable_getters?.has(prop)) {
+            if (typeof value === 'object' && value?.[ItemProxy.NO_CACHING])     // this particular value must not be cached for some reason?
+                return value.value
+            if (typeof value === 'object' && value?.[ItemProxy.CACHED])         // legacy
+                value = value.value
+
+            if (!target._meta_.mutable) {                                       // caching is only allowed in immutable objects
+                let stored = {value, [ItemProxy.FROM_CACHE]: true}
+                Object.defineProperty(target._self_, prop, {value: stored, writable: false, configurable: true})
+            }
+            return value
+        }
 
         if (typeof value === 'object' && value?.[ItemProxy.CACHED]) {
             // the value comes from a getter and is labelled to be "CACHED"? save it in the target object
