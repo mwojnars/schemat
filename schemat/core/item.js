@@ -164,14 +164,30 @@ class ItemProxy {
 
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
+        if (!target.constructor.cachable_getters) {
+            this.set_cachable_getters(target)
+            print('cachable_getters:', Array.from(target.constructor.cachable_getters))
+        }
         return new Proxy(target, {get: this.proxy_get})
+    }
+
+    static set_cachable_getters(target) {
+        target.constructor.cachable_getters = new Set(
+            Object.getOwnPropertyNames(target.constructor.prototype)
+                .filter(prop => {
+                    const descriptor = Object.getOwnPropertyDescriptor(target.constructor.prototype, prop)
+                    return descriptor && typeof descriptor.get === 'function' && !['_id_', 'iid', '_record_'].includes(prop)
+                })
+        )
     }
 
     static proxy_get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
 
-        if (typeof value === 'object' && value?.[ItemProxy.FROM_CACHE])         // if the value comes from cache return it immediately
+        if (typeof value === 'object' && value?.[ItemProxy.FROM_CACHE]) {        // if the value comes from cache return it immediately
+            // print('FROM_CACHE:', prop)
             return value.value
+        }
 
         // check if the value comes from a cachable getter?
         if (target.constructor.cachable_getters?.has(prop)) {
@@ -183,6 +199,7 @@ class ItemProxy {
             if (!target._meta_.mutable) {                                       // caching is only allowed in immutable objects
                 let stored = {value, [ItemProxy.FROM_CACHE]: true}
                 Object.defineProperty(target._self_, prop, {value: stored, writable: false, configurable: true})
+                // print('saved in cache:', prop)
             }
             return value
         }
