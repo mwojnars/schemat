@@ -250,7 +250,7 @@ class ItemProxy {
 
 /**********************************************************************************************************************/
 
-export class Item {
+export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObject?
 
     /*
     An application object that is persisted in a database, has a unique ID, is potentially accessible by a URL,
