@@ -129,14 +129,19 @@ export class LocalDirectory extends Directory {
         return (request) => this._read_file(path, request.res)
     }
 
+    get _ext_allowed() {
+        print('this.extensions_allowed:', this.extensions_allowed)
+        let exts = this.extensions_allowed.toLowerCase().split(/[ ,;:]+/)
+        return this.CACHED_PROP(exts)
+    }
+
     async _read_file(url_path, res) {
         let root = this._mod_path.resolve(this.local_path)                          // make `root` an absolute path
         if (!root) throw new Error('LocalDirectory.local_path is undefined')
         
         // check if the file extension of `url_path` is in the list of allowed extensions
         let ext = url_path.split('.').pop().toLowerCase()
-        let ext_allowed = this.extensions_allowed.toLowerCase().split(/[ ,;:]+/)
-        if (!ext_allowed.includes(ext)) throw new UrlPathNotFound({path: url_path})
+        if (!this._ext_allowed.includes(ext)) throw new UrlPathNotFound({path: url_path})
 
         // check if the local path still falls under the `root` after ".." reduction
         let file_path = this._mod_path.join(root, url_path)
