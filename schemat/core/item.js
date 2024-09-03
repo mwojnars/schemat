@@ -460,13 +460,13 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            This function, or create_stub(id), should be used instead of the constructor.
            If __create__() returns a Promise, this function returns a Promise too.
          */
-        let item = this.create_stub()
+        let item = this.create_stub(null, {mutable: true})              // newly-created object must be mutable
         let created = item.__create__(...args)
         if (created instanceof Promise) return created.then(() => item)
         return item
     }
 
-    static create_stub(id, {mutable = false} = {}) {
+    static create_stub(id = null, {mutable = false} = {}) {
         /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
 
         // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
@@ -475,7 +475,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         let core = new this(false)
         let item = core._proxy_ = ItemProxy.wrap(core)
-        if (id !== undefined) core._id_ = id
+        if (id !== undefined && id !== null) core._id_ = id
         if (mutable) core._meta_.mutable = true     // this allows EDIT_xxx operations on the object and prevents caching in Schemat's registry
         return item
     }
