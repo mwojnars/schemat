@@ -113,9 +113,10 @@ export class LocalFile extends File {
 }
 
 export class LocalDirectory extends Directory {
-    /* A folder on the local filesystem containing files and subfolders (no objects). */
+    /* File directory on the local filesystem containing files and subfolders (no objects). */
 
     local_path
+    allow_extensions
 
     async __init__() {
         if (schemat.server_side) {
