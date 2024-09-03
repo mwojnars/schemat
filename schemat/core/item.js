@@ -173,7 +173,7 @@ class ItemProxy {
         const own_getters = Object.getOwnPropertyNames(prototype)
                 .filter(prop => {
                     const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
-                    return descriptor && typeof descriptor.get === 'function' && !['_record_'].includes(prop)
+                    return descriptor && typeof descriptor.get === 'function' //&& !['_record_'].includes(prop)
                 })
         return constructor.cachable_getters = new Set([...parent_getters, ...own_getters])
     }
@@ -352,14 +352,15 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     get _record_() {
         this.assert_linked()
         this.assert_loaded()
-        // let record = this._record_ = new ItemRecord(this._id_, this._data_)
-        // return {[ItemProxy.NO_CACHING]: true, value: record}        // auto-caching makes the property immutable, while we still may want to store a "better" record found in _load()
-        return this._record_ = new ItemRecord(this._id_, this._data_)
+        let record = this._record_ = new ItemRecord(this._id_, this._data_)
+        return {[ItemProxy.FROM_CACHE]: true, value: record}        // caching in ItemProxy makes the property immutable, while we still may want to store a better record found in _load()
+        // return this._record_ = new ItemRecord(this._id_, this._data_)
     }
     set _record_(record) {
         assert(record)
         assert(record.id === this._id_)
-        Object.defineProperty(this._self_, '_record_', {value: record, writable: false})
+        let cached = {[ItemProxy.FROM_CACHE]: true, value: record}
+        Object.defineProperty(this._self_, '_record_', {value: cached, writable: true})
     }
 
     get _schema_() {
