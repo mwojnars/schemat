@@ -187,11 +187,7 @@ class ItemProxy {
         }
 
         let constructor = target.constructor
-        let getters = constructor.hasOwnProperty('cachable_getters') ? constructor.cachable_getters : undefined
-        if (!getters) {
-            getters = ItemProxy.set_cachable_getters(constructor)
-            // print('cachable_getters:', Array.from(getters))
-        }
+        let getters = (constructor.hasOwnProperty('cachable_getters') && constructor.cachable_getters) || ItemProxy.set_cachable_getters(constructor)
 
         // check if the value comes from a cachable getter?
         if (getters.has(prop)) {
