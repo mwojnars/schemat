@@ -363,8 +363,12 @@ export class Textual extends Primitive {
 }
 
 export class STRING extends Textual {
+    static defaultProps = {
+        trim: true,                 // if true (default), the strings are trimmed before insertion to DB
+    }
     _validate(value) {
-        return super._validate(value).trim()             // trim leading/trailing whitespace
+        value = super._validate(value)
+        return this.props.trim ? value.trim() : value           // trim leading/trailing whitespace
     }
 }
 export class URL extends STRING {
