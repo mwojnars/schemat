@@ -164,18 +164,14 @@ class ItemProxy {
 
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
-        if (!target.constructor.cachable_getters) {
-            this.set_cachable_getters(target)
-            print('cachable_getters:', Array.from(target.constructor.cachable_getters))
-        }
         return new Proxy(target, {get: this.proxy_get})
     }
 
-    static set_cachable_getters(target) {
-        target.constructor.cachable_getters = new Set(
-            Object.getOwnPropertyNames(target.constructor.prototype)
+    static set_cachable_getters(constructor) {
+        return constructor.cachable_getters = new Set(
+            Object.getOwnPropertyNames(constructor.prototype)
                 .filter(prop => {
-                    const descriptor = Object.getOwnPropertyDescriptor(target.constructor.prototype, prop)
+                    const descriptor = Object.getOwnPropertyDescriptor(constructor.prototype, prop)
                     return descriptor && typeof descriptor.get === 'function' && !['_id_', 'iid', '_record_'].includes(prop)
                 })
         )
@@ -189,8 +185,14 @@ class ItemProxy {
             return value.value
         }
 
+        let getters = target.constructor.hasOwnProperty('cachable_getters') ? target.constructor.cachable_getters : undefined
+        if (!getters) {
+            getters = ItemProxy.set_cachable_getters(target.constructor)
+            print('cachable_getters:', Array.from(getters))
+        }
+
         // check if the value comes from a cachable getter?
-        if (target.constructor.cachable_getters?.has(prop)) {
+        if (getters.has(prop)) {
             if (typeof value === 'object' && value?.[ItemProxy.NO_CACHING])     // this particular value must not be cached for some reason?
                 return value.value
             if (typeof value === 'object' && value?.[ItemProxy.CACHED])         // legacy
@@ -401,6 +403,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
 
     /***  Internal properties  ***/
+
+    static cachable_getters         // a Set of names of getters of the Item class or its subclass - for caching in ItemProxy
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
