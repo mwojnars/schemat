@@ -13,7 +13,7 @@
     "*main":
       "@": 1014
     "@": schemat:Catalog
-  default_path: /$/default
+  default_path: /$/id
   _category_:
     "@": 1
   "@": schemat:Data
@@ -156,7 +156,7 @@
       "@": 1023
     database:
       "@": 1024
-    default:
+    id:
       "@": 1021
     local:
       "@": 1020
@@ -175,7 +175,7 @@
     "@": 6
   "@": schemat:Data
 - __id: 1021
-  name: default namespace
+  name: default-namespace
   info: All objects accessible by their IDs.
   _container_:
     "@": 1019
