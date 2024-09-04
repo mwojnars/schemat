@@ -150,11 +150,11 @@
 - __id: 1019
   name: system-directory
   info: >-
-    This system directory provides low-level access to:
+    A system directory that provides low-level access to:
 
     1) every web object by its ID through the "default URL path" (.../id/<ID>), which is used when the object does not belong to any container;
 
-    2) Schemat's system files and source code located in a local disk folder.
+    2) Schemat's source code located in a local disk folder.
   entries:
     id:
       "@": 1021
