@@ -2,7 +2,7 @@
     Container classes (Directory, Namespace) for building URL paths and routing requests to items.
  */
 
-import {assert} from "../common/utils.js"
+import {assert, print} from "../common/utils.js"
 import {Item} from "../core/item.js"
 import {UrlPathNotFound} from "../common/errors.js";
 
@@ -81,7 +81,7 @@ export class Directory extends Container {
         let rev = new Map()
         for (let {key: name, value: object} of this.entries)
             rev.set(object._id_, name)
-        return this.CACHED_PROP(rev)
+        return rev
     }
 
     resolve(path) {

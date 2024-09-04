@@ -167,16 +167,17 @@ class ItemProxy {
         return new Proxy(target, {get: this.proxy_get})
     }
 
-    static set_cachable_getters(constructor) {
-        const prototype = constructor.prototype
-        const parent_getters = constructor.__proto__?.cachable_getters || []
-        const own_getters = Object.getOwnPropertyNames(prototype)
-                .filter(prop => {
-                    const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
-                    return descriptor && typeof descriptor.get === 'function' //&& !['_record_'].includes(prop)
-                })
-        return constructor.cachable_getters = new Set([...parent_getters, ...own_getters])
-    }
+    // static set_cachable_getters(constructor) {
+    //     const prototype = constructor.prototype
+    //     const parent_getters = constructor.__proto__?.cachable_getters || []
+    //     const own_getters = Object.getOwnPropertyNames(prototype)
+    //             .filter(prop => {
+    //                 const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
+    //                 return descriptor && typeof descriptor.get === 'function'
+    //             })
+    //     // print('own_getters:', own_getters)
+    //     return constructor.cachable_getters = new Set([...parent_getters, ...own_getters])
+    // }
 
     static proxy_get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
@@ -186,8 +187,9 @@ class ItemProxy {
             return value.value
         }
 
-        let constructor = target.constructor
-        let getters = (constructor.hasOwnProperty('cachable_getters') && constructor.cachable_getters) || ItemProxy.set_cachable_getters(constructor)
+        // let constructor = target.constructor
+        // let getters = (constructor.hasOwnProperty('cachable_getters') && constructor.cachable_getters) || ItemProxy.set_cachable_getters(constructor)
+        let getters = target.constructor.cachable_getters
 
         // check if the value comes from a cachable getter?
         if (getters.has(prop)) {
@@ -362,11 +364,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     get _schema_() {
-        let value = this._category_?.data_schema || new DATA_GENERIC()
-        return this.CACHED_PROP(value)
+        return this._category_?.data_schema || new DATA_GENERIC()
     }
 
-    get _prototypes_() { return this.CACHED_PROP(this._extends__array) }
+    get _prototypes_() { return this._extends__array }
 
     get _ancestors_() {
         // TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
@@ -374,14 +375,13 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // http://python-history.blogspot.com/2010/06/method-resolution-order.html
         let prototypes = this._prototypes_
         let candidates = prototypes.map(proto => proto._ancestors_)
-        let ancestors = [this, ...unique(concat(candidates))]
-        return this.CACHED_PROP(ancestors)
+        return [this, ...unique(concat(candidates))]
     }
 
     get _assets_()  {
         let assets = new Assets()
         this._schema_.collect(assets)
-        return this.CACHED_PROP(assets)
+        return assets
     }
 
 
@@ -402,7 +402,23 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Internal properties  ***/
 
-    static cachable_getters         // a Set of names of getters of the Item class or its subclass - for caching in ItemProxy
+    static _cachable_getters         // a Set of names of getters of the Item class or its subclass - for caching in ItemProxy
+
+    static _set_cachable_getters() {
+        const prototype = this.prototype
+        const parent_getters = this.__proto__?.cachable_getters || []
+        const own_getters = Object.getOwnPropertyNames(prototype)
+                .filter(prop => {
+                    const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
+                    return descriptor && typeof descriptor.get === 'function'
+                })
+        // print('own_getters:', own_getters)
+        return this._cachable_getters = new Set([...parent_getters, ...own_getters])
+    }
+
+    static get cachable_getters() {
+        return (this.hasOwnProperty('_cachable_getters') && this._cachable_getters) || this._set_cachable_getters()
+    }
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
