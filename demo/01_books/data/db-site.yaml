@@ -6,14 +6,14 @@
   database:
     "@": 1002
   entries:
-    system:
+    "$":
       "@": 1019
     "*domain":
       "@": 1011
     "*main":
       "@": 1014
     "@": schemat:Catalog
-  default_path: /system/default
+  default_path: /$/default
   _category_:
     "@": 1
   "@": schemat:Data
@@ -148,7 +148,7 @@
     "@": 22
   "@": schemat:Data
 - __id: 1019
-  name: /system
+  name: /$
   entries:
     categories:
       "@": 1022
@@ -167,7 +167,7 @@
     "@": 5
   "@": schemat:Data
 - __id: 1020
-  name: /system/local
+  name: /$/local
   local_path: .
   _container_:
     "@": 1019
@@ -183,21 +183,21 @@
     "@": 8
   "@": schemat:Data
 - __id: 1022
-  name: /system/categories
+  name: /$/categories
   _container_:
     "@": 1019
   _category_:
     "@": 5
   "@": schemat:Data
 - __id: 1023
-  name: /system/cluster
+  name: /$/cluster
   _container_:
     "@": 1019
   _category_:
     "@": 5
   "@": schemat:Data
 - __id: 1024
-  name: /system/database
+  name: /$/database
   _container_:
     "@": 1019
   _category_:

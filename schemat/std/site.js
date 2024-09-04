@@ -27,7 +27,7 @@ export class Site extends Directory {
     static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
-    static URL_LOCAL = '/system/local'      // url-path of the application's local filesystem root folder
+    static URL_LOCAL = '/$/local'      // url-path of the application's local filesystem root folder
 
     // properties:
     database
@@ -98,7 +98,7 @@ export class Site extends Directory {
 
     async import(path) {
         /* `path` is either a builtin class path of the form "schemat:Catalog", or a URL path of the form
-           "/system/local/.../file.js" or "/.../file.js:ClassName" pointing to a module accessible through
+           "/$/local/.../file.js" or "/.../file.js:ClassName" pointing to a module accessible through
            the SUN namespace or to a particular symbol within such module.
          */
         // print(`Site.import():  ${path}`)
@@ -285,7 +285,7 @@ export class Site extends Directory {
     // }
     //
     // _js_import_file(path) {
-    //     /* Schemat's server-side import path (/system/local/...) converted to a local filesystem path that can be used with standard import(). */
+    //     /* Schemat's server-side import path (/$/local/...) converted to a local filesystem path that can be used with standard import(). */
     //     let local = schemat.PATH_LOCAL_SUN
     //     if (!path.startsWith(local + '/')) throw new Error(`incorrect import path (${path}), should start with "${local}"`)
     //     return schemat.PATH_LOCAL_FS + path.slice(local.length)

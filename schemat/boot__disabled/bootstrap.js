@@ -98,7 +98,7 @@ async function create_categories(Category) {
     cat.Type = await Category.new(10, {
         name        : "Type",
         info        : "Category of items that represent data types. Some of the items are wrappers around system types (STRING, INTEGER etc.), while some others implement new types by themselves using dynamic code.",
-        class_path  : '/system/local/schemat/types/type_item.js:TypeItem',
+        class_path  : '/$/local/schemat/types/type_item.js:TypeItem',
         fields      : C({
             class_path  : new STRING(),
             encode      : new CODE({info: "Body of a function with the signature `encode(obj,props={})`. Should return a state that encodes the input object/value, `obj`."}),
@@ -117,7 +117,7 @@ async function create_categories(Category) {
     // cat.STRING = await Category.new(12, {
     //     name        : "STRING",
     //     _extends_   : cat.Type,
-    //     class_path  : '/system/local/schemat/types/type.js:STRING',
+    //     class_path  : '/$/local/schemat/types/type.js:STRING',
     // })
 
     return cat
@@ -130,7 +130,7 @@ async function create_categories(Category) {
 //     // item.default_namespace = await cat.ID_Namespace.new(14, {name: "default namespace", info: "All objects accessible by their IDs."})
 //     // item.dir_local  = await cat.LocalDirectory.new(12, {name: '/local', local_path: '.'})   //path.dirname(__dirname)
 //     //
-//     // item.dir_system = await cat.Directory.new(13, {name: "/system",
+//     // item.dir_system = await cat.Directory.new(13, {name: "/$",
 //     //     entries: C({
 //     //         'object'        : item.default_namespace,
 //     //         'local'         : item.dir_local,

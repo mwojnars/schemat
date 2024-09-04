@@ -40,7 +40,7 @@ export class ServerSchemat extends Schemat {
            all other imports in the dependant modules will be interpreted as SUN imports, as well.
            Reinitialize `classpath` so that builtin classes are also imported from the SUN namespace.
          */
-        // let {ServerSchemat} = await this.import('/system/local/schemat/core/schemat_srv.js')
+        // let {ServerSchemat} = await this.import('/$/local/schemat/core/schemat_srv.js')
         T.setClass(this, ServerSchemat)
         await this._init_classpath()
         // await this.reload(this.site_id)

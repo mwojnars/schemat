@@ -6,14 +6,14 @@
   database:
     "@": 1002
   entries:
-    system:
+    $:
       "@": 1019
     "*domain":
       "@": 1011
     "*main":
       "@": 1014
     "@": schemat:Catalog
-  default_path: /system/default
+  default_path: /$/default
   _category_:
     "@": 1
   "@": schemat:Data
@@ -148,7 +148,7 @@
     "@": 22
   "@": schemat:Data
 - __id: 1019
-  name: /system
+  name: system-directory
   entries:
     default:
       "@": 1021
@@ -161,7 +161,7 @@
     "@": 5
   "@": schemat:Data
 - __id: 1020
-  name: /system/local
+  name: /$/local
   local_path: .
   _container_:
     "@": 1019

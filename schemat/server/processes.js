@@ -53,10 +53,10 @@ export class WorkerProcess extends BackendProcess {
         // node = schemat.get_loaded(this_node_ID)
         // return node.activate()     // start the lifeloop and all worker processes (servers)
 
-        // let m = await schemat.import('/system/local/schemat/test/temp1.js')
+        // let m = await schemat.import('/$/local/schemat/test/temp1.js')
         // print('loaded:', m)
 
-        // let {WebServer} = await schemat.import('/system/local/schemat/server/servers.js')
+        // let {WebServer} = await schemat.import('/$/local/schemat/server/servers.js')
 
         print('Starting the server...')
         let web = new WebServer({host, port, workers})
