@@ -22,14 +22,14 @@ function DBG(type, name, promise) {
 
 
 export class Loader {
-    /* Dynamic imports from SUN namespace. All import paths have the form of public url-paths, like "/$/local/.../file.js",
+    /* Dynamic imports from SUN namespace. All import paths have the form of public url-paths, like "/$/schemat/.../file.js",
        no "file://..." like in standard import paths.
      */
 
     // static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     // static DOMAIN_SCHEMAT = ''              // internal server-side domain name prepended to DB import paths for debugging    //'schemat:'
 
-    PATH_LOCAL_SUN = "/$/local"        // SUN folder that maps to the local filesystem folder, PATH_LOCAL_FS;
+    PATH_LOCAL_SUN = "/$/schemat"           // SUN folder that maps to the local filesystem folder, PATH_LOCAL_FS;
     PATH_LOCAL_FS                           // modules from PATH_LOCAL_* can be imported during startup, before the SUN namespace is set up
 
     context = null                          // global vm.Context shared by all modules
@@ -97,7 +97,7 @@ export class Loader {
     // _unprefix(path) { return path.startsWith(Loader.DOMAIN_SCHEMAT) ? path.slice(Loader.DOMAIN_SCHEMAT.length) : path }
 
     _js_import_file(path) {
-        /* Schemat's server-side import path (/$/local/...) converted to a local filesystem path that can be used with standard import(). */
+        /* Schemat's server-side import path (/$/schemat/...) converted to a local filesystem path that can be used with standard import(). */
         let local = this.PATH_LOCAL_SUN
         if (!path.startsWith(local + '/')) throw new Error(`incorrect import path (${path}), should start with "${local}"`)
         return this.PATH_LOCAL_FS + path.slice(local.length)

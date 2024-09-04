@@ -17,6 +17,7 @@ export function html_page(path, locals = {}, opts = {}) {
     return () => {
         if (path.startsWith('file://')) path = path.slice(7)
         const ext = path.includes('.') ? path.split('.').pop().toLowerCase() : 'html'
+        console.log('path:', path)
         
         // check the file type by extension and load/render the file accordingly
         if (ext === 'html' || ext === 'htm')

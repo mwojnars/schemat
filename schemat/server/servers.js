@@ -56,7 +56,7 @@ export class WebServer extends Server {
 
         // print('start() test:', obj instanceof Set)
 
-        // let {ServerSchemat} = await import('/$/local/schemat/core/schemat_srv.js')
+        // let {ServerSchemat} = await import('/$/schemat/core/schemat_srv.js')
         // await schemat._reset_class(ServerSchemat)
 
         // schemat.registry.objects.clear()

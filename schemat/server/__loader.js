@@ -18,8 +18,8 @@ import {server} from './servers.js'
  **
  */
 
-const PATH_STD = '/$/local/schemat/std/'
-const PATH_APP = '/$/local/schemat/app/'
+const PATH_STD = '/$/schemat/std/'
+const PATH_APP = '/$/schemat/app/'
 const PREFIX   = 'schemat:'
 
 export function resolve(specifier, context, defaultResolve) {

@@ -42,11 +42,11 @@ export class Resources {
             <script src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js" integrity="sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0=" crossorigin="anonymous"></script>-->
         <!--<script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
             <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>-->
-        <!--<script src="/$/local/schemat/assets/libs/react.production.min.js" integrity="sha256-Ipu/TQ50iCCVZBUsZyNJfxrDk0E2yhaEIz0vqI+kFG8=" crossorigin="anonymous"></script>
-            <script src="/$/local/schemat/assets/libs/react-dom.production.min.js" integrity="sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0=" crossorigin="anonymous"></script>-->
+        <!--<script src="/$/schemat/assets/libs/react.production.min.js" integrity="sha256-Ipu/TQ50iCCVZBUsZyNJfxrDk0E2yhaEIz0vqI+kFG8=" crossorigin="anonymous"></script>
+            <script src="/$/schemat/assets/libs/react-dom.production.min.js" integrity="sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0=" crossorigin="anonymous"></script>-->
         
-        <script src="/$/local/schemat/assets/libs/react.development.js" crossorigin="anonymous"></script>
-        <script src="/$/local/schemat/assets/libs/react-dom.development.js" crossorigin="anonymous"></script>
+        <script src="/$/schemat/assets/libs/react.development.js" crossorigin="anonymous"></script>
+        <script src="/$/schemat/assets/libs/react-dom.development.js" crossorigin="anonymous"></script>
 
         <!-- Bootstrap - only use for widgets and in-block layout, not for page layout
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet"> <!--Bootstrap Icons-->
@@ -60,18 +60,18 @@ export class Resources {
         -->
         
         <!-- Material UI -->
-        <script src="/$/local/schemat/assets/libs/material-ui_v5.2.6.development.min.js" crossorigin></script>
+        <script src="/$/schemat/assets/libs/material-ui_v5.2.6.development.min.js" crossorigin></script>
         <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>    
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>    
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>    
         <!--<script src="https://unpkg.com/@mui/material@5.2.6/umd/material-ui.development.js" crossorigin></script>-->
     
         <!-- local resources... -->
-        <script src="/$/local/schemat/assets/libs/peg-0.10.0.min.js" crossorigin></script>
+        <script src="/$/schemat/assets/libs/peg-0.10.0.min.js" crossorigin></script>
 
-        <!--<script src="/$/local/schemat/assets/libs/popper.min.js" crossorigin></script>-->
-        <link href="/$/local/schemat/assets/favicon.ico" rel="icon" type="image/x-icon" />
-        <link href="/$/local/schemat/assets/styles.css" rel="stylesheet" />
+        <!--<script src="/$/schemat/assets/libs/popper.min.js" crossorigin></script>-->
+        <link href="/$/schemat/assets/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/$/schemat/assets/styles.css" rel="stylesheet" />
     `
     // inlined favicon:  <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
 }

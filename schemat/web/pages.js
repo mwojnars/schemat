@@ -215,7 +215,7 @@ export class ReactPage extends RenderedPage {
         }
 
         page_script(props) {
-            return `import {ClientSchemat} from "/$/local/schemat/client/main.js"; ClientSchemat.start_client();`
+            return `import {ClientSchemat} from "/$/schemat/client/main.js"; ClientSchemat.start_client();`
         }
 
         Main() {

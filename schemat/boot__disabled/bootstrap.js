@@ -98,7 +98,7 @@ async function create_categories(Category) {
     cat.Type = await Category.new(10, {
         name        : "Type",
         info        : "Category of items that represent data types. Some of the items are wrappers around system types (STRING, INTEGER etc.), while some others implement new types by themselves using dynamic code.",
-        class_path  : '/$/local/schemat/types/type_item.js:TypeItem',
+        class_path  : '/$/schemat/types/type_item.js:TypeItem',
         fields      : C({
             class_path  : new STRING(),
             encode      : new CODE({info: "Body of a function with the signature `encode(obj,props={})`. Should return a state that encodes the input object/value, `obj`."}),
@@ -117,7 +117,7 @@ async function create_categories(Category) {
     // cat.STRING = await Category.new(12, {
     //     name        : "STRING",
     //     _extends_   : cat.Type,
-    //     class_path  : '/$/local/schemat/types/type.js:STRING',
+    //     class_path  : '/$/schemat/types/type.js:STRING',
     // })
 
     return cat
