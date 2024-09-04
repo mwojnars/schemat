@@ -146,9 +146,9 @@ export class LocalDirectory extends Directory {
         if (!file_path.startsWith(root))
             throw new UrlPathNotFound({path: url_path})
         
-        // if the path contains a folder name that starts with "_" (underscore), it points to a PRIVATE file
-        if (file_path.includes('/_')) {
-            print(`LocalDirectory._read_file(): PRIVATE folder requested: '${file_path}'`)
+        // if the path contains a folder/file name that starts with "_" or ".", it is treated as PRIVATE (no access)
+        if (file_path.includes('/_') || file_path.includes('/.')) {
+            print(`LocalDirectory._read_file(), PRIVATE path requested: '${file_path}'`)
             throw new UrlPathNotFound({path: url_path})
         }
 
