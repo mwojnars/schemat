@@ -187,8 +187,6 @@ class ItemProxy {
         if (target.constructor.cachable_getters.has(prop)) {
             if (typeof value === 'object' && value?.[ItemProxy.NO_CACHING])     // this particular value must not be cached for some reason?
                 return value.value
-            // if (typeof value === 'object' && value?.[ItemProxy.CACHED])         // legacy
-            //     value = value.value
 
             if (!target._meta_.mutable) {                                       // caching is only allowed in immutable objects
                 let stored = {value, [ItemProxy.FROM_CACHE]: true}
@@ -404,7 +402,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
                     const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
                     return descriptor && typeof descriptor.get === 'function'
                 })
-        // print('own_getters:', own_getters)
         return this._cachable_getters = new Set([...parent_getters, ...own_getters])
     }
 
