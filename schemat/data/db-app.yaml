@@ -114,8 +114,6 @@
     "@": schemat:Catalog
   _category_:
     "@": 5
-  _container_:
-    "@": 1001
   "@": schemat:Data
 - __id: 5007
   name: /site
@@ -127,8 +125,6 @@
     "@": schemat:Catalog
   _category_:
     "@": 5
-  _container_:
-    "@": 1001
   "@": schemat:Data
 - __id: 5008
   content: export let print = console.log
