@@ -168,8 +168,7 @@ export class Category_IID_Namespace extends Namespace {
     get spaces_rev() {
         /* A reverse mapping of category identifiers to space names. Cached. */
         let catalog = this.spaces
-        let rev = new Map(catalog.map(({key, value:item}) => [item._id_, key]))
-        return this.CACHED_PROP(rev)
+        return new Map(catalog.map(({key, value:item}) => [item._id_, key]))
     }
 }
 

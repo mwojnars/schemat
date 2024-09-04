@@ -385,14 +385,14 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
 
-    CACHED_PROP(value) {
-        /* Wrap a `value` of a getter of a special property to mark that the value should be cached and reused
-           after the first calculation. <undefined> is a valid value and is stored as ItemProxy.UNDEFINED
-           to avoid repeated calculation. If you don't want to cache <undefined> (or any other value),
-           return the original (unwrapped) value instead of calling CACHED_PROP().
-         */
-        return {[ItemProxy.CACHED]: true, value}
-    }
+    // CACHED_PROP(value) {
+    //     /* Wrap a `value` of a getter of a special property to mark that the value should be cached and reused
+    //        after the first calculation. <undefined> is a valid value and is stored as ItemProxy.UNDEFINED
+    //        to avoid repeated calculation. If you don't want to cache <undefined> (or any other value),
+    //        return the original (unwrapped) value instead of calling CACHED_PROP().
+    //      */
+    //     return {[ItemProxy.CACHED]: true, value}
+    // }
 
     // static compare(obj1, obj2) {
     //     /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */

@@ -54,7 +54,7 @@ export class File extends Item {
     }
 
     get content_processed() {
-        return this.CACHED_PROP(this.process(this._content()))
+        return this.process(this._content())
     }
 
     // async CALL_import({request}) {
@@ -130,7 +130,6 @@ export class LocalDirectory extends Directory {
     }
 
     get _ext_allowed() {
-        print('this.extensions_allowed:', this.extensions_allowed)
         return this.extensions_allowed.toLowerCase().split(/[ ,;:]+/)
     }
 
