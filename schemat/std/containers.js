@@ -80,7 +80,7 @@ export class Directory extends Container {
            If an object occurs multiple times in this.entries, the LAST occurrence is recorded (!)
          */
         let rev = new Map()
-        for (let {key: name, value: object} of this.entries)
+        for (let {key: name, value: object} of this.entries || [])
             rev.set(object._id_, name)
         return rev
     }
@@ -88,7 +88,7 @@ export class Directory extends Container {
     resolve(path) {
         assert(path, `path must be non-empty`)
         let step = path.split('/')[0]
-        let next = this.entries.get(step)
+        let next = this.entries?.get(step)
         if (!next) return null
 
         let rest = path.slice(step.length + 1)
