@@ -139,7 +139,6 @@ export class Site extends Directory {
                 catch (ex) {
                     if (!(ex instanceof UrlPathNotFound)) throw ex
                 }
-                // if (node.contains(step)) return node.resolve(path, explicit_blank)
             }
             else if (name === step) {
                 if (!node.is_loaded()) await node.load()

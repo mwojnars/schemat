@@ -125,10 +125,6 @@ export class LocalDirectory extends Directory {
         }
     }
 
-    contains(name) {
-         if (!this.local_path) return false
-    }
-
     resolve(path) {
         if (!this.local_path) throw new UrlPathNotFound('LocalDirectory.local_path is undefined')
         let root = this._mod_path.resolve(this.local_path)                          // make `root` an absolute path

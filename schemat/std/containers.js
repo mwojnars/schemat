@@ -22,8 +22,6 @@ export class Container extends Item {
     // properties:
     _is_container
 
-    contains(name) { return true }
-
     resolve(path, explicit_blank = false) {
         /* Find the web object pointed to by `path` and located inside this container or a nested one.
            Return the object, in loaded state. Alternatively, a function, f(request), can be returned to perform
@@ -108,8 +106,6 @@ export class Directory extends Container {
         item.assert_linked()
         return this._entries_rev.get(item._id_)
     }
-
-    contains(name) { return this.entries.has(name) }
 }
 
 
