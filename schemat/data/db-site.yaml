@@ -153,7 +153,7 @@
 - __id: 1019
   name: system-root
   info: >-
-    The system directory (/$) provides access to:
+    The root system directory (/$). It provides access to:
 
     1) every web object by its ID through the "default URL path" (.../id/<ID>), which is used when the object does not belong to any other URL container;
 
