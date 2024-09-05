@@ -8,10 +8,8 @@
   entries:
     $:
       "@": 1019
-    "*domain":
-      "@": 1011
-    "*main":
-      "@": 1014
+    "*application":
+      "@": 1005
     "@": schemat:Catalog
   database:
     "@": 1002
@@ -61,26 +59,13 @@
   _category_:
     "@": 12
   "@": schemat:Data
-- __id: 1007
-  name: favicon.ico
-  local_path: ./assets/favicon.ico
-  _category_:
-    "@": 4
-  _container_:
-    "@": 1011
-  "@": schemat:Data
-- __id: 1011
-  name: domain
-  info: Directory with public static files that must be accessible at the domain
-    root, like .../favicon.ico, /robots.txt etc.
-  entries:
-    favicon.ico:
-      "@": 1007
-    "@": schemat:Catalog
-  _category_:
-    "@": 5
+- __id: 1005
+  name: application
+  local_path: ./app
   _container_:
     "@": 1001
+  _category_:
+    "@": 6
   "@": schemat:Data
 - __id: 1012
   ring:
@@ -97,17 +82,6 @@
     - "@": 1026
   _category_:
     "@": 22
-  "@": schemat:Data
-- __id: 1014
-  name: main-space
-  spaces:
-    sys.category:
-      "@": 0
-    "@": schemat:Catalog
-  _category_:
-    "@": 9
-  _container_:
-    "@": 1001
   "@": schemat:Data
 - __id: 1015
   sequence:
@@ -151,9 +125,9 @@
     "@": 22
   "@": schemat:Data
 - __id: 1019
-  name: system-directory
+  name: system
   info: >-
-    The system directory (/$) provides access to:
+    The root system directory (/$). It provides access to:
 
     1) every web object by its ID through the "default URL path" (.../id/<ID>), which is used when the object does not belong to any other URL container;
 
