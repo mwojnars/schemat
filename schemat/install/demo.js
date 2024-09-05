@@ -51,9 +51,8 @@ async function create_demo_01() {
     
     // replace file paths and object names in `db`
     db = db.replaceAll('main-site', `Books Demo`)
-
     db = db.replaceAll('/schemat/data/db-', `/demo/${demo_name}/data/db-`)
-    // db = db.replaceAll('db-site', `db`)
+    db = db.replaceAll('/app', `/demo/${demo_name}`)
 
     // save as db-site.yaml in the demo folder
     fs.writeFileSync(`${demo_dir}/data/db-site.yaml`, db, 'utf8')

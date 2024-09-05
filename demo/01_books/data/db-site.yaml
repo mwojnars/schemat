@@ -61,7 +61,7 @@
   "@": schemat:Data
 - __id: 1005
   name: application
-  local_path: ./app
+  local_path: ./demo/01_books
   _container_:
     "@": 1001
   _category_:
