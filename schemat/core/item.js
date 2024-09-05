@@ -654,6 +654,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             if (!container._path_) await container._meta_.pending_url       // container's path must be initialized
 
             this._path_ = container.get_access_path(this)
+            if (!this._path_) {
+                print(`WARNING: empty access path for [${this._id_}] despite its _container_ is defined as [${container._id_}]; using default path`)
+                return this._url_ = this._path_ = default_path()
+            }
+
             let [url, is_duplicate] = site.decode_access_path(this._path_)
             // print('_init_url():', url, ` (duplicate=${duplicate})`)
 

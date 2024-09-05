@@ -53,7 +53,11 @@ export class Container extends Item {
         assert(this._path_[0] === '/', `container's _path_ must start with '/'`)
 
         let ident = this.identify(member)
-        assert(ident, `object [${member._id_}] is not a member of this container [${this._id_}]`)
+        if (!ident) {
+            // here, null is returned instead of throwing an error because the mismatch between member's and container's settings may happen temporarily while moving an object from one container to another
+            print(`WARNING: container [${this._id_}] does NOT include object [${member._id_}]`)
+            return null
+        }
 
         // the last char in _path_ can be '/' for a site (_path_='/'); don't include extra '/' in such case
         if (this._path_.endsWith('/')) return this._path_ + ident
