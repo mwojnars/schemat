@@ -208,18 +208,6 @@ describe('Schemat Tests', function () {
             expect_include_all(await extract_content(Varia), 'check', 'Varia.code')
         })
 
-        it('Varia object', async function () {
-            await test_page(page, `${DOMAIN}/$/id/5001`, '#page-main', ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
-        })
-
-        it('uncategorized object', async function () {
-            await test_page(page, `${DOMAIN}/$/id/5002`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
-        })
-        
-        it('static html page', async function () {
-            await test_page(page, `${DOMAIN}/$/id/5001::test_html`, null, ['Test Page', 'Headings', 'First item'])
-        })
-
         it('create & delete item in Varia', async function () {
             // navigate to the Varia category page
             await test_page(page, `${DOMAIN}/sys.category:5000`, '#page-main')
@@ -257,6 +245,18 @@ describe('Schemat Tests', function () {
             // check that the new item disappeared from the list
             let updated_content = await extract_content(page)
             expect(updated_content).to.not.include(name)
+        })
+
+        it('Varia object', async function () {
+            await test_page(page, `${DOMAIN}/$/id/5001`, '#page-main', ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
+        })
+
+        it('uncategorized object', async function () {
+            await test_page(page, `${DOMAIN}/$/id/5002`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
+        })
+        
+        it('static html page', async function () {
+            await test_page(page, `${DOMAIN}/$/id/5001::test_html`, null, ['Test Page', 'Headings', 'First item'])
         })
 
         it('robots.txt', async function () {
