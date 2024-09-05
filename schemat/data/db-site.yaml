@@ -10,8 +10,6 @@
       "@": 1019
     "*application":
       "@": 1005
-    "*domain":
-      "@": 1011
     "*main":
       "@": 1014
     "@": schemat:Catalog
@@ -70,17 +68,6 @@
     "@": 1001
   _category_:
     "@": 6
-  "@": schemat:Data
-- __id: 1011
-  name: domain
-  info: Directory with public static files that must be accessible at the domain
-    root, like .../favicon.ico, /robots.txt etc.
-  entries:
-    "@": schemat:Catalog
-  _category_:
-    "@": 5
-  _container_:
-    "@": 1001
   "@": schemat:Data
 - __id: 1012
   ring:
