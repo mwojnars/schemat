@@ -117,6 +117,7 @@ export class LocalDirectory extends Directory {
     local_path
     extensions_allowed
     paths_forbidden
+    paths_allowed
 
     async __init__() {
         if (schemat.server_side) {
@@ -127,29 +128,32 @@ export class LocalDirectory extends Directory {
 
     resolve(path) {
         if (!this.local_path) return null
-        let root = this._mod_path.resolve(this.local_path)                  // make `root` an absolute path
-
-        // check if the file extension of `path` is in the list of allowed extensions
-        let ext = path.split('.').pop().toLowerCase()
-        if (!this._ext_allowed.includes(ext)) return null
+        let root = this._mod_path.resolve(this.local_path)          // make `root` an absolute path
 
         // check if the local path still falls under the `root` after ".." reduction
         let file_path = this._mod_path.join(root, path)
         if (!file_path.startsWith(root)) return null
-        
-        // check if the path possibly contains a forbidden substring
-        let forbidden = this.paths_forbidden?.split(/\s+/) || []
-        if (forbidden.some(s => file_path.includes(s))) {
-            print(`LocalDirectory._read_file(), forbidden path requested: '${file_path}'`)
-            return null
+
+        let subpath = file_path.slice(root.length + 1)              // truncate 'root' from 'file_path'
+        if (!this._paths_allowed.includes(subpath)) {               // only if the path is NOT explicitly allowed, there's need for further checks
+
+            // check if the file extension of `path` is in the list of allowed extensions
+            let ext = path.split('.').pop().toLowerCase()
+            if (!this._ext_allowed.includes(ext)) return null
+
+            // check if the path possibly contains a forbidden substring
+            if (this._paths_forbid.some(s => file_path.includes(s))) {
+                print(`LocalDirectory._read_file(), forbidden path requested: '${file_path}'`)
+                return null
+            }
         }
 
         return (request) => this._read_file(file_path, request.res)
     }
 
-    get _ext_allowed() {
-        return this.extensions_allowed.toLowerCase().split(/[ ,;:]+/)
-    }
+    get _ext_allowed()      { return this.extensions_allowed.toLowerCase().split(/[ ,;:]+/) }
+    get _paths_forbid()     { return this.paths_forbidden?.split(/\s+/) || [] }
+    get _paths_allowed()    { return this.paths_allowed?.split(/\s+/) || [] }
 
     async _read_file(path, res) {
         // file transforms to be applied
