@@ -280,9 +280,9 @@
       "@": schemat/types/type.js:STRING
     paths_allowed:
       default: robots.txt ads.txt security.txt humans.txt manifest.json
-      info: Explicit list of paths, space-separated, that are allowed even if excluded
-        by other rules, e.g., due to missing or non-supported extension. NO
-        leading slash.
+      info: Explicit list of file paths, space-separated, that are allowed to be
+        served even if excluded by other rules (e.g., due to missing or
+        disallowed extension). NO leading slash.
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
