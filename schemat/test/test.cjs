@@ -259,6 +259,13 @@ describe('Schemat Tests', function () {
             expect(updated_content).to.not.include(name)
         })
 
+        it('robots.txt', async function () {
+            const response = await page.goto(`${DOMAIN}/robots.txt`)
+            expect(response.status()).to.equal(200)
+            const content = await response.text()
+            expect(content).to.include('User-agent:')
+        })
+
         
         // describe('UI Actions on sys.category:1000', function () {
         //     before(async function () {
