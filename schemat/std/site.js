@@ -170,6 +170,7 @@ export class Site extends Directory {
         /* Find the object pointed to by the request's URL path and execute its endpoint function through __handle__(). */
         let path = request.path.slice(1)                // drop the leading slash
         let object = await this.resolve(path, explicit_blank)
+        if (!object) throw new UrlPathNotFound({path})
 
         // if (path !== object.url()) {
         //     // TODO: redirect to the canonical URL
