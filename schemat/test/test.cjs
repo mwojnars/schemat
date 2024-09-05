@@ -266,7 +266,7 @@ describe('Schemat Tests', function () {
             expect(content).to.include('User-agent:')
         })
 
-        
+
         // describe('UI Actions on sys.category:1000', function () {
         //     before(async function () {
         //         await page.goto('http://127.0.0.1:3000/sys.category:1000')
