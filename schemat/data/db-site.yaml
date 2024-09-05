@@ -8,7 +8,7 @@
   entries:
     $:
       "@": 1019
-    "*application":
+    "*codebase":
       "@": 1005
     "@": schemat:Catalog
   database:
@@ -60,7 +60,7 @@
     "@": 12
   "@": schemat:Data
 - __id: 1005
-  name: application
+  name: codebase
   local_path: ./app
   _container_:
     "@": 1001
