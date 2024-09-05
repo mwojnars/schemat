@@ -4,7 +4,6 @@
 
 import {assert, print} from "../common/utils.js"
 import {Item} from "../core/item.js"
-import {UrlPathNotFound} from "../common/errors.js";
 
 
 /**********************************************************************************************************************/
@@ -24,8 +23,8 @@ export class Container extends Item {
 
     resolve(path, explicit_blank = false) {
         /* Find the web object pointed to by `path` and located inside this container or a nested one.
-           Return the object, in loaded state. Alternatively, a function, f(request), can be returned to perform
-           the remaining part of the request handling process.
+           Return the object in loaded state, or null if not found. Alternatively, a function, f(request),
+           can be returned to perform the remaining part of the request handling process.
            This method may return a Promise if an async operation has to be performed during the computation.
 
            The path is relative to this container's base path and should NOT contain a leading slash.
@@ -33,7 +32,7 @@ export class Container extends Item {
            (a/*BLANK/b/c); otherwise, the path is a "URL path" with blank segments hidden (a/b/c).
            Currently, a blank segment is only allowed at the top level of a URL path, inside a Site directory.
          */
-        throw new Error('not implemented')
+        return null
     }
 
     identify(item) {
@@ -90,13 +89,13 @@ export class Directory extends Container {
         assert(path, `path must be non-empty`)
         let step = path.split('/')[0]
         let next = this.entries.get(step)
-        if (!next) throw new UrlPathNotFound({path})
-        let rest = path.slice(step.length + 1)
+        if (!next) return null
 
+        let rest = path.slice(step.length + 1)
         let tail = () => {
             // here, `next` is already loaded
             if (!rest) return next
-            if (!next._is_container) throw new UrlPathNotFound({path})
+            if (!next._is_container) return null
             return next.resolve(rest)
         }
         return next.is_loaded() ? tail() : next.load().then(tail)
@@ -130,7 +129,7 @@ export class IID_Namespace extends Namespace {
             assert(!isNaN(id))
             return schemat.get_loaded(id)
         }
-        catch (ex) { throw new UrlPathNotFound({path}) }
+        catch (ex) { return null }
     }
 
     identify(item) {
@@ -154,7 +153,7 @@ export class Category_IID_Namespace extends Namespace {
         let sep = Category_IID_Namespace.ID_SEPARATOR
         let [space, id, ...rest] = path.split(sep)
         let category = this.spaces.get(space)               // decode space identifier and convert to a category object
-        if (!category || rest.length) throw new UrlPathNotFound({path})
+        if (!category || rest.length) return null
         return schemat.get_loaded(Number(id))
     }
 

@@ -8,7 +8,6 @@ import {print, assert} from "../common/utils.js"
 import {Item} from "../core/item.js"
 import {HttpService, InternalService} from "../web/services.js"
 import {Directory} from "./containers.js";
-import {UrlPathNotFound} from "../common/errors.js";
 
 const {transform_postcss} = SERVER && await import("./transforms.js")
 
@@ -126,22 +125,21 @@ export class LocalDirectory extends Directory {
     }
 
     resolve(path) {
-        if (!this.local_path) throw new UrlPathNotFound('LocalDirectory.local_path is undefined')
-        let root = this._mod_path.resolve(this.local_path)                          // make `root` an absolute path
+        if (!this.local_path) return null
+        let root = this._mod_path.resolve(this.local_path)                  // make `root` an absolute path
 
         // check if the file extension of `path` is in the list of allowed extensions
         let ext = path.split('.').pop().toLowerCase()
-        if (!this._ext_allowed.includes(ext)) throw new UrlPathNotFound({path})
+        if (!this._ext_allowed.includes(ext)) return null
 
         // check if the local path still falls under the `root` after ".." reduction
         let file_path = this._mod_path.join(root, path)
-        if (!file_path.startsWith(root))
-            throw new UrlPathNotFound({path})
+        if (!file_path.startsWith(root)) return null
         
         // if the path contains a folder/file name that starts with "_" or ".", it is treated as PRIVATE (no access)
         if (file_path.includes('/_') || file_path.includes('/.')) {
             print(`LocalDirectory._read_file(), PRIVATE path requested: '${file_path}'`)
-            throw new UrlPathNotFound({path})
+            return null
         }
 
         return (request) => this._read_file(file_path, request.res)

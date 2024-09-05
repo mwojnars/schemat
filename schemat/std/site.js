@@ -135,7 +135,11 @@ export class Site extends Directory {
                 if (!node.is_loaded()) await node.load()
                 assert(node._is_container, "blank route can only point to a Container (Directory, Namespace)")
                 if (explicit_blank) return rest ? node.resolve(rest, explicit_blank) : node
-                try { return node.resolve(path, explicit_blank) }
+                try {
+                    let target = node.resolve(path, explicit_blank)
+                    if (T.isPromise(target)) target = await target
+                    if (target) return target               // target=null means the object was not found and the next route should be tried
+                }
                 catch (ex) {
                     if (!(ex instanceof UrlPathNotFound)) throw ex
                 }
