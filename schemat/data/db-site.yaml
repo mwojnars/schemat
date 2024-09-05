@@ -64,7 +64,7 @@
     "@": 12
   "@": schemat:Data
 - __id: 1005
-  name: application-root
+  name: application
   _container_:
     "@": 1001
   _category_:
@@ -160,7 +160,7 @@
     "@": 22
   "@": schemat:Data
 - __id: 1019
-  name: system-root
+  name: system
   info: >-
     The root system directory (/$). It provides access to:
 
