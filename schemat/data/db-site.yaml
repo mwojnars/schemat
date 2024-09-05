@@ -73,6 +73,8 @@
   "@": schemat:Data
 - __id: 1006
   name: application
+  entries:
+    "@": schemat:Catalog
   _container_:
     "@": 1001
   _category_:
