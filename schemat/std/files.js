@@ -125,6 +125,10 @@ export class LocalDirectory extends Directory {
         }
     }
 
+    contains(name) {
+         if (!this.local_path) return false
+    }
+
     resolve(path) {
         return (request) => this._read_file(path, request.res)
     }

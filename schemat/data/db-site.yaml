@@ -8,6 +8,8 @@
   entries:
     $:
       "@": 1019
+    "*application":
+      "@": 1005
     "*domain":
       "@": 1011
     "*main":
@@ -60,6 +62,13 @@
   stop_id: 5000
   _category_:
     "@": 12
+  "@": schemat:Data
+- __id: 1005
+  name: application-root
+  _container_:
+    "@": 1001
+  _category_:
+    "@": 6
   "@": schemat:Data
 - __id: 1007
   name: favicon.ico
