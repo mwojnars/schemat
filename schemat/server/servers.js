@@ -88,7 +88,14 @@ export class WebServer extends Server {
         }
         catch (ex) {
             print(ex)
-            try { res.sendStatus(ex.code || 500) } catch(e){}               // sending an error code is impossible if the response was already (partially) sent before the error occurred
+            if (!res.headersSent)
+                if (ex.code === 'ENOENT')                           // file not found error
+                    res.status(404).send('File not found')
+                else
+                    res.status(ex.code || 500).send(ex.message || 'Internal Server Error')
+            else
+                res.end()               // if headers were sent already, we need to end the response
+
             // TODO: send cancellation signal (StopRequest interrupt) to the Schemat to terminate all pending load-object operations and stop the remaining computation (esp. on timeout)
         }
 
