@@ -61,6 +61,8 @@
   "@": schemat:Data
 - __id: 1005
   name: codebase
+  info: Path to the local directory containing source code of the application.
+    Typically, this directory does NOT include Schemat source code.
   local_path: ./app
   _container_:
     "@": 1001
