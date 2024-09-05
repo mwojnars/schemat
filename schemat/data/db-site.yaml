@@ -8,6 +8,8 @@
   entries:
     $:
       "@": 1019
+    "*application":
+      "@": 1006
     "*codebase":
       "@": 1005
     "@": schemat:Catalog
@@ -68,6 +70,13 @@
     "@": 1001
   _category_:
     "@": 6
+  "@": schemat:Data
+- __id: 1006
+  name: application
+  _container_:
+    "@": 1001
+  _category_:
+    "@": 5
   "@": schemat:Data
 - __id: 1012
   ring:
