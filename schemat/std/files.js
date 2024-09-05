@@ -116,6 +116,7 @@ export class LocalDirectory extends Directory {
 
     local_path
     extensions_allowed
+    paths_forbidden
 
     async __init__() {
         if (schemat.server_side) {
@@ -136,9 +137,10 @@ export class LocalDirectory extends Directory {
         let file_path = this._mod_path.join(root, path)
         if (!file_path.startsWith(root)) return null
         
-        // if the path contains a folder/file name that starts with "_" or ".", it is treated as PRIVATE (no access)
-        if (file_path.includes('/_') || file_path.includes('/.')) {
-            print(`LocalDirectory._read_file(), PRIVATE path requested: '${file_path}'`)
+        // check if the path possibly contains a forbidden substring
+        let forbidden = this.paths_forbidden?.split(/\s+/) || []
+        if (forbidden.some(s => file_path.includes(s))) {
+            print(`LocalDirectory._read_file(), forbidden path requested: '${file_path}'`)
             return null
         }
 

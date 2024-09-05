@@ -271,6 +271,13 @@
         files that have any other extension are treated as invalid and result in
         'URL not found' error.
       "@": schemat/types/type.js:STRING
+    paths_forbidden:
+      default: /_ /.git /.svn/
+      info: Space-separated list of substrings that must NOT occur in the target file
+        path after its translation from the URL. If any of these substrings is
+        present, 'URL not found' error is returned regardless of the target file
+        extension.
+      "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
     _class_: schemat/std/files.js:LocalDirectory
