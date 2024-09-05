@@ -151,3 +151,12 @@
   _container_:
     "@": 5006
   "@": schemat:Data
+- __id: 5011
+  name: main-space
+  spaces:
+    sys.category:
+      "@": 0
+    "@": schemat:Catalog
+  _category_:
+    "@": 9
+  "@": schemat:Data

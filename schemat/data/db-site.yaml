@@ -83,15 +83,6 @@
   _category_:
     "@": 22
   "@": schemat:Data
-- __id: 1014
-  name: main-space
-  spaces:
-    sys.category:
-      "@": 0
-    "@": schemat:Catalog
-  _category_:
-    "@": 9
-  "@": schemat:Data
 - __id: 1015
   sequence:
     "@": 1012
