@@ -4,10 +4,7 @@
     contains top-level configuration of the website, cluster, database, URL
     routes etc.
   base_url: http://127.0.0.1:3000
-  cluster:
-    "@": 1025
-  database:
-    "@": 1002
+  default_path: /$/id
   entries:
     $:
       "@": 1019
@@ -16,7 +13,10 @@
     "*main":
       "@": 1014
     "@": schemat:Catalog
-  default_path: /$/id
+  database:
+    "@": 1002
+  cluster:
+    "@": 1025
   _category_:
     "@": 1
   "@": schemat:Data
