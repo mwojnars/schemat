@@ -10,8 +10,6 @@
       "@": 1019
     "*application":
       "@": 1005
-    "*main":
-      "@": 1014
     "@": schemat:Catalog
   database:
     "@": 1002
@@ -93,8 +91,6 @@
     "@": schemat:Catalog
   _category_:
     "@": 9
-  _container_:
-    "@": 1001
   "@": schemat:Data
 - __id: 1015
   sequence:

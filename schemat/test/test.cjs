@@ -191,17 +191,17 @@ describe('Schemat Tests', function () {
         })
 
         it('Category', async function () {
-            await test_page(page, `${DOMAIN}/sys.category:0`, '#page-main',
+            await test_page(page, `${DOMAIN}/$/id/0`, '#page-main',
                 ['Category:0', 'Category of items', 'name', '_ttl_', 'defaults', 'schema', 'Ring', 'Varia'])
         })
 
         it('Directory', async function () {
-            await test_page(page, `${DOMAIN}/sys.category:5`, '#page-main',
+            await test_page(page, `${DOMAIN}/$/id/5`, '#page-main',
                 ['Directory', 'nested containers', 'file system', 'containers.js:Directory'])
         })
 
         it('Varia', async function () {
-            let Varia = await test_page(page, `${DOMAIN}/sys.category:5000`, '#page-main',
+            let Varia = await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main',
                 ['Category:5000', 'Varia', 'name', '_category_', 'schema', 'Varia:5001', 'Create Item'])
 
             // these strings are only available after client-side rendering, not in HTML source:
@@ -210,7 +210,7 @@ describe('Schemat Tests', function () {
 
         it('create & delete item in Varia', async function () {
             // navigate to the Varia category page
-            await test_page(page, `${DOMAIN}/sys.category:5000`, '#page-main')
+            await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main')
 
             // type the name of the new item
             const input = 'input[name="name"]'
@@ -267,9 +267,9 @@ describe('Schemat Tests', function () {
         })
 
 
-        // describe('UI Actions on sys.category:1000', function () {
+        // describe('UI Actions on $/id/1000', function () {
         //     before(async function () {
-        //         await page.goto('http://127.0.0.1:3000/sys.category:1000')
+        //         await page.goto('http://127.0.0.1:3000/$/id/1000')
         //     })
         //
         //     it('should add an item and verify it appears in the list', async function () {

@@ -76,8 +76,6 @@
     "@": schemat:Catalog
   defaults:
     _class_: schemat:Category
-    _container_:
-      "@": 1014
     _ttl_: 60
     schema:
       _category_:
