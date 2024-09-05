@@ -130,47 +130,47 @@ export class LocalDirectory extends Directory {
     }
 
     resolve(path) {
-        return (request) => this._read_file(path, request.res)
+        if (!this.local_path) throw new UrlPathNotFound('LocalDirectory.local_path is undefined')
+        let root = this._mod_path.resolve(this.local_path)                          // make `root` an absolute path
+
+        // check if the file extension of `path` is in the list of allowed extensions
+        let ext = path.split('.').pop().toLowerCase()
+        if (!this._ext_allowed.includes(ext)) throw new UrlPathNotFound({path})
+
+        // check if the local path still falls under the `root` after ".." reduction
+        let file_path = this._mod_path.join(root, path)
+        if (!file_path.startsWith(root))
+            throw new UrlPathNotFound({path})
+        
+        // if the path contains a folder/file name that starts with "_" or ".", it is treated as PRIVATE (no access)
+        if (file_path.includes('/_') || file_path.includes('/.')) {
+            print(`LocalDirectory._read_file(), PRIVATE path requested: '${file_path}'`)
+            throw new UrlPathNotFound({path})
+        }
+
+        return (request) => this._read_file(file_path, request.res)
     }
 
     get _ext_allowed() {
         return this.extensions_allowed.toLowerCase().split(/[ ,;:]+/)
     }
 
-    async _read_file(url_path, res) {
-        let root = this._mod_path.resolve(this.local_path)                          // make `root` an absolute path
-        if (!root) throw new Error('LocalDirectory.local_path is undefined')
-        
-        // check if the file extension of `url_path` is in the list of allowed extensions
-        let ext = url_path.split('.').pop().toLowerCase()
-        if (!this._ext_allowed.includes(ext)) throw new UrlPathNotFound({path: url_path})
-
-        // check if the local path still falls under the `root` after ".." reduction
-        let file_path = this._mod_path.join(root, url_path)
-        if (!file_path.startsWith(root))
-            throw new UrlPathNotFound({path: url_path})
-        
-        // if the path contains a folder/file name that starts with "_" or ".", it is treated as PRIVATE (no access)
-        if (file_path.includes('/_') || file_path.includes('/.')) {
-            print(`LocalDirectory._read_file(), PRIVATE path requested: '${file_path}'`)
-            throw new UrlPathNotFound({path: url_path})
-        }
-
+    async _read_file(path, res) {
         // file transforms to be applied
         let transforms = [
             this._transform_postcss.bind(this),
         ]
 
-        let buffer = this._mod_fs.readFileSync(file_path)
-        buffer = await this._apply_transforms(transforms, buffer, file_path)
+        let buffer = this._mod_fs.readFileSync(path)
+        buffer = await this._apply_transforms(transforms, buffer, path)
 
         // TODO: the code below implements CALL requests and should return a buffer instead (no utf-8 decoding) to support all files incl. binary
         if (!res) {
-            assert(false, `LocalDirectory._read_file(): CALL request received for '${file_path}', returning file content as a string not binary`)
-            return this._mod_fs.readFileSync(file_path, {encoding: 'utf8'})
+            assert(false, `LocalDirectory._read_file(): CALL request received for '${path}', returning file content as a string not binary`)
+            return this._mod_fs.readFileSync(path, {encoding: 'utf8'})
         }
 
-        _set_mimetype(res, file_path)
+        _set_mimetype(res, path)
         res.send(buffer)
     }
 

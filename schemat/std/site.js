@@ -135,7 +135,11 @@ export class Site extends Directory {
                 if (!node.is_loaded()) await node.load()
                 assert(node._is_container, "blank route can only point to a Container (Directory, Namespace)")
                 if (explicit_blank) return rest ? node.resolve(rest, explicit_blank) : node
-                if (node.contains(step)) return node.resolve(path, explicit_blank)
+                try { return node.resolve(path, explicit_blank) }
+                catch (ex) {
+                    if (!(ex instanceof UrlPathNotFound)) throw ex
+                }
+                // if (node.contains(step)) return node.resolve(path, explicit_blank)
             }
             else if (name === step) {
                 if (!node.is_loaded()) await node.load()
