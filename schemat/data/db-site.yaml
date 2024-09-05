@@ -151,7 +151,7 @@
     "@": 22
   "@": schemat:Data
 - __id: 1019
-  name: system-directory
+  name: system-root
   info: >-
     The system directory (/$) provides access to:
 
