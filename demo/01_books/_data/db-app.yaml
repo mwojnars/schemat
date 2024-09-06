@@ -32,6 +32,26 @@
   "@": schemat:Data
 - __id: 5001
   name: Author
+  schema:
+    birth_year:
+      "@": schemat/types/type.js:INTEGER
+    death_year:
+      "@": schemat/types/type.js:INTEGER
+    nationality:
+      "@": schemat/types/type.js:STRING
+    notable_work:
+      "@": schemat/types/type.js:STRING
+    literary_movement:
+      "@": schemat/types/type.js:STRING
+    alma_mater:
+      "@": schemat/types/type.js:STRING
+    award:
+      "@": schemat/types/type.js:STRING
+    spouse:
+      "@": schemat/types/type.js:STRING
+    bio:
+      "@": schemat/types/type.js:TEXT
+    "@": schemat:Catalog
   __category:
     "@": 0
   "@": schemat:Data
