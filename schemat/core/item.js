@@ -339,7 +339,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (id !== undefined) Object.defineProperty(this, '_id_', {value: id, writable: false})
     }
 
-    get iid() { return this._id_ }       // alias for _id_
+    get id() { return this._id_ }           // alias for _id_
 
     get _record_() {
         this.assert_linked()

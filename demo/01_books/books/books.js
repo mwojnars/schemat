@@ -8,6 +8,6 @@ export class Book extends Item {
     }
 
     GET__view() {
-        return `Details of book [${this.iid}]...`
+        return `Details of book [${this.id}]...`
     }
 }

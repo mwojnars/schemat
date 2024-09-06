@@ -159,6 +159,7 @@ describe('Schemat Tests', function () {
 
             page.on('console', msg => { messages.push(msg) })
             page.on('pageerror', error => { messages.push({type: () => 'error', text: () => error}) })
+            await delay(100)
         })
 
         beforeEach(() => { messages = [] })

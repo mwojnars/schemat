@@ -75,8 +75,8 @@ export class Ring extends Item {
 
         for (let index of this.indexes.values()) {
             await index.load()
-            let subsequence = new Subsequence(index.iid, this.index_sequence)
-            this._subsequences.set(index.iid, subsequence)
+            let subsequence = new Subsequence(index.id, this.index_sequence)
+            this._subsequences.set(index.id, subsequence)
         }
     }
 
@@ -152,7 +152,7 @@ export class Ring extends Item {
     propagate(req, change /*ChangeRequest*/) {
         /* Propagate a change in this ring's data to all indexes. The change is submitted by a child block of the data_sequence. */
         for (const index of this.indexes.values()) {
-            let seq = this._subsequences.get(index.iid)
+            let seq = this._subsequences.get(index.id)
             index.apply(change, seq)                    // no need to await, the result is not used by the caller
         }
     }
@@ -164,7 +164,7 @@ export class Ring extends Item {
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
         let index = this.indexes.get(name)              // Index object
-        let seq = this._subsequences.get(index.iid)
+        let seq = this._subsequences.get(index.id)
         yield* index.scan(seq, {start, stop, limit, reverse, batch_size})
     }
 

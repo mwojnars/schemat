@@ -115,14 +115,14 @@ export class Subsequence {
      */
 
     base_sequence               // the underlying Sequence
-    iid                         // IID of the Operator that produced this subsequence
+    id                          // IID of the Operator that produced this subsequence
 
     static iid_type = new INTEGER({blank: false})       // for encoding/decoding the IID using variable-length encoding
 
-    constructor(iid, base_sequence) {
+    constructor(id, base_sequence) {
         this.base_sequence = base_sequence
-        this.iid = iid
-        this.prefix = Subsequence.iid_type.encode_uint(iid)
+        this.id = id
+        this.prefix = Subsequence.iid_type.encode_uint(id)
     }
 
     async put(req) {
@@ -156,8 +156,8 @@ export class Subsequence {
 
     _unprefix_key(prefixed_key) {
         let input = new BinaryInput(prefixed_key)
-        let iid = Subsequence.iid_type.decode_uint(input)
-        if (iid !== this.iid) throw new Error(`Invalid subsequence key, found IID prefix=${iid} instead of ${this.iid} in key ${prefixed_key}`)
+        let id = Subsequence.iid_type.decode_uint(input)
+        if (id !== this.id) throw new Error(`Invalid subsequence key, found ID prefix=${id} instead of ${this.id} in key ${prefixed_key}`)
         return input.current()
     }
 }

@@ -180,8 +180,8 @@ export class DataBlock extends Block {
             await this.assert_unique(key, id)
 
         const ring = req.current_ring
-        if (ring.readonly) throw new DataAccessError(`cannot insert a new item, the ring [${ring.iid}] is read-only`)
-        if (!ring.valid_id(id)) throw new DataAccessError(`candidate IID=${id} for a new item is outside of the valid range(s) for the ring [${ring.iid}]`)
+        if (ring.readonly) throw new DataAccessError(`cannot insert a new item, the ring [${ring.id}] is read-only`)
+        if (!ring.valid_id(id)) throw new DataAccessError(`candidate IID=${id} for a new item is outside of the valid range(s) for the ring [${ring.id}]`)
 
         this._autoincrement = Math.max(id, this._autoincrement)
 

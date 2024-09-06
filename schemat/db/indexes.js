@@ -32,7 +32,7 @@ export class Index extends Operator {
         // const {key, value_old, value_new} = change
         // print(`apply(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
 
-        // let sequence = ring.get_sequence('index', this.iid)
+        // let sequence = ring.get_sequence('index', this.id)
 
         // TODO: request object, only used when another propagation step is to be done
         let req = new DataRequest(this, 'apply', {change})
