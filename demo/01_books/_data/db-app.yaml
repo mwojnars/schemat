@@ -1,1 +1,10 @@
-[]
+- __id: 5000
+  name: Book
+  _category_:
+    "@": 0
+  "@": schemat:Data
+- __id: 5001
+  name: Author
+  _category_:
+    "@": 0
+  "@": schemat:Data
