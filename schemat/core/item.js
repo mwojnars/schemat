@@ -600,12 +600,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _init_prototypes() {
         /* Load all Schemat prototypes of this object. */
-        let prototypes = this._prototypes_
-        // for (const p of prototypes)        // TODO: update the code below to verify .__category instead of CIDs
-            // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
-        prototypes = prototypes.filter(p => !p.is_loaded())
-
         let opts = {await_url: false}                                       // during boot up, URLs are not awaited to avoid circular dependencies (see category.load(...) inside _load())
+        let prototypes = this._prototypes_.filter(p => !p.is_loaded())
         if (prototypes.length === 1) return prototypes[0].load(opts)        // performance: trying to avoid unnecessary awaits or Promise.all()
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load(opts)))
     }
