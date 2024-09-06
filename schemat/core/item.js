@@ -144,8 +144,8 @@ class ItemProxy {
        Since a Proxy class can't be subclassed, all methods and properties of ItemProxy are static.
      */
 
-    // the suffix appended to a property name when an array of *all* repeated values of this property is requested, not the first value only
-    static MULTIPLE_SUFFIX = '_array'       // = '$' instead?
+    // the suffix appended to the property name when a *plural* form of this property is requested (an array of *all* values of a repeated field, not the first value only)
+    static PLURAL_SUFFIX = '$'          // '_array'
 
     // these special props are always read from regular POJO attributes and NEVER from object's _data_
     static RESERVED = ['_id_', '_meta_', '_data_', '_record_', '_ready_']
@@ -223,9 +223,9 @@ class ItemProxy {
         // fetch a single value or an array of values of a property `prop` from the target object's _data_ ...
 
         // console.log('get', prop)
-        let suffix = ItemProxy.MULTIPLE_SUFFIX
-        let multiple = prop.endsWith(suffix)
-        if (multiple) prop = prop.slice(0, -suffix.length)      // use the base property name without the suffix
+        let suffix = ItemProxy.PLURAL_SUFFIX
+        let plural = prop.endsWith(suffix)
+        if (plural) prop = prop.slice(0, -suffix.length)        // use the base property name without the suffix
 
         let values = target._compute_property(prop)
 
@@ -233,14 +233,14 @@ class ItemProxy {
         if (!target._meta_.mutable)                             // caching is only allowed in immutable objects
             ItemProxy._cache_property(target, prop, values)
 
-        return multiple ? values : values[0]
+        return plural ? values : values[0]
     }
 
     static _cache_property(target, prop, values) {
         /* Cache the result in target._self_; _self_ is used instead of `target` because the latter
            can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
          */
-        let suffix = ItemProxy.MULTIPLE_SUFFIX
+        let suffix = ItemProxy.PLURAL_SUFFIX
         let single = values[0]
         let single_cached = (single !== undefined) ? single : ItemProxy.UNDEFINED
 
@@ -318,7 +318,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _schema_                schema of this item's data, as a DATA object
 
     _extends_
-    _prototypes_            array of direct ancestors (prototypes) of this object; alias for `_extends__array`
+    _prototypes_            array of direct ancestors (prototypes) of this object; alias for `_extends_$`
     _ancestors_             array of all ancestors, deduplicated and linearized, with `this` at the first position
 
     _class_                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
@@ -357,7 +357,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return this._category_?.data_schema || new DATA_GENERIC()
     }
 
-    get _prototypes_() { return this._extends__array }
+    get _prototypes_() { return this._extends_$ }
 
     get _ancestors_() {
         // TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
@@ -1158,7 +1158,7 @@ export class Category extends Item {
     //      */
     //     // let side = schemat.server_side ? 'server' : 'client'
     //     // let snippets = this.getMany([key, `${key}_${side}`], params)
-    //     let snippets = this[`${key}_array`].reverse()
+    //     let snippets = this[`${key}$`].reverse()
     //     return snippets.join('\n')
     // }
     //
