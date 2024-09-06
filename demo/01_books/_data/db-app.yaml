@@ -1,6 +1,31 @@
 - __id: 5000
   name: Book
   schema:
+    title:
+      "@": schemat/types/type.js:STRING
+    author:
+      info: Repeat this field to enter multiple authors.
+      category:
+        "@": 5001
+      "@": schemat/types/type.js:ITEM
+    genre:
+      "@": schemat/types/type.js:STRING
+    published_year:
+      "@": schemat/types/type.js:INTEGER
+    isbn:
+      "@": schemat/types/type.js:STRING
+    page_count:
+      "@": schemat/types/type.js:INTEGER
+    language:
+      "@": schemat/types/type.js:STRING
+    publisher:
+      "@": schemat/types/type.js:STRING
+    description:
+      "@": schemat/types/type.js:TEXT
+    average_rating:
+      "@": schemat/types/type.js:NUMBER
+    cover_image:
+      "@": schemat/types/type.js:URL
     "@": schemat:Catalog
   __category:
     "@": 0
