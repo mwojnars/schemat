@@ -53,8 +53,9 @@
         objects of this category when requested via a URL with no explicit
         endpoint.
       default:
-        GET: home
+        GET: view
         GET/2: admin
+        GET/3: schemat
         CALL: self
         "@": schemat:Catalog
       "@": schemat/types/catalog.js:CATALOG

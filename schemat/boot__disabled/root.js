@@ -35,7 +35,7 @@ let root_fields = new Catalog({
     class_body   : new CODE({repeated: true, info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `class_path` class, or the class of the first base category, or the top-level Item."}),
 
     default_endpoints: new CATALOG({values: new STRING(), info: "List of [PROTOCOL, endpoint] pairs that define default endpoint(s) for objects of this category when requested via a URL with no explicit endpoint.",
-                                    default: new Catalog(['GET', 'home'], ['GET', 'admin'], ['CALL', 'self']),
+                                    default: new Catalog(['GET', 'view'], ['GET', 'admin'], ['CALL', 'self']),
                                    }),
 
     pages        : new CATALOG({values: new CODE(), info: "Source code of functions that generate static HTML response for particular access methods of this category's items."}),

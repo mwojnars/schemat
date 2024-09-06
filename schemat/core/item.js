@@ -913,7 +913,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (endpoints.length) return endpoints
 
         // otherwise, use global defaults
-        let defaults = {GET: ['home', 'admin'], CALL: ['self']}
+        let defaults = {GET: ['view', 'admin', 'schemat'], CALL: ['self']}
         endpoints = defaults[protocol] || []
         if (endpoints.length) return endpoints
 
