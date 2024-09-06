@@ -8,9 +8,9 @@
   entries:
     $:
       "@": 1019
-    "*application":
+    "*app_objects":
       "@": 1006
-    "*codebase":
+    "*app_source":
       "@": 1005
     "@": schemat:Catalog
   database:
@@ -62,7 +62,7 @@
     "@": 12
   "@": schemat:Data
 - __id: 1005
-  name: codebase
+  name: app_source
   info: Path to the local directory containing source code of the application.
     Typically, this directory does NOT include Schemat source code.
   local_path: ./app
@@ -72,7 +72,7 @@
     "@": 6
   "@": schemat:Data
 - __id: 1006
-  name: application
+  name: app_objects
   entries:
     "@": schemat:Catalog
   __container:
