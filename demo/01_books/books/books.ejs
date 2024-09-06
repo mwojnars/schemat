@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <header>
+        <h1>Books</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/books">Books</a>
+            <a href="/authors">Authors</a>
+            <a href="/about">About</a>
+        </nav>
+    </header>
+    <main>
+        <ul id="book-list">
+            <% books.forEach(book => { %>
+                <li id="<%= book.id %>">
+                    <img src="<%= book.cover_image %>" alt="<%= book.title %> cover" class="book-cover">
+                    <h2><%= book.title %></h2>
+                    <p>Author(s):
+                        <% book.authors.forEach((authorId, index) => { %>
+                            <% let author = authors.find(a => a.id === authorId) %>
+                            <a href="/authors#<%= author.id %>"><%= author.name %></a><%= index < book.authors.length - 1 ? ', ' : '' %>
+                        <% }) %>
+                    </p>
+                    <p>Genre: <%= book.genre %></p>
+                    <p>Published: <%= book.published_year %> by <%= book.publisher %></p>
+                    <p>ISBN: <%= book.isbn %></p>
+                    <p>Pages: <%= book.page_count %></p>
+                    <p>Language: <%= book.language %></p>
+                    <p>Average Rating: <%= book.average_rating %>/5</p>
+                    <p>Description: <%= book.description %></p>
+                </li>
+            <% }) %>
+        </ul>
+    </main>
+    <footer>
+        <p>&copy; 2024 Our Bookstore. All rights reserved.</p>
+    </footer>
+</body>
+</html>
