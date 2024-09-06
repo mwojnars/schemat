@@ -143,7 +143,7 @@ export class Schemat {
     async boot(site_id, bootstrap_db, open_bootstrap_db = null) {
         /* Initialize built-in objects, site_id, site, bootstrap DB. */
 
-        await this._init_builtin()
+        await this._init_classpath()
 
         this._db = bootstrap_db             // on server, the ultimate DB is opened later: on the first access to this.db
         await open_bootstrap_db?.()
@@ -162,7 +162,7 @@ export class Schemat {
         assert(this.site)
     }
 
-    async _init_builtin() {
+    async _init_classpath() {
         let builtin = this.builtin = new Classpath()
 
         builtin.set(":Map", Map)                                    // standard JS classes have an empty file part of the path
