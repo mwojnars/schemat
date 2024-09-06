@@ -162,10 +162,10 @@
         its ID. For internal purposes. Should contain a leading slash and no
         trailing slash.
       "@": schemat/types/type.js:PATH
-    _path_:
+    __path:
       default: /
       "@": schemat/types/type.js:STRING
-    _url_:
+    __url:
       default: /
       "@": schemat/types/type.js:STRING
     cache_purge_interval:

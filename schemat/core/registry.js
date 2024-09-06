@@ -24,7 +24,7 @@ export class ObjectsCache extends Map {
         let count = 0
 
         for (let [id, obj] of this.entries()) {
-            if (obj._meta_.expiry > now) continue
+            if (obj.__meta.expiry > now) continue
 
             let evicted = on_evict?.(obj)
             if (T.isPromise(evicted)) evicted = await evicted       // TODO: add to `pending` instead of awaiting here
@@ -62,7 +62,7 @@ export class Registry {
     set(obj) {
         /* Put `obj` in the cache. This may override an existing instance with the same ID. */
         assert(obj._id_ !== undefined, `cannot register an object without an ID: ${obj}`)
-        assert(!obj._meta_.mutable, `cannot register a mutable object: ${obj}`)
+        assert(!obj.__meta.mutable, `cannot register a mutable object: ${obj}`)
         this.objects.set(obj._id_, obj)
         return obj
     }

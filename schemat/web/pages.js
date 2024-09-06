@@ -243,7 +243,7 @@ export class ItemAdminView extends ReactPage.View {
         /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
         let globalAssets = Resources.clientAssets
         // let staticAssets = this.__category?.schema_assets.render_all()
-        let staticAssets = this._assets_.render_all()
+        let staticAssets = this.__assets.render_all()
         // let customAssets = this.__category?.html_assets
         let assets = [globalAssets, staticAssets]   // customAssets
         return assets .filter(a => a?.trim()) .join('\n')
@@ -282,7 +282,7 @@ export class ItemAdminView extends ReactPage.View {
 
     PropertiesTable() {
         /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
-        return e(CatalogTable, {item: this, type: this.__schema, catalog: this._data_, start_color: 1})
+        return e(CatalogTable, {item: this, type: this.__schema, catalog: this.__data, start_color: 1})
     }
 }
 

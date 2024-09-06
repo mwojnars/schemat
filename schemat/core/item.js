@@ -147,11 +147,11 @@ class ItemProxy {
     // the suffix appended to the property name when a *plural* form of this property is requested (an array of *all* values of a repeated field, not the first value only)
     static PLURAL_SUFFIX = '$'          // __array __list __all ?
 
-    // these special props are always read from regular POJO attributes and NEVER from object's _data_
-    static RESERVED = ['_id_', '_meta_', '_data_', '__record', '_ready_']
+    // these special props are always read from regular POJO attributes and NEVER from object's __data
+    static RESERVED = ['_id_', '__meta', '__data', '__record']
 
-    // these special props can still be written to after the value read from _data_ was undefined
-    static WRITABLE_IF_UNDEFINED = ['_url_', '_path_']
+    // these special props can still be written to after the value read from __data was undefined
+    static WRITABLE_IF_UNDEFINED = ['__url', '__path']
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
@@ -176,7 +176,7 @@ class ItemProxy {
             if (typeof value === 'object' && value?.[ItemProxy.NO_CACHING])     // this particular value must not be cached for some reason?
                 return value.value
 
-            if (!target._meta_.mutable) {                                       // caching is only allowed in immutable objects
+            if (!target.__meta.mutable) {                                       // caching is only allowed in immutable objects
                 let stored = {value, [ItemProxy.FROM_CACHE]: true}
                 Object.defineProperty(target._self_, prop, {value: stored, writable: false, configurable: true})
                 // print('saved in cache:', prop)
@@ -187,7 +187,7 @@ class ItemProxy {
         // if (typeof value === 'object' && value?.[ItemProxy.CACHED]) {
         //     // the value comes from a getter and is labelled to be "CACHED"? save it in the target object
         //     value = value.value
-        //     if (!target._meta_.mutable) {           // caching is only allowed in immutable objects
+        //     if (!target.__meta.mutable) {           // caching is only allowed in immutable objects
         //         let stored = (value === undefined) ? ItemProxy.UNDEFINED : value
         //         Object.defineProperty(target._self_, prop, {value: stored, writable: false, configurable: true})
         //     }
@@ -197,7 +197,7 @@ class ItemProxy {
         if (value === ItemProxy.UNDEFINED) return undefined
         if (value !== undefined) return value
 
-        if (!target._data_) return undefined
+        if (!target.__data) return undefined
         if (typeof prop !== 'string') return undefined          // `prop` can be a symbol like [Symbol.toPrimitive] - ignore
 
         // there are many queries for 'then' because after a promise resolves, its result is checked for .then
@@ -208,7 +208,7 @@ class ItemProxy {
         if (ItemProxy.RESERVED.includes(prop))
             return undefined
 
-        // fetch a single value or an array of values of a property `prop` from the target object's _data_ ...
+        // fetch a single value or an array of values of a property `prop` from the target object's __data ...
 
         // console.log('get', prop)
         let suffix = ItemProxy.PLURAL_SUFFIX
@@ -218,7 +218,7 @@ class ItemProxy {
         let values = target._compute_property(prop)
 
         // if (values.length || target.is_loaded)                  // ?? undefined (empty) value is not cached unless the object is fully loaded
-        if (!target._meta_.mutable)                             // caching is only allowed in immutable objects
+        if (!target.__meta.mutable)                             // caching is only allowed in immutable objects
             ItemProxy._cache_property(target, prop, values)
 
         return plural ? values : values[0]
@@ -298,7 +298,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _id_                    database ID of the object, globally unique; undefined in a newly created item; must never be changed for an existing item;
                             it is assumed that if _id_ exists, the object is ALREADY stored in the DB (is "linked");
                             for a newly created object that already has an ID assigned, but is not yet (fully) saved to DB, the ID must be kept
-                            in _meta_.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
+                            in __meta.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
 
     __record                ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
                             undefined in a newborn item; immutable after the first assignment
@@ -315,9 +315,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __status                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
     __ttl                   time-to-live of this object in the registry [seconds]; 0 = immediate eviction on the next cache purge
 
-    _path_
-    _url_                   absolute URL path of this object; calculated right *after* __init__(); to be sure that _url_ is computed, await _meta_.pending_url first
-    _assets_                cached web Assets of this object's __schema
+    __path
+    __url                   absolute URL path of this object; calculated right *after* __init__(); to be sure that __url is computed, await __meta.pending_url first
+    __assets                cached web Assets of this object's __schema
 
     */
 
@@ -332,7 +332,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     get __record() {
         this.assert_linked()
         this.assert_loaded()
-        return new ItemRecord(this._id_, this._data_)
+        return new ItemRecord(this._id_, this.__data)
     }
     set __record(record) {
         assert(record)
@@ -356,7 +356,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return [this, ...unique(concat(candidates))]
     }
 
-    get _assets_()  {
+    get __assets()  {
         let assets = new Assets()
         this.__schema.collect(assets)
         return assets
@@ -399,12 +399,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
-    _data_          // data fields of this item, as a Data object; created during .load()
+    __data          // data fields of this item, as a Data object; created during .load()
     _net_           // per-instance Network adapter that connects this object to its network API as defined in the class's API (this.constructor._api_);
                     // API endpoints of the object can be called programmatically through this._net_.PROTO.xxx(args), where PROTO is GET/POST/CALL/...,
                     // which works both on the client and server (in the latter case, the call executes the service function directly without network communication)
 
-    _meta_ = {                  // _meta_ contain system properties of this object...
+    __meta = {                  // __meta contain system properties of this object...
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         mutable:   false,       // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from the registry
         expiry:    0,           // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
@@ -422,9 +422,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     is_newborn()    { return this._id_ === undefined }              // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
     is_linked()     { return this._id_ !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
-    is_loaded()     { return this._data_ && !this._meta_.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except _url_ & _path_ which are allowed to be delayed)
-    //is_activated()  { return this.is_loaded() && this._url_}        // true if the object is loaded AND its URL is already computed
-    //is_expired()    { return this._meta_.expiry < Date.now() }
+    is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
+    //is_activated()  { return this.is_loaded() && this.__url}        // true if the object is loaded AND its URL is already computed
+    //is_expired()    { return this.__meta.expiry < Date.now() }
 
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
@@ -471,7 +471,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let core = new this(false)
         let item = core._proxy_ = ItemProxy.wrap(core)
         if (id !== undefined && id !== null) core._id_ = id
-        if (mutable) core._meta_.mutable = true     // this allows EDIT_xxx operations on the object and prevents caching in Schemat's registry
+        if (mutable) core.__meta.mutable = true     // this allows EDIT_xxx operations on the object and prevents caching in Schemat's registry
         return item
     }
 
@@ -483,7 +483,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     static async from_record(record /*ItemRecord*/, opts = {}) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no ID yet);
            or an instance loaded from DB and filled out with data from `record` (an ItemRecord).
-           In any case, the item returned is *booted* (this._data_ is initialized) and activated (__init__() was called).
+           In any case, the item returned is *booted* (this.__data is initialized) and activated (__init__() was called).
          */
         // TODO: if the record is already cached in binary registry, return the cached item...
         // TODO: otherwise, create a new item and cache it in binary registry
@@ -511,8 +511,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _get_write_id() {
-        /* Either _id_ or _meta_.provisional_id. */
-        return this._id_ !== undefined ? this._id_ : this._meta_.provisional_id
+        /* Either _id_ or __meta.provisional_id. */
+        return this._id_ !== undefined ? this._id_ : this.__meta.provisional_id
     }
 
 
@@ -524,18 +524,18 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            If you want to refresh the data, create a new instance or use refresh() instead.
            `await_url` has effect only after the schemat.site is loaded, not during boot up.
          */
-        if (this._data_ || this._meta_.loading) {           // data is loaded or being loaded right now? do nothing except for awaiting the URL (previous load() may have been called with await_url=false)
+        if (this.__data || this.__meta.loading) {           // data is loaded or being loaded right now? do nothing except for awaiting the URL (previous load() may have been called with await_url=false)
             assert(!record)
-            if (await_url && schemat.site && this._meta_.pending_url)
-                await this._meta_.pending_url
-            return this._meta_.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
+            if (await_url && schemat.site && this.__meta.pending_url)
+                await this.__meta.pending_url
+            return this.__meta.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
         }
         if (this.is_newborn() && !record) return this                       // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
-        return this._meta_.loading = this._load(record, await_url)          // keep a Promise that will eventually load the data; this is needed to avoid race conditions
+        return this.__meta.loading = this._load(record, await_url)          // keep a Promise that will eventually load the data; this is needed to avoid race conditions
     }
 
     async _load(record /*ItemRecord*/, await_url) {
-        /* Load this._data_ from `record` or DB. Set up the class and prototypes. Call __init__(). */
+        /* Load this.__data from `record` or DB. Set up the class and prototypes. Call __init__(). */
 
         schemat.before_data_loading(this)
 
@@ -543,20 +543,20 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             record = record || await this._load_record()
             assert(record instanceof ItemRecord)
 
-            this._data_ = record.data
+            this.__data = record.data
             if (record.id !== undefined)                        // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
                 this.__record = record
 
             let proto = this._init_prototypes()                 // load prototypes
             if (proto instanceof Promise) await proto
 
-            // this._data_ is already loaded, so __category should be available IF defined (except for non-categorized objects)
+            // this.__data is already loaded, so __category should be available IF defined (except for non-categorized objects)
             let category = this.__category
 
             if (category && !category.is_loaded() && category !== this)
                 await category.load({await_url: false})         // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
-            this._meta_.expiry = Date.now() + (this.__ttl || 0) * 1000
+            this.__meta.expiry = Date.now() + (this.__ttl || 0) * 1000
 
             if (this.__status) print(`WARNING: object [${this._id_}] has status ${this.__status}`)
 
@@ -565,25 +565,25 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             this._init_network()
 
             if (this.is_linked())
-                this._meta_.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
+                this.__meta.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
             let init = this.__init__()                      // custom initialization after the data is loaded (optional);
-            if (init instanceof Promise) await init         // if this._url_ is needed inside __init__(), _meta_.pending_url must be explicitly awaited there
+            if (init instanceof Promise) await init         // if this.__url is needed inside __init__(), __meta.pending_url must be explicitly awaited there
 
             // if (!schemat.site?.is_activated())
             //     print(`site NOT yet fully activated when calculating url for [${this._id_}]`)
 
-            if (await_url && schemat.site && this._meta_.pending_url)
-                await this._meta_.pending_url
+            if (await_url && schemat.site && this.__meta.pending_url)
+                await this.__meta.pending_url
 
             return this
 
         } catch (ex) {
-            this._data_ = undefined                         // on error, clear the data to mark this object as not loaded
+            this.__data = undefined                         // on error, clear the data to mark this object as not loaded
             throw ex
 
         } finally {
-            this._meta_.loading = false                     // cleanup to allow another load attempt, even after an error
+            this.__meta.loading = false                     // cleanup to allow another load attempt, even after an error
             schemat.after_data_loading(this)
         }
     }
@@ -607,18 +607,18 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     async _init_url() {
-        /* Initialize this item's URL path (this._url_) and container path (this._path_).
+        /* Initialize this item's URL path (this.__url) and container path (this.__path).
            This method must NOT be overridden in subclasses, because it gets called BEFORE the proper class is set on the object (!)
          */
         try {
-            if (this._url_ && this._path_) return this._url_        // already initialized (e.g., for Site object)
+            if (this.__url && this.__path) return this.__url        // already initialized (e.g., for Site object)
 
             let site = schemat.site
 
             while (!site) {                                         // wait until the site is created (important for bootstrap objects)
                 // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
                 await delay()
-                if (this._url_) return this._url_                   // already initialized?
+                if (this.__url) return this.__url                   // already initialized?
                 if (schemat.is_closing) return undefined            // site is closing? no need to wait any longer
                 site = schemat.site
             }
@@ -630,26 +630,26 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             if (!container) {
                 let url = default_path()
                 print('missing container:', url, `(${this.name})`)
-                return this._url_ = this._path_ = url
+                return this.__url = this.__path = url
             }
             // print(`_init_url() container: '${container._id_}'`)
 
             if (!container.is_loaded()) await container.load()              // container must be fully loaded
-            if (!container._path_) await container._meta_.pending_url       // container's path must be initialized
+            if (!container.__path) await container.__meta.pending_url       // container's path must be initialized
 
-            this._path_ = container.get_access_path(this)
-            if (!this._path_) {
+            this.__path = container.get_access_path(this)
+            if (!this.__path) {
                 print(`WARNING: empty access path for [${this._id_}] despite its container is defined as [${container._id_}]; using default path`)
-                return this._url_ = this._path_ = default_path()
+                return this.__url = this.__path = default_path()
             }
 
-            let [url, is_duplicate] = site.decode_access_path(this._path_)
+            let [url, is_duplicate] = site.decode_access_path(this.__path)
             // print('_init_url():', url, ` (duplicate=${duplicate})`)
 
-            return this._url_ = is_duplicate ? default_path() : url
+            return this.__url = is_duplicate ? default_path() : url
         }
         finally {
-            this._meta_.pending_url = undefined
+            this.__meta.pending_url = undefined
         }
     }
 
@@ -685,7 +685,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         assert(typeof prop === 'string')
 
         let proxy = this._proxy_
-        let data  = this._data_
+        let data  = this.__data
         if (!data) throw new NotLoaded(this)
 
         // check the Type of the property in this object's __schema; special handling for:
@@ -722,28 +722,28 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return type.combine_inherited(streams, proxy)                       // `default` and `impute` of the `type` are applied here
     }
 
-    _own_values(prop)  { return this._data_.get_all(prop) }
+    _own_values(prop)  { return this.__data.get_all(prop) }
 
     async seal_data() {
-        /* In a newborn (unlinked) object, create _data_ - if not present yet - by copying property values
+        /* In a newborn (unlinked) object, create __data - if not present yet - by copying property values
            from regular POJO attributes of the object.
          */
-        if (this._data_) return this._data_
+        if (this.__data) return this.__data
         if (this.is_linked()) throw new Error('cannot seal properties of a linked object')
-        return this._data_ = await Data.from_object(this)
+        return this.__data = await Data.from_object(this)
     }
 
     dump_data() {
-        /* Encode and stringify this._data_ through JSONx. Nested values are recursively encoded. */
-        return this._data_.dump()
+        /* Encode and stringify this.__data through JSONx. Nested values are recursively encoded. */
+        return this.__data.dump()
     }
 
     url(endpoint, args) {
         /* `endpoint` is an optional name of an ::endpoint, `args` will be appended to URL as a query string. */
 
-        let path = this._url_
+        let path = this.__url
         if (!path) {
-            console.error(`missing _url_ for object [${this._id_}], introduce a delay or await _meta_.pending_url`)
+            console.error(`missing __url for object [${this._id_}], introduce a delay or await __meta.pending_url`)
             return ''
         }
         if (endpoint) path += Request.SEP_ENDPOINT + endpoint               // append ::endpoint and ?args if present...
@@ -804,8 +804,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     async _find_unlinked_references(visited = new Set()) {
         /* Find recursively all newborn (non-persisted) objects that are referenced - directly or indirectly -
-           by this one. If `this` is unsealed yet (properties are stored in POJO attributes not in _data_),
-           create _data_ from the object's regular attributes.
+           by this one. If `this` is unsealed yet (properties are stored in POJO attributes not in __data),
+           create __data from the object's regular attributes.
          */
         let data = await this.seal_data()
         let refs = data.find_references()
@@ -851,7 +851,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Custom tear down that is executed right after this object is deleted from the database. */
 
     __init__() {}
-        /* Optional item-specific initialization after this._data_ is loaded.
+        /* Optional item-specific initialization after this.__data is loaded.
            Subclasses may override this method as either sync or async.
          */
     __done__() {}
@@ -957,30 +957,30 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
      ***/
 
     EDIT_overwrite({data}) {
-        /* Replace the entire set of own properties, _data_, with a new Data object. */
+        /* Replace the entire set of own properties, __data, with a new Data object. */
         if (typeof data === 'string') data = Data.load(data)
         assert(data instanceof Data)
-        this._data_ = data
+        this.__data = data
     }
 
     EDIT_insert({path, pos, entry}) {
         /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
-        this._data_.insert(path, pos, entry)
+        this.__data.insert(path, pos, entry)
     }
 
     EDIT_delete({path}) {
         /* Delete a property; or a field inside a nested Catalog in a property. */
-        this._data_.delete(path)
+        this.__data.delete(path)
     }
 
     EDIT_update({path, entry}) {
         /* Update a property; or a field inside a nested Catalog. */
-        this._data_.update(path, entry)
+        this.__data.update(path, entry)
     }
 
     EDIT_move({path, pos, pos_new}) {
         /* Move a property or a field inside a nested Catalog. */
-        this._data_.move(path, pos, pos_new)
+        this.__data.move(path, pos, pos_new)
     }
 
 
@@ -1046,7 +1046,7 @@ export class Category extends Item {
 
     async _init_schema() {
         // initialize Type objects inside `schema`; in particular, TypeWrapper requires explicit async initialization to load sublinked items
-        let fields = this._data_.get('schema') || []
+        let fields = this.__data.get('schema') || []
         let calls  = fields.map(({value: type}) => type.init()).filter(res => res instanceof Promise)
         assert(!calls.length, 'TypeWrapper shall not be used for now')
         if (calls.length) return Promise.all(calls)
@@ -1149,7 +1149,7 @@ export class Category extends Item {
     // _checkPath(request) {
     //     /* Check if the request's path is compatible with the default path of this item. Throw an exception if not. */
     //     let path  = request.path
-    //     let dpath = this._url_                      // `path` must be equal to the canonical URL path of this item
+    //     let dpath = this.__url                      // `path` must be equal to the canonical URL path of this item
     //     if (path !== dpath)
     //         throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
     // }
@@ -1227,16 +1227,16 @@ export class RootCategory extends Category {
 
     _id_ = ROOT_ID
 
-    // _set_expiry() { this._meta_.expiry = undefined }          // never evict from cache
+    // _set_expiry() { this.__meta.expiry = undefined }          // never evict from cache
 
     get __category() { return this._proxy_ }        // root category is a category for itself
 
     get data_schema() {
         /* In RootCategory, this == this.__category, and to avoid infinite recursion we must perform schema inheritance manually. */
-        let root_fields = this._data_.get('schema')
-        let default_fields = this._data_.get('defaults').get('schema')
+        let root_fields = this.__data.get('schema')
+        let default_fields = this.__data.get('defaults').get('schema')
         let fields = new Catalog(root_fields, default_fields)
-        let custom = this._data_.get('allow_custom_fields')
+        let custom = this.__data.get('allow_custom_fields')
         return new DATA({fields: fields.object(), strict: custom !== true})
     }
 }

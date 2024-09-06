@@ -49,7 +49,7 @@ export class Site extends Directory {
         while (!schemat.site) await delay()
         let default_container = await this.resolve(this.default_path)
 
-        assert(this._url_[0] === '/', `site's _url_ path must start with '/'`)
+        assert(this.__url[0] === '/', `site's __url path must start with '/'`)
 
         // check that default_path maps to a container...
         assert(default_container._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)

@@ -64,7 +64,7 @@ export class ClientSchemat extends Schemat {
     /***  DB  ***/
 
     async insert(item) {
-        let data = item._data_.__getstate__()
+        let data = item.__data.__getstate__()
         delete data['__category']
 
         let category = item.__category

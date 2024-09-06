@@ -124,7 +124,7 @@ export class Schemat {
         }
         _name(obj) {
             if (typeof obj._self_.name === 'string') return obj._self_.name     // watch out for ItemProxy.UNDEFINED
-            return obj._data_?.get('name') || ''                                //(obj.is_loaded ? obj.name : obj._self_.name)
+            return obj.__data?.get('name') || ''                                //(obj.is_loaded ? obj.name : obj._self_.name)
         }
     }
 
@@ -190,9 +190,9 @@ export class Schemat {
          */
         await this.reload(this.site_id)
         for (let obj of this.registry)
-            if (obj._data_) await this.reload(obj)
-            // if (obj._data_ && !obj._url_)
-            //     await obj._meta_.pending_url
+            if (obj.__data) await this.reload(obj)
+            // if (obj.__data && !obj.__url)
+            //     await obj.__meta.pending_url
     }
 
 
@@ -204,7 +204,7 @@ export class Schemat {
          */
         // this.session?.countRequested(id)
         let obj = this.registry.get(id) || this.registry.set(Item.create_stub(id))          // a stub has immediate expiry date (i.e., on next cache purge) unless its data is loaded and TLS updated
-        assert(!obj._meta_.mutable)
+        assert(!obj.__meta.mutable)
         return obj
     }
 

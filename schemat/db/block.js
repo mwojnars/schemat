@@ -235,7 +235,7 @@ export class DataBlock extends Block {
             if (T.isPromise(ret)) await ret
         }
 
-        let value = object._data_.dump()
+        let value = object.__data.dump()
         req = req.make_step(this, 'save', {id, key, value})
 
         if (req.current_ring.readonly)              // can't write the update here in this ring? forward to a higher ring

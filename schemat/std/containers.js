@@ -46,8 +46,8 @@ export class Container extends Item {
         /* Return an access path to `member` that starts at the root (site object).
            The access path is like a URL path, but with explicit blank segments: /*BLANK
          */
-        assert(this._path_, `container's _path_ is not initialized (${this.name} ${this._id_})`)
-        assert(this._path_[0] === '/', `container's _path_ must start with '/'`)
+        assert(this.__path, `container's __path is not initialized (${this.name} ${this._id_})`)
+        assert(this.__path[0] === '/', `container's __path must start with '/'`)
 
         let ident = this.identify(member)
         if (!ident) {
@@ -56,10 +56,10 @@ export class Container extends Item {
             return null
         }
 
-        // the last char in _path_ can be '/' for a site (_path_='/'); don't include extra '/' in such case
-        if (this._path_.endsWith('/')) return this._path_ + ident
+        // the last char in __path can be '/' for a site (__path='/'); don't include extra '/' in such case
+        if (this.__path.endsWith('/')) return this.__path + ident
 
-        return this._path_ + '/' + ident
+        return this.__path + '/' + ident
     }
 
     // build_url(item) {

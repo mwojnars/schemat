@@ -290,7 +290,7 @@ export class Database extends Item {
            TODO: simplify the code if predefined ID is never used (id=undefined below); .save() can be used instead
          */
         let item = (item_or_data instanceof Item) && item_or_data
-        let data = item ? item._data_ : item_or_data
+        let data = item ? item.__data : item_or_data
 
         if (!T.isString(data)) data = data.dump()
 
@@ -327,12 +327,12 @@ export class Database extends Item {
 
         // 1st phase: insert stubs
         for (let item of items)
-            item._meta_.provisional_id = await this.insert(empty_data)      // TODO: await all in parallel (here and below)
+            item.__meta.provisional_id = await this.insert(empty_data)      // TODO: await all in parallel (here and below)
 
         // 2nd phase: update records with actual data
         for (let item of items) {
-            item._data_ = item._data_ || await Data.from_object(item)       // if item has no _data_, create it from the object's properties
-            item._id_ = item._meta_.provisional_id
+            item.__data = item.__data || await Data.from_object(item)       // if item has no __data, create it from the object's properties
+            item._id_ = item.__meta.provisional_id
             // TODO: check if the line below is needed or not? ultimately need to be removed...
             // schemat._register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
             await this.update_full(item)
