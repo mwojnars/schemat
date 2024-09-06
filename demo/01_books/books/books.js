@@ -1,9 +1,13 @@
-import {Category} from "../../../schemat";
+import {Item} from "../../../schemat";
 
 
-export class Books extends Category {
+export class Book extends Item {
+
+    static GET__view() {
+        return 'Books List ...'
+    }
 
     GET__view() {
-        return 'Books List ...'
+        return `Details of book [${this.iid}]...`
     }
 }
