@@ -26,7 +26,7 @@ export class ClientSchemat extends Schemat {
         target.assert_loaded()
 
         let endpoint = data.endpoint
-        let page = target._net_.get_service(endpoint)
+        let page = target.__net.get_service(endpoint)
         let root = document.querySelector("#page-main")
 
         return page.render_client(target, root)

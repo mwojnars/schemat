@@ -178,7 +178,7 @@ class ItemProxy {
 
             if (!target.__meta.mutable) {                                       // caching is only allowed in immutable objects
                 let stored = {value, [ItemProxy.FROM_CACHE]: true}
-                Object.defineProperty(target._self_, prop, {value: stored, writable: false, configurable: true})
+                Object.defineProperty(target.__self, prop, {value: stored, writable: false, configurable: true})
                 // print('saved in cache:', prop)
             }
             return value
@@ -189,7 +189,7 @@ class ItemProxy {
         //     value = value.value
         //     if (!target.__meta.mutable) {           // caching is only allowed in immutable objects
         //         let stored = (value === undefined) ? ItemProxy.UNDEFINED : value
-        //         Object.defineProperty(target._self_, prop, {value: stored, writable: false, configurable: true})
+        //         Object.defineProperty(target.__self, prop, {value: stored, writable: false, configurable: true})
         //     }
         //     return value
         // }
@@ -225,14 +225,14 @@ class ItemProxy {
     }
 
     static _cache_property(target, prop, values) {
-        /* Cache the result in target._self_; _self_ is used instead of `target` because the latter
-           can be a derived object (e.g., a View) that only inherits from _self_ through the JS prototype chain
+        /* Cache the result in target.__self; __self is used instead of `target` because the latter
+           can be a derived object (e.g., a View) that only inherits from __self through the JS prototype chain
          */
         let suffix = ItemProxy.PLURAL_SUFFIX
         let single = values[0]
         let single_cached = (single !== undefined) ? single : ItemProxy.UNDEFINED
 
-        let self = target._self_
+        let self = target.__self
         let writable = (prop[0] === '_' && prop[prop.length - 1] !== '_')       // only private props, _xxx, remain writable after caching
 
         if (single === undefined && ItemProxy.WRITABLE_IF_UNDEFINED.includes(prop))
@@ -338,7 +338,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         assert(record)
         assert(record.id === this._id_)
         let cached = {[ItemProxy.FROM_CACHE]: true, value: record}      // caching in ItemProxy makes the property immutable, while we still may want to store a better record found in _load(), hence manual caching here with writable=true
-        Object.defineProperty(this._self_, '__record', {value: cached, writable: true})
+        Object.defineProperty(this.__self, '__record', {value: cached, writable: true})
     }
 
     get __schema() {
@@ -397,11 +397,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return (this.hasOwnProperty('_cachable_getters') && this._cachable_getters) || this._set_cachable_getters()
     }
 
-    _proxy_         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
-    _self_          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> _self_ during property access
+    __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
+    __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
     __data          // data fields of this item, as a Data object; created during .load()
-    _net_           // per-instance Network adapter that connects this object to its network API as defined in the class's API (this.constructor._api_);
-                    // API endpoints of the object can be called programmatically through this._net_.PROTO.xxx(args), where PROTO is GET/POST/CALL/...,
+    __net           // per-instance Network adapter that connects this object to its network API as defined in the class's API (this.constructor.__api);
+                    // API endpoints of the object can be called programmatically through this.__net.PROTO.xxx(args), where PROTO is GET/POST/CALL/...,
                     // which works both on the client and server (in the latter case, the call executes the service function directly without network communication)
 
     __meta = {                  // __meta contain system properties of this object...
@@ -415,7 +415,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
     }
 
-    static _api_                // API instance that defines this class's endpoints and protocols; created lazily in _create_api() when the first instance is loaded, then reused for other instances
+    static __api                // API instance that defines this class's endpoints and protocols; created lazily in _create_api() when the first instance is loaded, then reused for other instances
 
 
     /***  Object status  ***/
@@ -442,8 +442,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     constructor(_fail_ = true) {
         /* For internal use! Always call Item.create() instead of `new Item()`. */
-        if(_fail_) throw new Error('item should be instantiated through Item.create() instead of new Item()')
-        this._self_ = this      // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
+        if(_fail_) throw new Error('web object must be instantiated through CLASS.create() instead of new CLASS()')
+        this.__self = this      // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
     }
 
     __create__(...args) {
@@ -469,7 +469,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             return RootCategory.create_stub(id)
 
         let core = new this(false)
-        let item = core._proxy_ = ItemProxy.wrap(core)
+        let item = core.__proxy = ItemProxy.wrap(core)
         if (id !== undefined && id !== null) core._id_ = id
         if (mutable) core.__meta.mutable = true     // this allows EDIT_xxx operations on the object and prevents caching in Schemat's registry
         return item
@@ -493,7 +493,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     static _create_api() {
         /* Collect endpoints defined as static properties of the class and named "PROTO/endpoint" (PROTO in uppercase)
-           and return as an API instance. The result is cached in this._api_ for reuse by all objects of this class.
+           and return as an API instance. The result is cached in this.__api for reuse by all objects of this class.
          */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
         let names = T.getAllPropertyNames(this).filter(is_endpoint)
@@ -507,7 +507,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         endpoints = {...endpoints, ...endpoints_proto}
         // print('endpoints:', endpoints)
 
-        return this._api_ = new API(endpoints)
+        return this.__api = new API(endpoints)
     }
 
     _get_write_id() {
@@ -667,10 +667,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _init_network() {
-        /* Create a network interface, _net_, and action _triggers_ for this item's network API. */
+        /* Create a network interface, __net, and action _triggers_ for this item's network API. */
         let role = schemat.server_side ? 'server' : 'client'
-        let api = T.getOwnProperty(this.constructor, '_api_') || this.constructor._create_api()
-        this._net_ = new Network(this, role, api)
+        let api = T.getOwnProperty(this.constructor, '__api') || this.constructor._create_api()
+        this.__net = new Network(this, role, api)
     }
 
 
@@ -684,7 +684,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
          */
         assert(typeof prop === 'string')
 
-        let proxy = this._proxy_
+        let proxy = this.__proxy
         let data  = this.__data
         if (!data) throw new NotLoaded(this)
 
@@ -710,7 +710,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (prop !== '__extends' && prop !== '__category')                  // avoid circular dependency for these special props
         {
             let category = proxy.__category
-            if (this === category?._self_ && prop === 'defaults')           // avoid circular dependency for RootCategory
+            if (this === category?.__self && prop === 'defaults')           // avoid circular dependency for RootCategory
                 category = undefined
 
             let defaults = category?.defaults?.get_all(prop)
@@ -872,7 +872,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         // find the first endpoint that has a corresponding service defined and launch its server() handler
         for (let endpoint of endpoints) {
-            let service = this._net_.get_service(endpoint)
+            let service = this.__net.get_service(endpoint)
             if (service) {
                 // print(`handle() endpoint: ${endpoint}`)
                 request.endpoint = endpoint
@@ -935,7 +935,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     edit(op, args) {
         // print('edit:', this._id_, op)
-        return schemat.site._net_.POST.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
+        return schemat.site.__net.POST.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
     }
 
     edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
@@ -945,7 +945,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     delete_self() {
         /* Delete this object from the database. */
-        return schemat.site._net_.POST.delete_object(this._id_)
+        return schemat.site.__net.POST.delete_object(this._id_)
     }
 
 
@@ -1214,8 +1214,8 @@ export class Category extends Item {
 
     /***  Actions  ***/
 
-    list_items()            { return this._net_.POST.read('list_items') }
-    create_item(data)       { return this._net_.POST.create_item(data) }
+    list_items()            { return this.__net.POST.read('list_items') }
+    create_item(data)       { return this.__net.POST.create_item(data) }
 }
 
 
@@ -1229,7 +1229,7 @@ export class RootCategory extends Category {
 
     // _set_expiry() { this.__meta.expiry = undefined }          // never evict from cache
 
-    get __category() { return this._proxy_ }        // root category is a category for itself
+    get __category() { return this.__proxy }        // root category is a category for itself
 
     get data_schema() {
         /* In RootCategory, this == this.__category, and to avoid infinite recursion we must perform schema inheritance manually. */
