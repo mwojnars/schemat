@@ -282,7 +282,7 @@ export class ItemAdminView extends ReactPage.View {
 
     PropertiesTable() {
         /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
-        return e(CatalogTable, {item: this, type: this._schema_, catalog: this._data_, start_color: 1})
+        return e(CatalogTable, {item: this, type: this.__schema, catalog: this._data_, start_color: 1})
     }
 }
 

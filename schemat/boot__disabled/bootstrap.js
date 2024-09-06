@@ -58,7 +58,7 @@ async function create_categories(Category) {
     cat.LocalFile = await Category.new(4, {
         name        : "LocalFile",
         info        : "File located on a local disk, identified by its local file path.",
-        _extends_   : cat.File,
+        __extends   : cat.File,
         fields      : C({
             local_path : new STRING(),          // path to a local file on disk
             //format: new STRING(),             // file format: pdf, xlsx, ...
@@ -74,7 +74,7 @@ async function create_categories(Category) {
     cat.LocalDirectory = await Category.new(6, {
         name        : "LocalDirectory",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
-        _extends_   : cat.Directory,
+        __extends   : cat.Directory,
         fields      : C({local_path: new STRING()}),
     })
 
@@ -116,7 +116,7 @@ async function create_categories(Category) {
 
     // cat.STRING = await Category.new(12, {
     //     name        : "STRING",
-    //     _extends_   : cat.Type,
+    //     __extends   : cat.Type,
     //     class_path  : '/$/schemat/types/type.js:STRING',
     // })
 

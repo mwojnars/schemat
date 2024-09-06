@@ -96,9 +96,9 @@ export class Request {   // Connection ?
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
         let site = schemat.site
-        let items = [this.target, this.target.__category, schemat.root_category, site, ...site.__category._ancestors_]
+        let items = [this.target, this.target.__category, schemat.root_category, site, ...site.__category.__ancestors]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
-        let records = items.map(it => it._record_.encoded())
+        let records = items.map(it => it.__record.encoded())
 
         return {site_id: site._id_, target_id: this.target._id_, items: records}
     }
@@ -148,7 +148,7 @@ class ItemProxy {
     static PLURAL_SUFFIX = '$'          // __array __list __all ?
 
     // these special props are always read from regular POJO attributes and NEVER from object's _data_
-    static RESERVED = ['_id_', '_meta_', '_data_', '_record_', '_ready_']
+    static RESERVED = ['_id_', '_meta_', '_data_', '__record', '_ready_']
 
     // these special props can still be written to after the value read from _data_ was undefined
     static WRITABLE_IF_UNDEFINED = ['_url_', '_path_']
@@ -300,14 +300,14 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
                             for a newly created object that already has an ID assigned, but is not yet (fully) saved to DB, the ID must be kept
                             in _meta_.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
 
-    _record_                ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
+    __record                ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
                             undefined in a newborn item; immutable after the first assignment
 
-    _schema_                schema of this item's data, as a DATA object
+    __schema                schema of this item's data, as a DATA object
 
-    _extends_
-    _prototypes_            array of direct ancestors (prototypes) of this object; alias for `_extends_$`
-    _ancestors_             array of all ancestors, deduplicated and linearized, with `this` at the first position
+    __extends
+    __prototypes            array of direct ancestors (prototypes) of this object; alias for `__extends$`
+    __ancestors             array of all ancestors, deduplicated and linearized, with `this` at the first position
 
     __class                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
     __category              category of this item, as a Category object
@@ -317,7 +317,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _path_
     _url_                   absolute URL path of this object; calculated right *after* __init__(); to be sure that _url_ is computed, await _meta_.pending_url first
-    _assets_                cached web Assets of this object's _schema_
+    _assets_                cached web Assets of this object's __schema
 
     */
 
@@ -329,36 +329,36 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     get id() { return this._id_ }           // alias for _id_
 
-    get _record_() {
+    get __record() {
         this.assert_linked()
         this.assert_loaded()
         return new ItemRecord(this._id_, this._data_)
     }
-    set _record_(record) {
+    set __record(record) {
         assert(record)
         assert(record.id === this._id_)
         let cached = {[ItemProxy.FROM_CACHE]: true, value: record}      // caching in ItemProxy makes the property immutable, while we still may want to store a better record found in _load(), hence manual caching here with writable=true
-        Object.defineProperty(this._self_, '_record_', {value: cached, writable: true})
+        Object.defineProperty(this._self_, '__record', {value: cached, writable: true})
     }
 
-    get _schema_() {
+    get __schema() {
         return this.__category?.data_schema || new DATA_GENERIC()
     }
 
-    get _prototypes_() { return this._extends_$ }
+    get __prototypes() { return this.__extends$ }
 
-    get _ancestors_() {
+    get __ancestors() {
         // TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
         // https://en.wikipedia.org/wiki/C3_linearization
         // http://python-history.blogspot.com/2010/06/method-resolution-order.html
-        let prototypes = this._prototypes_
-        let candidates = prototypes.map(proto => proto._ancestors_)
+        let prototypes = this.__prototypes
+        let candidates = prototypes.map(proto => proto.__ancestors)
         return [this, ...unique(concat(candidates))]
     }
 
     get _assets_()  {
         let assets = new Assets()
-        this._schema_.collect(assets)
+        this.__schema.collect(assets)
         return assets
     }
 
@@ -545,7 +545,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
             this._data_ = record.data
             if (record.id !== undefined)                        // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
-                this._record_ = record
+                this.__record = record
 
             let proto = this._init_prototypes()                 // load prototypes
             if (proto instanceof Promise) await proto
@@ -601,7 +601,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _init_prototypes() {
         /* Load all Schemat prototypes of this object. */
         let opts = {await_url: false}                                       // during boot up, URLs are not awaited to avoid circular dependencies (see category.load(...) inside _load())
-        let prototypes = this._prototypes_.filter(p => !p.is_loaded())
+        let prototypes = this.__prototypes.filter(p => !p.is_loaded())
         if (prototypes.length === 1) return prototypes[0].load(opts)        // performance: trying to avoid unnecessary awaits or Promise.all()
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load(opts)))
     }
@@ -688,14 +688,14 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let data  = this._data_
         if (!data) throw new NotLoaded(this)
 
-        // check the Type of the property in this object's _schema_; special handling for:
-        // 1) _extends_: because it is used at an early stage of the loading process (_init_prototypes() > this._prototypes_), before the object's category (and schema) is fully loaded;
-        // 2) __category: because the schema is not yet available and reading the type from _schema_ would create circular dependency.
+        // check the Type of the property in this object's __schema; special handling for:
+        // 1) __extends: because it is used at an early stage of the loading process (_init_prototypes() > this.__prototypes), before the object's category (and schema) is fully loaded;
+        // 2) __category: because the schema is not yet available and reading the type from __schema would create circular dependency.
 
         let type =
             prop === '__category' ? new ITEM() :
-            prop === '_extends_'  ? new ITEM({inherit: false}) :
-                                    proxy._schema_.get(prop)
+            prop === '__extends'  ? new ITEM({inherit: false}) :
+                                    proxy.__schema.get(prop)
 
         if (!type) return []
 
@@ -703,11 +703,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (!type.isRepeated() && !type.isCATALOG() && data.has(prop))
             return [data.get(prop)]
 
-        let ancestors = type.props.inherit ? proxy._ancestors_ : [proxy]    // `this` is always included as the first ancestor
+        let ancestors = type.props.inherit ? proxy.__ancestors : [proxy]    // `this` is always included as the first ancestor
         let streams = ancestors.map(proto => proto._own_values(prop))
 
         // read `defaults` from the category and combine them with the `streams`
-        if (prop !== '_extends_' && prop !== '__category')                  // avoid circular dependency for these special props
+        if (prop !== '__extends' && prop !== '__category')                  // avoid circular dependency for these special props
         {
             let category = proxy.__category
             if (this === category?._self_ && prop === 'defaults')           // avoid circular dependency for RootCategory
@@ -779,7 +779,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            True if parent==this. All comparisons by item ID.
          */
         if (this.is_equivalent(parent)) return true
-        for (const proto of this._prototypes_)
+        for (const proto of this.__prototypes)
             if (proto.inherits_from(parent)) return true
         return false
     }
@@ -914,9 +914,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
 
     // CALL__self()     { print('CALL__self'); return this }
-    // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this._record_.encoded() }) }
+    // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this.__record.encoded() }) }
 
-    // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this._record_.encoded() }) }
+    // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this.__record.encoded() }) }
     // GET__admin()     { return react_page(ItemAdminView) }
     // GET__admin()     { return html_page("item_admin.ejs") }      -- `request` arg can be passed even if not used; then, __handle__ must check if the result is a function and call it with (this, request) again
 
@@ -927,8 +927,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
     static ['GET/admin'] = new ReactPage(ItemAdminView)
-    static ['GET/json']  = new JsonService(function() { return this._record_.encoded() })
-    // GET__json()    { return new JsonService(function() { return this._record_.encoded() }) }
+    static ['GET/json']  = new JsonService(function() { return this.__record.encoded() })
+    // GET__json()    { return new JsonService(function() { return this.__record.encoded() }) }
 
 
     /***  Actions & edit operations. Can be called on a client or a server. All return a Promise.  ***/
@@ -1181,7 +1181,7 @@ export class Category extends Item {
                 return items
             },
             encode_result(items) {
-                return items.map(item => item._record_.encoded())
+                return items.map(item => item.__record.encoded())
             },
             async decode_result(records) {
                 /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
@@ -1205,7 +1205,7 @@ export class Category extends Item {
             let data = await (new Data).__setstate__(dataState)
             let item = await this.new(data)
             await schemat.db.insert(item)
-            return item._record_.encoded()
+            return item.__record.encoded()
             // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
         },
     // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB

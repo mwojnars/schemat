@@ -14,7 +14,7 @@ let default_fields = new Catalog({
     __category  : new ITEM({info: "Category of this item. Determines item's behavior and the schema of its attributes. Each category should be an item of the Root Category (IID=0).",
                             inherit: false}),
     // __class     : new CLASS({info: "Javascript class to be assigned to the item after loading to provide custom methods for the item."}),
-    _extends_   : new ITEM({info: "An item that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
+    __extends   : new ITEM({info: "An item that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
                                   "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items or categories - the latter case represents category inheritance. " +
                                   "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories.",
                             inherit: false}),

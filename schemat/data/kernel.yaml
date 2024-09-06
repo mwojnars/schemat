@@ -89,7 +89,7 @@
           after it is loaded from DB.
         default: schemat:Item
         "@": schemat/types/type.js:STRING
-      _extends_:
+      __extends:
         info: An item that serves as a prototype for this one, that is, provides default
           values for missing properties of this item. Multiple prototypes are
           allowed, the first one has priority over subsequent ones. Prototypes
@@ -178,7 +178,7 @@
     __class: schemat/std/site.js:Site
     __container: null
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 5
   __category:
     "@": 0
@@ -217,7 +217,7 @@
 - __id: 4
   name: LocalFile
   info: File located on a local disk, identified by its local file path.
-  _extends_:
+  __extends:
     "@": 3
   schema:
     local_path:
@@ -247,7 +247,7 @@
   defaults:
     __class: schemat/std/containers.js:Directory
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 2
   __category:
     "@": 0
@@ -287,7 +287,7 @@
   defaults:
     __class: schemat/std/files.js:LocalDirectory
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 5
   __category:
     "@": 0
@@ -302,7 +302,7 @@
   defaults:
     __class: schemat/std/containers.js:Namespace
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 2
   __category:
     "@": 0
@@ -321,7 +321,7 @@
   defaults:
     __class: schemat/std/containers.js:IID_Namespace
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 7
   __category:
     "@": 0
@@ -342,7 +342,7 @@
   defaults:
     __class: schemat/std/containers.js:Category_IID_Namespace
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 7
   __category:
     "@": 0
@@ -431,7 +431,7 @@
   defaults:
     __class: schemat/db/sequence.js:DataSequence
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 13
   __category:
     "@": 0
@@ -439,7 +439,7 @@
 - __id: 15
   name: Index
   info: Base category for indexes over the data sequence.
-  _extends_:
+  __extends:
     "@": 24
   __category:
     "@": 0
@@ -450,7 +450,7 @@
     input records represent objects.
   schema:
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 15
   __category:
     "@": 0
@@ -462,7 +462,7 @@
   defaults:
     __class: schemat/db/indexes.js:IndexByCategory
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 16
   __category:
     "@": 0
@@ -495,7 +495,7 @@
   defaults:
     __class: schemat/db/block.js:DataBlock
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 18
   __category:
     "@": 0
@@ -508,7 +508,7 @@
   defaults:
     __class: schemat/db/block.js:IndexBlock
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 18
   __category:
     "@": 0
@@ -524,7 +524,7 @@
   defaults:
     __class: schemat/db/sequence.js:IndexSequence
     "@": schemat:Catalog
-  _extends_:
+  __extends:
     "@": 13
   __category:
     "@": 0
