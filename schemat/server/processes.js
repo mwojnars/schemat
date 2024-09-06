@@ -195,7 +195,7 @@ export class AdminProcess extends BackendProcess {
         let item = Item.create_stub(new_id)
 
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
-        let transform = (it => it?._id_ === old_id ? item : it)
+        let transform = (it => it?.__id === old_id ? item : it)
 
         for (let ring of schemat.db.rings) {
             for await (const record of ring.scan_all()) {               // search for references to `old_id` in all records

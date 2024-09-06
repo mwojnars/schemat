@@ -69,7 +69,7 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
         }
 
-        if (obj instanceof Item) {         //obj?._id_ !== undefined || obj instanceof schemat.Item ||
+        if (obj instanceof Item) {         //obj?.__id !== undefined || obj instanceof schemat.Item ||
             let id = obj._get_write_id()
             if(id !== undefined) return {[JSONx.ATTR_CLASS]: id}
             else throw new Error(`Can't encode a newborn object (no ID): ${obj}`)

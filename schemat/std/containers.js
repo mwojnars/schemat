@@ -46,13 +46,13 @@ export class Container extends Item {
         /* Return an access path to `member` that starts at the root (site object).
            The access path is like a URL path, but with explicit blank segments: /*BLANK
          */
-        assert(this.__path, `container's __path is not initialized (${this.name} ${this._id_})`)
+        assert(this.__path, `container's __path is not initialized (${this.name} ${this.__id})`)
         assert(this.__path[0] === '/', `container's __path must start with '/'`)
 
         let ident = this.identify(member)
         if (!ident) {
             // here, null is returned instead of throwing an error because the mismatch between member's and container's settings may happen temporarily while moving an object from one container to another
-            print(`WARNING: container [${this._id_}] does NOT include object [${member._id_}]`)
+            print(`WARNING: container [${this.__id}] does NOT include object [${member.__id}]`)
             return null
         }
 
@@ -81,7 +81,7 @@ export class Directory extends Container {
          */
         let rev = new Map()
         for (let {key: name, value: object} of this.entries || [])
-            rev.set(object._id_, name)
+            rev.set(object.__id, name)
         return rev
     }
 
@@ -103,7 +103,7 @@ export class Directory extends Container {
 
     identify(item) {
         item.assert_linked()
-        return this._entries_rev.get(item._id_)
+        return this._entries_rev.get(item.__id)
     }
 }
 
@@ -134,7 +134,7 @@ export class IID_Namespace extends Namespace {
 
     identify(item) {
         item.assert_linked()
-        return `${item._id_}`
+        return `${item.__id}`
     }
 }
 
@@ -160,14 +160,14 @@ export class Category_IID_Namespace extends Namespace {
     identify(item) {
         let sep = Category_IID_Namespace.ID_SEPARATOR
         let spaces_rev = this.spaces_rev
-        let space = spaces_rev.get(item.__category?._id_)
-        if (space) return `${space}${sep}${item._id_}`
+        let space = spaces_rev.get(item.__category?.__id)
+        if (space) return `${space}${sep}${item.__id}`
     }
 
     get spaces_rev() {
         /* A reverse mapping of category identifiers to space names. Cached. */
         let catalog = this.spaces
-        return new Map(catalog.map(({key, value:item}) => [item._id_, key]))
+        return new Map(catalog.map(({key, value:item}) => [item.__id, key]))
     }
 }
 

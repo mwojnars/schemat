@@ -112,14 +112,14 @@ export class Schemat {
         debug = false
 
         _head(obj) {
-            let id   = `[${obj._id_}]`.padEnd(6)
+            let id   = `[${obj.__id}]`.padEnd(6)
             let name = this._name(obj).padEnd(15)
             return `${id} ${name}`
         }
         _tail() {
             // IDs and names of all objects currently being loaded
-            let ids = this.map(obj => obj._id_)
-            let names = this.map(obj => this._name(obj) || obj._id_)
+            let ids = this.map(obj => obj.__id)
+            let names = this.map(obj => this._name(obj) || obj.__id)
             return `[${ids}]  --  [${names.join(', ')}]`
         }
         _name(obj) {
@@ -151,7 +151,7 @@ export class Schemat {
         // if (cluster_id) {
         //     print(`Loading cluster ${cluster_id}...`)
         //     let cluster = await this.get_loaded(cluster_id)
-        //     site_id = cluster.site._id_
+        //     site_id = cluster.site.__id
         //     print(`Cluster ${cluster_id} loaded, site ID: ${site_id}`)
         // }
 
@@ -214,7 +214,7 @@ export class Schemat {
         /* Create a new instance of the object, load its data from DB, and when it is fully initialized
            replace the existing instance in the registry. Return the new object.
          */
-        let id  = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id._id_
+        let id  = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id
         let obj = Item.create_stub(id)
         return obj.load().then(() => this.registry.set(obj))
     }
@@ -223,7 +223,7 @@ export class Schemat {
     /***  Indexes  ***/
 
     async *scan_category(category) {
-        let target_cid = category?._id_
+        let target_cid = category?.__id
         let start = category ? [target_cid] : null
         let stop = category ? [target_cid + 1] : null
         let records = this.db.scan_index('idx_category_item', {start, stop})        // stream of plain Records

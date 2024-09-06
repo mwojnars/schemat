@@ -61,9 +61,9 @@ export class Registry {
 
     set(obj) {
         /* Put `obj` in the cache. This may override an existing instance with the same ID. */
-        assert(obj._id_ !== undefined, `cannot register an object without an ID: ${obj}`)
+        assert(obj.__id !== undefined, `cannot register an object without an ID: ${obj}`)
         assert(!obj.__meta.mutable, `cannot register a mutable object: ${obj}`)
-        this.objects.set(obj._id_, obj)
+        this.objects.set(obj.__id, obj)
         return obj
     }
 

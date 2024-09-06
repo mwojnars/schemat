@@ -67,7 +67,7 @@ export class Ring extends Item {
     async __init__() {
         /* Initialize the ring after it's been loaded from DB. */
         if (schemat.client_side) return
-        print(`... ring loaded [${this._id_}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
+        print(`... ring loaded [${this.__id}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
         await this.data_sequence.load()
         await this.index_sequence.load()
 
@@ -216,13 +216,13 @@ export class Database extends Item {
             await delay()       // strangely enough, without this delay, Ring.create() above is NOT fully awaited when using the custom module Loader (!?)
 
             this.rings.push(ring)
-            print(`... ring created [${ring._id_ || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
+            print(`... ring created [${ring.__id || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
         }
     }
 
     async __init__() {
         if (schemat.client_side) return
-        print(`loading database [${this._id_}] ${this.name}...`)
+        print(`loading database [${this.__id}] ${this.name}...`)
         return Promise.all(this.rings.map(ring => ring.load()))             // load all rings
     }
 
@@ -281,12 +281,12 @@ export class Database extends Item {
     async update_full(item) {
         /* Replace all data inside the item's record in DB with item.data. */
         let data = item.dump_data()
-        return this.update(item._id_, new Edit('overwrite', {data}))
+        return this.update(item.__id, new Edit('overwrite', {data}))
     }
 
     async insert(item_or_data, ring_name = null) {
         /* Find the top-most ring where the item's ID is writable and insert there. If a new ID is assigned,
-           it is written to item._id_. `ring` is an optional name of a ring to use.
+           it is written to item.__id. `ring` is an optional name of a ring to use.
            TODO: simplify the code if predefined ID is never used (id=undefined below); .save() can be used instead
          */
         let item = (item_or_data instanceof Item) && item_or_data
@@ -294,7 +294,7 @@ export class Database extends Item {
 
         if (!T.isString(data)) data = data.dump()
 
-        let id //= item._id_          // can be undefined
+        let id //= item.__id          // can be undefined
         let req = new DataRequest(this, 'insert', {id, data})
         let ring
 
@@ -307,7 +307,7 @@ export class Database extends Item {
 
         if (ring) {
             id = await ring.handle(req)
-            if (item) item._id_ = id
+            if (item) item.__id = id
             return id
         }
         return req.error_access(id === undefined ?
@@ -332,7 +332,7 @@ export class Database extends Item {
         // 2nd phase: update records with actual data
         for (let item of items) {
             item.__data = item.__data || await Data.from_object(item)       // if item has no __data, create it from the object's properties
-            item._id_ = item.__meta.provisional_id
+            item.__id = item.__meta.provisional_id
             // TODO: check if the line below is needed or not? ultimately need to be removed...
             // schemat._register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
             await this.update_full(item)
@@ -343,7 +343,7 @@ export class Database extends Item {
         /* Find and delete the top-most occurrence of the item or ID.
            Return true on success, or false if the ID was not found (no modifications are done in such case).
          */
-        let id = T.isNumber(item_or_id) ? item_or_id : item_or_id._id_
+        let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.__id
         return this.forward_down(new DataRequest(this, 'delete', {id}))
     }
 

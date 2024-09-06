@@ -195,7 +195,7 @@ export class ReactPage extends RenderedPage {
     static View = class extends RenderedPage.View {
 
         async prepare(side) {
-            // print(`prepare() called for [${this._id_}], ${this.__category}`)
+            // print(`prepare() called for [${this.__id}], ${this.__category}`)
             await this.load()
             await this.__category?.load()
             return {}
@@ -203,7 +203,7 @@ export class ReactPage extends RenderedPage {
 
         render_server(props) {
             this.assert_loaded()
-            print(`SSR render('${props.request.endpoint}') of ID=${this._id_}`)
+            print(`SSR render('${props.request.endpoint}') of ID=${this.__id}`)
             let main = e(this.Main, props)
             return ReactDOM.renderToString(main)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
@@ -330,7 +330,7 @@ export class CategoryAdminView extends ItemAdminView {
         let name = item.name || item.make_stamp({html:false})
         let url  = item.url()
         return TR(
-            TD(`${item._id_} ${NBSP}`),
+            TD(`${item.__id} ${NBSP}`),
             TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
             TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
         )

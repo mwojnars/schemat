@@ -62,8 +62,8 @@ export class ServerSchemat extends Schemat {
 
     _on_evict(obj) {
         /* Special handling for the root category and `site` object during registry purge. */
-        if (obj._id_ === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is (re)loaded, even after eviction
-        if (obj._id_ === this.site._id_)
+        if (obj.__id === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is (re)loaded, even after eviction
+        if (obj.__id === this.site.__id)
             return this.reload(this.site)                               // ...same for the `site` object
     }
 

@@ -100,7 +100,7 @@ export class Request {   // Connection ?
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(it => it.__record.encoded())
 
-        return {site_id: site._id_, target_id: this.target._id_, items: records}
+        return {site_id: site.__id, target_id: this.target.__id, items: records}
     }
 }
 
@@ -148,7 +148,7 @@ class ItemProxy {
     static PLURAL_SUFFIX = '$'          // __array __list __all ?
 
     // these special props are always read from regular POJO attributes and NEVER from object's __data
-    static RESERVED = ['_id_', '__meta', '__data', '__record']
+    static RESERVED = ['__id', '__meta', '__data', '__record']
 
     // these special props can still be written to after the value read from __data was undefined
     static WRITABLE_IF_UNDEFINED = ['__url', '__path']
@@ -295,8 +295,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     (some of the props below have getters defined, so they must be commented out not to mask the getters)
 
-    _id_                    database ID of the object, globally unique; undefined in a newly created item; must never be changed for an existing item;
-                            it is assumed that if _id_ exists, the object is ALREADY stored in the DB (is "linked");
+    __id                    database ID of the object, globally unique; undefined in a newly created item; must never be changed for an existing item;
+                            it is assumed that if __id exists, the object is ALREADY stored in the DB (is "linked");
                             for a newly created object that already has an ID assigned, but is not yet (fully) saved to DB, the ID must be kept
                             in __meta.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
 
@@ -321,22 +321,22 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     */
 
-    set _id_(id) {
-        let prev = this._id_
+    set __id(id) {
+        let prev = this.__id
         if (prev !== undefined && prev !== id) throw new Error(`object ID is read-only and can't be changed from ${prev} to ${id}`)
-        if (id !== undefined) Object.defineProperty(this, '_id_', {value: id, writable: false})
+        if (id !== undefined) Object.defineProperty(this, '__id', {value: id, writable: false})
     }
 
-    get id() { return this._id_ }           // alias for _id_
+    get id() { return this.__id }           // alias for __id
 
     get __record() {
         this.assert_linked()
         this.assert_loaded()
-        return new ItemRecord(this._id_, this.__data)
+        return new ItemRecord(this.__id, this.__data)
     }
     set __record(record) {
         assert(record)
-        assert(record.id === this._id_)
+        assert(record.id === this.__id)
         let cached = {[ItemProxy.FROM_CACHE]: true, value: record}      // caching in ItemProxy makes the property immutable, while we still may want to store a better record found in _load(), hence manual caching here with writable=true
         Object.defineProperty(this.__self, '__record', {value: cached, writable: true})
     }
@@ -374,7 +374,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     // static compare(obj1, obj2) {
     //     /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
-    //     return obj1._id_ - obj2._id_
+    //     return obj1.__id - obj2.__id
     // }
 
 
@@ -420,8 +420,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Object status  ***/
 
-    is_newborn()    { return this._id_ === undefined }              // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
-    is_linked()     { return this._id_ !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
+    is_newborn()    { return this.__id === undefined }              // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
+    is_linked()     { return this.__id !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     //is_activated()  { return this.is_loaded() && this.__url}        // true if the object is loaded AND its URL is already computed
     //is_expired()    { return this.__meta.expiry < Date.now() }
@@ -435,7 +435,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            AND may contain different data (!), for example, if one of them contains more recent updates than the other.
            If `other` is undefined or any of the objects has a missing ID, they are considered NOT equivalent.
          */
-        return this._id_ !== undefined && this._id_ === other?._id_
+        return this.__id !== undefined && this.__id === other?.__id
     }
 
     /***  Instantiation  ***/
@@ -470,7 +470,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         let core = new this(false)
         let item = core.__proxy = ItemProxy.wrap(core)
-        if (id !== undefined && id !== null) core._id_ = id
+        if (id !== undefined && id !== null) core.__id = id
         if (mutable) core.__meta.mutable = true     // this allows EDIT_xxx operations on the object and prevents caching in Schemat's registry
         return item
     }
@@ -511,8 +511,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _get_write_id() {
-        /* Either _id_ or __meta.provisional_id. */
-        return this._id_ !== undefined ? this._id_ : this.__meta.provisional_id
+        /* Either __id or __meta.provisional_id. */
+        return this.__id !== undefined ? this.__id : this.__meta.provisional_id
     }
 
 
@@ -558,7 +558,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
             this.__meta.expiry = Date.now() + (this.__ttl || 0) * 1000
 
-            if (this.__status) print(`WARNING: object [${this._id_}] has status ${this.__status}`)
+            if (this.__status) print(`WARNING: object [${this.__id}] has status ${this.__status}`)
 
             // after the props are loaded, attach a JS class to this object (to provide custom behavior) and call the initializer
             await this._init_class()                        // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
@@ -571,7 +571,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             if (init instanceof Promise) await init         // if this.__url is needed inside __init__(), __meta.pending_url must be explicitly awaited there
 
             // if (!schemat.site?.is_activated())
-            //     print(`site NOT yet fully activated when calculating url for [${this._id_}]`)
+            //     print(`site NOT yet fully activated when calculating url for [${this.__id}]`)
 
             if (await_url && schemat.site && this.__meta.pending_url)
                 await this.__meta.pending_url
@@ -590,12 +590,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     async _load_record() {
         this.assert_linked()
-        // schemat.session?.countLoaded(this._id_)
+        // schemat.session?.countLoaded(this.__id)
 
-        let req = new DataRequest(this, 'load', {id: this._id_})
+        let req = new DataRequest(this, 'load', {id: this.__id})
         let json = await schemat.db.select(req)
         assert(typeof json === 'string', json)
-        return new ItemRecord(this._id_, json)
+        return new ItemRecord(this.__id, json)
     }
 
     _init_prototypes() {
@@ -616,7 +616,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             let site = schemat.site
 
             while (!site) {                                         // wait until the site is created (important for bootstrap objects)
-                // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this._id_}]`)
+                // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this.__id}]`)
                 await delay()
                 if (this.__url) return this.__url                   // already initialized?
                 if (schemat.is_closing) return undefined            // site is closing? no need to wait any longer
@@ -625,21 +625,21 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
             let container = this.__container
             let default_path = () => site.default_path_of(this)
-            // assert(container, `missing container in [${this._id_}]`)
+            // assert(container, `missing container in [${this.__id}]`)
 
             if (!container) {
                 let url = default_path()
                 print('missing container:', url, `(${this.name})`)
                 return this.__url = this.__path = url
             }
-            // print(`_init_url() container: '${container._id_}'`)
+            // print(`_init_url() container: '${container.__id}'`)
 
             if (!container.is_loaded()) await container.load()              // container must be fully loaded
             if (!container.__path) await container.__meta.pending_url       // container's path must be initialized
 
             this.__path = container.get_access_path(this)
             if (!this.__path) {
-                print(`WARNING: empty access path for [${this._id_}] despite its container is defined as [${container._id_}]; using default path`)
+                print(`WARNING: empty access path for [${this.__id}] despite its container is defined as [${container.__id}]; using default path`)
                 return this.__url = this.__path = default_path()
             }
 
@@ -657,7 +657,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Initialize this object's class, i.e., substitute the object's temporary Item class with an ultimate subclass,
            known after loading the object's data.
          */
-        if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
+        if (this.__id === ROOT_ID) return T.setClass(this, RootCategory)
 
         let cls = this.__class
         if (typeof cls === 'string')
@@ -743,7 +743,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         let path = this.__url
         if (!path) {
-            console.error(`missing __url for object [${this._id_}], introduce a delay or await __meta.pending_url`)
+            console.error(`missing __url for object [${this.__id}], introduce a delay or await __meta.pending_url`)
             return ''
         }
         if (endpoint) path += Request.SEP_ENDPOINT + endpoint               // append ::endpoint and ?args if present...
@@ -763,7 +763,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             let url = this.__category?.url()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
-        let stamp = cat ? `${cat}:${this._id_}` : `${this._id_}`
+        let stamp = cat ? `${cat}:${this.__id}` : `${this.__id}`
         return brackets ? `[${stamp}]` : stamp
     }
 
@@ -934,8 +934,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     /***  Actions & edit operations. Can be called on a client or a server. All return a Promise.  ***/
 
     edit(op, args) {
-        // print('edit:', this._id_, op)
-        return schemat.site.__net.POST.submit_edits([this._id_, op, args])    //this, new Edit(op, args))
+        // print('edit:', this.__id, op)
+        return schemat.site.__net.POST.submit_edits([this.__id, op, args])    //this, new Edit(op, args))
     }
 
     edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
@@ -945,7 +945,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     delete_self() {
         /* Delete this object from the database. */
-        return schemat.site.__net.POST.delete_object(this._id_)
+        return schemat.site.__net.POST.delete_object(this.__id)
     }
 
 
@@ -1096,7 +1096,7 @@ export class Category extends Item {
     //     /* Combine all code snippets of this category, including inherited ones, into a module source code.
     //        Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
     //      */
-    //     let name = this.class_name || `Class_${this._id_}`
+    //     let name = this.class_name || `Class_${this.__id}`
     //     let base = this._codeBaseClass()
     //     let init = this._codeInit()
     //     let code = this._codeClass(name)
@@ -1225,7 +1225,7 @@ export class RootCategory extends Category {
 
     static __is_root_category__ = true
 
-    _id_ = ROOT_ID
+    __id = ROOT_ID
 
     // _set_expiry() { this.__meta.expiry = undefined }          // never evict from cache
 

@@ -67,7 +67,7 @@ export class NotLinked extends BaseError {
     constructor(obj) { super(`object is unlinked (missing ID)`) }
 }
 export class NotLoaded extends BaseError {
-    constructor(obj) { super(`object is not loaded yet, run 'await obj.load()', id=${obj._id_}`) }
+    constructor(obj) { super(`object is not loaded yet, run 'await obj.load()', id=${obj.__id}`) }
 }
 
 export class ServerError extends BaseError {
