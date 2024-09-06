@@ -145,7 +145,7 @@ class ItemProxy {
      */
 
     // the suffix appended to a property name when an array of *all* repeated values of this property is requested, not the first value only
-    static MULTIPLE_SUFFIX = '_array'
+    static MULTIPLE_SUFFIX = '_array'       // = '$' instead?
 
     // these special props are always read from regular POJO attributes and NEVER from object's _data_
     static RESERVED = ['_id_', '_meta_', '_data_', '_record_', '_ready_']

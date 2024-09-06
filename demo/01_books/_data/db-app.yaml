@@ -1,5 +1,7 @@
 - __id: 5000
   name: Book
+  schema:
+    "@": schemat:Catalog
   _category_:
     "@": 0
   "@": schemat:Data

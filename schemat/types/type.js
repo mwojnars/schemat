@@ -234,8 +234,10 @@ export class NUMBER extends Primitive {
     static stype = "number"
     static defaultProps = {
         initial: 0,
-        min:     undefined,         // minimum value allowed (>=)
-        max:     undefined,         // maximum value allowed (<=)
+        min:            undefined,         // minimum value allowed (>=)
+        max:            undefined,         // maximum value allowed (<=)
+        min_decimals:   0,
+        max_decimals:   undefined,
     }
     _validate(value) {
         value = super._validate(value)
