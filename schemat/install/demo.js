@@ -51,14 +51,14 @@ async function create_demo_01() {
     
     // replace file paths and object names in `db`
     db = db.replaceAll('main-site', `Books Demo`)
-    db = db.replaceAll('/schemat/data/db-', `/demo/${demo_name}/data/db-`)
+    db = db.replaceAll('/schemat/data/db-', `/demo/${demo_name}/_data/db-`)
     db = db.replaceAll('/app', `/demo/${demo_name}`)
 
     // save as db-site.yaml in the demo folder
-    fs.writeFileSync(`${demo_dir}/data/db-site.yaml`, db, 'utf8')
+    fs.writeFileSync(`${demo_dir}/_data/db-site.yaml`, db, 'utf8')
     
     // copy the index file
-    fs.copyFileSync(`${root_dir}/schemat/data/db-site.index.jl`, `${demo_dir}/data/db-site.index.jl`)
+    fs.copyFileSync(`${root_dir}/schemat/data/db-site.index.jl`, `${demo_dir}/_data/db-site.index.jl`)
 }
 
 async function create_demo(demo_id) {

@@ -9,6 +9,8 @@
     $:
       "@": 1019
     "*application":
+      "@": 1006
+    "*codebase":
       "@": 1005
     "@": schemat:Catalog
   database:
@@ -60,12 +62,23 @@
     "@": 12
   "@": schemat:Data
 - __id: 1005
-  name: application
+  name: codebase
+  info: Path to the local directory containing source code of the application.
+    Typically, this directory does NOT include Schemat source code.
   local_path: ./demo/01_books
   _container_:
     "@": 1001
   _category_:
     "@": 6
+  "@": schemat:Data
+- __id: 1006
+  name: application
+  entries:
+    "@": schemat:Catalog
+  _container_:
+    "@": 1001
+  _category_:
+    "@": 5
   "@": schemat:Data
 - __id: 1012
   ring:
@@ -191,7 +204,7 @@
 - __id: 1029
   sequence:
     "@": 1017
-  filename: ./demo/01_books/data/db-app.yaml
+  filename: ./demo/01_books/_data/db-app.yaml
   format: data-yaml
   _category_:
     "@": 19
@@ -199,7 +212,7 @@
 - __id: 1030
   sequence:
     "@": 1018
-  filename: ./demo/01_books/data/db-app.index.jl
+  filename: ./demo/01_books/_data/db-app.index.jl
   format: index-jl
   _category_:
     "@": 20
@@ -207,7 +220,7 @@
 - __id: 1032
   sequence:
     "@": 1027
-  filename: ./demo/01_books/data/db-site.yaml
+  filename: ./demo/01_books/_data/db-site.yaml
   format: data-yaml
   insert_mode: compact
   _category_:
@@ -216,7 +229,7 @@
 - __id: 1033
   sequence:
     "@": 1028
-  filename: ./demo/01_books/data/db-site.index.jl
+  filename: ./demo/01_books/_data/db-site.index.jl
   format: index-jl
   _category_:
     "@": 20
