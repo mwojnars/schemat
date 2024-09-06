@@ -55,3 +55,18 @@
   __category:
     "@": 0
   "@": schemat:Data
+- __id: 5002
+  name: The Great Gatsby
+  genre: Classic
+  published_year: 1925
+  isbn: "9780743273565"
+  page_count: 180
+  language: English
+  publisher: Scribner
+  description: A tragic love story set in the roaring 20s, exploring themes of
+    decadence, idealism, and the American Dream.
+  average_rating: 4.2
+  cover_image: https://example.com/great_gatsby_cover.jpg
+  __category:
+    "@": 5000
+  "@": schemat:Data
