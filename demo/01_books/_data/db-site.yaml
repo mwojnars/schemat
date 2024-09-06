@@ -17,7 +17,7 @@
     "@": 1002
   cluster:
     "@": 1025
-  _category_:
+  __category:
     "@": 1
   "@": schemat:Data
 - __id: 1002
@@ -26,7 +26,7 @@
     - "@": 1003
     - "@": 1004
     - "@": 1016
-  _category_:
+  __category:
     "@": 11
   "@": schemat:Data
 - __id: 1003
@@ -42,7 +42,7 @@
   readonly: false
   start_id: 0
   stop_id: 1000
-  _category_:
+  __category:
     "@": 12
   "@": schemat:Data
 - __id: 1004
@@ -58,7 +58,7 @@
   readonly: false
   start_id: 1001
   stop_id: 5000
-  _category_:
+  __category:
     "@": 12
   "@": schemat:Data
 - __id: 1005
@@ -66,18 +66,18 @@
   info: Path to the local directory containing source code of the application.
     Typically, this directory does NOT include Schemat source code.
   local_path: ./demo/01_books
-  _container_:
+  __container:
     "@": 1001
-  _category_:
+  __category:
     "@": 6
   "@": schemat:Data
 - __id: 1006
   name: application
   entries:
     "@": schemat:Catalog
-  _container_:
+  __container:
     "@": 1001
-  _category_:
+  __category:
     "@": 5
   "@": schemat:Data
 - __id: 1012
@@ -85,7 +85,7 @@
     "@": 1003
   blocks:
     - "@": 1015
-  _category_:
+  __category:
     "@": 14
   "@": schemat:Data
 - __id: 1013
@@ -93,7 +93,7 @@
     "@": 1003
   blocks:
     - "@": 1026
-  _category_:
+  __category:
     "@": 22
   "@": schemat:Data
 - __id: 1015
@@ -102,7 +102,7 @@
   filename: ./schemat/data/kernel.yaml
   format: data-yaml
   insert_mode: compact
-  _category_:
+  __category:
     "@": 19
   "@": schemat:Data
 - __id: 1016
@@ -118,7 +118,7 @@
   readonly: false
   start_id: 5000
   stop_id: null
-  _category_:
+  __category:
     "@": 12
   "@": schemat:Data
 - __id: 1017
@@ -126,7 +126,7 @@
     "@": 1016
   blocks:
     - "@": 1029
-  _category_:
+  __category:
     "@": 14
   "@": schemat:Data
 - __id: 1018
@@ -134,7 +134,7 @@
     "@": 1016
   blocks:
     - "@": 1030
-  _category_:
+  __category:
     "@": 22
   "@": schemat:Data
 - __id: 1019
@@ -151,30 +151,30 @@
     schemat:
       "@": 1020
     "@": schemat:Catalog
-  _container_:
+  __container:
     "@": 1001
-  _category_:
+  __category:
     "@": 5
   "@": schemat:Data
 - __id: 1020
   name: /$/schemat
   local_path: ./schemat
-  _container_:
+  __container:
     "@": 1019
-  _category_:
+  __category:
     "@": 6
   "@": schemat:Data
 - __id: 1021
   name: default-namespace
   info: All objects accessible by their IDs.
-  _container_:
+  __container:
     "@": 1019
-  _category_:
+  __category:
     "@": 8
   "@": schemat:Data
 - __id: 1025
   name: cluster
-  _category_:
+  __category:
     "@": 10
   "@": schemat:Data
 - __id: 1026
@@ -182,7 +182,7 @@
     "@": 1013
   filename: ./schemat/data/kernel.index.jl
   format: index-jl
-  _category_:
+  __category:
     "@": 20
   "@": schemat:Data
 - __id: 1027
@@ -190,7 +190,7 @@
     "@": 1004
   blocks:
     - "@": 1032
-  _category_:
+  __category:
     "@": 14
   "@": schemat:Data
 - __id: 1028
@@ -198,7 +198,7 @@
     "@": 1004
   blocks:
     - "@": 1033
-  _category_:
+  __category:
     "@": 22
   "@": schemat:Data
 - __id: 1029
@@ -206,7 +206,7 @@
     "@": 1017
   filename: ./demo/01_books/_data/db-app.yaml
   format: data-yaml
-  _category_:
+  __category:
     "@": 19
   "@": schemat:Data
 - __id: 1030
@@ -214,7 +214,7 @@
     "@": 1018
   filename: ./demo/01_books/_data/db-app.index.jl
   format: index-jl
-  _category_:
+  __category:
     "@": 20
   "@": schemat:Data
 - __id: 1032
@@ -223,7 +223,7 @@
   filename: ./demo/01_books/_data/db-site.yaml
   format: data-yaml
   insert_mode: compact
-  _category_:
+  __category:
     "@": 19
   "@": schemat:Data
 - __id: 1033
@@ -231,6 +231,6 @@
     "@": 1028
   filename: ./demo/01_books/_data/db-site.index.jl
   format: index-jl
-  _category_:
+  __category:
     "@": 20
   "@": schemat:Data

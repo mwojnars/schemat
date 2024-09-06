@@ -10,13 +10,13 @@
     title:
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 5001
   title: Ala ma kota Sierściucha i psa Kłapoucha.
   title/2: drugi tytuł...
-  _category_:
+  __category:
     "@": 5000
   "@": schemat:Data
 - __id: 5002
@@ -25,7 +25,7 @@
 - __id: 5003
   name: Post A
   text: Ala ma kota
-  _category_:
+  __category:
     "@": 5005
   "@": schemat:Data
 - __id: 5004
@@ -56,9 +56,9 @@
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   defaults:
-    _class_: /$/schemat/db/mysql.js:MySQL
+    __class: /$/schemat/db/mysql.js:MySQL
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 5005
@@ -103,7 +103,7 @@
         this.utils = utils
         console.log('this.utils #1:', this.utils)
     }
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 5006
@@ -112,7 +112,7 @@
     demo:
       "@": 5010
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 5
   "@": schemat:Data
 - __id: 5007
@@ -123,14 +123,14 @@
     widgets.js:
       "@": 5009
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 5
   "@": schemat:Data
 - __id: 5008
   content: export let print = console.log
-  _category_:
+  __category:
     "@": 3
-  _container_:
+  __container:
     "@": 5007
   "@": schemat:Data
 - __id: 5009
@@ -139,16 +139,16 @@
     export function check() { print('called widgets.js:check()') } 
     //let fs = await import('fs')
     //print('fs:',fs)
-  _category_:
+  __category:
     "@": 3
-  _container_:
+  __container:
     "@": 5007
   "@": schemat:Data
 - __id: 5010
   name: /demo
-  _category_:
+  __category:
     "@": 5
-  _container_:
+  __container:
     "@": 5006
   "@": schemat:Data
 - __id: 5011
@@ -157,6 +157,6 @@
     sys.category:
       "@": 0
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 9
   "@": schemat:Data

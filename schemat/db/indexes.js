@@ -128,7 +128,7 @@ export class PrimeIndexSequence extends Index {
     }
 
     accept(record) {
-        return !this.category || this.category.is_equivalent(record.data.get('_category_'))
+        return !this.category || this.category.is_equivalent(record.data.get('__category'))
     }
 
     generate_value(item_record) {
@@ -168,7 +168,7 @@ export class PrimeIndexSequence extends Index {
 export class IndexByCategory extends PrimeIndexSequence {
     /* An index that maps category IDs to item IDs: the key is [category ID, item ID], empty value. */
 
-    static _category_ = 17
+    static __category = 17
 
     record_schema = new RecordSchema(new Map([
         ['cid', new INTEGER({blank: true})],
@@ -176,7 +176,7 @@ export class IndexByCategory extends PrimeIndexSequence {
     ]));
 
     *generate_keys(item_record) {
-        let category_id = item_record.data.get('_category_')?._id_      // can be undefined, such records are also included in the index
+        let category_id = item_record.data.get('__category')?._id_      // can be undefined, such records are also included in the index
         yield [category_id, item_record.id]
     }
 }

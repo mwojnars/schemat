@@ -142,7 +142,7 @@ export class Block extends Item {
 export class DataBlock extends Block {
     /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
 
-    static _category_ = 19
+    static __category = 19
 
     _autoincrement = 0      // current maximum IID of records in this block; a new record is assigned id=_autoincrement+1 unless insert_mode='compact';
                             // transient field: NOT saved in the block's configuration in DB but re-initialized during block instantiation
@@ -270,7 +270,7 @@ export class DataBlock extends Block {
 }
 
 export class IndexBlock extends Block {
-    static _category_ = 20
+    static __category = 20
 }
 
 

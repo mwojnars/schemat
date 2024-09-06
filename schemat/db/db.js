@@ -16,7 +16,7 @@ import {Catalog, Data} from "../core/data.js";
 
 export class Ring extends Item {
 
-    static _category_ = 12  // IID of Ring category in the kernel
+    static __category = 12  // IID of Ring category in the kernel
     static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
 
     data_sequence           // DataSequence containing all primary data of this ring
@@ -189,7 +189,7 @@ export class Database extends Item {
        If ItemNotFound/ReadOnly is caught, the next ring is tried.
        This class is only instantiated on the server, while the client uses a ClientDB proxy instead.
      */
-    static _category_ = 11  // ID of Database category
+    static __category = 11  // ID of Database category
     static role = 'db'      // for use in ProcessingStep and DataRequest
 
     rings = []              // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
@@ -323,7 +323,7 @@ export class Database extends Item {
            2) the objects are updated with actual data, with all references (incl. bidirectional) correctly replaced with IDs.
            This method can also be used to insert a single object that contains a self-reference.
          */
-        let empty_data = new Data({_status_: 'DRAFT'}).dump()               // empty data
+        let empty_data = new Data({__status: 'DRAFT'}).dump()               // empty data
 
         // 1st phase: insert stubs
         for (let item of items)

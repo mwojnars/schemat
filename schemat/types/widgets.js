@@ -296,7 +296,7 @@ export const ITEM_Widget = ItemLoadingHOC(class extends TypeWidget {
         let stamp = HTML(item.make_stamp({html: false, brackets: false}))
 
         if (name && url) {
-            let note = item._category_.name || null
+            let note = item.__category.name || null
             return SPAN(
                 url ? A({href: url}, name) : name,
                 SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : stamp)}, note)

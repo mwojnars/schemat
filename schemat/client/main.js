@@ -65,9 +65,9 @@ export class ClientSchemat extends Schemat {
 
     async insert(item) {
         let data = item._data_.__getstate__()
-        delete data['_category_']
+        delete data['__category']
 
-        let category = item._category_
+        let category = item.__category
         assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items
 
         let record = await category.create_item(data)

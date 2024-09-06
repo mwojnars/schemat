@@ -76,15 +76,15 @@
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   defaults:
-    _class_: schemat:Category
-    _ttl_: 60
+    __class: schemat:Category
+    __ttl: 60
     schema:
-      _category_:
+      __category:
         info: Category of this item. Determines item's behavior and the schema of its
           attributes. Each category should be an item of the Root Category
           (IID=0).
         "@": schemat/types/type.js:ITEM
-      _class_:
+      __class:
         info: Javascript class (identified by a class path) to be assigned to the object
           after it is loaded from DB.
         default: schemat:Item
@@ -100,7 +100,7 @@
           field schemas as defined in base categories.
         inherit: false
         "@": schemat/types/type.js:ITEM
-      _container_:
+      __container:
         info: Parent URL container of this object. The chain of containers leading from
           Site to the object define the access path of this object, which can be
           converted to a canonical URL path of the object by removing blank
@@ -108,12 +108,12 @@
         default:
           "@": 1021
         "@": schemat/types/type.js:ITEM
-      _status_:
+      __status:
         info: Set to "DRAFT" if the object's record is not yet fully initialized in the
           database.
         inherit: false
         "@": schemat/types/type.js:STRING
-      _ttl_:
+      __ttl:
         default: 10
         info: Time To Live (TTL) of an object, in seconds. Determines for how long the
           object is kept in a server-side cache and reused after being loaded
@@ -175,17 +175,17 @@
       "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/std/site.js:Site
-    _container_: null
+    __class: schemat/std/site.js:Site
+    __container: null
     "@": schemat:Catalog
   _extends_:
     "@": 5
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 2
   name: Container
-  _category_:
+  __category:
     "@": 0
   schema:
     _is_container:
@@ -209,9 +209,9 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/std/files.js:File
+    __class: schemat/std/files.js:File
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 4
@@ -224,9 +224,9 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/std/files.js:LocalFile
+    __class: schemat/std/files.js:LocalFile
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 5
@@ -245,11 +245,11 @@
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/std/containers.js:Directory
+    __class: schemat/std/containers.js:Directory
     "@": schemat:Catalog
   _extends_:
     "@": 2
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 6
@@ -285,11 +285,11 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/std/files.js:LocalDirectory
+    __class: schemat/std/files.js:LocalDirectory
     "@": schemat:Catalog
   _extends_:
     "@": 5
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 7
@@ -300,11 +300,11 @@
     placed as a leaf node on a URL route and does not contain nested
     containers."
   defaults:
-    _class_: schemat/std/containers.js:Namespace
+    __class: schemat/std/containers.js:Namespace
     "@": schemat:Catalog
   _extends_:
     "@": 2
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 8
@@ -319,11 +319,11 @@
       "@": schemat/types/type.js:ITEM
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/std/containers.js:IID_Namespace
+    __class: schemat/std/containers.js:IID_Namespace
     "@": schemat:Catalog
   _extends_:
     "@": 7
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 9
@@ -340,16 +340,16 @@
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/std/containers.js:Category_IID_Namespace
+    __class: schemat/std/containers.js:Category_IID_Namespace
     "@": schemat:Catalog
   _extends_:
     "@": 7
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 10
   name: Cluster
-  _category_:
+  __category:
     "@": 0
   schema:
     "@": schemat:Catalog
@@ -363,9 +363,9 @@
       "@": schemat/types/type.js:GENERIC
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/db/db.js:Database
+    __class: schemat/db/db.js:Database
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 12
@@ -397,9 +397,9 @@
       "@": schemat/types/type.js:GENERIC
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/db/db.js:Ring
+    __class: schemat/db/db.js:Ring
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 13
@@ -422,18 +422,18 @@
   defaults:
     flush_delay: 0.01
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 14
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
   defaults:
-    _class_: schemat/db/sequence.js:DataSequence
+    __class: schemat/db/sequence.js:DataSequence
     "@": schemat:Catalog
   _extends_:
     "@": 13
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 15
@@ -441,7 +441,7 @@
   info: Base category for indexes over the data sequence.
   _extends_:
     "@": 24
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 16
@@ -452,7 +452,7 @@
     "@": schemat:Catalog
   _extends_:
     "@": 15
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 17
@@ -460,11 +460,11 @@
   info: "Index that maps categories to member objects: the key is [category ID,
     item ID]."
   defaults:
-    _class_: schemat/db/indexes.js:IndexByCategory
+    __class: schemat/db/indexes.js:IndexByCategory
     "@": schemat:Catalog
   _extends_:
     "@": 16
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 18
@@ -482,7 +482,7 @@
       info: "storage format: data-yaml, index-jl, rocksdb (in the future), ..."
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 19
@@ -493,11 +493,11 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/db/block.js:DataBlock
+    __class: schemat/db/block.js:DataBlock
     "@": schemat:Catalog
   _extends_:
     "@": 18
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 20
@@ -506,27 +506,27 @@
   schema:
     "@": schemat:Catalog
   defaults:
-    _class_: schemat/db/block.js:IndexBlock
+    __class: schemat/db/block.js:IndexBlock
     "@": schemat:Catalog
   _extends_:
     "@": 18
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 21
   name: Node
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 22
   name: IndexSequence
   info: Category for sequences of index records.
   defaults:
-    _class_: schemat/db/sequence.js:IndexSequence
+    __class: schemat/db/sequence.js:IndexSequence
     "@": schemat:Catalog
   _extends_:
     "@": 13
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 23
@@ -541,7 +541,7 @@
       "@": :Map
     properties: []
     "@": schemat/db/records.js:RecordSchema
-  _category_:
+  __category:
     "@": 17
   "@": schemat:Data
 - __id: 24
@@ -555,6 +555,6 @@
         RecordSchema
       "@": schemat/types/type.js:GENERIC
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data

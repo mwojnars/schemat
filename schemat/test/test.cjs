@@ -193,7 +193,7 @@ describe('Schemat Tests', function () {
 
         it('Category', async function () {
             await test_page(page, `${DOMAIN}/$/id/0`, '#page-main',
-                ['Category:0', 'Category of items', 'name', '_ttl_', 'defaults', 'schema', 'Ring', 'Varia'])
+                ['Category:0', 'Category of items', 'name', '__ttl', 'defaults', 'schema', 'Ring', 'Varia'])
         })
 
         it('Directory', async function () {
@@ -203,7 +203,7 @@ describe('Schemat Tests', function () {
 
         it('Varia', async function () {
             let Varia = await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main',
-                ['Category:5000', 'Varia', 'name', '_category_', 'schema', 'Varia:5001', 'Create Item'])
+                ['Category:5000', 'Varia', 'name', '__category', 'schema', 'Varia:5001', 'Create Item'])
 
             // these strings are only available after client-side rendering, not in HTML source:
             expect_include_all(await extract_content(Varia), 'check', 'Varia.code')
@@ -249,7 +249,7 @@ describe('Schemat Tests', function () {
         })
 
         it('Varia object', async function () {
-            await test_page(page, `${DOMAIN}/$/id/5001`, '#page-main', ['Varia', 'title', '_category_', 'Ala ma kota', 'Add new entry'])
+            await test_page(page, `${DOMAIN}/$/id/5001`, '#page-main', ['Varia', 'title', '__category', 'Ala ma kota', 'Add new entry'])
         })
 
         it('uncategorized object', async function () {

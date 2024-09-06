@@ -592,29 +592,29 @@ export class Data extends Catalog {
         /* Convert a plain object - POJO or a newborn Item containing plain JS attributes - to a Data instance,
            which contains all own properties of `obj` except for those starting with '_',
            or having undefined value, or Item's special attributes (like `action`).
-           Special properties: _class_, _category_, are preserved.
+           Special properties: __class, __category, are preserved.
            Properties defined by getters are ignored.
          */
         assert(!obj.is_linked?.())
         assert(Item, "missing globalThis.Item")
 
-        const KEEP = ['_class_', '_category_']
+        const KEEP = ['__class', '__category']
         const DROP = ['action']
 
-        // identify _category_ & _class_ of the object and perform conversions if needed
-        let _category_ = obj._category_ || obj.constructor._category_ || undefined
-        let _class_    = obj._class_    || obj.constructor._class_ || obj.constructor || undefined
+        // identify __category & __class of the object and perform conversions if needed
+        let __category = obj.__category || obj.constructor.__category || undefined
+        let __class    = obj.__class    || obj.constructor.__class || obj.constructor || undefined
 
-        if (T.isString(_category_)) _category_ = Number(_category_)
-        if (T.isNumber(_category_)) _category_ = await schemat.get_loaded(_category_) //schemat.get_object(_category_)
+        if (T.isString(__category)) __category = Number(__category)
+        if (T.isNumber(__category)) __category = await schemat.get_loaded(__category) //schemat.get_object(__category)
 
-        if (_class_ === Object || _class_ === Item) _class_ = undefined
-        if (_class_ && !T.isString(_class_)) _class_ = schemat.get_classpath(_class_)     // convert _class_ to a classpath string
+        if (__class === Object || __class === Item) __class = undefined
+        if (__class && !T.isString(__class)) __class = schemat.get_classpath(__class)     // convert __class to a classpath string
 
-        // drop _class_ if it's already defined through category's default (by literal equality of classpath strings)
-        if (_class_ === _category_?.defaults?.get('_class_')) _class_ = undefined
+        // drop __class if it's already defined through category's default (by literal equality of classpath strings)
+        if (__class === __category?.defaults?.get('__class')) __class = undefined
 
-        let props = {...obj, _category_, _class_}
+        let props = {...obj, __category, __class}
 
         // filter out undefined values, private props (starting with '_'), and special attributes except for those listed in KEEP
         let entries = Object.entries(props).filter(([k, v]) =>

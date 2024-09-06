@@ -195,9 +195,9 @@ export class ReactPage extends RenderedPage {
     static View = class extends RenderedPage.View {
 
         async prepare(side) {
-            // print(`prepare() called for [${this._id_}], ${this._category_}`)
+            // print(`prepare() called for [${this._id_}], ${this.__category}`)
             await this.load()
-            await this._category_?.load()
+            await this.__category?.load()
             return {}
         }
 
@@ -242,9 +242,9 @@ export class ItemAdminView extends ReactPage.View {
     html_head() {
         /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
         let globalAssets = Resources.clientAssets
-        // let staticAssets = this._category_?.schema_assets.render_all()
+        // let staticAssets = this.__category?.schema_assets.render_all()
         let staticAssets = this._assets_.render_all()
-        // let customAssets = this._category_?.html_assets
+        // let customAssets = this.__category?.html_assets
         let assets = [globalAssets, staticAssets]   // customAssets
         return assets .filter(a => a?.trim()) .join('\n')
     }

@@ -55,7 +55,7 @@ export class Site extends Directory {
         assert(default_container._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
 
         // ...and that this container is an ID_Namespace, so it is compatible with the URL generation on the client
-        assert(default_container._category_.name === 'IID_Namespace', `container [${this._id_}] at the default path ('${this.default_path}') must be an IID_Namespace`)
+        assert(default_container.__category.name === 'IID_Namespace', `container [${this._id_}] at the default path ('${this.default_path}') must be an IID_Namespace`)
     }
 
 

@@ -16,8 +16,8 @@
       - Classpath
       - repeated fields (Catalog / Data)
     - logical layer:
-      - `_class_`
-      - `_category_`: schema & defaults
+      - `__class`
+      - `__category`: schema & defaults
       - multiple inheritance
       - compound values: merging of inherited/default (Catalog)
     - proxy wrapper & caching of properties

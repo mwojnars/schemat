@@ -160,7 +160,7 @@ export class Category_IID_Namespace extends Namespace {
     identify(item) {
         let sep = Category_IID_Namespace.ID_SEPARATOR
         let spaces_rev = this.spaces_rev
-        let space = spaces_rev.get(item._category_?._id_)
+        let space = spaces_rev.get(item.__category?._id_)
         if (space) return `${space}${sep}${item._id_}`
     }
 

@@ -96,7 +96,7 @@ export class Request {   // Connection ?
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
         let site = schemat.site
-        let items = [this.target, this.target._category_, schemat.root_category, site, ...site._category_._ancestors_]
+        let items = [this.target, this.target.__category, schemat.root_category, site, ...site.__category._ancestors_]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(it => it._record_.encoded())
 
@@ -289,7 +289,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     name
     info
-    _status_
+    __status
 
     /***  Special properties:
 
@@ -309,11 +309,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _prototypes_            array of direct ancestors (prototypes) of this object; alias for `_extends_$`
     _ancestors_             array of all ancestors, deduplicated and linearized, with `this` at the first position
 
-    _class_                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
-    _category_              category of this item, as a Category object
-    _container_             Container of this item, for canonical URL generation
-    _status_                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
-    _ttl_                   time-to-live of this object in the registry [seconds]; 0 = immediate eviction on the next cache purge
+    __class                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
+    __category              category of this item, as a Category object
+    __container             Container of this item, for canonical URL generation
+    __status                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
+    __ttl                   time-to-live of this object in the registry [seconds]; 0 = immediate eviction on the next cache purge
 
     _path_
     _url_                   absolute URL path of this object; calculated right *after* __init__(); to be sure that _url_ is computed, await _meta_.pending_url first
@@ -342,7 +342,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     get _schema_() {
-        return this._category_?.data_schema || new DATA_GENERIC()
+        return this.__category?.data_schema || new DATA_GENERIC()
     }
 
     get _prototypes_() { return this._extends_$ }
@@ -550,15 +550,15 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             let proto = this._init_prototypes()                 // load prototypes
             if (proto instanceof Promise) await proto
 
-            // this._data_ is already loaded, so _category_ should be available IF defined (except for non-categorized objects)
-            let category = this._category_
+            // this._data_ is already loaded, so __category should be available IF defined (except for non-categorized objects)
+            let category = this.__category
 
             if (category && !category.is_loaded() && category !== this)
                 await category.load({await_url: false})         // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
-            this._meta_.expiry = Date.now() + (this._ttl_ || 0) * 1000
+            this._meta_.expiry = Date.now() + (this.__ttl || 0) * 1000
 
-            if (this._status_) print(`WARNING: object [${this._id_}] has status ${this._status_}`)
+            if (this.__status) print(`WARNING: object [${this._id_}] has status ${this.__status}`)
 
             // after the props are loaded, attach a JS class to this object (to provide custom behavior) and call the initializer
             await this._init_class()                        // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
@@ -601,7 +601,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _init_prototypes() {
         /* Load all Schemat prototypes of this object. */
         let prototypes = this._prototypes_
-        // for (const p of prototypes)        // TODO: update the code below to verify ._category_ instead of CIDs
+        // for (const p of prototypes)        // TODO: update the code below to verify .__category instead of CIDs
             // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
         prototypes = prototypes.filter(p => !p.is_loaded())
 
@@ -627,13 +627,13 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
                 site = schemat.site
             }
 
-            let container = this._container_
+            let container = this.__container
             let default_path = () => site.default_path_of(this)
-            // assert(container, `missing _container_ in [${this._id_}]`)
+            // assert(container, `missing container in [${this._id_}]`)
 
             if (!container) {
                 let url = default_path()
-                print('missing _container_:', url, `(${this.name})`)
+                print('missing container:', url, `(${this.name})`)
                 return this._url_ = this._path_ = url
             }
             // print(`_init_url() container: '${container._id_}'`)
@@ -643,7 +643,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
             this._path_ = container.get_access_path(this)
             if (!this._path_) {
-                print(`WARNING: empty access path for [${this._id_}] despite its _container_ is defined as [${container._id_}]; using default path`)
+                print(`WARNING: empty access path for [${this._id_}] despite its container is defined as [${container._id_}]; using default path`)
                 return this._url_ = this._path_ = default_path()
             }
 
@@ -663,7 +663,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
          */
         if (this._id_ === ROOT_ID) return T.setClass(this, RootCategory)
 
-        let cls = this._class_
+        let cls = this.__class
         if (typeof cls === 'string')
             cls = (cls[0] !== '/') ? await schemat.get_builtin(cls) : await schemat.site.import(cls)
 
@@ -694,10 +694,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         // check the Type of the property in this object's _schema_; special handling for:
         // 1) _extends_: because it is used at an early stage of the loading process (_init_prototypes() > this._prototypes_), before the object's category (and schema) is fully loaded;
-        // 2) _category_: because the schema is not yet available and reading the type from _schema_ would create circular dependency.
+        // 2) __category: because the schema is not yet available and reading the type from _schema_ would create circular dependency.
 
         let type =
-            prop === '_category_' ? new ITEM() :
+            prop === '__category' ? new ITEM() :
             prop === '_extends_'  ? new ITEM({inherit: false}) :
                                     proxy._schema_.get(prop)
 
@@ -711,16 +711,16 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let streams = ancestors.map(proto => proto._own_values(prop))
 
         // read `defaults` from the category and combine them with the `streams`
-        if (prop !== '_extends_' && prop !== '_category_')                  // avoid circular dependency for these special props
+        if (prop !== '_extends_' && prop !== '__category')                  // avoid circular dependency for these special props
         {
-            let category = proxy._category_
+            let category = proxy.__category
             if (this === category?._self_ && prop === 'defaults')           // avoid circular dependency for RootCategory
                 category = undefined
 
             let defaults = category?.defaults?.get_all(prop)
             if (defaults?.length) streams.push(defaults)
         }
-        // else if (prop === '_category_')
+        // else if (prop === '__category')
         //     streams.push([schemat.Uncategorized])
 
         return type.combine_inherited(streams, proxy)                       // `default` and `impute` of the `type` are applied here
@@ -760,11 +760,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            If html=true, the category name is hyperlinked to the category's profile page (unless URL failed to generate)
            and is HTML-escaped. If max_len is provided, category's suffix may be replaced with '...' to make its length <= max_len.
          */
-        let cat = this._category_?.name || ""
+        let cat = this.__category?.name || ""
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = this._category_?.url()
+            let url = this.__category?.url()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
         let stamp = cat ? `${cat}:${this._id_}` : `${this._id_}`
@@ -775,7 +775,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Check whether this item belongs to a `category`, or its subcategory.
            All comparisons along the way use item IDs, not object identity. The item must be loaded.
         */
-        return this._category_.inherits_from(category)
+        return this.__category.inherits_from(category)
     }
 
     inherits_from(parent) {
@@ -833,7 +833,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let object = this
 
         while (object) {
-            let parent = object._container_
+            let parent = object.__container
             let segment = parent?.identify(object)
 
             path.push([segment, object])
@@ -897,7 +897,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (endpoints.length) return endpoints
 
         // otherwise, use category defaults
-        endpoints = this._category_?.default_endpoints.get_all(protocol) || []
+        endpoints = this.__category?.default_endpoints.get_all(protocol) || []
         if (endpoints.length) return endpoints
 
         // otherwise, use global defaults
@@ -1063,7 +1063,7 @@ export class Category extends Item {
         if (typeof data === 'number') [data, id] = [id, data]
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
-        data.set('_category_', this)
+        data.set('__category', this)
         return Item.from_data(id, data)
     }
 
@@ -1233,10 +1233,10 @@ export class RootCategory extends Category {
 
     // _set_expiry() { this._meta_.expiry = undefined }          // never evict from cache
 
-    get _category_() { return this._proxy_ }        // root category is a category for itself
+    get __category() { return this._proxy_ }        // root category is a category for itself
 
     get data_schema() {
-        /* In RootCategory, this == this._category_, and to avoid infinite recursion we must perform schema inheritance manually. */
+        /* In RootCategory, this == this.__category, and to avoid infinite recursion we must perform schema inheritance manually. */
         let root_fields = this._data_.get('schema')
         let default_fields = this._data_.get('defaults').get('schema')
         let fields = new Catalog(root_fields, default_fields)

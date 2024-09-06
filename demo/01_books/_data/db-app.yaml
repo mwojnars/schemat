@@ -2,11 +2,11 @@
   name: Book
   schema:
     "@": schemat:Catalog
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data
 - __id: 5001
   name: Author
-  _category_:
+  __category:
     "@": 0
   "@": schemat:Data

@@ -11,14 +11,14 @@ import {CATALOG, DATA_SCHEMA} from "../types/catalog.js"
 
 // global-default fields shared by all item types
 let default_fields = new Catalog({
-    _category_  : new ITEM({info: "Category of this item. Determines item's behavior and the schema of its attributes. Each category should be an item of the Root Category (IID=0).",
+    __category  : new ITEM({info: "Category of this item. Determines item's behavior and the schema of its attributes. Each category should be an item of the Root Category (IID=0).",
                             inherit: false}),
-    // _class_     : new CLASS({info: "Javascript class to be assigned to the item after loading to provide custom methods for the item."}),
+    // __class     : new CLASS({info: "Javascript class to be assigned to the item after loading to provide custom methods for the item."}),
     _extends_   : new ITEM({info: "An item that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
                                   "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items or categories - the latter case represents category inheritance. " +
                                   "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories.",
                             inherit: false}),
-    _container_ : new ITEM({info: "Parent URL container of this object. The chain of containers leading from Site to the object define the access path of this object, which can be converted to a canonical URL path of the object by removing blank segments."}),
+    __container : new ITEM({info: "Parent URL container of this object. The chain of containers leading from Site to the object define the access path of this object, which can be converted to a canonical URL path of the object by removing blank segments."}),
 
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters.", default: ""}),
     info        : new TEXT({info: "Description of the item."}),
