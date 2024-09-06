@@ -504,6 +504,12 @@ export class ITEM extends Type {
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
     }
     static Widget = widgets.ITEM_Widget
+
+    _validate(obj) {
+        obj = super._validate(obj)
+        // TODO: check that props.category.__id is present in the list of object's ancestors, obj.__ancestor_ids
+        return obj
+    }
 }
 
 
