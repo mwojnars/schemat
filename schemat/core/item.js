@@ -145,7 +145,7 @@ class ItemProxy {
      */
 
     // the suffix appended to the property name when a *plural* form of this property is requested (an array of *all* values of a repeated field, not the first value only)
-    static PLURAL_SUFFIX = '$'          // '_array'
+    static PLURAL_SUFFIX = '$'          // __array __list __all ?
 
     // these special props are always read from regular POJO attributes and NEVER from object's _data_
     static RESERVED = ['_id_', '_meta_', '_data_', '_record_', '_ready_']
@@ -164,18 +164,6 @@ class ItemProxy {
         /* Create a Proxy wrapper around `target` object. */
         return new Proxy(target, {get: this.proxy_get})
     }
-
-    // static set_cachable_getters(constructor) {
-    //     const prototype = constructor.prototype
-    //     const parent_getters = constructor.__proto__?.cachable_getters || []
-    //     const own_getters = Object.getOwnPropertyNames(prototype)
-    //             .filter(prop => {
-    //                 const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
-    //                 return descriptor && typeof descriptor.get === 'function'
-    //             })
-    //     // print('own_getters:', own_getters)
-    //     return constructor.cachable_getters = new Set([...parent_getters, ...own_getters])
-    // }
 
     static proxy_get(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
