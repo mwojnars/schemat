@@ -285,7 +285,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Common properties ***/
 
-    // defined in Category::fields::fields::default (root.js/default_fields), but declared here to avoid IDE warnings...
+    // defined in [Category].schema.schema.default (root.js/default_fields), but declared here to avoid IDE warnings...
 
     name
     info
