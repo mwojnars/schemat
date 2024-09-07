@@ -661,7 +661,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         let cls = this.__class
         if (typeof cls === 'string')
-            cls = (cls[0] !== '/') ? await schemat.get_builtin(cls) : await schemat.site.import(cls)
+            if (cls.startsWith('schemat:') || !schemat.site?.is_loaded)
+                cls = schemat.get_builtin(cls)
+            else
+                cls = await schemat.site.import(cls)
+            // cls = (cls[0] !== '/') ? await schemat.get_builtin(cls) : await schemat.site.import(cls)
 
         T.setClass(this, cls || Item)
     }
