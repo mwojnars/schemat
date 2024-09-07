@@ -547,7 +547,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             if (record.id !== undefined)                    // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
                 this.__record = record
 
-            let proto = this._init_prototypes()             // load prototypes
+            let proto = this._load_prototypes()             // load prototypes
             if (proto instanceof Promise) await proto
 
             let category = this.__category                  // this.__data is already loaded, so __category should be available IF defined (except for non-categorized objects)
@@ -598,7 +598,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return new ItemRecord(this.__id, json)
     }
 
-    _init_prototypes() {
+    _load_prototypes() {
         /* Load all Schemat prototypes of this object. */
         let opts = {await_url: false}                                       // during boot up, URLs are not awaited to avoid circular dependencies (see category.load(...) inside _load())
         let prototypes = this.__prototypes.filter(p => !p.is_loaded())
@@ -654,9 +654,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _load_class() {
-        /* Initialize this object's class, i.e., substitute the object's temporary Item class with an ultimate subclass,
-           known after loading the object's data.
-         */
+        /* Load or import this object's ultimate class. */
         if (this.__id === ROOT_ID) return RootCategory
 
         let cls = this.__class
@@ -691,7 +689,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (!data) throw new NotLoaded(this)
 
         // check the Type of the property in this object's __schema; special handling for:
-        // 1) __extends: because it is used at an early stage of the loading process (_init_prototypes() > this.__prototypes), before the object's category (and schema) is fully loaded;
+        // 1) __extends: because it is used at an early stage of the loading process (_load_prototypes() > this.__prototypes), before the object's category (and schema) is fully loaded;
         // 2) __category: because the schema is not yet available and reading the type from __schema would create circular dependency.
 
         let type =
