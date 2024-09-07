@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "_moduleAliases": {
+  "aliases": {
     "@root": ".",
-    "schemat": "./schemat"
+    "schemat": "schemat"
   },
   "dependencies": {
     "@babel/core": "^7.17.8",
