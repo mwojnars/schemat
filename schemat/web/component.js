@@ -30,7 +30,7 @@ export class Assets {
     add_style_path(path) {
         /* `path` is the full local path to a file, typically retrieved with import.meta.resolve(RELATIVE_FILE_PATH). */
         if (!path) return
-        let url = schemat.site.translate_local(path)
+        let url = schemat.site.get_file_url(path)
         this.add_asset(`<link href="${encodeURI(url)}" rel="stylesheet" />`)
     }
 
@@ -213,7 +213,7 @@ export class Component extends Styled(React.Component) {
 
     _shadow_links(on_server) {
         return T.getInherited(this.constructor, 'css_file') .filter(Boolean) .map(path => {
-            let href = on_server ? schemat.site.translate_local(path) : path        // translation is only needed on server; on client, `path` is already a URL
+            let href = on_server ? schemat.site.get_file_url(path) : path        // translation is only needed on server; on client, `path` is already a URL
             return LINK({href, rel: 'stylesheet'})
         })
     }

@@ -83,23 +83,15 @@ export class Site extends Directory {
         return [url, last_blank]
     }
 
-    // get_file_url .. url_from_file_path
-    translate_local(path) {
-        /* Convert a local file path to its corresponding url-path. */
-        if (path.startsWith('file://')) path = path.slice(7)                        // trim leading 'file://' if present
+    get_file_url(path) {
+        /* Convert a local file path to its corresponding URL-path (href=...). Typically used for loading assets on the client. */
+        if (path.startsWith('file://')) path = path.slice(7)                // trim leading 'file://' if present
         let root = schemat.ROOT_DIRECTORY
         if (!path.startsWith(root + '/')) throw new Error(`path is not accessible via URL: ${path}`)
         return path.replace(root, Site.URL_LOCAL)
     }
 
-    // translate_url(path) {
-    //     /* Convert a public URL-path to its corresponding local file path. */
-    //     // return schemat.ROOT_DIRECTORY + '/' + path
-    //     if (path.startsWith(Site.URL_LOCAL + '/')) return path.replace(Site.URL_LOCAL, schemat.ROOT_DIRECTORY)
-    //     throw new Error(`URL path does not point to a local file: ${path}`)
-    // }
-
-    get_import_url(path) {
+    get_module_url(path) {
         /* Convert a local import path, like "schemat/.../file.js" to a URL-path that can be used with import() on the client. */
         if (path[0] === '/') throw new Error(`cannot make an import URL-path for an absolute local path: ${path}`)
         return `${Site.URL_LOCAL}/${path}::import`          // ::import is sometimes needed to get the proper MIME header, esp. if target is a web object not a local file
@@ -112,8 +104,8 @@ export class Site extends Directory {
            is converted to a URL of the form "/$/local/.../file.js::import". May return a Promise.
          */
         // print(`Site.import():  ${path}`)
-        let [url_path, symbol] = splitLast(path || '', ':')
-        let import_path = schemat.client_side ? this.get_import_url(url_path) : schemat.ROOT_DIRECTORY + '/' + url_path
+        let [file_path, symbol] = splitLast(path || '', ':')
+        let import_path = schemat.client_side ? this.get_module_url(file_path) : schemat.ROOT_DIRECTORY + '/' + file_path
 
         // print(`...importing:  ${import_path}`)
         let module = import(import_path)
