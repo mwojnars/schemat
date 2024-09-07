@@ -8,10 +8,10 @@
   entries:
     $:
       "@": 1019
-    "*app_objects":
-      "@": 1006
     "*app_source":
       "@": 1005
+    "*app_objects":
+      "@": 1006
     "@": schemat:Catalog
   database:
     "@": 1002
