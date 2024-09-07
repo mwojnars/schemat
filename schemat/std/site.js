@@ -103,7 +103,8 @@ export class Site extends Directory {
            the SUN namespace or to a particular symbol within such module. May return a Promise.
          */
         // print(`Site.import():  ${path}`)
-        if (path[0] !== '/') return schemat.get_builtin(path)         // import a builtin class registered in Schemat's Classpath
+        // if (path[0] !== '/') return schemat.get_builtin(path)         // import a builtin class registered in Schemat's Classpath
+        if (path[0] !== '/') path = Site.URL_LOCAL + '/' + path
 
         let [url_path, symbol] = splitLast(path || '', ':')
         let import_path = schemat.client_side ?
