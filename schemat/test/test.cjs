@@ -1,8 +1,8 @@
 /*
-    End-to-end tests for the Schemat application. Inside the `schemat/` folder, run command:
+    End-to-end tests for the Schemat application. Inside the project root (`src/`) launch:
 
-        ../node_modules/.bin/mocha --exit
-
+    $ npm run test          -- for one-time execution of all tests
+    $ npm run test:watch    -- for running the tests in watch mode (auto re-run on file changes)
  */
 
 const https = require('https')
@@ -139,7 +139,7 @@ describe('Schemat Tests', function () {
             // The inner "exec" is necessary to pass the SIGTERM signal to the child "node" process, otherwise the kill()
             // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
             // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
-            server = exec(`cd .. && exec node --experimental-vm-modules schemat/server/run.js --port ${PORT}`, (error, stdout, stderr) => {
+            server = exec(`node --experimental-vm-modules schemat/server/run.js --port ${PORT}`, (error, stdout, stderr) => {
                 if (error) console.error('\nError during server startup:', '\n' + stderr)
                 else       console.log('\nServer stdout:', '\n' + stdout)
             })
@@ -159,7 +159,7 @@ describe('Schemat Tests', function () {
 
             page.on('console', msg => { messages.push(msg) })
             page.on('pageerror', error => { messages.push({type: () => 'error', text: () => error}) })
-            await delay(100)
+            await delay(200)
         })
 
         beforeEach(() => { messages = [] })
@@ -188,7 +188,7 @@ describe('Schemat Tests', function () {
         after(async function () {
             await browser?.close()
             let killed = server?.kill()
-            await delay(200)                                        // wait for server to stop
+            await delay(300)                                        // wait for server to stop
         })
 
         it('Category', async function () {

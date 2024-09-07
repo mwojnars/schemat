@@ -67,5 +67,9 @@
     "puppeteer": "^21.5.0",
     "sass": "^1.77.8",
     "wtfnode": "^0.9.1"
+  },
+  "scripts": {
+    "test": "mocha --exit 'schemat/test/**/*.cjs'",
+    "test:watch": "mocha --watch 'schemat/test/**/*.cjs'"
   }
 }
