@@ -10,13 +10,18 @@
 */
 
 
+import {html_page} from "schemat/web/adapters.js"
+
+
 export class Book extends schemat.Item {
 
     static GET__view() {
+        // return html_page(import.meta.resolve('book.ejs'), {book: {}, authors: {}})
         return 'Books List ...'
     }
 
     GET__view() {
-        return `Details of book [${this.id}]...`
+        let path = import.meta.resolve('./book.ejs')
+        return html_page(path, {book: {}, authors: []})
     }
 }

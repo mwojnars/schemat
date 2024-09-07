@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> | Our Bookstore</title>
+    <title><%= book.title %> | Our Bookstore</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -30,7 +30,7 @@
             <p>ISBN: <%= book.isbn %></p>
             <p>Pages: <%= book.page_count %></p>
             <p>Language: <%= book.language %></p>
-            <p>Average Rating: <%= book.average_rating %>/5</p>
+            <p>Average Rating: <%= book.average_rating || 5 %>/5</p>
             <p>Description: <%= book.description %></p>
         </article>
     </main>
