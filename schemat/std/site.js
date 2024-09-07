@@ -92,19 +92,21 @@ export class Site extends Directory {
     }
 
     translate_url(path) {
-        /* Convert a public URL path to its corresponding local file path. */
+        /* Convert a public URL-path to its corresponding local file path. */
+        // return schemat.ROOT_DIRECTORY + '/' + path
         if (path.startsWith(Site.URL_LOCAL + '/')) return path.replace(Site.URL_LOCAL, schemat.ROOT_DIRECTORY)
         throw new Error(`URL path does not point to a local file: ${path}`)
     }
 
     import(path) {
         /* `path` is either a builtin class path of the form "schemat:Catalog", or a URL path of the form
-           "/$/local/schemat/.../file.js" or "/.../file.js:ClassName" pointing to a module accessible through
+           "schemat/.../file.js" or ".../file.js:ClassName" pointing to a module accessible through
            the SUN namespace or to a particular symbol within such module. May return a Promise.
          */
-        // print(`Site.import():  ${path}`)
+        print(`Site.import():  ${path}`)
         // if (path[0] !== '/') return schemat.get_builtin(path)         // import a builtin class registered in Schemat's Classpath
         if (path[0] !== '/') path = Site.URL_LOCAL + '/' + path
+        // if (path[0] === '/') throw new Error(`cannot import from absolute path: ${path}`)
 
         let [url_path, symbol] = splitLast(path || '', ':')
         let import_path = schemat.client_side ?
