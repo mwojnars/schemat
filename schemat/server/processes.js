@@ -10,6 +10,10 @@ import {DataRequest} from "../db/data_request.js";
 import {Database} from "../db/db.js";
 
 
+// print NODE_PATH:
+// console.log('NODE_PATH:', process.env.NODE_PATH)
+
+
 /**********************************************************************************************************************/
 
 export class BackendProcess {
