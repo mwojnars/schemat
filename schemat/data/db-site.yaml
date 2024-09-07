@@ -148,7 +148,7 @@
   entries:
     id:
       "@": 1021
-    schemat:
+    local:
       "@": 1020
     "@": schemat:Catalog
   __container:
@@ -157,8 +157,8 @@
     "@": 5
   "@": schemat:Data
 - __id: 1020
-  name: /$/schemat
-  local_path: ./schemat
+  name: /$/local
+  local_path: .
   __container:
     "@": 1019
   __category:

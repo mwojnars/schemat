@@ -19,7 +19,7 @@ import {HttpService, JsonService, API, Task, TaskService, InternalService, Netwo
 export const ROOT_ID = 0
 
 
-// import * as utils from 'http://127.0.0.1:3000/$/schemat/common/utils.js'
+// import * as utils from 'http://127.0.0.1:3000/$/local/schemat/common/utils.js'
 // import * as utils from 'file:///home/..../src/schemat/common/utils.js'
 // print("imported utils from localhost:", utils)
 // print('import.meta:', import.meta)

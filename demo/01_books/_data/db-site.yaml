@@ -157,7 +157,7 @@
     "@": 5
   "@": schemat:Data
 - __id: 1020
-  name: /$/schemat
+  name: /$/local/schemat
   local_path: ./schemat
   __container:
     "@": 1019

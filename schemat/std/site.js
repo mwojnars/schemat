@@ -27,8 +27,8 @@ export class Site extends Directory {
     static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
-    // static URL_LOCAL = '/$/local'        // url-path of the application's local filesystem root folder
-    static URL_SCHEMAT = '/$/schemat'       // url-path of the root of Schemat source code
+    static URL_LOCAL = '/$/local'           // url-path of the application's local filesystem root folder
+    // static URL_SCHEMAT = '/$/schemat'       // url-path of the root of Schemat source code
 
     // properties:
     database
@@ -86,20 +86,20 @@ export class Site extends Directory {
     translate_local(path) {
         /* Convert a local file path to its corresponding url-path. */
         if (path.startsWith('file://')) path = path.slice(7)                        // trim leading 'file://' if present
-        let root = schemat.SCHEMAT_DIRECTORY
+        let root = schemat.ROOT_DIRECTORY
         if (!path.startsWith(root + '/')) throw new Error(`path is not accessible via URL: ${path}`)
-        return path.replace(root, Site.URL_SCHEMAT)
+        return path.replace(root, Site.URL_LOCAL)
     }
 
     translate_url(path) {
         /* Convert a public URL path to its corresponding local file path. */
-        if (path.startsWith(Site.URL_SCHEMAT + '/')) return path.replace(Site.URL_SCHEMAT, schemat.SCHEMAT_DIRECTORY)
+        if (path.startsWith(Site.URL_LOCAL + '/')) return path.replace(Site.URL_LOCAL, schemat.ROOT_DIRECTORY)
         throw new Error(`URL path does not point to a local file: ${path}`)
     }
 
     async import(path) {
         /* `path` is either a builtin class path of the form "schemat:Catalog", or a URL path of the form
-           "/$/schemat/.../file.js" or "/.../file.js:ClassName" pointing to a module accessible through
+           "/$/local/schemat/.../file.js" or "/.../file.js:ClassName" pointing to a module accessible through
            the SUN namespace or to a particular symbol within such module.
          */
         // print(`Site.import():  ${path}`)
@@ -290,7 +290,7 @@ export class Site extends Directory {
     // }
     //
     // _js_import_file(path) {
-    //     /* Schemat's server-side import path (/$/schemat/...) converted to a local filesystem path that can be used with standard import(). */
+    //     /* Schemat's server-side import path (/$/local/schemat/...) converted to a local filesystem path that can be used with standard import(). */
     //     let local = schemat.PATH_LOCAL_SUN
     //     if (!path.startsWith(local + '/')) throw new Error(`incorrect import path (${path}), should start with "${local}"`)
     //     return schemat.PATH_LOCAL_FS + path.slice(local.length)

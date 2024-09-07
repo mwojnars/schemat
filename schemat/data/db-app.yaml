@@ -2,7 +2,7 @@
   name: Varia
   info: Category of items that do not belong to any specific category.
   class_body: >-
-    static check() { import('/$/schemat/common/utils.js').then(mod =>
+    static check() { import('/$/local/schemat/common/utils.js').then(mod =>
     console.log("Varia.code: imported ", mod)) }
 
     static error() { throw new Error('Varia/code/error()') }
@@ -30,7 +30,7 @@
   "@": schemat:Data
 - __id: 5004
   name: MysqlDB
-  class_path: /$/schemat/db/mysql.js:MySQL
+  class_path: /$/local/schemat/db/mysql.js:MySQL
   schema:
     host:
       "@": schemat/types/type.js:STRING
@@ -56,7 +56,7 @@
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   defaults:
-    __class: /$/schemat/db/mysql.js:MySQL
+    __class: /$/local/schemat/db/mysql.js:MySQL
     "@": schemat:Catalog
   __category:
     "@": 0
@@ -74,7 +74,7 @@
     // console.log('TwitterPost/code executed')
 
     // import {check} from '/site/widgets.js'
-    // import {Item} from '/$/schemat/core/item.js'
+    // import {Item} from '/$/local/schemat/core/item.js'
     // import vm from 'vm'
     // check()
     // console.log('schemat:', schemat)
