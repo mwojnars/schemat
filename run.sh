@@ -7,4 +7,6 @@ ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 # set NODE_PATH and the working directory to the root folder of the source code
 export NODE_PATH=$ROOT_DIR
 cd $ROOT_DIR
-node --experimental-vm-modules "$ROOT_DIR/schemat/server/run.js" "$@"
+
+# here, the --loader <...> option is needed ONLY if the application wants to use non-relative import paths like `import from "schemat/..."`
+node --experimental-vm-modules --loader esm-module-alias/loader "$ROOT_DIR/schemat/server/run.js" "$@"
