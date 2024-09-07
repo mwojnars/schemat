@@ -315,7 +315,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __status                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
     __ttl                   time-to-live of this object in the registry [seconds]; 0 = immediate eviction on the next cache purge
 
-    __path
+    __path                  URL path of this object; similar to __url, but contains blanks segments
     __url                   absolute URL path of this object; calculated right *after* __init__(); to be sure that __url is computed, await __meta.pending_url first
     __assets                cached web Assets of this object's __schema
 
