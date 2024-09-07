@@ -1,7 +1,7 @@
 /*
     End-to-end tests for the Schemat application. Inside the `schemat/` folder, run command:
 
-        ./node_modules/.bin/mocha --exit
+        ../node_modules/.bin/mocha --exit
 
  */
 
