@@ -27,6 +27,9 @@
     cover_image:
       "@": schemat/types/type.js:URL
     "@": schemat:Catalog
+  defaults:
+    "@": schemat:Catalog
+  __class: demo/01_books/books/books.js:Book
   __category:
     "@": 0
   "@": schemat:Data
