@@ -544,24 +544,24 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             assert(record instanceof ItemRecord)
 
             this.__data = record.data
-            if (record.id !== undefined)                        // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
+            if (record.id !== undefined)                    // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
                 this.__record = record
 
-            let proto = this._init_prototypes()                 // load prototypes
+            let proto = this._init_prototypes()             // load prototypes
             if (proto instanceof Promise) await proto
 
-            // this.__data is already loaded, so __category should be available IF defined (except for non-categorized objects)
-            let category = this.__category
+            let category = this.__category                  // this.__data is already loaded, so __category should be available IF defined (except for non-categorized objects)
 
             if (category && !category.is_loaded() && category !== this)
-                await category.load({await_url: false})         // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
+                await category.load({await_url: false})     // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
             this.__meta.expiry = Date.now() + (this.__ttl || 0) * 1000
 
             if (this.__status) print(`WARNING: object [${this.__id}] has status ${this.__status}`)
 
-            // after the props are loaded, attach a JS class to this object (to provide custom behavior) and call the initializer
-            await this._init_class()                        // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
+            let cls = await this._load_class()              // set the target JS class on this object; stubs only have Item as their class, which must be changed when the data is loaded and the item is linked to its category
+            T.setClass(this, cls || Item)
+
             this._init_network()
 
             if (this.is_linked())
@@ -653,21 +653,19 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         }
     }
 
-    async _init_class() {
+    _load_class() {
         /* Initialize this object's class, i.e., substitute the object's temporary Item class with an ultimate subclass,
            known after loading the object's data.
          */
-        if (this.__id === ROOT_ID) return T.setClass(this, RootCategory)
+        if (this.__id === ROOT_ID) return RootCategory
 
         let cls = this.__class
-        if (typeof cls === 'string')
-            if (cls.startsWith('schemat:') || !schemat.site?.is_loaded)
-                cls = schemat.get_builtin(cls)
-            else
-                cls = await schemat.site.import(cls)
-            // cls = (cls[0] !== '/') ? await schemat.get_builtin(cls) : await schemat.site.import(cls)
+        if (typeof cls !== 'string') return cls
 
-        T.setClass(this, cls || Item)
+        if (cls.startsWith('schemat:') || !schemat.site?.is_loaded)
+            return schemat.get_builtin(cls)
+
+        return schemat.site.import(cls)
     }
 
     _init_network() {
