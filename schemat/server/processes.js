@@ -1,3 +1,5 @@
+import "../common/globals.js"           // global flags: CLIENT, SERVER
+
 import {print, assert, T} from "../common/utils.js";
 import {ItemNotFound} from "../common/errors.js";
 import {DataServer, WebServer} from "./servers.js";

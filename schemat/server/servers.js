@@ -1,6 +1,5 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
-import {set_global} from "../common/globals.js";
 import {thread_local_variable} from "./thread.js";
 import {Request} from "../core/item.js";
 

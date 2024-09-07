@@ -6,7 +6,6 @@
 
 
 // global flags ...
-
 globalThis.SERVER = (typeof window === 'undefined')
 globalThis.CLIENT = !globalThis.SERVER
 
@@ -15,8 +14,6 @@ globalThis.CLIENT = !globalThis.SERVER
 //     process.versions != null &&                     // process.versions contains Node.js-specific version information
 //     process.versions.node != null                   // process.versions.node is the Node.js version string
 
-
-// global objects ...
 
 export function set_global({schemat} = {})
 {

@@ -1,3 +1,5 @@
+import "../common/globals.js"           // global flags: CLIENT, SERVER
+
 import {assert, print} from "../common/utils.js";
 import {ClientDB} from "./client_db.js";
 import {Schemat} from "../core/schemat.js";
