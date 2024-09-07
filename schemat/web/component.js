@@ -211,19 +211,19 @@ export class Component extends Styled(React.Component) {
         return T.getInherited(this.constructor, 'css_style').join('\n')
     }
 
-    _shadow_links(on_server) {
+    _shadow_links() {
         return T.getInherited(this.constructor, 'css_file') .filter(Boolean) .map(path => {
-            let href = on_server ? schemat.site.get_file_url(path) : path        // translation is only needed on server; on client, `path` is already a URL
+            let href = SERVER ? schemat.site.get_file_url(path) : path      // translation is only needed on server; on client, `path` is already a URL
             return LINK({href, rel: 'stylesheet'})
         })
     }
 
-    _content(on_server = false) {
+    _content() {
         /* Return the content of the component as a React element wrapped up in a <div> with proper classes for styling. */
         let classes = cl(this._classes(), 'component')
         let css = this._shadow_styles()
         let style = css ? STYLE(compact_css(css)) : null
-        let links = this._shadow_links(on_server)
+        let links = this._shadow_links()
         let main = DIV(classes, this._render_original())
         return FRAGMENT(...links, style, main)      // including links/styles already in server-side HTML prevents the FOUC
     }
@@ -243,7 +243,7 @@ export class Component extends Styled(React.Component) {
 
         // render the component inside a shadow DOM
         if (typeof window === 'undefined') {                            // server-side: content rendered inside a <template> tag
-            let template = TEMPLATE({shadowrootmode: 'open'}, this._content(true))
+            let template = TEMPLATE({shadowrootmode: 'open'}, this._content())
             return DIV(classes, template)
         }
         else                                                            // client-side: initially render the <div> container, shadow DOM content will be added in componentDidMount
