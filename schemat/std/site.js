@@ -97,10 +97,10 @@ export class Site extends Directory {
         throw new Error(`URL path does not point to a local file: ${path}`)
     }
 
-    async import(path) {
+    import(path) {
         /* `path` is either a builtin class path of the form "schemat:Catalog", or a URL path of the form
            "/$/local/schemat/.../file.js" or "/.../file.js:ClassName" pointing to a module accessible through
-           the SUN namespace or to a particular symbol within such module.
+           the SUN namespace or to a particular symbol within such module. May return a Promise.
          */
         // print(`Site.import():  ${path}`)
         if (path[0] !== '/') return schemat.get_builtin(path)         // import a builtin class registered in Schemat's Classpath
@@ -112,7 +112,7 @@ export class Site extends Directory {
 
         // print(`...importing:  ${import_path}`)
         let module = import(import_path)
-        return symbol ? (await module)[symbol] : module
+        return symbol ? module.then(m => m[symbol]) : module
     }
 
 
