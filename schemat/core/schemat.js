@@ -1,7 +1,7 @@
 "use strict";
 
 import {T, print, assert, DependenciesStack, normalize_path} from '../common/utils.js'
-import {Item, ROOT_ID} from './item.js'
+import {Item, Category, ROOT_ID} from './item.js'
 import {set_global} from "../common/globals.js";
 import {Registry} from "./registry.js";
 
@@ -138,6 +138,8 @@ export class Schemat {
         /* Create a new Schemat instance as a global object. */
         assert(!globalThis.schemat, `global Schemat instance already exists`)
         set_global({schemat: this})
+        this.Item = Item                    // schemat.Item is globally available for application code
+        this.Category = Category            // schemat.Category is globally available for application code
     }
 
     async boot(site_id, bootstrap_db, open_bootstrap_db = null) {

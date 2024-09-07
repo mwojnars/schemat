@@ -51,7 +51,7 @@ export class JSONx {
         with a special attribute "@" to hold the class name or item ID. Nested objects are encoded recursively.
         Optional `transform` function preprocesses the `obj` and every nested object before they get encoded.
         */
-        assert(Item, "missing globalThis.Item")
+        assert(schemat.Item, "missing global schemat.Item")
         let state
 
         if (this.transform) {
@@ -69,7 +69,7 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
         }
 
-        if (obj instanceof Item) {         //obj?.__id !== undefined || obj instanceof schemat.Item ||
+        if (obj instanceof schemat.Item) {         //obj?.__id !== undefined || obj instanceof schemat.Item ||
             let id = obj._get_write_id()
             if(id !== undefined) return {[JSONx.ATTR_CLASS]: id}
             else throw new Error(`Can't encode a newborn object (no ID): ${obj}`)
@@ -152,7 +152,7 @@ export class JSONx {
         if (cls === Set)              return new Set(this.decode_array(state))
         if (cls === Map)              return new Map(Object.entries(this.decode_object(state)))
 
-        // if (T.isSubclass(cls, Item) && T.isNumber(state))
+        // if (T.isSubclass(cls, schemat.Item) && T.isNumber(state))
         //     return schemat.get_object(state)
 
         if (state === _state)

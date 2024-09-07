@@ -1,7 +1,7 @@
-// import {Item} from "../../../schemat";
+// import {Item} from "../../../schemat/index.js";
 
 
-export class Book extends Item {
+export class Book extends schemat.Item {
 
     static GET__view() {
         return 'Books List ...'
