@@ -83,6 +83,7 @@ export class Site extends Directory {
         return [url, last_blank]
     }
 
+    // get_file_url .. url_from_file_path
     translate_local(path) {
         /* Convert a local file path to its corresponding url-path. */
         if (path.startsWith('file://')) path = path.slice(7)                        // trim leading 'file://' if present
@@ -98,20 +99,30 @@ export class Site extends Directory {
         throw new Error(`URL path does not point to a local file: ${path}`)
     }
 
+    get_import_url(path) {
+        /* Convert a local import path, like "schemat/.../file.js" to a URL-path that can be used with import() on the client. */
+        if (path[0] === '/') throw new Error(`cannot make an import URL-path for an absolute local path: ${path}`)
+        return `${Site.URL_LOCAL}/${path}::import`
+    }
+
     import(path) {
-        /* `path` is either a builtin class path of the form "schemat:Catalog", or a URL path of the form
-           "schemat/.../file.js" or ".../file.js:ClassName" pointing to a module accessible through
-           the SUN namespace or to a particular symbol within such module. May return a Promise.
+        /* `path` is either a builtin class path of the form "schemat:Catalog", or a local path of the form
+           "schemat/.../file.js" or ".../file.js:ClassName", pointing to a module or a symbol within a module.
+           This method can be called both on the server and on the client (!). In the latter case, the import path
+           is converted to a URL of the form "/$/local/.../file.js::import". May return a Promise.
          */
-        print(`Site.import():  ${path}`)
+        // print(`Site.import():  ${path}`)
         // if (path[0] !== '/') return schemat.get_builtin(path)         // import a builtin class registered in Schemat's Classpath
-        if (path[0] !== '/') path = Site.URL_LOCAL + '/' + path
+        // if (path[0] !== '/') path = Site.URL_LOCAL + '/' + path
         // if (path[0] === '/') throw new Error(`cannot import from absolute path: ${path}`)
+        // path = Site.URL_LOCAL + '/' + path
 
         let [url_path, symbol] = splitLast(path || '', ':')
-        let import_path = schemat.client_side ?
-            url_path + '::import' :             // client-side import uses the URL path, with ::import to get the raw file with proper MIME (if the file is a web object, not mapped to a local file)
-            this.translate_url(url_path)        // server-side import uses the local file path translated from the URL path
+        let import_path = schemat.client_side ? this.get_import_url(url_path) : schemat.ROOT_DIRECTORY + '/' + url_path
+
+        // let import_path = schemat.client_side ?
+        //     url_path + '::import' :             // client-side import uses the URL path, with ::import to get the raw file with proper MIME (if the file is a web object, not mapped to a local file)
+        //     this.translate_url(url_path)        // server-side import uses the local file path translated from the URL path
 
         // print(`...importing:  ${import_path}`)
         let module = import(import_path)
