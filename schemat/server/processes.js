@@ -1,3 +1,4 @@
+import 'module-alias/register.js'
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {print, assert, T} from "../common/utils.js";

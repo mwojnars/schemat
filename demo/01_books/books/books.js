@@ -1,5 +1,5 @@
-// import {Item} from "schemat/index.js";
-import {Item} from "../../../schemat/index.js";
+import {Item} from "schemat/index.js";
+// import {Item} from "../../../schemat/index.js";
 
 
 export class Book extends schemat.Item {

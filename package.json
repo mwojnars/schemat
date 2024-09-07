@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
+  "_moduleAliases": {
+    "@root": ".",
+    "schemat": "./schemat"
+  },
   "dependencies": {
     "@babel/core": "^7.17.8",
     "@emotion/react": "^11.13.0",
@@ -22,6 +26,7 @@
     "ejs": "^3.1.10",
     "express": "^4.17.1",
     "kafkajs": "^2.2.3",
+    "module-alias": "^2.2.3",
     "mysql2": "^2.3.3",
     "pegjs": "^0.10.0",
     "postcss": "^8.4.41",
