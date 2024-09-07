@@ -38,6 +38,7 @@ export class Site extends Directory {
 
 
     async __init__()  {
+        this._modules_cache = new Map()
         if (schemat.server_side) {
             await this.database?.load()
             this._vm = await import('node:vm')
@@ -108,8 +109,13 @@ export class Site extends Directory {
         let import_path = schemat.client_side ? this.get_module_url(file_path) : schemat.ROOT_DIRECTORY + '/' + file_path
 
         // print(`...importing:  ${import_path}`)
-        let module = import(import_path)
-        return symbol ? module.then(m => m[symbol]) : module        // TODO: add caching of imported modules to prevent the awaiting (in caller) every time
+        let module = this._modules_cache.get(import_path)           // first, try taking the module from the cache - returns immediately
+        if (module) return symbol ? module[symbol] : module
+
+        return import(import_path).then(mod => {                    // otherwise, import the module and cache it - this returns a Promise
+            this._modules_cache.set(import_path, mod)
+            return symbol ? mod[symbol] : mod
+        })
     }
 
 
