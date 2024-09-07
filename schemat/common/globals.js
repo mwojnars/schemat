@@ -18,12 +18,11 @@ globalThis.CLIENT = !globalThis.SERVER
 
 // global objects ...
 
-export function set_global({schemat, Item} = {})
+export function set_global({schemat} = {})
 {
     /* This is a complete list of Schemat's global objects. */
 
     if (schemat)     globalThis.schemat = schemat
-    if (Item)        globalThis.Item = Item
     // if (importLocal) globalThis.importLocal = importLocal
 }
 

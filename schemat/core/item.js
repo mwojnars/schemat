@@ -1241,9 +1241,3 @@ export class RootCategory extends Category {
     }
 }
 
-
-/**********************************************************************************************************************/
-
-// if (globalThis.Item) print('globalThis.Item already exists, will be overwritten')
-// set_global({Item})                  // Item class is available globally without import, for dynamic code
-// print('globalThis.Item assigned')
