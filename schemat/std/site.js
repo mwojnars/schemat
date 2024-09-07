@@ -113,7 +113,7 @@ export class Site extends Directory {
 
         // print(`...importing:  ${import_path}`)
         let module = import(import_path)
-        return symbol ? module.then(m => m[symbol]) : module
+        return symbol ? module.then(m => m[symbol]) : module        // TODO: add caching of imported modules to prevent the awaiting (in caller) every time
     }
 
 
