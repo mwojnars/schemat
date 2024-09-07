@@ -135,14 +135,16 @@ describe('Schemat Tests', function () {
             // internet connection must be available even for tests that run on localhost, otherwise they hang
             check_internet(() => { throw new Error('NO INTERNET CONNECTION. Terminating.') })
 
-            // Start the server...
-            // The inner "exec" is necessary to pass the SIGTERM signal to the child "node" process, otherwise the kill()
+            // start the server...
+
+            // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
             // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
             // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
-            server = exec(`node --experimental-vm-modules schemat/server/run.js --port ${PORT}`, (error, stdout, stderr) => {
+            server = exec(`exec node --experimental-vm-modules schemat/server/run.js --port ${PORT}`, (error, stdout, stderr) => {
                 if (error) console.error('\nError during server startup:', '\n' + stderr)
                 else       console.log('\nServer stdout:', '\n' + stdout)
             })
+
             // console.log('Server started:', server.pid)
             await delay(1000)                                       // wait for server to start
             browser = await puppeteer.launch({headless: "new"})
@@ -159,7 +161,7 @@ describe('Schemat Tests', function () {
 
             page.on('console', msg => { messages.push(msg) })
             page.on('pageerror', error => { messages.push({type: () => 'error', text: () => error}) })
-            await delay(200)
+            await delay(300)
         })
 
         beforeEach(() => { messages = [] })
@@ -296,6 +298,10 @@ describe('Schemat Tests', function () {
         //
         //     // ...additional tests for reverting the change
         // })
+    })
+
+    after(function() {
+        console.log(`\nTests completed at: ${new Date().toLocaleString()}`)
     })
 
     // after(function (done) {
