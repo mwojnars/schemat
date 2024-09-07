@@ -1,5 +1,3 @@
-'use strict'
-
 import {print, assert, T, escape_html, splitLast, concat, unique, delay} from '../common/utils.js'
 import {UrlPathNotFound, NotLinked, NotLoaded} from '../common/errors.js'
 

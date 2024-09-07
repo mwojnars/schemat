@@ -1,5 +1,3 @@
-"use strict";
-
 import {T, print, assert, DependenciesStack, normalize_path} from '../common/utils.js'
 import {Item, Category, ROOT_ID} from './item.js'
 import {set_global} from "../common/globals.js";
