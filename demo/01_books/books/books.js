@@ -16,6 +16,8 @@ import {html_page} from "../../../schemat/web/adapters.js"
 
 export class Book extends schemat.Item {
 
+    // get name() { return this.title }
+
     static async GET__view() {
         let books = []
         for await (const book of schemat.scan_category(this)) {
