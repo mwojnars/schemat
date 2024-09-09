@@ -59,6 +59,8 @@
   "@": schemat:Data
 - __id: 5002
   name: The Great Gatsby
+  author:
+    "@": 5003
   genre: Classic
   published_year: 1925
   isbn: "9780743273565"
