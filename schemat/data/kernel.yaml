@@ -17,12 +17,6 @@
       info: Default values for properties of objects in this category. The key cannot
         be empty. Same key can be repeated.
       "@": schemat/types/catalog.js:CATALOG
-    class_path:
-      info: SUN path to a Javascript file that contains a (base) class for this
-        category. May contain an optional class name appended after colon ':'.
-        If the class name is missing (no colon), default import from the file is
-        used.
-      "@": schemat/types/type.js:STRING
     class_name:
       info: Custom internal name for the Class of this category, for debugging. Also
         used as an alias when exporting the Class from the category's module.
@@ -36,7 +30,7 @@
     class_body:
       repeated: true
       info: Source code of the class (a body without heading) that will be created for
-        this category. The class inherits from the `class_path` class, or the
+        this category. The class inherits from the `class`, or the
         class of the first base category, or the top-level Item.
       "@": schemat/types/type.js:CODE
     pages:

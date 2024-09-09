@@ -30,7 +30,6 @@
   "@": schemat:Data
 - __id: 5004
   name: MysqlDB
-  class_path: schemat/db/mysql.js:MySQL
   schema:
     host:
       "@": schemat/types/type.js:STRING

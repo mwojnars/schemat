@@ -1096,7 +1096,7 @@ export class Category extends Item {
 
     // getClassPath() {
     //     /* Return import path of this category's items' base class, as a pair [module_path, class_name]. */
-    //     return splitLast(this.class_path || '', ':')
+    //     return splitLast(this.class || '', ':')
     // }
     //
     // get _source_() {
