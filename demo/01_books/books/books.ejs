@@ -23,8 +23,8 @@
                     <img src="<%= book.cover_image %>" alt="<%= book.title %> cover" class="book-cover">
                     <h2><%= book.title %></h2>
                     <p>Author(s):
-                        <% book.author$.forEach(author => { %>
-                            <a href="/authors#<%= author.id %>"><%= author.name %></a>,
+                        <% book.author$.forEach((author, index) => { %>
+                            <a href="/$/id/<%= author.id %>"><%= author.name %></a><%= index < book.author$.length - 1 ? ', ' : '' %>
                         <% }) %>
                     </p>
                     <p>Genre: <%= book.genre %></p>

@@ -58,7 +58,7 @@
     "@": 0
   "@": schemat:Data
 - __id: 5002
-  name: The Great Gatsby
+  title: The Great Gatsby
   author:
     "@": 5003
   genre: Classic

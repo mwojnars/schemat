@@ -27,7 +27,8 @@ export class Book extends schemat.Item {
         return html_page(path, {books, title: "List of Books"})  //{async: true}
     }
 
-    GET__view() {
+    async GET__view() {
+        for (let author of this.author$) await author.load()
         let path = import.meta.resolve('./book.ejs')
         return html_page(path, {book: this, authors: []})
     }
