@@ -8,6 +8,12 @@
       info: Default values for properties of objects in this category. The key cannot
         be empty. Same key can be repeated.
       "@": schemat/types/catalog.js:CATALOG
+    instance_class:
+      info: Import path of the JS class ("path/file.js:ClassName") that will be linked to objects of this category.
+        Similar to the `__class` property, but defined on category level, for all objects at once.
+        Importantly, `instance_class` impacts also the category itself, because this class may define *static*
+        endpoints that will be treated as endpoints of the category object, not its instances.
+      "@": schemat/types/type.js:STRING
     class_path:
       info: SUN path to a Javascript file that contains a (base) class for this
         category. May contain an optional class name appended after colon ':'.
@@ -85,8 +91,7 @@
           (IID=0).
         "@": schemat/types/type.js:ITEM
       __class:
-        info: Javascript class (identified by a class path) to be assigned to the object
-          after it is loaded from DB.
+        info: Import path of the JS class ("path/file.js:ClassName") that will be linked to this object during loading.
         default: schemat:Item
         "@": schemat/types/type.js:STRING
       __extends:
