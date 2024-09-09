@@ -602,7 +602,7 @@ export class Data extends Catalog {
 
         // identify __category & __class of the object and perform conversions if needed
         let __category = obj.__category || obj.constructor.__category || undefined
-        let __class    = obj.__class    || obj.constructor.instance_class || obj.constructor.__class || obj.constructor || undefined
+        let __class    = obj.__class    || obj.constructor.class || obj.constructor.__class || obj.constructor || undefined
 
         if (T.isString(__category)) __category = Number(__category)
         if (T.isNumber(__category)) __category = await schemat.get_loaded(__category) //schemat.get_object(__category)

@@ -55,7 +55,7 @@
     readonly:
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
-  instance_class: schemat/db/mysql.js:MySQL
+  class: schemat/db/mysql.js:MySQL
   __category:
     "@": 0
   "@": schemat:Data

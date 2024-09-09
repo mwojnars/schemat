@@ -8,10 +8,10 @@
       info: Default values for properties of objects in this category. The key cannot
         be empty. Same key can be repeated.
       "@": schemat/types/catalog.js:CATALOG
-    instance_class:
+    class:
       info: Import path of the JS class ("path/file.js:ClassName") that will be linked to objects of this category.
         Similar to the `__class` property, but defined on category level, for all objects at once.
-        Importantly, `instance_class` impacts also the category itself, because this class may define *static*
+        Importantly, `class` impacts also the category itself, because this class may define *static*
         endpoints that will be treated as endpoints of the category object, not its instances.
       default: schemat/index.js:Item
       "@": schemat/types/type.js:STRING
@@ -82,7 +82,7 @@
         their schema is GENERIC()
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
-  instance_class: schemat:Category
+  class: schemat:Category
   defaults:
     __ttl: 60
     schema:
@@ -93,7 +93,7 @@
         "@": schemat/types/type.js:ITEM
       __class:
         info: Import path of the JS class ("path/file.js:ClassName") that will be linked to this object during loading. 
-          (NOTE this is likely obsolete, set category.instance_class instead?)
+          (NOTE this is likely obsolete, set category.class instead?)
         "@": schemat/types/type.js:STRING
       __extends:
         info: An item that serves as a prototype for this one, that is, provides default
@@ -180,7 +180,7 @@
         objects. A real number.
       "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
-  instance_class: schemat/std/site.js:Site
+  class: schemat/std/site.js:Site
   defaults:
     __container: null
     "@": schemat:Catalog
@@ -214,7 +214,7 @@
     format:
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
-  instance_class: schemat/std/files.js:File
+  class: schemat/std/files.js:File
   __category:
     "@": 0
   "@": schemat:Data
@@ -227,7 +227,7 @@
     local_path:
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
-  instance_class: schemat/std/files.js:LocalFile
+  class: schemat/std/files.js:LocalFile
   __category:
     "@": 0
   "@": schemat:Data
@@ -246,7 +246,7 @@
         "@": schemat/types/type.js:ITEM
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
-  instance_class: schemat/std/containers.js:Directory
+  class: schemat/std/containers.js:Directory
   __extends:
     "@": 2
   __category:
@@ -284,7 +284,7 @@
         disallowed extension). NO leading slash.
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
-  instance_class: schemat/std/files.js:LocalDirectory
+  class: schemat/std/files.js:LocalDirectory
   __extends:
     "@": 5
   __category:
@@ -297,7 +297,7 @@
     identifier, typically built from the object's ID. Typically, a namespace is
     placed as a leaf node on a URL route and does not contain nested
     containers."
-  instance_class: schemat/std/containers.js:Namespace
+  class: schemat/std/containers.js:Namespace
   __extends:
     "@": 2
   __category:
@@ -314,7 +314,7 @@
       info: Optional category(ies) of items handled by this namespace.
       "@": schemat/types/type.js:ITEM
     "@": schemat:Catalog
-  instance_class: schemat/std/containers.js:IID_Namespace
+  class: schemat/std/containers.js:IID_Namespace
   __extends:
     "@": 7
   __category:
@@ -333,7 +333,7 @@
         "@": schemat/types/type.js:ITEM
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
-  instance_class: schemat/std/containers.js:Category_IID_Namespace
+  class: schemat/std/containers.js:Category_IID_Namespace
   __extends:
     "@": 7
   __category:
@@ -354,7 +354,7 @@
       info: Array of Ring objects
       "@": schemat/types/type.js:GENERIC
     "@": schemat:Catalog
-  instance_class: schemat/db/db.js:Database
+  class: schemat/db/db.js:Database
   __category:
     "@": 0
   "@": schemat:Data
@@ -386,7 +386,7 @@
       info: Map of Indexes and their names
       "@": schemat/types/type.js:GENERIC
     "@": schemat:Catalog
-  instance_class: schemat/db/db.js:Ring
+  class: schemat/db/db.js:Ring
   __category:
     "@": 0
   "@": schemat:Data
@@ -416,7 +416,7 @@
 - __id: 14
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
-  instance_class: schemat/db/sequence.js:DataSequence
+  class: schemat/db/sequence.js:DataSequence
   __extends:
     "@": 13
   __category:
@@ -445,7 +445,7 @@
   name: IndexByCategory
   info: "Index that maps categories to member objects: the key is [category ID,
     item ID]."
-  instance_class: schemat/db/indexes.js:IndexByCategory
+  class: schemat/db/indexes.js:IndexByCategory
   __extends:
     "@": 16
   __category:
@@ -476,7 +476,7 @@
     insert_mode:
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
-  instance_class: schemat/db/block.js:DataBlock
+  class: schemat/db/block.js:DataBlock
   __extends:
     "@": 18
   __category:
@@ -487,7 +487,7 @@
   info: Block of an Index sequence.
   schema:
     "@": schemat:Catalog
-  instance_class: schemat/db/block.js:IndexBlock
+  class: schemat/db/block.js:IndexBlock
   __extends:
     "@": 18
   __category:
@@ -501,7 +501,7 @@
 - __id: 22
   name: IndexSequence
   info: Category for sequences of index records.
-  instance_class: schemat/db/sequence.js:IndexSequence
+  class: schemat/db/sequence.js:IndexSequence
   __extends:
     "@": 13
   __category:
