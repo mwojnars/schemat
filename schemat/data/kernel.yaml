@@ -179,8 +179,8 @@
         objects. A real number.
       "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
+  instance_class: schemat/std/site.js:Site
   defaults:
-    __class: schemat/std/site.js:Site
     __container: null
     "@": schemat:Catalog
   __extends:
