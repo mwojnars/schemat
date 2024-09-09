@@ -7,8 +7,8 @@
         linked to the objects of this category upon object.load(). Can be
         overriden on a per-object basis by setting object.__class property.
         Importantly, `class` impacts the category itself: all *static* endpoints
-        defined in the class are treated as endpoints of the category object
-        itself.'
+        defined in this class are treated as endpoints of the category object,
+        not instances.'
       default: schemat/index.js:Item
       "@": schemat/types/type.js:STRING
     defaults:
