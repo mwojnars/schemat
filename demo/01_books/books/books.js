@@ -16,7 +16,10 @@ import {html_page} from "../../../schemat/web/adapters.js"
 
 export class Book extends schemat.Item {
 
-    // get name() { return this.title }
+    // get name() {
+    //     console.log('Book.name():', this.title, this.is_loaded)
+    //     if(this.is_loaded) return this.title
+    // }
 
     static async GET__view() {
         let books = []
