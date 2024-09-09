@@ -460,7 +460,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
 
         // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
-        if (id === ROOT_ID && !this.__is_root_category__)
+        if (id === ROOT_ID && !this.__is_root_category)
             return RootCategory.create_stub(id)
 
         let core = new this(false)
@@ -1236,7 +1236,7 @@ export class Category extends Item {
 
 export class RootCategory extends Category {
 
-    static __is_root_category__ = true
+    static __is_root_category = true
 
     __id = ROOT_ID
 
