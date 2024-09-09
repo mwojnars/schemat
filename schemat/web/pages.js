@@ -227,8 +227,8 @@ export class ReactPage extends RenderedPage {
 
 /**********************************************************************************************************************/
 
-export class ItemAdminView extends ReactPage.View {
-    /* Admin view that displays all persistent properties of a web object. */
+export class ItemControlView extends ReactPage.View {
+    /* System-level view that displays raw properties of a web object. */
 
     html_title() {
         /* Get/compute a title for an HTML response page for a given request & view name. */
@@ -289,8 +289,8 @@ export class ItemAdminView extends ReactPage.View {
 
 /**********************************************************************************************************************/
 
-export class CategoryAdminView extends ItemAdminView {
-    /* Admin view that displays properties of a Category object and a list of its children (members of the category). */
+export class CategoryControlView extends ItemControlView {
+    /* System-level view that displays raw properties of a Category object and a list of its children (members of the category). */
 
     async prepare(side) {
         // TODO: on client, items could be pulled from response data to avoid re-scanning on 1st render?
