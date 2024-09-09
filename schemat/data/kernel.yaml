@@ -2,19 +2,21 @@
   name: Category
   info: Category of items that represent categories
   schema:
+    class:
+      info: 'Import path of the JS class (e.g., "path/.../file.js:ClassName") to be
+        linked to the objects of this category upon object.load(). Can be
+        overriden on a per-object basis by setting object.__class property.
+        Importantly, `class` impacts the category itself: all *static* endpoints
+        defined in the class are treated as endpoints of the category object
+        itself.'
+      default: schemat/index.js:Item
+      "@": schemat/types/type.js:STRING
     defaults:
       values:
         "@": schemat/types/type.js:GENERIC
       info: Default values for properties of objects in this category. The key cannot
         be empty. Same key can be repeated.
       "@": schemat/types/catalog.js:CATALOG
-    class:
-      info: Import path of the JS class ("path/file.js:ClassName") that will be linked to objects of this category.
-        Similar to the `__class` property, but defined on category level, for all objects at once.
-        Importantly, `class` impacts also the category itself, because this class may define *static*
-        endpoints that will be treated as endpoints of the category object, not its instances.
-      default: schemat/index.js:Item
-      "@": schemat/types/type.js:STRING
     class_path:
       info: SUN path to a Javascript file that contains a (base) class for this
         category. May contain an optional class name appended after colon ':'.
@@ -92,8 +94,9 @@
           (IID=0).
         "@": schemat/types/type.js:ITEM
       __class:
-        info: Import path of the JS class ("path/file.js:ClassName") that will be linked to this object during loading. 
-          (NOTE this is likely obsolete, set category.class instead?)
+        info: Import path of the JS class ("path/file.js:ClassName") that will be linked
+          to this object during loading. (NOTE this is likely obsolete, set
+          category.class instead?)
         "@": schemat/types/type.js:STRING
       __extends:
         info: An item that serves as a prototype for this one, that is, provides default
