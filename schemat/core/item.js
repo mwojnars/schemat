@@ -847,7 +847,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 
 
-    __handle__(request) {
+    async __handle__(request) {
         /* Serve a web or internal Request by executing the corresponding service from this.net.
            Query parameters are passed in `req.query`, as:
            - a string if there's one occurrence of PARAM in a query string,
@@ -864,14 +864,14 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         for (let endpoint of endpoints) {
             let service = this._get_handler(endpoint.replace('/','__'))
             service ??= this.__net.get_service(endpoint)
+            if (!service) continue
 
-            if (service) {
-                // print(`handle() endpoint: ${endpoint}`)
-                request.endpoint = endpoint
-                let handler = (typeof service === 'function') ? service.bind(this) : (r) => service.server(this, r)
-                let result = handler(request)
-                return (typeof result === 'function') ? result.call(this, request) : result
-            }
+            // print(`handle() endpoint: ${endpoint}`)
+            request.endpoint = endpoint
+            let handler = (typeof service === 'function') ? service.bind(this) : (r) => service.server(this, r)
+            let result = handler(request)
+            if (result instanceof Promise) result = await result
+            return (typeof result === 'function') ? result.call(this, request) : result
         }
 
         request.throwNotFound(`endpoint(s) not found in the target object: [${endpoints}]`)
