@@ -16,9 +16,15 @@ import {html_page} from "../../../schemat/web/adapters.js"
 
 export class Book extends schemat.Item {
 
-    static GET__view() {
-        // return html_page(import.meta.resolve('book.ejs'), {book: {}, authors: {}})
-        return 'Books List ...'
+    static async GET__view() {
+        let books = []
+        for await (const book of schemat.scan_category(this)) {
+            await book.load()
+            books.push(book)
+            book.authors = []
+        }
+        let path = import.meta.resolve('./books.ejs')
+        return html_page(path, {books, title: "List of Books"})
     }
 
     GET__view() {
