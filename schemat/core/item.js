@@ -853,6 +853,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            - a string if there's one occurrence of PARAM in a query string,
            - an array [val1, val2, ...] if PARAM occurs multiple times.
         */
+        assert(this.is_loaded)
         request.target = this
 
         // convert endpoint names to full protocol-qualified endpoints: GET/xxx
@@ -863,7 +864,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         for (let endpoint of endpoints) {
             let service = this._get_handler(endpoint.replace('/','__'))
             service ??= this.__net.get_service(endpoint)
-            // let service = this.__net.get_service(endpoint)
 
             if (service) {
                 // print(`handle() endpoint: ${endpoint}`)
@@ -880,11 +880,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _get_handler(endpoint) {
         return this[endpoint]
     }
-    //     let proto = this.constructor.prototype
-    //     let is_endpoint = prop => prop.includes('__') && prop.split('__')[0].length && prop.split('__')[0] === prop.split('__')[0].toUpperCase()
-    //     let names = T.getAllPropertyNames(proto).filter(is_endpoint)
-    //     let endpoints = Object.fromEntries(names.map(name => [name.replace('__','/'), proto[name]]))
-    // }
 
     _get_endpoints(request) {
         /* Return a list of endpoint names (no protocol included) to be tried for this request. */
