@@ -654,7 +654,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Load or import this object's ultimate class. */
         if (this.__id === ROOT_ID) return RootCategory
 
-        let cls = this.__class
+        let cls = this.__class || this.__category?.instance_class
         if (typeof cls !== 'string') return cls
 
         if (cls.startsWith('schemat:') || !schemat.site?.is_loaded)

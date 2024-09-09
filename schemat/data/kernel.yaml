@@ -93,7 +93,6 @@
         "@": schemat/types/type.js:ITEM
       __class:
         info: Import path of the JS class ("path/file.js:ClassName") that will be linked to this object during loading.
-        default: schemat:Item
         "@": schemat/types/type.js:STRING
       __extends:
         info: An item that serves as a prototype for this one, that is, provides default
