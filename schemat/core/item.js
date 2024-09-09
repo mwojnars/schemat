@@ -651,14 +651,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _load_class() {
         /* Load or import this object's ultimate class. */
         if (this.__id === ROOT_ID) return RootCategory
-
-        let cls = this.__class || this.__category?.class
-        if (typeof cls !== 'string') return cls
-        return schemat.import(cls)
-
-        // if (cls.startsWith('schemat:') || !schemat.site?.is_loaded)
-        //     return schemat.get_builtin(cls)
-        // return schemat.site.import(cls)
+        let path = this.__class || this.__category?.class
+        if (path) return schemat.import(path)                   // the path can be missing, for no-category objects
     }
 
     _init_network() {
