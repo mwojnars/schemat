@@ -289,8 +289,8 @@
         disallowed extension). NO leading slash.
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
+  instance_class: schemat/std/files.js:LocalDirectory
   defaults:
-    __class: schemat/std/files.js:LocalDirectory
     "@": schemat:Catalog
   __extends:
     "@": 5
@@ -304,8 +304,8 @@
     identifier, typically built from the object's ID. Typically, a namespace is
     placed as a leaf node on a URL route and does not contain nested
     containers."
+  instance_class: schemat/std/containers.js:Namespace
   defaults:
-    __class: schemat/std/containers.js:Namespace
     "@": schemat:Catalog
   __extends:
     "@": 2
@@ -323,8 +323,8 @@
       info: Optional category(ies) of items handled by this namespace.
       "@": schemat/types/type.js:ITEM
     "@": schemat:Catalog
+  instance_class: schemat/std/containers.js:IID_Namespace
   defaults:
-    __class: schemat/std/containers.js:IID_Namespace
     "@": schemat:Catalog
   __extends:
     "@": 7
@@ -344,8 +344,8 @@
         "@": schemat/types/type.js:ITEM
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
+  instance_class: schemat/std/containers.js:Category_IID_Namespace
   defaults:
-    __class: schemat/std/containers.js:Category_IID_Namespace
     "@": schemat:Catalog
   __extends:
     "@": 7
