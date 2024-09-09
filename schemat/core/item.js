@@ -893,7 +893,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (endpoints.length) return endpoints
 
         // otherwise, use global defaults
-        let defaults = {GET: ['view', 'admin', 'schemat'], CALL: ['self']}
+        let defaults = {GET: ['view', 'admin', 'system'], CALL: ['self']}
         endpoints = defaults[protocol] || []
         if (endpoints.length) return endpoints
 
@@ -922,7 +922,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     GET__test_html()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
 
     static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
-    static ['GET/admin'] = new ReactPage(ItemAdminView)
+    static ['GET/system'] = new ReactPage(ItemAdminView)
     static ['GET/json']  = new JsonService(function() { return this.__record.encoded() })
     // GET__json()    { return new JsonService(function() { return this.__record.encoded() }) }
 
@@ -1176,7 +1176,7 @@ export class Category extends Item {
 
     /***  Endpoints  ***/
 
-    static ['GET/admin'] = new ReactPage(CategoryAdminView)
+    static ['GET/system'] = new ReactPage(CategoryAdminView)
 
     static ['POST/read'] = new TaskService({
         list_items: new Task({
