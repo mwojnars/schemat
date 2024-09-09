@@ -332,7 +332,7 @@ export class CategoryAdminView extends ItemAdminView {
         let url  = item.url()
         return TR(
             TD(`${item.__id} ${NBSP}`),
-            TD(url !== null ? A({href: url + '::system'}, name) : `${name} (no URL)`, ' ', NBSP),
+            TD(url !== null ? A({href: url + '::control'}, name) : `${name} (no URL)`, ' ', NBSP),
             TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
         )
     }
