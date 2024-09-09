@@ -82,8 +82,8 @@
         their schema is GENERIC()
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
+  instance_class: schemat:Category
   defaults:
-    __class: schemat:Category
     __ttl: 60
     schema:
       __category:
@@ -213,8 +213,8 @@
     format:
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
+  instance_class: schemat/std/files.js:File
   defaults:
-    __class: schemat/std/files.js:File
     "@": schemat:Catalog
   __category:
     "@": 0
@@ -228,8 +228,8 @@
     local_path:
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
+  instance_class: schemat/std/files.js:LocalFile
   defaults:
-    __class: schemat/std/files.js:LocalFile
     "@": schemat:Catalog
   __category:
     "@": 0
@@ -249,8 +249,8 @@
         "@": schemat/types/type.js:ITEM
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
+  instance_class: schemat/std/containers.js:Directory
   defaults:
-    __class: schemat/std/containers.js:Directory
     "@": schemat:Catalog
   __extends:
     "@": 2
