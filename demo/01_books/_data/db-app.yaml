@@ -128,3 +128,18 @@
   __category:
     "@": 5001
   "@": schemat:Data
+- __id: 5006
+  title: Pride and Prejudice
+  genre: Romance
+  published_year: 1813
+  isbn: "9780141439518"
+  page_count: 432
+  language: English
+  publisher: T. Egerton, Whitehall
+  description: A classic tale of love and misunderstanding set in class-conscious
+    England of the late 18th century.
+  average_rating: 4.4
+  cover_image: https://example.com/pride_and_prejudice_cover.jpg
+  __category:
+    "@": 5000
+  "@": schemat:Data
