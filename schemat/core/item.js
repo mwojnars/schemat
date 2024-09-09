@@ -1072,7 +1072,7 @@ export class Category extends Item {
     }
 
     _get_handler(endpoint) {
-        // the handler can be defined as a *static* method of __child_class of this category
+        // the handler can be defined as a *static* method of this category's __child_class
         return this[endpoint] || this.__child_class[endpoint]
     }
 
