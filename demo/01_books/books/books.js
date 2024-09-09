@@ -10,7 +10,8 @@
 */
 
 
-import {html_page} from "schemat/web/adapters.js"
+import {html_page} from "../../../schemat/web/adapters.js"
+// import {html_page} from "schemat/web/adapters.js"
 
 
 export class Book extends schemat.Item {
@@ -22,6 +23,6 @@ export class Book extends schemat.Item {
 
     GET__view() {
         let path = import.meta.resolve('./book.ejs')
-        return html_page(path, {book: {}, authors: []})
+        return html_page(path, {book: this, authors: []})
     }
 }

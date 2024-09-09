@@ -174,12 +174,14 @@ export class Site extends Directory {
         let object = await this.resolve(path, explicit_blank)
         if (!object) throw new UrlPathNotFound({path})
 
+        if (typeof object === 'function') return object(request)        // `object` can be a tail function, just call it then
+        if (!object.is_loaded()) await object.load()
+
         // if (path !== object.url()) {
         //     // TODO: redirect to the canonical URL
         // }
 
-        // if `object` is a tail function, call it with the request; otherwise, call its __handle__ method
-        return typeof object === 'function' ? object(request) : object.__handle__(request)
+        return object.__handle__(request)
     }
 
 
