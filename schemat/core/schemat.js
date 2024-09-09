@@ -264,6 +264,11 @@ export class Schemat {
         return this.builtin.get_object(path)
     }
 
+    import(path) {
+        if (path.startsWith('schemat:') || !this.site?.is_loaded)
+            return this.get_builtin(path)
+        return this.site.import_dynamic(path)
+    }
 
     /***  Dynamic import from SUN  ***/
 

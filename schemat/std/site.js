@@ -97,15 +97,15 @@ export class Site extends Directory {
         return `${Site.URL_LOCAL}/${path}::import`          // ::import is sometimes needed to get the proper MIME header, esp. if target is a web object not a local file
     }
 
-    import(path) {
-        /* Import from a local `path` of the form "schemat/.../file.js" or ".../file.js:ClassName", pointing to a module or symbol
+    import_dynamic(path) {
+        /* Import from a local `path` of the form ".../file.js" or ".../file.js:ClassName", pointing to a module or symbol
            inside the project's root folder which should include both Schemat and application's source code.
            This method can be called both on the server and on the client (!). In the latter case, the import path
            is converted to a URL of the form "/$/local/.../file.js::import". May return a Promise.
          */
         // print(`Site.import():  ${path}`)
         let [file_path, symbol] = splitLast(path || '', ':')
-        let import_path = schemat.client_side ? this.get_module_url(file_path) : schemat.ROOT_DIRECTORY + '/' + file_path
+        let import_path = CLIENT ? this.get_module_url(file_path) : schemat.ROOT_DIRECTORY + '/' + file_path
 
         // print(`...importing:  ${import_path}`)
         let module = this._modules_cache.get(import_path)           // first, try taking the module from the cache - returns immediately

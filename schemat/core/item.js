@@ -654,11 +654,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         let cls = this.__class || this.__category?.class
         if (typeof cls !== 'string') return cls
+        return schemat.import(cls)
 
-        if (cls.startsWith('schemat:') || !schemat.site?.is_loaded)
-            return schemat.get_builtin(cls)
-
-        return schemat.site.import(cls)
+        // if (cls.startsWith('schemat:') || !schemat.site?.is_loaded)
+        //     return schemat.get_builtin(cls)
+        // return schemat.site.import(cls)
     }
 
     _init_network() {
@@ -1054,6 +1054,13 @@ export class Category extends Item {
         let custom = this.allow_custom_fields
         return new DATA({fields, strict: custom !== true})
     }
+
+    // get __child_class() {
+    //     let cls = this.class
+    //     if (cls.startsWith('schemat:') || !schemat.site?.is_loaded)
+    //         return schemat.get_builtin(cls)
+    //     return schemat.site.import(cls)
+    // }
 
 
     __init__()      { return this._init_schema() }
