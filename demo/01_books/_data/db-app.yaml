@@ -33,6 +33,7 @@
   "@": schemat:Data
 - __id: 5001
   name: Author
+  class: demo/01_books/authors/author.js:Author
   schema:
     birth_year:
       "@": schemat/types/type.js:INTEGER

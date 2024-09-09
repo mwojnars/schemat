@@ -21,10 +21,10 @@ export class Book extends schemat.Item {
         for await (const book of schemat.scan_category(this)) {
             await book.load()
             books.push(book)
-            book.authors = []
+            for (let author of book.author$) await author.load()
         }
         let path = import.meta.resolve('./books.ejs')
-        return html_page(path, {books, title: "List of Books"})
+        return html_page(path, {books, title: "List of Books"})  //{async: true}
     }
 
     GET__view() {
