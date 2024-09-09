@@ -144,20 +144,20 @@ export class DATA_GENERIC extends DATA {
 }
 
 
-export class DATA_SCHEMA extends TYPE {
-    /* An (imputed) instance of DATA that represents schema of objects in a category: category.schema wrapped up in a DATA. */
-
-    static defaultProps = {
-        editable: false,
-        impute() {
-            /* `this` is expected to be a Category object that defines items' schema through its `fields` property. */
-            // assert(this instanceof Category)
-            let fields = this.schema.object()
-            let custom = this.allow_custom_fields
-            return new DATA({fields, strict: custom !== true})
-        }
-    }
-}
+// export class DATA_SCHEMA extends TYPE {
+//     /* An (imputed) instance of DATA that represents schema of objects in a category, wrapped up in a DATA. */
+//
+//     static defaultProps = {
+//         editable: false,
+//         impute() {
+//             /* `this` is expected to be a Category object that defines items' schema through its `fields` property. */
+//             // assert(this instanceof Category)
+//             let fields = this.schema.object()
+//             let custom = this.allow_custom_fields
+//             return new DATA({fields, strict: custom !== true})
+//         }
+//     }
+// }
 
 
 /**********************************************************************************************************************

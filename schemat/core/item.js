@@ -282,8 +282,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Common properties ***/
 
-    // defined in [Category].schema.schema.default (root.js/default_fields), but declared here to avoid IDE warnings...
-
     name
     info
     __status
@@ -885,7 +883,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         request.throwNotFound(`endpoint(s) not found in the target object: [${endpoints}]`)
     }
 
-    // _get_handler(endpoint) {
+    _get_handler(endpoint) {
+        return this[endpoint.replace('/','__')]
+    }
     //     let proto = this.constructor.prototype
     //     let is_endpoint = prop => prop.includes('__') && prop.split('__')[0].length && prop.split('__')[0] === prop.split('__')[0].toUpperCase()
     //     let names = T.getAllPropertyNames(proto).filter(is_endpoint)
@@ -1045,9 +1045,16 @@ export class Category extends Item {
      */
 
     /***  Special properties:
-      data_schema           DATA_SCHEMA of items in this category (not the schema of self)
+      data_schema           representation of this category's object schema as a DATA object; NOT the schema of self
       _source_              module source code of this category: all code snippets combined, including inherited ones
     */
+
+    get data_schema() {
+        let fields = this.schema.object()
+        let custom = this.allow_custom_fields
+        return new DATA({fields, strict: custom !== true})
+    }
+
 
     __init__()      { return this._init_schema() }
 
