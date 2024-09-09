@@ -337,7 +337,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     get __schema() {
-        return this.__category?.data_schema || new DATA_GENERIC()
+        return this.__category?._data_schema || new DATA_GENERIC()
     }
 
     get __prototypes() { return this.__extends$ }
@@ -1045,11 +1045,11 @@ export class Category extends Item {
      */
 
     /***  Special properties:
-      data_schema           representation of this category's object schema as a DATA object; NOT the schema of self
+      _data_schema           representation of this category's object schema as a DATA object; NOT the schema of self
       _source_              module source code of this category: all code snippets combined, including inherited ones
     */
 
-    get data_schema() {
+    get _data_schema() {
         let fields = this.schema.object()
         let custom = this.allow_custom_fields
         return new DATA({fields, strict: custom !== true})
@@ -1082,7 +1082,7 @@ export class Category extends Item {
     //        OR in the type's own `default` property. NO imputation even if defined in the prop's type,
     //        because the imputation depends on the target object which is missing here.
     //      */
-    //     let type = this.data_schema.get(prop) || generic_type
+    //     let type = this._data_schema.get(prop) || generic_type
     //     let defaults = this.defaults?.get_all(prop) || []
     //     return type.combine_inherited([defaults])
     // }
@@ -1094,7 +1094,7 @@ export class Category extends Item {
 
     // get schema_assets() {
     //     let assets = new Assets()
-    //     this.data_schema.collect(assets)
+    //     this._data_schema.collect(assets)
     //     return this.CACHED_PROP(assets)
     // }
 
@@ -1245,7 +1245,7 @@ export class RootCategory extends Category {
 
     get __category() { return this.__proxy }        // root category is a category for itself
 
-    get data_schema() {
+    get _data_schema() {
         /* In RootCategory, this == this.__category, and to avoid infinite recursion we must perform schema inheritance manually. */
         let root_fields = this.__data.get('schema')
         let default_fields = this.__data.get('defaults').get('schema')
