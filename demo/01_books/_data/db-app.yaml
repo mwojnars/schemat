@@ -92,3 +92,19 @@
   __category:
     "@": 5001
   "@": schemat:Data
+- __id: 5004
+  title: The Hobbit
+  genre: Fantasy
+  published_year: 1937
+  isbn: "9780547928227"
+  page_count: 366
+  language: English
+  publisher: George Allen & Unwin
+  description: A children's fantasy novel that follows the quest of home-loving
+    hobbit Bilbo Baggins to win a share of the treasure guarded by the dragon,
+    Smaug.
+  average_rating: 4.6
+  cover_image: https://example.com/the_hobbit_cover.jpg
+  __category:
+    "@": 5000
+  "@": schemat:Data
