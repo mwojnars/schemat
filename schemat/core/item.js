@@ -1077,7 +1077,7 @@ export class Category extends Item {
     }
 
     _get_handler(endpoint) {
-        // first, look for a static method in the __child_class that implements the endpoint for this category
+        // first, look for a *static* method in the __child_class that implements the endpoint for this category
         let handler = this.__child_class[endpoint]
         return handler || super._get_handler(endpoint)
     }
