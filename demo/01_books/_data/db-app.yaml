@@ -130,6 +130,8 @@
   "@": schemat:Data
 - __id: 5006
   title: Pride and Prejudice
+  author:
+    "@": 5007
   genre: Romance
   published_year: 1813
   isbn: "9780141439518"
@@ -142,4 +144,19 @@
   cover_image: https://example.com/pride_and_prejudice_cover.jpg
   __category:
     "@": 5000
+  "@": schemat:Data
+- __id: 5007
+  name: Jane Austen
+  birth_year: 1775
+  death_year: 1817
+  nationality: British
+  notable_work: Pride and Prejudice
+  notable_work/2: Sense and Sensibility
+  notable_work/3: Emma
+  literary_movement: Romanticism
+  bio: Jane Austen was an English novelist known primarily for her six major
+    novels, which interpret, critique and comment upon the British landed gentry
+    at the end of the 18th century.
+  __category:
+    "@": 5001
   "@": schemat:Data
