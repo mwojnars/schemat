@@ -13,6 +13,7 @@
         Similar to the `__class` property, but defined on category level, for all objects at once.
         Importantly, `instance_class` impacts also the category itself, because this class may define *static*
         endpoints that will be treated as endpoints of the category object, not its instances.
+      default: schemat:Item
       "@": schemat/types/type.js:STRING
     class_path:
       info: SUN path to a Javascript file that contains a (base) class for this
