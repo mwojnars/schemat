@@ -337,7 +337,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     get __schema() {
-        return this.__category?._data_schema || new DATA_GENERIC()
+        return this.__category?.__child_schema || new DATA_GENERIC()
     }
 
     get __prototypes() { return this.__extends$ }
@@ -1045,11 +1045,11 @@ export class Category extends Item {
      */
 
     /***  Special properties:
-      _data_schema           representation of this category's object schema as a DATA object; NOT the schema of self
-      _source_              module source code of this category: all code snippets combined, including inherited ones
+      __child_schema        schema of objects in this category, as a DATA instance; NOT the schema of self (.__schema)
+      __source              module source code of this category: all code snippets combined, including inherited ones
     */
 
-    get _data_schema() {
+    get __child_schema() {
         let fields = this.schema.object()
         let custom = this.allow_custom_fields
         return new DATA({fields, strict: custom !== true})
@@ -1082,7 +1082,7 @@ export class Category extends Item {
     //        OR in the type's own `default` property. NO imputation even if defined in the prop's type,
     //        because the imputation depends on the target object which is missing here.
     //      */
-    //     let type = this._data_schema.get(prop) || generic_type
+    //     let type = this.__child_schema.get(prop) || generic_type
     //     let defaults = this.defaults?.get_all(prop) || []
     //     return type.combine_inherited([defaults])
     // }
@@ -1094,7 +1094,7 @@ export class Category extends Item {
 
     // get schema_assets() {
     //     let assets = new Assets()
-    //     this._data_schema.collect(assets)
+    //     this.__child_schema.collect(assets)
     //     return this.CACHED_PROP(assets)
     // }
 
@@ -1106,7 +1106,7 @@ export class Category extends Item {
     //     return splitLast(this.class || '', ':')
     // }
     //
-    // get _source_() {
+    // get __source() {
     //     /* Combine all code snippets of this category, including inherited ones, into a module source code.
     //        Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
     //      */
@@ -1172,7 +1172,7 @@ export class Category extends Item {
     //     /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
     //     this._checkPath(request)
     //     request.res.type('js')
-    //     return this._source_
+    //     return this.__source
     // })
 
     /***  Endpoints  ***/
@@ -1245,7 +1245,7 @@ export class RootCategory extends Category {
 
     get __category() { return this.__proxy }        // root category is a category for itself
 
-    get _data_schema() {
+    get __child_schema() {
         /* In RootCategory, this == this.__category, and to avoid infinite recursion we must perform schema inheritance manually. */
         let root_fields = this.__data.get('schema')
         let default_fields = this.__data.get('defaults').get('schema')
