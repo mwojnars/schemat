@@ -596,19 +596,18 @@ export class Data extends Catalog {
            Properties defined by getters are ignored.
          */
         assert(!obj.is_linked?.())
-        assert(Item, "missing globalThis.Item")
 
         const KEEP = ['__class', '__category']
         const DROP = ['action']
 
         // identify __category & __class of the object and perform conversions if needed
         let __category = obj.__category || obj.constructor.__category || undefined
-        let __class    = obj.__class    || obj.constructor.__class || obj.constructor || undefined
+        let __class    = obj.__class    || obj.constructor.instance_class || obj.constructor.__class || obj.constructor || undefined
 
         if (T.isString(__category)) __category = Number(__category)
         if (T.isNumber(__category)) __category = await schemat.get_loaded(__category) //schemat.get_object(__category)
 
-        if (__class === Object || __class === Item) __class = undefined
+        if (__class === Object || __class === schemat.Item) __class = undefined
         if (__class && !T.isString(__class)) __class = schemat.get_classpath(__class)     // convert __class to a classpath string
 
         // drop __class if it's already defined through category's default (by literal equality of classpath strings)
@@ -640,9 +639,8 @@ export class Data extends Catalog {
 
     find_references() {
         /* Extract an array of Item objects referenced from within this Data object. */
-        assert(Item, "missing globalThis.Item")
         let refs = []
-        JSONx.encode(this, val => {if (val instanceof Item) { refs.push(val); return null; }})
+        JSONx.encode(this, val => {if (val instanceof schemat.Item) { refs.push(val); return null; }})
         return refs
     }
 }
