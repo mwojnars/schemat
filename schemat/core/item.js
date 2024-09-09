@@ -869,7 +869,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         // find the first endpoint that has a corresponding service defined and launch its server() handler
         for (let endpoint of endpoints) {
-            let service = this.__net.get_service(endpoint)
+            let service = this[endpoint.replace('/','__')]
+            service ??= this.__net.get_service(endpoint)
+            // let service = this.__net.get_service(endpoint)
+
             if (service) {
                 // print(`handle() endpoint: ${endpoint}`)
                 request.endpoint = endpoint
@@ -881,6 +884,13 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         request.throwNotFound(`endpoint(s) not found in the target object: [${endpoints}]`)
     }
+
+    // _get_handler(endpoint) {
+    //     let proto = this.constructor.prototype
+    //     let is_endpoint = prop => prop.includes('__') && prop.split('__')[0].length && prop.split('__')[0] === prop.split('__')[0].toUpperCase()
+    //     let names = T.getAllPropertyNames(proto).filter(is_endpoint)
+    //     let endpoints = Object.fromEntries(names.map(name => [name.replace('__','/'), proto[name]]))
+    // }
 
     _get_endpoints(request) {
         /* Return a list of endpoint names (no protocol included) to be tried for this request. */
