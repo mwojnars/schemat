@@ -9,7 +9,7 @@
         Importantly, `class` impacts the category itself: all *static* endpoints
         defined in this class are treated as endpoints of the category object,
         not instances.'
-      default: schemat/index.js:Item
+      default: schemat:Item
       "@": schemat/types/type.js:STRING
     defaults:
       values:

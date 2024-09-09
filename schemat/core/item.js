@@ -1049,15 +1049,13 @@ export class Category extends Item {
         return new DATA({fields, strict: custom !== true})
     }
 
-    // get __child_class() {
-    //     let cls = this.class
-    //     if (cls.startsWith('schemat:') || !schemat.site?.is_loaded)
-    //         return schemat.get_builtin(cls)
-    //     return schemat.site.import(cls)
-    // }
+    // get __child_class() { return schemat.site.import(this.class) }      // TODO: add smart caching of Promises in ItemProxy
 
 
-    __init__()      { return this._init_schema() }
+    async __init__() {
+        this.__child_class = await schemat.import(this.class)
+        return this._init_schema()
+    }
 
     async _init_schema() {
         // initialize Type objects inside `schema`; in particular, TypeWrapper requires explicit async initialization to load sublinked items
