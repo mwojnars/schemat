@@ -94,6 +94,8 @@
   "@": schemat:Data
 - __id: 5004
   title: The Hobbit
+  author:
+    "@": 5005
   genre: Fantasy
   published_year: 1937
   isbn: "9780547928227"
@@ -107,4 +109,22 @@
   cover_image: https://example.com/the_hobbit_cover.jpg
   __category:
     "@": 5000
+  "@": schemat:Data
+- __id: 5005
+  name: J.R.R. Tolkien
+  birth_year: 1892
+  death_year: 1973
+  nationality: British
+  notable_work: The Hobbit
+  notable_work/2: The Lord of the Rings
+  notable_work/3: The Silmarillion
+  literary_movement: Fantasy
+  alma_mater: Exeter College, Oxford
+  award: Commander of the Order of the British Empire
+  spouse: Edith Bratt
+  bio: J.R.R. Tolkien was an English writer, poet, philologist, and academic, best
+    known as the author of the high fantasy works The Hobbit and The Lord of the
+    Rings.
+  __category:
+    "@": 5001
   "@": schemat:Data
