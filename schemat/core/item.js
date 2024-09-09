@@ -861,7 +861,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         // find the first endpoint that has a corresponding service defined and launch its server() handler
         for (let endpoint of endpoints) {
-            let service = this[endpoint.replace('/','__')]
+            let service = this._get_handler(endpoint.replace('/','__'))
             service ??= this.__net.get_service(endpoint)
             // let service = this.__net.get_service(endpoint)
 
@@ -878,7 +878,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _get_handler(endpoint) {
-        return this[endpoint.replace('/','__')]
+        return this[endpoint]
     }
     //     let proto = this.constructor.prototype
     //     let is_endpoint = prop => prop.includes('__') && prop.split('__')[0].length && prop.split('__')[0] === prop.split('__')[0].toUpperCase()
@@ -1074,6 +1074,12 @@ export class Category extends Item {
         if (!(data instanceof Data)) data = new Data(data)
         data.set('__category', this)
         return Item.from_data(id, data)
+    }
+
+    _get_handler(endpoint) {
+        // first, look for a static method in the __child_class that implements the endpoint for this category
+        let handler = this.__child_class[endpoint]
+        return handler || super._get_handler(endpoint)
     }
 
     // get_defaults(prop) {
