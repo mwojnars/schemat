@@ -72,3 +72,21 @@
   __category:
     "@": 5000
   "@": schemat:Data
+- __id: 5003
+  name: F. Scott Fitzgerald
+  birth_year: 1896
+  death_year: 1940
+  nationality: American
+  notable_work: The Great Gatsby
+  notable_work/2: Tender Is the Night
+  notable_work/3: This Side of Paradise
+  literary_movement: Modernism
+  alma_mater: Princeton University
+  award: National Book Award (posthumously)
+  spouse: Zelda Fitzgerald
+  bio: F. Scott Fitzgerald was an American novelist, essayist, and short story
+    writer, widely regarded as one of the greatest American writers of the 20th
+    century.
+  __category:
+    "@": 5001
+  "@": schemat:Data
