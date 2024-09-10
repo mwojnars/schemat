@@ -235,7 +235,7 @@ export class Schemat {
         for await (const record of records) {
             let {cid, id} = record.object_key
             assert(full_scan || target === cid)
-            yield loaded ? this.get_loaded(id) : this.get_object(id)
+            yield loaded ? await this.get_loaded(id) : this.get_object(id)
         }
     }
 

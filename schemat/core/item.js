@@ -1186,10 +1186,7 @@ export class Category extends Item {
             async process(request, offset, limit) {
                // TODO: use size limit & offset (pagination).
                // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
-                let items = []
-                for await (const item of schemat.scan_category(this, {loaded: true}))
-                    items.push(item)
-                return items
+                return schemat.list_category(this, {loaded: true, offset, limit})
             },
             encode_result(items) {
                 return items.map(item => item.__record.encoded())

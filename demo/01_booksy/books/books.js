@@ -22,12 +22,11 @@ export class Book extends schemat.Item {
     // }
 
     static async GET__view() {
-        let books = []
-        for await (const book of schemat.scan_category(this, {loaded: true})) {
-            await book.load()
-            books.push(book)
+        let books = await schemat.list_category(this, {loaded: true})
+
+        for (let book of books)
             for (let author of book.author$) await author.load()
-        }
+
         let path = import.meta.resolve('./books.ejs')
         return html_page(path, {books, title: "List of Books"})  //{async: true}
     }

@@ -20,6 +20,7 @@ What's new (as compared to traditional web frameworks):
 - system URLs: `/$/<id>` -- available out of the box
 - custom URLs: `/books`, `/authors` ??
 - endpoint names in URLs: `::view`, `::control`, default endpoint
+- loading objects (`schemat.list_category()`, `.load()`)
 - repeated fields and "plural" property name (`.name$`)
 - versioning ?? (of schema and objects)
 
