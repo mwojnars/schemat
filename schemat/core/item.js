@@ -689,8 +689,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (!type) return []
 
         // if the property is atomic (non-repeated and non-compound) and an own value is present, skip inheritance to speed up
-        if (!type.isRepeated() && !type.isCATALOG() && data.has(prop))
-            return [data.get(prop)]
+        if (!type.isRepeated() && !type.isCATALOG() && data.has(prop)) {
+            let values = data.get_all(prop)
+            if (values.length > 1) print(`WARNING: multiple values present for a property declared as non-repeated (${prop})`)
+            return [values[0]]  //[data.get(prop)]
+        }
 
         let ancestors = type.props.inherit ? proxy.__ancestors : [proxy]    // `this` is always included as the first ancestor
         let streams = ancestors.map(proto => proto._own_values(prop))
