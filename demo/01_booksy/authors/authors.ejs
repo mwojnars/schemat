@@ -38,7 +38,7 @@
                     <h3>Find in Booksy:</h3>
                     <ul>
                         <% books.filter(book => book.author$.map(a => a.id).includes(author.id)).forEach(book => { %>
-                            <li><a href="/books#<%= book.id %>"><%= book.title %></a> (<%= book.published_year %>)</li>
+                            <li><a href="/$/id/<%= book.id %>"><%= book.title %></a> (<%= book.published_year %>)</li>
                         <% }) %>
                     </ul>
                 </li>
