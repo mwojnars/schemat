@@ -8,6 +8,7 @@ Objectives:
 - assets (CSS, pics)
 - site configuration
 - web objects & categories
+- layout of application folder: flexible & organized around functionalities (unlike MVC)
 
 What's new (as compared to traditional web frameworks):
 - site configuration is fully stored in DB (see db-site.yaml)
