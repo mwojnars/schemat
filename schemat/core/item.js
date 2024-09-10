@@ -1187,10 +1187,8 @@ export class Category extends Item {
                // TODO: use size limit & offset (pagination).
                // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
                 let items = []
-                for await (const item of schemat.scan_category(this)) {
-                    await item.load()
+                for await (const item of schemat.scan_category(this, {loaded: true}))
                     items.push(item)
-                }
                 return items
             },
             encode_result(items) {
