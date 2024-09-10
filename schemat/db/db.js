@@ -347,11 +347,25 @@ export class Database extends Item {
         return this.forward_down(new DataRequest(this, 'delete', {id}))
     }
 
-    async *scan_index(name, opts) {
+    async *scan_index(name, {offset, limit, ...opts} = {}) {
         /* Yield a stream of plain Records from the index, merge-sorted from all the rings. */
         let streams = this.rings.map(r => r.scan_index(name, opts))
-        yield* merge(Record.compare, ...streams)
-        // TODO: apply `limit` to the merged stream
+        let merged = merge(Record.compare, ...streams)
+        
+        if (offset)
+            for (let i = 0; i < offset; i++) {
+                let next = await merged.next()
+                if (next.done) return
+            }
+
+        if (limit !== undefined && limit !== null) {
+            let count = 0
+            for await (let record of merged)
+                if (++count > limit) break
+                else yield record
+        }
+        else yield* merged
+
         // TODO: apply `batch_size` to the merged stream and yield in batches
     }
 
