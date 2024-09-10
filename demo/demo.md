@@ -9,6 +9,7 @@ Objectives:
 - site configuration
 - web objects & categories
 - layout of application folder: flexible & organized around functionalities (unlike MVC)
+- URLs
 
 What's new (as compared to traditional web frameworks):
 - site configuration is fully stored in DB (see db-site.yaml)
@@ -16,7 +17,10 @@ What's new (as compared to traditional web frameworks):
   - web interface for schema editing (todo: improve)
   - smooth modifications of the schema in the future; incremental migrations
 - built-in web interface for creating & editing application objects, a la CMS (todo: improve)
-- system URLs: `/$/<id>`, available out of the box
+- system URLs: `/$/<id>` -- available out of the box
+- custom URLs: `/books`, `/authors` ??
+- endpoint names in URLs: `::view`, `::control`, default endpoint
+- repeated fields and "plural" property name (`.name$`)
 - versioning ?? (of schema and objects)
 
 

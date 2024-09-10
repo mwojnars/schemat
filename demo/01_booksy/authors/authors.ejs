@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authors | Booksy</title>
+    <link rel="stylesheet" href="/common/styles.css">
+</head>
+<body>
+    <header>
+        <h1>List of Authors</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/books">Books</a>
+            <a href="/authors">Authors</a>
+            <a href="/common/about.html">About</a>
+        </nav>
+    </header>
+    <main>
+        <ul id="author-list">
+            <% authors.forEach(author => { %>
+                <li id="<%= author.id %>">
+                    <h2><%= author.name %></h2>
+                    <p>Life: <%= author.birth_year %> - <%= author.death_year || 'Present' %></p>
+                    <p>Nationality: <%= author.nationality %></p>
+                    <p>Literary Movement: <%= author.literary_movement %></p>
+                    <p>Alma Mater: <%= author.alma_mater || 'N/A' %></p>
+                    <p>Spouse: <%= author.spouse || 'N/A' %></p>
+                    <p>Awards: <%= author.award$.join(', ') || 'N/A' %></p>
+                    <p>Biography: <%= author.bio %></p>
+                    <h3>Notable Works:</h3>
+                    <ul>
+                        <% author.notable_work$.forEach(work => { %>
+                            <li><%= work %></li>
+                        <% }) %>
+                    </ul>
+                    <h3>Books in our store:</h3>
+                    <ul>
+                    </ul>
+                </li>
+            <% }) %>
+        </ul>
+    </main>
+    <footer>
+        <p>&copy; 2024 Our Bookstore. All rights reserved.</p>
+    </footer>
+</body>
+</html>
