@@ -222,15 +222,16 @@ export class Schemat {
 
     /***  Indexes  ***/
 
-    async *scan_category(category) {
-        let target_cid = category?.__id
-        let start = category ? [target_cid] : null
-        let stop = category ? [target_cid + 1] : null
+    async *scan_category(category_or_id = null) {
+        let full_scan = (category_or_id === null)
+        let target = (typeof category_or_id === 'number') ? category_or_id : category_or_id?.__id       // ID of the target category, or undefined (all categories)
+        let start = !full_scan && [target]                                          // [target] is a 1-element record compatible with the index schema
+        let stop  = !full_scan && [target + 1]
         let records = this.db.scan_index('idx_category_item', {start, stop})        // stream of plain Records
 
         for await (const record of records) {
             let {cid, id} = record.object_key
-            assert(target_cid === undefined || target_cid === cid)
+            assert(full_scan || target === cid)
             yield this.get_loaded(id)
         }
     }
