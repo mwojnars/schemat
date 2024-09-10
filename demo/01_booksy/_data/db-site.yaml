@@ -65,7 +65,7 @@
   name: app_source
   info: Path to the local directory containing source code of the application.
     Typically, this directory does NOT include Schemat source code.
-  local_path: ./demo/01_books
+  local_path: ./demo/01_booksy
   __container:
     "@": 1001
   __category:
@@ -204,7 +204,7 @@
 - __id: 1029
   sequence:
     "@": 1017
-  filename: ./demo/01_books/_data/db-app.yaml
+  filename: ./demo/01_booksy/_data/db-app.yaml
   format: data-yaml
   __category:
     "@": 19
@@ -212,7 +212,7 @@
 - __id: 1030
   sequence:
     "@": 1018
-  filename: ./demo/01_books/_data/db-app.index.jl
+  filename: ./demo/01_booksy/_data/db-app.index.jl
   format: index-jl
   __category:
     "@": 20
@@ -220,7 +220,7 @@
 - __id: 1032
   sequence:
     "@": 1027
-  filename: ./demo/01_books/_data/db-site.yaml
+  filename: ./demo/01_booksy/_data/db-site.yaml
   format: data-yaml
   insert_mode: compact
   __category:
@@ -229,7 +229,7 @@
 - __id: 1033
   sequence:
     "@": 1028
-  filename: ./demo/01_books/_data/db-site.index.jl
+  filename: ./demo/01_booksy/_data/db-site.index.jl
   format: index-jl
   __category:
     "@": 20
