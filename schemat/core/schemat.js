@@ -223,6 +223,9 @@ export class Schemat {
     /***  Indexes  ***/
 
     async *scan_category(category_or_id = null, {loaded=false, ...opts} = {}) {
+        /* Generate a stream of objects found in a given category, or all objects if no first argument is given.
+           `category_or_id` should be a Category object (not necessarily loaded), or an ID.
+         */
         let full_scan = (category_or_id === null)
         let target = (typeof category_or_id === 'number') ? category_or_id : category_or_id?.__id       // ID of the target category, or undefined (all categories)
         let start = !full_scan && [target]                                              // [target] is a 1-element record compatible with the index schema
@@ -234,6 +237,17 @@ export class Schemat {
             assert(full_scan || target === cid)
             yield loaded ? this.get_loaded(id) : this.get_object(id)
         }
+    }
+
+    async list_category(category = null, opts = {}) {
+        /* Return an array of objects found in a given category, or all objects if no `category` is given.
+           `category` should be a Category object (not necessarily loaded), or an ID. `opts` are the same as for `scan_category`
+           and may include, among others: `loaded`, `limit`, `offset`, `reverse`.
+         */
+        let objects = []
+        for await (const obj of this.scan_category(category, opts))
+            objects.push(obj)
+        return objects
     }
 
     // async *_scan_all({limit} = {}) {
