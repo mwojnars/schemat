@@ -212,7 +212,7 @@ class ItemProxy {
         let plural = prop.endsWith(suffix)
         if (plural) prop = prop.slice(0, -suffix.length)        // use the base property name without the suffix
 
-        let values = target._compute_property(prop)
+        let values = target._compute_property(prop)             // ALL repeated values are computed here, even if plural=false
 
         // if (values.length || target.is_loaded)                  // ?? undefined (empty) value is not cached unless the object is fully loaded
         if (!target.__meta.mutable)                             // caching is only allowed in immutable objects

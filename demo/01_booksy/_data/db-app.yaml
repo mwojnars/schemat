@@ -6,6 +6,7 @@
       "@": schemat/types/type.js:STRING
     author:
       info: Repeat this field to enter multiple authors.
+      repeated: true
       category:
         "@": 5001
       "@": schemat/types/type.js:ITEM
@@ -42,12 +43,14 @@
     nationality:
       "@": schemat/types/type.js:STRING
     notable_work:
+      repeated: true
       "@": schemat/types/type.js:STRING
     literary_movement:
       "@": schemat/types/type.js:STRING
     alma_mater:
       "@": schemat/types/type.js:STRING
     award:
+      repeated: true
       "@": schemat/types/type.js:STRING
     spouse:
       "@": schemat/types/type.js:STRING
@@ -85,7 +88,6 @@
   literary_movement: Modernism
   alma_mater: Princeton University
   award: National Book Award (posthumously)
-  award/2: Test Award ...
   spouse: Zelda Fitzgerald
   bio: F. Scott Fitzgerald was an American novelist, essayist, and short story
     writer, widely regarded as one of the greatest American writers of the 20th
@@ -122,6 +124,7 @@
   literary_movement: Fantasy
   alma_mater: Exeter College, Oxford
   award: Commander of the Order of the British Empire
+  award/2: Locus Award for Best Fantasy
   spouse: Edith Bratt
   bio: J.R.R. Tolkien was an English writer, poet, philologist, and academic, best
     known as the author of the high fantasy works The Hobbit and The Lord of the
