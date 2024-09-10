@@ -35,7 +35,7 @@
                         <% }) %>
                     </ul>
 
-                    <h3>Books in our store:</h3>
+                    <h3>Find in Booksy:</h3>
                     <ul>
                         <% books.filter(book => book.author$.map(a => a.id).includes(author.id)).forEach(book => { %>
                             <li><a href="/books#<%= book.id %>"><%= book.title %></a> (<%= book.published_year %>)</li>

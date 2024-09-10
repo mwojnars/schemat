@@ -85,6 +85,7 @@
   literary_movement: Modernism
   alma_mater: Princeton University
   award: National Book Award (posthumously)
+  award/2: Test Award ...
   spouse: Zelda Fitzgerald
   bio: F. Scott Fitzgerald was an American novelist, essayist, and short story
     writer, widely regarded as one of the greatest American writers of the 20th
@@ -150,8 +151,8 @@
   birth_year: 1775
   death_year: 1817
   nationality: British
-  notable_work: Pride and Prejudice
-  notable_work/2: Sense and Sensibility
+  notable_work: Sense and Sensibility
+  notable_work/2: Pride and Prejudice
   notable_work/3: Emma
   literary_movement: Romanticism
   bio: Jane Austen was an English novelist known primarily for her six major
