@@ -222,7 +222,7 @@ export class Schemat {
 
     /***  Indexes  ***/
 
-    async *scan_category(category_or_id = null, {loaded=false, ...opts} = {}) {
+    async *scan_category(category_or_id = null, {load=false, ...opts} = {}) {
         /* Generate a stream of objects found in a given category, or all objects if no first argument is given.
            `category_or_id` should be a Category object (not necessarily loaded), or an ID.
          */
@@ -235,7 +235,7 @@ export class Schemat {
         for await (const record of records) {
             let {cid, id} = record.object_key
             assert(full_scan || target === cid)
-            yield loaded ? await this.get_loaded(id) : this.get_object(id)
+            yield load ? await this.get_loaded(id) : this.get_object(id)
         }
     }
 
