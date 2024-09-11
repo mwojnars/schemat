@@ -107,10 +107,10 @@ export class Catalog {
     isDict()            { return this.hasUniqueKeys() && this.hasStringKeys() && !this.hasAnnot() }
 
     // Array & Map interface:
-    map(fun)            { return Array.from(this._entries, fun) }
+    map(fun)            { return this._entries.map(e => fun(e.value)) }
     *keys()             { yield* this._keys.keys() }
     *values()           { yield* this._entries.map(e => e.value) }
-    *entries()          { yield* this }                                         // same as the [iterator]() below
+    *entries()          { yield* this }                                         // same as the .iterator() below
     *[Symbol.iterator](){ yield* this._entries.map(e => [e.key, e.value]) }     // iterator over [key,value] pairs
 
     object(first = true) {
