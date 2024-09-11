@@ -841,7 +841,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
             type.validate(value)                            // may raise an exception
 
-            if (!type.props.repeated) {
+            if (!type.props.repeated) {                     // check that a single-valued property has no repetitions
                 let count = this.__data.get_all(prop).length
                 if (count > 1) throw new ValidationError(`found ${count} occurrences of a property declared as single-valued (${prop})`)
             }
