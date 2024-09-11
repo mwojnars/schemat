@@ -110,8 +110,8 @@ export class Catalog {
     map(fun)            { return Array.from(this._entries, fun) }
     *keys()             { yield* this._keys.keys() }
     *values()           { yield* this._entries.map(e => e.value) }
-    *entries()          { yield* this._entries }
-    *[Symbol.iterator](){ yield* this._entries.map(e => [e.key, e.value]) }     // iterator over [key,value] pairs, same as this.entries()
+    *entries()          { yield* this }                                         // same as the [iterator]() below
+    *[Symbol.iterator](){ yield* this._entries.map(e => [e.key, e.value]) }     // iterator over [key,value] pairs
 
     object(first = true) {
         /* Return a flat object containing the entries converted to {key: value} pairs.
