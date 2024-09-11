@@ -1,6 +1,6 @@
 import {A} from '../web/react-utils.js'
 import {assert, concat, print, T} from '../common/utils.js'
-import {DataError, NotImplemented, ValueError} from '../common/errors.js'
+import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
 import {byteLengthOfUnsignedInteger} from "../util/binary.js";
 import * as widgets from './widgets.js'
 
@@ -608,7 +608,7 @@ export class RECORD extends Type {
 //     compute(item) {
 //         if (this.cache !== undefined) return this.cache
 //         let {compute, cache} = this.props
-//         if (!compute) throw new DataError(`virtual field ${this.name} has no compute() function`)
+//         if (!compute) throw new ValidationError(`virtual field ${this.name} has no compute() function`)
 //         let value = compute(item)
 //         if (cache) this.cache = value
 //         return value

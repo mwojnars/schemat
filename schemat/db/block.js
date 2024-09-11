@@ -172,6 +172,8 @@ export class DataBlock extends Block {
     async insert(req) {
         // calculate the `id` if not provided, update _autoincrement and write the data
         let {id, key, data} = req.args
+        let object = await Item.from_data(id, data, {mutable: true})        // the object must be instantiated for validation
+        object.validate()
 
         if (id === undefined || id === null) {              // assign a new ID if not provided for the new item
             id = this._assign_id(req)
@@ -234,6 +236,9 @@ export class DataBlock extends Block {
             let ret = edit.apply_to(object)
             if (T.isPromise(ret)) await ret
         }
+
+        // validate the object's data and the values of individual properties; may raise validation exceptions
+        object.validate()
 
         let value = object.__data.dump()
         req = req.make_step(this, 'save', {id, key, value})

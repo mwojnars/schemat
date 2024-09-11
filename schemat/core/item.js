@@ -834,6 +834,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     validate() {
         // validate each individual property in __data
+        // for (const [prop, values] of this.__data) {
+        //     let type = this.__schema.get(prop)
+        //     if (type) type.validate(values, this)
+        //     else if (!this.__category.allow_custom_fields)
+        //         throw new Error(`unknown field: ${prop}`)
+        // }
 
         // check multi-property constraints, for example, for the types where `repeated=false`
     }

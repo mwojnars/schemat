@@ -60,8 +60,8 @@ export class NotImplemented extends BaseError {
     static message = "not implemented"
 }
 
-export class DataError extends BaseError {}
-export class ValueError extends DataError {}
+export class ValidationError extends BaseError  { static message = "validation of object's fields failed" }
+export class ValueError extends ValidationError { static message = "incorrect value of an object's field" }
 
 export class NotLinked extends BaseError {
     constructor(obj) { super(`object is unlinked (missing ID)`) }

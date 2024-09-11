@@ -69,7 +69,7 @@
       "@": schemat/types/catalog.js:CATALOG
     allow_custom_fields:
       default: false
-      info: If true, it is allowed to use undefined (out-of-schema) fields in items -
+      info: If true, it is allowed to set undeclared (out-of-schema) fields in objects -
         their schema is GENERIC()
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog

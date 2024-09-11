@@ -1,4 +1,4 @@
-import {DataError} from "../common/errors.js";
+import {ValidationError} from "../common/errors.js";
 import {T, assert, trycatch, concat} from "../common/utils.js";
 import {Catalog, Path} from '../core/data.js'
 import {GENERIC, generic_string, generic_type, is_valid_field_name, STRING, Type, TYPE} from "./type.js";
@@ -52,7 +52,7 @@ export class CATALOG extends Type {
     constructor(props = {}) {
         super(props)
         let {keys} = props
-        if (keys && !(keys.instanceof(STRING))) throw new DataError(`data type of keys must be an instance of STRING or its subclass, not ${keys}`)
+        if (keys && !(keys.instanceof(STRING))) throw new ValidationError(`data type of keys must be an instance of STRING or its subclass, not ${keys}`)
     }
 
     collect(assets) {
@@ -116,7 +116,7 @@ export class DATA extends CATALOG {
     subtype(key) {
         let {fields} = this.props
         if (!fields.hasOwnProperty(key) && this.props.strict)
-            throw new DataError(`Unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
+            throw new ValidationError(`Unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
         return fields[key] || this.props.values
     }
     collect(assets) {
