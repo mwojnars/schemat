@@ -126,7 +126,7 @@ export class Site extends Directory {
         let step = path.split('/')[0]
         let rest = path.slice(step.length + 1)
 
-        for (let [name, node] of this.entries.pairs__()) {
+        for (let [name, node] of this.entries) {
 
             assert(name, "route name must be non-empty; use *NAME for a blank route to be excluded in public URLs")
             let blank = (name[0] === '*')

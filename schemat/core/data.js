@@ -105,16 +105,13 @@ export class Catalog {
     hasStringKeys()     { return this._entries.filter(e => typeof e.key !== 'string').length === 0 }
     hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
     isDict()            { return this.hasUniqueKeys() && this.hasStringKeys() && !this.hasAnnot() }
-    map(fun)            { return Array.from(this._entries, fun) }           // Array's interface
-    *keys()             { yield* this._keys.keys() }                        // Map's interface
-    *values()           { yield* this._entries.map(e => e.value) }          // Map's interface
-    *entries()          { print('Catalog.entries()'); yield* this._entries }                            // Map's interface
-    // *[Symbol.iterator](){
-    //     print('Catalog.iterator()');
-    //     yield* this._entries
-    // }            // iterator over entries, same as this.entries()
 
-    *pairs__()          { yield* this._entries.map(e => [e.key, e.value]) }
+    // Array & Map interface:
+    map(fun)            { return Array.from(this._entries, fun) }
+    *keys()             { yield* this._keys.keys() }
+    *values()           { yield* this._entries.map(e => e.value) }
+    *entries()          { yield* this._entries }
+    *[Symbol.iterator](){ yield* this._entries.map(e => [e.key, e.value]) }     // iterator over [key,value] pairs, same as this.entries()
 
     object(first = true) {
         /* Return a flat object containing the entries converted to {key: value} pairs.
