@@ -18,6 +18,10 @@
   cluster:
     "@": 1025
   global:
+    AuthorCategory:
+      "@": 5001
+    BookCategory:
+      "@": 5000
     "@": schemat:Catalog
   __category:
     "@": 1
