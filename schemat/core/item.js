@@ -463,10 +463,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (id === ROOT_ID && !this.__is_root_category)
             return RootCategory.create_stub(id)
 
-        let core = new this(false)
-        let item = core.__proxy = ItemProxy.wrap(core)
-        if (id !== undefined && id !== null) core.__id = id
-        if (mutable) core.__meta.mutable = true     // this allows EDIT_xxx operations on the object and prevents caching in Schemat's registry
+        let self = new this(false)
+        let item = self.__proxy = ItemProxy.wrap(self)
+        if (id !== undefined && id !== null) self.__id = id
+        if (mutable) self.__meta.mutable = true     // this allows EDIT_xxx operations on the object and prevents caching in Schemat's registry
         return item
     }
 
@@ -832,6 +832,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return path.reverse()
     }
 
+    validate() {
+        // validate each individual property in __data
+
+        // check multi-property constraints, for example, for the types where `repeated=false`
+    }
 
     __validate__() {}
         /* Validate this object's properties before inserting to the database. Called *after* validation of individual values through their schema. */
