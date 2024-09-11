@@ -30,8 +30,8 @@
     class_body:
       repeated: true
       info: Source code of the class (a body without heading) that will be created for
-        this category. The class inherits from the `class`, or the
-        class of the first base category, or the top-level Item.
+        this category. The class inherits from the `class`, or the class of the
+        first base category, or the top-level Item.
       "@": schemat/types/type.js:CODE
     pages:
       values:
@@ -69,8 +69,8 @@
       "@": schemat/types/catalog.js:CATALOG
     allow_custom_fields:
       default: false
-      info: If true, it is allowed to set undeclared (out-of-schema) fields in objects -
-        their schema is GENERIC()
+      info: If true, it is allowed to set undeclared (out-of-schema) fields in objects
+        - their schema is GENERIC()
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   class: schemat:Category
@@ -136,6 +136,7 @@
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
     startup.
+  class: schemat/std/site.js:Site
   schema:
     base_url:
       info: "Base URL at which the website is served: protocol + domain + root path
@@ -147,6 +148,11 @@
     database:
       info: Database instance that contains all data of this site
       "@": schemat/types/type.js:ITEM
+    default_path:
+      info: URL path of a default container that can be used to access any object via
+        its ID. For internal purposes. Should contain a leading slash and no
+        trailing slash.
+      "@": schemat/types/type.js:PATH
     entries:
       values:
         "@": schemat/types/type.js:ITEM
@@ -155,24 +161,25 @@
         requests whose URLs start with a given prefix. NO leading/trailing
         slashes.
       "@": schemat/types/catalog.js:CATALOG
-    default_path:
-      info: URL path of a default container that can be used to access any object via
-        its ID. For internal purposes. Should contain a leading slash and no
-        trailing slash.
-      "@": schemat/types/type.js:PATH
+    global:
+      values:
+        "@": schemat/types/type.js:ITEM
+      info: A catalog of essential web objects that will be loaded and made globally
+        available (`globalThis.XXX`) to the application code right after
+        initialization of `schemat.site` object.
+      "@": schemat/types/catalog.js:CATALOG
+    cache_purge_interval:
+      default: 10
+      info: Interval [sec] at which the server-side cache is purged from expired
+        objects. A real number.
+      "@": schemat/types/type.js:NUMBER
     __path:
       default: /
       "@": schemat/types/type.js:STRING
     __url:
       default: /
       "@": schemat/types/type.js:STRING
-    cache_purge_interval:
-      default: 10
-      info: Interval [sec] at which the server-side cache is purged from expired
-        objects. A real number.
-      "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
-  class: schemat/std/site.js:Site
   defaults:
     __container: null
     "@": schemat:Catalog
