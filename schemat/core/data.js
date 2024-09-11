@@ -109,10 +109,10 @@ export class Catalog {
     *keys()             { yield* this._keys.keys() }                        // Map's interface
     *values()           { yield* this._entries.map(e => e.value) }          // Map's interface
     *entries()          { print('Catalog.entries()'); yield* this._entries }                            // Map's interface
-    *[Symbol.iterator](){
-        print('Catalog.iterator()');
-        yield* this._entries
-    }            // iterator over entries, same as this.entries()
+    // *[Symbol.iterator](){
+    //     print('Catalog.iterator()');
+    //     yield* this._entries
+    // }            // iterator over entries, same as this.entries()
 
     *pairs__()          { yield* this._entries.map(e => [e.key, e.value]) }
 

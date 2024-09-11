@@ -80,7 +80,7 @@ export class Directory extends Container {
            If an object occurs multiple times in this.entries, the LAST occurrence is recorded (!)
          */
         let rev = new Map()
-        for (let {key: name, value: object} of this.entries || [])
+        for (let [name, object] of this.entries?.pairs__() || [])
             rev.set(object.__id, name)
         return rev
     }

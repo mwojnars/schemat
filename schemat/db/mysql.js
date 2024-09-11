@@ -59,7 +59,7 @@ export class MySQL extends DataBlock {
         this._sqlTables = []
         this._categories = []
 
-        for (let {key: path, value: sqlTable} of tables.entries()) {
+        for (let [path, sqlTable] of tables.pairs__()) {
             assert(path)
             let category = await schemat.site.find_item(path)
             assert(category.is_loaded())
