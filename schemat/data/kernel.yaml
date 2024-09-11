@@ -164,9 +164,9 @@
     global:
       values:
         "@": schemat/types/type.js:ITEM
-      info: A catalog of essential web objects that will be loaded and made globally
-        available (`globalThis.XXX`) to the application code right after
-        initialization of `schemat.site` object.
+      info: A catalog of essential application objects - typically categories - that
+        will be loaded and made globally available to the application code via
+        `globalThis.XXX` right after initialization of `schemat.site` object.
       "@": schemat/types/catalog.js:CATALOG
     cache_purge_interval:
       default: 10
