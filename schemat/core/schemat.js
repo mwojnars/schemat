@@ -242,7 +242,7 @@ export class Schemat {
     async list_category(category_or_id = null, opts = {}) {
         /* Return an array of objects found in a given category, or all objects if no category is specified.
            `category_or_id` should be a Category object (not necessarily loaded), or an ID. `opts` are the same as for
-           `scan_category` and may include, among others: `loaded`, `limit`, `offset`, `reverse`.
+           `scan_category` and may include, among others: `load`, `limit`, `offset`, `reverse`.
          */
         let objects = []
         for await (const obj of this.scan_category(category_or_id, opts))
