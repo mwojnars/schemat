@@ -1094,6 +1094,11 @@ export class Category extends Item {
         return Item.from_data(id, data)
     }
 
+    async list_objects(opts = {}) {
+        /* Return an array of all objects in this category, possibly truncated or re-ordered according to `opts`. */
+        return schemat.list_category(this, opts)
+    }
+
     _get_handler(endpoint) {
         // the handler can be defined as a *static* method of this category's __child_class
         return this[endpoint] || this.__child_class[endpoint]
@@ -1209,7 +1214,7 @@ export class Category extends Item {
             async process(request, offset, limit) {
                // TODO: use size limit & offset (pagination).
                // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
-                return schemat.list_category(this, {load: true, offset, limit})
+                return this.list_objects({load: true, offset, limit})
             },
             encode_result(items) {
                 return items.map(item => item.__record.encoded())

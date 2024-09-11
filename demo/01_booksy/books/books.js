@@ -22,7 +22,7 @@ export class Book extends schemat.Item {
     // }
 
     static async GET__view() {
-        let books = await schemat.list_category(this, {load: true})
+        let books = await this.list_objects({load: true})
 
         for (let book of books)
             for (let author of book.author$) await author.load()
