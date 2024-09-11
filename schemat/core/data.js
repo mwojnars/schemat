@@ -113,6 +113,7 @@ export class Catalog {
     *entries()          { yield* this }                                         // same as the .iterator() below
     *[Symbol.iterator](){ yield* this._entries.map(e => [e.key, e.value]) }     // iterator over [key,value] pairs
 
+
     object(first = true) {
         /* Return a flat object containing the entries converted to {key: value} pairs.
            For repeated keys, only one value is included: the first one if first=true (default), or the last one, otherwise.

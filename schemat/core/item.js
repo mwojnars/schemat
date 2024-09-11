@@ -1,5 +1,5 @@
 import {print, assert, T, escape_html, splitLast, concat, unique, delay} from '../common/utils.js'
-import {UrlPathNotFound, NotLinked, NotLoaded} from '../common/errors.js'
+import {UrlPathNotFound, NotLinked, NotLoaded, ValidationError} from '../common/errors.js'
 
 import {Catalog, Data} from './data.js'
 import {ITEM, generic_type} from "../types/type.js"
@@ -826,22 +826,31 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
             path.push([segment, object])
 
-            if (path.length > max_len) break            // avoid infinite loops
+            if (path.length > max_len) break                // avoid infinite loops
             object = parent
         }
         return path.reverse()
     }
 
     validate() {
-        // validate each individual property in __data
-        // for (const [prop, values] of this.__data) {
-        //     let type = this.__schema.get(prop)
-        //     if (type) type.validate(values, this)
-        //     else if (!this.__category.allow_custom_fields)
-        //         throw new Error(`unknown field: ${prop}`)
-        // }
+        for (const [prop, value] of this.__data) {          // validate each individual property in __data ...
+            let type = this.__schema.get(prop)
+            if (!type)                                      // the property `prop` is not present in the schema? skip or raise an error
+                if (this.__category.allow_custom_fields) continue
+                else throw new ValidationError(`unknown property: ${prop}`)
 
-        // check multi-property constraints, for example, for the types where `repeated=false`
+            type.validate(value)                            // may raise an exception
+
+            if (!type.props.repeated) {
+                let count = this.__data.get_all(prop).length
+                if (count > 1) throw new ValidationError(`property '${prop}' must be a single value, but found ${count} values`)
+            }
+        }
+
+        // check multi-field constraints ...
+
+        // run category-specific validation
+        this.__validate__()
     }
 
     __validate__() {}

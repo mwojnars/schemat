@@ -71,6 +71,7 @@ export class Type {
         return Object.assign({}, ...T.getInherited(this, 'defaultProps'))
     }
 
+    props                       // properties of this type: own (__props) + defaults (defaultProps)
     __props = {}                // own properties, i.e., excluding the defaults; this.props = defaults (with inherited) + __props
 
 
