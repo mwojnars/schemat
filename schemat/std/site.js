@@ -34,6 +34,7 @@ export class Site extends Directory {
     entries
     default_path
     cache_purge_interval
+    global
 
 
     async __init__()  {
@@ -43,6 +44,13 @@ export class Site extends Directory {
             this._vm = await import('node:vm')
             this._check_default_container()                 // no await to avoid blocking the site's startup
         }
+
+        // load objects listed in [global] property and make them globally available for application code
+        for (let [name, object] of this.global || [])
+            try { globalThis[name] = await object.load() }
+            catch (e) { 
+                print(`Site: failed to load global object '${name}'`)
+            }
     }
 
     async _check_default_container() {
