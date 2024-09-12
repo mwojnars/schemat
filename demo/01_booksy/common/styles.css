@@ -164,15 +164,18 @@ h3 {
 .book-item {
     display: flex;
     align-items: flex-start;
-    background-color: #e6f2ff;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: background-color 0.3s ease;
+    background-color: #3c8af1; /* Dark blue background */
+    color: #ffffff; /* White text */
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
 }
 
 .book-item:hover {
-    background-color: #d1e6ff;
+    background-color: #2569c6; /* Slightly darker blue on hover */
+    transform: translateY(-3px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
 }
 
 .book-icon {
@@ -186,7 +189,7 @@ h3 {
 }
 
 .book-info a {
-    color: #1a73e8;
+    color: #ffffff; /* White text for the title */
     text-decoration: none;
     font-weight: bold;
     display: block;
@@ -198,6 +201,6 @@ h3 {
 }
 
 .book-year {
-    color: #666;
+    color: #e6f2ff; /* Light blue for the year */
     font-size: 0.9em;
 }
