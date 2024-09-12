@@ -220,3 +220,56 @@
   __category:
     "@": 5001
   "@": schemat:Data
+- __id: 5011
+  title: The Silmarillion
+  author:
+    "@": 5005
+  genre: Fantasy
+  published_year: 1977
+  isbn: "9780261102736"
+  page_count: 365
+  language: English
+  publisher: George Allen & Unwin
+  description: A collection of mythopoeic works by J.R.R. Tolkien, edited and
+    published posthumously by his son Christopher Tolkien, that forms a
+    comprehensive background to his Lord of the Rings trilogy.
+  average_rating: 4.2
+  cover_image: https://example.com/silmarillion_cover.jpg
+  __category:
+    "@": 5000
+  "@": schemat:Data
+- __id: 5012
+  title: The Children of Húrin
+  author:
+    "@": 5005
+  genre: Fantasy
+  published_year: 2007
+  isbn: "9780618894642"
+  page_count: 313
+  language: English
+  publisher: Houghton Mifflin
+  description: A tragic tale of the hero Túrin Turambar and his sister Nienor,
+    children of Húrin, set in the First Age of Middle-earth. This book expands
+    on a story from The Silmarillion.
+  average_rating: 4
+  cover_image: https://example.com/children_of_hurin_cover.jpg
+  __category:
+    "@": 5000
+  "@": schemat:Data
+- __id: 5013
+  title: Unfinished Tales of Númenor and Middle-earth
+  author:
+    "@": 5005
+  genre: Fantasy
+  published_year: 1980
+  isbn: "9780261102163"
+  page_count: 472
+  language: English
+  publisher: George Allen & Unwin
+  description: A collection of stories and essays by J.R.R. Tolkien, edited by his
+    son Christopher Tolkien, that expand on the lore of Middle-earth.
+  average_rating: 4.1
+  cover_image: https://example.com/unfinished_tales_cover.jpg
+  __category:
+    "@": 5000
+  "@": schemat:Data
