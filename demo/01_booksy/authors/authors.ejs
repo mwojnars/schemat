@@ -21,26 +21,36 @@
             <% authors.forEach(author => { %>
                 <li id="<%= author.id %>">
                     <h2><%= author.name %></h2>
-                    <p>Life: <%= author.birth_year %> - <%= author.death_year || 'Present' %></p>
-                    <p>Nationality: <%= author.nationality %></p>
-                    <p>Literary Movement: <%= author.literary_movement %></p>
-                    <p>Alma Mater: <%= author.alma_mater || 'N/A' %></p>
-                    <p>Spouse: <%= author.spouse || 'N/A' %></p>
-                    <p>Awards: <%= author.award$.join(', ') || 'N/A' %></p>
-                    <p>Biography: <%= author.bio %></p>
-                    <h3>Notable Works:</h3>
-                    <ul>
-                        <% author.notable_work$.forEach(work => { %>
-                            <li><%= work %></li>
-                        <% }) %>
-                    </ul>
+                    
+                    <dl class="details-table">
+                        <dt>Life</dt>               <dd><%= author.birth_year %> - <%= author.death_year || 'Present' %></dd>
+                        <dt>Nationality</dt>        <dd><%= author.nationality %></dd>
+                        <dt>Literary Movement</dt>  <dd><%= author.literary_movement %></dd>
+                        <dt>Alma Mater</dt>         <dd><%= author.alma_mater || 'N/A' %></dd>
+                        <dt>Spouse</dt>             <dd><%= author.spouse || 'N/A' %></dd>
+                        <dt>Awards</dt>             <dd><%= author.award$.join('; ') || 'N/A' %></dd>
+                        <dt>Notable Works</dt>
+                        <dd>
+                            <ul class="notable-works">
+                                <% author.notable_work$.forEach(work => { %>
+                                    <li><%= work %></li>
+                                <% }) %>
+                            </ul>
+                        </dd>
+                        <dt>Biography</dt>          <dd><%= author.bio %></dd>
+                    </dl>
 
                     <h3>Find in Booksy:</h3>
-                    <ul>
+                    <div class="book-list">
                         <% books.filter(book => book.author$.map(a => a.id).includes(author.id)).forEach(book => { %>
-                            <li><a href="/$/id/<%= book.id %>"><%= book.title %></a> (<%= book.published_year %>)</li>
+                            <div class="book-item">
+                                <span class="book-icon">📖</span>
+                                <a href="/book/<%= book.id %>"><%= book.title %></a>
+                                <span class="book-year">(<%= book.published_year %>)</span>
+                            </div>
                         <% }) %>
-                    </ul>
+                    </div>
+
                 </li>
             <% }) %>
         </ul>
