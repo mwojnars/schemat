@@ -512,3 +512,22 @@ export async function *merge(order, ...streams) {
     }
 }
 
+/**********************************************************************************************************************/
+
+export function Promises(check = false) {
+    /* Creates a collection that will be filled with promises (.add()) to be awaited altogether (in parallel) at the end (await .all()). */
+
+    let promises = []
+    return {
+        add: check ? 
+            (p) => { if (p instanceof Promise) promises.push(p); return p } :
+            (p) => { promises.push(p); return p },
+        any: () => promises.length > 0,
+        all: () => Promise.all(promises),
+    }
+}
+
+export function PromisesChecked() {
+    /* Like Promises, but skips non-promises during .add() to avoid unnecessary awaiting of synchronous code in .all(). */
+    return Promises(true)
+}
