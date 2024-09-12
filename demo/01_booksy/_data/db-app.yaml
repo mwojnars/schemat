@@ -164,3 +164,59 @@
   __category:
     "@": 5001
   "@": schemat:Data
+- __id: 5008
+  title: Good Omens
+  author:
+    "@": 5009
+  author/2:
+    "@": 5010
+  genre: Fantasy, Comedy
+  published_year: 1990
+  isbn: "9780060853976"
+  page_count: 288
+  language: English
+  publisher: Workman
+  description: The classic collaboration between Terry Pratchett and Neil Gaiman
+    about the forces of good and evil coming together to prevent the apocalypse.
+  average_rating: 4.5
+  cover_image: https://example.com/good_omens_cover.jpg
+  __category:
+    "@": 5000
+  "@": schemat:Data
+- __id: 5009
+  name: Neil Gaiman
+  birth_year: 1960
+  nationality: British
+  notable_work: American Gods
+  notable_work/2: Coraline
+  notable_work/3: The Sandman
+  notable_work/4: Good Omens
+  literary_movement: Contemporary fantasy
+  award: Hugo Award
+  award/2: Nebula Award
+  award/3: Bram Stoker Award
+  award/4: Newbery Medal
+  spouse: Amanda Palmer
+  bio: Neil Gaiman is a prolific English author known for his work in comic books,
+    novels, and screenplays. His works blend elements of fantasy, horror, and
+    mythology.
+  __category:
+    "@": 5001
+  "@": schemat:Data
+- __id: 5010
+  name: Terry Pratchett
+  birth_year: 1948
+  death_year: 2015
+  nationality: British
+  notable_work: Discworld series
+  notable_work/2: Good Omens
+  notable_work/3: The Carpet People
+  literary_movement: Comic fantasy
+  award: Carnegie Medal
+  award/2: Knighthood for services to literature
+  spouse: Lyn Purves
+  bio: Sir Terry Pratchett was an English humorist, satirist, and author of
+    fantasy novels, best known for his Discworld series of 41 novels.
+  __category:
+    "@": 5001
+  "@": schemat:Data
