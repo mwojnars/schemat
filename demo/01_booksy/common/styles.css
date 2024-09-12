@@ -119,8 +119,8 @@ a:hover {
 .details-table {
     display: grid;
     grid-template-columns: max-content 1fr;
-    gap: 10px 20px;
-    margin-top: 20px;
+    gap: 10px 25px;
+    margin: 20px;
 }
 
 .details-table dt {
