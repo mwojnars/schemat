@@ -22,7 +22,7 @@ What's new (as compared to traditional web frameworks):
 - custom URLs: `/books`, `/authors` ??
 - endpoint names in URLs: `::view`, `::control`, default endpoint
 - loading objects (`category.list_objects()`, `.load()`)
-- repeated fields and "plural" property name (`.name$`)
+- repeated (multi-valued) fields and "plural" property name (`.name$`, `book.author$` vs `book.author`)
 - versioning ?? (of schema and objects)
 
 

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | Booksy</title>
+    <link rel="stylesheet" href="/common/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Welcome to Booksy!</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/$/id/5000::view">Books</a>
+            <a href="/$/id/5001::view">Authors</a>
+            <a href="/common/about.html">About</a>
+        </nav>
+    </header>
+    <main>
+        <section id="featured-books">
+            <h2>Featured Books</h2>
+            <div class="preview-container">
+                <% featured_books.forEach(book => { %>
+                    <div class="book-preview">
+                        <img src="<%= book.cover_image %>" alt="<%= book.title %> cover" class="book-cover">
+                        <h3><a href="/$/id/<%= book.id %>"><%= book.title %></a></h3>
+                        <p>by <%= book.author.name %></p>
+                        <p>Rating: <%= book.average_rating %>/5</p>
+                        <a href="/$/id/<%= book.id %>">View Details</a>
+                    </div>
+                <% }) %>
+            </div>
+            <a href="/$/id/5000::view" class="view-all">View All Books</a>
+        </section>
+        <section id="featured-authors">
+            <h2>Featured Authors</h2>
+            <div class="preview-container">
+                <% featured_authors.forEach(author => { %>
+                    <div class="author-preview">
+                        <h3><%= author.name %></h3>
+                        <p>Notable work: <%= author.notable_work %></p>
+                        <p><%= author.nationality %>, <%= author.birth_year %> - <%= author.death_year || 'Present' %></p>
+                        <a href="/$/id/5001::view#<%= author.id %>">View Profile</a>
+                    </div>
+                <% }) %>
+            </div>
+            <a href="/$/id/5001::view" class="view-all">View All Authors</a>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 Our Bookstore. All rights reserved.</p>
+    </footer>
+</body>
+</html>
