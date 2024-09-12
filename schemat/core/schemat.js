@@ -244,10 +244,11 @@ export class Schemat {
            `category_or_id` should be a Category object (not necessarily loaded), or an ID. `opts` are the same as for
            `scan_category` and may include, among others: `load`, `limit`, `offset`, `reverse`.
          */
+        let _opts = {...opts, load: false}              // it is better to load objects *after* scan, concurrently
         let objects = []
-        for await (const obj of this.scan_category(category_or_id, opts))
+        for await (const obj of this.scan_category(category_or_id, _opts))
             objects.push(obj)
-        return objects
+        return opts.load ? Promise.all(objects.map(obj => obj.load())) : objects
     }
 
     // async *_scan_all({limit} = {}) {
