@@ -20,6 +20,7 @@
         <article id="book-details">
             <img src="<%= book.cover_image %>" alt="<%= book.title %> cover" class="book-cover">
             <h2><%= book.title %></h2>
+            
             <p>Author(s):
                 <% book.author$.forEach((author, index) => { %>
                     <a href="/$/id/<%= author.id %>"><%= author.name %></a><%= index < book.author$.length - 1 ? ', ' : '' %>
@@ -32,6 +33,22 @@
             <p>Language: <%= book.language %></p>
             <p>Average Rating: <%= book.average_rating || 5 %>/5</p>
             <p>Description: <%= book.description %></p>
+            
+            <dl class="details-table">
+                <dt>Author(s)</dt>
+                <dd>
+                    <% book.author$.forEach((author, index) => { %>
+                        <a href="/$/id/<%= author.id %>"><%= author.name %></a><%= index < book.author$.length - 1 ? ', ' : '' %>
+                    <% }) %>
+                </dd>
+                <dt>Genre</dt>      <dd><%= book.genre %></dd>
+                <dt>Published</dt>  <dd><%= book.published_year %> by <%= book.publisher %></dd>
+                <dt>ISBN</dt>       <dd><%= book.isbn %></dd>
+                <dt>Pages</dt>      <dd><%= book.page_count %></dd>
+                <dt>Language</dt>   <dd><%= book.language %></dd>
+                <dt>Average Rating</dt> <dd><%= book.average_rating %>/5</dd>
+                <dt>Description</dt>    <dd><%= book.description %></dd>
+            </dl>            
         </article>
     </main>
     <footer>
