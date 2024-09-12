@@ -238,7 +238,7 @@ export class NUMBER extends Primitive {
     /* Floating-point number */
     static stype = "number"
     static defaultProps = {
-        initial: 0,
+        // initial: 0,
         min:            undefined,         // minimum value allowed (>=)
         max:            undefined,         // maximum value allowed (<=)
         min_decimals:   0,
