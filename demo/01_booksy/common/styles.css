@@ -151,7 +151,7 @@ h3 {
     margin-top: 30px;
     margin-bottom: 15px;
     color: #1a73e8;
-    border-bottom: 2px solid #1a73e8;
+    border-bottom: 1px solid #1a73e8;
     padding-bottom: 5px;
 }
 
@@ -162,6 +162,8 @@ h3 {
 }
 
 .book-item {
+    display: flex;
+    align-items: flex-start;
     background-color: #f0f0f0;
     padding: 10px;
     border-radius: 5px;
@@ -173,25 +175,29 @@ h3 {
     background-color: #e0e0e0;
 }
 
-.book-item a {
+.book-icon {
+    font-size: 1.5em;
+    margin: -6px 15px 0 12px;
+    flex-shrink: 0;
+}
+
+.book-info {
+    flex-grow: 1;
+}
+
+.book-info a {
     color: #1a73e8;
     text-decoration: none;
     font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
 }
 
-.book-item a:hover {
+.book-info a:hover {
     text-decoration: underline;
 }
 
 .book-year {
     color: #666;
     font-size: 0.9em;
-    margin-left: 5px;
-}
-
-.book-icon {
-    font-size: 1.5em;
-    margin-left: 10px;
-    margin-right: 10px;
-    vertical-align: -3px;
 }
