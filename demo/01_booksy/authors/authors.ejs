@@ -45,7 +45,7 @@
                         <% books.filter(book => book.author$.map(a => a.id).includes(author.id)).forEach(book => { %>
                             <div class="book-item">
                                 <span class="book-icon">📖</span>
-                                <a href="/book/<%= book.id %>"><%= book.title %></a>
+                                <a href="/$/id/<%= book.id %>"><%= book.title %></a>
                                 <span class="book-year">(<%= book.published_year %>)</span>
                             </div>
                         <% }) %>
