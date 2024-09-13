@@ -119,8 +119,10 @@ export class Namespace extends Container {
 }
 
 
-export class IID_Namespace extends Namespace {
-    /* All objects accessible through the raw numeric ID url path of the form: /ID */
+export class ObjectSpace extends Namespace {
+    /* Web objects accessible through the raw numeric ID url path of the form: /ID
+       The set of objects can optionally be restricted to a particular category.
+     */
 
     resolve(path) {
         assert(path, `path must be non-empty`)

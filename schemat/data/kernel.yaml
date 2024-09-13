@@ -303,7 +303,7 @@
     "@": 0
   "@": schemat:Data
 - __id: 8
-  name: IID_Namespace
+  name: ObjectSpace
   info: Namespace that serves items on simple URLs of the form /IID. Mainly used
     for system & admin purposes, or as a last-resort default for URL generation.
   schema:
@@ -313,7 +313,7 @@
       info: Optional category(ies) of items handled by this namespace.
       "@": schemat/types/type.js:ITEM
     "@": schemat:Catalog
-  class: schemat/std/containers.js:IID_Namespace
+  class: schemat/std/containers.js:ObjectSpace
   __extends:
     "@": 7
   __category:
