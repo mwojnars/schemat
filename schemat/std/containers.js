@@ -107,6 +107,7 @@ export class Directory extends Container {
     }
 }
 
+/**********************************************************************************************************************/
 
 export class Namespace extends Container {
     /*
@@ -121,7 +122,9 @@ export class Namespace extends Container {
 
 export class ObjectSpace extends Namespace {
     /* Web objects accessible through the raw numeric ID url path of the form: /ID
-       The set of objects can optionally be restricted to a particular category.
+       The set of objects can optionally be restricted to a particular category, although, during resolve(),
+       a loading error may be raised even if the object does NOT belong to this namespace (!)
+       - that's because the errors are raised before the category check can be made.
      */
 
     resolve(path) {
@@ -129,15 +132,24 @@ export class ObjectSpace extends Namespace {
         try {
             let id = Number(path)
             assert(!isNaN(id))
-            return schemat.get_loaded(id)
+            if (!this.category) return schemat.get_loaded(id)
+            return schemat.get_loaded(id).then(obj => this._is_allowed(obj) ? obj : null)
         }
         catch (ex) { return null }
     }
 
-    identify(item) {
-        item.assert_linked()
-        return `${item.__id}`
+    identify(obj) {
+        obj.assert_linked()
+        return this._is_allowed(obj) ? `${obj.__id}` : null
     }
+
+    _is_allowed(obj) {
+        if (!this.category) return true
+        for (let category of this.category$)
+            if (obj.instanceof(category)) return true
+        return false
+    }
+
 }
 
 export class Category_IID_Namespace extends Namespace {
