@@ -66,7 +66,9 @@
 - __id: 1005
   name: app_source
   info: Path to the local directory containing source code of the application.
-    Typically, this directory does NOT include Schemat source code.
+    Typically, this directory does NOT include Schemat source code, and is used
+    for serving special files that must be placed in the domain root, like
+    robots.txt or favicon.ico.
   local_path: ./app
   __container:
     "@": 1001
