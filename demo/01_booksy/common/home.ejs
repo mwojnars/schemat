@@ -11,8 +11,8 @@
         <h1>Welcome to The Bookstore!</h1>
         <nav>
             <a href="/">Home</a>
-            <a href="/$/id/5000::view">Books</a>
-            <a href="/$/id/5001::view">Authors</a>
+            <a href="/books">Books</a>
+            <a href="/authors">Authors</a>
             <a href="/common/about.html">About</a>
         </nav>
     </header>
@@ -30,7 +30,7 @@
                     </div>
                 <% }) %>
             </div>
-            <a href="/$/id/5000::view" class="view-all">View All Books</a>
+            <a href="/books" class="view-all">View All Books</a>
         </section>
         <section id="featured-authors">
             <h2>Featured Authors</h2>
@@ -40,11 +40,11 @@
                         <h3><%= author.name %></h3>
                         <p>Notable work: <%= author.notable_work %></p>
                         <p><%= author.nationality %>, <%= author.birth_year %> - <%= author.death_year || 'Present' %></p>
-                        <a href="/$/id/5001::view#<%= author.id %>">View Profile</a>
+                        <a href="/authors#<%= author.id %>">View Profile</a>
                     </div>
                 <% }) %>
             </div>
-            <a href="/$/id/5001::view" class="view-all">View All Authors</a>
+            <a href="/authors" class="view-all">View All Authors</a>
         </section>
     </main>
     <footer>

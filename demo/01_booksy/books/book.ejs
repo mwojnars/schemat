@@ -24,7 +24,7 @@
                 <dt>Author(s)</dt>
                 <dd>
                     <% book.author$.forEach((author, index) => { %>
-                        <a href="/$/id/5001::view#<%= author.id %>"><%= author.name %></a><%= index < book.author$.length - 1 ? ', ' : '' %>
+                        <a href="/authors#<%= author.id %>"><%= author.name %></a><%= index < book.author$.length - 1 ? ', ' : '' %>
                     <% }) %>
                 </dd>
                 <dt>Genre</dt>      <dd><%= book.genre %></dd>
