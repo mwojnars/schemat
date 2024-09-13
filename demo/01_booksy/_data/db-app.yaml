@@ -273,3 +273,10 @@
   __category:
     "@": 5000
   "@": schemat:Data
+- __id: 5014
+  name: book-space
+  category:
+    "@": 5000
+  __category:
+    "@": 8
+  "@": schemat:Data
