@@ -131,9 +131,9 @@ export class ObjectSpace extends Namespace {
         assert(path, `path must be non-empty`)
         try {
             let id = Number(path)
-            assert(!isNaN(id))
-            if (!this.category) return schemat.get_loaded(id)
-            return schemat.get_loaded(id).then(obj => this._is_allowed(obj) ? obj : null)
+            if (isNaN(id)) return null
+            let loading = schemat.get_loaded(id)
+            return !this.category ? loading : loading.then(obj => this._is_allowed(obj) ? obj : null)
         }
         catch (ex) { return null }
     }
