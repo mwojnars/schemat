@@ -13,16 +13,16 @@
     "*app_objects":
       "@": 1006
     "@": schemat:Catalog
-  database:
-    "@": 1002
-  cluster:
-    "@": 1025
   global:
     AuthorCategory:
       "@": 5001
     BookCategory:
       "@": 5000
     "@": schemat:Catalog
+  database:
+    "@": 1002
+  cluster:
+    "@": 1025
   __category:
     "@": 1
   "@": schemat:Data
