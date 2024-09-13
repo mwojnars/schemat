@@ -911,14 +911,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let {methods: endpoints, protocol} = request
         if (endpoints.length) return endpoints
 
-        // otherwise, use category defaults
-        endpoints = this.__category?.default_endpoints.get_all(protocol) || []
-        if (endpoints.length) return endpoints
-
-        // otherwise, use global defaults
-        let defaults = {GET: ['view', 'admin', 'control'], CALL: ['self']}
-        endpoints = defaults[protocol] || []
-        if (endpoints.length) return endpoints
+        // otherwise, use category defaults, OR global defaults (for no-category objects)
+        let glob_defaults = {GET: ['view', 'admin', 'control'], CALL: ['self']}
+        let catg_defaults = this.__category?.default_endpoints.get_all(protocol)
+        let defaults = catg_defaults || glob_defaults[protocol]
+        if (defaults.length) return defaults
 
         request.throwNotFound(`endpoint not specified (protocol ${protocol})`)
     }
