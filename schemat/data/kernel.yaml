@@ -73,7 +73,6 @@
         - their schema is GENERIC()
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
-  class: schemat:Category
   defaults:
     __ttl: 60
     schema:
@@ -131,6 +130,7 @@
         "@": schemat/types/type.js:STRING
       "@": schemat:Catalog
     "@": schemat:Catalog
+  class: schemat:Category
   "@": schemat:Data
 - __id: 1
   name: Site
@@ -304,13 +304,15 @@
   "@": schemat:Data
 - __id: 8
   name: ObjectSpace
-  info: Namespace that serves items on simple URLs of the form /IID. Mainly used
-    for system & admin purposes, or as a last-resort default for URL generation.
+  info: Namespace that maps all objects to URLs of the form /<ID>. Optionally
+    restricted to a specific category(ies) of objects.
   schema:
     category:
       category:
         "@": 0
-      info: Optional category(ies) of items handled by this namespace.
+      info: Optional category(ies) of objects to be included in this namespace. Every
+        object that is not an instance of at least one of these categories is
+        excluded.
       "@": schemat/types/type.js:ITEM
     "@": schemat:Catalog
   class: schemat/std/containers.js:ObjectSpace
