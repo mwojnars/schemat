@@ -274,7 +274,8 @@
     "@": 5000
   "@": schemat:Data
 - __id: 5014
-  name: book-space
+  name: book-objects
+  info: All objects of the Book category accessible via .../<book-id> URL paths.
   category:
     "@": 5000
   __category:
