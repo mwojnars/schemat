@@ -56,6 +56,7 @@ async function create_demo_01() {
 
     // insert AuthorCategory and BookCategory references in [site.global]
     db = db.replace(`global:`, `global:\n    AuthorCategory:\n      "@": 5001\n    BookCategory:\n      "@": 5000`)
+    db = db.replace(`global:`, `global:\n    AuthorCategory:\n      "@": 5001\n    BookCategory:\n      "@": 5000`)
 
     // save as db-site.yaml in the demo folder
     fs.writeFileSync(`${demo_dir}/_data/db-site.yaml`, db, 'utf8')

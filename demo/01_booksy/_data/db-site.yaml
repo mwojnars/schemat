@@ -6,12 +6,12 @@
   base_url: http://127.0.0.1:3000
   default_path: /$/id
   entries:
-    $:
-      "@": 1019
-    books:
-      "@": 5000
     authors:
       "@": 5001
+    books:
+      "@": 5000
+    $:
+      "@": 1019
     "*app_source":
       "@": 1005
     "*app_objects":
