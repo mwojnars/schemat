@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authors | Booksy</title>
+    <title>Authors | The Bookstore</title>
     <link rel="stylesheet" href="/common/styles.css">
 </head>
 <body>
@@ -40,7 +40,7 @@
                         <dt>Biography</dt>          <dd><%= author.bio %></dd>
                     </dl>
 
-                    <h3>Find in Booksy:</h3>
+                    <h3>Find in The Bookstore:</h3>
                     <div class="book-list">
                         <% books.filter(book => book.author$.map(a => a.id).includes(author.id)).forEach(book => { %>
                             <div class="book-item">

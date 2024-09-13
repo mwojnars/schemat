@@ -1,6 +1,6 @@
 ## Demonstration apps
 
-### 1. Booksy
+### 1. The Bookstore
 
 Objectives:
 - static HTML
