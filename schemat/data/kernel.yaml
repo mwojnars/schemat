@@ -138,10 +138,6 @@
     startup.
   class: schemat/std/site.js:Site
   schema:
-    base_url:
-      info: "Base URL at which the website is served: protocol + domain + root path
-        (if any); no trailing '/'."
-      "@": schemat/types/type.js:STRING
     cluster:
       info: A Cluster of compute & storage nodes that host this site and database.
       "@": schemat/types/type.js:ITEM
