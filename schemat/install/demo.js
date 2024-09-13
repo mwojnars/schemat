@@ -50,7 +50,7 @@ async function create_demo_01() {
     let db = _load_data_init()
     
     // replace file paths and object names in `db`
-    db = db.replaceAll('main-site', `Books Demo`)
+    db = db.replaceAll('main-site', `Bookstore (demo site)`)
     db = db.replaceAll('/schemat/data/db-', `/demo/${demo_name}/_data/db-`)
     db = db.replaceAll('/app', `/demo/${demo_name}`)
 

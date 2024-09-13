@@ -1,5 +1,5 @@
 - __id: 1001
-  name: Books Demo
+  name: Bookstore (demo site)
   info: The "site" object is the main entry point to the entire application. It
     contains top-level configuration of the website, cluster, database, URL
     routes etc.
