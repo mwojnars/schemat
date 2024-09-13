@@ -8,6 +8,10 @@
   entries:
     $:
       "@": 1019
+    books:
+      "@": 5000
+    authors:
+      "@": 5001
     "*app_source":
       "@": 1005
     "*app_objects":
