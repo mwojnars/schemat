@@ -870,7 +870,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 
 
-    async __handle__(request) {
+    async handle(request) {
         /* Serve a web or internal Request by executing the corresponding service from this.net.
            Query parameters are passed in `req.query`, as:
            - a string if there's one occurrence of PARAM in a query string,
@@ -937,7 +937,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this.__record.encoded() }) }
     // GET__admin()     { return react_page(ItemControlView) }
-    // GET__admin()     { return html_page("item_admin.ejs") }      -- `request` arg can be passed even if not used; then, __handle__ must check if the result is a function and call it with (this, request) again
+    // GET__admin()     { return html_page("item_admin.ejs") }      -- `request` arg can be passed even if not used; then, handle() must check if the result is a function and call it with (this, request) again
 
     GET__test_txt()         { return "TEST txt ..." }                   // works
     GET__test_fun()         { return () => "TEST function ..." }        // works
