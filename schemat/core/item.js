@@ -603,10 +603,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
 
     async _init_url() {
-        while (!schemat.site) {                                     // wait until the site is created (important for bootstrap objects)
-            // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this.__id}]`)
+        while (!schemat.site) {                                     // wait until the site is created; important for bootstrap objects
             await delay()
-            if (schemat.is_closing) return undefined                // site is closing? no need to wait any longer
+            if (schemat.is_closing) return                          // site is closing? no need to wait any longer
         }
 
         let container = this.__container
