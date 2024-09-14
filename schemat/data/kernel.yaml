@@ -105,6 +105,10 @@
         default:
           "@": 1021
         "@": schemat/types/type.js:ITEM
+      __path:
+        "@": schemat/types/type.js:STRING
+      __url:
+        "@": schemat/types/type.js:STRING
       __status:
         info: Set to "DRAFT" if the object's record is not yet fully initialized in the
           database.
