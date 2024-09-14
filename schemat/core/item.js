@@ -618,14 +618,14 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _impute__path() {
-        let path = this.__container?.get_access_path(this) || schemat.site.default_path_of(this)
-        return path
+        /* Calculation of __path if missing. */
+        return this.__container?.get_access_path(this) || schemat.site.default_path_of(this)
     }
 
     _impute__url() {
+        /* Calculation of __url if missing. */
         let [url, is_duplicate] = schemat.site.decode_access_path(this.__path)
-        let _url = is_duplicate ? schemat.site.default_path_of(this) : url
-        return _url
+        return is_duplicate ? schemat.site.default_path_of(this) : url
     }
 
     
