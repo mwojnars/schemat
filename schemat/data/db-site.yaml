@@ -82,6 +82,20 @@
   __category:
     "@": 5
   "@": schemat:Data
+- __id: 1007
+  name: <root>
+  info: Root of the container hierarchy exposed at URL path = /
+  entries:
+    $:
+      "@": 1019
+    "*app_source":
+      "@": 1005
+    "*app_objects":
+      "@": 1006
+    "@": schemat:Catalog
+  __category:
+    "@": 5
+  "@": schemat:Data
 - __id: 1012
   ring:
     "@": 1003
