@@ -4,6 +4,8 @@
     contains top-level configuration of the website, cluster, database, URL
     routes etc.
   default_path: /$/id
+  root_directory:
+    "@": 1007
   entries:
     $:
       "@": 1019
