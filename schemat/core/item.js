@@ -601,8 +601,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load(opts)))
     }
 
-    
-    async _init_url__() {
+
+    async _init_url() {
         while (!schemat.site) {                                     // wait until the site is created (important for bootstrap objects)
             // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this.__id}]`)
             await delay()
@@ -610,69 +610,71 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         }
 
         let container = this.__container
-        if (!container) return this.__url                           // root Directory has no parent container
-        
+        if (!container) return this.__url                           // root Directory has no parent container; also, no-category objects have no *default* __container and no imputation of __path & __url
+
         if (!container.is_loaded()) await container.load()          // container must be fully loaded
         if (!container.__path) await container.__meta.pending_url   // container's path must be initialized
         return this.__url                                           // invokes calculation of __path and __url via impute functions
     }
-    
+
     _impute__path() {
-        return this.__container?.get_access_path(this) || schemat.site.default_path_of(this)
+        let path = this.__container?.get_access_path(this) || schemat.site.default_path_of(this)
+        return path
     }
 
     _impute__url() {
         let [url, is_duplicate] = schemat.site.decode_access_path(this.__path)
-        return is_duplicate ? schemat.site.default_path_of(this) : url
+        let _url = is_duplicate ? schemat.site.default_path_of(this) : url
+        return _url
     }
 
     
-    async _init_url() {
-        /* Initialize this item's URL path (this.__url) and container path (this.__path).
-           This method must NOT be overridden in subclasses, because it gets called BEFORE the proper class is set on the object (!)
-         */
-        try {
-            if (this.__url && this.__path) return this.__url        // already initialized (e.g., for Site object)
-
-            let site = schemat.site
-
-            while (!site) {                                         // wait until the site is created (important for bootstrap objects)
-                // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this.__id}]`)
-                await delay()
-                if (this.__url) return this.__url                   // already initialized?
-                if (schemat.is_closing) return undefined            // site is closing? no need to wait any longer
-                site = schemat.site
-            }
-
-            let container = this.__container
-            let default_path = () => site.default_path_of(this)
-            // assert(container, `missing container in [${this.__id}]`)
-
-            if (!container) {
-                let url = default_path()
-                print('missing container:', url, `(${this.name})`)
-                return this.__url = this.__path = url
-            }
-            // print(`_init_url() container: '${container.__id}'`)
-
-            if (!container.is_loaded()) await container.load()              // container must be fully loaded
-            if (!container.__path) await container.__meta.pending_url       // container's path must be initialized
-
-            this.__path = container.get_access_path(this)
-            if (!this.__path) {
-                print(`WARNING: empty access path for [${this.__id}] despite its container is defined as [${container.__id}]; using default path`)
-                return this.__url = this.__path = default_path()
-            }
-
-            let [url, is_duplicate] = site.decode_access_path(this.__path)
-            // print('_init_url():', url, ` (duplicate=${duplicate})`)
-
-            return this.__url = is_duplicate ? default_path() : url
-        }
-        finally {
-            this.__meta.pending_url = undefined
-        }
-    }
+    // async _init_url() {
+    //     /* Initialize this item's URL path (this.__url) and container path (this.__path).
+    //        This method must NOT be overridden in subclasses, because it gets called BEFORE the proper class is set on the object (!)
+    //      */
+    //     try {
+    //         if (this.__url && this.__path) return this.__url        // already initialized (e.g., for Site object)
+    //
+    //         let site = schemat.site
+    //
+    //         while (!site) {                                         // wait until the site is created (important for bootstrap objects)
+    //             // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this.__id}]`)
+    //             await delay()
+    //             if (this.__url) return this.__url                   // already initialized?
+    //             if (schemat.is_closing) return undefined            // site is closing? no need to wait any longer
+    //             site = schemat.site
+    //         }
+    //
+    //         let container = this.__container
+    //         let default_path = () => site.default_path_of(this)
+    //         // assert(container, `missing container in [${this.__id}]`)
+    //
+    //         if (!container) {
+    //             let url = default_path()
+    //             print('missing container:', url, `(${this.name})`)
+    //             return this.__url = this.__path = url
+    //         }
+    //         // print(`_init_url() container: '${container.__id}'`)
+    //
+    //         if (!container.is_loaded()) await container.load()              // container must be fully loaded
+    //         if (!container.__path) await container.__meta.pending_url       // container's path must be initialized
+    //
+    //         this.__path = container.get_access_path(this)
+    //         if (!this.__path) {
+    //             print(`WARNING: empty access path for [${this.__id}] despite its container is defined as [${container.__id}]; using default path`)
+    //             return this.__url = this.__path = default_path()
+    //         }
+    //
+    //         let [url, is_duplicate] = site.decode_access_path(this.__path)
+    //         // print('_init_url():', url, ` (duplicate=${duplicate})`)
+    //
+    //         return this.__url = is_duplicate ? default_path() : url
+    //     }
+    //     finally {
+    //         this.__meta.pending_url = undefined
+    //     }
+    // }
 
     _load_class() {
         /* Load or import this object's ultimate class. */
@@ -762,14 +764,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     url(endpoint, args) {
-        /* `endpoint` is an optional name of an ::endpoint, `args` will be appended to URL as a query string. */
-
-        let path = this.__url
-        if (!path) {
-            console.error(`missing __url for object [${this.__id}], introduce a delay or await __meta.pending_url`)
-            return ''
-        }
-        if (endpoint) path += Request.SEP_ENDPOINT + endpoint               // append ::endpoint and ?args if present...
+        /* Return the canonical URL of this object. `endpoint` is an optional name of ::endpoint,
+           `args` will be appended to URL as a query string.
+         */
+        let path = this.__url || this.system_url()                      // no-category objects may have no __url because of lack of schema and __url imputation
+        if (endpoint) path += Request.SEP_ENDPOINT + endpoint           // append ::endpoint and ?args if present...
         if (args) path += '?' + new URLSearchParams(args).toString()
         return path
     }
