@@ -40,6 +40,7 @@ export class Site extends Item {
     async __init__()  {
         this._modules_cache = new Map()
         if (schemat.server_side) {
+            await this.root_directory.load()
             await this.database?.load()
             this._vm = await import('node:vm')
             this._check_default_container()                 // no await to avoid blocking the site's startup
@@ -117,11 +118,10 @@ export class Site extends Item {
 
     async resolve(path, explicit_blank = false) {
         if (path[0] === '/') path = path.slice(1)           // drop the leading slash
-        if (!path) return this
+        if (!path) return this //.root_directory
+
         let step = path.split('/')[0]
         let rest = path.slice(step.length + 1)
-
-        await this.root_directory.load()    // TODO: move this method to Directory (?), drop `extends Directory`
 
         for (let [name, node] of this.root_directory.entries) {
 
