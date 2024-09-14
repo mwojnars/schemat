@@ -329,7 +329,7 @@ export class CategoryControlView extends ItemControlView {
     _ItemEntry({item, remove}) {
         /* A single row in the list of items. */
         let name = item.name || item.make_stamp({html:false})
-        let url  = item.url()
+        let url  = item.internal_url()
         return TR(
             TD(`${item.__id} ${NBSP}`),
             TD(url !== null ? A({href: url + '::control'}, name) : `${name} (no URL)`, ' ', NBSP),

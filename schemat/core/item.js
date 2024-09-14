@@ -730,6 +730,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return this.__data.dump()
     }
 
+    internal_url() {
+        return schemat.site.default_path_of(this)
+    }
+
     url(endpoint, args) {
         /* `endpoint` is an optional name of an ::endpoint, `args` will be appended to URL as a query string. */
 
