@@ -623,14 +623,27 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _impute__url() {
         /* Calculation of __url if missing. */
-        let [url, on_blank_route] = schemat.site.decode_access_path(this.__path)
+        let [url, on_blank_route] = Item._decode_access_path(this.__path)
         if (on_blank_route)                                         // if any of the ancestor containers has the same URL, use the system URL instead for this object
             for (let parent = this.__container; parent; parent = parent.__container)
                 if (url === parent.__url) return schemat.site.default_path_of(this)
         return url
     }
 
-    
+    static _decode_access_path(path) {
+        /* Convert a container access path to a URL path by removing all blank segments (/*xxx).
+           NOTE 1: if the last segment is blank, the result URL can be a duplicate of the URL of a parent or ancestor container (!);
+           NOTE 2: even if the last segment is not blank, the result URL can still be a duplicate of the URL of a sibling object,
+                   if they both share an ancestor container with a blank segment. This case cannot be automatically detected
+                   and should be prevented by proper configuration of top-level containers.
+         */
+        let last = path.split('/').pop()
+        let last_blank = last.startsWith('*')           // if the last segment is blank, the URL may be a duplicate of an ancestor's URL
+        let url = path.replace(/\/\*[^/]*/g, '')
+        return [url, last_blank]
+    }
+
+
     // async _init_url() {
     //     /* Initialize this item's URL path (this.__url) and container path (this.__path).
     //        This method must NOT be overridden in subclasses, because it gets called BEFORE the proper class is set on the object (!)
