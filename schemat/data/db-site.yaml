@@ -71,7 +71,7 @@
     mainly used for serving static files, like .css files, robots.txt etc.
   local_path: ./app
   __container:
-    "@": 1001
+    "@": 1007
   __category:
     "@": 6
   "@": schemat:Data
@@ -80,7 +80,7 @@
   entries:
     "@": schemat:Catalog
   __container:
-    "@": 1001
+    "@": 1007
   __category:
     "@": 5
   "@": schemat:Data
@@ -97,6 +97,7 @@
     "@": schemat:Catalog
   __path: /
   __url: /$/id/1007
+  __container: null
   __category:
     "@": 5
   "@": schemat:Data
@@ -172,7 +173,7 @@
       "@": 1020
     "@": schemat:Catalog
   __container:
-    "@": 1001
+    "@": 1007
   __category:
     "@": 5
   "@": schemat:Data
