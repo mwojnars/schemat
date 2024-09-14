@@ -81,7 +81,7 @@ export class CATALOG extends Type {
 
     merge_inherited(arrays, item = null) {
         let values = concat(arrays)
-        if (!values.length) return this.impute(item)
+        if (!values.length) return this._impute(item)
 
         // include the default value in the merge, if present
         let default_ = this.props.default

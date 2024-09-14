@@ -124,18 +124,18 @@ export class Type {
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
 
-    combine_inherited(arrays, item = null) {
+    combine_inherited(arrays, obj = null) {
         /* Combine arrays of inherited values that match this type. Return an array of values.
            The arrays are either concatenated, or the values are merged into one, depending on `prop.repeated`.
            In the latter case, the default value (if present) is also included in the merge.
-           `item` is an argument to downstream impute().
+           `obj` is an argument to downstream impute().
          */
         if (this.isRepeated()) return concat(arrays)
-        let value = this.merge_inherited(arrays, item)
+        let value = this.merge_inherited(arrays, obj)
         return value !== undefined ? [value] : []
     }
 
-    merge_inherited(arrays, item = null) {
+    merge_inherited(arrays, obj = null) {
         /* Only used for single-valued schemas (when prop.repeated == false).
            Merge multiple inherited arrays of values matching this type (TODO: check against incompatible inheritance).
            Return the merged value, or undefined if it cannot be determined.
@@ -150,22 +150,23 @@ export class Type {
             // if (values.length > 1) throw new Error("multiple values present for a key in a single-valued type")
             return values[0]
         }
-        return this.impute(item)                        // if no values were found, use `default` or impute()
+        return this._impute(obj)                        // if no values were found, use `default` or impute()
     }
 
-    impute(item = null) {
-        /* Impute a value for an `item`s field described by this type.
+    _impute(obj = null) {
+        /* Impute a value for an object`s field described by this type.
            This may return the default value (if present), or run the props.impute() property function.
          */
-        let value = this.props.default
+        let {default: value, impute} = this.props
         if (value !== undefined) return value
-
-        if (!item) return undefined
-        let impute = this.props.impute
-        // if (typeof impute === 'string') { ... compile `impute` to a function ... }
+        if (!impute || !obj) return undefined
 
         if (typeof impute === 'function')
-            return impute.call(item)
+            return impute.call(obj, obj)                // impute() function may take `obj` via `this` or via regular argument
+        if (typeof impute === 'string')
+            return obj[impute].call(obj)
+
+        throw new Error(`incorrect type of 'impute' property`)
     }
 
     /*** binary encoding for indexing ***/
