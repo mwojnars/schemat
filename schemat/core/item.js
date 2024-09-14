@@ -601,6 +601,32 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load(opts)))
     }
 
+    
+    async _init_url__() {
+        while (!schemat.site) {                                     // wait until the site is created (important for bootstrap objects)
+            // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this.__id}]`)
+            await delay()
+            if (schemat.is_closing) return undefined                // site is closing? no need to wait any longer
+        }
+
+        let container = this.__container
+        if (!container) return this.__url                           // root Directory has no parent container
+
+        if (!container.is_loaded()) await container.load()          // container must be fully loaded
+        if (!container.__path) await container.__meta.pending_url   // container's path must be initialized
+        return this.__url                                           // invokes calculation of __path and __url via impute functions
+    }
+
+    _impute__path() {
+        return this.__container?.get_access_path(this) || schemat.site.default_path_of(this)
+    }
+
+    _impute__url() {
+        let [url, is_duplicate] = schemat.site.decode_access_path(this.__path)
+        return is_duplicate ? schemat.site.default_path_of(this) : url
+    }
+
+
     async _init_url() {
         /* Initialize this item's URL path (this.__url) and container path (this.__path).
            This method must NOT be overridden in subclasses, because it gets called BEFORE the proper class is set on the object (!)

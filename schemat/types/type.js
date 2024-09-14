@@ -154,8 +154,8 @@ export class Type {
     }
 
     _impute(obj = null) {
-        /* Impute a value for an object`s field described by this type.
-           This may return the default value (if present), or run the props.impute() property function.
+        /* Impute a value for an object`s field described by this type. This may return the default value (if present),
+           or run the props.impute() function, or run the obj[props.impute] method on the target object.
          */
         let {default: value, impute} = this.props
         if (value !== undefined) return value
