@@ -5,17 +5,9 @@
     routes etc.
   root_directory:
     "@": 1007
-  default_path: /$/id
-  entries:
-    $:
-      "@": 1019
-    "*app_source":
-      "@": 1005
-    "*app_objects":
-      "@": 1006
-    "@": schemat:Catalog
   global:
     "@": schemat:Catalog
+  default_path: /$/id
   database:
     "@": 1002
   cluster:
