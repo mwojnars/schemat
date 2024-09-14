@@ -730,7 +730,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return this.__data.dump()
     }
 
-    internal_url() {
+    system_url() {
+        /* The internal URL of this object, typically /$/id/<ID> */
         return schemat.site.default_path_of(this)
     }
 
