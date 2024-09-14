@@ -3,6 +3,8 @@
   info: The "site" object is the main entry point to the entire application. It
     contains top-level configuration of the website, cluster, database, URL
     routes etc.
+  root_directory:
+    "@": 1007
   default_path: /$/id
   entries:
     authors:
@@ -89,6 +91,22 @@
     "@": schemat:Catalog
   __container:
     "@": 1001
+  __category:
+    "@": 5
+  "@": schemat:Data
+- __id: 1007
+  name: <root>
+  info: Root of the container hierarchy exposed at URL path = /
+  entries:
+    $:
+      "@": 1019
+    "*app_source":
+      "@": 1005
+    "*app_objects":
+      "@": 1006
+    "@": schemat:Catalog
+  __path: /
+  __url: /$/id/1007
   __category:
     "@": 5
   "@": schemat:Data
