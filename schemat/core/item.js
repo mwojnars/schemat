@@ -623,8 +623,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _impute__url() {
         /* Calculation of __url if missing. */
-        let [url, is_duplicate] = schemat.site.decode_access_path(this.__path)
-        return is_duplicate ? schemat.site.default_path_of(this) : url
+        let [url, on_blank_route] = schemat.site.decode_access_path(this.__path)
+        if (on_blank_route)                                         // if any of the ancestor containers has the same URL, use the system URL instead for this object
+            for (let parent = this.__container; parent; parent = parent.__container)
+                if (url === parent.__url) return schemat.site.default_path_of(this)
+        return url
     }
 
     

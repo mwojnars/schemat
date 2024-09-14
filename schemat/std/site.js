@@ -134,7 +134,7 @@ export class Site extends Directory {
         let step = path.split('/')[0]
         let rest = path.slice(step.length + 1)
 
-        await this.root_directory.load()
+        await this.root_directory.load()    // TODO: move this method to Directory (?), drop `extends Directory`
 
         for (let [name, node] of this.root_directory.entries) {
 
