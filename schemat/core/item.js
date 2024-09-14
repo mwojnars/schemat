@@ -841,25 +841,25 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return visited
     }
 
-    get_container_path(max_len = 10) {
+    get_breadcrumb(max_len = 10) {
         /* Return an array of containers that lead from the site's root to this object.
            The array contains pairs [segment, container] where `segment` is a string that identifies `container`
            inside its parent; the last pair is [segment, this] (the object itself).
            If containers are correctly configured, the first pair is [undefined, site_object] (the root).
          */
-        let path = []
+        let steps = []
         let object = this
 
         while (object) {
             let parent = object.__container
             let segment = parent?.identify(object)
 
-            path.push([segment, object])
+            steps.push([segment, object])
 
-            if (path.length > max_len) break                // avoid infinite loops
+            if (steps.length > max_len) break                // avoid infinite loops
             object = parent
         }
-        return path.reverse()
+        return steps.reverse()
     }
 
     validate() {

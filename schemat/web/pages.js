@@ -275,8 +275,8 @@ export class ItemControlView extends ReactPage.View {
 
     Breadcrumb() {
         /* A list of links to the parent containers of the object. */
-        let items = this.get_container_path()
-        let links = items.map(([name, obj]) => A({href: obj.url()}, name || 'home'))
+        let steps = this.get_breadcrumb()
+        let links = steps.map(([name, obj]) => A({href: obj.url()}, name || 'home'))
         let elems = links.map((link, i) => [link, i < links.length-1 ? ' » ' : ''])
         return P(...elems)
     }
