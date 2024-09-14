@@ -31,7 +31,7 @@ export class Site extends Directory {
 
     // properties:
     database
-    entries
+    root_directory
     default_path
     cache_purge_interval
     global
@@ -134,7 +134,9 @@ export class Site extends Directory {
         let step = path.split('/')[0]
         let rest = path.slice(step.length + 1)
 
-        for (let [name, node] of this.entries) {
+        await this.root_directory.load()
+
+        for (let [name, node] of this.root_directory.entries) {
 
             assert(name, "route name must be non-empty; use *NAME for a blank route to be excluded in public URLs")
             let blank = (name[0] === '*')
