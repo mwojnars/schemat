@@ -5,27 +5,13 @@
     routes etc.
   root_directory:
     "@": 1007
-  default_path: /$/id
-  entries:
-    authors:
-      "@": 5001
-    books:
-      "@": 5000
-    book:
-      "@": 5014
-    $:
-      "@": 1019
-    "*app_source":
-      "@": 1005
-    "*app_objects":
-      "@": 1006
-    "@": schemat:Catalog
   global:
     AuthorCategory:
       "@": 5001
     BookCategory:
       "@": 5000
     "@": schemat:Catalog
+  default_path: /$/id
   database:
     "@": 1002
   cluster:
