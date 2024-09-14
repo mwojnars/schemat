@@ -149,6 +149,11 @@
         its ID. For internal purposes. Should contain a leading slash and no
         trailing slash.
       "@": schemat/types/type.js:PATH
+    root_directory:
+      info: Root of the object container hierarchy for URL routing. Domain root.
+      category:
+        "@": 2
+      "@": schemat/types/type.js:ITEM
     entries:
       values:
         "@": schemat/types/type.js:ITEM
