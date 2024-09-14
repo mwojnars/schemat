@@ -95,10 +95,10 @@
     "*app_objects":
       "@": 1006
     "@": schemat:Catalog
-  __category:
-    "@": 5
   __path: /
   __url: /$/id/1007
+  __category:
+    "@": 5
   "@": schemat:Data
 - __id: 1012
   ring:
