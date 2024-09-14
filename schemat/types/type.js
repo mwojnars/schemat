@@ -164,7 +164,7 @@ export class Type {
         if (typeof impute === 'function')
             return impute.call(obj, obj)                // impute() function may take `obj` via `this` or via regular argument
         if (typeof impute === 'string')
-            return obj[impute].call(obj)
+            return obj[impute]?.call(obj)
 
         throw new Error(`incorrect type of 'impute' property`)
     }
