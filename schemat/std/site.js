@@ -1,7 +1,7 @@
 import {print, assert, T, delay, splitLast} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
-import {Edit, Request} from '../core/item.js'
-import {Container, Directory, ObjectSpace} from "./containers.js";
+import {Item, Edit, Request} from '../core/item.js'
+import {ObjectSpace} from "./containers.js";
 import {JsonService} from "../web/services.js";
 
 
@@ -18,7 +18,7 @@ import {JsonService} from "../web/services.js";
  **
  */
 
-export class Site extends Directory {
+export class Site extends Item {
     /* Global configuration of all applications that comprise this website, with URL routing etc.
        A route whose name starts with asterisk (*NAME) is treated as blank.
      */
