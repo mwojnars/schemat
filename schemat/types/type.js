@@ -46,6 +46,8 @@ export class Type {
                                 // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
                                 // the function must be *synchronous* and cannot return a Promise
 
+        // virtual : undefined,    // if true, the field only supports imputation and cannot be directly assigned to
+        // persisted : undefined   // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
         // required : undefined,   // if true, the field described by this type must be present in the record or object's data during insert/update
 
         // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
