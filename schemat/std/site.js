@@ -117,6 +117,9 @@ export class Site extends Item {
     /***  Request resolution  ***/
 
     async resolve(path, explicit_blank = false) {
+        /* When explicit_blank=true, the `path` is an access path (all intermediate containers are included);
+           otherwise, it's a URL path (blank containers removed).
+         */
         if (path[0] === '/') path = path.slice(1)           // drop the leading slash
         if (!path) return this //.root_directory
 

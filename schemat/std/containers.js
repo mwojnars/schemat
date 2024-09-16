@@ -107,6 +107,12 @@ export class Directory extends Container {
     }
 }
 
+export class RootDirectory extends Directory {
+    /* Site's root directory must implement special behavior for URL resolution and __url/__path imputation. */
+}
+
+
+
 /**********************************************************************************************************************/
 
 export class Namespace extends Container {
