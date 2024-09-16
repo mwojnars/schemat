@@ -378,6 +378,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     static _cachable_getters         // a Set of names of getters of the Item class or its subclass - for caching in ItemProxy
 
     static _set_cachable_getters() {
+        /* Find all getter functions in the current class, combine with parent's set of getters and store in _cachable_getters. */
         const prototype = this.prototype
         const parent_getters = this.__proto__?.cachable_getters || []
         const own_getters = Object.getOwnPropertyNames(prototype)
@@ -634,7 +635,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* The internal URL of this object, typically /$/id/<ID> */
         return schemat.site.default_path_of(this)
     }
-    
+
     static _decode_access_path(path) {
         /* Convert a container access path to a URL path by removing all blank segments (/*xxx).
            NOTE 1: if the last segment is blank, the result URL can be a duplicate of the URL of a parent or ancestor container (!);
