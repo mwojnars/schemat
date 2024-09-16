@@ -107,9 +107,11 @@
         "@": schemat/types/type.js:ITEM
       __path:
         impute: _impute__path
+        inherit: false
         "@": schemat/types/type.js:STRING
       __url:
         impute: _impute__url
+        inherit: false
         "@": schemat/types/type.js:STRING
       __status:
         info: Set to "DRAFT" if the object's record is not yet fully initialized in the
