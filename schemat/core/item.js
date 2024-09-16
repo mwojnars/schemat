@@ -625,9 +625,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _impute__url() {
         /* Calculation of __url if missing. */
         let [url, on_blank_route] = Item._decode_access_path(this.__path)
-        if (on_blank_route)                                         // if any of the ancestor containers has the same URL, use the system URL instead for this object
-            for (let parent = this.__container; parent; parent = parent.__container)
-                if (url === parent.__url) return this.system_url
+        // if (on_blank_route)                                         // if any of the ancestor containers has the same URL, use the system URL instead for this object
+        //     for (let parent = this.__container; parent; parent = parent.__container)
+        //         if (url === parent.__url) return this.system_url
         return url
     }
 
