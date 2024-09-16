@@ -21,6 +21,11 @@ export class Container extends Item {
     // properties:
     _is_container
 
+    _impute__url() {
+        /* All containers are exposed on internal URLs to avoid conflicts with URLs of member objects (on blank routes). */
+        return this.system_url()
+    }
+
     resolve(path, explicit_blank = false) {
         /* Find the web object pointed to by `path` and located inside this container or a nested one.
            Return the object in loaded state, or null if not found. Alternatively, a function, f(request),

@@ -618,7 +618,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _impute__path() {
         /* Calculation of __path if missing. */
-        return this.__container?.get_access_path(this) || schemat.site.default_path_of(this)
+        return this.__container?.get_access_path(this) || this.system_url()
     }
 
     _impute__url() {
@@ -626,7 +626,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let [url, on_blank_route] = Item._decode_access_path(this.__path)
         if (on_blank_route)                                         // if any of the ancestor containers has the same URL, use the system URL instead for this object
             for (let parent = this.__container; parent; parent = parent.__container)
-                if (url === parent.__url) return schemat.site.default_path_of(this)
+                if (url === parent.__url) return this.system_url()
         return url
     }
 
