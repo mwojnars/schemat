@@ -2,8 +2,9 @@
     Container classes (Directory, Namespace) for building URL paths and routing requests to items.
  */
 
-import {assert, print} from "../common/utils.js"
+import {assert, print, T} from "../common/utils.js"
 import {Item} from "../core/item.js"
+import {UrlPathNotFound} from "../common/errors.js";
 
 
 /**********************************************************************************************************************/
@@ -90,21 +91,60 @@ export class Directory extends Container {
         return rev
     }
 
-    resolve(path) {
-        assert(path, `path must be non-empty`)
-        let step = path.split('/')[0]
-        let next = this.entries?.get(step)
-        if (!next) return null
+    async resolve(path, explicit_blank = false) {
+        /* When explicit_blank=true, the `path` is an access path (all intermediate containers are included);
+           otherwise, it's a URL path (blank containers removed).
+         */
+        if (path[0] === '/') path = path.slice(1)           // drop the leading slash
+        if (!path) return this //.root_directory
 
+        let step = path.split('/')[0]
         let rest = path.slice(step.length + 1)
-        let tail = () => {
-            // here, `next` is already loaded
-            if (!rest) return next
-            if (!next._is_container) return null
-            return next.resolve(rest)
+
+        for (let [name, node] of this.entries || []) {
+
+            assert(name, "route name must be non-empty; use *NAME for a blank route to be excluded in public URLs")
+            let blank = (name[0] === '*')
+
+            // blank route? only consume the `step` and truncate the request path if explicit_blank=true;
+            // step into the nested Container only if it potentially contains the `step`
+            if (blank) {
+                if (!node.is_loaded()) await node.load()
+                assert(node._is_container, "blank route can only point to a Container (Directory, Namespace)")
+                if (explicit_blank) return rest ? node.resolve(rest, explicit_blank) : node
+
+                let target = node.resolve(path, explicit_blank)
+                if (T.isPromise(target)) target = await target
+                if (target) return target           // target=null means the object was not found and the next route should be tried
+            }
+            else if (name === step) {
+                if (!node.is_loaded()) await node.load()
+                // print('import.meta.url:', import.meta.url)
+                // print(`resolve():  ${name}  (rest: ${rest})  (${node instanceof Container})`)
+                if (node._is_container && rest) return node.resolve(rest, explicit_blank)
+                else if (rest) return null //throw new UrlPathNotFound({path})
+                else return node
+            }
         }
-        return next.is_loaded() ? tail() : next.load().then(tail)
+        return null
+        // throw new UrlPathNotFound({path})
     }
+
+    // resolve(path) {
+    //     assert(path, `path must be non-empty`)
+    //     let step = path.split('/')[0]
+    //     let next = this.entries?.get(step)
+    //     if (!next) return null
+    //
+    //     let rest = path.slice(step.length + 1)
+    //     let tail = () => {
+    //         // here, `next` is already loaded
+    //         if (!rest) return next
+    //         if (!next._is_container) return null
+    //         return next.resolve(rest)
+    //     }
+    //     return next.is_loaded() ? tail() : next.load().then(tail)
+    // }
 
     identify(item) {
         item.assert_linked()
