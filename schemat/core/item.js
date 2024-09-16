@@ -623,79 +623,32 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _impute__url() {
-        /* Calculation of __url if missing. */
-        let [url, on_blank_route] = Item._decode_access_path(this.__path)
+        /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
+        return this.__path.replace(/\/\*[^/]*/g, '')
+        // let [url, on_blank_route] = Item._decode_access_path(this.__path)
         // if (on_blank_route)                                         // if any of the ancestor containers has the same URL, use the system URL instead for this object
         //     for (let parent = this.__container; parent; parent = parent.__container)
         //         if (url === parent.__url) return this.system_url
-        return url
+        // return url
     }
+
+    // static _decode_access_path(path) {
+    //     /* Convert a container access path to a URL path by removing all blank segments (/*xxx).
+    //        NOTE 1: if the last segment is blank, the result URL can be a duplicate of the URL of a parent or ancestor container (!);
+    //        NOTE 2: even if the last segment is not blank, the result URL can still be a duplicate of the URL of a sibling object,
+    //                if they both share an ancestor container with a blank segment. This case cannot be automatically detected
+    //                and should be prevented by proper configuration of top-level containers.
+    //      */
+    //     let last = path.split('/').pop()
+    //     let last_blank = last.startsWith('*')           // if the last segment is blank, the URL may be a duplicate of an ancestor's URL
+    //     let url = path.replace(/\/\*[^/]*/g, '')
+    //     return [url, last_blank]
+    // }
 
     get system_url() {
         /* The internal URL of this object, typically /$/id/<ID> */
         return schemat.site.default_path_of(this)
     }
-
-    static _decode_access_path(path) {
-        /* Convert a container access path to a URL path by removing all blank segments (/*xxx).
-           NOTE 1: if the last segment is blank, the result URL can be a duplicate of the URL of a parent or ancestor container (!);
-           NOTE 2: even if the last segment is not blank, the result URL can still be a duplicate of the URL of a sibling object,
-                   if they both share an ancestor container with a blank segment. This case cannot be automatically detected
-                   and should be prevented by proper configuration of top-level containers.
-         */
-        let last = path.split('/').pop()
-        let last_blank = last.startsWith('*')           // if the last segment is blank, the URL may be a duplicate of an ancestor's URL
-        let url = path.replace(/\/\*[^/]*/g, '')
-        return [url, last_blank]
-    }
-
-
-    // async _init_url() {
-    //     /* Initialize this item's URL path (this.__url) and container path (this.__path).
-    //        This method must NOT be overridden in subclasses, because it gets called BEFORE the proper class is set on the object (!)
-    //      */
-    //     try {
-    //         if (this.__url && this.__path) return this.__url        // already initialized (e.g., for Site object)
-    //
-    //         let site = schemat.site
-    //
-    //         while (!site) {                                         // wait until the site is created (important for bootstrap objects)
-    //             // print('no schemat.site, waiting for it to be initialized... in', this.constructor?.name || this, `[${this.__id}]`)
-    //             await delay()
-    //             if (this.__url) return this.__url                   // already initialized?
-    //             if (schemat.is_closing) return undefined            // site is closing? no need to wait any longer
-    //             site = schemat.site
-    //         }
-    //
-    //         let container = this.__container
-    //         let default_path = () => site.default_path_of(this)
-    //         // assert(container, `missing container in [${this.__id}]`)
-    //
-    //         if (!container) {
-    //             let url = default_path()
-    //             print('missing container:', url, `(${this.name})`)
-    //             return this.__url = this.__path = url
-    //         }
-    //         // print(`_init_url() container: '${container.__id}'`)
-    //
-    //         if (!container.is_loaded()) await container.load()              // container must be fully loaded
-    //         if (!container.__path) await container.__meta.pending_url       // container's path must be initialized
-    //
-    //         this.__path = container.get_access_path(this)
-    //         if (!this.__path) {
-    //             print(`WARNING: empty access path for [${this.__id}] despite its container is defined as [${container.__id}]; using default path`)
-    //             return this.__url = this.__path = default_path()
-    //         }
-    //
-    //         let [url, is_duplicate] = site.decode_access_path(this.__path)
-    //         // print('_init_url():', url, ` (duplicate=${duplicate})`)
-    //
-    //         return this.__url = is_duplicate ? default_path() : url
-    //     }
-    //     finally {
-    //         this.__meta.pending_url = undefined
-    //     }
-    // }
 
     _load_class() {
         /* Load or import this object's ultimate class. */
