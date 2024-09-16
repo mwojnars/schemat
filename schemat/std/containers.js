@@ -23,7 +23,7 @@ export class Container extends Item {
 
     _impute__url() {
         /* All containers are exposed on internal URLs to avoid conflicts with URLs of member objects (on blank routes). */
-        return this.system_url()
+        return this.system_url
     }
 
     resolve(path, explicit_blank = false) {

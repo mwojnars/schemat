@@ -618,7 +618,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _impute__path() {
         /* Calculation of __path if missing. */
-        return this.__container?.get_access_path(this) || this.system_url()
+        return this.__container?.get_access_path(this) || this.system_url
     }
 
     _impute__url() {
@@ -626,10 +626,15 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let [url, on_blank_route] = Item._decode_access_path(this.__path)
         if (on_blank_route)                                         // if any of the ancestor containers has the same URL, use the system URL instead for this object
             for (let parent = this.__container; parent; parent = parent.__container)
-                if (url === parent.__url) return this.system_url()
+                if (url === parent.__url) return this.system_url
         return url
     }
 
+    get system_url() {
+        /* The internal URL of this object, typically /$/id/<ID> */
+        return schemat.site.default_path_of(this)
+    }
+    
     static _decode_access_path(path) {
         /* Convert a container access path to a URL path by removing all blank segments (/*xxx).
            NOTE 1: if the last segment is blank, the result URL can be a duplicate of the URL of a parent or ancestor container (!);
@@ -773,16 +778,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return this.__data.dump()
     }
 
-    system_url() {
-        /* The internal URL of this object, typically /$/id/<ID> */
-        return schemat.site.default_path_of(this)
-    }
-
     url(endpoint, args) {
         /* Return the canonical URL of this object. `endpoint` is an optional name of ::endpoint,
            `args` will be appended to URL as a query string.
          */
-        let path = this.__url || this.system_url()                      // no-category objects may have no __url because of lack of schema and __url imputation
+        let path = this.__url || this.system_url                        // no-category objects may have no __url because of lack of schema and __url imputation
         if (endpoint) path += Request.SEP_ENDPOINT + endpoint           // append ::endpoint and ?args if present...
         if (args) path += '?' + new URLSearchParams(args).toString()
         return path
