@@ -156,7 +156,9 @@
         trailing slash.
       "@": schemat/types/type.js:PATH
     root:
-      info: Root of the object container hierarchy for URL routing. Domain root.
+      info: "Root of the object hierarchy and the starting point for URL routing: each
+        URL path is mapped to an object placed somewhere below the `root`
+        container."
       category:
         "@": 2
       "@": schemat/types/type.js:ITEM
