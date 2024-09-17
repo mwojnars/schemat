@@ -56,7 +56,7 @@ export class Site extends Item {
 
     async _check_default_container() {
         while (!schemat.site) await delay()
-        let default_container = await this.resolve(this.default_path)
+        let default_container = await this.resolve(this.default_path.slice(1))
 
         // check that default_path maps to a container...
         assert(default_container?._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)

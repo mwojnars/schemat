@@ -109,7 +109,7 @@ export class Directory extends Container {
 
     async resolve(path) {
         /* Find an object that corresponds to the URL path, `path`. */
-        if (path[0] === '/') path = path.slice(1)           // drop the leading slash
+        if (path[0] === '/') return null                    // the leading slash should have been dropped already
         let step = path.split('/')[0]
         let rest = path.slice(step.length + 1)
 
