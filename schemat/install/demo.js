@@ -54,7 +54,7 @@ async function create_demo_01() {
     db = db.replaceAll('/schemat/data/db-', `/demo/${demo_name}/_data/db-`)
     db = db.replaceAll('/app', `/demo/${demo_name}`)
 
-    // insert AuthorCategory and BookCategory references in [site.global]
+    // insert AuthorCategory and BookCategory references in [site.global]; insert URL routes
     db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 5001\n    BookCategory:\n      "@": 5000`)
     db = db.replaceAll(`entries:\n    $`, `entries:\n    authors:\n      "@": 5001\n    books:\n      "@": 5000\n    book:\n      "@": 5014\n    $`)
 

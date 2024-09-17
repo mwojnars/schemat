@@ -1,3 +1,10 @@
+
+export function warn(msg) {
+    /* Print a server-side warning. In the future, this should be replaced with writing to a logging queue. */
+    console.error('WARNING:', msg)
+}
+
+
 /**********************************************************************************************************************
  **
  **  ERRORS

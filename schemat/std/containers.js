@@ -4,7 +4,7 @@
 
 import {assert, print, T} from "../common/utils.js"
 import {Item} from "../core/item.js"
-import {UrlPathNotFound} from "../common/errors.js";
+import {UrlPathNotFound, warn} from "../common/errors.js";
 
 
 /**********************************************************************************************************************/
@@ -95,7 +95,9 @@ export class Directory extends Container {
         /* A Map like this.entries, but without blank routes. */
         let routes = new Map()
         for (let [name, target] of this.entries || [])
-            if (name[0] !== '*') routes.set(name, target)
+            if (name[0] !== '*')
+                if (routes.has(name)) warn(`duplicate non-blank entry (${name}) in directory [${this.id}]`)
+                else routes.set(name, target)
         return routes
     }
 
