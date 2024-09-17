@@ -162,14 +162,6 @@
       category:
         "@": 2
       "@": schemat/types/type.js:ITEM
-    entries:
-      values:
-        "@": schemat/types/type.js:ITEM
-      repeated: true
-      info: URL prefixes (as keys) mapped to items that shall perform routing of
-        requests whose URLs start with a given prefix. NO leading/trailing
-        slashes.
-      "@": schemat/types/catalog.js:CATALOG
     global:
       values:
         "@": schemat/types/type.js:ITEM
@@ -544,11 +536,13 @@
   name: Page
   info: >-
     A standalone HTML page that is not strictly related to any specific object
-    or category, and is implemented in its own static file, or as a JS function.
+    or category and is implemented in its own static file or as a JS function.
     Typically, a landing page, like a home page.
 
 
     Pages that are related to a particular object or category are better implemented as view methods (instance-level or static) of the category's Javascript class.
+  schema:
+    "@": schemat:Catalog
   __category:
     "@": 0
   "@": schemat:Data
