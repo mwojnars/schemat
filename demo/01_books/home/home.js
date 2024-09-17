@@ -1,7 +1,7 @@
 import {html_page} from "../../../schemat/web/adapters.js"
 
 
-export async function view() {
+export async function home_view() {
     let authors = await AuthorCategory.list_objects({load: true})
     let books = await BookCategory.list_objects({load: true})
     for (let book of books)

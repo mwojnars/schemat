@@ -18,7 +18,7 @@ let __filename = fileURLToPath(import.meta.url)
 let __dirname  = path.dirname(__filename)
 
 let root_dir = `${__dirname}/../..`
-let demo_names = [null, '01_booksy', '02_blog', '03_chatter']
+let demo_names = [null, '01_books', '02_blog', '03_chatter']
 
 
 function _load_data_init() {

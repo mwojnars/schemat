@@ -1,6 +1,6 @@
 - __id: 5000
   name: Book
-  class: demo/01_booksy/books/books.js:Book
+  class: demo/01_books/books/books.js:Book
   schema:
     title:
       "@": schemat/types/type.js:STRING
@@ -34,7 +34,7 @@
   "@": schemat:Data
 - __id: 5001
   name: Author
-  class: demo/01_booksy/authors/author.js:Author
+  class: demo/01_books/authors/author.js:Author
   schema:
     birth_year:
       "@": schemat/types/type.js:INTEGER
