@@ -30,17 +30,17 @@ export class Site extends Item {
     // static URL_SCHEMAT = '/$/schemat'       // url-path of the root of Schemat source code
 
     // properties:
+    root
+    global
     database
-    root_directory
     default_path
     cache_purge_interval
-    global
 
 
     async __init__()  {
         this._modules_cache = new Map()
         if (schemat.server_side) {
-            await this.root_directory.load()
+            await this.root.load()
             await this.database?.load()
             this._vm = await import('node:vm')
             this._check_default_container()                 // no await to avoid blocking the site's startup
@@ -144,7 +144,7 @@ export class Site extends Item {
         return object.handle(request)
     }
 
-    async resolve(path) { return this.root_directory.resolve(path) }
+    async resolve(path) { return this.root.resolve(path) }
 
 
     /***  Dynamic imports  ***/
