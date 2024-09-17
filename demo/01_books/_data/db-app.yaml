@@ -73,7 +73,7 @@
   description: A tragic love story set in the roaring 20s, exploring themes of
     decadence, idealism, and the American Dream.
   average_rating: 4.2
-  cover_image: https://example.com/great_gatsby_cover.jpg
+  cover_image: https://dummyimage.com/200x300/3498db/ffffff.png&text=The+Great+Gatsby
   __category:
     "@": 5000
   "@": schemat:Data
@@ -109,7 +109,7 @@
     hobbit Bilbo Baggins to win a share of the treasure guarded by the dragon,
     Smaug.
   average_rating: 4.6
-  cover_image: https://example.com/the_hobbit_cover.jpg
+  cover_image: https://dummyimage.com/200x300/16a085/ffffff.png&text=The+Hobbit
   __category:
     "@": 5000
   "@": schemat:Data
@@ -145,7 +145,7 @@
   description: A classic tale of love and misunderstanding set in class-conscious
     England of the late 18th century.
   average_rating: 4.4
-  cover_image: https://example.com/pride_and_prejudice_cover.jpg
+  cover_image: https://dummyimage.com/200x300/9b59b6/ffffff.png&text=Pride+and+Prejudice
   __category:
     "@": 5000
   "@": schemat:Data
@@ -179,7 +179,7 @@
   description: The classic collaboration between Terry Pratchett and Neil Gaiman
     about the forces of good and evil coming together to prevent the apocalypse.
   average_rating: 4.5
-  cover_image: https://example.com/good_omens_cover.jpg
+  cover_image: https://dummyimage.com/200x300/f39c12/ffffff.png&text=Good+Omens
   __category:
     "@": 5000
   "@": schemat:Data
@@ -234,7 +234,7 @@
     published posthumously by his son Christopher Tolkien, that forms a
     comprehensive background to his Lord of the Rings trilogy.
   average_rating: 4.2
-  cover_image: https://example.com/silmarillion_cover.jpg
+  cover_image: https://dummyimage.com/200x300/1abc9c/ffffff.png&text=The+Silmarillion
   __category:
     "@": 5000
   "@": schemat:Data
@@ -252,7 +252,7 @@
     children of Húrin, set in the First Age of Middle-earth. This book expands
     on a story from The Silmarillion.
   average_rating: 4
-  cover_image: https://example.com/children_of_hurin_cover.jpg
+  cover_image: https://dummyimage.com/200x300/d35400/ffffff.png&text=The+Children+of+Húrin
   __category:
     "@": 5000
   "@": schemat:Data
@@ -269,7 +269,7 @@
   description: A collection of stories and essays by J.R.R. Tolkien, edited by his
     son Christopher Tolkien, that expand on the lore of Middle-earth.
   average_rating: 4.1
-  cover_image: https://example.com/unfinished_tales_cover.jpg
+  cover_image: https://dummyimage.com/200x300/2980b9/ffffff.png&text=Unfinished+Tales
   __category:
     "@": 5000
   "@": schemat:Data
@@ -280,4 +280,12 @@
     "@": 5000
   __category:
     "@": 8
+  "@": schemat:Data
+- __id: 5015
+  title: Animal Farm
+  genre: Satire
+  published_year: 1945
+  isbn: "9780451526342"
+  __category:
+    "@": 5000
   "@": schemat:Data
