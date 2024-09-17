@@ -205,7 +205,7 @@ describe('Schemat Tests', function () {
 
         it('Varia', async function () {
             let Varia = await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main',
-                ['Category:5000', 'Varia', 'name', '__category', 'schema', 'Varia:5001', 'Create Item'])
+                ['Category:5000', 'Varia', 'name', '__category', 'schema', 'Varia:5001', 'Create'])
 
             // these strings are only available after client-side rendering, not in HTML source:
             expect_include_all(await extract_content(Varia), 'check', 'Varia.code')
@@ -224,7 +224,7 @@ describe('Schemat Tests', function () {
             await page.focus(input)
             await page.type(input, `${name}_(&$%#@!^)`)
                     
-            // click the "Create Item" button
+            // click the "Create" button
             await page.click('button[type="submit"]')
             await delay(100)
 

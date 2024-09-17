@@ -310,9 +310,9 @@ export class CategoryControlView extends ItemControlView {
         const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
         return super.Main({extra: FRAGMENT(
-            H2('Items'),
+            H2('Objects'),
             e(this.Items, {items: items, itemRemoved: async () => setItems(await scan()), key: 'items'}),
-            H3('Add item'),
+            H3('Create New'),
             e(this.Items, {items: newItems, itemRemoved}),
             e(this.NewItem, {itemAdded}),
         )})
@@ -369,7 +369,7 @@ export class CategoryControlView extends ItemControlView {
         return FORM({ref: form}, FIELDSET(
             // LABEL('Name: ', INPUT({name: 'name'}), ' '),
             INPUT({name: 'name', placeholder: 'name'}),
-            BUTTON({type: 'submit', onClick: submit}, 'Create Item'),
+            BUTTON({type: 'submit', onClick: submit}, 'Create'),
         ))
     }
 }
