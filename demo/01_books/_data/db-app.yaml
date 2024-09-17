@@ -283,9 +283,36 @@
   "@": schemat:Data
 - __id: 5015
   title: Animal Farm
+  author:
+    "@": 5016
   genre: Satire
   published_year: 1945
   isbn: "9780451526342"
+  page_count: 112
+  language: English
+  publisher: Secker & Warburg
+  description: An allegorical novella reflecting events leading up to the Russian
+    Revolution of 1917 and the early years of the Soviet Union.
+  average_rating: 4.1
+  cover_image: https://dummyimage.com/200x300/27ae60/ffffff.png&text=Animal+Farm
   __category:
     "@": 5000
+  "@": schemat:Data
+- __id: 5016
+  name: George Orwell
+  birth_year: 1903
+  death_year: 1950
+  nationality: British
+  notable_work: "1984"
+  notable_work/2: Animal Farm
+  notable_work/3: Homage to Catalonia
+  literary_movement: Political fiction
+  alma_mater: Eton College
+  award: Prometheus Hall of Fame Award
+  spouse: Eileen O'Shaughnessy
+  bio: George Orwell was an English novelist, essayist, journalist, and critic.
+    His work is characterized by lucid prose, social criticism, opposition to
+    totalitarianism, and support of democratic socialism.
+  __category:
+    "@": 5001
   "@": schemat:Data
