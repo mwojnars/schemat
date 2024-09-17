@@ -540,3 +540,15 @@
   __category:
     "@": 0
   "@": schemat:Data
+- __id: 25
+  name: Page
+  info: >-
+    A standalone HTML page that is not strictly related to any specific object
+    or category, and is implemented in its own static file, or as a JS function.
+    Typically, a landing page, like a home page.
+
+
+    Pages that are related to a particular object or category are better implemented as view methods (instance-level or static) of the category's Javascript class.
+  __category:
+    "@": 0
+  "@": schemat:Data
