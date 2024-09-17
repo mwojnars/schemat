@@ -116,47 +116,9 @@ export class Site extends Item {
 
     /***  Request resolution  ***/
 
-    async resolve(path, explicit_blank = false) {
-        return this.root_directory.resolve(path, explicit_blank)
+    async resolve(path) {
+        return this.root_directory.resolve(path)
     }
-
-    // async resolve(path, explicit_blank = false) {
-    //     /* When explicit_blank=true, the `path` is an access path (all intermediate containers are included);
-    //        otherwise, it's a URL path (blank containers removed).
-    //      */
-    //     if (path[0] === '/') path = path.slice(1)           // drop the leading slash
-    //     if (!path) return this //.root_directory
-    //
-    //     let step = path.split('/')[0]
-    //     let rest = path.slice(step.length + 1)
-    //
-    //     for (let [name, node] of this.root_directory.entries) {
-    //
-    //         assert(name, "route name must be non-empty; use *NAME for a blank route to be excluded in public URLs")
-    //         let blank = (name[0] === '*')
-    //
-    //         // blank route? only consume the `step` and truncate the request path if explicit_blank=true;
-    //         // step into the nested Container only if it potentially contains the `step`
-    //         if (blank) {
-    //             if (!node.is_loaded()) await node.load()
-    //             assert(node._is_container, "blank route can only point to a Container (Directory, Namespace)")
-    //             if (explicit_blank) return rest ? node.resolve(rest, explicit_blank) : node
-    //
-    //             let target = node.resolve(path, explicit_blank)
-    //             if (T.isPromise(target)) target = await target
-    //             if (target) return target           // target=null means the object was not found and the next route should be tried
-    //         }
-    //         else if (name === step) {
-    //             if (!node.is_loaded()) await node.load()
-    //             // print('import.meta.url:', import.meta.url)
-    //             // print(`resolve():  ${name}  (rest: ${rest})  (${node instanceof Container})`)
-    //             if (node._is_container && rest) return node.resolve(rest, explicit_blank)
-    //             else if (rest) throw new UrlPathNotFound({path})
-    //             else return node
-    //         }
-    //     }
-    //     throw new UrlPathNotFound({path})
-    // }
 
     async find_item(path) {
         /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
@@ -172,10 +134,10 @@ export class Site extends Item {
         // return Request.run_with({path}, () => this.route(request))
     }
 
-    async route(request, explicit_blank = false) {
+    async route(request) {
         /* Find the object pointed to by the request's URL path and execute its endpoint function through handle(). */
         let path = request.path.slice(1)                // drop the leading slash
-        let object = await this.resolve(path, explicit_blank)
+        let object = await this.resolve(path)
         if (!object) throw new UrlPathNotFound({path})
 
         if (typeof object === 'function') return object(request)        // `object` can be a tail function, just call it then
