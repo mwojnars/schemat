@@ -263,3 +263,21 @@ h3 {
     margin: 0 0 20px 20px;
 }
 
+.book-preview .book-cover {
+    float: right;
+    width: 100px;
+    height: auto;
+    margin-left: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.book-preview {
+    overflow: hidden; /* This ensures the container expands to include the floated image */
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}

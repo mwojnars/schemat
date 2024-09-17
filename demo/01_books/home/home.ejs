@@ -22,8 +22,8 @@
             <div class="preview-container">
                 <% featured_books.forEach(book => { %>
                     <div class="book-preview">
-                        <img src="<%= book.cover_image %>" alt="<%= book.title %> cover" class="book-cover">
                         <h3><a href="/book/<%= book.id %>"><%= book.title %></a></h3>
+                        <img src="<%= book.cover_image %>" alt="<%= book.title %> cover" class="book-cover">
                         <p>by <%= book.author.name %></p>
                         <p>Rating: <%= book.average_rating %>/5</p>
                         <a href="/book/<%= book.id %>">View Details</a>
