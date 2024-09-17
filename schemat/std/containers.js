@@ -42,8 +42,8 @@ export class Container extends Item {
     }
 
     identify(item) {
-        /* Return a unique non-empty string identifier of `item` within this container. An identifier of the form *xxx
-           (ident[0] == '*') denotes a blank segment that should be removed when converting container access path to a URL path.
+        /* Return a unique string identifier of `item` within this container. Empty string is a *valid* identifier!
+           An identifier of the form *XXX denotes a blank segment that should be removed when converting container access path to a URL path.
          */
         throw new Error('not implemented')
     }
@@ -56,13 +56,13 @@ export class Container extends Item {
         assert(this.__path[0] === '/', `container's __path must start with '/'`)
 
         let ident = this.identify(member)
-        if (!ident) {
+        if (ident === null || ident === undefined) {
             // here, null is returned instead of throwing an error because the mismatch between member's and container's settings may happen temporarily while moving an object from one container to another
             print(`WARNING: container [${this.__id}] does NOT include object [${member.__id}]`)
             return null
         }
 
-        // the last char in __path can be '/' for a site (__path='/'); don't include extra '/' in such case
+        // the last char in __path can be '/' for the root container, don't add extra '/' in such case
         if (this.__path.endsWith('/')) return this.__path + ident
 
         return this.__path + '/' + ident

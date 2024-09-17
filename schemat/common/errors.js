@@ -1,6 +1,6 @@
 
 export function warn(msg) {
-    /* Print a server-side warning. In the future, this should be replaced with writing to a logging queue. */
+    /* Print a warning. In the future, this should be replaced with writing to a logging queue (on server). */
     console.error('WARNING:', msg)
 }
 

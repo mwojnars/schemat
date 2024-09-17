@@ -80,6 +80,8 @@
   name: <root>
   info: Root of the container hierarchy exposed at URL path = /
   entries:
+    "":
+      "@": 1008
     $:
       "@": 1019
     "*app_source":
@@ -94,6 +96,8 @@
   "@": schemat:Data
 - __id: 1008
   name: home
+  __container:
+    "@": 1007
   __category:
     "@": 25
   "@": schemat:Data
@@ -132,7 +136,7 @@
     idx_category_item:
       "@": 23
     "@": schemat:Catalog
-  readonly: true
+  readonly: false
   start_id: 5000
   stop_id: null
   __category:
