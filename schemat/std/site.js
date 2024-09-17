@@ -58,8 +58,6 @@ export class Site extends Item {
         while (!schemat.site) await delay()
         let default_container = await this.resolve(this.default_path)
 
-        assert(this.__url[0] === '/', `site's __url path must start with '/'`)
-
         // check that default_path maps to a container...
         assert(default_container?._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
 
@@ -116,10 +114,6 @@ export class Site extends Item {
 
     /***  Request resolution  ***/
 
-    async resolve(path) {
-        return this.root_directory.resolve(path)
-    }
-
     async find_item(path) {
         /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
         // return this.route(new Request({path, method: '::item'}))
@@ -149,6 +143,8 @@ export class Site extends Item {
 
         return object.handle(request)
     }
+
+    async resolve(path) { return this.root_directory.resolve(path) }
 
 
     /***  Dynamic imports  ***/
