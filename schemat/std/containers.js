@@ -91,7 +91,23 @@ export class Directory extends Container {
         return rev
     }
 
-    async resolve__(path) {
+    get _non_blank_routes() {
+        /* A Map like this.entries, but without blank routes. */
+        let routes = new Map()
+        for (let [name, target] of this.entries || [])
+            if (name[0] !== '*') routes.set(name, target)
+        return routes
+    }
+
+    get _blank_routes() {
+        /* An array of target nodes for all blank routes in this.entries. */
+        let nodes = []
+        for (let [name, target] of this.entries || [])
+            if (name[0] === '*') nodes.push(target)
+        return nodes
+    }
+
+    async resolve(path) {
         /* Find an object that corresponds to the URL path, `path`. */
         if (path[0] === '/') path = path.slice(1)           // drop the leading slash
         let step = path.split('/')[0]
@@ -100,8 +116,8 @@ export class Directory extends Container {
         // first, check non-blank routes for the one matching exactly the `step`
         let node = this._non_blank_routes.get(step)
         if (node) {
-            if (!rest) return node
             if (!node.is_loaded()) await node.load()
+            if (!rest) return node
             if (node._is_container) return node.resolve(rest)
             return null
         }
@@ -118,42 +134,42 @@ export class Directory extends Container {
         return null
     }
 
-    async resolve(path, explicit_blank = false) {
-        /* When explicit_blank=true, `path` is treated as an access path (all intermediate containers included);
-           otherwise, it's a URL path (with blank containers removed).
-         */
-        if (path[0] === '/') path = path.slice(1)           // drop the leading slash
-        if (!path) return this
-        let step = path.split('/')[0]
-        let rest = path.slice(step.length + 1)
+    // async resolve(path, explicit_blank = false) {
+    //     /* When explicit_blank=true, `path` is treated as an access path (all intermediate containers included);
+    //        otherwise, it's a URL path (with blank containers removed).
+    //      */
+    //     if (path[0] === '/') path = path.slice(1)           // drop the leading slash
+    //     if (!path) return this
+    //     let step = path.split('/')[0]
+    //     let rest = path.slice(step.length + 1)
 
-        for (let [name, node] of this.entries || []) {
+    //     for (let [name, node] of this.entries || []) {
 
-            assert(name, "route name must be non-empty; use *NAME for a blank route to be excluded in public URLs")
-            let blank = (name[0] === '*')
+    //         assert(name, "route name must be non-empty; use *NAME for a blank route to be excluded in public URLs")
+    //         let blank = (name[0] === '*')
 
-            // blank route? only consume the `step` and truncate the request path if explicit_blank=true;
-            // step into the nested Container only if it potentially contains the `step`
-            if (blank) {
-                if (!node.is_loaded()) await node.load()
-                assert(node._is_container, "blank route can only point to a Container (Directory, Namespace)")
-                if (explicit_blank) return rest ? node.resolve(rest, explicit_blank) : node
+    //         // blank route? only consume the `step` and truncate the request path if explicit_blank=true;
+    //         // step into the nested Container only if it potentially contains the `step`
+    //         if (blank) {
+    //             if (!node.is_loaded()) await node.load()
+    //             assert(node._is_container, "blank route can only point to a Container (Directory, Namespace)")
+    //             if (explicit_blank) return rest ? node.resolve(rest, explicit_blank) : node
 
-                let target = node.resolve(path, explicit_blank)
-                if (T.isPromise(target)) target = await target
-                if (target) return target           // target=null means the object was not found and the next route should be tried
-            }
-            else if (name === step) {
-                if (!node.is_loaded()) await node.load()
-                // print('import.meta.url:', import.meta.url)
-                // print(`resolve():  ${name}  (rest: ${rest})  (${node instanceof Container})`)
-                if (node._is_container && rest) return node.resolve(rest, explicit_blank)
-                else if (rest) return null
-                else return node
-            }
-        }
-        return null
-    }
+    //             let target = node.resolve(path, explicit_blank)
+    //             if (T.isPromise(target)) target = await target
+    //             if (target) return target           // target=null means the object was not found and the next route should be tried
+    //         }
+    //         else if (name === step) {
+    //             if (!node.is_loaded()) await node.load()
+    //             // print('import.meta.url:', import.meta.url)
+    //             // print(`resolve():  ${name}  (rest: ${rest})  (${node instanceof Container})`)
+    //             if (node._is_container && rest) return node.resolve(rest, explicit_blank)
+    //             else if (rest) return null
+    //             else return node
+    //         }
+    //     }
+    //     return null
+    // }
 
     // resolve(path) {
     //     assert(path, `path must be non-empty`)
