@@ -312,7 +312,7 @@ export class CategoryControlView extends ItemControlView {
         return super.Main({extra: FRAGMENT(
             H2('Objects'),
             e(this.Items, {items: items, itemRemoved: async () => setItems(await scan()), key: 'items'}),
-            H3('Create New'),
+            H3('New Object'),
             e(this.Items, {items: newItems, itemRemoved}),
             e(this.NewItem, {itemAdded}),
         )})
