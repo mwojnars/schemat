@@ -164,7 +164,7 @@ h3 {
 .book-item {
     display: flex;
     align-items: flex-start;
-    background-color: #aaa;
+    background-color: #95baed;   /*#bbb;*/
     /*background-color: #3c8af1; !* Dark blue background *!*/
     color: #ffffff; /* White text */
     padding: 15px;
