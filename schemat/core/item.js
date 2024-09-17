@@ -893,6 +893,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             let handler = (typeof service === 'function') ? service.bind(this) : (r) => service.server(this, r)
             let result = handler(request)
             if (result instanceof Promise) result = await result
+
             return (typeof result === 'function') ? result.call(this, request) : result
         }
 
