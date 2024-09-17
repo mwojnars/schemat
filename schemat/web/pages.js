@@ -366,11 +366,11 @@ export class CategoryControlView extends ItemControlView {
             itemAdded(item)
         }
 
-        return FORM({ref: form}, FIELDSET(
+        return FORM({ref: form, style: {marginTop: '10px'}},
             // LABEL('Name: ', INPUT({name: 'name'}), ' '),
             INPUT({name: 'name', placeholder: 'name'}),
-            BUTTON({type: 'submit', onClick: submit}, 'Create'),
-        ))
+            BUTTON({type: 'submit', onClick: submit, style: {marginLeft: '10px'}}, 'Create'),
+        )
     }
 }
 
