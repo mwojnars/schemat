@@ -175,9 +175,6 @@
         objects. A real number.
       "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
-  defaults:
-    __container: null
-    "@": schemat:Catalog
   __extends:
     "@": 5
   __category:
