@@ -102,8 +102,6 @@
           Site to the object define the access path of this object, which can be
           converted to a canonical URL path of the object by removing blank
           segments.
-        default:
-          "@": 1021
         "@": schemat/types/type.js:ITEM
       __path:
         impute: _impute__path
