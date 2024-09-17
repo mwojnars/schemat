@@ -92,6 +92,11 @@
   __category:
     "@": 5
   "@": schemat:Data
+- __id: 1008
+  name: home
+  __category:
+    "@": 25
+  "@": schemat:Data
 - __id: 1012
   ring:
     "@": 1003
@@ -127,7 +132,7 @@
     idx_category_item:
       "@": 23
     "@": schemat:Catalog
-  readonly: false
+  readonly: true
   start_id: 5000
   stop_id: null
   __category:
