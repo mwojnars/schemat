@@ -8,5 +8,5 @@ export async function homepage() {
         for (let author of book.author$) await author.load()
 
     let path = import.meta.resolve('./home.ejs')
-    return html_page(path, {book: this, authors: []})
+    return html_page(path, {featured_books: books, featured_authors: authors})
 }
