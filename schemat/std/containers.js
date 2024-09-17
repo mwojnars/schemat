@@ -27,16 +27,12 @@ export class Container extends Item {
         return this.system_url
     }
 
-    resolve(path, explicit_blank = false) {
-        /* Find the web object pointed to by `path` and located inside this container or a nested one.
+    resolve(path) {
+        /* Find the web object pointed to by URL `path` and located inside this container or a nested one.
            Return the object in loaded state, or null if not found. Alternatively, a function, f(request),
            can be returned to perform the remaining part of the request handling process.
            This method may return a Promise if an async operation has to be performed during the computation.
-
            The path is relative to this container's base path and should NOT contain a leading slash.
-           If `explicit_blank` is true, the path is an internal "container path" that includes explicit blank segment(s)
-           (a/*BLANK/b/c); otherwise, the path is a "URL path" with blank segments hidden (a/b/c).
-           Currently, a blank segment is only allowed at the top level of a URL path, inside a Site directory.
          */
         return null
     }
@@ -67,15 +63,6 @@ export class Container extends Item {
 
         return this.__path + '/' + ident
     }
-
-    // build_url(item) {
-    //     /* Create an absolute URL path from the site's root to `item`. Return [url, duplicate], where:
-    //        - `url` is the URL path from the site's root to `item`;
-    //        - duplicate=true if the `url` is a duplicate of an ancestor's URL path, due to a terminal blank segment.
-    //        The `item` should be a member of this container.
-    //      */
-    //     return this.decode_access_path(this.get_access_path(item))
-    // }
 }
 
 
@@ -137,26 +124,26 @@ export class Directory extends Container {
     }
 
     // async resolve(path, explicit_blank = false) {
-    //     /* When explicit_blank=true, `path` is treated as an access path (all intermediate containers included);
-    //        otherwise, it's a URL path (with blank containers removed).
+    //     /* If `explicit_blank` is true, the path is an internal "container path" that includes explicit blank segment(s)
+    //        (a/*BLANK/b/c); otherwise, the path is a "URL path" with blank segments hidden (a/b/c).
     //      */
     //     if (path[0] === '/') path = path.slice(1)           // drop the leading slash
     //     if (!path) return this
     //     let step = path.split('/')[0]
     //     let rest = path.slice(step.length + 1)
-
+    //
     //     for (let [name, node] of this.entries || []) {
-
+    //
     //         assert(name, "route name must be non-empty; use *NAME for a blank route to be excluded in public URLs")
     //         let blank = (name[0] === '*')
-
+    //
     //         // blank route? only consume the `step` and truncate the request path if explicit_blank=true;
     //         // step into the nested Container only if it potentially contains the `step`
     //         if (blank) {
     //             if (!node.is_loaded()) await node.load()
     //             assert(node._is_container, "blank route can only point to a Container (Directory, Namespace)")
     //             if (explicit_blank) return rest ? node.resolve(rest, explicit_blank) : node
-
+    //
     //             let target = node.resolve(path, explicit_blank)
     //             if (T.isPromise(target)) target = await target
     //             if (target) return target           // target=null means the object was not found and the next route should be tried
@@ -171,22 +158,6 @@ export class Directory extends Container {
     //         }
     //     }
     //     return null
-    // }
-
-    // resolve(path) {
-    //     assert(path, `path must be non-empty`)
-    //     let step = path.split('/')[0]
-    //     let next = this.entries?.get(step)
-    //     if (!next) return null
-    //
-    //     let rest = path.slice(step.length + 1)
-    //     let tail = () => {
-    //         // here, `next` is already loaded
-    //         if (!rest) return next
-    //         if (!next._is_container) return null
-    //         return next.resolve(rest)
-    //     }
-    //     return next.is_loaded() ? tail() : next.load().then(tail)
     // }
 
     identify(item) {
