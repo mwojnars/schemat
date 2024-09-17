@@ -74,12 +74,6 @@
 - __id: 1006
   name: app_objects
   entries:
-    authors:
-      "@": 5001
-    books:
-      "@": 5000
-    book:
-      "@": 5014
     "@": schemat:Catalog
   __container:
     "@": 1007
@@ -174,12 +168,6 @@
 
     2) Schemat's source code that is read from a local disk folder.
   entries:
-    authors:
-      "@": 5001
-    books:
-      "@": 5000
-    book:
-      "@": 5014
     id:
       "@": 1021
     local:
