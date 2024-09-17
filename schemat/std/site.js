@@ -61,7 +61,7 @@ export class Site extends Item {
         assert(this.__url[0] === '/', `site's __url path must start with '/'`)
 
         // check that default_path maps to a container...
-        assert(default_container._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
+        assert(default_container?._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
 
         // ...and that this container is an ObjectSpace, so it is compatible with the URL generation on the client
         assert(default_container.__category.name === 'ObjectSpace', `container [${this.__id}] at the default path ('${this.default_path}') must be an ObjectSpace`)

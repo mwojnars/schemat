@@ -91,13 +91,39 @@ export class Directory extends Container {
         return rev
     }
 
+    async resolve__(path) {
+        /* Find an object that corresponds to the URL path, `path`. */
+        if (path[0] === '/') path = path.slice(1)           // drop the leading slash
+        let step = path.split('/')[0]
+        let rest = path.slice(step.length + 1)
+
+        // first, check non-blank routes for the one matching exactly the `step`
+        let node = this._non_blank_routes.get(step)
+        if (node) {
+            if (!rest) return node
+            if (!node.is_loaded()) await node.load()
+            if (node._is_container) return node.resolve(rest)
+            return null
+        }
+
+        // then, iterate over blank routes and try resolving the full `path` through each one
+        for (let node of this._blank_routes) {
+            if (!node.is_loaded()) await node.load()
+            if (!node._is_container) throw new Error(`found a non-container on a blank route (${node.name}), which is not allowed`)
+
+            let target = node.resolve(path)
+            if (T.isPromise(target)) target = await target
+            if (target) return target
+        }
+        return null
+    }
+
     async resolve(path, explicit_blank = false) {
-        /* When explicit_blank=true, the `path` is an access path (all intermediate containers are included);
-           otherwise, it's a URL path (blank containers removed).
+        /* When explicit_blank=true, `path` is treated as an access path (all intermediate containers included);
+           otherwise, it's a URL path (with blank containers removed).
          */
         if (path[0] === '/') path = path.slice(1)           // drop the leading slash
-        if (!path) return this //.root_directory
-
+        if (!path) return this
         let step = path.split('/')[0]
         let rest = path.slice(step.length + 1)
 
@@ -122,12 +148,11 @@ export class Directory extends Container {
                 // print('import.meta.url:', import.meta.url)
                 // print(`resolve():  ${name}  (rest: ${rest})  (${node instanceof Container})`)
                 if (node._is_container && rest) return node.resolve(rest, explicit_blank)
-                else if (rest) return null //throw new UrlPathNotFound({path})
+                else if (rest) return null
                 else return node
             }
         }
         return null
-        // throw new UrlPathNotFound({path})
     }
 
     // resolve(path) {
