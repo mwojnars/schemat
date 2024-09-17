@@ -10,7 +10,7 @@ import {DataRequest} from "../db/data_request.js"
 
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
-import {ReactPage, CategoryControlView, ItemControlView} from "../web/pages.js"
+import {ReactPage, CategoryRecordView, ItemRecordView} from "../web/pages.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "../web/services.js"
 
 export const ROOT_ID = 0
@@ -911,7 +911,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (endpoints.length) return endpoints
 
         // otherwise, use category defaults, OR global defaults (for no-category objects)
-        let glob_defaults = {GET: ['view', 'admin', 'control'], CALL: ['self']}
+        let glob_defaults = {GET: ['view', 'admin', 'record'], CALL: ['self']}
         let catg_defaults = this.__category?.default_endpoints.get_all(protocol)
         let defaults = catg_defaults || glob_defaults[protocol]
         if (defaults.length) return defaults
@@ -932,7 +932,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this.__record.encoded() }) }
 
     // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this.__record.encoded() }) }
-    // GET__admin()     { return react_page(ItemControlView) }
+    // GET__admin()     { return react_page(ItemRecordView) }
     // GET__admin()     { return html_page("item_admin.ejs") }      -- `request` arg can be passed even if not used; then, handle() must check if the result is a function and call it with (this, request) again
 
     GET__test_txt()         { return "TEST txt ..." }                   // works
@@ -941,7 +941,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     GET__test_html()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
 
     static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
-    static ['GET/control'] = new ReactPage(ItemControlView)
+    static ['GET/record'] = new ReactPage(ItemRecordView)
     static ['GET/json']  = new JsonService(function() { return this.__record.encoded() })
     // GET__json()    { return new JsonService(function() { return this.__record.encoded() }) }
 
@@ -1200,7 +1200,7 @@ export class Category extends Item {
 
     /***  Endpoints  ***/
 
-    static ['GET/control'] = new ReactPage(CategoryControlView)
+    static ['GET/record'] = new ReactPage(CategoryRecordView)
 
     static ['POST/read'] = new TaskService({
         list_items: new Task({

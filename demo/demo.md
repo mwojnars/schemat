@@ -20,7 +20,7 @@ What's new (as compared to traditional web frameworks):
 - built-in web interface for creating & editing application objects, a la CMS (todo: improve)
 - system URLs: `/$/<id>` -- available out of the box
 - custom URLs: `/books`, `/authors` ??
-- endpoint names in URLs: `::view`, `::control`, default endpoint
+- endpoint names in URLs: `::view`, `::record`, default endpoint
 - loading objects (`category.list_objects()`, `.load()`)
 - repeated (multi-valued) fields and "plural" property name (`.name$`, `book.author$` vs `book.author`)
 - versioning ?? (of schema and objects)

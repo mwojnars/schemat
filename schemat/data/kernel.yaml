@@ -58,7 +58,7 @@
       default:
         GET: view
         GET/2: admin
-        GET/3: control
+        GET/3: record
         CALL: self
         "@": schemat:Catalog
       "@": schemat/types/catalog.js:CATALOG

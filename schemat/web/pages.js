@@ -227,7 +227,7 @@ export class ReactPage extends RenderedPage {
 
 /**********************************************************************************************************************/
 
-export class ItemControlView extends ReactPage.View {
+export class ItemRecordView extends ReactPage.View {
     /* System-level view that displays raw properties of a web object. */
 
     html_title() {
@@ -289,7 +289,7 @@ export class ItemControlView extends ReactPage.View {
 
 /**********************************************************************************************************************/
 
-export class CategoryControlView extends ItemControlView {
+export class CategoryRecordView extends ItemRecordView {
     /* System-level view that displays raw properties of a Category object and a list of its children (members of the category). */
 
     async prepare(side) {
@@ -332,7 +332,7 @@ export class CategoryControlView extends ItemControlView {
         let url  = item.system_url
         return TR(
             TD(`${item.__id} ${NBSP}`),
-            TD(url !== null ? A({href: url + '::control'}, name) : `${name} (no URL)`, ' ', NBSP),
+            TD(url !== null ? A({href: url + '::record'}, name) : `${name} (no URL)`, ' ', NBSP),
             TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
         )
     }
