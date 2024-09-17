@@ -286,6 +286,8 @@ export class TYPE_Widget extends GENERIC_Widget {
 
 export const ITEM_Widget = ItemLoadingHOC(class extends TypeWidget {
 
+    static css_class = "REF"
+
     view() {
         let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
         if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
@@ -299,7 +301,7 @@ export const ITEM_Widget = ItemLoadingHOC(class extends TypeWidget {
             let note = item.__category.name || null
             return SPAN(
                 url ? A({href: url}, name) : name,
-                SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : stamp)}, note)
+                SPAN(cl('ref-category'), note || stamp)
             )
         } else
             return SPAN('[', url ? A({href: url, ...stamp}) : SPAN(stamp), ']')
