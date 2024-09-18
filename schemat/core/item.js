@@ -880,7 +880,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         for (let endpoint of endpoints) {
             let service = this._get_handler(endpoint.replace('/','__'))
             service ??= this.__services[endpoint]
-            // service ??= this.__net.get_service(endpoint)
             if (!service) continue
 
             // print(`handle() endpoint: ${endpoint}`)

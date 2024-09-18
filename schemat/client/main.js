@@ -29,7 +29,6 @@ export class ClientSchemat extends Schemat {
 
         let endpoint = data.endpoint
         let page = target.__services[endpoint]
-        // let page = target.__net.get_service(endpoint)
         let root = document.querySelector("#page-main")
 
         return page.render_client(target, root)

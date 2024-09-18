@@ -358,10 +358,10 @@ export class API {
             }
     }
 
-    get_service(endpoint) {
-        /* Return the Service instance that's exposed on a given `endpoint`, or undefined if `endpoint` not found. */
-        return this.services[endpoint]
-    }
+    // get_service(endpoint) {
+    //     /* Return the Service instance that's exposed on a given `endpoint`, or undefined if `endpoint` not found. */
+    //     return this.services[endpoint]
+    // }
 }
 
 /**********************************************************************************************************************/
@@ -435,16 +435,10 @@ export class Network {
         }
     }
 
-    get_service(endpoint) {
-        /* Resolve `endpoint` to a Service instance (a handler). Return undefined if `endpoint` not found. */
-        let service = this.api.get_service(endpoint)
-        // return (service && typeof service === 'object') ? (r) => service.server(this.target, r) : service      // return a handler function, f(request) -> result
-        // if (typeof service === 'function') {
-        //     service = service.call(this.target)
-        //     service.bindAt(endpoint)
-        // }
-        return service
-    }
+    // get_service(endpoint) {
+    //     /* Resolve `endpoint` to a Service instance (a handler). Return undefined if `endpoint` not found. */
+    //     return this.api.get_service(endpoint)
+    // }
 }
 
 
