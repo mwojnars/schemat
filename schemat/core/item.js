@@ -493,24 +493,13 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
          */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
         let names = T.getAllPropertyNames(this).filter(is_endpoint).filter(name => this[name])
-        return this.prototype.__services = Object.fromEntries(names.map(endpoint => {
+        let endpoints = names.map(endpoint => {
             let service = this[endpoint]
             service.bindAt(endpoint)
             return [endpoint, service]
-        }))
-        // return this.prototype.__services = {...new API(endpoints).services}
+        })
+        return this.prototype.__services = Object.fromEntries(endpoints)
     }
-
-    // static _init_services(endpoints) {
-    //     let services = {}
-    //     for (let [endpoint, service] of Object.entries(endpoints))
-    //         if (service) {
-    //             service.bindAt(endpoint)
-    //             services[endpoint] = service
-    //         }
-    //     return services
-    // }
-
 
     _get_write_id() {
         /* Either __id or __meta.provisional_id. */
