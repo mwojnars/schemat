@@ -333,39 +333,6 @@ export class TaskService extends JsonService {
 
 /**********************************************************************************************************************/
 
-export class API {
-    /* A set of Services exposed on particular endpoints. API can be linked to target objects via the Network adapter. */
-
-    services = {}               // {endpoint_string: service_object}
-
-    constructor(services = {}) {
-        for (let [endpoint, service] of Object.entries(services))
-            if (typeof service === 'object')
-                service.bindAt(endpoint)
-        this.add(services)
-    }
-
-    add(services) {
-        /* Add `services` dict to `this.services`. If an endpoint already exists its service gets merged with the new
-           service instance (e.g., functionality of both services is combined), or replaced if a given service class
-           doesn't implement merge(). If service==null in `services`, the endpoint is removed from the API.
-         */
-        for (let [endpoint, service] of Object.entries(services))
-            if (service == null) delete this.services[endpoint]
-            else {
-                let previous = this.services[endpoint]
-                this.services[endpoint] = previous ? previous.merge(service) : service
-            }
-    }
-
-    // get_service(endpoint) {
-    //     /* Return the Service instance that's exposed on a given `endpoint`, or undefined if `endpoint` not found. */
-    //     return this.services[endpoint]
-    // }
-}
-
-/**********************************************************************************************************************/
-
 export class Network {
     /*
        Network interface of a `target` object. Handles incoming communication through resolve(), and outgoing

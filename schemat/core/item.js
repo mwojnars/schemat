@@ -11,7 +11,7 @@ import {DataRequest} from "../db/data_request.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {ReactPage, CategoryRecordView, ItemRecordView} from "../web/pages.js"
-import {JsonService, API, Task, TaskService, Network} from "../web/services.js"
+import {JsonService, Task, TaskService, Network} from "../web/services.js"
 
 export const ROOT_ID = 0
 
@@ -488,8 +488,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     static _collect_services() {
-        /* Collect endpoints defined as static properties of the class and named "PROTO/endpoint" (PROTO in uppercase)
-           and return as an API instance. The result is cached in the prototype for reuse by all objects of this class.
+        /* Collect Services defined as static properties of the class and named "PROTO/endpoint" (PROTO in uppercase).
+           The result is cached in prototype.__services for reuse by all objects of this class.
          */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
         let names = T.getAllPropertyNames(this).filter(is_endpoint).filter(name => this[name])
