@@ -494,14 +494,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
         let names = T.getAllPropertyNames(this).filter(is_endpoint)
 
-        let is_endpoint_proto = prop => prop.includes('__') && prop.split('__')[0].length && prop.split('__')[0] === prop.split('__')[0].toUpperCase()
-        let names_proto = T.getAllPropertyNames(this.prototype).filter(is_endpoint_proto)
+        // let is_endpoint_proto = prop => prop.includes('__') && prop.split('__')[0].length && prop.split('__')[0] === prop.split('__')[0].toUpperCase()
+        // let names_proto = T.getAllPropertyNames(this.prototype).filter(is_endpoint_proto)
 
         let endpoints = Object.fromEntries(names.map(name => [name, this[name]]))
-        let endpoints_proto = Object.fromEntries(names_proto.map(name => [name.replace('__','/'), this.prototype[name]]))
-
-        endpoints = {...endpoints, ...endpoints_proto}
-        // print('endpoints:', endpoints)
+        // let endpoints_proto = Object.fromEntries(names_proto.map(name => [name.replace('__','/'), this.prototype[name]]))
+        // endpoints = {...endpoints, ...endpoints_proto}
 
         return this.__api = new API(endpoints)
     }
