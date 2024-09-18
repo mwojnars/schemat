@@ -940,7 +940,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     GET__json({res})        { res.json(this.__record.encoded()) }
 
-    static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
+    // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
+
     static ['GET/record'] = new ReactPage(ItemRecordView)
 
 
