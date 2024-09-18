@@ -37,7 +37,7 @@
             <div class="preview-container">
                 <% featured_authors.forEach(author => { %>
                     <div class="author-preview">
-                        <h3><%= author.name %></h3>
+                        <h3><a href="/authors#<%= author.id %>"><%= author.name %></a></h3>
                         <p>Notable work: <%= author.notable_work %></p>
                         <p><%= author.nationality %>, <%= author.birth_year %> - <%= author.death_year || 'Present' %></p>
                         <a href="/authors#<%= author.id %>">View Profile</a>
