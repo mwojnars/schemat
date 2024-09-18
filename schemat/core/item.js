@@ -487,14 +487,14 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return item.load({record})
     }
 
-    static _create_services() {
+    static _collect_services() {
         /* Collect endpoints defined as static properties of the class and named "PROTO/endpoint" (PROTO in uppercase)
            and return as an API instance. The result is cached in the prototype for reuse by all objects of this class.
          */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
         let names = T.getAllPropertyNames(this).filter(is_endpoint)
         let endpoints = Object.fromEntries(names.map(name => [name, this[name]]))
-        this.prototype.__services = {...new API(endpoints).services}
+        return this.prototype.__services = {...new API(endpoints).services}
     }
 
     _get_write_id() {
@@ -649,9 +649,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _init_network() {
-        /* Create a network interface, __net, and action _triggers_ for this item's network API. */
-        if (!T.getOwnProperty(this.constructor.prototype, '__services')) this.constructor._create_services()
-        this.__net = new Network(this, this.__services)
+        /* Create a network interface, __net, and action triggers for this item's network API. */
+        let services = T.getOwnProperty(this.constructor.prototype, '__services') || this.constructor._collect_services()
+        this.__net = new Network(this, services)
     }
 
 
