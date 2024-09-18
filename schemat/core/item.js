@@ -11,7 +11,7 @@ import {DataRequest} from "../db/data_request.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {ReactPage, CategoryRecordView, ItemRecordView} from "../web/pages.js"
-import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "../web/services.js"
+import {JsonService, API, Task, TaskService, Network} from "../web/services.js"
 
 export const ROOT_ID = 0
 
@@ -929,9 +929,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     // In a special case when an action is called directly on the server through _triggers_.XXX(), `request` is null,
     // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
 
-    // CALL__self()     { print('CALL__self'); return this }
-    // GET__admin()     { return react_page(ItemRecordView) }
-    // GET__admin()     { return html_page("item_admin.ejs") }      -- `request` arg can be passed even if not used; then, handle() must check if the result is a function and call it with (this, request) again
 
     GET__test_txt()         { return "TEST txt ..." }                   // works
     GET__test_fun()         { return () => "TEST function ..." }        // works
@@ -940,8 +937,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     GET__json({res})        { res.json(this.__record.encoded()) }
 
+    // CALL__self()     { print('CALL__self'); return this }
     // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
 
+    // GET__record()     { return react_page(ItemRecordView) }
     static ['GET/record'] = new ReactPage(ItemRecordView)
 
 
