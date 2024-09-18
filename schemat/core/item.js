@@ -411,6 +411,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
     }
 
+    // __services               // instance-level map {...} of all Services, initialized once for the entire class and stored in its prototype
     static __api                // API instance that defines this class's endpoints and protocols; created lazily in _create_api() when the first instance is loaded, then reused for other instances
 
 
@@ -493,15 +494,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
          */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
         let names = T.getAllPropertyNames(this).filter(is_endpoint)
-
-        // let is_endpoint_proto = prop => prop.includes('__') && prop.split('__')[0].length && prop.split('__')[0] === prop.split('__')[0].toUpperCase()
-        // let names_proto = T.getAllPropertyNames(this.prototype).filter(is_endpoint_proto)
-
         let endpoints = Object.fromEntries(names.map(name => [name, this[name]]))
-        // let endpoints_proto = Object.fromEntries(names_proto.map(name => [name.replace('__','/'), this.prototype[name]]))
-        // endpoints = {...endpoints, ...endpoints_proto}
-
-        return this.__api = new API(endpoints)
+        this.__api = new API(endpoints)
+        this.prototype.__services = {...this.__api.services}
+        return this.__api
     }
 
     _get_write_id() {
@@ -883,7 +879,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // find the first endpoint that has a corresponding service defined and launch its server() handler
         for (let endpoint of endpoints) {
             let service = this._get_handler(endpoint.replace('/','__'))
-            service ??= this.__net.get_service(endpoint)
+            service ??= this.__services[endpoint]
+            // service ??= this.__net.get_service(endpoint)
             if (!service) continue
 
             // print(`handle() endpoint: ${endpoint}`)
