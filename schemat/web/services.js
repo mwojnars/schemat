@@ -406,15 +406,15 @@ export class Network {
     // ... other protocols are added dynamically if found in endpoint specification ...
 
 
-    constructor(target, role, api) {
+    constructor(target, role, services) {
         this.target = target
         this.role = role
-        this.api  = api
+        // this.api  = api
 
         let server_side = (this.role === 'server')
 
         // create triggers for all endpoints in the API
-        for (let [endpoint, service] of Object.entries(this.api.services))
+        for (let [endpoint, service] of Object.entries(services))
         {
             let {protocol, name} = new Endpoint(endpoint)
             let triggers = this[protocol] = this[protocol] || {}
