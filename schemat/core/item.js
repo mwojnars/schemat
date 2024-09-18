@@ -653,9 +653,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _init_network() {
         /* Create a network interface, __net, and action _triggers_ for this item's network API. */
-        let role = schemat.server_side ? 'server' : 'client'
-        let api = T.getOwnProperty(this.constructor, '__api') || this.constructor._create_api()
-        this.__net = new Network(this, role, this.__services)
+        if (!T.getOwnProperty(this.constructor, '__api')) this.constructor._create_api()
+        this.__net = new Network(this, this.__services)
     }
 
 

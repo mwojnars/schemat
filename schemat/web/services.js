@@ -393,7 +393,6 @@ export class Network {
 
     target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
     role        // current network role of the `target` for the `api`; typically, 'client' or 'server'
-    api         // API to be exposed on this network interface
 
     // trigger functions are created for each endpoint in the API and are grouped by protocol;
     // each trigger is internally bound to the target object and may return a Promise;
@@ -406,12 +405,8 @@ export class Network {
     // ... other protocols are added dynamically if found in endpoint specification ...
 
 
-    constructor(target, role, services) {
+    constructor(target, services) {
         this.target = target
-        this.role = role
-        // this.api  = api
-
-        let server_side = (this.role === 'server')
 
         // create triggers for all endpoints in the API
         for (let [endpoint, service] of Object.entries(services))
@@ -429,7 +424,7 @@ export class Network {
                 // service.bindAt(endpoint)
             }
 
-            triggers[name] = server_side
+            triggers[name] = SERVER
                 ? (...args) => service.execute(target, null, ...args)     // may return a Promise
                 : (...args) => service.client(target, ...args)            // may return a Promise
         }
