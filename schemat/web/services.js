@@ -392,7 +392,6 @@ export class Network {
      */
 
     target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
-    role        // current network role of the `target` for the `api`; typically, 'client' or 'server'
 
     // trigger functions are created for each endpoint in the API and are grouped by protocol;
     // each trigger is internally bound to the target object and may return a Promise;

@@ -649,7 +649,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _init_network() {
-        /* Create a network interface, __net, and action triggers for this item's network API. */
+        /* Create a network interface, __net, and action triggers for this item's network services. */
         if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
         this.__net = new Network(this, this.__services)
     }
