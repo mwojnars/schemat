@@ -314,6 +314,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __url                   absolute URL path of this object; calculated right *after* __init__(); to be sure that __url is computed, await __meta.pending_url first
     __assets                cached web Assets of this object's __schema
 
+    __services              instance-level dictionary {...} of all Services; initialized once for the entire class and stored in the prototype (!), see _create_services()
+
     */
 
     set __id(id) {
@@ -358,15 +360,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
 
-    // CACHED_PROP(value) {
-    //     /* Wrap a `value` of a getter of a special property to mark that the value should be cached and reused
-    //        after the first calculation. <undefined> is a valid value and is stored as ItemProxy.UNDEFINED
-    //        to avoid repeated calculation. If you don't want to cache <undefined> (or any other value),
-    //        return the original (unwrapped) value instead of calling CACHED_PROP().
-    //      */
-    //     return {[ItemProxy.CACHED]: true, value}
-    // }
-
     // static compare(obj1, obj2) {
     //     /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
     //     return obj1.__id - obj2.__id
@@ -377,7 +370,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     static _cachable_getters         // a Set of names of getters of the Item class or its subclass - for caching in ItemProxy
 
-    static _set_cachable_getters() {
+    static _collect_cachable_getters() {
         /* Find all getter functions in the current class, combine with parent's set of getters and store in _cachable_getters. */
         const prototype = this.prototype
         const parent_getters = this.__proto__?.cachable_getters || []
@@ -390,7 +383,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     static get cachable_getters() {
-        return (this.hasOwnProperty('_cachable_getters') && this._cachable_getters) || this._set_cachable_getters()
+        return (this.hasOwnProperty('_cachable_getters') && this._cachable_getters) || this._collect_cachable_getters()
     }
 
     __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
@@ -410,8 +403,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
     }
-
-    // __services               // instance-level dictionary {...} of all Services, initialized once for the entire class and stored in its prototype (_create_services())
 
 
     /***  Object status  ***/
