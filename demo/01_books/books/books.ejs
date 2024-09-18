@@ -20,7 +20,7 @@
         <ul id="book-list">
             <% books.forEach(book => { %>
                 <li id="<%= book.id %>">
-                    <h2><%= book.title %></h2>
+                    <h2><a href="/book/<%= book.id %>"><%= book.title %></a></h2>
                     <div class="book-content">
                         <dl class="details-table">
                             <dt>Author(s)</dt>
@@ -38,7 +38,7 @@
                             <dt>Description</dt>    <dd><%= book.description %></dd>
                         </dl>
                         <div class="book-cover-container">
-                            <img src="<%= book.cover_image %>" alt="<%= book.title %> cover" class="book-cover">
+                            <a href="/book/<%= book.id %>"><img src="<%= book.cover_image %>" alt="<%= book.title %> cover" class="book-cover"></a>
                         </div>
                 </li>
             <% }) %>
