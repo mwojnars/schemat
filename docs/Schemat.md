@@ -22,7 +22,7 @@
       - compound values: merging of inherited/default (Catalog)
     - proxy wrapper & caching of properties
     - networking
-      - endpoints (`PROTO/name`) & API (`__api`)
+      - endpoints (`PROTO/name`) & services
       - actions (`__net.PROTO.name()`)
       - RPC to myself only
 - Category

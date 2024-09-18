@@ -396,7 +396,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
     __data          // data fields of this item, as a Data object; created during .load()
-    __net           // per-instance Network adapter that connects this object to its network API as defined in the class's API (this.constructor.__api);
+    __net           // per-instance Network adapter that connects this object to its network __services;
                     // API endpoints of the object can be called programmatically through this.__net.PROTO.xxx(args), where PROTO is GET/POST/CALL/...,
                     // which works both on the client and server (in the latter case, the call executes the service function directly without network communication)
 
@@ -411,8 +411,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
     }
 
-    // __services               // instance-level map {...} of all Services, initialized once for the entire class and stored in its prototype
-    static __api                // API instance that defines this class's endpoints and protocols; created lazily in _create_api() when the first instance is loaded, then reused for other instances
+    // __services               // instance-level dictionary {...} of all Services, initialized once for the entire class and stored in its prototype (_create_services())
 
 
     /***  Object status  ***/
@@ -488,16 +487,14 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return item.load({record})
     }
 
-    static _create_api() {
+    static _create_services() {
         /* Collect endpoints defined as static properties of the class and named "PROTO/endpoint" (PROTO in uppercase)
-           and return as an API instance. The result is cached in this.__api for reuse by all objects of this class.
+           and return as an API instance. The result is cached in the prototype for reuse by all objects of this class.
          */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
         let names = T.getAllPropertyNames(this).filter(is_endpoint)
         let endpoints = Object.fromEntries(names.map(name => [name, this[name]]))
-        this.__api = new API(endpoints)
-        this.prototype.__services = {...this.__api.services}
-        return this.__api
+        this.prototype.__services = {...new API(endpoints).services}
     }
 
     _get_write_id() {
@@ -653,7 +650,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _init_network() {
         /* Create a network interface, __net, and action _triggers_ for this item's network API. */
-        if (!T.getOwnProperty(this.constructor, '__api')) this.constructor._create_api()
+        if (!T.getOwnProperty(this.constructor.prototype, '__services')) this.constructor._create_services()
         this.__net = new Network(this, this.__services)
     }
 
