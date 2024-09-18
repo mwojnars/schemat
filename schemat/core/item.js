@@ -492,10 +492,25 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            and return as an API instance. The result is cached in the prototype for reuse by all objects of this class.
          */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
-        let names = T.getAllPropertyNames(this).filter(is_endpoint)
-        let endpoints = Object.fromEntries(names.map(name => [name, this[name]]))
-        return this.prototype.__services = {...new API(endpoints).services}
+        let names = T.getAllPropertyNames(this).filter(is_endpoint).filter(name => this[name])
+        return this.prototype.__services = Object.fromEntries(names.map(endpoint => {
+            let service = this[endpoint]
+            service.bindAt(endpoint)
+            return [endpoint, service]
+        }))
+        // return this.prototype.__services = {...new API(endpoints).services}
     }
+
+    // static _init_services(endpoints) {
+    //     let services = {}
+    //     for (let [endpoint, service] of Object.entries(endpoints))
+    //         if (service) {
+    //             service.bindAt(endpoint)
+    //             services[endpoint] = service
+    //         }
+    //     return services
+    // }
+
 
     _get_write_id() {
         /* Either __id or __meta.provisional_id. */
