@@ -930,9 +930,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
 
     // CALL__self()     { print('CALL__self'); return this }
-    // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this.__record.encoded() }) }
-
-    // GET__json(conn)  { return new JsonService(() => { print('GET__json'); return this.__record.encoded() }) }
     // GET__admin()     { return react_page(ItemRecordView) }
     // GET__admin()     { return html_page("item_admin.ejs") }      -- `request` arg can be passed even if not used; then, handle() must check if the result is a function and call it with (this, request) again
 
@@ -941,10 +938,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     GET__test_res({res})    { res.send("TEST res.send() ...") }         // works
     GET__test_html()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
 
+    GET__json({res})        { res.json(this.__record.encoded()) }
+
     static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
     static ['GET/record'] = new ReactPage(ItemRecordView)
-    static ['GET/json']  = new JsonService(function() { return this.__record.encoded() })
-    // GET__json()    { return new JsonService(function() { return this.__record.encoded() }) }
 
 
     /***  Actions & edit operations. Can be called on a client or a server. All return a Promise.  ***/
