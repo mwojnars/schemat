@@ -126,7 +126,7 @@ export class HtmlPage extends HttpService {
 export class RenderedPage extends HtmlPage {
     /* An HTML page that is rendered from a component (e.g., React) and can be (re-)rendered on the client. */
 
-    async render_client(target, html_element) {
+    async render_client(target) {
         /* Client-side rendering of the main component of the page to an HTML element. */
         throw new NotImplemented('render() must be implemented in subclasses')
     }
@@ -183,13 +183,15 @@ export class ReactPage extends RenderedPage {
        The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
      */
 
-    async render_client(target, html_element) {
+    async render_client(target) {
         assert(CLIENT)
         target.assert_loaded()
+
+        let root  = document.querySelector("#page-main")
         let view  = this.create_view(target)
         let props = await view.prepare('client') || {}
         let main  = e(view.Main, props)
-        return ReactDOM.createRoot(html_element).render(main)
+        return ReactDOM.createRoot(root).render(main)
     }
 
     static View = class extends RenderedPage.View {

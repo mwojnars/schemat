@@ -943,6 +943,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     // CALL__self()     { print('CALL__self'); return this }
     // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
 
+    // GET__record(request)    { return new ReactPage(ItemRecordView).server(this, request) }
     // GET__record()     { return react_page(ItemRecordView) }
     static ['GET/record'] = new ReactPage(ItemRecordView)
 
