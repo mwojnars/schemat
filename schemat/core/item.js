@@ -652,13 +652,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _init_network() {
         /* Create a network interface, __net, and action triggers for this item's network services. */
         if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
-        this.__net = this._make_triggers(this.__services)
-    }
+        let net = this.__net = {}
 
-    _make_triggers(services) {
-        let net = {}
-        for (let [endpoint, service] of Object.entries(services))
-        {
+        for (let [endpoint, service] of Object.entries(this.__services)) {
             let {type, name} = new Endpoint(endpoint)
             let triggers = net[type] = net[type] || {}
             // if (!triggers) throw new Error(`unknown endpoint type: ${type}`)
@@ -667,7 +663,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
                 ? (...args) => service.server(this, null, ...args)          // may return a Promise
                 : (...args) => service.client(this, ...args)                // may return a Promise
         }
-        return net
     }
 
 
