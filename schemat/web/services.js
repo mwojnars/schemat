@@ -42,7 +42,7 @@ export class Service {
     static opts = {}    // default values of configuration options
 
 
-    get endpoint_method() { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
+    get endpoint_type()   { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
     get endpoint_name()   { return this._splitEndpoint()[1] }       // name of the endpoint (function/action to execute)
 
     constructor(service_function = null, opts = {}) {
@@ -165,7 +165,7 @@ export class JsonService extends HttpService {
         /* Fetch the `url` while including the `args` (if any) in the request body, json-encoded.
            For GET requests, `args` must be missing (undefined), as we don't allow body in GET.
          */
-        let method = this.endpoint_method || 'POST'
+        let method = this.endpoint_type || 'POST'
         let params = {method, headers: {}}
         if (args !== undefined) {
             if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
