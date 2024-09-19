@@ -532,7 +532,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             let cls = await this._load_class()              // set the target JS class on this object; stubs only have Item as their class, which must be changed when the data is loaded and the item is linked to its category
             T.setClass(this, cls || Item)
 
-            this._init_network()
+            this._init_services()
 
             if (this.is_linked())
                 this.__meta.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
@@ -636,7 +636,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     /***  network services initialization  ***/
 
     static _collect_services() {
-        /* Collect Services defined as static properties of the class and named "PROTO/endpoint" (PROTO in uppercase).
+        /* Collect Services defined as static properties of the class and named "TYPE/endpoint" (TYPE in uppercase).
            The result is cached in prototype.__services for reuse by all objects of this class.
          */
         let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
@@ -649,7 +649,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return this.prototype.__services = Object.fromEntries(endpoints)
     }
 
-    _init_network() {
+    _init_services() {
         /* Collect services for this object's class and create service triggers for the object. */
         if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
         let triggers = this.service = {}
