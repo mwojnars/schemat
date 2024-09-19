@@ -99,8 +99,7 @@ export class Service {
     }
 
     handle(target, request) {
-        /* Server-side request handler that decodes arguments passed from the client(), executes the server(), and sends back the result.
-         */
+        /* Server-side request handler that decodes arguments passed from the client(), executes the server(), and sends back the result. */
         throw new Error(`no server-side request handler for the service`)
     }
 
@@ -395,8 +394,8 @@ export class Network {
             }
 
             triggers[name] = SERVER
-                ? (...args) => service.server(target, null, ...args)     // may return a Promise
-                : (...args) => service.client(target, ...args)            // may return a Promise
+                ? (...args) => service.server(target, null, ...args)        // may return a Promise
+                : (...args) => service.client(target, ...args)              // may return a Promise
         }
     }
 }
