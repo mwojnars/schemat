@@ -35,7 +35,7 @@ export class Protocol {
 export class Service {
     /*
        A Service is any server-side functionality that's exposed on a particular (fixed) `endpoint` of a group
-       of objects and can be invoked in a context of a `target` object: directly on the server (with execute()),
+       of objects and can be invoked in a context of a `target` object: directly on the server (with server()),
        remotely through a web request (that triggers handle()), or through an RPC call from a client (client()).
 
        The service's functionality - represented by a `service` function by default - is called in a context
@@ -99,15 +99,14 @@ export class Service {
     }
 
     handle(target, request) {
-        /* Server-side request handler for the execution of an RPC call (from client()) or a regular web request (from a browser).
-           Subclasses should override this method to decode arguments and encode result in a service-specific way.
+        /* Server-side request handler that decodes arguments passed from the client(), executes the server(), and sends back the result.
          */
         throw new Error(`no server-side request handler for the service`)
     }
 
-    execute(target, request, ...args) {
+    server(target, request, ...args) {
         /* The actual execution of the service, server-side, without pre- & post-processing of web requests/responses.
-           Here, `request` can be null, so execute() can be called directly *outside* of a web request,
+           Here, `request` can be null, so server() can be called directly *outside* of a web request,
            if only the service supports this.
          */
         return this.service_function.call(target, request, ...args)
@@ -119,7 +118,7 @@ export class Service {
 //     /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
 //        defined as SUN routing paths but executed server-side exclusively.
 //      */
-//     handle(target, request)  { return this.execute(target, request) }
+//     handle(target, request)  { return this.server(target, request) }
 // }
 
 
@@ -142,7 +141,7 @@ export class HttpService extends Service {
     async handle(target, request) {
         try {
             let args = this.decode_args(target, request)
-            let result = this.execute(target, request, ...args)
+            let result = this.server(target, request, ...args)
             if (isPromise(result)) result = await result
             return this.send_result(target, request, result, ...args)
         }
@@ -316,7 +315,7 @@ export class TaskService extends JsonService {
         return result
     }
 
-    execute(target, request, task_name, ...args) {
+    server(target, request, task_name, ...args) {
         let task = this.tasks[task_name]
         if (!task) throw new NotFound(`unknown task name: '${task_name}'`)
         let process = task instanceof Task ? task.process : task
@@ -396,7 +395,7 @@ export class Network {
             }
 
             triggers[name] = SERVER
-                ? (...args) => service.execute(target, null, ...args)     // may return a Promise
+                ? (...args) => service.server(target, null, ...args)     // may return a Promise
                 : (...args) => service.client(target, ...args)            // may return a Promise
         }
     }

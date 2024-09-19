@@ -27,7 +27,7 @@ export class HtmlPage extends HttpService {
         this.View = View || this.constructor.View
     }
 
-    async execute(target, request) {
+    async server(target, request) {
         /* Server-side generation of an HTML page for the target object. */
         let view = this.create_view(target)
         let props = await view.prepare('server') || {}
