@@ -184,7 +184,7 @@ export class ReactPage extends RenderedPage {
      */
 
     async render_client(target, html_element) {
-        assert(schemat.client_side)
+        assert(CLIENT)
         target.assert_loaded()
         let view  = this.create_view(target)
         let props = await view.prepare('client') || {}
