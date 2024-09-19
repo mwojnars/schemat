@@ -359,6 +359,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return assets
     }
 
+    service         // isomorphic service triggers created for this object from its class's __services; called as this.service.xxx(args) or this.service.xxx.TYPE(args),
+                    // where TYPE is GET/POST/CALL/... - works both on the client and server (in the latter case, the call executes server function directly without network communication)
+
 
     // static compare(obj1, obj2) {
     //     /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
@@ -371,9 +374,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
     __data          // data fields of this item, as a Data object; created during .load()
-    __net           // per-instance Network adapter that connects this object to its network __services;
-                    // API endpoints of the object can be called programmatically through this.__net.PROTO.xxx(args), where PROTO is GET/POST/CALL/...,
-                    // which works both on the client and server (in the latter case, the call executes the service function directly without network communication)
 
     __meta = {                  // __meta contain system properties of this object...
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
@@ -650,22 +650,20 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _init_network() {
-        /* Create a network interface, __net, and action triggers for this item's network services. */
+        /* Collect services for this object's class and create service triggers for the object. */
         if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
-        let net = this.__net = {}
+        let triggers = this.service = {}
 
         for (let [endpoint, service] of Object.entries(this.__services)) {
             let {type, name} = new Endpoint(endpoint)
-            if (net[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
-            // let triggers = net[type] = net[type] || {}
-            // if (!triggers) throw new Error(`unknown endpoint type: ${type}`)
+            if (triggers[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
 
             let trigger = SERVER
                 ? (...args) => service.server(this, null, ...args)          // may return a Promise
                 : (...args) => service.client(this, ...args)                // may return a Promise
 
-            net[name] = trigger             // __net.xxx(...)
-            trigger[type] = trigger         // __net.xxx.POST(...)
+            triggers[name] = trigger        // service.xxx(...)
+            trigger[type] = trigger         // service.xxx.POST(...)
         }
     }
 
@@ -953,7 +951,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     edit(op, args) {
         // print('edit:', this.__id, op)
-        return schemat.site.__net.submit_edits([this.__id, op, args])    //this, new Edit(op, args))
+        return schemat.site.service.submit_edits([this.__id, op, args])    //this, new Edit(op, args))
     }
 
     edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
@@ -963,7 +961,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     delete_self() {
         /* Delete this object from the database. */
-        return schemat.site.__net.delete_object(this.__id)
+        return schemat.site.service.delete_object(this.__id)
     }
 
 
@@ -1247,8 +1245,8 @@ export class Category extends Item {
 
     /***  Actions  ***/
 
-    list_items()            { return this.__net.read('list_items') }
-    create_item(data)       { return this.__net.create_item(data) }
+    list_items()            { return this.service.read('list_items') }
+    create_item(data)       { return this.service.create_item(data) }
 }
 
 

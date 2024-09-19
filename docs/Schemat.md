@@ -23,7 +23,7 @@
     - proxy wrapper & caching of properties
     - networking
       - endpoints (`PROTO/name`) & services
-      - actions (`__net.PROTO.name()`)
+      - actions (`service.name()`)
       - RPC to myself only
 - Category
   - `schema` 
