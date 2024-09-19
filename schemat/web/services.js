@@ -5,32 +5,13 @@ import { JSONx } from '../core/jsonx.js'
 
 /**********************************************************************************************************************/
 
-export class Endpoint {
-    /* A string that represents a network endpoint: PROTOCOL/name. */
-
-    full            // full endpoint string as {type}/{name}
-    type            // endpoint type, always in upper case (GET, POST, ...)
-    name
-
-    constructor(endpoint) {
-        let parts = endpoint.split('/')
-        if (parts.length !== 2) throw new Error(`incorrect endpoint format: '${endpoint}'`)
-        if (parts[0].toUpperCase() !== parts[0]) throw new Error(`endpoint type must be in upper case: '${parts[0]}'`)
-
-        this.full = endpoint
-        this.type = parts[0]
-        this.name = parts[1]
-    }
-}
-
-
-/**********************************************************************************************************************/
-
 export class Protocol {
     /* A pair of functions: client() and server(), that can communicate with each other over the network
        after the server() gets exposed on a particular endpoint - done by creating a Service on top of a Protocol.
      */
 }
+
+/**********************************************************************************************************************/
 
 export class Service {
     /*
