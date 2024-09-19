@@ -26,6 +26,12 @@ class Endpoint {
 
 /**********************************************************************************************************************/
 
+export class Protocol {
+    /* A pair of functions: client() and server(), that can communicate with each other over the network
+       after the server() gets exposed on a particular endpoint - done by creating a Service on top of a Protocol.
+     */
+}
+
 export class Service {
     /*
        A Service is any server-side functionality that's exposed on a particular (fixed) `endpoint` of a group
@@ -52,8 +58,7 @@ export class Service {
 
     service_function    // a function, f(request, ...args), to be called on the server when the protocol is invoked;
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
-                        // like a method of the "target"; `request` is a RequestContext, or {} in the case when an action
-                        // is called directly on the server through _triggers_.XXX() which invokes execute() instead of server()
+                        // like a method of the "target"; `request` is a RequestContext, or {} if called directly on the server
 
     opts = {}           // configuration options
     static opts = {}    // default values of configuration options
@@ -396,48 +401,3 @@ export class Network {
         }
     }
 }
-
-
-// export class NetworkObject {   // RemoteObject NetObject Agent
-//     /* Base class for objects ("agents") that expose an API for external and/or internal calls.
-//
-//        In an "internal call" scenario, the agent is instantiated client-side and server-side, providing the same
-//        programming interface (action.*) in each of these environments, but always executing the actions on the server:
-//        actions triggered on a client get redirected to the server, execute there, and the result is communicated
-//        back to the client.
-//
-//        In an "external call" scenario, a request is initiated by a third party (typically, a user browser) and is
-//        sent directly to the server. A client-side instance of the agent is not needed then.
-//
-//        The API of an agent may handle user requests (HTML) and machine requests (REST) alike.
-//      */
-//
-//     static _api     // API instance that defines this agent's endpoints, actions, and protocols (for each endpoint)
-//     _role           // 'client' or 'server'
-//
-//     constructor(role = 'client') {
-//         this._role = role
-//     }
-//
-//     /* Instantiate a client-side variant of this agent. Remote methods will make RPC calls to the server() object. */
-//     static client(...args) { return new this('client', ...args) }
-//     static server(...args) { return new this('server', ...args) }
-//
-//     _rpc(endpoint, ...args) {
-//         let protocol = this.constructor._api.get(endpoint)
-//         if (this._side === 'client')
-//             return protocol.client(this, ...args)
-//         return protocol.execute(this, {}, ...args)
-//     }
-//
-//     _getAgentRole() {
-//         /* Override in subclasses to return the name of the current environment: "client" or "server". */
-//         throw new Error("not implemented")
-//     }
-//     _getAgentParents() {
-//         /* Override in subclasses to return a list of agents this one directly inherits from. */
-//         throw new Error("not implemented")
-//     }
-//
-//     url(endpoint) {}
-// }

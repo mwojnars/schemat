@@ -44,7 +44,7 @@ export class Request {   // Connection ?
     req             // instance of node.js express' Request
     res             // instance of node.js express' Response
 
-    protocol        // endpoint type: CALL, GET, POST, (SOCK in the future); multiple endpoints may share the same name as long as their types differ
+    protocol        // endpoint type: CALL, GET, POST, (SOCK in the future)
     path            // URL path with trailing ::endpoint name removed
 
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
