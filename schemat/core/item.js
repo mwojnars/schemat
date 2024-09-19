@@ -44,7 +44,7 @@ export class Request {   // Connection ?
     req             // instance of node.js express' Request
     res             // instance of node.js express' Response
 
-    protocol        // CALL, GET, POST, (SOCK in the future); there can be different services exposed at the same endpoint-name but different protocols
+    protocol        // endpoint type: CALL, GET, POST, (SOCK in the future); multiple endpoints may share the same name as long as their types differ
     path            // URL path with trailing ::endpoint name removed
 
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
@@ -426,7 +426,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return this.__id !== undefined && this.__id === other?.__id
     }
 
-    
+
     /***  Instantiation  ***/
 
     constructor(_fail_ = true) {

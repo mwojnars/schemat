@@ -8,17 +8,17 @@ import { JSONx } from '../core/jsonx.js'
 class Endpoint {
     /* A string that represents a network endpoint: PROTOCOL/name. */
 
-    full            // full endpoint string as {protocol}/{name}
-    protocol        // protocol identifier, always in upper case
+    full            // full endpoint string as {type}/{name}
+    type            // endpoint type, always in upper case (GET, POST, ...)
     name
 
     constructor(endpoint) {
         let parts = endpoint.split('/')
         if (parts.length !== 2) throw new Error(`incorrect endpoint format: '${endpoint}'`)
-        if (parts[0].toUpperCase() !== parts[0]) throw new Error(`protocol name must be in upper case: '${parts[0]}'`)
+        if (parts[0].toUpperCase() !== parts[0]) throw new Error(`endpoint type must be in upper case: '${parts[0]}'`)
 
         this.full = endpoint
-        this.protocol = parts[0]
+        this.type = parts[0]
         this.name = parts[1]
     }
 }
@@ -360,7 +360,7 @@ export class Network {
 
     target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
 
-    // trigger functions are created for each endpoint in the API and are grouped by protocol;
+    // trigger functions are created for each endpoint and grouped by endpoint type;
     // each trigger is internally bound to the target object and may return a Promise;
     // a trigger function makes a call to the server through the protocol if executed on the client;
     // or calls the service function directly if executed on the server...
@@ -368,7 +368,7 @@ export class Network {
     GET  = {}           // {endpoint_name: trigger_function}
     POST = {}
     CALL = {}
-    // ... other protocols are added dynamically if found in endpoint specification ...
+    // ... other endpoint types are added dynamically if found in endpoint specification ...
 
 
     constructor(target, services) {
@@ -377,9 +377,9 @@ export class Network {
         // create triggers for all endpoints in the API
         for (let [endpoint, service] of Object.entries(services))
         {
-            let {protocol, name} = new Endpoint(endpoint)
-            let triggers = this[protocol] = this[protocol] || {}
-            // if (!triggers) throw new Error(`unknown protocol: ${protocol}`)
+            let {type, name} = new Endpoint(endpoint)
+            let triggers = this[type] = this[type] || {}
+            // if (!triggers) throw new Error(`unknown endpoint type: ${type}`)
 
             if (typeof service === 'function') {
                 service = {
