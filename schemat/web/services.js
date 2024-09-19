@@ -48,9 +48,6 @@ export class Service {
        The target object is typically an Item (although this is not a strict requirement), and it may change between
        invocations of the Service's methods. Multiple services are usually combined into an API (see the API class)
        that can be linked through Network adapters to a number of different target objects.
-
-       In some cases, during building an API, 2+ services (usually of the same type) may be merged together (merge())
-       to create a new service that combines the functionality of the original services.
      */
 
     endpoint            // the target object's endpoint where this service is exposed; a string of the form "PROTOCOL/name",
@@ -81,12 +78,12 @@ export class Service {
         return parts
     }
 
-    merge(service) {
-        /* Create a Service that combines this one and `service`. By default, the new `service` is returned,
-           so redefining a service in an API means *overriding* the previous one with a new one (no merging).
-         */
-        return service
-    }
+    // merge(service) {
+    //     /* Create a Service that combines this one and `service`. By default, the new `service` is returned,
+    //        so redefining a service in an API means *overriding* the previous one with a new one (no merging).
+    //      */
+    //     return service
+    // }
 
     // the methods below may return a Promise or be declared as async in subclasses...
 
@@ -273,32 +270,32 @@ export class TaskService extends JsonService {
         this.tasks = tasks
     }
 
-    merge(service) {
-        /* If `service` is of the exact same class as self, merge tasks of both services, otherwise return `service`.
-           The `opts` in both services must be exactly THE SAME, otherwise the tasks from one service could not
-           work properly with the options from another one.
-         */
-
-        let c1 = T.getClass(this)
-        let c2 = T.getClass(service)
-        if (c1 !== c2) throw new Error(`overriding TaskService instance with a different service (${c2}) is not allowed`)
-        // if (c1 !== c2) return service          // `service` can be null
-        assert(this.endpoint === service.endpoint, this.endpoint, service.endpoint)
-
-        // check that the options are the same
-        let opts1 = JSON.stringify(this.opts)
-        let opts2 = JSON.stringify(service.opts)
-        if (opts1 !== opts2)
-            throw new Error(`cannot merge services that have different options: ${opts1} != ${opts2}`)
-
-        // create a new service instance with the tasks combined; copy the endpoint
-        let tasks = {...this.tasks, ...service.tasks}
-        let opts = {...this.opts, ...service.opts}
-        let merged = new c1(tasks, opts)
-        merged.bindAt(this.endpoint)
-
-        return merged
-    }
+    // merge(service) {
+    //     /* If `service` is of the exact same class as self, merge tasks of both services, otherwise return `service`.
+    //        The `opts` in both services must be exactly THE SAME, otherwise the tasks from one service could not
+    //        work properly with the options from another one.
+    //      */
+    //
+    //     let c1 = T.getClass(this)
+    //     let c2 = T.getClass(service)
+    //     if (c1 !== c2) throw new Error(`overriding TaskService instance with a different service (${c2}) is not allowed`)
+    //     // if (c1 !== c2) return service          // `service` can be null
+    //     assert(this.endpoint === service.endpoint, this.endpoint, service.endpoint)
+    //
+    //     // check that the options are the same
+    //     let opts1 = JSON.stringify(this.opts)
+    //     let opts2 = JSON.stringify(service.opts)
+    //     if (opts1 !== opts2)
+    //         throw new Error(`cannot merge services that have different options: ${opts1} != ${opts2}`)
+    //
+    //     // create a new service instance with the tasks combined; copy the endpoint
+    //     let tasks = {...this.tasks, ...service.tasks}
+    //     let opts = {...this.opts, ...service.opts}
+    //     let merged = new c1(tasks, opts)
+    //     merged.bindAt(this.endpoint)
+    //
+    //     return merged
+    // }
 
     async client(target, ...args) {
         /* Call super.client() with optional pre- and postprocessing of the arguments and the result. */
