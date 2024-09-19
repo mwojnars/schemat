@@ -36,7 +36,7 @@ export class Service {
     /*
        A Service is any server-side functionality that's exposed on a particular (fixed) `endpoint` of a group
        of objects and can be invoked in a context of a `target` object: directly on the server (with execute()),
-       remotely through a web request (that triggers server()), or through an RPC call from a client (client()).
+       remotely through a web request (that triggers handle()), or through an RPC call from a client (client()).
 
        The service's functionality - represented by a `service` function by default - is called in a context
        of a `target` object (this = target), so the function behaves like a method of this object.
@@ -92,14 +92,14 @@ export class Service {
 
     client(target, ...args) {
         /* Client-side remote invocation (RPC) of the service through a network request
-           to be handled on the server by the server() method (see below).
+           to be handled on the server by the handle() method (see below).
            Subclasses should override this method to encode arguments in a service-specific way.
          */
         throw new Error(`client-side invocation not allowed for this service`)
     }
 
-    server(target, request) {
-        /* Server-side request handler for the execution of an RPC call (from client()) or a regular web  (from a browser).
+    handle(target, request) {
+        /* Server-side request handler for the execution of an RPC call (from client()) or a regular web request (from a browser).
            Subclasses should override this method to decode arguments and encode result in a service-specific way.
          */
         throw new Error(`no server-side request handler for the service`)
@@ -119,7 +119,7 @@ export class Service {
 //     /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
 //        defined as SUN routing paths but executed server-side exclusively.
 //      */
-//     server(target, request)  { return this.execute(target, request) }
+//     handle(target, request)  { return this.execute(target, request) }
 // }
 
 
@@ -139,7 +139,7 @@ export class HttpService extends Service {
         return this.recv_result(result, ...args)
     }
 
-    async server(target, request) {
+    async handle(target, request) {
         try {
             let args = this.decode_args(target, request)
             let result = this.execute(target, request, ...args)

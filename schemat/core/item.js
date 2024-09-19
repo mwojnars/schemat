@@ -869,7 +869,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let names = this._get_endpoints(request)
         let endpoints = names.map(e => `${request.protocol}/${e}`)
 
-        // find the first endpoint that has a corresponding service defined and launch its server() handler
+        // find the first endpoint that matches this request and launch its handler
         for (let endpoint of endpoints) {
             let service = this._get_handler(endpoint.replace('/','__'))
             service ??= this.__services[endpoint]
@@ -877,7 +877,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
             // print(`handle() endpoint: ${endpoint}`)
             request.endpoint = endpoint
-            let handler = (typeof service === 'function') ? service.bind(this) : (r) => service.server(this, r)
+            let handler = (typeof service === 'function') ? service.bind(this) : (r) => service.handle(this, r)
             let result = handler(request)
             if (result instanceof Promise) result = await result
 
