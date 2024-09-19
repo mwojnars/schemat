@@ -368,24 +368,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Internal properties  ***/
 
-    static _cachable_getters         // a Set of names of getters of the Item class or its subclass - for caching in ItemProxy
-
-    static _collect_cachable_getters() {
-        /* Find all getter functions in the current class, combine with parent's set of getters and store in _cachable_getters. */
-        const prototype = this.prototype
-        const parent_getters = this.__proto__?.cachable_getters || []
-        const own_getters = Object.getOwnPropertyNames(prototype)
-                .filter(prop => {
-                    const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
-                    return descriptor && typeof descriptor.get === 'function'
-                })
-        return this._cachable_getters = new Set([...parent_getters, ...own_getters])
-    }
-
-    static get cachable_getters() {
-        return (this.hasOwnProperty('_cachable_getters') && this._cachable_getters) || this._collect_cachable_getters()
-    }
-
     __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
     __data          // data fields of this item, as a Data object; created during .load()
@@ -402,6 +384,25 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
+    }
+
+
+    static _cachable_getters         // a Set of names of getters of the Item class or its subclass - for caching in ItemProxy
+
+    static _collect_cachable_getters() {
+        /* Find all getter functions in the current class, combine with parent's set of getters and store in _cachable_getters. */
+        const prototype = this.prototype
+        const parent_getters = this.__proto__?.cachable_getters || []
+        const own_getters = Object.getOwnPropertyNames(prototype)
+                .filter(prop => {
+                    const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
+                    return descriptor && typeof descriptor.get === 'function'
+                })
+        return this._cachable_getters = new Set([...parent_getters, ...own_getters])
+    }
+
+    static get cachable_getters() {
+        return (this.hasOwnProperty('_cachable_getters') && this._cachable_getters) || this._collect_cachable_getters()
     }
 
 
@@ -425,6 +426,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return this.__id !== undefined && this.__id === other?.__id
     }
 
+    
     /***  Instantiation  ***/
 
     constructor(_fail_ = true) {
