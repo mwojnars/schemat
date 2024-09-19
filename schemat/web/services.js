@@ -110,12 +110,12 @@ export class Service {
 }
 
 
-export class InternalService extends Service {
-    /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
-       defined as SUN routing paths but executed server-side exclusively.
-     */
-    server(target, request)  { return this.execute(target, request) }
-}
+// export class InternalService extends Service {
+//     /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
+//        defined as SUN routing paths but executed server-side exclusively.
+//      */
+//     server(target, request)  { return this.execute(target, request) }
+// }
 
 
 export class HttpService extends Service {
@@ -395,11 +395,6 @@ export class Network {
                 : (...args) => service.client(target, ...args)            // may return a Promise
         }
     }
-
-    // get_service(endpoint) {
-    //     /* Resolve `endpoint` to a Service instance (a handler). Return undefined if `endpoint` not found. */
-    //     return this.api.get_service(endpoint)
-    // }
 }
 
 

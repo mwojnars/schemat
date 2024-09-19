@@ -1191,8 +1191,6 @@ export class Category extends Item {
                of flat, fully loaded records.
              */
             async process(request, offset, limit) {
-               // TODO: use size limit & offset (pagination).
-               // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
                 return this.list_objects({load: true, offset, limit})
             },
             encode_result(items) {
