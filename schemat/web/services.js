@@ -5,7 +5,7 @@ import { JSONx } from '../core/jsonx.js'
 
 /**********************************************************************************************************************/
 
-class Endpoint {
+export class Endpoint {
     /* A string that represents a network endpoint: PROTOCOL/name. */
 
     full            // full endpoint string as {type}/{name}
@@ -336,66 +336,66 @@ export class TaskService extends JsonService {
 
 /**********************************************************************************************************************/
 
-export class Network {
-    /*
-       Network interface of a `target` object. Handles incoming communication through resolve(), and outgoing
-       communication through action calls: action.*(). The API exposed on the interface is defined by `api`.
-       Typically, this class is instantiated as a .net property of the target, so the entire network-related
-       functionality is accessible through a single property and doesn't clutter the target's own interface.
-       Typically, a Network adapter is created for an Item object, but it may also be used for other JS objects.
-
-       Certain endpoints of the `api` may be used to define "actions", i.e., internal RPC calls, local or remote, that
-       can be invoked on a server or client alike using the exact same syntax, so the caller does NOT
-       have to check every time whether it plays a role of a client or a server in a given moment, because the action
-       automatically chooses the right way to execute itself (locally or remotely), and is properly performed in both cases.
-       As such, an action can be viewed as a "network method" of the target object: while a regular method always executes
-       locally, a "network method" is smart enough to execute itself remotely if needed, depending on the current
-       `role` of the target object. ("Network polimorphism", similar to the "method polimorphism" of regular methods.)
-
-       Note that, while actions are the only way to perform an outgoing (local or remote) communication through the Network
-       adapter, incoming communication may originate NOT ONLY from actions (of a Network adapter of this or another node),
-       but also from regular web requests initiated by the user's browser, so it still makes sense to have endpoints
-       in the API that are not used by any action.
-
-       In the future, multiple APIs may be supported in a single Network adapter, with the target object playing
-       different roles (of a client/server) in different APIs, all at the same time. Actions will be defined jointly for all APIs.
-     */
-
-    target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
-
-    // trigger functions are created for each endpoint and grouped by endpoint type;
-    // each trigger is internally bound to the target object and may return a Promise;
-    // a trigger function makes a call to the server through the protocol if executed on the client;
-    // or calls the service function directly if executed on the server...
-    //
-    GET  = {}           // {endpoint_name: trigger_function}
-    POST = {}
-    CALL = {}
-    // ... other endpoint types are added dynamically if found in endpoint specification ...
-
-
-    constructor(target, services) {
-        this.target = target
-
-        // create triggers for all endpoints in the API
-        for (let [endpoint, service] of Object.entries(services))
-        {
-            let {type, name} = new Endpoint(endpoint)
-            let triggers = this[type] = this[type] || {}
-            // if (!triggers) throw new Error(`unknown endpoint type: ${type}`)
-
-            if (typeof service === 'function') {
-                service = {
-                    execute: () => service.call(target),
-                    client:  (request) => service.call(target, request),
-                }
-                // service = service.call(target)
-                // service.bindAt(endpoint)
-            }
-
-            triggers[name] = SERVER
-                ? (...args) => service.server(target, null, ...args)        // may return a Promise
-                : (...args) => service.client(target, ...args)              // may return a Promise
-        }
-    }
-}
+// export class Network {
+//     /*
+//        Network interface of a `target` object. Handles incoming communication through resolve(), and outgoing
+//        communication through action calls: action.*(). The API exposed on the interface is defined by `api`.
+//        Typically, this class is instantiated as a .net property of the target, so the entire network-related
+//        functionality is accessible through a single property and doesn't clutter the target's own interface.
+//        Typically, a Network adapter is created for an Item object, but it may also be used for other JS objects.
+//
+//        Certain endpoints of the `api` may be used to define "actions", i.e., internal RPC calls, local or remote, that
+//        can be invoked on a server or client alike using the exact same syntax, so the caller does NOT
+//        have to check every time whether it plays a role of a client or a server in a given moment, because the action
+//        automatically chooses the right way to execute itself (locally or remotely), and is properly performed in both cases.
+//        As such, an action can be viewed as a "network method" of the target object: while a regular method always executes
+//        locally, a "network method" is smart enough to execute itself remotely if needed, depending on the current
+//        `role` of the target object. ("Network polimorphism", similar to the "method polimorphism" of regular methods.)
+//
+//        Note that, while actions are the only way to perform an outgoing (local or remote) communication through the Network
+//        adapter, incoming communication may originate NOT ONLY from actions (of a Network adapter of this or another node),
+//        but also from regular web requests initiated by the user's browser, so it still makes sense to have endpoints
+//        in the API that are not used by any action.
+//
+//        In the future, multiple APIs may be supported in a single Network adapter, with the target object playing
+//        different roles (of a client/server) in different APIs, all at the same time. Actions will be defined jointly for all APIs.
+//      */
+//
+//     target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
+//
+//     // trigger functions are created for each endpoint and grouped by endpoint type;
+//     // each trigger is internally bound to the target object and may return a Promise;
+//     // a trigger function makes a call to the server through the protocol if executed on the client;
+//     // or calls the service function directly if executed on the server...
+//     //
+//     GET  = {}           // {endpoint_name: trigger_function}
+//     POST = {}
+//     CALL = {}
+//     // ... other endpoint types are added dynamically if found in endpoint specification ...
+//
+//
+//     constructor(target, services) {
+//         this.target = target
+//
+//         // create triggers for all endpoints in the API
+//         for (let [endpoint, service] of Object.entries(services))
+//         {
+//             let {type, name} = new Endpoint(endpoint)
+//             let triggers = this[type] = this[type] || {}
+//             // if (!triggers) throw new Error(`unknown endpoint type: ${type}`)
+//
+//             if (typeof service === 'function') {
+//                 service = {
+//                     execute: () => service.call(target),
+//                     client:  (request) => service.call(target, request),
+//                 }
+//                 // service = service.call(target)
+//                 // service.bindAt(endpoint)
+//             }
+//
+//             triggers[name] = SERVER
+//                 ? (...args) => service.server(target, null, ...args)        // may return a Promise
+//                 : (...args) => service.client(target, ...args)              // may return a Promise
+//         }
+//     }
+// }

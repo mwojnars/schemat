@@ -11,7 +11,7 @@ import {DataRequest} from "../db/data_request.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {ReactPage, CategoryRecordView, ItemRecordView} from "../web/pages.js"
-import {JsonService, Task, TaskService, Network} from "../web/services.js"
+import {JsonService, Task, TaskService, Endpoint} from "../web/services.js"
 
 export const ROOT_ID = 0
 
@@ -652,7 +652,22 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _init_network() {
         /* Create a network interface, __net, and action triggers for this item's network services. */
         if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
-        this.__net = new Network(this, this.__services)
+        this.__net = this._make_triggers(this.__services)
+    }
+
+    _make_triggers(services) {
+        let net = {}
+        for (let [endpoint, service] of Object.entries(services))
+        {
+            let {type, name} = new Endpoint(endpoint)
+            let triggers = net[type] = net[type] || {}
+            // if (!triggers) throw new Error(`unknown endpoint type: ${type}`)
+
+            triggers[name] = SERVER
+                ? (...args) => service.server(this, null, ...args)          // may return a Promise
+                : (...args) => service.client(this, ...args)                // may return a Promise
+        }
+        return net
     }
 
 
