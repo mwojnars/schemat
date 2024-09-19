@@ -480,20 +480,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return item.load({record})
     }
 
-    static _collect_services() {
-        /* Collect Services defined as static properties of the class and named "PROTO/endpoint" (PROTO in uppercase).
-           The result is cached in prototype.__services for reuse by all objects of this class.
-         */
-        let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
-        let names = T.getAllPropertyNames(this).filter(is_endpoint).filter(name => this[name])
-        let endpoints = names.map(endpoint => {
-            let service = this[endpoint]
-            service.bindAt(endpoint)
-            return [endpoint, service]
-        })
-        return this.prototype.__services = Object.fromEntries(endpoints)
-    }
-
     _get_write_id() {
         /* Either __id or __meta.provisional_id. */
         return this.__id !== undefined ? this.__id : this.__meta.provisional_id
@@ -590,6 +576,14 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load(opts)))
     }
 
+    _load_class() {
+        /* Load or import this object's ultimate class. */
+        if (this.__id === ROOT_ID) return RootCategory
+        let path = this.__class || this.__category?.class
+        if (path) return schemat.import(path)                   // the path can be missing, for no-category objects
+    }
+
+    /***  URL initialization  ***/
 
     async _init_url() {
         while (!schemat.site) {                                     // wait until the site is created; important for bootstrap objects
@@ -638,11 +632,21 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return schemat.site.default_path_of(this)
     }
 
-    _load_class() {
-        /* Load or import this object's ultimate class. */
-        if (this.__id === ROOT_ID) return RootCategory
-        let path = this.__class || this.__category?.class
-        if (path) return schemat.import(path)                   // the path can be missing, for no-category objects
+
+    /***  network services initialization  ***/
+
+    static _collect_services() {
+        /* Collect Services defined as static properties of the class and named "PROTO/endpoint" (PROTO in uppercase).
+           The result is cached in prototype.__services for reuse by all objects of this class.
+         */
+        let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
+        let names = T.getAllPropertyNames(this).filter(is_endpoint).filter(name => this[name])
+        let endpoints = names.map(endpoint => {
+            let service = this[endpoint]
+            service.bindAt(endpoint)
+            return [endpoint, service]
+        })
+        return this.prototype.__services = Object.fromEntries(endpoints)
     }
 
     _init_network() {
@@ -652,7 +656,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
 
-    /***  Access to properties  ***/
+    /***  access to properties  ***/
 
     _compute_property(prop) {
         /* Compute a property, `prop`, and return an array of its values. The array consists of own data + inherited
