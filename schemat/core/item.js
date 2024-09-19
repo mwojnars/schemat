@@ -11,7 +11,7 @@ import {DataRequest} from "../db/data_request.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {ReactPage, CategoryRecordView, ItemRecordView} from "../web/pages.js"
-import {JsonService, Task, TaskService, Endpoint} from "../web/services.js"
+import {JsonService, Task, TaskService} from "../web/services.js"
 
 export const ROOT_ID = 0
 
@@ -655,7 +655,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let triggers = this.service = {}
 
         for (let [endpoint, service] of Object.entries(this.__services)) {
-            let {type, name} = new Endpoint(endpoint)
+            let [type, name] = endpoint.split('/')
             if (triggers[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
 
             let trigger = SERVER
