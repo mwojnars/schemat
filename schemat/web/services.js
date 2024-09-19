@@ -48,7 +48,7 @@ export class Service {
      */
 
     endpoint            // the target object's endpoint where this service is exposed; a string of the form "PROTOCOL/name",
-                        // where PROTOCOL is one of GET/POST/CALL/WEBS..., and the name is a service name etc.
+                        // where PROTOCOL is one of GET/POST/CALL/..., and the name is a service name etc.
 
     service_function    // a function, f(request, ...args), to be called on the server when the protocol is invoked;
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
