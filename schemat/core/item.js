@@ -650,7 +650,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _init_services() {
-        /* Collect services for this object's class and create service triggers for the object. */
+        /* Collect services for this object's class and create this.service.xxx() triggers for the object. */
         if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
         let triggers = this.service = {}
 
