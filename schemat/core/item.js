@@ -656,12 +656,16 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         for (let [endpoint, service] of Object.entries(this.__services)) {
             let {type, name} = new Endpoint(endpoint)
-            let triggers = net[type] = net[type] || {}
+            if (net[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
+            // let triggers = net[type] = net[type] || {}
             // if (!triggers) throw new Error(`unknown endpoint type: ${type}`)
 
-            triggers[name] = SERVER
+            let trigger = SERVER
                 ? (...args) => service.server(this, null, ...args)          // may return a Promise
                 : (...args) => service.client(this, ...args)                // may return a Promise
+
+            net[name] = trigger             // __net.xxx(...)
+            trigger[type] = trigger         // __net.xxx.POST(...)
         }
     }
 
@@ -949,7 +953,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     edit(op, args) {
         // print('edit:', this.__id, op)
-        return schemat.site.__net.POST.submit_edits([this.__id, op, args])    //this, new Edit(op, args))
+        return schemat.site.__net.submit_edits([this.__id, op, args])    //this, new Edit(op, args))
     }
 
     edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
@@ -959,7 +963,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     delete_self() {
         /* Delete this object from the database. */
-        return schemat.site.__net.POST.delete_object(this.__id)
+        return schemat.site.__net.delete_object(this.__id)
     }
 
 
@@ -1243,8 +1247,8 @@ export class Category extends Item {
 
     /***  Actions  ***/
 
-    list_items()            { return this.__net.POST.read('list_items') }
-    create_item(data)       { return this.__net.POST.create_item(data) }
+    list_items()            { return this.__net.read('list_items') }
+    create_item(data)       { return this.__net.create_item(data) }
 }
 
 
