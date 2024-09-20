@@ -66,7 +66,7 @@ export class Ring extends Item {
 
     async __init__() {
         /* Initialize the ring after it's been loaded from DB. */
-        if (schemat.client_side) return
+        if (CLIENT) return
         print(`... ring loaded [${this.__id}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
         await this.data_sequence.load()
         await this.index_sequence.load()
@@ -221,7 +221,7 @@ export class Database extends Item {
     }
 
     async __init__() {
-        if (schemat.client_side) return
+        if (CLIENT) return
         print(`loading database [${this.__id}] ${this.name}...`)
         return Promise.all(this.rings.map(ring => ring.load()))             // load all rings
     }

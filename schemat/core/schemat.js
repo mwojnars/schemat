@@ -86,8 +86,6 @@ export class Schemat {
     is_closing = false              // true if the Schemat node is in the process of shutting down
     server_side = true              // the current environment: client / server
 
-    get client_side() { return !this.server_side }
-
     get db() {
         /* The site's database instance, either a Database (on server) or a ClientDB (on client) */
         return (this.server_side && this.site?.database) || this._db
@@ -300,7 +298,7 @@ export class Schemat {
     //        IMPORTANT: a new global context is created every time a module is imported using this method,
     //                   so this method should be called only ONCE when the process is starting.
     //      */
-    //     let module = this.client_side ? import(this._js_import_url(path)) : this.loader.import(path)
+    //     let module = CLIENT ? import(this._js_import_url(path)) : this.loader.import(path)
     //     return name ? (await module)[name] : module
     // }
     //

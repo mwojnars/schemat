@@ -157,7 +157,7 @@ export class Site extends Item {
     //     print(`import_module():  ${path}  (ref: ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
     //
     //     // on a client, use standard import() via a URL, which still may point to a (remote) SUN object - no special handling needed
-    //     if(schemat.client_side) return import(this._js_import_url(path))
+    //     if(CLIENT) return import(this._js_import_url(path))
     //
     //     // make `path` absolute
     //     if (path[0] === '.') {
