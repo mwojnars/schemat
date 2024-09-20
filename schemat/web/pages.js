@@ -208,7 +208,7 @@ export class ReactPage extends RenderedPage {
         }
 
         page_data(props) {
-            return new SeedData(props.request)
+            return SeedData.from_request(props.request)
         }
 
         page_script(props) {

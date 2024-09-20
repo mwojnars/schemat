@@ -3,6 +3,7 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 import {assert, print} from "../common/utils.js";
 import {ClientDB} from "./client_db.js";
 import {Schemat} from "../core/schemat.js";
+import {SeedData} from "../web/request.js"
 
 
 /**********************************************************************************************************************/
@@ -16,6 +17,7 @@ export class ClientSchemat extends Schemat {
     static async start_client() {
         /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
 
+        // let data = SeedData.from_element('#page-data')
         let data = this._read_data('#page-data', 'json+base64')
         print('seed data:', data)
 

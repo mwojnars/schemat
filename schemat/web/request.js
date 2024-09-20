@@ -63,27 +63,44 @@ export class Request {   // Connection ?
 
 
 export class SeedData {
-    /* Seed objects and data that can be embedded in HTML response to enable the boot up of a client-side Schemat.
-       The objects are flattened (state-encoded), but not yet stringified.
+    /* Structure containing seed objects and data to be embedded in HTML response to enable the boot up 
+       of a client-side Schemat. The objects are flattened (state-encoded), but not yet stringified.
      */
     site_id
     target_id
     items
     endpoint
 
-    constructor(request) {
+    static from_request(request) {
+        /* For use on the server. */
+        let seed = new SeedData()
         let site = schemat.site
         let target = request.target
         let items = [target, target.__category, schemat.root_category, site, ...site.__category.__ancestors]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
 
-        this.items = items.map(it => it.__record.encoded())
-        this.site_id = site.__id
-        this.target_id = target.__id
-        this.endpoint = request.endpoint
+        seed.items = items.map(it => it.__record.encoded())
+        seed.site_id = site.__id
+        seed.target_id = target.__id
+        seed.endpoint = request.endpoint
+        return seed
     }
 
-    encode()    { return btoa(encodeURIComponent(JSON.stringify(this))) }
+    static from_element(selector) {
+        /* For use on the client. Extract text contents of the DOM element pointed to by a CSS `selector` and decode back into SeedData. */
+        let node = document.querySelector(selector)
+        return this.decode(node.textContent)
+    }
+
+    encode() {
+        /* Encoding into JSON+base64 string. */
+        return btoa(encodeURIComponent(JSON.stringify(this)))
+    }
+
+    static decode(text) {
+        let state = JSON.parse(decodeURIComponent(atob(text)))
+        return Object.assign(new SeedData(), state)
+    }
 }
 
 
