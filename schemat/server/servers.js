@@ -1,7 +1,7 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {thread_local_variable} from "./thread.js";
-import {Request} from "../core/item.js";
+import {Request} from "../web/request.js";
 
 
 /**********************************************************************************************************************/

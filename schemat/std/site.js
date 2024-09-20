@@ -1,6 +1,7 @@
 import {print, assert, T, delay, splitLast} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
-import {Item, Edit, Request} from '../core/item.js'
+import {Request} from '../web/request.js'
+import {Item, Edit} from '../core/item.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonService} from "../web/services.js";
 

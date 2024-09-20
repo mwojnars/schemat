@@ -7,7 +7,7 @@ import {HttpService} from "./services.js";
 import {Data} from "../core/data.js";
 import {Styled} from "./component.js";
 import {CatalogTable} from "../types/catalog.js";
-import {SeedData} from "../core/item.js";
+import {SeedData} from "./request.js";
 
 
 /**********************************************************************************************************************/
@@ -214,8 +214,6 @@ export class ReactPage extends RenderedPage {
 
         page_data(props) {
             return new SeedData(props.request)
-            // let dump = props.request.dump()
-            // return {...dump, endpoint: props.request.endpoint}
         }
 
         page_script(props) {
