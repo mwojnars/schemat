@@ -285,7 +285,7 @@ export class Schemat {
     }
 
     client() {
-        /* Piece of HTML code that can be placed in an HTML page to make Schemat load on the client upon start up. */
+        /* Piece of HTML to be placed in a page to load Schemat client-side upon start up. */
         return `import {ClientSchemat} from "/$/local/schemat/client/main.js"; ClientSchemat.start_client();`
     }
 
