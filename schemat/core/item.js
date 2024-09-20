@@ -583,7 +583,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (path) return schemat.import(path)                   // the path can be missing, for no-category objects
     }
 
-    /***  URL initialization  ***/
+    /***  initialization of URL & services  ***/
 
     async _init_url() {
         while (!schemat.site) {                                     // wait until the site is created; important for bootstrap objects
@@ -632,8 +632,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return schemat.site.default_path_of(this)
     }
 
-
-    /***  network services initialization  ***/
 
     static _collect_services() {
         /* Collect Services defined as static properties of the class and named "TYPE/endpoint" (TYPE in uppercase).
@@ -721,17 +719,26 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _own_values(prop)  { return this.__data.get_all(prop) }
 
-    async seal_data() {
-        /* In a newborn (unlinked) object, create __data - if not present yet - by copying property values
-           from regular POJO attributes of the object.
-         */
-        if (this.__data) return this.__data
-        if (this.is_linked()) throw new Error('cannot seal properties of a linked object')
-        return this.__data = await Data.from_object(this)
+    instanceof(category) {
+        /* Check whether this item belongs to a `category`, or its subcategory.
+           All comparisons along the way use item IDs, not object identity. The item must be loaded.
+        */
+        return this.__category.inherits_from(category)
     }
 
+    inherits_from(parent) {
+        /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
+           True if parent==this. All comparisons by item ID.
+         */
+        if (this.is_equivalent(parent)) return true
+        for (const proto of this.__prototypes)
+            if (proto.inherits_from(parent)) return true
+        return false
+    }
+
+    
     dump_data() {
-        /* Encode and stringify this.__data through JSONx. Nested values are recursively encoded. */
+        /* Encode and stringify this.__data through JSONx. Return a string. Nested values are recursively encoded. */
         return this.__data.dump()
     }
 
@@ -761,58 +768,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return brackets ? `[${stamp}]` : stamp
     }
 
-    instanceof(category) {
-        /* Check whether this item belongs to a `category`, or its subcategory.
-           All comparisons along the way use item IDs, not object identity. The item must be loaded.
-        */
-        return this.__category.inherits_from(category)
-    }
-
-    inherits_from(parent) {
-        /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
-           True if parent==this. All comparisons by item ID.
-         */
-        if (this.is_equivalent(parent)) return true
-        for (const proto of this.__prototypes)
-            if (proto.inherits_from(parent)) return true
-        return false
-    }
-
-    async insert_self() {
-        /* Insert this (newborn) object and, recursively, all the newborn objects referenced by this one, to the database. */
-
-        assert(this.is_newborn(), 'trying to insert an object that is already stored in the database')
-
-        // find recursively all the objects referenced (directly or indirectly) by this one that are still
-        // not persisted in the database; the graph of such objects may contain circular references -
-        // including a reference of this object to itself (!)
-        let refs = await this._find_unlinked_references()
-
-        // if no references need to be inserted together with this object, use the regular 1-phase insertion
-        if (refs.length === 0) return schemat.db.insert(this)
-
-        // otherwise, perform a 2-phase insertion of 1+ of cross/self-referencing objects
-        let objects = new Set([this, ...refs])
-        return schemat.db.insert_many(...objects)
-    }
-
-    async _find_unlinked_references(visited = new Set()) {
-        /* Find recursively all newborn (non-persisted) objects that are referenced - directly or indirectly -
-           by this one. If `this` is unsealed yet (properties are stored in POJO attributes not in __data),
-           create __data from the object's regular attributes.
-         */
-        let data = await this.seal_data()
-        let refs = data.find_references()
-        let unlinked_refs = refs.filter(obj => obj.is_newborn() && !visited.has(obj))
-
-        unlinked_refs.forEach(ref => visited.add(ref))
-
-        for (let ref of unlinked_refs)
-            await ref._find_unlinked_references(visited)
-
-        return visited
-    }
-
     get_breadcrumb(max_len = 10) {
         /* Return an array of containers that lead from the site's root to this object.
            The array contains pairs [segment, container] where `segment` is a string that identifies `container`
@@ -834,6 +789,50 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return steps.reverse()
     }
 
+    // async insert_self() {
+    //     /* Insert this (newborn) object and, recursively, all the newborn objects referenced by this one, to the database. */
+    //
+    //     assert(this.is_newborn(), 'trying to insert an object that is already stored in the database')
+    //
+    //     // find recursively all the objects referenced (directly or indirectly) by this one that are still
+    //     // not persisted in the database; the graph of such objects may contain circular references -
+    //     // including a reference of this object to itself (!)
+    //     let refs = await this._find_unlinked_references()
+    //
+    //     // if no references need to be inserted together with this object, use the regular 1-phase insertion
+    //     if (refs.length === 0) return schemat.db.insert(this)
+    //
+    //     // otherwise, perform a 2-phase insertion of 1+ of cross/self-referencing objects
+    //     let objects = new Set([this, ...refs])
+    //     return schemat.db.insert_many(...objects)
+    // }
+    //
+    // async _find_unlinked_references(visited = new Set()) {
+    //     /* Find recursively all newborn (non-persisted) objects that are referenced - directly or indirectly -
+    //        by this one. If `this` is unsealed yet (properties are stored in POJO attributes not in __data),
+    //        create __data from the object's regular attributes.
+    //      */
+    //     let data = await this.seal_data()
+    //     let refs = data.find_references()
+    //     let unlinked_refs = refs.filter(obj => obj.is_newborn() && !visited.has(obj))
+    //
+    //     unlinked_refs.forEach(ref => visited.add(ref))
+    //
+    //     for (let ref of unlinked_refs)
+    //         await ref._find_unlinked_references(visited)
+    //
+    //     return visited
+    // }
+    //
+    // async seal_data() {
+    //     /* In a newborn (unlinked) object, create __data - if not present yet - by copying property values
+    //        from regular POJO attributes of the object.
+    //      */
+    //     if (this.__data) return this.__data
+    //     if (this.is_linked()) throw new Error('cannot seal properties of a linked object')
+    //     return this.__data = await Data.from_object(this)
+    // }
+
     validate() {
         for (const [prop, value] of this.__data) {          // validate each individual property in __data ...
             let type = this.__schema.get(prop)
@@ -854,6 +853,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // run category-specific validation
         this.__validate__()
     }
+
 
     __validate__() {}
         /* Validate this object's properties before inserting to the database. Called *after* validation of individual values through their schema. */
