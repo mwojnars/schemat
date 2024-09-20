@@ -14,12 +14,3 @@ globalThis.CLIENT = !globalThis.SERVER
 //     process.versions != null &&                     // process.versions contains Node.js-specific version information
 //     process.versions.node != null                   // process.versions.node is the Node.js version string
 
-
-export function set_global({schemat} = {})
-{
-    /* This is a complete list of Schemat's global objects. */
-
-    if (schemat)     globalThis.schemat = schemat
-    // if (importLocal) globalThis.importLocal = importLocal
-}
-

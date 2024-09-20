@@ -1,6 +1,5 @@
 import {T, print, assert, DependenciesStack, normalize_path} from '../common/utils.js'
 import {Item, Category, ROOT_ID} from './item.js'
-import {set_global} from "../common/globals.js";
 import {Registry} from "./registry.js";
 
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -135,7 +134,7 @@ export class Schemat {
     constructor() {
         /* Create a new Schemat instance as a global object. */
         assert(!globalThis.schemat, `global Schemat instance already exists`)
-        set_global({schemat: this})
+        globalThis.schemat = this
         this.Item = Item                    // schemat.Item is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
     }
@@ -285,6 +284,11 @@ export class Schemat {
         if (path.startsWith('schemat:') || !this.site?.is_loaded)
             return this.get_builtin(path)
         return this.site.import_dynamic(path)
+    }
+
+    client() {
+        /* Piece of HTML code that can be placed in an HTML page to make Schemat load on the client upon start up. */
+        return `import {ClientSchemat} from "/$/local/schemat/client/main.js"; ClientSchemat.start_client();`
     }
 
     /***  Dynamic import from SUN  ***/

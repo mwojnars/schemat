@@ -7,6 +7,11 @@ import {Schemat} from "../core/schemat.js";
 
 /**********************************************************************************************************************/
 
+globalThis.SERVER = false
+globalThis.CLIENT = true
+
+/**********************************************************************************************************************/
+
 export class ClientSchemat extends Schemat {
     /* Client-side global Schemat object. */
 
@@ -27,8 +32,7 @@ export class ClientSchemat extends Schemat {
         let target = await schemat._preload_objects(data)
         target.assert_loaded()
 
-        let endpoint = data.endpoint
-        let page = target.__services[endpoint]
+        let page = target.__services[data.endpoint]
         return page.render_client(target)
         // check()
     }
