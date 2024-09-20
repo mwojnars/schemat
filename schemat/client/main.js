@@ -17,8 +17,7 @@ export class ClientSchemat extends Schemat {
     static async start_client() {
         /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
 
-        // let data = SeedData.from_element('#page-data')
-        let data = this._read_data('#page-data', 'json+base64')
+        let data = SeedData.from_element('#page-data')
         print('seed data:', data)
 
         let db = new ClientDB(data.items)
@@ -32,23 +31,23 @@ export class ClientSchemat extends Schemat {
         // check()
     }
 
-    static _read_data(node, format = "json") {
-        /* Extract text contents of an element pointed to by a given selector.
-           If `format` is given, or the element has `format` attribute, and the format is "json",
-           the extracted string is JSON-decoded to an object.
-         */
-        if (typeof node === "string")
-            node = document.querySelector(node)
-
-        let value = node.textContent
-        if (!format) format = node.getAttribute('format')
-
-        // decode `value` depending on the `format`
-        if (format === "json") return JSON.parse(value)
-        if (format === "json+base64") return JSON.parse(decodeURIComponent(atob(value)))
-
-        return value
-    }
+    // static _read_data(node, format = "json") {
+    //     /* Extract text contents of an element pointed to by a given selector.
+    //        If `format` is given, or the element has `format` attribute, and the format is "json",
+    //        the extracted string is JSON-decoded to an object.
+    //      */
+    //     if (typeof node === "string")
+    //         node = document.querySelector(node)
+    //
+    //     let value = node.textContent
+    //     if (!format) format = node.getAttribute('format')
+    //
+    //     // decode `value` depending on the `format`
+    //     if (format === "json") return JSON.parse(value)
+    //     if (format === "json+base64") return JSON.parse(decodeURIComponent(atob(value)))
+    //
+    //     return value
+    // }
 
     async _preload_objects(data) {
         /* Load response data from state-encoded `data.session` as produced by Request.dump(). */
