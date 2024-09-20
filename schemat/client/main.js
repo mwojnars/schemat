@@ -10,8 +10,6 @@ import {Schemat} from "../core/schemat.js";
 export class ClientSchemat extends Schemat {
     /* Client-side global Schemat object. */
 
-    server_side = false
-
 
     /***  startup  ***/
 

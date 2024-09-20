@@ -1179,7 +1179,7 @@ export class Category extends Item {
     //        including the environment-specific {key}_client OR {key}_server keys; assumes the values are strings.
     //        Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets.
     //      */
-    //     // let side = schemat.server_side ? 'server' : 'client'
+    //     // let side = SERVER ? 'server' : 'client'
     //     // let snippets = this.getMany([key, `${key}_${side}`], params)
     //     let snippets = this[`${key}$`].reverse()
     //     return snippets.join('\n')

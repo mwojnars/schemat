@@ -84,11 +84,11 @@ export class Schemat {
     builtin                         // a Classpath containing built-in classes and their paths
 
     is_closing = false              // true if the Schemat node is in the process of shutting down
-    server_side = true              // the current environment: client / server
+
 
     get db() {
         /* The site's database instance, either a Database (on server) or a ClientDB (on client) */
-        return (this.server_side && this.site?.database) || this._db
+        return (SERVER && this.site?.database) || this._db
     }
 
     get root_category() {

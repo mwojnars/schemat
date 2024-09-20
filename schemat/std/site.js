@@ -39,7 +39,7 @@ export class Site extends Item {
 
     async __init__()  {
         this._modules_cache = new Map()
-        if (schemat.server_side) {
+        if (SERVER) {
             await this.root.load()
             await this.database?.load()
             this._vm = await import('node:vm')
