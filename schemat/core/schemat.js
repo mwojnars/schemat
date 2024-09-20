@@ -1,6 +1,7 @@
 import {T, print, assert, DependenciesStack, normalize_path} from '../common/utils.js'
 import {Item, Category, ROOT_ID} from './item.js'
 import {Registry} from "./registry.js";
+import Resources from "../web/resources.js";
 
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
@@ -284,9 +285,14 @@ export class Schemat {
         return this.site.import_dynamic(path)
     }
 
-    client() {
-        /* Piece of HTML to be placed in a page to load Schemat client-side upon start up. */
-        return `import {ClientSchemat} from "/$/local/schemat/client/main.js"; ClientSchemat.start_client();`
+    init_client() {
+        /* HTML code to be placed in an HTML page to load `schemat` on the client upon page load.
+           If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
+                <%- schemat.init_client() %>
+         */
+        let assets = Resources.clientAssets
+        let script = `<script type="module">import {ClientSchemat} from "/$/local/schemat/client/main.js"; ClientSchemat.start_client();</script>`
+        return assets + script
     }
 
     /***  Dynamic import from SUN  ***/
