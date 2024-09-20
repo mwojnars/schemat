@@ -7,11 +7,6 @@ import {Schemat} from "../core/schemat.js";
 
 /**********************************************************************************************************************/
 
-globalThis.SERVER = false
-globalThis.CLIENT = true
-
-/**********************************************************************************************************************/
-
 export class ClientSchemat extends Schemat {
     /* Client-side global Schemat object. */
 
