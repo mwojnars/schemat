@@ -59,18 +59,6 @@ export class Request {   // Connection ?
             if (m && !this.methods.includes(m)) this.methods.push(m)
         }
     }
-
-    // dump() {
-    //     /* Prepare bootstrap objects and data to be embedded in HTML response for the boot up of a client-side Schemat.
-    //        The objects are flat (state-encoded), but not yet stringified.
-    //      */
-    //     let site = schemat.site
-    //     let items = [this.target, this.target.__category, schemat.root_category, site, ...site.__category.__ancestors]
-    //     items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
-    //     let records = items.map(it => it.__record.encoded())
-    //
-    //     return {site_id: site.__id, target_id: this.target.__id, items: records}
-    // }
 }
 
 
@@ -95,9 +83,7 @@ export class SeedData {
         this.endpoint = request.endpoint
     }
 
-    encode() {
-        return btoa(encodeURIComponent(JSON.stringify(this)))
-    }
+    encode()    { return btoa(encodeURIComponent(JSON.stringify(this))) }
 }
 
 
