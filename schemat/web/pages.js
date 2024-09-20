@@ -160,18 +160,13 @@ export class RenderedPage extends HtmlPage {
 
         component_frame({html, data, code}) {
             /* The HTML wrapper for the page's main component, `html`, and its `data` and the launch script, `code`.
-               All these elements will be placed together inside <body>...</body>.
+               All these elements will be placed together inside <body>...</body>. `data` must be an instance of SeedData.
              */
-            let data_string = this._encode_page_data(data)
             return `
                 <div id="page-main">${html}</div>
                 <script async type="module">${code}</script>
-                <p id="page-data" style="display:none">${data_string}</p>
+                <p id="page-data" style="display:none">${data.encode()}</p>
             `
-        }
-
-        _encode_page_data(data) {
-            return btoa(encodeURIComponent(JSON.stringify(data)))
         }
     }
 }

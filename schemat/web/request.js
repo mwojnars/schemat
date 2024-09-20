@@ -94,6 +94,10 @@ export class SeedData {
         this.target_id = target.__id
         this.endpoint = request.endpoint
     }
+
+    encode() {
+        return btoa(encodeURIComponent(JSON.stringify(this)))
+    }
 }
 
 
