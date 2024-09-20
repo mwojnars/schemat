@@ -91,13 +91,37 @@ export class Request {   // Connection ?
     }
 
     dump() {
-        /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
+        /* Prepare bootstrap objects and data to be embedded in HTML response for the boot up of a client-side Schemat.
+           The objects are flat (state-encoded), but not yet stringified.
+         */
         let site = schemat.site
         let items = [this.target, this.target.__category, schemat.root_category, site, ...site.__category.__ancestors]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(it => it.__record.encoded())
 
         return {site_id: site.__id, target_id: this.target.__id, items: records}
+    }
+}
+
+export class SeedData {
+    /* Seed objects and data that can be embedded in HTML response to enable the boot up of a client-side Schemat.
+       The objects are flattened (state-encoded), but not yet stringified.
+     */
+    site_id
+    target_id
+    items
+    endpoint
+
+    constructor(request) {
+        let site = schemat.site
+        let target = request.target
+        let items = [target, target.__category, schemat.root_category, site, ...site.__category.__ancestors]
+        items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
+
+        this.items = items.map(it => it.__record.encoded())
+        this.site_id = site.__id
+        this.target_id = target.__id
+        this.endpoint = request.endpoint
     }
 }
 
@@ -736,7 +760,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return false
     }
 
-    
+
     dump_data() {
         /* Encode and stringify this.__data through JSONx. Return a string. Nested values are recursively encoded. */
         return this.__data.dump()

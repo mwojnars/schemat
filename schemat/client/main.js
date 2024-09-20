@@ -17,7 +17,7 @@ export class ClientSchemat extends Schemat {
         /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
 
         let data = this._read_data('#page-data', 'json+base64')
-        print('page data:', data)
+        print('seed data:', data)
 
         let db = new ClientDB(data.items)
         await new ClientSchemat().boot(data.site_id, db)
