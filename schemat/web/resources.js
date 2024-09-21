@@ -1,6 +1,7 @@
 /*
-    Loading of libraries and static resources.
+    Loading of client-side packages and static resources.
 */
+
 
 export class Resources {
     /*
@@ -85,20 +86,15 @@ Bootstrap, Bootstrap Icons -- large number of different classes; TODO: drop this
 
 */
 
-// let React_ = require("react")
-// exports.React_ = React_
-// module.exports = {React_}
 
+/**********************************************************************************************************************/
 
-export let {
-    React,
-    ReactDOM,
-    MaterialUI,
-    // ReactBootstrap,
-    // styled,
-    // CSSTransition,
-} = globalThis              // on client, some objects may already be present in globalThis if loaded via <script> tag;
-                            // IMPORTANT: prefer import() over <script>; the latter relies on global objects, is isolated from the main code, and runs in unpredictable order!
+// IMPORTANT:
+// On client, some objects may already be present in globalThis if loaded via <script> tag. However, do always prefer
+// import() over <script>. The latter relies on global objects, is isolated from the main code, and runs in
+// unpredictable order relative to Schemat and the main application code (!).
+
+export let {React, ReactDOM, MaterialUI} = {}    // = globalThis
 
 
 if (CLIENT) {
@@ -109,14 +105,21 @@ if (CLIENT) {
     // The other solution is to import ESM modules from esm.sh website, but this may introduce package version mismatch between
     // the client and the server; plus, there tend to be tiny differences in module layouts that enforce changes in application code.
 
+    function check_unloaded(name) {
+        if (globalThis[name]) throw new Error(`${name} already loaded via <script> tag`)
+    }
+    
+    check_unloaded("React")
     await import("/$/local/node_modules/react/umd/react.development.js")
     React = globalThis.React
     // console.log('React:', React)
 
+    check_unloaded("ReactDOM")
     await import("/$/local/node_modules/react-dom/umd/react-dom.development.js")
     ReactDOM = globalThis.ReactDOM
     // console.log('ReactDOM:', ReactDOM)
 
+    check_unloaded("MaterialUI")
     await import("/$/local/schemat/assets/libs/material-ui_v5.2.6.development.min.js")
     MaterialUI = globalThis.MaterialUI
     // console.log('MaterialUI:', MaterialUI)
