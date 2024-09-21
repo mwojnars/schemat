@@ -187,8 +187,8 @@ export class ReactPage extends RenderedPage {
         let view  = this.create_view(target)
         let props = await view.prepare('client') || {}
         let main  = e(view.Main, props)
-        return ReactDOM.createRoot(root).render(main)
-        // return hydrateRoot(root, main)
+        return ReactDOM.hydrateRoot(root, main)
+        // return ReactDOM.createRoot(root).render(main)    // this re-renders the entire tree from scratch (no hydration)
     }
 
     static View = class extends RenderedPage.View {
