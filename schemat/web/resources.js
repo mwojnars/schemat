@@ -47,8 +47,8 @@ export class Resources {
         
         <!--<script src="/$/local/schemat/assets/libs/react.development.js" crossorigin="anonymous"></script>-->
         <!--<script src="/$/local/schemat/assets/libs/react-dom.development.js" crossorigin="anonymous"></script>-->
-        <script src="/$/local/node_modules/react/umd/react.development.js" crossorigin="anonymous"></script>
-        <script src="/$/local/node_modules/react-dom/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<!--        <script src="/$/local/node_modules/react/umd/react.development.js" crossorigin="anonymous"></script>-->
+<!--        <script src="/$/local/node_modules/react-dom/umd/react-dom.development.js" crossorigin="anonymous"></script>-->
 
         <!-- Bootstrap - only use for widgets and in-block layout, not for page layout
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet"> <!--Bootstrap Icons-->
@@ -62,7 +62,7 @@ export class Resources {
         -->
         
         <!-- Material UI -->
-        <script src="/$/local/schemat/assets/libs/material-ui_v5.2.6.development.min.js" crossorigin></script>
+<!--        <script src="/$/local/schemat/assets/libs/material-ui_v5.2.6.development.min.js" crossorigin></script>-->
         <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>    
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>    
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>    
@@ -94,21 +94,43 @@ Bootstrap, Bootstrap Icons -- large number of different classes; TODO: drop this
 // exports.React_ = React_
 // module.exports = {React_}
 
-export let {                                                               // on client...
+
+export let {
     React,
     ReactDOM,
-    // ReactBootstrap,
     MaterialUI,
+    // ReactBootstrap,
     // styled,
     // CSSTransition,
-} = globalThis
+} = globalThis                  // on client, some objects may already be present in globalThis if loaded via <script> tag
 
-// if (CLIENT) {
-//     globalThis.React      = React       = (await import("https://esm.sh/react@18.2.0?dev")).default
-//     globalThis.ReactDOM   = ReactDOM    = (await import("https://esm.sh/react-dom@18.2.0?dev")).default
-//     globalThis.hydrateRoot = (await import("https://esm.sh/react-dom@18.2.0/client?dev")).hydrateRoot
-//     globalThis.MaterialUI = MaterialUI  = (await import("https://esm.sh/@mui/material@5.2.6?dev"))
-// }
+
+if (CLIENT) {
+    // IMPORTANT:
+    // All imports from node_modules below use UMD (not ESM) modules and return empty objects (!) which CANNOT be assigned directly to a variable!
+    // However, each of these modules saves its result in globalThis.* and the result object can be taken from there.
+    // Note that React does NOT deliver ESM versions of its packages, that's why we must fall back to UMD modules...
+    // The other solution is to import ESM modules from esm.sh website, but this may introduce package version mismatch between
+    // the client and the server; plus, there tend to be tiny differences in module layouts that enforce changes in application code.
+
+    await import("/$/local/node_modules/react/umd/react.development.js")
+    React = globalThis.React
+    // console.log('React:', React)
+
+    await import("/$/local/node_modules/react-dom/umd/react-dom.development.js")
+    ReactDOM = globalThis.ReactDOM
+    // console.log('ReactDOM:', ReactDOM)
+
+    await import("/$/local/schemat/assets/libs/material-ui_v5.2.6.development.min.js")
+    MaterialUI = globalThis.MaterialUI
+    // console.log('MaterialUI:', MaterialUI)
+
+    // globalThis.React      = React       = (await import("https://esm.sh/react@18.2.0?dev")).default
+    // globalThis.ReactDOM   = ReactDOM    = (await import("https://esm.sh/react-dom@18.2.0?dev")).default
+    // globalThis.createRoot  = (await import("https://esm.sh/react-dom@18.2.0/client?dev")).createRoot
+    // globalThis.hydrateRoot = (await import("https://esm.sh/react-dom@18.2.0/client?dev")).hydrateRoot
+    // globalThis.MaterialUI = MaterialUI  = (await import("https://esm.sh/@mui/material@5.2.6?dev"))
+}
 
 if (SERVER) {                                                       // on server...
     // React      = (await import("./assets/libs/react.production.min.js")).default
