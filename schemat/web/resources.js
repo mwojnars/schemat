@@ -120,7 +120,8 @@ if (CLIENT) {
     // console.log('ReactDOM:', ReactDOM)
 
     check_unloaded("MaterialUI")
-    await import("/$/local/schemat/assets/libs/material-ui_v5.2.6.development.min.js")
+    await import("/$/local/node_modules/@mui/material/umd/material-ui.development.js")
+    // await import("/$/local/schemat/assets/libs/material-ui_v5.2.6.development.min.js")
     MaterialUI = globalThis.MaterialUI
     // console.log('MaterialUI:', MaterialUI)
 
