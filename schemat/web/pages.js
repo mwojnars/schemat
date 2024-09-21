@@ -2,7 +2,7 @@ import {NotImplemented} from "../common/errors.js";
 import {T, print, assert, dedentFull, escape_html} from "../common/utils.js";
 import {Resources, ReactDOM} from './resources.js'
 import {e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
-        TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './react-utils.js'
+        TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, printReactTree} from './react-utils.js'
 import {HttpService} from "./services.js";
 import {Data} from "../core/data.js";
 import {Styled} from "./component.js";
@@ -203,6 +203,10 @@ export class ReactPage extends RenderedPage {
         render_server(props) {
             this.assert_loaded()
             print(`SSR render('${props.request.endpoint}') of ID=${this.__id}`)
+
+            // print('React tree:\n', ReactDOM.renderToStaticMarkup(e(this.Main, props)))
+            // printReactTree(this.Main())
+
             let main = e(this.Main, props)
             return ReactDOM.renderToString(main)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
