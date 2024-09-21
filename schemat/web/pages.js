@@ -200,9 +200,9 @@ export class ReactPage extends RenderedPage {
             return {}
         }
 
-        render_server(props) {
+        render_server({request, ...props}) {
             this.assert_loaded()
-            print(`SSR render('${props.request.endpoint}') of ID=${this.__id}`)
+            print(`SSR render('${request.endpoint}') of ID=${this.__id}`)
 
             // print('React tree:\n', ReactDOM.renderToStaticMarkup(e(this.Main, props)))
             // printReactTree(this.Main())
