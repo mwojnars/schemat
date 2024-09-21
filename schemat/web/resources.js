@@ -42,10 +42,6 @@ export class Resources {
             <script src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js" integrity="sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0=" crossorigin="anonymous"></script>-->
         <!--<script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
             <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>-->
-        <!--<script src="/$/local/schemat/assets/libs/react.production.min.js" integrity="sha256-Ipu/TQ50iCCVZBUsZyNJfxrDk0E2yhaEIz0vqI+kFG8=" crossorigin="anonymous"></script>
-            <script src="/$/local/schemat/assets/libs/react-dom.production.min.js" integrity="sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0=" crossorigin="anonymous"></script>-->
-        <!--<script src="/$/local/schemat/assets/libs/react.development.js" crossorigin="anonymous"></script>
-            <script src="/$/local/schemat/assets/libs/react-dom.development.js" crossorigin="anonymous"></script>-->
         <!--<script src="/$/local/node_modules/react/umd/react.development.js" crossorigin="anonymous"></script>
             <script src="/$/local/node_modules/react-dom/umd/react-dom.development.js" crossorigin="anonymous"></script>-->
 
@@ -61,13 +57,10 @@ export class Resources {
         -->
         
         <!-- Material UI -->
-        <!--<script src="/$/local/schemat/assets/libs/material-ui_v5.2.6.development.min.js" crossorigin></script>-->
         <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>    
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>    
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>    
-        <!--<script src="https://unpkg.com/@mui/material@5.2.6/umd/material-ui.development.js" crossorigin></script>-->
     
-        <!--<script src="/$/local/schemat/assets/libs/popper.min.js" crossorigin></script>-->
         <link href="/$/local/schemat/assets/favicon.ico" rel="icon" type="image/x-icon" />
         <link href="/$/local/schemat/assets/styles.css" rel="stylesheet" />
     `
@@ -121,7 +114,6 @@ if (CLIENT) {
 
     check_unloaded("MaterialUI")
     await import("/$/local/node_modules/@mui/material/umd/material-ui.development.js")
-    // await import("/$/local/schemat/assets/libs/material-ui_v5.2.6.development.min.js")
     MaterialUI = globalThis.MaterialUI
     // console.log('MaterialUI:', MaterialUI)
 
@@ -133,8 +125,6 @@ if (CLIENT) {
 }
 
 if (SERVER) {                                                       // on server...
-    // React      = (await import("./assets/libs/react.production.min.js")).default
-    // ReactDOM   = (await import("./assets/libs/react-dom.production.min.js")).default
     React      = (await import("react")).default
     ReactDOM   = (await import("react-dom/server")).default
     MaterialUI = (await import("@mui/material")).default
