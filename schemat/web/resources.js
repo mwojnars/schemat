@@ -45,8 +45,10 @@ export class Resources {
         <!--<script src="/$/local/schemat/assets/libs/react.production.min.js" integrity="sha256-Ipu/TQ50iCCVZBUsZyNJfxrDk0E2yhaEIz0vqI+kFG8=" crossorigin="anonymous"></script>
             <script src="/$/local/schemat/assets/libs/react-dom.production.min.js" integrity="sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0=" crossorigin="anonymous"></script>-->
         
-        <script src="/$/local/schemat/assets/libs/react.development.js" crossorigin="anonymous"></script>
-        <script src="/$/local/schemat/assets/libs/react-dom.development.js" crossorigin="anonymous"></script>
+        <!--<script src="/$/local/schemat/assets/libs/react.development.js" crossorigin="anonymous"></script>-->
+        <!--<script src="/$/local/schemat/assets/libs/react-dom.development.js" crossorigin="anonymous"></script>-->
+        <script src="/$/local/node_modules/react/umd/react.development.js" crossorigin="anonymous"></script>
+        <script src="/$/local/node_modules/react-dom/umd/react-dom.development.js" crossorigin="anonymous"></script>
 
         <!-- Bootstrap - only use for widgets and in-block layout, not for page layout
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet"> <!--Bootstrap Icons-->
