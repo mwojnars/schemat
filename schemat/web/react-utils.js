@@ -204,23 +204,91 @@ export const ItemLoadingHOC = (classComponent, config = {raise: false}) =>
 
 /**********************************************************************************************************************/
 
+function isReactElement(obj) {
+    return obj && obj.$$typeof === Symbol.for('react.element');
+}
+
 export function parseReactTree(element) {
     /* Convert a React component tree back to plain objects for debugging. */
 
-    if (typeof element === 'string') return element
-    if (!element) return null
+    if (typeof element === 'string' || typeof element === 'number' || element == null) return element
+    if (!isReactElement(element)) return '[Complex Object]'
 
-    let props = {...element.props}
-    delete props.children
+    const { type, props } = element;
+
+    // Handle functional components
+    if (typeof type === 'function') {
+        try {
+            // Attempt to render the functional component
+            const renderedElement = type(props);
+            return parseReactTree(renderedElement);
+        } catch (error) {
+            // If rendering fails (e.g., due to hooks), return a placeholder
+            return {
+                type: type.displayName || type.name || 'FunctionalComponent',
+                props: simplifyProps(props),
+                children: ['[Component Content]']
+            };
+        }
+    }
+
+    // Handle regular elements and class components
+    let children = props.children;
+    if (children === undefined) {
+        children = [];
+    } else if (!Array.isArray(children)) {
+        children = [children];
+    }
 
     return {
-        type: element.type.name || element.type,
-        props: Object.keys(props).length ? props : null,
-        nodes: React.Children.map(element.props.children, parseReactTree)
+        type: typeof type === 'string' ? type : (type.displayName || type.name || 'Unknown'),
+        props: simplifyProps(props),
+        children: React.Children.toArray(children).map(parseReactTree)
+    };
+}
+
+function simplifyProps(props) {
+    const simplified = {};
+    for (const key in props) {
+        if (key === 'children') continue;
+        const value = props[key];
+        if (typeof value === 'function') {
+            simplified[key] = '[Function]';
+        } else if (isReactElement(value)) {
+            simplified[key] = parseReactTree(value);
+        } else if (typeof value === 'object' && value !== null) {
+            simplified[key] = '[Object]';
+        } else {
+            simplified[key] = value;
+        }
     }
+    return Object.keys(simplified).length ? simplified : null;
+}
+
+function safeStringify(obj, seen = new WeakSet()) {
+    return JSON.stringify(obj, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+            if (seen.has(value)) {
+                return '[Circular]';
+            }
+            seen.add(value);
+        }
+        if (typeof value === 'function') {
+            return value.name || '[Function]';
+        }
+        if (value instanceof RegExp) {
+            return value.toString();
+        }
+        if (value instanceof Date) {
+            return value.toISOString();
+        }
+        return value;
+    }, 2);
 }
 
 export function printReactTree(element) {
     let tree = parseReactTree(element)
-    console.log(JSON.stringify(tree, null, 2))
+    console.log(safeStringify(tree))
+    return ''
 }
+
