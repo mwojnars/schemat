@@ -1,5 +1,5 @@
 import {T, assert, print, tryimport} from '../common/utils.js'
-import {compact_css, cssPrepend} from './css.js'
+import {compact_css} from './css.js'
 import {e, cl, DIV, TEMPLATE, STYLE, FRAGMENT, LINK} from './react-utils.js'
 import {React} from './resources.js'
 
