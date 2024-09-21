@@ -1,7 +1,7 @@
 import {T, print, assert, DependenciesStack, normalize_path} from '../common/utils.js'
 import {Item, Category, ROOT_ID} from './item.js'
 import {Registry} from "./registry.js";
-import Resources from "../web/resources.js";
+// import Resources from "../web/resources.js";
 
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
@@ -290,7 +290,7 @@ export class Schemat {
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
                 <%- schemat.init_client() %>
          */
-        let assets = Resources.clientAssets
+        let assets = '' //Resources.clientAssets
         let script = `<script type="module">import {ClientSchemat} from "/$/local/schemat/client/main.js"; ClientSchemat.start_client();</script>`
         return assets + script
     }

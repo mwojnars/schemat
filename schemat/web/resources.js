@@ -101,7 +101,14 @@ export let {                                                               // on
     // CSSTransition,
 } = globalThis
 
-if (!React) {                                                       // on server...
+// if (CLIENT) {
+//     globalThis.React      = React       = (await import("https://esm.sh/react@18.2.0?dev")).default
+//     globalThis.ReactDOM   = ReactDOM    = (await import("https://esm.sh/react-dom@18.2.0?dev")).default
+//     globalThis.hydrateRoot = (await import("https://esm.sh/react-dom@18.2.0/client?dev")).hydrateRoot
+//     globalThis.MaterialUI = MaterialUI  = (await import("https://esm.sh/@mui/material@5.2.6?dev"))
+// }
+
+if (SERVER) {                                                       // on server...
     // React      = (await import("./assets/libs/react.production.min.js")).default
     // ReactDOM   = (await import("./assets/libs/react-dom.production.min.js")).default
     React      = (await import("react")).default
@@ -114,5 +121,8 @@ if (!React) {                                                       // on server
     // console.log("styled:", styled)
     // CSSTransition = (await import("react-transition-group")).CSSTransition
 }
+
+// console.log('React/ReactDOM versions: ', React.version, ReactDOM.version)
+// console.log('ReactDOM:', ReactDOM)
 
 export default Resources
