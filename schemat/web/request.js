@@ -63,7 +63,7 @@ export class Request {   // Connection ?
 
 
 export class SeedData {
-    /* Structure containing seed objects and data to be embedded in HTML response to enable the boot up 
+    /* Data structure containing seed objects and data to be embedded in HTML response to enable the boot up
        of a client-side Schemat. The objects are flattened (state-encoded), but not yet stringified.
      */
     site_id
