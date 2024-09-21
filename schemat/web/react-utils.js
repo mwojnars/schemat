@@ -201,3 +201,26 @@ export const ItemLoadingHOC = (classComponent, config = {raise: false}) =>
         }
     }
 
+
+/**********************************************************************************************************************/
+
+export function parseReactTree(element) {
+    /* Convert a React component tree back to plain objects for debugging. */
+
+    if (typeof element === 'string') return element
+    if (!element) return null
+
+    let props = {...element.props}
+    delete props.children
+
+    return {
+        type: element.type.name || element.type,
+        props: Object.keys(props).length ? props : null,
+        nodes: React.Children.map(element.props.children, parseReactTree)
+    }
+}
+
+export function printReactTree(element) {
+    let tree = parseReactTree(element)
+    console.log(JSON.stringify(tree, null, 2))
+}
