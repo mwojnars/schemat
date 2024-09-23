@@ -1,6 +1,7 @@
 import {T, print, assert, DependenciesStack, normalize_path} from '../common/utils.js'
 import {Item, Category, ROOT_ID} from './item.js'
 import {Registry} from "./registry.js";
+import {RequestContext} from "../web/request.js";
 // import Resources from "../web/resources.js";
 
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -285,20 +286,24 @@ export class Schemat {
         return this.site.import_dynamic(path)
     }
 
-    client_block(context_path) {
+    client_block(request, context_path, ...objects) {
         /* HTML code to be placed in an HTML page by the server, to load `schemat` on the client side upon page load.
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
-                <%- schemat.client_block('#data-path') %>
-           The argument, `context_path`, must be a CSS selector that will point to the HTML element of the result page
-           containing RequestContext for the client-side Schemat.
+                <%- schemat.client_block(request, '#context-path') %>
+           `context_path` must be a CSS selector pointing to the HTML element of the result page that will contain RequestContext for the client-side Schemat.
          */
-        if (!context_path) throw new(`argument is missing: a CSS selector of the HTML element containing request context must be provided`)
-        return `<script type="module">${this.init_client(context_path)}</script>`
+        if (!context_path) throw new(`context_path is missing: a CSS selector of the HTML element containing request context must be provided`)
+        assert(!context_path.includes('"'))
+
+        let ctx = RequestContext.from_request(request, ...objects)
+        let script = `<script async type="module">${this.init_client(context_path)}</script>`
+        let context = `<p id="${context_path}" style="display:none">${ctx.encode()}</p>`
+
+        return script + context
     }
 
     init_client(context_path) {
-        assert(!context_path.includes("'"))
-        return `import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot('${context_path}');`
+        return `import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot("${context_path}");`
     }
 
 
