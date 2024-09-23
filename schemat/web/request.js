@@ -73,14 +73,15 @@ export class RequestContext {
     endpoint
 
     static from_request(request, ...objects) {
-        /* For use on the server. Optional `objects` are included in the context as seed objects together with `site` and `target`. */
-
+        /* For use on the server. Optional `objects` are included in the context as seed objects together
+           with `target`, `site` and `site.global` objects.
+         */
         let ctx = new RequestContext()
         let site = schemat.site
         let target = request.target
 
         let items = new ObjectSet()
-        let queue = [target, site, ...objects].filter(Boolean)
+        let queue = [target, site, ...site.global?.values() || [], ...objects].filter(Boolean)
         
         // extend the `items` set with all objects that are referenced from the `target` and `site` via __category or __extend
         // TODO: deduplicate IDs when repeated by different object instances (e.g., this happens for the root category)
@@ -94,6 +95,7 @@ export class RequestContext {
             queue.push(...obj.__extends$)
         }
         items = [...items]
+        print('objects in RequestContext:', items.length)
 
         ctx.items = items.map(obj => obj.__record.encoded())
         ctx.site_id = site.__id
