@@ -54,6 +54,7 @@ export class ClientSchemat extends Schemat {
     request = {
         target: null,           // target web object that was addressed by the request, already loaded
         endpoint: null,         // target's endpoint that was called
+        service: null,          // service (if any) that is exposed at the target's `endpoint`
     }
 
     /***  startup  ***/
@@ -68,15 +69,14 @@ export class ClientSchemat extends Schemat {
         for (let rec of data.items)                     // preload all boot objects
             await this.get_loaded(rec.id)
 
-        this.request = {
-            target:     this.get_object(data.target_id),
-            endpoint:   data.endpoint
-        }
-        this.request.target.assert_loaded()
+        let target = this.get_object(data.target_id)
+        target.assert_loaded()
 
-        let {target, endpoint} = this.request
-        let page = target.__services[endpoint]
-        return page.render_client(target)
+        let endpoint = data.endpoint
+        let service = target.__services[endpoint]
+
+        this.request = {target, endpoint, service}
+        return service.render_client(target)
         // check()
     }
 
