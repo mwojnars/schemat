@@ -1,5 +1,6 @@
 import {UrlPathNotFound} from "../common/errors.js";
 import {assert, splitLast} from "../common/utils.js";
+import {ObjectSet} from "../common/objects.js";
 
 
 export class Request {   // Connection ?
@@ -77,25 +78,25 @@ export class RequestContext {
         let site = schemat.site
         let target = request.target
 
-        let items = new Set()
+        let items = new ObjectSet()
         let queue = [target, site].filter(Boolean)
         
         // extend the `items` set with all objects that are referenced from the `target` and `site` via __category or __extend
         // TODO: deduplicate IDs when repeated by different object instances (e.g., this happens for the root category)
         while (queue.length) {
             let obj = queue.pop()
-            if (!obj || items.has(obj)) continue
+            if (!obj || items.hasNewer(obj)) continue
             obj.assert_loaded()
-            items.add(obj)
 
+            items.add(obj)
             queue.push(obj.__category)
             queue.push(...obj.__extends$)
         }
         items = [...items]
 
-        // // build the set of unique IDs to check against duplicates
-        // let ids = new Set(objs.map(obj => obj.id))
-        // assert(ids.size === objs.length, `duplicate item IDs: ${objs.map(o => o.id).join(', ')}`)
+        // build the set of unique IDs to check against duplicates
+        let ids = new Set(items.map(obj => obj.id))
+        assert(ids.size === items.length, `duplicate item IDs: ${items.map(o => o.id).join(', ')}`)
 
         ctx.items = items.map(obj => obj.__record.encoded())
         ctx.site_id = site.__id
