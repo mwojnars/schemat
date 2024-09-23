@@ -95,7 +95,6 @@ export class RequestContext {
             queue.push(...obj.__extends$)
         }
         items = [...items]
-        print('objects in RequestContext:', items.length)
 
         ctx.items = items.map(obj => obj.__record.encoded())
         ctx.site_id = site.__id
