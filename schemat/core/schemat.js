@@ -286,24 +286,25 @@ export class Schemat {
         return this.site.import_dynamic(path)
     }
 
-    client_block(request, context_path, ...objects) {
+    client_block(request, id_context, ...objects) {
         /* HTML code to be placed in an HTML page by the server, to load `schemat` on the client side upon page load.
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
                 <%- schemat.client_block(request, '#context-path') %>
-           `context_path` must be a CSS selector pointing to the HTML element of the result page that will contain RequestContext for the client-side Schemat.
+           `id_context` must be an ID of the HTML element of the result page where RequestContext for the client-side Schemat is to be written.
          */
-        if (!context_path) throw new(`context_path is missing: a CSS selector of the HTML element containing request context must be provided`)
-        assert(!context_path.includes('"'))
+        if (!id_context) throw new(`id_context is missing: ID of the HTML element containing request context must be provided`)
+        assert(!id_context.includes('"'))
+        assert(!id_context.includes('#'))
 
         let ctx = RequestContext.from_request(request, ...objects)
-        let script = `<script async type="module">${this.init_client(context_path)}</script>`
-        let context = `<p id="${context_path}" style="display:none">${ctx.encode()}</p>`
+        let script = `<script async type="module">${this.init_client(id_context)}</script>`
+        let context = `<p id="${id_context}" style="display:none">${ctx.encode()}</p>`
 
-        return script + context
+        return context + '\n' + script
     }
 
-    init_client(context_path) {
-        return `import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot("${context_path}");`
+    init_client(id_context) {
+        return `import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot("#${id_context}");`
     }
 
 
