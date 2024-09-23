@@ -2,7 +2,7 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {assert, print} from "../common/utils.js";
 import {Schemat} from "../core/schemat.js";
-import {SeedData} from "../web/request.js"
+import {SeedData} from "./request.js"
 
 
 /**********************************************************************************************************************/
