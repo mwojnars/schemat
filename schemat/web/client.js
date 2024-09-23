@@ -62,7 +62,11 @@ export class ClientSchemat extends Schemat {
         let db = new ClientDB(data.items)
         await new ClientSchemat().boot(data.site_id, db)
 
-        let target = await schemat._preload_objects(data)
+        // await schemat._preload_objects(data)
+        for (let rec of data.items)
+            await schemat.get_loaded(rec.id)               // preload all boot objects
+
+        let target = schemat.get_object(data.target_id)
         target.assert_loaded()
 
         let page = target.__services[data.endpoint]
@@ -87,15 +91,12 @@ export class ClientSchemat extends Schemat {
     //
     //     return value
     // }
-
-    async _preload_objects(data) {
-        /* Load response data from state-encoded `data.session` as produced by Request.dump(). */
-
-        for (let rec of data.items)
-            await this.get_loaded(rec.id)               // preload all boot items from copies passed in constructor()
-
-        return this.get_object(data.target_id)
-    }
+    //
+    // async _preload_objects(data) {
+    //     /* Load response data from state-encoded `data.session` as produced by Request.dump(). */
+    //     for (let rec of data.items)
+    //         await this.get_loaded(rec.id)               // preload all boot items from copies passed in constructor()
+    // }
 
 
     /***  DB  ***/
