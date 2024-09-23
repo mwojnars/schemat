@@ -73,7 +73,7 @@ export class RequestContext {
     endpoint
 
     static from_request(request, ...objects) {
-        /* For use on the server. Optional `objects` are put in the list of seed objects together with `site` and `target`. */
+        /* For use on the server. Optional `objects` are included in the context as seed objects together with `site` and `target`. */
 
         let ctx = new RequestContext()
         let site = schemat.site
