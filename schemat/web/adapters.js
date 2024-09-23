@@ -12,10 +12,9 @@ const ejs = SERVER && await import('ejs')
 
 export function html_page(path, locals = {}, opts = {}) {
     /* Returns a function that loads an HTML page: either from a static .html file, or from a template (.ejs).
-       In the latter case, the template is rendered with `locals` as its variables, and `schemat` variable is added by default
-       - this is typically used to call `schemat.client()`, which embeds the Schemat bootstrap code and makes the client Schemat-aware.
+       In the latter case, the template is rendered with `locals` as its variables, and special variables: `schemat`, `request` - are added by default.
      */
-    return () => {
+    return (request) => {
         if (path.startsWith('file://')) path = path.slice(7)
         const ext = path.includes('.') ? path.split('.').pop().toLowerCase() : 'html'
         // console.log('path:', path)
@@ -27,7 +26,7 @@ export function html_page(path, locals = {}, opts = {}) {
         if (ext === 'ejs') {
             opts = {filename: path, views: schemat.ROOT_DIRECTORY, ...opts}
             const template = fs.readFileSync(path, 'utf-8')
-            return ejs.render(template, {schemat, ...locals}, opts)
+            return ejs.render(template, {schemat, request, ...locals}, opts)
         }
         throw new Error(`Unsupported file type: ${ext}`)
     }
