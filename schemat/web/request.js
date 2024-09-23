@@ -94,10 +94,6 @@ export class RequestContext {
         }
         items = [...items]
 
-        // build the set of unique IDs to check against duplicates
-        let ids = new Set(items.map(obj => obj.id))
-        assert(ids.size === items.length, `duplicate item IDs: ${items.map(o => o.id).join(', ')}`)
-
         ctx.items = items.map(obj => obj.__record.encoded())
         ctx.site_id = site.__id
         ctx.target_id = target.__id
