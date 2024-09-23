@@ -50,6 +50,11 @@ export class ClientDB {
 export class ClientSchemat extends Schemat {
     /* Client-side global Schemat object. */
 
+    // attributes of the web request that initiated generation of this page
+    request = {
+        target: null,           // target web object that was addressed by the request, already loaded
+        endpoint: null,         // target's endpoint that was called
+    }
 
     /***  startup  ***/
 
@@ -63,33 +68,17 @@ export class ClientSchemat extends Schemat {
         for (let rec of data.items)                     // preload all boot objects
             await this.get_loaded(rec.id)
 
-        let target = this.get_object(data.target_id)
-        target.assert_loaded()
+        this.request = {
+            target:     this.get_object(data.target_id),
+            endpoint:   data.endpoint
+        }
+        this.request.target.assert_loaded()
 
-        let page = target.__services[data.endpoint]
+        let {target, endpoint} = this.request
+        let page = target.__services[endpoint]
         return page.render_client(target)
         // check()
     }
-
-    // static async start_client() {
-    //     /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
-
-    //     let data = SeedData.from_element('#page-data')
-    //     print('seed data:', data)
-
-    //     let db = new ClientDB(data.items)
-    //     await new ClientSchemat().boot(data.site_id, db)
-
-    //     for (let rec of data.items)
-    //         await schemat.get_loaded(rec.id)               // preload all boot objects
-
-    //     let target = schemat.get_object(data.target_id)
-    //     target.assert_loaded()
-
-    //     let page = target.__services[data.endpoint]
-    //     return page.render_client(target)
-    //     // check()
-    // }
 
     // static _read_data(node, format = "json") {
     //     /* Extract text contents of an element pointed to by a given selector.
@@ -107,12 +96,6 @@ export class ClientSchemat extends Schemat {
     //     if (format === "json+base64") return JSON.parse(decodeURIComponent(atob(value)))
     //
     //     return value
-    // }
-    //
-    // async _preload_objects(data) {
-    //     /* Load response data from state-encoded `data.session` as produced by Request.dump(). */
-    //     for (let rec of data.items)
-    //         await this.get_loaded(rec.id)               // preload all boot items from copies passed in constructor()
     // }
 
 
