@@ -285,17 +285,22 @@ export class Schemat {
         return this.site.import_dynamic(path)
     }
 
-    init_client(context_path) {
+    client_block(context_path) {
         /* HTML code to be placed in an HTML page by the server, to load `schemat` on the client side upon page load.
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
-                <%- schemat.init_client('#data-path') %>
-           The argument, `context_path`, must be a CSS selector string that will point to the HTML element of the result page
+                <%- schemat.client_block('#data-path') %>
+           The argument, `context_path`, must be a CSS selector that will point to the HTML element of the result page
            containing RequestContext for the client-side Schemat.
          */
-        if (!context_path) throw new(`the argument for init_client() is missing: a CSS selector of the HTML element containing request context must be provided`)
-        assert(!context_path.includes("'"))
-        return `<script type="module">import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot('${context_path}');</script>`
+        if (!context_path) throw new(`argument is missing: a CSS selector of the HTML element containing request context must be provided`)
+        return `<script type="module">${this.init_client(context_path)}</script>`
     }
+
+    init_client(context_path) {
+        assert(!context_path.includes("'"))
+        return `import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot('${context_path}');`
+    }
+
 
     /***  Dynamic import from SUN  ***/
 

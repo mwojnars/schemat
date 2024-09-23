@@ -149,11 +149,11 @@ export class RenderedPage extends HtmlPage {
         page_context(props) { return RequestContext.from_request(props.request) }
 
         page_script(props) {
-            return `
-                import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot('#page-data');
-                let {service, target} = schemat.request;
-                service.render_client(target);
-            `
+            return schemat.init_client('#page-data') +
+                `
+                    let {service, target} = schemat.request;
+                    service.render_client(target);
+                `
         }
 
         component_frame({html, data, code}) {
