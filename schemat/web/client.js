@@ -59,8 +59,8 @@ export class ClientSchemat extends Schemat {
 
     /***  startup  ***/
 
-    async boot(data_element) {
-        let ctx = RequestContext.from_element(data_element)
+    async boot(context_path) {
+        let ctx = RequestContext.from_element(context_path)
         print('request context:', ctx)
 
         let db = new ClientDB(ctx.items)

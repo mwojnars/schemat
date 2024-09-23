@@ -136,7 +136,7 @@ export class RenderedPage extends HtmlPage {
 
         html_body(props) {
             let html = this.render_server(props)
-            let data = this.page_data(props)
+            let data = this.page_context(props)
             let code = this.page_script(props)
             return this.component_frame({html, data, code})
         }
@@ -146,9 +146,7 @@ export class RenderedPage extends HtmlPage {
             return ''
         }
 
-        page_data(props) {
-            return RequestContext.from_request(props.request)
-        }
+        page_context(props) { return RequestContext.from_request(props.request) }
 
         page_script(props) {
             return `
