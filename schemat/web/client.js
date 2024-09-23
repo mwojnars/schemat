@@ -53,26 +53,43 @@ export class ClientSchemat extends Schemat {
 
     /***  startup  ***/
 
-    static async start_client() {
-        /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
-
+    async boot() {
         let data = SeedData.from_element('#page-data')
         print('seed data:', data)
 
         let db = new ClientDB(data.items)
-        await new ClientSchemat().boot(data.site_id, db)
+        await super.boot(data.site_id, db)
 
-        // await schemat._preload_objects(data)
-        for (let rec of data.items)
-            await schemat.get_loaded(rec.id)               // preload all boot objects
+        for (let rec of data.items)                     // preload all boot objects
+            await this.get_loaded(rec.id)
 
-        let target = schemat.get_object(data.target_id)
+        let target = this.get_object(data.target_id)
         target.assert_loaded()
 
         let page = target.__services[data.endpoint]
         return page.render_client(target)
         // check()
     }
+
+    // static async start_client() {
+    //     /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
+
+    //     let data = SeedData.from_element('#page-data')
+    //     print('seed data:', data)
+
+    //     let db = new ClientDB(data.items)
+    //     await new ClientSchemat().boot(data.site_id, db)
+
+    //     for (let rec of data.items)
+    //         await schemat.get_loaded(rec.id)               // preload all boot objects
+
+    //     let target = schemat.get_object(data.target_id)
+    //     target.assert_loaded()
+
+    //     let page = target.__services[data.endpoint]
+    //     return page.render_client(target)
+    //     // check()
+    // }
 
     // static _read_data(node, format = "json") {
     //     /* Extract text contents of an element pointed to by a given selector.

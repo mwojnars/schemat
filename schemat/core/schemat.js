@@ -291,7 +291,7 @@ export class Schemat {
                 <%- schemat.init_client() %>
          */
         let assets = '' //Resources.clientAssets
-        let script = `<script type="module">import {ClientSchemat} from "/$/local/schemat/web/client.js"; ClientSchemat.start_client();</script>`
+        let script = `<script type="module">import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot();</script>`
         return assets + script
     }
 
