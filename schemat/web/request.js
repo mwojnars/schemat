@@ -62,43 +62,6 @@ export class Request {   // Connection ?
 }
 
 
-export class ObjectSet {
-    /* A Set of objects deduplicated by object.id. When an existing ID is to be overwritten, 
-       the `__meta.loaded_at` property is compared and the most recent object is kept. 
-     */
-    objects = new Map()
-
-    add(obj) {
-        if (obj.id === undefined) throw new Error("missing 'id' for the object to be added to the ObjectSet")
-
-        let prev = this.objects.get(obj.id)
-        if (prev && obj.__meta.loaded_at < prev.__meta.loaded_at)
-            return this
-
-        this.objects.set(obj.id, obj)
-        return this
-    }
-
-    delete(obj)     { return this.objects.delete(obj.id) }
-    has(obj)        { return this.objects.has(obj.id) }
-    ids()           { return this.objects.keys() }
-    keys()          { return this.objects.values() }        // for compatibility with Set interface
-    values()        { return this.objects.values() }
-    clear()         { this.objects.clear() }
-    
-    get size()      { return this.objects.size }
-    get length()    { return this.objects.size }
-
-    [Symbol.iterator]() { return this.objects.values() }
-
-    forEach(callbackFn, thisArg) {
-        this.objects.forEach((value) => {
-            callbackFn.call(thisArg, value, value, this)
-        })
-    }
-}
-
-
 export class RequestContext {
     /* Seed web objects and request-related context information to be embedded in HTML response and then unpacked on the client
        to enable boot up of a client-side Schemat. The objects are flattened (state-encoded), but not yet stringified.
@@ -133,9 +96,6 @@ export class RequestContext {
         // // build the set of unique IDs to check against duplicates
         // let ids = new Set(objs.map(obj => obj.id))
         // assert(ids.size === objs.length, `duplicate item IDs: ${objs.map(o => o.id).join(', ')}`)
-
-        // let items = [target, target.__category, schemat.root_category, site, ...site.__category.__ancestors]
-        // items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
 
         ctx.items = items.map(obj => obj.__record.encoded())
         ctx.site_id = site.__id
