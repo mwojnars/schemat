@@ -7,7 +7,7 @@ import {HttpService} from "./services.js";
 import {Data} from "../core/data.js";
 import {Styled} from "./component.js";
 import {CatalogTable} from "../types/catalog.js";
-import {SeedData} from "./request.js";
+import {RequestContext} from "./request.js";
 
 
 /**********************************************************************************************************************/
@@ -147,7 +147,7 @@ export class RenderedPage extends HtmlPage {
         }
 
         page_data(props) {
-            return SeedData.from_request(props.request)
+            return RequestContext.from_request(props.request)
         }
 
         page_script(props) {
@@ -160,7 +160,7 @@ export class RenderedPage extends HtmlPage {
 
         component_frame({html, data, code}) {
             /* The HTML wrapper for the page's main component, `html`, and its `data` and the launch script, `code`.
-               All these elements will be placed together inside <body>...</body>. `data` must be an instance of SeedData.
+               All these elements will be placed together inside <body>...</body>. `data` must be an instance of RequestContext.
              */
             return `
                 <div id="page-main">${html}</div>

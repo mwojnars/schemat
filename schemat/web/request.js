@@ -62,9 +62,9 @@ export class Request {   // Connection ?
 }
 
 
-export class SeedData {
-    /* Data structure containing seed objects and data to be embedded in HTML response to enable the boot up
-       of a client-side Schemat. The objects are flattened (state-encoded), but not yet stringified.
+export class RequestContext {
+    /* Seed web objects and request-related context information to be embedded in HTML response and then unpacked on the client
+       to enable boot up of a client-side Schemat. The objects are flattened (state-encoded), but not yet stringified.
      */
     site_id
     target_id
@@ -73,21 +73,21 @@ export class SeedData {
 
     static from_request(request) {
         /* For use on the server. */
-        let seed = new SeedData()
+        let ctx = new RequestContext()
         let site = schemat.site
         let target = request.target
         let items = [target, target.__category, schemat.root_category, site, ...site.__category.__ancestors]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
 
-        seed.items = items.map(it => it.__record.encoded())
-        seed.site_id = site.__id
-        seed.target_id = target.__id
-        seed.endpoint = request.endpoint
-        return seed
+        ctx.items = items.map(it => it.__record.encoded())
+        ctx.site_id = site.__id
+        ctx.target_id = target.__id
+        ctx.endpoint = request.endpoint
+        return ctx
     }
 
     static from_element(selector) {
-        /* For use on the client. Extract text contents of the DOM element pointed to by a CSS `selector` and decode back into SeedData. */
+        /* For use on the client. Extract text contents of the DOM element pointed to by a CSS `selector` and decode back into RequestContext. */
         let node = document.querySelector(selector)
         return this.decode(node.textContent)
     }
@@ -99,7 +99,7 @@ export class SeedData {
 
     static decode(text) {
         let state = JSON.parse(decodeURIComponent(atob(text)))
-        return Object.assign(new SeedData(), state)
+        return Object.assign(new RequestContext(), state)
     }
 }
 

@@ -290,7 +290,7 @@ export class Schemat {
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
                 <%- schemat.init_client('#data-path') %>
            The argument, `data_element`, must be a CSS selector string that will point to the HTML element of the result page
-           containing SeedData for the client-side Schemat.
+           containing RequestContext for the client-side Schemat.
          */
         if (!data_element) throw new(`the argument for init_client() is missing: a CSS selector of the HTML element containing client-side data must be provided`)
         assert(!data_element.includes("'"))

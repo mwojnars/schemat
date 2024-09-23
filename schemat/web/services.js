@@ -36,7 +36,7 @@ export class Service {
 
     service_function    // a function, f(request, ...args), to be called on the server when the protocol is invoked;
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
-                        // like a method of the "target"; `request` is a RequestContext, or {} if called directly on the server
+                        // like a method of the "target"; `request` is a Request, or {} if called directly on the server
 
     opts = {}           // configuration options
     static opts = {}    // default values of configuration options

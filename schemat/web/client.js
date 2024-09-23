@@ -2,7 +2,7 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {assert, print} from "../common/utils.js";
 import {Schemat} from "../core/schemat.js";
-import {SeedData} from "./request.js"
+import {RequestContext} from "./request.js"
 
 
 /**********************************************************************************************************************/
@@ -60,19 +60,19 @@ export class ClientSchemat extends Schemat {
     /***  startup  ***/
 
     async boot(data_element) {
-        let data = SeedData.from_element(data_element)
-        print('seed data:', data)
+        let ctx = RequestContext.from_element(data_element)
+        print('request context:', ctx)
 
-        let db = new ClientDB(data.items)
-        await super.boot(data.site_id, db)
+        let db = new ClientDB(ctx.items)
+        await super.boot(ctx.site_id, db)
 
-        for (let rec of data.items)                     // preload all boot objects
+        for (let rec of ctx.items)                      // preload all boot objects
             await this.get_loaded(rec.id)
 
-        let target = this.get_object(data.target_id)
+        let target = this.get_object(ctx.target_id)
         target.assert_loaded()
 
-        let endpoint = data.endpoint
+        let endpoint = ctx.endpoint
         let service = target.__services[endpoint]
 
         this.request = {target, endpoint, service}
