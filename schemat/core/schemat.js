@@ -286,7 +286,7 @@ export class Schemat {
     }
 
     init_client() {
-        /* HTML code to be placed in an HTML page to load `schemat` on the client upon page load.
+        /* HTML code to be placed in an HTML page by the server to load `schemat` on the client side upon page load.
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
                 <%- schemat.init_client() %>
          */

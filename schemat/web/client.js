@@ -76,7 +76,6 @@ export class ClientSchemat extends Schemat {
         let service = target.__services[endpoint]
 
         this.request = {target, endpoint, service}
-        return service.render_client(target)
         // check()
     }
 
