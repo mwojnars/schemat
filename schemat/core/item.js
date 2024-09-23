@@ -304,6 +304,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         mutable:   false,       // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from the registry
         expiry:    0,           // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
+        loaded_at: undefined,   // unix timestamp [ms] to detect the most recently loaded copy of the same object
         pending_url: undefined,     // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
@@ -450,8 +451,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             if (category && !category.is_loaded() && category !== this)
                 await category.load({await_url: false})     // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
-            this.__meta.expiry = Date.now() + (this.__ttl || 0) * 1000
-
             if (this.__status) print(`WARNING: object [${this.__id}] has status ${this.__status}`)
 
             let cls = await this._load_class()              // set the target JS class on this object; stubs only have Item as their class, which must be changed when the data is loaded and the item is linked to its category
@@ -470,6 +469,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
             if (await_url && schemat.site && this.__meta.pending_url)
                 await this.__meta.pending_url
+
+            this.__meta.loaded_at = Date.now()              // current local unix timestamp [ms] to detect the most recently loaded copy of the same object
+            this.__meta.expiry = Date.now() + (this.__ttl || 0) * 1000
 
             return this
 
