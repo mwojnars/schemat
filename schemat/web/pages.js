@@ -147,15 +147,15 @@ export class RenderedPage extends HtmlPage {
         }
 
         page_data(props) {
-            /* Data string to be embedded in HTML output for use by the client-side JS code. Must be HTML-escaped. */
-            throw new NotImplemented('page_data() must be implemented in subclasses')
+            return SeedData.from_request(props.request)
         }
 
         page_script(props) {
-            /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
-               This code will launch the client-side rendering of the component.
-             */
-            throw new NotImplemented('page_script() must be implemented in subclasses')
+            return `
+                import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot('#page-data');
+                let {service, target} = schemat.request;
+                service.render_client(target);
+            `
         }
 
         component_frame({html, data, code}) {
@@ -210,18 +210,6 @@ export class ReactPage extends RenderedPage {
             let main = e(this.Main, props)
             return ReactDOM.renderToString(main)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
-        }
-
-        page_data(props) {
-            return SeedData.from_request(props.request)
-        }
-
-        page_script(props) {
-            return `
-                import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot('#page-data');
-                let {service, target} = schemat.request;
-                service.render_client(target);
-            `
         }
 
         Main() {
