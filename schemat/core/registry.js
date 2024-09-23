@@ -24,7 +24,8 @@ export class ObjectsCache extends Map {
         let count = 0
 
         for (let [id, obj] of this.entries()) {
-            if (obj.__meta.expiry > now) continue
+            let expire_at = obj.__meta.expire_at
+            if (expire_at === undefined || expire_at > now) continue
 
             let evicted = on_evict?.(obj)
             if (T.isPromise(evicted)) evicted = await evicted       // TODO: add to `pending` instead of awaiting here

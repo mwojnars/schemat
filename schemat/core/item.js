@@ -300,12 +300,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
     __data          // data fields of this item, as a Data object; created during .load()
 
-    __meta = {                  // __meta contain system properties of this object...
-        loading:   false,       // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
-        mutable:   false,       // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from the registry
-        expiry:    0,           // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
-        loaded_at: undefined,   // unix timestamp [ms] to detect the most recently loaded copy of the same object
-        pending_url: undefined,     // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
+    __meta = {                      // __meta contain system properties of this object...
+        loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
+        mutable:        false,      // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from the registry
+        expire_at:      undefined,  // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
+        loaded_at:      undefined,  // unix timestamp [ms] to detect the most recently loaded copy of the same object
+        pending_url:    undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
         // db         // the origin database of this item; undefined in newborn items
@@ -338,7 +338,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     is_linked()     { return this.__id !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     //is_activated()  { return this.is_loaded() && this.__url}        // true if the object is loaded AND its URL is already computed
-    //is_expired()    { return this.__meta.expiry < Date.now() }
+    //is_expired()    { return this.__meta.expire_at < Date.now() }
 
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
@@ -470,8 +470,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             if (await_url && schemat.site && this.__meta.pending_url)
                 await this.__meta.pending_url
 
-            this.__meta.loaded_at = Date.now()              // current local unix timestamp [ms] to detect the most recently loaded copy of the same object
-            this.__meta.expiry = Date.now() + (this.__ttl || 0) * 1000
+            let now = Date.now()
+            this.__meta.loaded_at = now
+            this.__meta.expire_at = now + (this.__ttl || 0) * 1000
 
             return this
 
@@ -1185,8 +1186,6 @@ export class RootCategory extends Category {
     static __is_root_category = true
 
     __id = ROOT_ID
-
-    // _set_expiry() { this.__meta.expiry = undefined }          // never evict from cache
 
     get __category() { return this.__proxy }        // root category is a category for itself
 
