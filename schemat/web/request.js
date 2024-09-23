@@ -62,6 +62,11 @@ export class Request {   // Connection ?
 }
 
 
+export class ObjectSet {
+    /* A Set of objects that deduplicates by object.id and keeps the most recent object (by __meta.loaded_at). */
+}
+
+
 export class RequestContext {
     /* Seed web objects and request-related context information to be embedded in HTML response and then unpacked on the client
        to enable boot up of a client-side Schemat. The objects are flattened (state-encoded), but not yet stringified.
@@ -76,10 +81,31 @@ export class RequestContext {
         let ctx = new RequestContext()
         let site = schemat.site
         let target = request.target
-        let items = [target, target.__category, schemat.root_category, site, ...site.__category.__ancestors]
-        items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
 
-        ctx.items = items.map(it => it.__record.encoded())
+        let items = new Set()
+        let queue = [target, site].filter(Boolean)
+        
+        // extend the `items` set with all objects that are referenced from the `target` and `site` via __category or __extend
+        // TODO: deduplicate IDs when repeated by different object instances (e.g., this happens for the root category)
+        while (queue.length) {
+            let obj = queue.pop()
+            if (!obj || items.has(obj)) continue
+            obj.assert_loaded()
+            items.add(obj)
+
+            queue.push(obj.__category)
+            queue.push(...obj.__extends$)
+        }
+        items = [...items]
+
+        // // build the set of unique IDs to check against duplicates
+        // let ids = new Set(objs.map(obj => obj.id))
+        // assert(ids.size === objs.length, `duplicate item IDs: ${objs.map(o => o.id).join(', ')}`)
+
+        // let items = [target, target.__category, schemat.root_category, site, ...site.__category.__ancestors]
+        // items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
+
+        ctx.items = items.map(obj => obj.__record.encoded())
         ctx.site_id = site.__id
         ctx.target_id = target.__id
         ctx.endpoint = request.endpoint
