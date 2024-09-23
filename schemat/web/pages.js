@@ -217,7 +217,11 @@ export class ReactPage extends RenderedPage {
         }
 
         page_script(props) {
-            return `import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot(); schemat.request.service.render_client(schemat.request.target)`
+            return `
+                import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot('#page-data');
+                let {service, target} = schemat.request;
+                service.render_client(target);
+            `
         }
 
         Main() {

@@ -285,14 +285,16 @@ export class Schemat {
         return this.site.import_dynamic(path)
     }
 
-    init_client() {
-        /* HTML code to be placed in an HTML page by the server to load `schemat` on the client side upon page load.
+    init_client(data_element) {
+        /* HTML code to be placed in an HTML page by the server, to load `schemat` on the client side upon page load.
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
-                <%- schemat.init_client() %>
+                <%- schemat.init_client('#data-path') %>
+           The argument, `data_element`, must be a CSS selector string that will point to the HTML element of the result page
+           containing SeedData for the client-side Schemat.
          */
-        let assets = '' //Resources.clientAssets
-        let script = `<script type="module">import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot();</script>`
-        return assets + script
+        if (!data_element) throw new(`the argument for init_client() is missing: a CSS selector of the HTML element containing client-side data must be provided`)
+        assert(!data_element.includes("'"))
+        return `<script type="module">import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot('${data_element}');</script>`
     }
 
     /***  Dynamic import from SUN  ***/

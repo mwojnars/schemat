@@ -59,8 +59,8 @@ export class ClientSchemat extends Schemat {
 
     /***  startup  ***/
 
-    async boot() {
-        let data = SeedData.from_element('#page-data')
+    async boot(data_element) {
+        let data = SeedData.from_element(data_element)
         print('seed data:', data)
 
         let db = new ClientDB(data.items)
