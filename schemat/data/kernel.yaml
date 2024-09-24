@@ -76,7 +76,7 @@
     versioning:
       default: false
       info: If true, updated or newly created objects of this category receive the
-        __version property that holds this object's version number (1,2,3,...) and
+        __ver property that holds this object's version number (1,2,3,...) and
         is automatically incremented on every update.
       "@": schemat/types/type.js:BOOLEAN
     history:
@@ -90,9 +90,8 @@
     __ttl: 60
     schema:
       __category:
-        info: Category of this item. Determines item's behavior and the schema of its
-          attributes. Each category should be an item of the Root Category.
-          (IID=0).
+        info: Category of this object. Determines its behavior and the schema of its
+          properties. Each category itself is an object of the Root Category (ID=0).
         repeated: true
         "@": schemat/types/type.js:ITEM
       __class:
@@ -114,10 +113,14 @@
         repeated: true
         inherit: false
         "@": schemat/types/type.js:ITEM
+      __ver:
+        info: Version of the object's content. Automatically incremented on every update.
+        min: 1
+        "@": schemat/types/type.js:INTEGER
       __container:
         info: Parent URL container of this object. The chain of containers leading from
-          Site to the object define the access path of this object, which can be
-          converted to a canonical URL path of the object by removing blank
+          the root container to a given object defines the access path of this object, 
+          which can be converted to a canonical URL path of the object by removing blank
           segments.
         "@": schemat/types/type.js:ITEM
       __path:
