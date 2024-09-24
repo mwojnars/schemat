@@ -159,6 +159,8 @@ export class Schemat {
         await this._init_site()
         // await this._reset_class()
         assert(this.site)
+
+        await this.site.load_globals()
     }
 
     async _init_classpath() {
@@ -281,7 +283,7 @@ export class Schemat {
 
     import(path) {
         /* May return a Promise. */
-        if (path.startsWith('schemat:') || !this.site?.is_loaded)
+        if (path.startsWith('schemat:') || !this.site) //?.is_loaded)
             return this.get_builtin(path)
         return this.site.import_dynamic(path)
     }

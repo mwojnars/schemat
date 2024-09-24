@@ -46,13 +46,6 @@ export class Site extends Item {
             this._vm = await import('node:vm')
             this._check_default_container()                 // no await to avoid blocking the site's startup
         }
-
-        // load objects listed in [global] property and make them globally available for application code
-        for (let [name, object] of this.global || [])
-            try { globalThis[name] = await object.load() }
-            catch (e) { 
-                print(`Site: failed to load global object '${name}'`)
-            }
     }
 
     async _check_default_container() {
@@ -64,6 +57,15 @@ export class Site extends Item {
 
         // ...and that this container is an ObjectSpace, so it is compatible with the URL generation on the client
         assert(default_container.__category.name === 'ObjectSpace', `container [${this.__id}] at the default path ('${this.default_path}') must be an ObjectSpace`)
+    }
+
+    async load_globals() {
+        /* Load objects listed in [global] property and make them globally available for application code. */
+        for (let [name, object] of this.global || [])
+            try { globalThis[name] = await object.load() }
+            catch (e) {
+                print(`Site: failed to load global object '${name}'`)
+            }
     }
 
 
