@@ -91,7 +91,7 @@
     schema:
       __category:
         info: Category of this item. Determines item's behavior and the schema of its
-          attributes. Each category should be an item of the Root Category
+          attributes. Each category should be an item of the Root Category.
           (IID=0).
         repeated: true
         "@": schemat/types/type.js:ITEM
