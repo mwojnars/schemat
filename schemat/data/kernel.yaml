@@ -105,11 +105,10 @@
           allowed, the first one has priority over subsequent ones. Prototypes
           can be defined for regular objects and for categories - the latter
           case represents category inheritance. Objects/categories may inherit
-          individual entries from catalog-valued fields, see
-          Item.getInherited(). In this way, subcategories inherit individual
-          field schemas from base categories, and may add their own fields to
-          the existing ones (during inheritance, schema is merged not
-          overwritten).
+          individual entries from catalog-valued fields (catalogs are merged, not 
+          overwritten during inheritance). For example, in this way, subcategories 
+          inherit individual field schemas from base categories, and may add their own 
+          fields to the existing ones.
         repeated: true
         inherit: false
         "@": schemat/types/type.js:ITEM
