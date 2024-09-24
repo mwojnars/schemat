@@ -1,6 +1,7 @@
 - __id: 0
   name: Category
-  info: Category of items that represent categories
+  info: Root category. Category of objects that represent categories. Is a
+    category for itself and for other categories.
   schema:
     class:
       info: 'Import path of the JS class (e.g., "path/.../file.js:ClassName") to be
@@ -72,6 +73,17 @@
       info: If true, it is allowed to set undeclared (out-of-schema) fields in objects
         - their schema is GENERIC()
       "@": schemat/types/type.js:BOOLEAN
+    use_versioning:
+      default: false
+      info: If true, updated or newly created objects of this category receive the __ver property
+        that holds this object's version number (1,2,3,...) and is automatically incremented on every update.
+      "@": schemat/types/type.js:BOOLEAN
+    keep_revisions:
+      default: false
+      info: If true, old versions of objects in this category are preserved on update by creating 
+        an immutable Revision that stores the object's previous content.
+        Effective only with use_versioning=true.
+      "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   defaults:
     __ttl: 60
@@ -88,15 +100,16 @@
           category.class instead?)
         "@": schemat/types/type.js:STRING
       __extends:
-        info: An object that serves as a prototype for this one, that is, provides default
-          values for missing properties. Multiple prototypes are allowed, 
-          the first one has priority over subsequent ones. Prototypes
-          can be defined for regular objects and for categories - the latter case
-          represents category inheritance. Objects/categories may inherit
+        info: An object that serves as a prototype for this one, that is, provides
+          default values for missing properties. Multiple prototypes are
+          allowed, the first one has priority over subsequent ones. Prototypes
+          can be defined for regular objects and for categories - the latter
+          case represents category inheritance. Objects/categories may inherit
           individual entries from catalog-valued fields, see
           Item.getInherited(). In this way, subcategories inherit individual
-          field schemas from base categories, and may add their own fields to the existing ones 
-          (during inheritance, schema is merged not overwritten).
+          field schemas from base categories, and may add their own fields to
+          the existing ones (during inheritance, schema is merged not
+          overwritten).
         repeated: true
         inherit: false
         "@": schemat/types/type.js:ITEM

@@ -195,7 +195,7 @@ describe('Schemat Tests', function () {
 
         it('Category', async function () {
             await test_page(page, `${DOMAIN}/$/id/0`, '#page-main',
-                ['Category:0', 'Category of items', 'name', '__ttl', 'defaults', 'schema', 'Ring', 'Varia'])
+                ['Category:0', 'Category of objects', 'name', '__ttl', 'defaults', 'schema', 'Ring', 'Varia'])
         })
 
         it('Directory', async function () {
