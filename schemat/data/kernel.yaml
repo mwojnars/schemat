@@ -76,14 +76,14 @@
     versioning:
       default: false
       info: If true, updated or newly created objects of this category receive the
-        __ver property that holds this object's version number (1,2,3,...) and
+        __version property that holds this object's version number (1,2,3,...) and
         is automatically incremented on every update.
       "@": schemat/types/type.js:BOOLEAN
     history:
       default: false
       info: If true, old versions of objects in this category are preserved on every
         update by creating an immutable Revision that stores the object's
-        previous content. Effective only with versioning=true.
+        previous content. Only effective with versioning=true.
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   defaults:
