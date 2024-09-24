@@ -50,8 +50,8 @@ export class ClientDB {
 export class ClientSchemat extends Schemat {
     /* Client-side global Schemat object. */
 
-    // attributes of the web request that initiated generation of this page
-    request = {
+    // attributes of the web request that invoked generation of this page by the server
+    requested = {
         target: null,           // target web object that was addressed by the request, already loaded
         endpoint: null,         // target's endpoint that was called
         service: null,          // service (if any) that is exposed at the target's `endpoint`
@@ -75,7 +75,7 @@ export class ClientSchemat extends Schemat {
         let endpoint = ctx.endpoint
         let service = target.__services[endpoint]
 
-        this.request = {target, endpoint, service}
+        this.requested = {target, endpoint, service}
         // check()
     }
 
