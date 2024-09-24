@@ -73,16 +73,17 @@
       info: If true, it is allowed to set undeclared (out-of-schema) fields in objects
         - their schema is GENERIC()
       "@": schemat/types/type.js:BOOLEAN
-    use_versioning:
+    versioning:
       default: false
-      info: If true, updated or newly created objects of this category receive the __ver property
-        that holds this object's version number (1,2,3,...) and is automatically incremented on every update.
+      info: If true, updated or newly created objects of this category receive the
+        __ver property that holds this object's version number (1,2,3,...) and
+        is automatically incremented on every update.
       "@": schemat/types/type.js:BOOLEAN
-    keep_revisions:
+    history:
       default: false
-      info: If true, old versions of objects in this category are preserved on update by creating 
-        an immutable Revision that stores the object's previous content.
-        Effective only with use_versioning=true.
+      info: If true, old versions of objects in this category are preserved on every
+        update by creating an immutable Revision that stores the object's
+        previous content. Effective only with versioning=true.
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   defaults:
@@ -155,6 +156,7 @@
         "@": schemat/types/type.js:STRING
       "@": schemat:Catalog
     "@": schemat:Catalog
+  versioning: true
   class: schemat:Category
   "@": schemat:Data
 - __id: 1
