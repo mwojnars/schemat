@@ -269,6 +269,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     get __prototypes() { return this.__extends$ }
 
+    get __proto_versions() { return this.__prototypes.map(proto => proto.__ver || 0) }      // DRAFT
+
     get __ancestors() {
         // TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
         // https://en.wikipedia.org/wiki/C3_linearization
