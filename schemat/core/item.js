@@ -650,7 +650,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Check whether this item belongs to a `category`, or its subcategory.
            All comparisons along the way use item IDs, not object identity. The item must be loaded.
         */
-        return this.__category.inherits_from(category)
+        return this.__category$.some(cat => cat.inherits_from(category))
     }
 
     inherits_from(parent) {
