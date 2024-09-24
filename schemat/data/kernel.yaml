@@ -76,7 +76,7 @@
     versioning:
       default: false
       info: If true, updated or newly created objects of this category receive the
-        __ver property that holds this object's version number (1,2,3,...) and
+        __version property that holds this object's version number (1,2,3,...) and
         is automatically incremented on every update.
       "@": schemat/types/type.js:BOOLEAN
     history:
@@ -112,8 +112,8 @@
         repeated: true
         inherit: false
         "@": schemat/types/type.js:ITEM
-      __ver:
-        info: Version of the object's content. Automatically incremented on every update.
+      __version:
+        info: Version number of the object's content, automatically incremented on every update.
         min: 1
         "@": schemat/types/type.js:INTEGER
       __container:
