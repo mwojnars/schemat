@@ -105,7 +105,6 @@
   "@": schemat:Data
 - __id: 1008
   name: home
-  view_endpoint: demo/01_books/home/home.js:homepage
   __container:
     "@": 1007
   __category:
