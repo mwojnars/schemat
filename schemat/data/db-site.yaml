@@ -50,7 +50,7 @@
     idx_category_item:
       "@": 23
     "@": schemat:Catalog
-  readonly: false
+  readonly: true
   start_id: 1001
   stop_id: 5000
   __category:
@@ -135,7 +135,7 @@
     idx_category_item:
       "@": 23
     "@": schemat:Catalog
-  readonly: false
+  readonly: true
   start_id: 5000
   stop_id: null
   __category:

@@ -304,9 +304,9 @@ export class CategoryRecordView extends ItemRecordView {
         const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
         return super.Main({extra: FRAGMENT(
-            H2('Objects'),
+            H2('Members'),
             e(this.Items, {items: items, itemRemoved: async () => setItems(await scan()), key: 'items'}),
-            H3('New Object'),
+            H3('Create New'),
             e(this.Items, {items: newItems, itemRemoved}),
             e(this.NewItem, {itemAdded}),
         )})

@@ -91,7 +91,8 @@
     schema:
       __category:
         info: Category of this object. Determines its behavior and the schema of its
-          properties. Each category itself is an object of the Root Category (ID=0).
+          properties. Each category itself is an object of the Root Category
+          (ID=0).
         repeated: true
         "@": schemat/types/type.js:ITEM
       __class:
@@ -105,22 +106,23 @@
           allowed, the first one has priority over subsequent ones. Prototypes
           can be defined for regular objects and for categories - the latter
           case represents category inheritance. Objects/categories may inherit
-          individual entries from catalog-valued fields (catalogs are merged, not 
-          overwritten during inheritance). For example, in this way, subcategories 
-          inherit individual field schemas from base categories, and may add their own 
-          fields to the existing ones.
+          individual entries from catalog-valued fields (catalogs are merged,
+          not overwritten during inheritance). For example, in this way,
+          subcategories inherit individual field schemas from base categories,
+          and may add their own fields to the existing ones.
         repeated: true
         inherit: false
         "@": schemat/types/type.js:ITEM
       __ver:
-        info: Version number of the object's content, automatically incremented on every update.
+        info: Version number of the object's content, automatically incremented on every
+          update.
         min: 1
         "@": schemat/types/type.js:INTEGER
       __container:
         info: Parent URL container of this object. The chain of containers leading from
-          the root container to a given object defines the access path of this object, 
-          which can be converted to a canonical URL path of the object by removing blank
-          segments.
+          the root container to a given object defines the access path of this
+          object, which can be converted to a canonical URL path of the object
+          by removing blank segments.
         "@": schemat/types/type.js:ITEM
       __path:
         impute: _impute__path
