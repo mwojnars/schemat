@@ -576,6 +576,8 @@
   "@": schemat:Data
 - __id: 26
   name: Revision
+  info: Immutable snapshot of past content of the `target` object at a particular
+    version number.
   __category:
     "@": 0
   "@": schemat:Data
