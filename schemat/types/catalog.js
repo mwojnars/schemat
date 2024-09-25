@@ -36,11 +36,11 @@ export class CATALOG extends Type {
     static get Widget() { return CatalogTable }
 
     static props = {
-        class:      Catalog,
-        keys:       new STRING({blank: true}),      // Type of all keys in the catalog; must be an instance of STRING or its subclass; mainly for validation
-        values:     new GENERIC({multi: true}),     // Type of all values in the catalog
-        initial:    () => new Catalog(),
-        repeated:   false,                          // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)
+        class:          Catalog,
+        type_keys:      new STRING({blank: true}),      // type of all keys in the catalog; must be an instance of STRING or its subclass
+        values:    new GENERIC(),                  // type of all values in the catalog
+        initial:        () => new Catalog(),
+        repeated:       false,                          // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)
         // keys_mandatory : false,
         // keys_forbidden : false,
         // keys_unique    : false,
@@ -52,21 +52,21 @@ export class CATALOG extends Type {
 
     constructor(props = {}) {
         super(props)
-        let {keys} = props
-        if (keys && !(keys.instanceof(STRING))) throw new ValidationError(`data type of keys must be an instance of STRING or its subclass, not ${keys}`)
+        let {type_keys} = props
+        if (type_keys && !(type_keys.instanceof(STRING)))
+            throw new ValidationError(`data type of keys must be an instance of STRING or its subclass, not ${type_keys}`)
     }
 
     collect(assets) {
-        this.props.keys.collect(assets)
+        this.props.type_keys.collect(assets)
         this.props.values.collect(assets)
         CatalogTable.collect(assets)            // CatalogTable is the widget used to display catalogs in the UI
     }
 
     toString() {
         let name = this.constructor.name
-        let {keys, values} = this.props
-        if (T.ofType(keys, STRING))  return `${name}(${values})`
-        else                         return `${name}(${values}, ${keys})`
+        let {type_keys, values} = this.props
+        return T.ofType(type_keys, STRING) ? `${name}(${values})` : `${name}(${values}, ${type_keys})`
     }
 
     find(path = null) {
@@ -97,11 +97,11 @@ export class CATALOG extends Type {
     _validate(obj) {
         obj = super._validate(obj)
 
-        let {keys, values} = this.props
-        for (let key of obj.keys()) keys.validate(key)
+        let {type_keys, values} = this.props
+        for (let key of obj.keys()) type_keys.validate(key)
         for (let val of obj.values()) values.validate(val)
 
-        if (!keys.props.repeated) {
+        if (!type_keys.props.repeated) {
             let dups = new Set()
             for (let key of obj.keys()) {
                 if (key === undefined || key === null) continue
