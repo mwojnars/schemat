@@ -172,8 +172,11 @@ export class DataBlock extends Block {
     async insert(req) {
         // calculate the `id` if not provided, update _autoincrement and write the data
         let {id, key, data} = req.args
-        let object = await Item.from_data(id, data, {mutable: true})        // the object must be instantiated for validation
-        object.validate()
+        let obj = await Item.from_data(id, data, {mutable: true})       // the object must be instantiated for validation
+        obj.validate()
+
+        if (obj.__category.versioning)   // __c.versioning
+            data.set('__ver', 1)
 
         if (id === undefined || id === null) {              // assign a new ID if not provided for the new item
             id = this._assign_id(req)
@@ -230,17 +233,17 @@ export class DataBlock extends Block {
         let data = await this._storage.get(key)
         if (data === undefined) return req.forward_down()
 
-        let object = await Item.from_data(id, data, {mutable: true})
+        let obj = await Item.from_data(id, data, {mutable: true})
 
         for (const edit of edits) {                 // `edit` is an instance of Edit
-            let ret = edit.apply_to(object)
+            let ret = edit.apply_to(obj)
             if (T.isPromise(ret)) await ret
         }
 
         // validate the object's data and the values of individual properties; may raise validation exceptions
-        object.validate()
+        obj.validate()
 
-        let value = object.__data.dump()
+        let value = obj.__data.dump()
         req = req.make_step(this, 'save', {id, key, value})
 
         if (req.current_ring.readonly)              // can't write the update here in this ring? forward to a higher ring
