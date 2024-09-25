@@ -578,6 +578,11 @@
   name: Revision
   info: Immutable snapshot of past content of the `target` object at a particular
     version number.
+  schema:
+    target:
+      info: The object whose older version is stored in this revision.
+      "@": schemat/types/type.js:ITEM
+    "@": schemat:Catalog
   __category:
     "@": 0
   "@": schemat:Data
