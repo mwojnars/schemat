@@ -220,7 +220,10 @@ export class Catalog {
         return this._entries.filter(e => !e.key)
     }
 
-    _normPath(path) { return typeof path === 'string' ? path.split('/') : T.isArray(path) ? path : [path] }
+    _normPath(path) {
+        assert(!path.includes('/'))     // TODO: use '.' as a segment separator not '/'
+        return typeof path === 'string' ? path.split('/') : T.isArray(path) ? path : [path]
+    }
 
     _step(path, error = true) {
         /* Make one step along a `path`. Return the position of the 1st entry on the path (must be unique),
@@ -464,8 +467,29 @@ export class Catalog {
         throw new Error(`path not found: ${subpath.join('/')}`)
     }
 
+    step(path, error = true) {
+        /* Make one step along `path`. Return all the entries that match the first segment of `path`
+
+        the position of the 1st entry on the path (must be unique),
+           the remaining path, and the value object found after the 1st step. */
+        path = this._normPath(path)
+        assert(path.length >= 1)
+
+        let step = path[0]
+        let pos = this._positionOf(step)
+        if (pos === undefined)
+            if (error) throw new Error(`path not found: ${step}`)
+            else return [-1]
+        let remain = path.slice(1)
+        let value = this._entries[pos].value
+
+        return [pos, remain, value]
+    }
+
     delete__(path) {
-        /* Delete all (sub)entries identified by `path`. Return the number of entries removed (0 if nothing deleted). */
+        /* Delete all (sub)entries identified by `path`. Return the number of entries removed (0 if nothing).
+           This is compatible with Map.delete() behavior, with the modification that an integer is returned instead of a boolean.
+         */
     }
 
     delete(path) {
