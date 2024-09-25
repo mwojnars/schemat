@@ -35,7 +35,7 @@ export class Path {
         return [head, tail]
     }
 
-    // static step(start, path, next = this.next) {
+    // static _step(start, path, next = this.next) {
     //     /* Starting from an object, `start`, move along the `path` of nested objects, and return [obj, tail],
     //        where `obj` is the first object found after taking one step on the `path`, and `tail` is the remaining path.
     //      */
@@ -222,7 +222,7 @@ export class Catalog {
 
     _normPath(path) { return typeof path === 'string' ? path.split('/') : T.isArray(path) ? path : [path] }
 
-    step(path, error = true) {
+    _step(path, error = true) {
         /* Make one step along a `path`. Return the position of the 1st entry on the path (must be unique),
            the remaining path, and the value object found after the 1st step. */
         path = this._normPath(path)
@@ -459,14 +459,18 @@ export class Catalog {
         /* Insert a new `entry` at position `pos` in a subcatalog identified by `path`; empty path denotes this catalog. */
         path = this._normPath(path)
         if (!path.length) return this._insertAt(pos, entry)
-        let [_, subpath, subcat] = this.step(path)
+        let [_, subpath, subcat] = this._step(path)
         if (subcat instanceof Catalog) return subcat.insert(subpath, pos, entry)        // nested Catalog? make a recursive call
         throw new Error(`path not found: ${subpath.join('/')}`)
     }
 
+    delete__(path) {
+        /* Delete all (sub)entries identified by `path`. Return the number of entries removed (0 if nothing deleted). */
+    }
+
     delete(path) {
         /* Delete a (sub)entry uniquely identified by `path`. */
-        let [pos, subpath, subcat] = this.step(path)
+        let [pos, subpath, subcat] = this._step(path)
         if (!subpath.length) return this._deleteAt(pos)
         if (subcat instanceof Catalog) return subcat.delete(subpath)        // nested Catalog? make a recursive call
         throw new Error(`path not found: ${subpath.join('/')}`)
@@ -478,7 +482,7 @@ export class Catalog {
            Automated changes, which are less reliable, should go through update() to allow for deduplication etc. - TODO
          */
         let props = {key, value, label, comment}
-        let [pos, subpath] = this.step(path)
+        let [pos, subpath] = this._step(path)
         if (!subpath.length) return this._overwrite(pos, props)     // `path` has only one segment, make the modifications and return
 
         let subcat = this._entries[pos].value
@@ -492,7 +496,7 @@ export class Catalog {
         /* In a (sub)catalog pointed to by `path`, move the entry at position `pos1` to position `pos2` while shifting after entries. */
         path = this._normPath(path)
         if (!path.length) return this._move(pos1, pos2)
-        let [_, subpath, subcat] = this.step(path)
+        let [_, subpath, subcat] = this._step(path)
         if (subcat instanceof Catalog) return subcat.move(subpath, pos1, pos2)        // nested Catalog? make a recursive call
         throw new Error(`path not found: ${subpath.join('/')}`)
     }
