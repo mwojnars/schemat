@@ -175,7 +175,7 @@ export class DataBlock extends Block {
         let obj = await Item.from_data(id, data, {mutable: true})       // the object must be instantiated for validation
         obj.validate()
 
-        if (obj.__category.versioning) {  // __c.versioning
+        if (obj.__c.versioning) {                           // set __ver=1 if needed
             obj.__data.set('__ver', 1)
             data = obj.dump_data()
         }

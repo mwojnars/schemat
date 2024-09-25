@@ -225,6 +225,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __record                ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
                             undefined in a newborn item; immutable after the first assignment
 
+    __c                     virtual category: either the __category (if only one present), or (TODO) a newly created Category object
+                            that inherits (as from prototypes) from all __category$ categories listed in this object
+
     __schema                schema of this item's data, as a DATA object
 
     __extends
@@ -263,6 +266,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         assert(record.id === this.__id)
         let cached = {[ItemProxy.FROM_CACHE]: true, value: record}      // caching in ItemProxy makes the property immutable, while we still may want to store a better record found in _load(), hence manual caching here with writable=true
         Object.defineProperty(this.__self, '__record', {value: cached, writable: true})
+    }
+
+    get __c() {
+        let cats = this.__category$
+        if (cats?.length > 1) throw new Error(`multiple categories not supported yet`)
+        return cats[0]
     }
 
     get __schema() {
