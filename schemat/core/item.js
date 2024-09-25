@@ -220,6 +220,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
                             for a newly created object that already has an ID assigned, but is not yet (fully) saved to DB, the ID must be kept
                             in __meta.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
 
+    __data                  own properties of this object in raw form (before imputation etc.), as a Data object created during .load()
+
     __record                ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
                             undefined in a newborn item; immutable after the first assignment
 
@@ -300,9 +302,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
-    __data          // data fields of this item, as a Data object; created during .load()
 
-    __meta = {                      // __meta contain system properties of this object...
+    __meta = {                      // some special properties are grouped here under __meta to avoid cluttering the object's interface ...
         loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         mutable:        false,      // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from the registry
         loaded_at:      undefined,  // timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
