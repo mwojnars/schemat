@@ -13,7 +13,7 @@
       default: schemat:Item
       "@": schemat/types/type.js:STRING
     defaults:
-      values:
+      type_values:
         "@": schemat/types/type.js:GENERIC
       info: Default values for properties of objects in this category. The key cannot
         be empty. Same key can be repeated.
@@ -35,13 +35,13 @@
         first base category, or the top-level Item.
       "@": schemat/types/type.js:CODE
     pages:
-      values:
+      type_values:
         "@": schemat/types/type.js:CODE
       info: Source code of functions that generate static HTML response for particular
         access methods of this category's items.
       "@": schemat/types/catalog.js:CATALOG
     views:
-      values:
+      type_values:
         "@": schemat/types/type.js:CODE
       info: "Body of React functional components (no function header) to be added
         dynamically to the category's Class body as VIEW_name(props) methods for
@@ -51,7 +51,7 @@
         title(), assets() - like in a class body."
       "@": schemat/types/catalog.js:CATALOG
     default_endpoints:
-      values:
+      type_values:
         "@": schemat/types/type.js:STRING
       info: List of [PROTOCOL, endpoint] pairs that define default endpoint(s) for
         objects of this category when requested via a URL with no explicit
@@ -64,7 +64,7 @@
         "@": schemat:Catalog
       "@": schemat/types/catalog.js:CATALOG
     schema:
-      values:
+      type_values:
         "@": schemat/types/type.js:TYPE
       info: Names and data types of properties of objects in this category.
       "@": schemat/types/catalog.js:CATALOG
@@ -192,7 +192,7 @@
         "@": 2
       "@": schemat/types/type.js:REF
     global:
-      values:
+      type_values:
         "@": schemat/types/type.js:REF
       info: A catalog of essential application objects - typically categories - that
         will be loaded and made globally available to the application code via
@@ -262,7 +262,7 @@
     See also the Namespace containers for unbounded collections of objects with dynamically assigned names.
   schema:
     entries:
-      values:
+      type_values:
         "@": schemat/types/type.js:REF
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
@@ -349,7 +349,7 @@
     `spaces` property."
   schema:
     spaces:
-      values:
+      type_values:
         category:
           "@": 0
         "@": schemat/types/type.js:REF

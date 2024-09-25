@@ -38,7 +38,7 @@ export class CATALOG extends Type {
     static props = {
         class:          Catalog,
         type_keys:      new STRING({blank: true}),      // type of all keys in the catalog; must be an instance of STRING or its subclass
-        values:    new GENERIC(),                  // type of all values in the catalog
+        type_values:    new GENERIC(),                  // type of all values in the catalog
         initial:        () => new Catalog(),
         repeated:       false,                          // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)
         // keys_mandatory : false,
@@ -47,7 +47,7 @@ export class CATALOG extends Type {
         // keys_empty_ok  : false,
     }
 
-    subtype(key)  { return this.props.values }    // Type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
+    subtype(key)  { return this.props.type_values }     // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     getValidKeys()  { return undefined }
 
     constructor(props = {}) {
@@ -59,14 +59,14 @@ export class CATALOG extends Type {
 
     collect(assets) {
         this.props.type_keys.collect(assets)
-        this.props.values.collect(assets)
+        this.props.type_values.collect(assets)
         CatalogTable.collect(assets)            // CatalogTable is the widget used to display catalogs in the UI
     }
 
     toString() {
         let name = this.constructor.name
-        let {type_keys, values} = this.props
-        return T.ofType(type_keys, STRING) ? `${name}(${values})` : `${name}(${values}, ${type_keys})`
+        let {type_keys, type_values} = this.props
+        return T.ofType(type_keys, STRING) ? `${name}(${type_values})` : `${name}(${type_values}, ${type_keys})`
     }
 
     find(path = null) {
@@ -91,15 +91,15 @@ export class CATALOG extends Type {
         return Catalog.merge(catalogs, !this.isRepeated())          // merge all values (catalogs) into a single catalog
 
         // TODO: inside Catalog.merge(), if repeated=false, overlapping values should be merged recursively
-        //       through combine() of props.values type
+        //       through combine() of props.type_values type
     }
 
     _validate(obj) {
         obj = super._validate(obj)
 
-        let {type_keys, values} = this.props
+        let {type_keys, type_values} = this.props
         for (let key of obj.keys()) type_keys.validate(key)
-        for (let val of obj.values()) values.validate(val)
+        for (let val of obj.values()) type_values.validate(val)
 
         if (!type_keys.props.repeated) {
             let dups = new Set()
@@ -136,7 +136,7 @@ export class DATA extends CATALOG {
         let {fields} = this.props
         if (!fields.hasOwnProperty(key) && this.props.strict)
             throw new ValidationError(`Unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
-        return fields[key] || this.props.values
+        return fields[key] || this.props.type_values
     }
     collect(assets) {
         for (let type of this._all_subtypes())
