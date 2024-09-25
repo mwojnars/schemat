@@ -85,6 +85,10 @@
         update by creating an immutable Revision that stores the object's
         previous content. Only effective with versioning=true.
       "@": schemat/types/type.js:BOOLEAN
+    immutable:
+      default: false
+      info: If true, objects of this category cannot be modified after creation.
+      "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   defaults:
     __ttl: 60
