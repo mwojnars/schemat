@@ -79,12 +79,12 @@ export class Type {
 
     constructor(props = {}) {
         this.__props = props || {}      // props=null/undefined is also valid
-        this.initProps()
+        this._init_props()
     }
 
     init() {}                   // called from Category.init(); subclasses should override this method as async to perform asynchronous initialization
 
-    initProps() {
+    _init_props() {
         /* Create this.props by combining the constructor's default props (own and inherited) with instance props (this.__props). */
         this.props = {...this.constructor.default_props(), ...this.__props}
     }
@@ -94,11 +94,11 @@ export class Type {
     __setstate__(state) {
         assert(T.isDict(state))
         this.__props = state
-        this.initProps()
+        this._init_props()
         return this
     }
 
-    getInitial() {
+    get_initial() {
         /* `props.initial` can be a value or a function; this method provides support for both cases. */
         let {initial} = this.props //this.constructor.initial
         return (typeof initial === 'function') ? initial() : initial
@@ -651,7 +651,7 @@ export class TypeWrapper extends Type {
     __getstate__()          { return [this.props.type_item, this.props.properties] }
     __setstate__(state)     {
         [this.__props.type_item, this.__props.properties] = state
-        this.initProps()
+        this._init_props()
         return this
     }
 }

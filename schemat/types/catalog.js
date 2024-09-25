@@ -438,7 +438,7 @@ export class CatalogTable extends Component {
                 assert(prev[pos].id === 'new')
                 if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
 
-                let value = type.getInitial()
+                let value = type.get_initial()
                 let ids = [-1, ...prev.map(e => e.id)]
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}

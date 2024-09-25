@@ -96,7 +96,7 @@ export class TypeWidget extends Component {
         let {type, value} = this.props
         if (!this.state.editing) return this.viewer()
         this.initial = (value !== undefined) ? this.encode(value) : undefined
-        this.default = (this.initial !== undefined) ? this.initial : type.getInitial()
+        this.default = (this.initial !== undefined) ? this.initial : type.get_initial()
         return this.editor()
     }
 }
