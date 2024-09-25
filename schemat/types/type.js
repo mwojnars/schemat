@@ -153,7 +153,7 @@ export class Type {
            Merge multiple inherited arrays of values matching this type (TODO: check against incompatible inheritance).
            Return the merged value, or undefined if it cannot be determined.
            The merged value may include or consist of the type's imputed value (props.impute()) or default (props.default).
-           Base class implementation returns the first value of `arrays`, or the default value, or imputed value.
+           Base class implementation returns the first value of `arrays`, or the default value, or impute()
            Only the CATALOG and its subclasses provide a different implementation that performs a merge of catalogs
            across all prototypes of a given object.
          */
@@ -375,9 +375,20 @@ export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static stype = "string"
     static props = {
-        initial: '',
+        initial:    '',
+        charset:    undefined,
         // collator                 // optional collator object that defines the sort order and provides a (possibly one-way!) binary encoding for indexing
         // charcase: false,         // 'upper'/'lower' - only upper/lower case characters allowed
+    }
+
+    _validate(str) {
+        str = super._validate(str)
+        let {charset} = this.props
+        if (charset) {
+            let regex = new RegExp(`^[${charset}]*$`, 'u')
+            if (!regex.test(str)) throw new ValueError(`found characters from outside the charset (${charset})`)
+        }
+        return str
     }
 
     static Widget = widgets.TextualWidget
@@ -387,11 +398,24 @@ export class STRING extends Textual {
     static props = {
         trim: true,                 // if true (default), the strings are trimmed before insertion to DB
     }
-    _validate(value) {
-        value = super._validate(value)
-        return this.props.trim ? value.trim() : value           // trim leading/trailing whitespace
+    _validate(str) {
+        str = super._validate(str)
+        return this.props.trim ? str.trim() : str               // trim leading/trailing whitespace
     }
 }
+
+export class FIELD extends STRING {
+    /* A STRING than only contains alphanumeric characters (including Unicode!), "_" and "-", 
+       but no punctuation, spaces or control chars.
+     */
+    static props = {charset: 'a-zA-Z0-9_\\-\\p{L}\\p{N}'}
+}
+
+export class IDENTIFIER extends STRING {
+    /* A STRING than only contains ASCII alphanumeric characters and "_", but no punctuation, "-", spaces or control chars. */
+    static props = {charset: 'a-zA-Z0-9_'}
+}
+
 export class URL extends STRING {
     /* For now, URL type does NOT check if the string is a valid URL, only modifies the display to make the string a hyperlink. */
     static Widget = class extends widgets.TextualWidget {
