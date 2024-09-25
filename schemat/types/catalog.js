@@ -1,7 +1,7 @@
 import {ValidationError} from "../common/errors.js";
 import {T, assert, trycatch, concat} from "../common/utils.js";
 import {Catalog, Path} from '../core/data.js'
-import {GENERIC, generic_string, generic_type, is_valid_field_name, STRING, Type, TYPE} from "./type.js";
+import {FIELD, GENERIC, STRING, Type, generic_string, generic_type, is_valid_field_name} from "./type.js";
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../web/react-utils.js";
 import {MaterialUI} from "../web/resources.js";
@@ -37,7 +37,7 @@ export class CATALOG extends Type {
 
     static props = {
         class:          Catalog,
-        type_keys:      new STRING({blank: true}),      // type of all keys in the catalog; must be an instance of STRING or its subclass
+        type_keys:      new FIELD({blank: true}),       // type of all keys in the catalog; must be an instance of STRING or its subclass
         type_values:    new GENERIC(),                  // type of all values in the catalog
         initial:        () => new Catalog(),
         repeated:       false,                          // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)

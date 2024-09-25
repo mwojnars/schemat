@@ -386,7 +386,7 @@ export class Textual extends Primitive {
         let {charset} = this.props
         if (charset) {
             let regex = new RegExp(`^[${charset}]*$`, 'u')
-            if (!regex.test(str)) throw new ValueError(`found characters from outside the charset (${charset})`)
+            if (!regex.test(str)) throw new ValueError(`some characters are outside the charset (${charset})`)
         }
         return str
     }
