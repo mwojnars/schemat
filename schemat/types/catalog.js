@@ -36,6 +36,7 @@ export class CATALOG extends Type {
     static get Widget() { return CatalogTable }
 
     static props = {
+        class:      Catalog,
         keys:       new STRING({blank: true}),      // Type of all keys in the catalog; must be an instance of STRING or its subclass; mainly for validation
         values:     new GENERIC({multi: true}),     // Type of all values in the catalog
         initial:    () => new Catalog(),
@@ -93,43 +94,23 @@ export class CATALOG extends Type {
         //       through combine() of props.values type
     }
 
-    // _validate(obj) {
-    //     obj = super._validate(obj)
-    //
-    //     if (!(obj instanceof Catalog)) {
-    //         throw new ValidationError(`Expected a Catalog instance, got ${obj} instead`)
-    //     }
-    //
-    //     const {keys, values, repeated} = this.props
-    //
-    //     if (!repeated) {
-    //         const keySet = new Set()
-    //         for (const entry of obj._entries) {
-    //             if (entry.key !== undefined && keySet.has(entry.key)) {
-    //                 throw new ValidationError(`Duplicate key '${entry.key}' found in non-repeated CATALOG`)
-    //             }
-    //             keySet.add(entry.key)
-    //         }
-    //     }
-    //
-    //     for (const entry of obj._entries) {
-    //         if (entry.key !== undefined) {
-    //             try {
-    //                 keys.validate(entry.key)
-    //             } catch (error) {
-    //                 throw new ValidationError(`Invalid key '${entry.key}': ${error.message}`)
-    //             }
-    //         }
-    //
-    //         try {
-    //             values.validate(entry.value)
-    //         } catch (error) {
-    //             throw new ValidationError(`Invalid value for key '${entry.key}': ${error.message}`)
-    //         }
-    //     }
-    //
-    //     return obj
-    // }
+    _validate(obj) {
+        obj = super._validate(obj)
+
+        let {keys, values} = this.props
+        for (let key of obj.keys()) keys.validate(key)
+        for (let val of obj.values()) values.validate(val)
+
+        if (!keys.props.repeated) {
+            let dups = new Set()
+            for (let key of obj.keys()) {
+                if (key === undefined || key === null) continue
+                if (dups.has(key)) throw new ValidationError(`duplicate key (${key})`)
+                dups.add(key)
+            }
+        }
+        return obj
+    }
 }
 
 
