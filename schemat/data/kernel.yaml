@@ -586,7 +586,14 @@
     target:
       info: The object whose older version is stored in this revision.
       "@": schemat/types/type.js:REF
+    ver:
+      info: Version number of the `target` that is stored in this revision.
+      "@": schemat/types/type.js:INTEGER
+    data:
+      info: JSON-stringified `__data` of the target object at version `ver`.
+      "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
+  immutable: true
   __category:
     "@": 0
   "@": schemat:Data
