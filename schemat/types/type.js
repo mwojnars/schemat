@@ -69,13 +69,13 @@ export class Type {
         // compress: undefined,     // whether to compress JSON output in stringify/parse()
     }
 
-    static getDefaultProps() {
+    static default_props() {
         /* Return all defaultProps from the prototype chain combined. */
         return Object.assign({}, ...T.getInherited(this, 'defaultProps'))
     }
 
-    props                       // properties of this type: own (__props) + defaults (defaultProps)
-    __props = {}                // own properties, i.e., excluding the defaults; this.props = defaults (with inherited) + __props
+    __props = {}                // own properties of this type instance (without defaults)
+    props                       // all properties of this type instance: own + defaults  (this.__props + constructor.props)
 
 
     constructor(props = {}) {
@@ -87,7 +87,7 @@ export class Type {
 
     initProps() {
         /* Create this.props by combining the constructor's defaultProps (own and inherited) with own props (this.__props). */
-        this.props = {...this.constructor.getDefaultProps(), ...this.__props}
+        this.props = {...this.constructor.default_props(), ...this.__props}
     }
 
     __getstate__()      { return this.__props }
@@ -579,7 +579,6 @@ export class RECORD extends Type {
     */
 
     static defaultProps = {
-        class:  undefined,
         fields: {},                     // object containing field names and their schemas
     }
 
