@@ -119,8 +119,8 @@ export class Type {
             else throw new ValueError(`expected a non-blank (non-missing) value, got '${value}' instead`)
 
         let class_ = this.props.class
-        if (class_ && !(obj instanceof class_))
-            throw new ValueError(`expected an instance of ${class_}, got ${obj} instead`)
+        if (class_ && !(value instanceof class_))
+            throw new ValueError(`expected an instance of ${class_}, got ${value} instead`)
 
         return this._validate(value)
     }
