@@ -2,7 +2,7 @@ import {print, assert, T, escape_html, concat, unique, delay} from '../common/ut
 import {NotLinked, NotLoaded, ValidationError} from '../common/errors.js'
 
 import {Catalog, Data} from './data.js'
-import {ITEM, generic_type} from "../types/type.js"
+import {REF, generic_type} from "../types/type.js"
 import {DATA, DATA_GENERIC} from "../types/catalog.js"
 
 import {ItemRecord} from "../db/records.js"
@@ -615,8 +615,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // 2) __category: because the schema is not yet available and reading the type from __schema would create circular dependency.
 
         let type =
-            prop === '__category' ? new ITEM() :
-            prop === '__extends'  ? new ITEM({inherit: false}) :
+            prop === '__category' ? new REF() :
+            prop === '__extends'  ? new REF({inherit: false}) :
                                     proxy.__schema.get(prop)
 
         if (!type) return []

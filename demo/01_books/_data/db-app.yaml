@@ -9,7 +9,7 @@
       repeated: true
       category:
         "@": 5001
-      "@": schemat/types/type.js:ITEM
+      "@": schemat/types/type.js:REF
     genre:
       "@": schemat/types/type.js:STRING
     published_year:

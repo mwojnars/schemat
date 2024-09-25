@@ -284,7 +284,7 @@ export class TYPE_Widget extends GENERIC_Widget {
 
 /**********************************************************************************************************************/
 
-export const ITEM_Widget = ItemLoadingHOC(class extends TypeWidget {
+export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
 
     static css_class = "REF"
 

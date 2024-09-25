@@ -501,17 +501,17 @@ export class TYPE extends GENERIC {
 
 /**********************************************************************************************************************/
 
-export class ITEM extends Type {
+export class REF extends Type {
     /*
     Reference to an Item, encoded as {"@": id} during serialization through JSONx.
-    ITEM without parameters is equivalent to GENERIC(Item), however, ITEM can also be parameterized,
+    REF without parameters is equivalent to GENERIC(Item), however, REF can also be parameterized,
     which is not possible with a GENERIC.
     */
     static defaultProps = {
         category:  undefined,       // base category for all the items to be encoded
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
     }
-    static Widget = widgets.ITEM_Widget
+    static Widget = widgets.REF_Widget
 
     _validate(obj) {
         obj = super._validate(obj)

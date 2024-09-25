@@ -94,7 +94,7 @@
           properties. Each category itself is an object of the Root Category
           (ID=0).
         repeated: true
-        "@": schemat/types/type.js:ITEM
+        "@": schemat/types/type.js:REF
       __class:
         info: Import path of the JS class ("path/file.js:ClassName") that will be linked
           to this object during loading. (NOTE this is likely obsolete, set
@@ -112,7 +112,7 @@
           and may add their own fields to the existing ones.
         repeated: true
         inherit: false
-        "@": schemat/types/type.js:ITEM
+        "@": schemat/types/type.js:REF
       __ver:
         info: Version number of the object's content, automatically incremented on every
           update.
@@ -123,7 +123,7 @@
           the root container to a given object defines the access path of this
           object, which can be converted to a canonical URL path of the object
           by removing blank segments.
-        "@": schemat/types/type.js:ITEM
+        "@": schemat/types/type.js:REF
       __path:
         impute: _impute__path
         inherit: false
@@ -171,10 +171,10 @@
   schema:
     cluster:
       info: A Cluster of compute & storage nodes that host this site and database.
-      "@": schemat/types/type.js:ITEM
+      "@": schemat/types/type.js:REF
     database:
       info: Database instance that contains all data of this site
-      "@": schemat/types/type.js:ITEM
+      "@": schemat/types/type.js:REF
     default_path:
       info: URL path of a default container that can be used to access any object via
         its ID. For internal purposes. Should contain a leading slash and no
@@ -186,10 +186,10 @@
         container."
       category:
         "@": 2
-      "@": schemat/types/type.js:ITEM
+      "@": schemat/types/type.js:REF
     global:
       values:
-        "@": schemat/types/type.js:ITEM
+        "@": schemat/types/type.js:REF
       info: A catalog of essential application objects - typically categories - that
         will be loaded and made globally available to the application code via
         `globalThis.XXX` right after initialization of `schemat.site` object.
@@ -259,7 +259,7 @@
   schema:
     entries:
       values:
-        "@": schemat/types/type.js:ITEM
+        "@": schemat/types/type.js:REF
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
   class: schemat/std/containers.js:Directory
@@ -330,7 +330,7 @@
       info: Optional category(ies) of objects to be included in this namespace. Every
         object that is not an instance of at least one of these categories is
         excluded.
-      "@": schemat/types/type.js:ITEM
+      "@": schemat/types/type.js:REF
     "@": schemat:Catalog
   class: schemat/std/containers.js:ObjectSpace
   __extends:
@@ -348,7 +348,7 @@
       values:
         category:
           "@": 0
-        "@": schemat/types/type.js:ITEM
+        "@": schemat/types/type.js:REF
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
   class: schemat/std/containers.js:Category_IID_Namespace
@@ -394,12 +394,12 @@
       info: DataSequence that keeps all primary objects of this ring
       category:
         "@": 14
-      "@": schemat/types/type.js:ITEM
+      "@": schemat/types/type.js:REF
     index_sequence:
       info: IndexSequence that keeps all indexes of this ring
       category:
         "@": 22
-      "@": schemat/types/type.js:ITEM
+      "@": schemat/types/type.js:REF
     indexes:
       info: Map of Indexes and their names
       "@": schemat/types/type.js:GENERIC
@@ -416,7 +416,7 @@
       info: parent Ring of this sequence
       category:
         "@": 12
-      "@": schemat/types/type.js:ITEM
+      "@": schemat/types/type.js:REF
     blocks:
       info: array of Blocks containing records of this sequence
       "@": schemat/types/type.js:GENERIC
@@ -476,7 +476,7 @@
   schema:
     sequence:
       info: parent Sequence this block is a part of
-      "@": schemat/types/type.js:ITEM
+      "@": schemat/types/type.js:REF
     filename:
       info: path to a local file that contains records of this block
       "@": schemat/types/type.js:STRING
@@ -545,7 +545,7 @@
   schema:
     source:
       info: source Sequence that feeds data to this index
-      "@": schemat/types/type.js:ITEM
+      "@": schemat/types/type.js:REF
     record_schema:
       info: Schema of records produced by this operator, as an instance of
         RecordSchema
@@ -581,7 +581,7 @@
   schema:
     target:
       info: The object whose older version is stored in this revision.
-      "@": schemat/types/type.js:ITEM
+      "@": schemat/types/type.js:REF
     "@": schemat:Catalog
   __category:
     "@": 0
