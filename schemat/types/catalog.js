@@ -35,7 +35,7 @@ export class CATALOG extends Type {
 
     static get Widget() { return CatalogTable }
 
-    static defaultProps = {
+    static props = {
         keys:       new STRING({blank: true}),      // Type of all keys in the catalog; must be an instance of STRING or its subclass; mainly for validation
         values:     new GENERIC({multi: true}),     // Type of all values in the catalog
         initial:    () => new Catalog(),
@@ -92,6 +92,44 @@ export class CATALOG extends Type {
         // TODO: inside Catalog.merge(), if repeated=false, overlapping values should be merged recursively
         //       through combine() of props.values type
     }
+
+    // _validate(obj) {
+    //     obj = super._validate(obj)
+    //
+    //     if (!(obj instanceof Catalog)) {
+    //         throw new ValidationError(`Expected a Catalog instance, got ${obj} instead`)
+    //     }
+    //
+    //     const {keys, values, repeated} = this.props
+    //
+    //     if (!repeated) {
+    //         const keySet = new Set()
+    //         for (const entry of obj._entries) {
+    //             if (entry.key !== undefined && keySet.has(entry.key)) {
+    //                 throw new ValidationError(`Duplicate key '${entry.key}' found in non-repeated CATALOG`)
+    //             }
+    //             keySet.add(entry.key)
+    //         }
+    //     }
+    //
+    //     for (const entry of obj._entries) {
+    //         if (entry.key !== undefined) {
+    //             try {
+    //                 keys.validate(entry.key)
+    //             } catch (error) {
+    //                 throw new ValidationError(`Invalid key '${entry.key}': ${error.message}`)
+    //             }
+    //         }
+    //
+    //         try {
+    //             values.validate(entry.value)
+    //         } catch (error) {
+    //             throw new ValidationError(`Invalid value for key '${entry.key}': ${error.message}`)
+    //         }
+    //     }
+    //
+    //     return obj
+    // }
 }
 
 
@@ -102,7 +140,7 @@ export class DATA extends CATALOG {
        Primarily used as a data type for Item.data, not intended for other uses.
      */
 
-    static defaultProps = {
+    static props = {
         fields: {},             // object with field names and their types; null means a default data type should be used for a given field
         strict: true,           // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields
     }
@@ -135,7 +173,7 @@ export class DATA extends CATALOG {
 
 export class DATA_GENERIC extends DATA {
     /* Generic item's DATA schema, used when there's no category for an item. */
-    static defaultProps = {
+    static props = {
         fields: {},
         strict: false,
     }
@@ -147,7 +185,7 @@ export class DATA_GENERIC extends DATA {
 // export class DATA_SCHEMA extends TYPE {
 //     /* An (imputed) instance of DATA that represents schema of objects in a category, wrapped up in a DATA. */
 //
-//     static defaultProps = {
+//     static props = {
 //         editable: false,
 //         impute() {
 //             /* `this` is expected to be a Category object that defines items' schema through its `fields` property. */

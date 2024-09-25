@@ -27,25 +27,24 @@ export class Type {
     isRepeated()    { return this.props.repeated }
     isEditable()    { return this.props.editable }
 
-    // common properties of value types; can be utilized by subclasses or callers:
-    static defaultProps = {
-        info     : undefined,   // human-readable description of this type: what values are accepted and how they are interpreted
-        blank    : undefined,   // if true, `null` and `undefined` are treated as a valid value: stored and then decoded as "null"
-        class    : undefined,   // if present, all values (except blank) must be instances of this JS class
-        initial  : undefined,   // initial value assigned to a newly created data element of this type
-        default  : undefined,   // default value to be used for a non-repeated property when no explicit value was provided;
-                                // since repeated properties behave like lists of varying length, and zero is a valid length,
-                                // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
+    static props = {                // common properties of all types:
+        info     : undefined,       // human-readable description of this type: what values are accepted and how they are interpreted
+        blank    : undefined,       // if true, `null` and `undefined` are treated as a valid value: stored and then decoded as "null"
+        class    : undefined,       // if present, all values (except blank) must be instances of this JS class
+        initial  : undefined,       // initial value assigned to a newly created data element of this type
+        default  : undefined,       // default value to be used for a non-repeated property when no explicit value was provided;
+                                    // since repeated properties behave like lists of varying length, and zero is a valid length,
+                                    // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
-        repeated : undefined,   // if true, the field described by this type can have multiple occurrences, typically inside a CATALOG/RECORD/DATA
-                                // - all the values (incl. inherited ones) can be retrieved via .field$ then; note that setting repeated=true has performance impact,
-                                // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object;
-                                // repeated fields of type CATALOG provide special behavior: they get merged altogether during the property's value computation
+        repeated : undefined,       // if true, the field described by this type can have multiple occurrences, typically inside a CATALOG/RECORD/DATA
+                                    // - all the values (incl. inherited ones) can be retrieved via .field$ then; note that setting repeated=true has performance impact,
+                                    // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object;
+                                    // repeated fields of type CATALOG provide special behavior: they get merged altogether during the property's value computation
 
-        inherit  : true,        // if false, inheritance is disabled for this field; used particularly for some system fields
-        impute   : undefined,   // a function to be used for imputation of missing values; `this` references the item;
-                                // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
-                                // the function must be *synchronous* and cannot return a Promise
+        inherit  : true,            // if false, inheritance is disabled for this field; used particularly for some system fields
+        impute   : undefined,       // a function to be used for imputation of missing values; `this` references the item;
+                                    // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
+                                    // the function must be *synchronous* and cannot return a Promise
 
         // virtual : undefined,    // if true, the field only supports imputation and cannot be directly assigned to
         // persisted : undefined   // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
@@ -70,8 +69,8 @@ export class Type {
     }
 
     static default_props() {
-        /* Return all defaultProps from the prototype chain combined. */
-        return Object.assign({}, ...T.getInherited(this, 'defaultProps'))
+        /* Return all props from the prototype chain combined. */
+        return Object.assign({}, ...T.getInherited(this, 'props'))
     }
 
     __props = {}                // own properties of this type instance (without defaults)
@@ -86,7 +85,7 @@ export class Type {
     init() {}                   // called from Category.init(); subclasses should override this method as async to perform asynchronous initialization
 
     initProps() {
-        /* Create this.props by combining the constructor's defaultProps (own and inherited) with own props (this.__props). */
+        /* Create this.props by combining the constructor's default props (own and inherited) with instance props (this.__props). */
         this.props = {...this.constructor.default_props(), ...this.__props}
     }
 
@@ -246,13 +245,13 @@ export class Primitive extends Type {
 
 export class BOOLEAN extends Primitive {
     static stype = "boolean"
-    static defaultProps = {initial: false}
+    static props = {initial: false}
 }
 
 export class NUMBER extends Primitive {
     /* Floating-point number */
     static stype = "number"
-    static defaultProps = {
+    static props = {
         // initial: 0,
         min:            undefined,         // minimum value allowed (>=)
         max:            undefined,         // maximum value allowed (<=)
@@ -273,7 +272,7 @@ export class INTEGER extends NUMBER {
 
     static DEFAULT_LENGTH_SIGNED = 6    // default length of the binary representation in bytes, for signed integers
 
-    static defaultProps = {
+    static props = {
         signed:  false,         // if true, values can be negative
         length:  undefined,     // number of bytes to be used to store values in DB indexes; adaptive encoding if undefined (for uint), or 6 (for signed int)
     }
@@ -375,7 +374,7 @@ export class INTEGER extends NUMBER {
 export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static stype = "string"
-    static defaultProps = {
+    static props = {
         initial: '',
         // collator                 // optional collator object that defines the sort order and provides a (possibly one-way!) binary encoding for indexing
         // charcase: false,         // 'upper'/'lower' - only upper/lower case characters allowed
@@ -385,7 +384,7 @@ export class Textual extends Primitive {
 }
 
 export class STRING extends Textual {
-    static defaultProps = {
+    static props = {
         trim: true,                 // if true (default), the strings are trimmed before insertion to DB
     }
     _validate(value) {
@@ -454,7 +453,7 @@ export let generic_string = new STRING()
 /**********************************************************************************************************************/
 
 export class TYPE extends GENERIC {
-    static defaultProps = {class: Type}
+    static props = {class: Type}
     static Widget = widgets.TYPE_Widget
 }
 
@@ -504,7 +503,7 @@ export class REF extends Type {
     REF without parameters is equivalent to GENERIC(Item), however, REF can also be parameterized,
     which is not possible with a GENERIC.
     */
-    static defaultProps = {
+    static props = {
         category:  undefined,       // base category for all the items to be encoded
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
     }
@@ -527,7 +526,7 @@ export class REF extends Type {
 export class ARRAY extends GENERIC {
     /* Represents arrays of objects, all of the same type (`type`, generic_type by default). */
 
-    static defaultProps = {
+    static props = {
         type: generic_type,                 // type of all elements in the array, as a Type instance
     }
 
@@ -554,7 +553,7 @@ export class MAP extends Type {
     If no type is provided, `generic_type` is used as a default for values, or STRING() for keys.
     */
 
-    static defaultProps = {
+    static props = {
         class:      Object,                     // class of input objects
         keys:       new STRING(),               // Type of keys of app-layer dicts
         values:     generic_type,               // Type of values of app-layer dicts
@@ -578,7 +577,7 @@ export class RECORD extends Type {
     `this.type`, if present, is an exact class (NOT a base class) of accepted objects.
     */
 
-    static defaultProps = {
+    static props = {
         fields: {},                     // object containing field names and their schemas
     }
 
@@ -598,7 +597,7 @@ export class RECORD extends Type {
 //        By default, the computed value is cached. To disable caching, set `cache` to false.
 //      */
 //
-//     static defaultProps = {
+//     static props = {
 //         compute:    undefined,          // function(item) that computes the value of the field
 //         cache:      true,               // if true, the computed value is cached
 //     }
@@ -630,7 +629,7 @@ export class TypeWrapper extends Type {
        Specifies a type item + property values (type constraints etc.).
      */
 
-    static defaultProps = {
+    static props = {
         type_item:  undefined,          // item of the Type category (instance of TypeItem) implementing this.real_type
         properties: {},                 // properties to be passed to `type_item` to create this.real_type
     }
