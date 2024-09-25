@@ -434,7 +434,6 @@ export class GENERIC extends Type {
     static defaultProps = {
         class: undefined,         // TODO: rename to `subclass`?
         //types: undefined,
-        inherit: false,
     }
 
     _validate(obj) {
