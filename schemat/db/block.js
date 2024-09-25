@@ -173,12 +173,15 @@ export class DataBlock extends Block {
         // calculate the `id` if not provided, update _autoincrement and write the data
         let {id, key, data} = req.args
         let obj = await Item.from_data(id, data, {mutable: true})       // the object must be instantiated for validation
+
         obj.validate()
 
-        if (obj.__c.versioning) {                           // set __ver=1 if needed
+        if (obj.__c.versioning)                             // set __ver=1 if needed
             obj.__data.set('__ver', 1)
-            data = obj.dump_data()
-        }
+        // else
+        //     obj.__data.delete('__ver')
+
+        data = obj.dump_data()
 
         if (id === undefined || id === null) {              // assign a new ID if not provided for the new item
             id = this._assign_id(req)
