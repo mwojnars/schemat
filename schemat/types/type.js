@@ -417,9 +417,22 @@ export class IDENTIFIER extends STRING {
 }
 
 export class URL extends STRING {
-    /* For now, URL type does NOT check if the string is a valid URL, only modifies the display to make the string a hyperlink. */
+    /* URL type that allows URLs with or without protocol. The Widget automatically appends the protocol if needed. */
+
+    // basic URL validation using a regular expression that allows URLs without protocol
+    static pattern = /^([a-z]{3,6}:\/\/)?((([a-z\d]([a-z\d-]*[a-z\d])*)\.)+[a-z]{2,}|((\d{1,3}\.){3}\d{1,3}))(\:\d+)?(\/[-a-z\d%_.~+]*)*(\?[;&a-z\d%_.~+=-]*)?(\#[-a-z\d_]*)?$/i
+    
+    _validate(url) {
+        url = super._validate(url)
+        if (!this.constructor.pattern.test(url)) throw new ValueError(`invalid URL: ${url}`)
+        return url
+    }
+
     static Widget = class extends widgets.TextualWidget {
-        view(v) { return A({href: v}, v) }
+        view(v) {
+            let href = v.includes('://') ? v : 'https://' + v
+            return A({href}, v)
+        }
     }
 }
 
