@@ -31,6 +31,7 @@ export class Type {
     static defaultProps = {
         info     : undefined,   // human-readable description of this type: what values are accepted and how they are interpreted
         blank    : undefined,   // if true, `null` and `undefined` are treated as a valid value: stored and then decoded as "null"
+        class    : undefined,   // if present, all values (except blank) must be instances of this JS class
         initial  : undefined,   // initial value assigned to a newly created data element of this type
         default  : undefined,   // default value to be used for a non-repeated property when no explicit value was provided;
                                 // since repeated properties behave like lists of varying length, and zero is a valid length,
@@ -117,10 +118,21 @@ export class Type {
         if (value === null || value === undefined)
             if (this.props.blank) return null
             else throw new ValueError(`expected a non-blank (non-missing) value, got '${value}' instead`)
+
+        let class_ = this.props.class
+        if (class_ && !(obj instanceof class_))
+            throw new ValueError(`expected an instance of ${class_}, got ${obj} instead`)
+
         return this._validate(value)
     }
 
     _validate(value) {
+        /* Subclasses should override this method instead of validate(). This method  is only called after `value`
+           was already checked against blanks and an incorrect class, so the subclass may assume that the value
+           is non-blank and of the proper class. Every subclass implementation should first execute:
+              value = super._validate(value)
+           to allow for any super-class validation and normalization to take place.
+         */
         return value
     }
 
@@ -430,20 +442,6 @@ export class DATETIME extends STRING {
 
 export class GENERIC extends Type {
     /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
-
-    static defaultProps = {
-        class: undefined,         // TODO: rename to `subclass`?
-        //types: undefined,
-    }
-
-    _validate(obj) {
-        let {class: class_} = this.props
-        if (class_ && !(obj instanceof class_))
-            throw new ValueError(`invalid object type, expected an instance of ${class_}, got ${obj} instead`)
-        return obj
-        // let types = this._types
-        // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
-    }
 
     static Widget = widgets.GENERIC_Widget
 }
