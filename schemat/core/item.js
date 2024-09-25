@@ -54,12 +54,12 @@ export class Edit {
 
 /**********************************************************************************************************************
  **
- **  ITEM & CATEGORY
+ **  PROXY
  **
  */
 
 class ItemProxy {
-    /* Creates a Proxy wrapper for network objects (Items), be it stubs, unlinked objects, or loaded from DB.
+    /* A Proxy wrapper for web objects: either stubs, newly created (unlinked) objects, or loaded from DB.
        Combines plain object attributes with loaded properties and makes them all accessible with the `obj.prop` syntax.
        Performs caching of computed properties in plain attributes of the `target` object.
        Ensures immutability of regular properties.
