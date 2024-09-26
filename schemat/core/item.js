@@ -225,8 +225,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __record                ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
                             undefined in a newborn item; immutable after the first assignment
 
-    __c                     virtual category: either the __category (if only one present), or (TODO) a newly created Category object
-                            that inherits (as from prototypes) from all __category$ categories listed in this object
+    __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
+                            that inherits (like from prototypes) from all __category$ categories listed in this object
 
     __schema                schema of this item's data, as a DATA object
 
@@ -268,7 +268,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         Object.defineProperty(this.__self, '__record', {value: cached, writable: true})
     }
 
-    get __c() {
+    get __base() {
         let cats = this.__category$
         if (cats?.length > 1) throw new Error(`multiple categories not supported yet`)
         return cats[0]
@@ -906,7 +906,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _set_version() {
         /* Set __ver=1 for a newly created object, if so requested by category settings. */
-        if (this.__c.versioning)
+        if (this.__base.versioning)
             this.__data.set('__ver', 1)
         else
             this.__data.delete('__ver')         // manually configuring __ver by the caller is disallowed
@@ -917,10 +917,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            Create a new Revision with `prev` data (json) if history=true in the category. May return a Promise.
            The existing __ver may get *removed* if `versioning` has changed in the meantime (!).
          */
-        if (this.__c.versioning) {
+        if (this.__base.versioning) {
             let ver = this.__ver || 0
             this.__data.set('__ver', ver + 1)
-            if (ver && this.__c.history) return this._create_revision(prev).then(rev => this.__data.set('__prev', rev))
+            if (ver && this.__base.history) return this._create_revision(prev).then(rev => this.__data.set('__prev', rev))
         }
         else this.__data.delete('__ver')        // TODO: drop orphaned revisions to save DB space and avoid accidental reuse when versioning starts again
     }
