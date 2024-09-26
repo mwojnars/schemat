@@ -176,10 +176,7 @@ export class DataBlock extends Block {
 
         obj.validate()
 
-        if (obj.__c.versioning)                             // set __ver=1 if needed
-            obj.__data.set('__ver', 1)
-        else
-            obj.__data.delete('__ver')
+        obj._set_version()                                  // set __ver if needed
 
         data = obj.dump_data()
 
@@ -247,6 +244,9 @@ export class DataBlock extends Block {
 
         // validate the object's data and the values of individual properties; may raise validation exceptions
         obj.validate()
+
+        let wait = obj._bump_version(data)          // increment __ver and create a Revision for the previous `data`, if needed
+        if (wait) await wait
 
         let value = obj.__data.dump()
         req = req.make_step(this, 'save', {id, key, value})
