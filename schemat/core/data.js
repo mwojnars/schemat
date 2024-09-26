@@ -110,8 +110,10 @@ export class Catalog {
     *values()           { yield* this._entries.map(e => e.value) }
     *entries()          { yield* this }                                         // same as the .iterator() below
     *[Symbol.iterator](){ yield* this._entries.map(e => [e.key, e.value]) }     // iterator over [key,value] pairs, NOT this._entries!
+    forEach(fun, this_) { this._entries.forEach(e => {fun.call(this_, e.value, e.key, this)})}
 
     // extended interface ...
+    getAll(key)         { return this.getEntries(key).map(e => e.value) }       // array of all values of a given (repeated) key
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this.length }
     hasStringKeys()     { return this._entries.filter(e => typeof e.key !== 'string').length === 0 }
@@ -204,11 +206,6 @@ export class Catalog {
                 }
             yield* locs.sort().map(pos => this._entries[pos])
         }
-    }
-
-    getAll(key) {
-        /* Return an array of all (multiple) values associated with occurrences of a given (repeated) key; [] if missing. */
-        return this.getEntries(key).map(e => e.value)
     }
 
     getEntries(keys) { return [...this.readEntries(keys)] }
