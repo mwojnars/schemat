@@ -96,7 +96,7 @@ export class Catalog {
     */
 
     _entries = []               // plain objects with {key, value, label, comment} attributes
-    _keys    = new Map()        // for each key, a list of positions in _entries where this key occurs, sorted (!)
+    _keys    = new Map()        // for each key, an array of positions in _entries where this key occurs, sorted (!)
 
 
     // Map & Array interface ...
@@ -113,7 +113,9 @@ export class Catalog {
     forEach(fun, this_) { this._entries.forEach(e => {fun.call(this_, e.value, e.key, this)})}
 
     // extended interface ...
-    getAll(key)         { return this.getEntries(key).map(e => e.value) }       // array of all values of a given (repeated) key
+    getAll(key)         { return this.getEntries(key).map(e => e.value) }                       // array of all values of a (repeated) key
+    getLocations(key)   { return (this._keys.get(key) || []).map(i => [i, this._entries[i]]) }  // array of [index, value] pairs of all occurrences of a key
+
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this.length }
     hasStringKeys()     { return this._entries.filter(e => typeof e.key !== 'string').length === 0 }
@@ -124,6 +126,7 @@ export class Catalog {
         /* Return an object containing {key: value} pairs of all the entries. For repeated keys, only the first value is included. */
         return Object.fromEntries(this._entries.map(e => [e.key, e.value]).reverse())
     }
+
 
     constructor(...entries) {
         /* Each argument can be a Catalog, or an object whose attributes will be used as entries,
@@ -459,31 +462,29 @@ export class Catalog {
         throw new Error(`path not found: ${subpath.join('/')}`)
     }
 
-    *step(path, error = true) {
+    *step(key, error = true) {
         /* Make one step along `path`. Yield all the elements that match the first segment of `path`, each element
-           is a triplet: [numeric position in _entries, remaining path, value].
+           is a pair: [numeric position in _entries, value].
          */
-        assert(path.length >= 1)
-
-        let step = path[0]
-        let pos = this._positionOf(step)
+        let pos = this._positionOf(key)
         if (pos === undefined)
             if (error) throw new Error(`path not found: ${step}`)
             else return [-1]
-        let remain = path.slice(1)
         let value = this._entries[pos].value
 
-        return [pos, remain, value]
+        return [pos, value]
     }
 
     delete__(path) {
         /* Delete all (sub)entries identified by `path`. Return the number of entries removed (0 if nothing).
-           This is compatible with Map.delete() behavior, with the modification that an integer is returned instead of a boolean.
+           This is compatible with Map.delete() behavior, but an integer is returned instead of a boolean.
          */
         assert(path instanceof Array)
-        for (let [pos, subcat] of this.step(path[0])) {
-            let subpath = path.slice(1)
-        }
+        let [key, ...remain] = path
+
+        if (!remain.length)
+            for (let [pos, subcat] of this.getLocations(key))
+                this._deleteAt(pos)
     }
 
     delete(path) {
