@@ -219,8 +219,7 @@ export class Catalog {
     }
 
     _normPath(path) {
-        assert(!path.includes('/'))     // TODO: use '.' as a segment separator not '/'
-        return typeof path === 'string' ? path.split('/') : T.isArray(path) ? path : [path]
+        return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : [path]
     }
 
     _step(path, error = true) {
