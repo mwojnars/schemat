@@ -476,16 +476,20 @@ export class Catalog {
         assert(path.length > 0)
 
         let [key, ...steps] = path
-        let locs = (typeof key === 'number') ? [[key, this._entries[key].value]] : this.getLocations(key)
+        let locs = this.locs(key)
+        // let pairs = locs.map(i => [i, this._entries[i]])
+        // let pairs = (typeof key === 'number') ? [[key, this._entries[key].value]] : this.getLocations(key)
 
         if (!steps.length) {                    // no more steps to be done? delete leaf nodes here
-            for (let [pos] of locs) this._deleteAt(pos)
+            for (let pos of locs) this._deleteAt(pos)
             return locs.length
         }
 
         let deleted = 0                         // there are more steps to be done; do recursive calls into nested Catalogs
-        for (let [_, obj] of locs)
+        for (let i of locs) {
+            let obj = this.get(i)
             if (obj instanceof Catalog) deleted += obj.delete(steps)
+        }
         return deleted
     }
 
