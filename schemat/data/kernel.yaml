@@ -129,6 +129,10 @@
           update.
         min: 1
         "@": schemat/types/type.js:INTEGER
+      __prev:
+        info: The most recent Revision created for this object. Contains the previous state 
+          of this object (from before the last update).
+        "@": schemat/types/type.js:REF
       __container:
         info: Parent URL container of this object. The chain of containers leading from
           the root container to a given object defines the access path of this
