@@ -96,39 +96,6 @@ export class Catalog {
     _keys    = new Map()        // for each key, an array of positions in _entries where this key occurs, sorted (!)
 
 
-    // Map & Array interface ...
-    get size()          { return this._entries.length }
-    get length()        { return this._entries.length }
-
-    get(key)            { return this._entries[this.loc(key)]?.value }
-    has(key)            { return this._keys.has(key)  }
-    map(fun)            { return this._entries.map(e => fun(e.value)) }
-    *keys()             { yield* this._keys.keys() }
-    *values()           { yield* this._entries.map(e => e.value) }
-    *entries()          { yield* this }                                         // same as the .iterator() below
-    *[Symbol.iterator](){ yield* this._entries.map(e => [e.key, e.value]) }     // iterator over [key,value] pairs, NOT this._entries!
-    forEach(fun, this_) { this._entries.forEach(e => {fun.call(this_, e.value, e.key, this)})}
-
-    // extended interface ...
-    loc(key)            { return (typeof key === 'number') ? key : this._keys.get(key)?.[0] }       // location of the first occurrence of a string `key`, or undefined, or `key` if already a number
-    locs(key)           { return (typeof key === 'number') ? [key] : this._keys.get(key) || [] }    // locations of all occurrences of a string `key`, [] if none, or [key] if already a number
-
-    getAll(key)         { return this.locs(key).map(i => this._entries[i].value) }                  // array of all values of a (repeated) key
-    getRecord(key)      { return this._entries[this.loc(key)] }
-    getRecords(key)     { return key === undefined ? [...this._entries] : this.locs(key).map(i => this._entries[i]) }
-
-    hasKeys()           { return this._keys.size > 0  }
-    hasUniqueKeys()     { return this._keys.size === this.length }
-    hasStringKeys()     { return this._entries.filter(e => typeof e.key !== 'string').length === 0 }
-    hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
-    isDict()            { return this.hasUniqueKeys() && this.hasStringKeys() && !this.hasAnnot() }
-
-    object() {
-        /* Return an object containing {key: value} pairs of all the entries. For repeated keys, only the first value is included. */
-        return Object.fromEntries(this._entries.map(e => [e.key, e.value]).reverse())
-    }
-
-
     constructor(...entries) {
         /* Each argument can be a Catalog, or an object whose attributes will be used as entries,
            or a [key, value] pair, or a {key, value} entry.
@@ -153,6 +120,41 @@ export class Catalog {
             let ids = this._keys.get(key) || []
             if (ids.push(pos) === 1) this._keys.set(key, ids)
         }
+    }
+
+
+    /***  Map & Array interface  ***/
+
+    get size()          { return this._entries.length }
+    get length()        { return this._entries.length }
+
+    get(key)            { return this._entries[this.loc(key)]?.value }
+    has(key)            { return this._keys.has(key)  }
+    map(fun)            { return this._entries.map(e => fun(e.value)) }
+    *keys()             { yield* this._keys.keys() }
+    *values()           { yield* this._entries.map(e => e.value) }
+    *entries()          { yield* this }                                         // same as the .iterator() below
+    *[Symbol.iterator](){ yield* this._entries.map(e => [e.key, e.value]) }     // iterator over [key,value] pairs, NOT this._entries!
+    forEach(fun, this_) { this._entries.forEach(e => {fun.call(this_, e.value, e.key, this)})}
+
+    // custom extensions ...
+
+    loc(key)            { return (typeof key === 'number') ? key : this._keys.get(key)?.[0] }       // location of the first occurrence of a string `key`, or undefined, or `key` if already a number
+    locs(key)           { return (typeof key === 'number') ? [key] : this._keys.get(key) || [] }    // locations of all occurrences of a string `key`, [] if none, or [key] if already a number
+
+    getAll(key)         { return this.locs(key).map(i => this._entries[i].value) }                  // array of all values of a (repeated) key
+    getRecord(key)      { return this._entries[this.loc(key)] }
+    getRecords(key)     { return key === undefined ? [...this._entries] : this.locs(key).map(i => this._entries[i]) }
+
+    hasKeys()           { return this._keys.size > 0  }
+    hasUniqueKeys()     { return this._keys.size === this.length }
+    hasStringKeys()     { return this._entries.filter(e => typeof e.key !== 'string').length === 0 }
+    hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
+    isDict()            { return this.hasUniqueKeys() && this.hasStringKeys() && !this.hasAnnot() }
+
+    object() {
+        /* Return an object containing {key: value} pairs of all the entries. For repeated keys, only the first value is included. */
+        return Object.fromEntries(this._entries.map(e => [e.key, e.value]).reverse())
     }
 
 
