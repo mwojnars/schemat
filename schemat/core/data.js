@@ -462,38 +462,34 @@ export class Catalog {
         throw new Error(`path not found: ${subpath.join('/')}`)
     }
 
-    *step(key, error = true) {
-        /* Make one step along `path`. Yield all the elements that match the first segment of `path`, each element
-           is a pair: [numeric position in _entries, value].
-         */
-        let pos = this._positionOf(key)
-        if (pos === undefined)
-            if (error) throw new Error(`path not found: ${step}`)
-            else return [-1]
-        let value = this._entries[pos].value
-
-        return [pos, value]
-    }
-
-    delete__(path) {
-        /* Delete all (sub)entries identified by `path`. Return the number of entries removed (0 if nothing).
-           This is compatible with Map.delete() behavior, but an integer is returned instead of a boolean.
-         */
-        assert(path instanceof Array)
-        let [key, ...remain] = path
-
-        if (!remain.length)
-            for (let [pos, subcat] of this.getLocations(key))
-                this._deleteAt(pos)
-    }
-
     delete(path) {
-        /* Delete a (sub)entry uniquely identified by `path`. */
-        let [pos, subpath, subcat] = this._step(path)
-        if (!subpath.length) return this._deleteAt(pos)
-        if (subcat instanceof Catalog) return subcat.delete(subpath)        // nested Catalog? make a recursive call
-        throw new Error(`path not found: ${subpath.join('/')}`)
+        /* Delete all (sub)entries identified by `path`. Return the number of entries removed (0 if nothing).
+           This is compatible with Map.delete(), but an integer is returned instead of a boolean.
+         */
+        path = this._normPath(path)
+        assert(path.length > 0)
+
+        let [key, ...steps] = path
+        let locs = (typeof key === 'number') ? [[key, this._entries[key].value]] : this.getLocations(key)
+
+        if (!steps.length) {                    // no more steps to be done? delete leaf nodes here
+            for (let [pos] of locs) this._deleteAt(pos)
+            return locs.length
+        }
+
+        let deleted = 0                         // there are more steps to be done; do recursive calls into nested Catalogs
+        for (let [_, obj] of locs)
+            if (obj instanceof Catalog) deleted += obj.delete(steps)
+        return deleted
     }
+
+    // delete(path) {
+    //     /* Delete a (sub)entry uniquely identified by `path`. */
+    //     let [pos, subpath, subcat] = this._step(path)
+    //     if (!subpath.length) return this._deleteAt(pos)
+    //     if (subcat instanceof Catalog) return subcat.delete(subpath)        // nested Catalog? make a recursive call
+    //     throw new Error(`path not found: ${subpath.join('/')}`)
+    // }
     
     update(path, {key, value, label, comment}, context = {}, sep = '/') {
         /* Modify an existing entry at a given `path`. The entry must be unique. Return the entry after modifications.
