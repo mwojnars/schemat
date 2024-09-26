@@ -98,21 +98,25 @@ export class Catalog {
     _entries = []               // plain objects with {key, value, label, comment} attributes
     _keys    = new Map()        // for each key, a list of positions in _entries where this key occurs, sorted (!)
 
-    get length()        { return this._entries.length }  //{ return this.size }
-    has(key)            { return this._keys.has(key)  }                     // Map's interface
+
+    // Map & Array interface ...
+    get size()          { return this._entries.length }
+    get length()        { return this._entries.length }
+
+    get(key)            { return this.getEntry(key)?.value }
+    has(key)            { return this._keys.has(key)  }
+    map(fun)            { return this._entries.map(e => fun(e.value)) }
+    *keys()             { yield* this._keys.keys() }
+    *values()           { yield* this._entries.map(e => e.value) }
+    *entries()          { yield* this }                                         // same as the .iterator() below
+    *[Symbol.iterator](){ yield* this._entries.map(e => [e.key, e.value]) }     // iterator over [key,value] pairs, NOT this._entries!
+
+    // extended interface ...
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this.length }
     hasStringKeys()     { return this._entries.filter(e => typeof e.key !== 'string').length === 0 }
     hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
     isDict()            { return this.hasUniqueKeys() && this.hasStringKeys() && !this.hasAnnot() }
-
-    // Array & Map interface:
-    map(fun)            { return this._entries.map(e => fun(e.value)) }
-    *keys()             { yield* this._keys.keys() }
-    *values()           { yield* this._entries.map(e => e.value) }
-    *entries()          { yield* this }                                         // same as the .iterator() below
-    *[Symbol.iterator](){ yield* this._entries.map(e => [e.key, e.value]) }     // iterator over [key,value] pairs
-
 
     object(first = true) {
         /* Return a flat object containing the entries converted to {key: value} pairs.
@@ -161,11 +165,6 @@ export class Catalog {
             if (unique && ids.length > 1) throw new Error(`unique entry expected for '${key}', found ${ids.length} entries instead`)
             return ids.length ? ids[0] : undefined
         }
-    }
-
-    get(key) {
-        /* Return the `value` property of the first entry with a given `key`, or default_ if the key is missing. */
-        return this.getEntry(key)?.value
     }
 
     getEntry(key, unique = false) {
