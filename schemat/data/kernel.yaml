@@ -169,10 +169,6 @@
         info: Description or summary of the object.
         repeated: true
         "@": schemat/types/type.js:TEXT
-      html_title:
-        info: HTML title to be used for when this object is rendered.
-        repeated: true
-        "@": schemat/types/type.js:STRING
       "@": schemat:Catalog
     "@": schemat:Catalog
   versioning: true

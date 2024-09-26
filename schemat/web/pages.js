@@ -225,9 +225,8 @@ export class ItemRecordView extends ReactPage.View {
     html_title() {
         /* Get/compute a title for an HTML response page for a given request & view name. */
         // print('html_title(): ', this.name, this.title, this.is_loaded)
-        let title = this.html_title
-        // if (title instanceof Function) title = title()          // this can still return undefined
-        if (typeof title === 'string') return title
+        // let title = this.html_title
+        // if (typeof title === 'string') return title
         let stamp = this.make_stamp({html: false})
         return `${this.name || ''} ${stamp}`
     }
