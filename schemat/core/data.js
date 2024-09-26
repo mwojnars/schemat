@@ -35,7 +35,7 @@ export class Path {
         return [head, tail]
     }
 
-    // static _step(start, path, next = this.next) {
+    // static step(start, path, next = this.next) {
     //     /* Starting from an object, `start`, move along the `path` of nested objects, and return [obj, tail],
     //        where `obj` is the first object found after taking one step on the `path`, and `tail` is the remaining path.
     //      */
@@ -164,23 +164,6 @@ export class Catalog {
 
     _normPath(path) {
         return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : [path]
-    }
-
-    _step(path, error = true) {
-        /* Make one step along a `path`. Return the position of the 1st entry on the path (must be unique),
-           the remaining path, and the value object found after the 1st step. */
-        path = this._normPath(path)
-        assert(path.length >= 1)
-
-        let step = path[0]
-        let pos = this.loc(step)
-        if (pos === undefined)
-            if (error) throw new Error(`path not found: ${step}`)
-            else return [-1]
-        let subpath = path.slice(1)
-        let value = this._entries[pos].value
-
-        return [pos, subpath, value]
     }
 
     static merge(catalogs, unique = true) {
@@ -399,6 +382,23 @@ export class Catalog {
     }
 
     /***  Higher-level edit operations  ***/
+
+    _step(path, error = true) {
+        /* Make one step along a `path`. Return the position of the 1st entry on the path (must be unique),
+           the remaining path, and the value object found after the 1st step. */
+        path = this._normPath(path)
+        assert(path.length >= 1)
+
+        let step = path[0]
+        let pos = this.loc(step)
+        if (pos === undefined)
+            if (error) throw new Error(`path not found: ${step}`)
+            else return [-1]
+        let subpath = path.slice(1)
+        let value = this._entries[pos].value
+
+        return [pos, subpath, value]
+    }
 
     insert(path, pos, entry) {
         /* Insert a new `entry` at position `pos` in a subcatalog identified by `path`; empty path denotes this catalog. */
