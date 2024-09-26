@@ -178,42 +178,6 @@ export class Catalog {
         return this._entries[pos]
     }
 
-    *readEntries(keys = undefined) {
-        /* Yield all the entries associated with a given key (if `keys` is a string), or with multiple keys
-           (if `key` is an array); or all the entries if `keys` is undefined. Keys can be strings or numbers (positions).
-           The same order of entries as in this._entries is preserved. The output can be empty.
-         */
-        if (keys === undefined) {
-            yield* this._entries
-            return
-        }
-        if (!T.isArray(keys)) keys = [keys]
-
-        if (keys.length === 1) {
-            // if there's only one key we don't have to sort values by their positions in _entries, which is more efficient
-            let key = keys[0]
-            if (typeof key === 'number') yield this._entries[key]
-            else
-                for (const pos of (this._keys.get(key) || []))
-                    yield this._entries[pos]
-        }
-        else {
-            let locs = []
-            for (const key of keys)
-                if (typeof key === 'number') locs.push(key)
-                else {
-                    let p = this._keys.get(key)
-                    if (p) locs.push(...p)
-                }
-            yield* locs.sort().map(pos => this._entries[pos])
-        }
-    }
-
-    getEmpty() {
-        /* Return all the entries with an empty key (missing, null, ''). */
-        return this._entries.filter(e => !e.key)
-    }
-
     _normPath(path) {
         return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : [path]
     }
