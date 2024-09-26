@@ -920,10 +920,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (this.__base.versioning) {
             let ver = this.__ver || 0
             this.__data.set('__ver', ver + 1)
-            if (ver && this.__base.keep_history)
+            if (this.__base.keep_history)
                 return this._create_revision(prev).then(rev => this.__data.set('__prev', rev))
         }
-        else this.__data.delete('__ver')        // TODO: drop orphaned revisions to save DB space and avoid accidental reuse when versioning starts again
+        else this.__data.delete('__ver')        // TODO: either drop orphaned revisions OR do garbage collection to save DB space and avoid accidental reuse when versioning starts again
     }
 
     async _create_revision(data) {
