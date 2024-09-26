@@ -904,7 +904,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return schemat.site.service.delete_object(this.__id)
     }
 
-    async _set_version() {
+    _set_version() {
         /* Set __ver=1 for a newly created object, if so requested by category settings. */
         if (this.__c.versioning)
             this.__data.set('__ver', 1)
@@ -912,18 +912,15 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             this.__data.delete('__ver')         // manually configuring __ver by the caller is disallowed
     }
 
-    async _bump_version(prev_data) {
+    _bump_version(prev) {
         /* Increment (or set/delete) the __ver number, depending on the category's `versioning` setting.
-           Create a new Revision with `prev_data` if history=true in the category. The existing __ver can be *removed*
-           if `versioning` has changed in the meantime (!).
+           Create a new Revision with `prev` data (json) if history=true in the category. May return a Promise.
+           The existing __ver may get *removed* if `versioning` has changed in the meantime (!).
          */
         if (this.__c.versioning) {
             let ver = this.__ver || 0
-            if (ver && this.__c.history) {
-                let revision = await this._create_revision(prev_data)
-                this.__data.set('__prev', revision)
-            }
             this.__data.set('__ver', ver + 1)
+            if (ver && this.__c.history) return this._create_revision(prev).then(rev => this.__data.set('__prev', rev))
         }
         else this.__data.delete('__ver')        // TODO: drop orphaned revisions to save DB space and avoid accidental reuse when versioning starts again
     }
