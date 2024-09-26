@@ -100,6 +100,16 @@
   defaults:
     __ttl: 60
     schema:
+      name:
+        info: Display name of the object. May contain spaces, punctuation, non-latin
+          characters.
+        repeated: true
+        default: ""
+        "@": schemat/types/type.js:STRING
+      info:
+        info: Description or summary of the object.
+        repeated: true
+        "@": schemat/types/type.js:TEXT
       __category:
         info: Category of this object. Determines its behavior and the schema of its
           properties. Each category itself is an object of the Root Category
@@ -123,15 +133,6 @@
           and may add their own fields to the existing ones.
         repeated: true
         inherit: false
-        "@": schemat/types/type.js:REF
-      __ver:
-        info: Version number of the object's content, automatically incremented on every
-          update.
-        min: 1
-        "@": schemat/types/type.js:INTEGER
-      __prev:
-        info: The most recent Revision created for this object. Contains the previous state 
-          of this object (from before the last update).
         "@": schemat/types/type.js:REF
       __container:
         info: Parent URL container of this object. The chain of containers leading from
@@ -159,16 +160,15 @@
           from DB. If zero, the object is evicted on the nearest cache purge. A
           real number.
         "@": schemat/types/type.js:NUMBER
-      name:
-        info: Display name of the object. May contain spaces, punctuation, non-latin
-          characters.
-        repeated: true
-        default: ""
-        "@": schemat/types/type.js:STRING
-      info:
-        info: Description or summary of the object.
-        repeated: true
-        "@": schemat/types/type.js:TEXT
+      __ver:
+        info: Version number of the object's content, automatically incremented on every
+          update.
+        min: 1
+        "@": schemat/types/type.js:INTEGER
+      __prev:
+        info: The most recent Revision created for the object. Contains the previous state 
+          of this object (from before the last update).
+        "@": schemat/types/type.js:REF
       "@": schemat:Catalog
     "@": schemat:Catalog
   versioning: true
