@@ -178,8 +178,8 @@ export class DataBlock extends Block {
 
         if (obj.__c.versioning)                             // set __ver=1 if needed
             obj.__data.set('__ver', 1)
-        // else
-        //     obj.__data.delete('__ver')
+        else
+            obj.__data.delete('__ver')
 
         data = obj.dump_data()
 
