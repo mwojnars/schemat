@@ -128,8 +128,9 @@ export class Catalog {
     get size()          { return this._entries.length }
     get length()        { return this._entries.length }
 
+    // everywhere below, `key` can be a string, or an index (number) into _entries ...
     get(key)            { return this._entries[this.loc(key)]?.value }
-    has(key)            { return this._keys.has(key)  }
+    has(key)            { return (typeof key === 'number') ? 0 <= key < this._entries.length : this._keys.has(key)  }
     map(fun)            { return this._entries.map(e => fun(e.value)) }
     *keys()             { yield* this._keys.keys() }
     *values()           { yield* this._entries.map(e => e.value) }
@@ -139,12 +140,13 @@ export class Catalog {
 
     // custom extensions ...
 
-    loc(key)            { return (typeof key === 'number') ? key : this._keys.get(key)?.[0] }       // location of the first occurrence of a string `key`, or undefined, or `key` if already a number
+    loc(key)            { return (typeof key === 'number') ? key : this._keys.get(key)?.[0] }       // location of the first occurrence of a string `key`, or `key` if already a number
     locs(key)           { return (typeof key === 'number') ? [key] : this._keys.get(key) || [] }    // locations of all occurrences of a string `key`, [] if none, or [key] if already a number
 
     getAll(key)         { return this.locs(key).map(i => this._entries[i].value) }                  // array of all values of a (repeated) key
     getRecord(key)      { return this._entries[this.loc(key)] }
     getRecords(key)     { return key === undefined ? [...this._entries] : this.locs(key).map(i => this._entries[i]) }
+    hasMultiple(key)    { return this.locs(key).length >= 2 }           // true if multiple (at least 2) values are present for `key`
 
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this.length }
@@ -172,11 +174,11 @@ export class Catalog {
         }
     }
 
-    getEntry(key, unique = false) {
+    getEntry(key) {
         /* Return the first entry with a given `key`, or the entry located at a given position if `key` is a number.
            If the key is missing, undefined is returned. Exception is raised if duplicates are present and unique=true.
          */
-        let pos = this._positionOf(key, unique)
+        let pos = this._positionOf(key)
         return this._entries[pos]
     }
 
@@ -191,7 +193,7 @@ export class Catalog {
         assert(path.length >= 1)
 
         let step = path[0]
-        let pos = this._positionOf(step)
+        let pos = this.loc(step)
         if (pos === undefined)
             if (error) throw new Error(`path not found: ${step}`)
             else return [-1]
@@ -243,8 +245,10 @@ export class Catalog {
             if (T.isNumber(step)) return this._overwrite(step, props)
             else return this.setShallow(step, props)
 
+        if (this.hasMultiple(step)) throw new Error(`multiple occurrences of the key (${key}), cannot uniquely update the entry`)
+
         // make one step forward, then call set() recursively
-        let entry = this.getEntry(step, true)
+        let entry = this.getEntry(step)
         if (!entry)
             if (create_path && typeof step === 'string')                // create a missing intermediate Catalog() if so requested
                 this.setShallow({key: step, value: new Catalog()})
