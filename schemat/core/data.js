@@ -155,7 +155,7 @@ export class Catalog {
         /* Find a unique position of a `key`, the key being a string or a number. Return undefined if not found.
            Raise an exception if multiple occurrences and unique=true.
          */
-        if (typeof key === 'number') return key in this._entries ? key : undefined
+        if (typeof key === 'number') return (key in this._entries) ? key : undefined
         if (this._keys.has(key)) {
             let ids = this._keys.get(key)
             if (unique && ids.length > 1) throw new Error(`unique entry expected for '${key}', found ${ids.length} entries instead`)
@@ -163,10 +163,9 @@ export class Catalog {
         }
     }
 
-    get(key, default_ = undefined, unique = false) {
+    get(key) {
         /* Return the `value` property of the first entry with a given `key`, or default_ if the key is missing. */
-        let entry = this.getEntry(key, unique)
-        return entry === undefined ? default_ : entry.value
+        return this.getEntry(key)?.value
     }
 
     getEntry(key, unique = false) {
@@ -467,12 +466,10 @@ export class Catalog {
         throw new Error(`path not found: ${subpath.join('/')}`)
     }
 
-    step(path, error = true) {
-        /* Make one step along `path`. Return all the entries that match the first segment of `path`
-
-        the position of the 1st entry on the path (must be unique),
-           the remaining path, and the value object found after the 1st step. */
-        path = this._normPath(path)
+    *step(path, error = true) {
+        /* Make one step along `path`. Yield all the elements that match the first segment of `path`, each element
+           is a triplet: [numeric position in _entries, remaining path, value].
+         */
         assert(path.length >= 1)
 
         let step = path[0]
@@ -490,6 +487,10 @@ export class Catalog {
         /* Delete all (sub)entries identified by `path`. Return the number of entries removed (0 if nothing).
            This is compatible with Map.delete() behavior, with the modification that an integer is returned instead of a boolean.
          */
+        assert(path instanceof Array)
+        for (let [pos, subcat] of this.step(path[0])) {
+            let subpath = path.slice(1)
+        }
     }
 
     delete(path) {

@@ -405,7 +405,7 @@ export class STRING extends Textual {
 }
 
 export class FIELD extends STRING {
-    /* A STRING than only contains alphanumeric characters (including Unicode!), "_" and "-", 
+    /* A STRING than only contains alphanumeric characters (Unicode allowed!), "_" and "-",
        but no punctuation, spaces or control chars.
      */
     static props = {charset: 'a-zA-Z0-9_\\-\\p{L}\\p{N}'}

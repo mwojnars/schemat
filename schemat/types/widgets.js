@@ -314,11 +314,11 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
     //         return SPAN({suppressHydrationWarning: true}, "loading...")
     //
     //     let url  = item.url()
-    //     let name = item.get('name', '')
+    //     let name = item.name || ''
     //     let stamp = HTML(item.make_stamp({html: false, brackets: false}))
     //
     //     if (name && url) {
-    //         let note = item.category.get('name', null)
+    //         let note = item.category.name
     //         return SPAN(
     //             url ? A({href: url}, name) : name,
     //             SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : stamp)}, note)
