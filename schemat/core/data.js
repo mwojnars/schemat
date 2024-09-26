@@ -120,12 +120,9 @@ export class Catalog {
     hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
     isDict()            { return this.hasUniqueKeys() && this.hasStringKeys() && !this.hasAnnot() }
 
-    object(first = true) {
-        /* Return a flat object containing the entries converted to {key: value} pairs.
-           For repeated keys, only one value is included: the first one if first=true (default), or the last one, otherwise.
-         */
-        let entries = first ? [...this._entries].reverse() : this._entries
-        return Object.fromEntries(entries.map(e => [e.key, e.value]))
+    object() {
+        /* Return an object containing {key: value} pairs of all the entries. For repeated keys, only the first value is included. */
+        return Object.fromEntries(this._entries.map(e => [e.key, e.value]).reverse())
     }
 
     constructor(...entries) {
