@@ -174,14 +174,6 @@ export class Catalog {
         }
     }
 
-    getEntry(key) {
-        /* Return the first entry with a given `key`, or the entry located at a given position if `key` is a number.
-           If the key is missing, undefined is returned. Exception is raised if duplicates are present and unique=true.
-         */
-        let pos = this._positionOf(key)
-        return this._entries[pos]
-    }
-
     _normPath(path) {
         return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : [path]
     }
@@ -248,15 +240,14 @@ export class Catalog {
         if (this.hasMultiple(step)) throw new Error(`multiple occurrences of the key (${key}), cannot uniquely update the entry`)
 
         // make one step forward, then call set() recursively
-        let entry = this.getEntry(step)
-        if (!entry)
+        let subpath = path.slice(1)
+        let subcat  = this.get(step)
+
+        if (subcat === undefined)
             if (create_path && typeof step === 'string')                // create a missing intermediate Catalog() if so requested
                 this.setShallow({key: step, value: new Catalog()})
             else
                 throw new Error(`path not found, missing '${step}' of '${spath}'`)
-
-        let subcat  = entry.value
-        let subpath = path.slice(1)
 
         // subcat is a Catalog? make a recursive call
         if (subcat instanceof Catalog)
