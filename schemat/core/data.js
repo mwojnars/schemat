@@ -63,10 +63,7 @@ export class Path {
 
     static *next(obj, key, generic = true) {
         /* Yield all elements of an object or collection, `obj`, stored at a given key or attribute, `key`. */
-        if (obj instanceof Catalog)
-            for (const entry of obj.readEntries(key))
-                yield entry.value
-
+        if (obj instanceof Catalog) yield* obj.getAll(key)
         else if (obj instanceof Map) yield obj.get(key)
         else if (generic && (typeof obj === 'object')) yield obj[key]
     }
@@ -113,14 +110,12 @@ export class Catalog {
     forEach(fun, this_) { this._entries.forEach(e => {fun.call(this_, e.value, e.key, this)})}
 
     // extended interface ...
-    getAll(key)         { return this.locs(key).map(i => this._entries[i].value) }                  // array of all values of a (repeated) key
-    // getAll(key)         { return this.getEntries(key).map(e => e.value) }                           // array of all values of a (repeated) key
-
     loc(key)            { return (typeof key === 'number') ? key : this._keys.get(key)?.[0] }       // location of the first occurrence of a string `key`, or undefined, or `key` if already a number
     locs(key)           { return (typeof key === 'number') ? [key] : this._keys.get(key) || [] }    // locations of all occurrences of a string `key`, [] if none, or [key] if already a number
 
+    getAll(key)         { return this.locs(key).map(i => this._entries[i].value) }                  // array of all values of a (repeated) key
     getRecord(key)      { return this._entries[this.loc(key)] }
-    getRecords()        { return [...this._entries] }
+    getRecords(key)     { return key === undefined ? [...this._entries] : this.locs(key).map(i => this._entries[i]) }
 
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this.length }
@@ -213,8 +208,6 @@ export class Catalog {
             yield* locs.sort().map(pos => this._entries[pos])
         }
     }
-
-    getEntries(keys) { return [...this.readEntries(keys)] }
 
     getEmpty() {
         /* Return all the entries with an empty key (missing, null, ''). */
