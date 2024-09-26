@@ -448,7 +448,7 @@ export class CatalogTable extends Component {
         let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
 
         // `id` of an entry is used to identify subcomponents through React's "key" property
-        let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
+        let [entries, setEntries] = useState(catalog.getRecords().map((ent, pos) => ({...ent, id: pos})))
         let run = this.actions({item, path, setEntries})
 
         let keyNames = type.getValidKeys()

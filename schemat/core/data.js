@@ -113,11 +113,12 @@ export class Catalog {
     forEach(fun, this_) { this._entries.forEach(e => {fun.call(this_, e.value, e.key, this)})}
 
     // extended interface ...
+    getAll(key)         { return this.getEntries(key).map(e => e.value) }                           // array of all values of a (repeated) key
     loc(key)            { return (typeof key === 'number') ? key : this._keys.get(key)?.[0] }       // location of the first occurrence of a string `key`, or undefined, or `key` if already a number
     locs(key)           { return (typeof key === 'number') ? [key] : this._keys.get(key) || [] }    // locations of all occurrences of a string `key`, [] if none, or [key] if already a number
 
-    getAll(key)         { return this.getEntries(key).map(e => e.value) }                       // array of all values of a (repeated) key
-    getLocations(key)   { return (this._keys.get(key) || []).map(i => [i, this._entries[i]]) }  // array of [index, value] pairs of all occurrences of a key
+    getRecord(key)      { return this._entries[this.loc(key)] }
+    getRecords()        { return [...this._entries] }
 
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this.length }
@@ -464,10 +465,6 @@ export class Catalog {
         throw new Error(`path not found: ${subpath.join('/')}`)
     }
 
-    step(key) {
-
-    }
-
     delete(path) {
         /* Delete all (sub)entries identified by `path`. Return the number of entries removed (0 if nothing).
            This is compatible with Map.delete(), but an integer is returned instead of a boolean.
@@ -477,8 +474,6 @@ export class Catalog {
 
         let [key, ...steps] = path
         let locs = this.locs(key)
-        // let pairs = locs.map(i => [i, this._entries[i]])
-        // let pairs = (typeof key === 'number') ? [[key, this._entries[key].value]] : this.getLocations(key)
 
         if (!steps.length) {                    // no more steps to be done? delete leaf nodes here
             for (let pos of locs) this._deleteAt(pos)
