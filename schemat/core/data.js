@@ -146,7 +146,7 @@ export class Catalog {
     getAll(key)         { return this.locs(key).map(i => this._entries[i].value) }                  // array of all values of a (repeated) key
     getRecord(key)      { return this._entries[this.loc(key)] }
     getRecords(key)     { return key === undefined ? [...this._entries] : this.locs(key).map(i => this._entries[i]) }
-    hasMultiple(key)    { return this.locs(key).length >= 2 }           // true if multiple (at least 2) values are present for `key`
+    hasMultiple(key)    { return this.locs(key).length >= 2 }           // true if 2 or more values are present for `key`
 
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this.length }
@@ -161,18 +161,6 @@ export class Catalog {
 
 
     /***  Read access  ***/
-
-    _positionOf(key, unique = false) {
-        /* Find a unique position of a `key`, the key being a string or a number. Return undefined if not found.
-           Raise an exception if multiple occurrences and unique=true.
-         */
-        if (typeof key === 'number') return (key in this._entries) ? key : undefined
-        if (this._keys.has(key)) {
-            let ids = this._keys.get(key)
-            if (unique && ids.length > 1) throw new Error(`unique entry expected for '${key}', found ${ids.length} entries instead`)
-            return ids.length ? ids[0] : undefined
-        }
-    }
 
     _normPath(path) {
         return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : [path]
