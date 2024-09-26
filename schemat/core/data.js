@@ -113,7 +113,9 @@ export class Catalog {
     forEach(fun, this_) { this._entries.forEach(e => {fun.call(this_, e.value, e.key, this)})}
 
     // extended interface ...
-    getAll(key)         { return this.getEntries(key).map(e => e.value) }                           // array of all values of a (repeated) key
+    getAll(key)         { return this.locs(key).map(i => this._entries[i].value) }                  // array of all values of a (repeated) key
+    // getAll(key)         { return this.getEntries(key).map(e => e.value) }                           // array of all values of a (repeated) key
+
     loc(key)            { return (typeof key === 'number') ? key : this._keys.get(key)?.[0] }       // location of the first occurrence of a string `key`, or undefined, or `key` if already a number
     locs(key)           { return (typeof key === 'number') ? [key] : this._keys.get(key) || [] }    // locations of all occurrences of a string `key`, [] if none, or [key] if already a number
 
