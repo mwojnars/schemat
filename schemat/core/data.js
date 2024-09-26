@@ -85,14 +85,14 @@ export class Catalog {
        - key,
        - label,
        - comment.
-       Keys, labels, comments, if present, are strings. Keys may repeat.
-       Keys may include all printable characters except ":" and whitespace.
-       Labels may include all printable characters except ":", newline, tab (spaces allowed).
+       Keys, labels, comments, if present, are strings. The same key can be repeated.
+       Keys may include all characters except ":", '.' and whitespace.
+       Labels may include all characters except ":", newline, tab (spaces allowed).
        Comments may include all printable characters including whitespace.
        Empty strings in label/comment are treated as missing. Empty string is a valid non-missing key.
        Entries can be accessed by their key, or integer position (0,1,...), or a path. The path may contain
-       - labels: "key:label/key2:label2"
-       - flags:  "key/key2:label::first" or "key::last" (first/last flag at the end of a path, after ::)
+       - labels: "key1:label1.key2:label2"
+       - flags:  "key1.key2:label::first" or "key::last" (first/last flag at the end of a path, after ::)
     */
 
     _entries = []               // plain objects with {key, value, label, comment} attributes
@@ -113,6 +113,9 @@ export class Catalog {
     forEach(fun, this_) { this._entries.forEach(e => {fun.call(this_, e.value, e.key, this)})}
 
     // extended interface ...
+    loc(key)            { return (typeof key === 'number') ? key : this._keys.get(key)?.[0] }       // location of the first occurrence of a string `key`, or `key` if already a number
+    locs(key)           { return (typeof key === 'number') ? [key] : this._keys.get(key) || [] }    // locations of all occurrences of a string `key`, [] if none, or [key] if already a number
+
     getAll(key)         { return this.getEntries(key).map(e => e.value) }                       // array of all values of a (repeated) key
     getLocations(key)   { return (this._keys.get(key) || []).map(i => [i, this._entries[i]]) }  // array of [index, value] pairs of all occurrences of a key
 
@@ -460,6 +463,10 @@ export class Catalog {
         let [_, subpath, subcat] = this._step(path)
         if (subcat instanceof Catalog) return subcat.insert(subpath, pos, entry)        // nested Catalog? make a recursive call
         throw new Error(`path not found: ${subpath.join('/')}`)
+    }
+
+    step(key) {
+
     }
 
     delete(path) {
