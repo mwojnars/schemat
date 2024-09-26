@@ -905,7 +905,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _set_version() {
-        /* Set __ver=1 for a newly created object, if so requested by category settings. */
+        /* Set __ver=1 for a newly created object, if so requested in category settings. */
         if (this.__base.versioning)
             this.__data.set('__ver', 1)
         else
@@ -920,7 +920,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (this.__base.versioning) {
             let ver = this.__ver || 0
             this.__data.set('__ver', ver + 1)
-            if (ver && this.__base.history) return this._create_revision(prev).then(rev => this.__data.set('__prev', rev))
+            if (ver && this.__base.history)
+                return this._create_revision(prev).then(rev => this.__data.set('__prev', rev))
         }
         else this.__data.delete('__ver')        // TODO: drop orphaned revisions to save DB space and avoid accidental reuse when versioning starts again
     }
