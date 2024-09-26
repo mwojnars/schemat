@@ -79,7 +79,7 @@
         __ver property that holds this object's version number (1,2,3,...) and
         is automatically incremented on every update.
       "@": schemat/types/type.js:BOOLEAN
-    history:
+    keep_history:
       default: false
       info: If true, old versions of objects in this category are preserved on every
         update by creating an immutable Revision that stores the object's
@@ -88,6 +88,13 @@
     immutable:
       default: false
       info: If true, objects of this category cannot be modified after creation.
+      "@": schemat/types/type.js:BOOLEAN
+    garbage_collect:
+      default: false
+      info: If true, objects of this category are automatically removed (TODO) if not referenced through a REF
+        from any other object; the reference must *not* be buried inside any custom data structure.
+        Use this setting with caution, only for supporting objects like Revision etc., whose permanent deletion
+        is desirable after the removal of the main object, NOT for core data objects.
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   defaults:
