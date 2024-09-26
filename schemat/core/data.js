@@ -206,8 +206,8 @@ export class Catalog {
         }
     }
 
-    get_all(key) {
-        /* Return an array of all values associated with a given top-level key. */
+    getAll(key) {
+        /* Return an array of all (multiple) values associated with occurrences of a given (repeated) key; [] if missing. */
         return this.getEntries(key).map(e => e.value)
     }
 

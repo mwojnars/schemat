@@ -632,7 +632,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         // if the property is atomic (non-repeated and non-compound) and an own value is present, skip inheritance to speed up
         if (!type.isRepeated() && !type.isCATALOG() && data.has(prop)) {
-            let values = data.get_all(prop)
+            let values = data.getAll(prop)
             if (values.length > 1) print(`WARNING: multiple values present for a property declared as non-repeated (${prop})`)
             return [values[0]]  //[data.get(prop)]
         }
@@ -647,7 +647,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             if (this === category?.__self && prop === 'defaults')           // avoid circular dependency for RootCategory
                 category = undefined
 
-            let defaults = category?.defaults?.get_all(prop)
+            let defaults = category?.defaults?.getAll(prop)
             if (defaults?.length) streams.push(defaults)
         }
         // else if (prop === '__category')
@@ -656,7 +656,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return type.combine_inherited(streams, proxy)                       // `default` and `impute` of the `type` are applied here
     }
 
-    _own_values(prop)  { return this.__data.get_all(prop) }
+    _own_values(prop)  { return this.__data.getAll(prop) }
 
     instanceof(category) {
         /* Check whether this item belongs to a `category`, or its subcategory.
@@ -782,7 +782,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             type.validate(value)                            // may raise an exception
 
             if (!type.props.repeated) {                     // check that a single-valued property has no repetitions
-                let count = this.__data.get_all(prop).length
+                let count = this.__data.getAll(prop).length
                 if (count > 1) throw new ValidationError(`found ${count} occurrences of a property declared as single-valued (${prop})`)
             }
         }
@@ -855,7 +855,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         // otherwise, use category defaults, OR global defaults (for no-category objects)
         let glob_defaults = {GET: ['view', 'admin', 'record'], CALL: ['self']}
-        let catg_defaults = this.__category?.default_endpoints.get_all(protocol)
+        let catg_defaults = this.__category?.default_endpoints.getAll(protocol)
         let defaults = catg_defaults || glob_defaults[protocol]
         if (defaults.length) return defaults
 
@@ -1047,7 +1047,7 @@ export class Category extends Item {
     //        because the imputation depends on the target object which is missing here.
     //      */
     //     let type = this.__child_schema.get(prop) || generic_type
-    //     let defaults = this.defaults?.get_all(prop) || []
+    //     let defaults = this.defaults?.getAll(prop) || []
     //     return type.combine_inherited([defaults])
     // }
     //

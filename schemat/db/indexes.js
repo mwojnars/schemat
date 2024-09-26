@@ -149,7 +149,7 @@ export class PrimeIndexSequence extends Index {
         let data = item_record.data
 
         for (const field of this.record_schema.field_names) {
-            const values = data.get_all(field)
+            const values = data.getAll(field)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && field_values.length)
                 throw new Error(`key field ${field} has multiple values, which is allowed only for the first field in the index`)
