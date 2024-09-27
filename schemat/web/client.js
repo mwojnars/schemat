@@ -101,16 +101,12 @@ export class ClientSchemat extends Schemat {
     /***  DB  ***/
 
     async client_insert(category, data) {
+        /* `data` is a flat (encoded) object, possibly the result of Data.__getstate__() but not necessarily. */
         assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items
-
-        let state = data.__getstate__()
-        let record = await category.create_item(state)
-
-        if (record) {
-            schemat.db.cache(record)                         // record == {id: id, data: data-encoded}
-            return this.get_object(record.id)
-        }
-        throw new Error(`failed to insert new object`)
+        let record = await category.create_item(data)
+        if (!record) throw new Error(`failed to insert a new object`)
+        schemat.db.cache(record)                         // record == {id: id, data: data-encoded}
+        return this.get_object(record.id)
     }
 }
 

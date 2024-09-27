@@ -4,7 +4,6 @@ import {Resources, ReactDOM} from './resources.js'
 import {e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
         TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, printReactTree} from './react-utils.js'
 import {HttpService} from "./services.js";
-import {Data} from "../core/data.js";
 import {Styled} from "./component.js";
 import {CatalogTable} from "../types/catalog.js";
 import {RequestContext} from "./request.js";
@@ -347,7 +346,7 @@ export class CategoryRecordView extends ItemRecordView {
             // let name = input.current.value
             // let json = JSON.stringify(Array.from(fdata))
 
-            let data = new Data(...fdata)
+            let data = Object.fromEntries([...fdata])
             let obj = await schemat.client_insert(this, data)
             await obj.load()                                // initialize the object's URL
 
