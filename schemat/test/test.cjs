@@ -28,8 +28,8 @@ let delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 function check_internet(fail) {
     /* Check that internet connection is available, otherwise the tests hang (even if running on localhost). */
-    const req = https.get('https://www.google.com', (res) => {
-        if (res.statusCode !== 200) fail()
+    const req = https.get('https://www.google.pl/generate_204', (res) => {
+        if (res.statusCode !== 204) fail()
         req.destroy()                                  // terminate the request to avoid downloading the entire page
     }).on('error', fail)
 }
