@@ -287,7 +287,6 @@ export class Database extends Item {
     async insert(data, ring_name = null) {
         /* Find the top-most ring where the item's ID is writable and insert there. The newly assigned ID is returned.
            `ring` is an optional name of a ring to use.
-           TODO: simplify the code if predefined ID is never used (id=undefined below); .save() can be used instead
          */
         if (!T.isString(data)) data = data.dump()
         let req = new DataRequest(this, 'insert', {data})
