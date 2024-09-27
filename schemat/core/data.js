@@ -539,7 +539,7 @@ export class Catalog {
         return irregular.length > 0 ? entries : Object.fromEntries(entries)
     }
 
-    __setstate__(state) {
+    static __setstate__(state) {
         if (!T.isArray(state)) {                    // if state is an object (compact representation) convert it to an array
             state = Object.entries(state)
             state = state.map(([key, value]) => [key.split('/')[0], value])     // convert keys of the form "key/X" back to "key"
@@ -548,8 +548,9 @@ export class Catalog {
         // convert each entry [key,value,...] in the array to an object {key, value, ...}
         state = state.map(([key, value, label, comment]) => ({key, value, label, comment}))
 
-        this.init(state)
-        return this
+        let catalog = new this()
+        catalog.init(state)
+        return catalog
     }
 }
 

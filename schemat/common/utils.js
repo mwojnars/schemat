@@ -336,9 +336,10 @@ export class Types {
     static setstate = (cls, state) => {
         // create an object of class `cls` and call its __setstate__() if present, or assign `state` directly;
         // if __setstate__() is async, setstate() returns a promise;
-        // __setstate__() must end with "return this" (!)
+        // obj.__setstate__() must end with "return this" (!)
+        if (cls.__setstate__) return cls.__setstate__(state)
         let obj = new cls()
-        if (obj['__setstate__']) return obj['__setstate__'](state)
+        if (obj.__setstate__) return obj.__setstate__(state)
         return Object.assign(obj, state)
     }
 

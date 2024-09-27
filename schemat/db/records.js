@@ -135,7 +135,7 @@ export class ItemRecord {
 
     _decode_data() {
         let data = this._data_object = JSONx.decode(this.data_plain)
-        if (!(data instanceof Data)) this._data_object = new Data().__setstate__(data)
+        if (!(data instanceof Data)) this._data_object = Data.__setstate__(data)
         return this._data_object
     }
     

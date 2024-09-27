@@ -196,7 +196,7 @@ export class Category extends Item {
     static ['POST/create_item'] = new JsonService(
         async function(request, dataState) {
             /* Create a new item in this category based on request data. */
-            let data = new Data().__setstate__(dataState)
+            let data = Data.__setstate__(dataState)
             data.set('__category', this)
             let id = await schemat.db.insert(data)
             let obj = await schemat.get_loaded(id)
