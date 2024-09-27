@@ -197,7 +197,8 @@ export class Category extends Item {
         async function(request, dataState) {
             /* Create a new item in this category based on request data. */
             let data = new Data().__setstate__(dataState)
-            let obj = await this.new(data)
+            data.set('__category', this)
+            let obj = await Item.from_data(null, data)
             await schemat.db.insert(obj)
             return obj.__record.encoded()
             // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
