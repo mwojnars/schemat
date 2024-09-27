@@ -137,7 +137,7 @@ export class Ring extends Item {
         return this.handle(req.safe_step(this, 'insert', {id, data}))
     }
 
-    async update(id_or_item, data = null, req = null) {
+    async update_full(id_or_item, data = null, req = null) {
         req = req || new DataRequest()
         let item = T.isNumber(id_or_item) ? null : id_or_item
         let id = item ? item._get_write_id() : id_or_item

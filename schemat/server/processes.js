@@ -214,7 +214,7 @@ export class AdminProcess extends BackendProcess {
                     print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
                 else {
                     print(`...updating reference(s) in object [${id}]`)
-                    await ring.update(id, data)
+                    await ring.update_full(id, data)
                     // await ring.flush()
                 }
             }
