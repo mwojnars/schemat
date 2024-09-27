@@ -723,50 +723,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return steps.reverse()
     }
 
-    // async insert_self() {
-    //     /* Insert this (newborn) object and, recursively, all the newborn objects referenced by this one, to the database. */
-    //
-    //     assert(this.is_newborn(), 'trying to insert an object that is already stored in the database')
-    //
-    //     // find recursively all the objects referenced (directly or indirectly) by this one that are still
-    //     // not persisted in the database; the graph of such objects may contain circular references -
-    //     // including a reference of this object to itself (!)
-    //     let refs = await this._find_unlinked_references()
-    //
-    //     // if no references need to be inserted together with this object, use the regular 1-phase insertion
-    //     if (refs.length === 0) return schemat.db.insert(this)
-    //
-    //     // otherwise, perform a 2-phase insertion of 1+ of cross/self-referencing objects
-    //     let objects = new Set([this, ...refs])
-    //     return schemat.db.insert_many(...objects)
-    // }
-    //
-    // async _find_unlinked_references(visited = new Set()) {
-    //     /* Find recursively all newborn (non-persisted) objects that are referenced - directly or indirectly -
-    //        by this one. If `this` is unsealed yet (properties are stored in POJO attributes not in __data),
-    //        create __data from the object's regular attributes.
-    //      */
-    //     let data = await this.seal_data()
-    //     let refs = data.find_references()
-    //     let unlinked_refs = refs.filter(obj => obj.is_newborn() && !visited.has(obj))
-    //
-    //     unlinked_refs.forEach(ref => visited.add(ref))
-    //
-    //     for (let ref of unlinked_refs)
-    //         await ref._find_unlinked_references(visited)
-    //
-    //     return visited
-    // }
-    //
-    // async seal_data() {
-    //     /* In a newborn (unlinked) object, create __data - if not present yet - by copying property values
-    //        from regular POJO attributes of the object.
-    //      */
-    //     if (this.__data) return this.__data
-    //     if (this.is_linked()) throw new Error('cannot seal properties of a linked object')
-    //     return this.__data = await Data.from_object(this)
-    // }
-
     validate() {
         for (const [prop, value] of this.__data) {          // validate each individual property in __data ...
             let type = this.__schema.get(prop)
@@ -805,6 +761,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __done__() {}
         /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 
+
+    /***  Request handling  ***/
 
     async handle(request) {
         /* Serve a web or internal Request by executing the corresponding service from this.net.
@@ -858,41 +816,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
 
-    /***  Endpoints  ***/
-
-    // When endpoint functions (below) are called, `this` is always bound to the Item instance, so they execute
-    // in the context of their item like if they were regular methods of the Item (sub)class.
-    // The first argument, `request`, is a Request instance, followed by action-specific list of arguments.
-    // In a special case when an action is called directly on the server through _triggers_.XXX(), `request` is null,
-    // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
-
-
-    GET__test_txt()         { return "TEST txt ..." }                   // works
-    GET__test_fun()         { return () => "TEST function ..." }        // works
-    GET__test_res({res})    { res.send("TEST res.send() ...") }         // works
-    GET__test_html()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
-
-    GET__json({res})        { res.json(this.__record.encoded()) }
-
-    // CALL__self()     { print('CALL__self'); return this }
-    // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
-
-    // GET__record(request)    { return new ReactPage(ItemRecordView).server(this, request) }
-    // GET__record()     { return react_page(ItemRecordView) }
-    static ['GET/record'] = new ReactPage(ItemRecordView)
-
-
-    /***  Actions & edit operations. Can be called on a client or a server. All return a Promise.  ***/
-
-    edit(op, args) {
-        // print('edit:', this.__id, op)
-        return schemat.site.service.submit_edits([this.__id, op, args])
-    }
-
-    edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
-    edit_delete(path)                   { return this.edit('delete', {path}) }
-    edit_update(path, entry)            { return this.edit('update', {path, entry}) }
-    edit_move(path, pos, pos_new)       { return this.edit('move', {path, pos, pos_new}) }
+    /***  Database operations on self  ***/
 
     delete_self() {
         /* Delete this object from the database. */
@@ -910,7 +834,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _bump_version(prev) {
         /* Increment (or set/delete) the __ver number, depending on the category's `versioning` setting.
            Create a new Revision with `prev` data (json) if keep_history=true in the category. May return a Promise.
-           The existing __ver may get *removed* if `versioning` has changed in the meantime (!).
+           The existing __ver may get *removed* if `versioning` was disabled in the meantime (!).
          */
         if (this.__base.versioning) {
             let ver = this.__ver || 0
@@ -925,12 +849,70 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Create a new Revision object to preserve the old `data` snapshot (JSON string). */
     }
 
+    // async insert_self() {
+    //     /* Insert this (newborn) object and, recursively, all the newborn objects referenced by this one, to the database. */
+    //
+    //     assert(this.is_newborn(), 'trying to insert an object that is already stored in the database')
+    //
+    //     // find recursively all the objects referenced (directly or indirectly) by this one that are still
+    //     // not persisted in the database; the graph of such objects may contain circular references -
+    //     // including a reference of this object to itself (!)
+    //     let refs = await this._find_unlinked_references()
+    //
+    //     // if no references need to be inserted together with this object, use the regular 1-phase insertion
+    //     if (refs.length === 0) return schemat.db.insert(this)
+    //
+    //     // otherwise, perform a 2-phase insertion of 1+ of cross/self-referencing objects
+    //     let objects = new Set([this, ...refs])
+    //     return schemat.db.insert_many(...objects)
+    // }
+    //
+    // async _find_unlinked_references(visited = new Set()) {
+    //     /* Find recursively all newborn (non-persisted) objects that are referenced - directly or indirectly -
+    //        by this one. If `this` is unsealed yet (properties are stored in POJO attributes not in __data),
+    //        create __data from the object's regular attributes.
+    //      */
+    //     let data = await this.seal_data()
+    //     let refs = data.find_references()
+    //     let unlinked_refs = refs.filter(obj => obj.is_newborn() && !visited.has(obj))
+    //
+    //     unlinked_refs.forEach(ref => visited.add(ref))
+    //
+    //     for (let ref of unlinked_refs)
+    //         await ref._find_unlinked_references(visited)
+    //
+    //     return visited
+    // }
+    //
+    // async seal_data() {
+    //     /* In a newborn (unlinked) object, create __data - if not present yet - by copying property values
+    //        from regular POJO attributes of the object.
+    //      */
+    //     if (this.__data) return this.__data
+    //     if (this.is_linked()) throw new Error('cannot seal properties of a linked object')
+    //     return this.__data = await Data.from_object(this)
+    // }
 
-    /***  Implementations of edit operations. NOT for direct use!
-          These methods are only called on the server where the object is stored, inside the block's object-level lock.
+
+    /***  Client-side edit methods. Return a Promise.  ***/
+
+    edit(op, args) {
+        // print('edit:', this.__id, op)
+        return schemat.site.service.submit_edits([this.__id, op, args])
+    }
+
+    edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
+    edit_delete(path)                   { return this.edit('delete', {path}) }
+    edit_update(path, entry)            { return this.edit('update', {path, entry}) }
+    edit_move(path, pos, pos_new)       { return this.edit('move', {path, pos, pos_new}) }
+
+
+    /***  Server-side implementation of edits. NOT for direct use!  ***/
+
+    /***  These methods are only called on the server where the object is stored, inside the block's object-level lock.
           New edit ops can be added in subclasses. An EDIT_{op} method can be async or return a Promise.
           The names of methods (the {op} suffix) must match the names of operations passed by callers to .edit().
-          Typically, when adding a new OP, a corresponding shortcut method, edit_OP(), is added to the subclass.
+          Typically, when adding a new OP, a corresponding client method, edit_OP(), is added, too.
      ***/
 
     _apply_edits(...edits) {
@@ -969,6 +951,30 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Move a property or a field inside a nested Catalog. */
         this.__data.move(path, pos, pos_new)
     }
+
+
+    /***  Endpoints  ***/
+
+    // When endpoint functions (below) are called, `this` is always bound to the Item instance, so they execute
+    // in the context of their item like if they were regular methods of the Item (sub)class.
+    // The first argument, `request`, is a Request instance, followed by action-specific list of arguments.
+    // In a special case when an action is called directly on the server through _triggers_.XXX(), `request` is null,
+    // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
+
+
+    GET__test_txt()         { return "TEST txt ..." }                   // works
+    GET__test_fun()         { return () => "TEST function ..." }        // works
+    GET__test_res({res})    { res.send("TEST res.send() ...") }         // works
+    GET__test_html()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
+
+    GET__json({res})        { res.json(this.__record.encoded()) }
+
+    // CALL__self()     { print('CALL__self'); return this }
+    // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
+
+    // GET__record(request)    { return new ReactPage(ItemRecordView).server(this, request) }
+    // GET__record()     { return react_page(ItemRecordView) }
+    static ['GET/record'] = new ReactPage(ItemRecordView)
 
 
 
