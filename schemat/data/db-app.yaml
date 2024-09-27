@@ -12,13 +12,11 @@
     "@": schemat:Catalog
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 5001
   title: Ala ma kota Sierściucha i psa Kłapoucha.
   title/2: drugi tytuł...
   __category:
     "@": 5000
-  "@": schemat:Data
 - __id: 5002
   title: ąłęÓŁŻŹŚ
   "@": schemat:Data
@@ -27,7 +25,6 @@
   text: Ala ma kota
   __category:
     "@": 5005
-  "@": schemat:Data
 - __id: 5004
   name: MysqlDB
   schema:
@@ -57,7 +54,6 @@
   class: schemat/db/mysql.js:MySQL
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 5005
   name: TwitterPost
   schema:
