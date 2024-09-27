@@ -886,7 +886,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     edit(op, args) {
         // print('edit:', this.__id, op)
-        return schemat.site.service.submit_edits([this.__id, op, args])    //this, new Edit(op, args))
+        return schemat.site.service.submit_edits([this.__id, op, args])
     }
 
     edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
@@ -936,6 +936,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _apply_edits(...edits) {
         /* Apply edits before saving a modified object to the DB. For server-side use only. Each `edit` is an instance of Edit. */
         for (const edit of edits) {
+            assert(edit instanceof Edit)
             const method = `EDIT_${edit.op}`
             if (!this[method]) throw new Error(`object does not support edit operation: '${edit.op}'`)
             this[method](edit.args)

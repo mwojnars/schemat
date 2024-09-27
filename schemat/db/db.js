@@ -142,7 +142,7 @@ export class Ring extends Item {
         let item = T.isNumber(id_or_item) ? null : id_or_item
         let id = item ? item._get_write_id() : id_or_item
         if (!data) data = item.dump_data()
-        let edits = [new Edit('overwrite', {data})]      // [new EditData(data)]
+        let edits = [new Edit('overwrite', {data})]
         return this.handle(req.safe_step(this, 'update', {id, edits}))
     }
 
