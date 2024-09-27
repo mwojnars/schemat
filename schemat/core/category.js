@@ -43,15 +43,15 @@ export class Category extends Item {
         if (calls.length) return Promise.all(calls)
     }
 
-    async new(data, id) {
+    async new(data = {}) {
         /* Create a newborn item of this category (not yet in DB) and set its `data`; set its ID if given.
            The order of `data` and `id` arguments can be swapped.
          */
-        if (typeof data === 'number') [data, id] = [id, data]
+        // if (typeof data === 'number') [data, id] = [id, data]
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
         data.set('__category', this)
-        return Item.from_data(id, data)
+        return Item.from_data(null, data)
     }
 
     async list_objects(opts = {}) {

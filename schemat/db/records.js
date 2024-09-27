@@ -177,13 +177,13 @@ export class ItemRecord {
 
     constructor(id, data) {
         /* `id` is a Number; `data` is either a JSONx string, or a Data object. */
-        this.id = id
-        assert(data, `missing 'data' for ItemRecord, id=${id}`)
+        if (id !== undefined && id !== null) this.id = id
+        assert(data, `missing 'data' for ItemRecord, id=${this.id}`)
 
         if (typeof data === 'string') this._data_json = data
         else if (data instanceof Data) this._data_object = data
         else
-            assert(false, `plain data objects not accepted for ItemRecord, id=${id}: ${data}`)
+            assert(false, `plain data objects not accepted for ItemRecord, id=${this.id}: ${data}`)
             // for now, it's not needed to accept plain objects as data - this can change later
 
         // else {

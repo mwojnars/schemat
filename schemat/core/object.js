@@ -847,6 +847,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     async _create_revision(data) {
         /* Create a new Revision object to preserve the old `data` snapshot (JSON string). */
+
+        // Revision.from_data(id, data)
     }
 
     // async insert_self() {
