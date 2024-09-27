@@ -290,24 +290,18 @@ export class Database extends Item {
            TODO: simplify the code if predefined ID is never used (id=undefined below); .save() can be used instead
          */
         if (!T.isString(data)) data = data.dump()
-
-        let id //= item.__id          // can be undefined
-        let req = new DataRequest(this, 'insert', {id, data})
+        let req = new DataRequest(this, 'insert', {data})
         let ring
 
         if (ring_name) {                                            // find the ring by name
             ring = await this.find_ring({name: ring_name})
             if (!ring) return req.error_access(`target ring not found: '${ring_name}'`)
-            if (!ring.writable(id)) return req.error_access(`the ring '${ring_name}' is read-only or the ID is not writable`)
         }
-        else ring = this.rings_reversed.find(r => r.writable(id))         // find the first ring where `id` can be inserted
-
-        if (ring) return ring.handle(req)                           // returns newly assigned ID
-
-        return req.error_access(id === undefined ?
-            "cannot insert the item, the ring(s) are read-only" :
-            "cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range"
-        )
+        else {
+            ring = this.rings_reversed.find(r => r.writable())     // find the first writable ring
+            if (!ring) return req.error_access("all ring(s) are read-only")
+        }
+        return ring.handle(req)                                     // perform the insert & return newly assigned ID
     }
 
     async insert_many(...items) {
