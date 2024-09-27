@@ -198,8 +198,8 @@ export class Category extends Item {
             /* Create a new item in this category based on request data. */
             let data = new Data().__setstate__(dataState)
             data.set('__category', this)
-            let obj = await Item.from_data(null, data)
-            obj.__id = await schemat.db.insert(obj)
+            let id = await schemat.db.insert(data)
+            let obj = await schemat.get_loaded(id)
             return obj.__record.encoded()
             // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
         },
