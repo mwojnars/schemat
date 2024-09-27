@@ -284,14 +284,11 @@ export class Database extends Item {
         return this.update(item.__id, new Edit('overwrite', {data}))
     }
 
-    async insert(item_or_data, ring_name = null) {
-        /* Find the top-most ring where the item's ID is writable and insert there. If a new ID is assigned,
-           it is written to item.__id. `ring` is an optional name of a ring to use.
+    async insert(data, ring_name = null) {
+        /* Find the top-most ring where the item's ID is writable and insert there. The newly assigned ID is returned.
+           `ring` is an optional name of a ring to use.
            TODO: simplify the code if predefined ID is never used (id=undefined below); .save() can be used instead
          */
-        let item = (item_or_data instanceof Item) && item_or_data
-        let data = item ? item.__data : item_or_data
-
         if (!T.isString(data)) data = data.dump()
 
         let id //= item.__id          // can be undefined
