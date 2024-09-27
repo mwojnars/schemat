@@ -201,7 +201,6 @@ export class Category extends Item {
             let id = await schemat.db.insert(data)
             let obj = await schemat.get_loaded(id)
             return obj.__record.encoded()
-            // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
         },
     // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
     )
