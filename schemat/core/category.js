@@ -196,10 +196,10 @@ export class Category extends Item {
     static ['POST/create_item'] = new JsonService(
         async function(request, dataState) {
             /* Create a new item in this category based on request data. */
-            let data = await (new Data).__setstate__(dataState)
-            let item = await this.new(data)
-            await schemat.db.insert(item)
-            return item.__record.encoded()
+            let data = new Data().__setstate__(dataState)
+            let obj = await this.new(data)
+            await schemat.db.insert(obj)
+            return obj.__record.encoded()
             // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
         },
     // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
