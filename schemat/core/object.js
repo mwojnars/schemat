@@ -44,12 +44,6 @@ export class Edit {
         this.op = op
         this.args = args
     }
-
-    apply_to(object) {
-        const method = object[`EDIT_${this.op}`]
-        if (!method) throw new Error(`object does not support edit operation: '${this.op}'`)
-        return method.call(object, this.args)       // may return a Promise
-    }
 }
 
 
@@ -940,9 +934,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
      ***/
 
     _apply_edits(...edits) {
-        /* Apply edits before saving a modified object to the DB. To be used on the server only. Each `edit` is an instance of Edit. */
-        for (const edit of edits)
-            edit.apply_to(this)
+        /* Apply edits before saving a modified object to the DB. For server-side use only. Each `edit` is an instance of Edit. */
+        for (const edit of edits) {
+            const method = `EDIT_${edit.op}`
+            if (!this[method]) throw new Error(`object does not support edit operation: '${edit.op}'`)
+            this[method](edit.args)
+        }
     }
 
     EDIT_overwrite({data}) {

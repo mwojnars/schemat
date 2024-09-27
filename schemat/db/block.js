@@ -235,15 +235,9 @@ export class DataBlock extends Block {
 
         let obj = await Item.from_data(id, data, {mutable: true})
 
+        // apply edits & validate the object's data and the values of individual properties
         obj._apply_edits(...edits)
-
-        // for (const edit of edits) {                 // `edit` is an instance of Edit
-        //     let ret = edit.apply_to(obj)
-        //     if (T.isPromise(ret)) await ret
-        // }
-
-        // validate the object's data and the values of individual properties; may raise validation exceptions
-        obj.validate()
+        obj.validate()                              // may raise validation exceptions
 
         let wait = obj._bump_version(data)          // increment __ver and create a Revision for the previous `data`, if needed
         if (wait) await wait
