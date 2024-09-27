@@ -906,7 +906,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
     edit_delete(path)                   { return this.edit('delete', {path}) }
     edit_update(path, entry)            { return this.edit('update', {path, entry}) }
-    edit_move(path, pos, pos_new)       { return this.edit('move', {path, pos, pos_new}) }
+    edit_move(path, delta)              { return this.edit('move',   {path, delta}) }
 
 
     /***  Server-side implementation of edits. NOT for direct use!  ***/
@@ -949,9 +949,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         this.__data.update(path, entry)
     }
 
-    EDIT_move({path, pos, pos_new}) {
+    EDIT_move({path, delta}) {
         /* Move a property or a field inside a nested Catalog. */
-        this.__data.move(path, pos, pos_new)
+        let pos = path.pop()
+        this.__data.move(path, pos, pos + delta)
     }
 
 
