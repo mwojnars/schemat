@@ -150,6 +150,27 @@ export class Site extends Item {
     async resolve(path) { return this.root.resolve(path) }
 
 
+    /***  Endpoints  ***/
+
+    static ['POST/submit_edits'] = new JsonService(async function(request, ...plain_edits)
+    {
+        /* Submit a list of object edits to the DB. Each plain edit is a 3-element array: [id, op, args],
+           where `id` is the ID of the object to be edited, `op` is the name of the EDIT_* operation to be executed,
+           and `args` is a dictionary of arguments to be passed to the operation.
+         */
+        for (let edit of plain_edits) {
+            let [id, op, args] = edit
+            await this.database.update(id, new Edit(op, args))
+            await schemat.reload(id)           // TODO: read the newest version of the object from update()'s feedback and send back to the client
+        }
+    })
+
+    static ['POST/delete_object'] = new JsonService(async function(request, id)
+    {
+        return this.database.delete(id)
+    })
+
+
     /***  Dynamic imports  ***/
 
     // async import_module(path, referrer) {
@@ -264,27 +285,5 @@ export class Site extends Item {
     //     if (!path.startsWith(local + '/')) throw new Error(`incorrect import path (${path}), should start with "${local}"`)
     //     return schemat.PATH_LOCAL_FS + path.slice(local.length)
     // }
-
-
-    /***  Endpoints  ***/
-
-    static ['POST/submit_edits'] = new JsonService(async function(request, ...plain_edits)
-    {
-        /* Submit a list of object edits to the DB. Each plain edit is a 3-element array: [id, op, args],
-           where `id` is the ID of the object to be edited, `op` is the name of the EDIT_* operation to be executed,
-           and `args` is a dictionary of arguments to be passed to the operation.
-         */
-        for (let edit of plain_edits) {
-            let [id, op, args] = edit
-            await this.database.update(id, new Edit(op, args))
-            await schemat.reload(id)           // TODO: read the newest version of the object from update()'s feedback and send back to the client
-        }
-    })
-
-    static ['POST/delete_object'] = new JsonService(async function(request, id)
-    {
-        return this.database.delete(id)
-    })
-
 }
 
