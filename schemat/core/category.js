@@ -199,7 +199,7 @@ export class Category extends Item {
             let data = new Data().__setstate__(dataState)
             data.set('__category', this)
             let obj = await Item.from_data(null, data)
-            await schemat.db.insert(obj)
+            obj.__id = await schemat.db.insert(obj)
             return obj.__record.encoded()
             // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
         },

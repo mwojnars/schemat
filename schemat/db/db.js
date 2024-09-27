@@ -305,11 +305,8 @@ export class Database extends Item {
         }
         else ring = this.rings_reversed.find(r => r.writable(id))         // find the first ring where `id` can be inserted
 
-        if (ring) {
-            id = await ring.handle(req)
-            if (item) item.__id = id
-            return id
-        }
+        if (ring) return ring.handle(req)                           // returns newly assigned ID
+
         return req.error_access(id === undefined ?
             "cannot insert the item, the ring(s) are read-only" :
             "cannot insert the item, either the ring(s) are read-only or the ID is outside the ring's valid ID range"
