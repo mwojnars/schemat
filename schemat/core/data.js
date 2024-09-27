@@ -120,6 +120,7 @@ export class Catalog {
             let ids = this._keys.get(key) || []
             if (ids.push(pos) === 1) this._keys.set(key, ids)
         }
+        return this
     }
 
 
@@ -548,9 +549,7 @@ export class Catalog {
         // convert each entry [key,value,...] in the array to an object {key, value, ...}
         state = state.map(([key, value, label, comment]) => ({key, value, label, comment}))
 
-        let catalog = new this()
-        catalog.init(state)
-        return catalog
+        return new this().init(state)
     }
 }
 
