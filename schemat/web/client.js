@@ -101,10 +101,6 @@ export class ClientSchemat extends Schemat {
     /***  DB  ***/
 
     async client_insert(category, data) {
-        // let category = data.get('__category')
-        // data.delete('__category')
-        // delete state['__category']
-
         assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items
 
         let state = data.__getstate__()
@@ -114,7 +110,7 @@ export class ClientSchemat extends Schemat {
             schemat.db.cache(record)                         // record == {id: id, data: data-encoded}
             return this.get_object(record.id)
         }
-        throw new Error(`cannot create item ${item}`)
+        throw new Error(`failed to insert new object`)
     }
 }
 

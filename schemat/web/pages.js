@@ -347,16 +347,13 @@ export class CategoryRecordView extends ItemRecordView {
             // let name = input.current.value
             // let json = JSON.stringify(Array.from(fdata))
 
-            let data = new Data()
-            for (let [k, v] of fdata) data.push(k, v)
-
-            // let draft = await this.new(data)                // no ID yet; TODO: validate `data` through category's schema
-            let item = await schemat.client_insert(this, data)    // has ID now
-            await item.load()                               // load() is needed to initialize the item's URL
+            let data = new Data(...fdata)
+            let obj = await schemat.client_insert(this, data)
+            await obj.load()                                // initialize the object's URL
 
             form.current.reset()                            // clear input fields
             setFormDisabled(false)
-            itemAdded(item)
+            itemAdded(obj)
         }
 
         return FORM({ref: form, style: {marginTop: '10px'}},
