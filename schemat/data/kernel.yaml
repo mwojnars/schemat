@@ -91,10 +91,12 @@
       "@": schemat/types/type.js:BOOLEAN
     garbage_collect:
       default: false
-      info: If true, objects of this category are automatically removed (TODO) if not referenced through a REF
-        from any other object; the reference must *not* be buried inside any custom data structure.
-        Use this setting with caution, only for supporting objects like Revision etc., whose permanent deletion
-        is desirable after the removal of the main object, NOT for core data objects.
+      info: If true, objects of this category are automatically removed (TODO) if not
+        referenced through a REF from any other object; the reference must *not*
+        be buried inside any custom data structure. Use this setting with
+        caution, only for supporting objects like Revision etc., whose permanent
+        deletion is desirable after the removal of the main object, NOT for core
+        data objects.
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   defaults:
@@ -166,12 +168,12 @@
         min: 1
         "@": schemat/types/type.js:INTEGER
       __prev:
-        info: The most recent Revision created for the object. Contains the previous state 
-          of this object (from before the last update).
+        info: The most recent Revision created for the object. Contains the previous
+          state of this object (from before the last update).
         "@": schemat/types/type.js:REF
       "@": schemat:Catalog
     "@": schemat:Catalog
-  versioning: true
+  versioning: false
   class: schemat:Category
   "@": schemat:Data
 - __id: 1
