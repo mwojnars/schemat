@@ -1,5 +1,5 @@
-import {assert} from "../common/utils.js";
-import {CustomMap} from "../common/structs.js";
+import {assert} from "./utils.js";
+import {CustomMap} from "./structs.js";
 
 
 /**********************************************************************************************************************/

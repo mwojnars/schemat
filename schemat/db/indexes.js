@@ -1,5 +1,5 @@
 import {assert, print, T} from "../common/utils.js";
-import {BinaryMap} from "../util/binary.js"
+import {BinaryMap} from "../common/binary.js"
 import {INTEGER} from "../types/type.js";
 import {ItemRecord, PlainRecord, RecordSchema, data_schema} from "./records.js";
 import {DataRequest} from "./data_request.js";

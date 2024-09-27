@@ -6,7 +6,7 @@
 
 import {assert, print, T} from "../common/utils.js";
 import {JSONx} from "../core/jsonx.js";
-import {BinaryInput, BinaryOutput, compareUint8Arrays, fnv1aHash} from "../util/binary.js";
+import {BinaryInput, BinaryOutput, compareUint8Arrays, fnv1aHash} from "../common/binary.js";
 import {Data} from "../core/data.js";
 import {INTEGER} from "../types/type.js";
 

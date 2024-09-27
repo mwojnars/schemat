@@ -1,7 +1,7 @@
 import {A} from '../web/react-utils.js'
 import {assert, concat, print, T} from '../common/utils.js'
 import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
-import {byteLengthOfUnsignedInteger} from "../util/binary.js";
+import {byteLengthOfUnsignedInteger} from "../common/binary.js";
 import * as widgets from './widgets.js'
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
