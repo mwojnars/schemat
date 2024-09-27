@@ -211,7 +211,7 @@ describe('Schemat Tests', function () {
             expect_include_all(await extract_content(Varia), 'check', 'Varia.code')
         })
 
-        it('create & delete item in Varia', async function () {
+        it('insert & delete', async function () {
             // navigate to the Varia category page
             await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main')
 

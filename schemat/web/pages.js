@@ -350,8 +350,8 @@ export class CategoryRecordView extends ItemRecordView {
             let data = new Data()
             for (let [k, v] of fdata) data.push(k, v)
 
-            let draft = await this.new(data)                // item with no IID yet; TODO: validate `data` through category's schema
-            let item = await schemat.insert(draft)          // has IID now
+            // let draft = await this.new(data)                // no ID yet; TODO: validate `data` through category's schema
+            let item = await schemat.client_insert(this, data)    // has ID now
             await item.load()                               // load() is needed to initialize the item's URL
 
             form.current.reset()                            // clear input fields
