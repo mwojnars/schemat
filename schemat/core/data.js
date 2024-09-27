@@ -605,7 +605,7 @@ export class Data extends Catalog {
 
     dump() {
         /* Encode & stringify self through JSONx. Return a JSON string representing the entire contents of this Data instance. */
-        return JSONx.stringify(this)
+        return JSONx.stringify(this.__getstate__())
     }
 
     find_references() {

@@ -150,7 +150,7 @@ export class ItemRecord {
     }
 
     _encode_data() {
-        return this._data_plain = JSONx.encode(this._data_object)
+        return this._data_plain = JSONx.encode(this._data_object.__getstate__())
         // if(!(JSONx.decode(this._data_plain) instanceof Data)) assert(false)
         // return this._data_plain
     }
