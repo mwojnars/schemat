@@ -939,6 +939,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
           Typically, when adding a new OP, a corresponding shortcut method, edit_OP(), is added to the subclass.
      ***/
 
+    _apply_edits(...edits) {
+        /* Apply edits before saving a modified object to the DB. To be used on the server only. Each `edit` is an instance of Edit. */
+        for (const edit of edits)
+            edit.apply_to(this)
+    }
+
     EDIT_overwrite({data}) {
         /* Replace the entire set of own properties, __data, with a new Data object. */
         if (typeof data === 'string') data = Data.load(data)
