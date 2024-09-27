@@ -1,9 +1,9 @@
 import {print, assert, T, escape_html, concat, unique, delay} from '../common/utils.js'
 import {NotLinked, NotLoaded, ValidationError} from '../common/errors.js'
 
-import {Catalog, Data} from './data.js'
-import {REF, generic_type} from "../types/type.js"
-import {DATA, DATA_GENERIC} from "../types/catalog.js"
+import {Data} from './data.js'
+import {REF} from "../types/type.js"
+import {DATA_GENERIC} from "../types/catalog.js"
 
 import {ItemRecord} from "../db/records.js"
 import {DataRequest} from "../db/data_request.js"
@@ -13,7 +13,6 @@ import {Assets} from "../web/component.js"
 import {Request} from "../web/request.js"
 import {ReactPage, ItemRecordView} from "../web/pages.js"
 
-// import {ROOT_ID, RootCategory} from "./category.js";
 
 let ROOT_ID, RootCategory
 

@@ -153,13 +153,13 @@ export class DATA extends CATALOG {
 }
 
 export class DATA_GENERIC extends DATA {
-    /* Generic item's DATA schema, used when there's no category for an item. */
+    /* Generic DATA schema, used when there's no category for a web object. */
     static props = {
         fields: {},
         strict: false,
     }
-    subtype(key)  { return this.props.fields[key] || generic_type }
-    _all_subtypes()  { return [...super._all_subtypes(), generic_type] }
+    subtype(key)    { return this.props.fields[key] || generic_type }
+    _all_subtypes() { return [...super._all_subtypes(), generic_type] }
 }
 
 
