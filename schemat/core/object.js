@@ -903,10 +903,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return schemat.site.service.submit_edits([this.__id, op, args])
     }
 
-    edit_insert(path, pos, entry)       { return this.edit('insert', {path, pos, entry}) }
-    edit_delete(path)                   { return this.edit('delete', {path}) }
-    edit_update(path, entry)            { return this.edit('update', {path, entry}) }
-    edit_move(path, delta)              { return this.edit('move',   {path, delta}) }
+    edit_insert(path, entry)        { return this.edit('insert', {path, entry}) }
+    edit_delete(path)               { return this.edit('delete', {path}) }
+    edit_update(path, entry)        { return this.edit('update', {path, entry}) }
+    edit_move(path, delta)          { return this.edit('move',   {path, delta}) }
 
 
     /***  Server-side implementation of edits. NOT for direct use!  ***/
@@ -934,8 +934,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         this.__data = data
     }
 
-    EDIT_insert({path, pos, entry}) {
+    EDIT_insert({path, entry}) {
         /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
+        let pos = path.pop()
         this.__data.insert(path, pos, entry)
     }
 

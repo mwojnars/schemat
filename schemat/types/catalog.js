@@ -424,9 +424,9 @@ export class CatalogTable extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (type.isCATALOG()) item.edit_insert(path, pos, {key, value})
+                if (type.isCATALOG()) item.edit_insert([...path, pos], {key, value})
                 else prev[pos].saveNew = (value) =>
-                    item.edit_insert(path, pos, {key, value}).then(() => unnew())
+                    item.edit_insert([...path, pos], {key, value}).then(() => unnew())
 
                 return [...prev]
             })
