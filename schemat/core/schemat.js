@@ -296,7 +296,7 @@ export class Schemat {
                 <%- schemat.client_block(request, '#context-path') %>
            `id_context` must be an ID of the HTML element of the result page where RequestContext for the client-side Schemat is to be written.
          */
-        if (!id_context) throw new(`id_context is missing: ID of the HTML element containing request context must be provided`)
+        if (!id_context) throw new Error(`id_context is missing: ID of the HTML element containing request context must be provided`)
         assert(!id_context.includes('"'))
         assert(!id_context.includes('#'))
 
