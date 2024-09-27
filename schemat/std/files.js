@@ -5,7 +5,7 @@
  */
 
 import {print, assert} from "../common/utils.js"
-import {Item} from "../core/item.js"
+import {Item} from "../core/object.js"
 import {Directory} from "./containers.js";
 
 const {transform_postcss} = SERVER && await import("./transforms.js")

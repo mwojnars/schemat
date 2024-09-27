@@ -1,6 +1,6 @@
 import {T, print, assert, normalize_path} from '../common/utils.js'
 import {DependenciesStack} from '../common/structs.js'
-import {Item, Category, ROOT_ID} from './item.js'
+import {Item, Category, ROOT_ID} from './object.js'
 import {Registry} from "./registry.js";
 import {RequestContext} from "../web/request.js";
 // import Resources from "../web/resources.js";

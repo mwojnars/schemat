@@ -1,6 +1,6 @@
 /*
     The TypeItem class depends on Item, that's why it's placed in a separate file rather than type.js
-    - to avoid circular dependencies when some other files (dependencies of item.js) want to import type.js.
+    - to avoid circular dependencies when some other files (dependencies of object.js) want to import type.js.
  */
 
 import { T, assert, print, splitLast } from '../common/utils.js'

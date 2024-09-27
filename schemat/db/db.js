@@ -1,6 +1,6 @@
 import {DatabaseError} from "../common/errors.js"
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
-import {Item, Edit} from "../core/item.js"
+import {Item, Edit} from "../core/object.js"
 import {DataOperator} from "./sequence.js";
 import {Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";

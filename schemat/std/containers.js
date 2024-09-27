@@ -3,7 +3,7 @@
  */
 
 import {assert, print, T} from "../common/utils.js"
-import {Item} from "../core/item.js"
+import {Item} from "../core/object.js"
 import {UrlPathNotFound, warn} from "../common/errors.js";
 
 

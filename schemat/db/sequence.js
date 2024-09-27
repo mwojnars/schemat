@@ -1,7 +1,7 @@
 import {BinaryRecord, data_schema} from "./records.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock, IndexBlock} from "./block.js";
-import {Item} from "../core/item.js";
+import {Item} from "../core/object.js";
 import {BinaryInput} from "../common/binary.js";
 import {INTEGER} from "../types/type.js";
 

@@ -71,7 +71,7 @@
     // console.log('TwitterPost/code executed')
 
     // import {check} from '/site/widgets.js'
-    // import {Item} from '/$/local/schemat/core/item.js'
+    // import {Item} from '/$/local/schemat/core/object.js'
     // import vm from 'vm'
     // check()
     // console.log('schemat:', schemat)
