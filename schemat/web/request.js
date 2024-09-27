@@ -1,6 +1,6 @@
 import {UrlPathNotFound} from "../common/errors.js";
 import {print, assert, splitLast} from "../common/utils.js";
-import {ObjectSet} from "../common/objects.js";
+import {ObjectSet} from "../common/structs.js";
 
 
 export class Request {   // Connection ?
