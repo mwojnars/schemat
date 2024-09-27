@@ -175,7 +175,6 @@
     "@": schemat:Catalog
   versioning: false
   class: schemat:Category
-  "@": schemat:Data
 - __id: 1
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
@@ -217,7 +216,6 @@
     "@": 5
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 2
   name: Container
   __category:
@@ -227,7 +225,6 @@
       default: true
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
-  "@": schemat:Data
 - __id: 3
   name: File
   info: File with a text content.
@@ -246,7 +243,6 @@
   class: schemat/std/files.js:File
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 4
   name: LocalFile
   info: File located on a local disk, identified by its local file path.
@@ -259,7 +255,6 @@
   class: schemat/std/files.js:LocalFile
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 5
   name: Directory
   info: >-
@@ -280,7 +275,6 @@
     "@": 2
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 6
   name: LocalDirectory
   info: A Directory whose content is located on a local disk, in the folder
@@ -318,7 +312,6 @@
     "@": 5
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 7
   name: Namespace
   info: "Unbounded collection of objects: each object that satisfies the criteria
@@ -331,7 +324,6 @@
     "@": 2
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 8
   name: ObjectSpace
   info: Namespace that maps all objects to URLs of the form /<ID>. Optionally
@@ -350,7 +342,6 @@
     "@": 7
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 9
   name: Category_IID_Namespace
   info: "Namespace for accessing public data through verbose paths of the form:
@@ -369,14 +360,12 @@
     "@": 7
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 10
   name: Cluster
   __category:
     "@": 0
   schema:
     "@": schemat:Catalog
-  "@": schemat:Data
 - __id: 11
   name: Database
   info: Internal database. An array of data Rings stacked on top of each other.
@@ -388,7 +377,6 @@
   class: schemat/db/db.js:Database
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 12
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
@@ -420,7 +408,6 @@
   class: schemat/db/db.js:Ring
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 13
   name: Sequence
   info: Base category for sequences of key-value records, either data or indexes.
@@ -443,7 +430,6 @@
     "@": schemat:Catalog
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 14
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
@@ -452,7 +438,6 @@
     "@": 13
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 15
   name: Index
   info: Base category for indexes over the data sequence.
@@ -460,7 +445,6 @@
     "@": 24
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 16
   name: PrimeIndexSequence
   info: An index that receives record updates from the main data sequence, so
@@ -471,7 +455,6 @@
     "@": 15
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 17
   name: IndexByCategory
   info: "Index that maps categories to member objects: the key is [category ID,
@@ -481,7 +464,6 @@
     "@": 16
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 18
   name: Block
   info: A continuous subrange of records of a data/index sequence, physically
@@ -499,7 +481,6 @@
     "@": schemat:Catalog
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 19
   name: DataBlock
   info: Block of a DataSequence.
@@ -512,7 +493,6 @@
     "@": 18
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 20
   name: IndexBlock
   info: Block of an Index sequence.
@@ -523,12 +503,10 @@
     "@": 18
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 21
   name: Node
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 22
   name: IndexSequence
   info: Category for sequences of index records.
@@ -537,7 +515,6 @@
     "@": 13
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 23
   name: index-by-category
   record_schema:
@@ -552,7 +529,6 @@
     "@": schemat/db/records.js:RecordSchema
   __category:
     "@": 17
-  "@": schemat:Data
 - __id: 24
   name: Operator
   schema:
@@ -566,7 +542,6 @@
     "@": schemat:Catalog
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 25
   name: Page
   info: >-
@@ -586,7 +561,6 @@
     "@": schemat:Catalog
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 26
   name: Revision
   info: Immutable snapshot of past content of the `target` object at a particular
@@ -605,4 +579,3 @@
   immutable: true
   __category:
     "@": 0
-  "@": schemat:Data

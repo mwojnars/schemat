@@ -31,7 +31,6 @@
     "@": schemat:Catalog
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 5001
   name: Author
   class: demo/01_books/authors/author.js:Author
@@ -59,7 +58,6 @@
     "@": schemat:Catalog
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 5002
   title: The Great Gatsby
   author:
@@ -76,7 +74,6 @@
   cover_image: https://dummyimage.com/200x300/3498db/ffffff.png&text=The+Great+Gatsby
   __category:
     "@": 5000
-  "@": schemat:Data
 - __id: 5003
   name: F. Scott Fitzgerald
   birth_year: 1896
@@ -94,7 +91,6 @@
     century.
   __category:
     "@": 5001
-  "@": schemat:Data
 - __id: 5004
   title: The Hobbit
   author:
@@ -112,7 +108,6 @@
   cover_image: https://dummyimage.com/200x300/16a085/ffffff.png&text=The+Hobbit
   __category:
     "@": 5000
-  "@": schemat:Data
 - __id: 5005
   name: J.R.R. Tolkien
   birth_year: 1892
@@ -131,7 +126,6 @@
     Rings.
   __category:
     "@": 5001
-  "@": schemat:Data
 - __id: 5006
   title: Pride and Prejudice
   author:
@@ -148,7 +142,6 @@
   cover_image: https://dummyimage.com/200x300/9b59b6/ffffff.png&text=Pride+and+Prejudice
   __category:
     "@": 5000
-  "@": schemat:Data
 - __id: 5007
   name: Jane Austen
   birth_year: 1775
@@ -163,7 +156,6 @@
     at the end of the 18th century.
   __category:
     "@": 5001
-  "@": schemat:Data
 - __id: 5008
   title: Good Omens
   author:
@@ -182,7 +174,6 @@
   cover_image: https://dummyimage.com/200x300/f39c12/ffffff.png&text=Good+Omens
   __category:
     "@": 5000
-  "@": schemat:Data
 - __id: 5009
   name: Neil Gaiman
   birth_year: 1960
@@ -202,7 +193,6 @@
     mythology.
   __category:
     "@": 5001
-  "@": schemat:Data
 - __id: 5010
   name: Terry Pratchett
   birth_year: 1948
@@ -219,7 +209,6 @@
     fantasy novels, best known for his Discworld series of 41 novels.
   __category:
     "@": 5001
-  "@": schemat:Data
 - __id: 5011
   title: The Silmarillion
   author:
@@ -237,7 +226,6 @@
   cover_image: https://dummyimage.com/200x300/1abc9c/ffffff.png&text=The+Silmarillion
   __category:
     "@": 5000
-  "@": schemat:Data
 - __id: 5012
   title: The Children of Húrin
   author:
@@ -255,7 +243,6 @@
   cover_image: https://dummyimage.com/200x300/d35400/ffffff.png&text=The+Children+of+Húrin
   __category:
     "@": 5000
-  "@": schemat:Data
 - __id: 5013
   title: Unfinished Tales of Númenor and Middle-earth
   author:
@@ -272,7 +259,6 @@
   cover_image: https://dummyimage.com/200x300/2980b9/ffffff.png&text=Unfinished+Tales
   __category:
     "@": 5000
-  "@": schemat:Data
 - __id: 5014
   name: book
   info: All objects of the Book category accessible via /book/<ID> URL paths.
@@ -280,7 +266,6 @@
     "@": 5000
   __category:
     "@": 8
-  "@": schemat:Data
 - __id: 5015
   title: Animal Farm
   author:
@@ -297,7 +282,6 @@
   cover_image: https://dummyimage.com/200x300/27ae60/ffffff.png&text=Animal+Farm
   __category:
     "@": 5000
-  "@": schemat:Data
 - __id: 5016
   name: George Orwell
   birth_year: 1903
@@ -315,4 +299,3 @@
     totalitarianism, and support of democracy.
   __category:
     "@": 5001
-  "@": schemat:Data

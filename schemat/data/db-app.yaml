@@ -19,7 +19,6 @@
     "@": 5000
 - __id: 5002
   title: ąłęÓŁŻŹŚ
-  "@": schemat:Data
 - __id: 5003
   name: Post A
   text: Ala ma kota
@@ -98,7 +97,6 @@
     }
   __category:
     "@": 0
-  "@": schemat:Data
 - __id: 5006
   name: /apps
   entries:
@@ -107,7 +105,6 @@
     "@": schemat:Catalog
   __category:
     "@": 5
-  "@": schemat:Data
 - __id: 5007
   name: /site
   entries:
@@ -118,14 +115,12 @@
     "@": schemat:Catalog
   __category:
     "@": 5
-  "@": schemat:Data
 - __id: 5008
   content: export let print = console.log
   __category:
     "@": 3
   __container:
     "@": 5007
-  "@": schemat:Data
 - __id: 5009
   content: |-
     import {print} from '../site/utils.js'
@@ -136,14 +131,12 @@
     "@": 3
   __container:
     "@": 5007
-  "@": schemat:Data
 - __id: 5010
   name: /demo
   __category:
     "@": 5
   __container:
     "@": 5006
-  "@": schemat:Data
 - __id: 5011
   name: main-space
   spaces:
@@ -152,4 +145,3 @@
     "@": schemat:Catalog
   __category:
     "@": 9
-  "@": schemat:Data
