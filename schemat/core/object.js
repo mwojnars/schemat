@@ -362,9 +362,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Instantiation  ***/
 
-    constructor(_fail_ = true) {
-        /* For internal use! Always call Item.create() or CategoryObject.create() instead of `new Item()`. */
-        if(_fail_) throw new Error('web object must be instantiated through CLASS.create() instead of new CLASS()')
+    constructor(_fail = true) {
+        /* For internal use! Always call Item.create() or category.create() instead of `new Item()`. */
+        if(_fail) throw new Error('web object must be instantiated through CLASS.create() instead of new CLASS()')
         this.__self = this      // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
     }
 
@@ -378,14 +378,17 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            If __create__() returns a Promise, this function returns a Promise too.
          */
         if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
-        let obj = this.create_stub(null, {mutable: true})               // newly-created object must be mutable
+        let obj = this.create_stub(null, {mutable: true})               // newly-created objects are always mutable
         let created = obj.__create__(...args)
         if (created instanceof Promise) return created.then(() => obj)
         return obj
     }
 
-    static create_stub(id = null, {mutable = false} = {}) {
-        /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
+    static create_stub(id = null, {mutable = CLIENT} = {}) {
+        /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards.
+           By default, the result object is mutable on client (where all modifications are local to the single client process),
+           but immutable on server (where any modifications might spoil other web requests).
+         */
 
         // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
         if (id === ROOT_ID && !this.__is_root_category)
