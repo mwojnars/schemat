@@ -363,7 +363,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     /***  Instantiation  ***/
 
     constructor(_fail_ = true) {
-        /* For internal use! Always call Item.create() instead of `new Item()`. */
+        /* For internal use! Always call Item.create() or CategoryObject.create() instead of `new Item()`. */
         if(_fail_) throw new Error('web object must be instantiated through CLASS.create() instead of new CLASS()')
         this.__self = this      // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
     }
@@ -377,10 +377,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            This function, or create_stub(id), should be used instead of the constructor.
            If __create__() returns a Promise, this function returns a Promise too.
          */
-        let item = this.create_stub(null, {mutable: true})              // newly-created object must be mutable
-        let created = item.__create__(...args)
-        if (created instanceof Promise) return created.then(() => item)
-        return item
+        if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
+        let obj = this.create_stub(null, {mutable: true})               // newly-created object must be mutable
+        let created = obj.__create__(...args)
+        if (created instanceof Promise) return created.then(() => obj)
+        return obj
     }
 
     static create_stub(id = null, {mutable = false} = {}) {

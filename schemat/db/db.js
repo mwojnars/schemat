@@ -16,18 +16,18 @@ import {Catalog, Data} from "../core/data.js";
 
 export class Ring extends Item {
 
-    static __category = 12  // IID of Ring category in the kernel
+    static __category = 12  // ID of Ring category in the kernel
     static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
 
     data_sequence           // DataSequence containing all primary data of this ring
-    index_sequence          // IndexSequence containing all indexes of this ring ordered by index IID and concatenated; each record key is prefixed with its index's IID
+    index_sequence          // IndexSequence containing all indexes of this ring ordered by index ID and concatenated; each record key is prefixed with its index's ID
     indexes = new Catalog() // {name: Index} map of all derived indexes of this ring
 
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
-    // validity range [start, stop) for IIDs of NEWLY-INSERTED objects in this ring;
-    // UPDATED objects (re-inserted here from lower rings) can still have IIDs from outside this range (!)
+    // validity range [start, stop) for IDs of NEWLY-INSERTED objects in this ring;
+    // UPDATED objects (re-inserted here from lower rings) can still have IDs from outside this range (!)
     start_id = 0
     stop_id
 
@@ -56,10 +56,6 @@ export class Ring extends Item {
 
         this.index_sequence = IndexSequence.create(this, filename)
         await this.index_sequence.open()
-
-        // this.indexes = new Catalog([
-        //     ['idx_category_item', IndexByCategory.create(this, filename)],      // index of item IDs sorted by parent category ID
-        // ])
 
         // await this.rebuild_indexes()
     }

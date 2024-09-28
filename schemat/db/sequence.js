@@ -100,6 +100,7 @@ export class Sequence extends Item {    // Series?
 
 export class IndexSequence extends Sequence {
     /* A Sequence composed of IndexBlock type of blocks. */
+    static __category = 22
 
     __create__(ring, filename) {
         super.__create__(ring)
