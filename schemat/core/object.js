@@ -65,7 +65,7 @@ class ItemProxy {
     static PLURAL_SUFFIX = '$'          // __array __list __all ?
 
     // these special props are always read from regular POJO attributes and NEVER from object's __data
-    static RESERVED = ['__id', '__meta', '__data', '__record']
+    static SPECIAL = ['__id', '__meta', '__data', '__record']
 
     // these special props can still be written to after the value read from __data was undefined
     static WRITABLE_IF_UNDEFINED = ['__url', '__path']
@@ -79,10 +79,11 @@ class ItemProxy {
 
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
-        return new Proxy(target, {get: this.proxy_get()})
+        return new Proxy(target, {get: this.proxy_get(target.__meta)})
     }
 
-    static proxy_get = (cache, staging, edits) => function(target, prop, receiver) {
+    static proxy_get = ({mutable, cache, staging, edits}) => function(target, prop, receiver)
+    {
         let value = Reflect.get(target, prop, receiver)
 
         if (typeof value === 'object' && value?.[ItemProxy.FROM_CACHE])         // if the value comes from cache return it immediately
@@ -93,23 +94,13 @@ class ItemProxy {
             if (typeof value === 'object' && value?.[ItemProxy.NO_CACHING])     // this particular value must not be cached for some reason?
                 return value.value
 
-            if (!target.__meta.mutable) {                                       // caching is only allowed in immutable objects
+            if (!mutable) {                                                     // caching is only allowed in immutable objects
                 let stored = {value, [ItemProxy.FROM_CACHE]: true}
                 Object.defineProperty(target.__self, prop, {value: stored, writable: false, configurable: true})
                 // print('saved in cache:', prop)
             }
             return value
         }
-
-        // if (typeof value === 'object' && value?.[ItemProxy.CACHED]) {
-        //     // the value comes from a getter and is labelled to be "CACHED"? save it in the target object
-        //     value = value.value
-        //     if (!target.__meta.mutable) {           // caching is only allowed in immutable objects
-        //         let stored = (value === undefined) ? ItemProxy.UNDEFINED : value
-        //         Object.defineProperty(target.__self, prop, {value: stored, writable: false, configurable: true})
-        //     }
-        //     return value
-        // }
 
         if (value === ItemProxy.UNDEFINED) return undefined
         if (value !== undefined) return value
@@ -122,7 +113,7 @@ class ItemProxy {
         if (prop === 'then') return undefined
 
         // if (prop.length >= 2 && prop[0] === '_' && prop[prop.length - 1] === '_')    // _***_ props are reserved for internal use
-        if (ItemProxy.RESERVED.includes(prop))
+        if (ItemProxy.SPECIAL.includes(prop))
             return undefined
 
         // fetch a single value or an array of values of a property `prop` from the target object's __data ...
@@ -135,7 +126,7 @@ class ItemProxy {
         let values = target._compute_property(prop)             // ALL repeated values are computed here, even if plural=false
 
         // if (values.length || target.is_loaded)                  // ?? undefined (empty) value is not cached unless the object is fully loaded
-        if (!target.__meta.mutable)                             // caching is only allowed in immutable objects
+        if (!mutable)                                           // caching is only allowed in immutable objects
             ItemProxy._cache_property(target, prop, values)
 
         return plural ? values : values[0]
@@ -309,7 +300,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     __meta = {                      // some special properties are grouped here to avoid cluttering the object's interface ...
         loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
-        mutable:        false,      // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and is excluded from the server-side registry
+        mutable:        false,      // if true, object can be edited; the edits are accumulated and committed to DB using .save(); this prop CANNOT be changed after construction; editable objects are excluded from server-side caching
         loaded_at:      undefined,  // timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
         expire_at:      undefined,  // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
         pending_url:    undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
@@ -373,8 +364,15 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
          */
         if(_fail) throw new Error('web object must be instantiated through CLASS.create() instead of new CLASS()')
 
-        this.__self = this                  // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
-        this.__meta.mutable = mutable       // mutable=true allows edit operations on the object and prevents server-side caching in Registry
+        this.__self = this              // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
+
+        // mutable=true allows edit operations on the object and prevents server-side caching in Registry;
+        // __meta.mutable is immutable and can be set only once during construction
+        Object.defineProperty(this.__meta, 'mutable', {
+            value: mutable,
+            writable: false,
+            configurable: false
+        })
     }
 
     __create__(...args) {
