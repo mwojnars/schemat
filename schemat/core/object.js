@@ -79,10 +79,31 @@ class ItemProxy {
 
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
-        return new Proxy(target, {get: this.proxy_get(target.__meta)})
+        return new Proxy(target, {get: this.proxy_get(target.__meta)}) //, set: this.proxy_set(target.__meta)})
     }
 
-    static proxy_get = ({mutable, local, cache}) => function(target, prop, receiver)
+    static proxy_set = ({mutable, edits}) => function(target, prop, value, receiver)
+    {
+        if (!mutable)
+            throw new Error(`Cannot set property '${prop}' on immutable object`)
+
+        if (ItemProxy.SPECIAL.includes(prop))
+            return Reflect.set(target, prop, value, receiver)
+
+        if (typeof prop !== 'string') 
+            return Reflect.set(target, prop, value, receiver)
+
+        let suffix = ItemProxy.PLURAL_SUFFIX
+        let plural = prop.endsWith(suffix)
+        if (plural) prop = prop.slice(0, -suffix.length)
+
+        target.__data.set(prop, value)
+        edits.push(new Edit('update', {path: [prop], entry: value}))
+
+        return true
+    }
+
+    static proxy_get = ({mutable, cache}) => function(target, prop, receiver)
     {
         // let val
         // if ((val = local?.get(prop)) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
