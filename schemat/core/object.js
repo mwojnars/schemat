@@ -79,10 +79,10 @@ class ItemProxy {
 
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
-        return new Proxy(target, {get: this.proxy_get})
+        return new Proxy(target, {get: this.proxy_get()})
     }
 
-    static proxy_get(target, prop, receiver) {
+    static proxy_get = (cache = {}) => function(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
 
         if (typeof value === 'object' && value?.[ItemProxy.FROM_CACHE])         // if the value comes from cache return it immediately
@@ -847,9 +847,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     async _create_revision(data) {
         /* Create a new Revision object to preserve the old `data` snapshot (JSON string). */
-        // let revision = categories.Revision.create(data)
-        // revision.data =
-        // return revision.save()
+        // let Revision = await schemat.import('/$/sys/Revision')  ??
+        // let Revision = schemat.sys.Revision
+        // let rev = Revision.create()   ... Revision.create({data, target: this})
+        // rev.target = this
+        // rev.data = data
+        // return rev.save()
     }
 
     // async insert_self() {

@@ -207,7 +207,7 @@ export class Schemat {
          */
         // this.session?.countRequested(id)
         let obj = this.registry.get(id) || this.registry.set(Item.create_stub(id))          // a stub has immediate expiry date (i.e., on next cache purge) unless its data is loaded and TLS updated
-        assert(!obj.__meta.mutable)
+        assert(CLIENT || !obj.__meta.mutable)
         return obj
     }
 
