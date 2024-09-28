@@ -1,3 +1,10 @@
+/**********************************************************************************************************************
+ *  Main class of Schemat's web object model.
+ *
+ *  @author Marcin Wojnarski
+ *
+ */
+
 import {print, assert, T, escape_html, concat, unique, delay} from '../common/utils.js'
 import {NotLinked, NotLoaded, ValidationError} from '../common/errors.js'
 

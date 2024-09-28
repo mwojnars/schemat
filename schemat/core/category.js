@@ -1,3 +1,10 @@
+/**********************************************************************************************************************
+ *  Category. Base class for web objects representing categories.
+ *
+ *  @author Marcin Wojnarski
+ *
+ */
+
 import {assert, T} from "../common/utils.js";
 import {Catalog, Data} from "./data.js";
 
