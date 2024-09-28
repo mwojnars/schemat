@@ -102,15 +102,18 @@ class ItemProxy {
 
     static proxy_get = ({mutable, cache}) => function(target, prop, receiver)
     {
-        // let val
-        // if ((val = local?.get(prop)) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
+        let val
 
-        let val = Reflect.get(target, prop, receiver)
+        // try reading the value from `cache`, return if found
+        if ((val = cache?.get(prop)) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
 
-        if (typeof val === 'object' && val?.[ItemProxy.FROM_CACHE])             // if the value comes from cache return it immediately
-            return val.value
+        // try reading the value from regular JS attributes of the `target`: either defined as such, or cached over there...
+        val = Reflect.get(target, prop, receiver)
 
-        // cache the value if it comes from a cachable getter
+        // ...the value was already cached? return immediately
+        if (typeof val === 'object' && val?.[ItemProxy.FROM_CACHE]) return val.value
+
+        // ...otherwise cache the value IF it comes from a cachable getter, and return; (no point in re-assigning regular attrs)
         if (target.constructor.cachable_getters.has(prop)) {
             if (typeof val === 'object' && val?.[ItemProxy.NO_CACHING])         // this particular value must not be cached for some reason?
                 return val.value
@@ -133,7 +136,6 @@ class ItemProxy {
         // to see if the result is another promise; defining a `then` property is unsafe, hence we disallow it
         if (prop === 'then') return undefined
 
-        // if (prop.length >= 2 && prop[0] === '_' && prop[prop.length - 1] === '_')    // _***_ props are reserved for internal use
         if (ItemProxy.SPECIAL.includes(prop))
             return undefined
 
