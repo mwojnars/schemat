@@ -140,8 +140,9 @@ class ItemProxy {
         let values = target._compute_property(prop)             // ALL repeated values are computed here, even if plural=false
 
         if (cache) {                                         // caching only allowed in immutable objects
-
-            ItemProxy._cache_property(target, prop, values)
+            cache.set(prop + suffix, values)
+            cache.set(prop, values.length ? values[0] : ItemProxy.UNDEFINED)
+            // ItemProxy._cache_property(target, prop, values)
         }
 
         return plural ? values : values[0]
@@ -382,6 +383,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
         // only on the client this flag can be changed after object creation
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
+
         if (!mutable) this.__meta.cache = new Map()
 
         // if (mutable) {
