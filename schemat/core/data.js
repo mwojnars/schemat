@@ -161,6 +161,25 @@ export class Catalog {
     }
 
 
+    /***  key-based modifications (no paths, no recursion)  ***/
+
+    setAll(key, ...values) {
+        /* Remove all existing values for the `key` and insert new `values` at the end of the catalog. */
+        this.delete(key)
+        return this.append(key, ...values)
+    }
+
+    append(key, ...values) {
+        /* Insert (key, value[i]) pairs at the end of the catalog. */
+        let start = this._entries.length
+        this._entries.push(...values.map(value => ({key, value})))
+        let locs = this._keys.get(key)
+        if (!locs) this._keys.set(key, locs = [])
+        locs.push(...values.map((_, i) => start + i))
+        return this
+    }
+
+
     /***  Read access  ***/
 
     _normPath(path) {
@@ -194,10 +213,6 @@ export class Catalog {
            new Catalog() entries are inserted in place of missing path segments.
          */
         return this.setEntry(path, {value, label, comment}, create_path)
-    }
-
-    setAll(key, ...values) {
-
     }
 
     setEntry(path, {value, label, comment} = {}, create_path = false) {
@@ -437,14 +452,6 @@ export class Catalog {
         return deleted
     }
 
-    // delete(path) {
-    //     /* Delete a (sub)entry uniquely identified by `path`. */
-    //     let [pos, subpath, subcat] = this._step(path)
-    //     if (!subpath.length) return this._deleteAt(pos)
-    //     if (subcat instanceof Catalog) return subcat.delete(subpath)        // nested Catalog? make a recursive call
-    //     throw new Error(`path not found: ${subpath.join('/')}`)
-    // }
-    
     update(path, {key, value, label, comment}, context = {}, sep = '/') {
         /* Modify an existing entry at a given `path`. The entry must be unique. Return the entry after modifications.
            This method should be used to apply manual data modifications.
