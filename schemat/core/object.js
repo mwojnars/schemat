@@ -117,12 +117,12 @@ class ItemProxy {
 
         // ...otherwise cache the value IF it comes from a cachable getter, and return; (no point in re-assigning regular attrs)
         if (target.constructor.cachable_getters.has(prop)) {
-            if (mutable) cache.set(prop, val)
+            if (val?.[ItemProxy.NO_CACHING]) return val.value   // NO_CACHING set? return without caching
+            if (mutable) cache.set(prop, val)                   // caching only allowed in immutable objects
             return val
-            // return ItemProxy._cache_singleton(target, prop, val, mutable)
         }
 
-        // return if the value was found (above in JS attrs)
+        // return if the value was read from JS attr (but not getter)
         if (val !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
 
         // return if the object is not loaded yet, or the property is special in any way
@@ -145,16 +145,6 @@ class ItemProxy {
             ItemProxy._cache_property(target, prop, values)
 
         return plural ? values : values[0]
-    }
-
-    static _cache_singleton(target, prop, val, mutable) {
-        if (val?.[ItemProxy.NO_CACHING]) return val.value        // NO_CACHING: this particular value must not be cached for some reason?
-        if (!mutable) {                                          // caching is only allowed in immutable objects
-            let stored = {value: val, [ItemProxy.FROM_CACHE]: true}
-            Object.defineProperty(target.__self, prop, {value: stored, writable: false, configurable: true})
-            // print('saved in cache:', prop)
-        }
-        return val
     }
 
     static _cache_property(target, prop, values) {
