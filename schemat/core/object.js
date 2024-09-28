@@ -119,11 +119,9 @@ class ItemProxy {
                 target.__data.setAll(base, ...value)
                 edits.push(new Edit('update', {path: prop, entry: {value}}))
             }
-            else {
-                target.__data.set(prop, value)
-                edits.push(new Edit('update', {path: prop, entry: {value}}))
-                // edits.push(target._make_edit('update', {path: prop, entry: {value}}))
-            }
+            else target.make_edit('update', {path: prop, entry: {value}})
+                // target.__data.set(prop, value)
+                // edits.push(new Edit('update', {path: prop, entry: {value}}))
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${prop})`)
@@ -980,9 +978,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return schemat.site.service.submit_edits(edit)
     }
 
-    edit_insert(path, entry)        { return this.edit('insert', {path, entry}) }
+    edit_insert(path, entry)        { return this.edit('insert', {path, ...entry}) }
     edit_delete(path)               { return this.edit('delete', {path}) }
-    edit_update(path, entry)        { return this.edit('update', {path, entry}) }
+    edit_update(path, entry)        { return this.edit('update', {path, ...entry}) }
     edit_move(path, delta)          { return this.edit('move',   {path, delta}) }
 
 
@@ -1012,10 +1010,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         this.__data = data
     }
 
-    EDIT_insert({path, entry}) {
+    EDIT_insert({path, key, value}) {
         /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
         let pos = path.pop()
-        this.__data.insert(path, pos, entry)
+        this.__data.insert(path, pos, {key, value})
     }
 
     EDIT_delete({path}) {
@@ -1023,9 +1021,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         this.__data.delete(path)
     }
 
-    EDIT_update({path, entry}) {
+    EDIT_update({path, key, value}) {
         /* Update a property; or a field inside a nested Catalog. */
-        this.__data.update(path, entry)
+        this.__data.update(path, {key, value})
     }
 
     EDIT_move({path, delta}) {
