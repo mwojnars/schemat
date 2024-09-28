@@ -196,6 +196,10 @@ export class Catalog {
         return this.setEntry(path, {value, label, comment}, create_path)
     }
 
+    setAll(key, ...values) {
+
+    }
+
     setEntry(path, {value, label, comment} = {}, create_path = false) {
         /* Like set(), but with all props accepted in a single argument. */
         path = this._normPath(path)

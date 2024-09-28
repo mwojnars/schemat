@@ -98,18 +98,32 @@ class ItemProxy {
             || ItemProxy.SPECIAL.includes(prop)
         ) return Reflect.set(target, prop, value, receiver)
 
+        let suffix = ItemProxy.PLURAL_SUFFIX
+        let plural = prop.endsWith(suffix)
+        let base = (plural ? prop.slice(0, -suffix.length) : prop)        // use the base property name without the suffix
+        // if (plural) prop = prop.slice(0, -suffix.length)        // use the base property name without the suffix
+
         // "_xyz" props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
         // others are "regular" and can only be written to __data, never to __self
         let regular = (prop[0] !== '_' || prop.startsWith('__'))
         let schema = receiver.__schema              // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
 
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
-        if (schema?.has(prop) || (!schema?.props.strict && regular)) {
+        if (schema?.has(base) || (!schema?.props.strict && regular)) {
             let {edits} = target.__meta
             if (!edits) throw new Error(`cannot set '${prop}' on immutable object`)
             print('proxy_set updating:', prop)
-            target.__data.set(prop, value)
-            edits.push(new Edit('update', {path: prop, entry: {value}}))
+
+            if (plural) {
+                if (!(value instanceof Array)) throw new Error(`array expected when assigning multiple values to '${prop}'`)
+                target.__data.setAll(base, ...value)
+                edits.push(new Edit('update', {path: prop, entry: {value}}))
+            }
+            else {
+                // target.__data.set(prop, value)
+                let edit = target.edit('update', {path: prop, entry: {value}})
+                edits.push(edit)  //new Edit('update', {path: prop, entry: {value}}))
+            }
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${prop})`)
