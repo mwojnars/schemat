@@ -107,7 +107,7 @@ class ItemProxy {
         let val
 
         // try reading the value from `cache` first
-        if ((val = cache.get(prop)) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
+        if ((val = cache.get(prop)) !== undefined) {print('from cache:',prop); return val === ItemProxy.UNDEFINED ? undefined : val}
 
         // try reading the value from regular JS attributes of the `target`: either defined as such, or cached over there...
         val = Reflect.get(target, prop, receiver)
@@ -118,7 +118,7 @@ class ItemProxy {
         // ...otherwise cache the value IF it comes from a cachable getter, and return; (no point in re-assigning regular attrs)
         if (target.constructor.cachable_getters.has(prop)) {
             if (val?.[ItemProxy.NO_CACHING]) return val.value   // NO_CACHING set? return without caching
-            if (mutable) cache.set(prop, val)                   // caching only allowed in immutable objects
+            if (!mutable) cache.set(prop, val)                  // caching only allowed in immutable objects
             return val
         }
 
@@ -133,16 +133,16 @@ class ItemProxy {
 
         // fetch a single value or an array of values of a property `prop` from the target object's __data ...
 
-        // console.log('get', prop)
         let suffix = ItemProxy.PLURAL_SUFFIX
         let plural = prop.endsWith(suffix)
         if (plural) prop = prop.slice(0, -suffix.length)        // use the base property name without the suffix
 
         let values = target._compute_property(prop)             // ALL repeated values are computed here, even if plural=false
 
-        // if (values.length || target.is_loaded)                  // ?? undefined (empty) value is not cached unless the object is fully loaded
-        if (!mutable)                                           // caching is only allowed in immutable objects
+        if (!mutable) {                                         // caching only allowed in immutable objects
+
             ItemProxy._cache_property(target, prop, values)
+        }
 
         return plural ? values : values[0]
     }
@@ -369,18 +369,20 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Instantiation  ***/
 
-    constructor(_fail = true, {mutable = CLIENT} = {}) {
+    constructor(_fail = true, {mutable = false} = {}) {
         /* For internal use! Always call Item.create() or category.create() instead of `new Item()`.
-           By default, the object is mutable on client (where all modifications are local to the single client process),
-           but immutable on server (where any modifications might spoil other web requests).
+           By default, the object is created immutable, and on client (where all modifications are local to the single client process)
+           this gets toggled automatically on the first attempt to object modification. On the server
+           (where any modifications might spoil other web requests), changing `mutable` after creation is disallowed.
          */
         if(_fail) throw new Error('web object must be instantiated through CLASS.create() instead of new CLASS()')
 
         this.__self = this              // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
+        this.__meta.mutable = mutable
 
-        // mutable=true allows edit operations on the object and prevents server-side caching in Registry;
-        // __meta.mutable is immutable and can be set only once during construction
-        Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: false, configurable: false})
+        // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
+        // only on the client this flag can be changed after object creation
+        Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
 
         // if (mutable) {
         //     this.__meta.local = new Map()
