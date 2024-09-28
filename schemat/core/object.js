@@ -64,8 +64,10 @@ class ItemProxy {
     // the suffix appended to the property name when a *plural* form of this property is requested (an array of *all* values of a repeated field, not the first value only)
     static PLURAL_SUFFIX = '$'          // __array __list __all ?
 
-    // these special props are always read from regular POJO attributes and NEVER from object's __data
-    static SPECIAL = ['__id', '__meta', '__data', '__record']
+    // these special props are always read from regular POJO attributes and NEVER from object's __data;
+    // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
+    // defining a custom `then` prop is unsafe, hence we disallow it
+    static SPECIAL = ['then', '__id', '__meta', '__data', '__record']
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
@@ -105,7 +107,7 @@ class ItemProxy {
         let val
 
         // try reading the value from `cache`, return if found
-        if ((val = cache?.get(prop)) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
+        if ((val = cache.get(prop)) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
 
         // try reading the value from regular JS attributes of the `target`: either defined as such, or cached over there...
         val = Reflect.get(target, prop, receiver)
@@ -114,30 +116,17 @@ class ItemProxy {
         if (typeof val === 'object' && val?.[ItemProxy.FROM_CACHE]) return val.value
 
         // ...otherwise cache the value IF it comes from a cachable getter, and return; (no point in re-assigning regular attrs)
-        if (target.constructor.cachable_getters.has(prop)) {
-            if (typeof val === 'object' && val?.[ItemProxy.NO_CACHING])         // this particular value must not be cached for some reason?
-                return val.value
+        if (target.constructor.cachable_getters.has(prop))
+            return ItemProxy._cache_singleton(target, prop, val, mutable)
 
-            if (!mutable) {                                                     // caching is only allowed in immutable objects
-                let stored = {value: val, [ItemProxy.FROM_CACHE]: true}
-                Object.defineProperty(target.__self, prop, {value: stored, writable: false, configurable: true})
-                // print('saved in cache:', prop)
-            }
-            return val
-        }
+        // return if the value was found (above in JS attrs)
+        if (val !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
 
-        if (val === ItemProxy.UNDEFINED) return undefined
-        if (val !== undefined) return val
-
-        if (!target.__data) return undefined
-        if (typeof prop !== 'string') return undefined          // `prop` can be a symbol like [Symbol.toPrimitive] - ignore
-
-        // there are many queries for 'then' because after a promise resolves, its result is checked for .then
-        // to see if the result is another promise; defining a `then` property is unsafe, hence we disallow it
-        if (prop === 'then') return undefined
-
-        if (ItemProxy.SPECIAL.includes(prop))
-            return undefined
+        // return if the object is not loaded yet, or the property is special in any way
+        if (!target.__data
+            || typeof prop !== 'string'                 // `prop` can be a symbol like [Symbol.toPrimitive] - should skip
+            || ItemProxy.SPECIAL.includes(prop)
+        ) return undefined
 
         // fetch a single value or an array of values of a property `prop` from the target object's __data ...
 
@@ -153,6 +142,18 @@ class ItemProxy {
             ItemProxy._cache_property(target, prop, values)
 
         return plural ? values : values[0]
+    }
+
+    static _cache_singleton(target, prop, val, mutable) {
+        if (typeof val === 'object' && val?.[ItemProxy.NO_CACHING])         // this particular value must not be cached for some reason?
+            return val.value
+
+        if (!mutable) {                                                     // caching is only allowed in immutable objects
+            let stored = {value: val, [ItemProxy.FROM_CACHE]: true}
+            Object.defineProperty(target.__self, prop, {value: stored, writable: false, configurable: true})
+            // print('saved in cache:', prop)
+        }
+        return val
     }
 
     static _cache_property(target, prop, values) {
@@ -327,7 +328,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
         cache:          new Map(),  // Map of properties loaded from __data, imputed or inherited; cached for performance
-        local:          undefined,  // Map of properties assigned/modified locally by the caller through edit operations
+        // local:          undefined,  // Map of properties assigned/modified locally by the caller through edit operations
         edits:          undefined,  // array of edit operations that were reflected in `local` so far, for replay on the DB
 
         // db         // the origin database of this item; undefined in newborn items
@@ -390,10 +391,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // __meta.mutable is immutable and can be set only once during construction
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: false, configurable: false})
 
-        if (mutable) {
-            this.__meta.local = new Map()
-            this.__meta.edits = []
-        }
+        // if (mutable) {
+        //     this.__meta.local = new Map()
+        //     this.__meta.edits = []
+        // }
     }
 
     static create_stub(id = null, opts = {}) {
