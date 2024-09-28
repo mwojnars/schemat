@@ -91,23 +91,22 @@ class ItemProxy {
 
     static proxy_set(target, prop, value, receiver)
     {
-        let {mutable, edits} = target.__meta
-
         // special attributes are written directly to __self (outside __data, not sent to DB);
         // also, when the __data is not loaded yet, *every* write goes to __self
         if (!target.is_loaded()
-            || typeof prop !== 'string'                 // `prop` can be a symbol like [Symbol.toPrimitive] - should skip
+            || typeof prop !== 'string'             // `prop` can be a symbol like [Symbol.toPrimitive]
             || ItemProxy.SPECIAL.includes(prop)
         ) return Reflect.set(target, prop, value, receiver)
 
         // "_xyz" props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
         // others are "regular" and can only be written to __data, never to __self
         let regular = (prop[0] !== '_' || prop.startsWith('__'))
-        let schema = target.__schema
+        let schema = receiver.__schema              // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
 
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
         if (schema?.has(prop) || (!schema?.props.strict && regular)) {
-            if (!mutable) throw new Error(`cannot set '${prop}' on immutable object`)
+            let {edits} = target.__meta
+            if (!edits) throw new Error(`cannot set '${prop}' on immutable object`)
             print('proxy_set updating:', prop)
             target.__data.set(prop, value)
             edits.push(new Edit('update', {path: prop, entry: {value}}))
@@ -122,6 +121,15 @@ class ItemProxy {
         // let plural = prop.endsWith(suffix)
         // if (plural) prop = prop.slice(0, -suffix.length)
     }
+
+    // static _edit_prop(target, prop, value) {
+    //     let {edits} = target.__meta
+    //     if (!edits) throw new Error(`cannot set '${prop}' on immutable object`)
+    //     print('proxy_set updating:', prop)
+    //     target.__data.set(prop, value)
+    //     edits.push(new Edit('update', {path: prop, entry: {value}}))
+    //     return true
+    // }
 
     static proxy_get(target, prop, receiver)
     {
