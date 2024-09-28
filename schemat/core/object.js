@@ -927,8 +927,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Server-side implementation of edits. NOT for direct use!  ***/
 
-    /***  Edits are methods that manipulate directly on the object's __data instead of the object wrapper.
-          These methods are only called on the server, inside the block's object-level lock, when modifications are to be committed to DB.
+    /***  "Edits" are methods that manipulate directly on the object's __data instead of the object wrapper.
+          They are only called on the server, inside the block's object-level lock, when modifications are to be committed to DB.
           New edit ops can be added in subclasses. An EDIT_{op} method can be async or return a Promise.
           The names of methods (the {op} suffix) must match the names of operations passed by callers to .edit().
           Typically, when adding a new OP, a corresponding client method, edit_OP(), is added, too.
