@@ -82,8 +82,12 @@ class ItemProxy {
         return new Proxy(target, {get: this.proxy_get(target.__meta)})
     }
 
-    static proxy_get = ({mutable, cache, staging, edits}) => function(target, prop, receiver)
+    static proxy_get = ({mutable, cache, local, edits}) => function(target, prop, receiver)
     {
+        // let val
+        // if ((val = local[prop]) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
+        // if ((val = cache[prop]) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
+
         let value = Reflect.get(target, prop, receiver)
 
         if (typeof value === 'object' && value?.[ItemProxy.FROM_CACHE])         // if the value comes from cache return it immediately
@@ -306,9 +310,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         pending_url:    undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
-        cache:          {},
-        staging:        {},
-        edits:          [],
+        cache:          {},         // properties loaded from __data, imputed or inherited; cached for performance
+        local:          {},         // properties assigned/modified locally by the caller through edit operations
+        edits:          [],         // list of edit operations that were reflected in `local` so far, for replay on the DB
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -368,15 +372,19 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         // mutable=true allows edit operations on the object and prevents server-side caching in Registry;
         // __meta.mutable is immutable and can be set only once during construction
-        Object.defineProperty(this.__meta, 'mutable', {
-            value: mutable,
-            writable: false,
-            configurable: false
-        })
+        Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: false, configurable: false})
     }
 
-    __create__(...args) {
-        /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by Item.create(). */
+    static create_stub(id = null, opts = {}) {
+        /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
+
+        // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
+        if (id === ROOT_ID && !this.__is_root_category)
+            return RootCategory.create_stub(id)
+
+        let obj = new this(false, opts)
+        if (id !== undefined && id !== null) obj.__id = id
+        return obj.__proxy = ItemProxy.wrap(obj)
     }
 
     static create(...args) {
@@ -390,16 +398,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return wait instanceof Promise ? wait.then(() => obj) : obj
     }
 
-    static create_stub(id = null, opts = {}) {
-        /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
-
-        // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
-        if (id === ROOT_ID && !this.__is_root_category)
-            return RootCategory.create_stub(id)
-
-        let obj = new this(false, opts)
-        if (id !== undefined && id !== null) obj.__id = id
-        return obj.__proxy = ItemProxy.wrap(obj)
+    __create__(...args) {
+        /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by Item.create(). */
     }
 
     static async from_data(id, data, opts = {}) {
