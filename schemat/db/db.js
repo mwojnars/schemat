@@ -67,7 +67,7 @@ export class Ring extends Item {
         await this.data_sequence.load()
         await this.index_sequence.load()
 
-        this._subsequences = new Map()          // (temporary) a map {iid: Subsequence} of logical sequences for each index
+        this._subsequences = new Map()          // (temporary) a map {id: Subsequence} of logical sequences for each index
 
         for (let index of this.indexes.values()) {
             await index.load()

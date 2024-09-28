@@ -130,6 +130,7 @@ export class DATA extends CATALOG {
         return is_valid_field_name(key) && (!this.props.strict || Object.hasOwn(this.props.fields, key))
     }
 
+    has(key) { return !!this.props.fields[key] }    // true if `key` is EXPLICITLY declared here as a valid field
     get(key) { return this.props.fields[key] || (!this.props.strict && generic_type) || undefined }
 
     subtype(key) {

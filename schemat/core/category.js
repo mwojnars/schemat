@@ -24,6 +24,7 @@ export class Category extends Item {
      */
 
     /***  Special properties:
+      __child_class         imported JS class of objects in this category
       __child_schema        schema of objects in this category, as a DATA instance; NOT the schema of self (.__schema)
       __source              module source code of this category: all code snippets combined, including inherited ones
     */

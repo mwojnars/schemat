@@ -86,28 +86,45 @@ class ItemProxy {
 
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
-        return new Proxy(target, {get: this.proxy_get}) //, set: this.proxy_set})
+        return new Proxy(target, {get: this.proxy_get, set: this.proxy_set})
     }
 
-    static proxy_set = ({mutable, edits}) => function(target, prop, value, receiver)
+    static proxy_set(target, prop, value, receiver)
     {
-        if (!mutable)
-            throw new Error(`Cannot set property '${prop}' on immutable object`)
+        let {mutable, edits} = target.__meta
 
-        if (ItemProxy.SPECIAL.includes(prop))
-            return Reflect.set(target, prop, value, receiver)
+        // special attributes are written directly in the object (outside __data, no persistence);
+        // also, when the __data is not loaded yet, every write goes to __self
+        if (!target.is_loaded()
+            || typeof prop !== 'string'                 // `prop` can be a symbol like [Symbol.toPrimitive] - should skip
+            || ItemProxy.SPECIAL.includes(prop)
+        ) return Reflect.set(target, prop, value, receiver)
 
-        if (typeof prop !== 'string') 
-            return Reflect.set(target, prop, value, receiver)
+        let schema = target.__schema
+        let regular = (prop[0] !== '_' || prop.startsWith('__'))        // _xyz names are treated as "private", others as "regular"
 
-        let suffix = ItemProxy.PLURAL_SUFFIX
-        let plural = prop.endsWith(suffix)
-        if (plural) prop = prop.slice(0, -suffix.length)
+        // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
+        if (schema?.has(prop) || (!schema?.props.strict && regular)) {
+            if (!mutable) throw new Error(`cannot set property '${prop}' on immutable object`)
+            print('proxy_set updating:', prop)
+            target.__data.set(prop, value)
+            edits.push(new Edit('update', {path: prop, entry: {value}}))
+            return true
+        }
 
-        target.__data.set(prop, value)
-        edits.push(new Edit('update', {path: [prop], entry: value}))
+        print('proxy_set() private:', prop, '/', mutable)
+        return Reflect.set(target, prop, value, receiver)
 
-        return true
+        // if (!mutable)
+        //     if (SERVER) throw new Error(`cannot set property '${prop}' on immutable object`)
+        //
+        // if (typeof prop !== 'string')
+        //     return Reflect.set(target, prop, value, receiver)
+        //
+        // let suffix = ItemProxy.PLURAL_SUFFIX
+        // let plural = prop.endsWith(suffix)
+        // if (plural) prop = prop.slice(0, -suffix.length)
+        //
     }
 
     static proxy_get(target, prop, receiver)
@@ -389,12 +406,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // only on the client this flag can be changed after object creation
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
 
-        if (!mutable) this.__meta.cache = new Map()
-
-        // if (mutable) {
-        //     this.__meta.local = new Map()
-        //     this.__meta.edits = []
-        // }
+        if (mutable)
+            this.__meta.edits = []
+        else
+            this.__meta.cache = new Map()
     }
 
     static create_stub(id = null, opts = {}) {
