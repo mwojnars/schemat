@@ -82,7 +82,7 @@ class ItemProxy {
         return new Proxy(target, {get: this.proxy_get()})
     }
 
-    static proxy_get = (cache = {}) => function(target, prop, receiver) {
+    static proxy_get = (cache, staging, edits) => function(target, prop, receiver) {
         let value = Reflect.get(target, prop, receiver)
 
         if (typeof value === 'object' && value?.[ItemProxy.FROM_CACHE])         // if the value comes from cache return it immediately
@@ -307,13 +307,17 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
 
-    __meta = {                      // some special properties are grouped here under __meta to avoid cluttering the object's interface ...
+    __meta = {                      // some special properties are grouped here to avoid cluttering the object's interface ...
         loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         mutable:        false,      // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from the registry
         loaded_at:      undefined,  // timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
         expire_at:      undefined,  // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
         pending_url:    undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
+
+        cache:          {},
+        staging:        {},
+        edits:          [],
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -394,10 +398,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             return RootCategory.create_stub(id)
 
         let self = new this(false)
-        let item = self.__proxy = ItemProxy.wrap(self)
+        if (mutable) self.__meta.mutable = true                 // this allows edit operations on the object and prevents server-side caching in Registry
+        let obj = self.__proxy = ItemProxy.wrap(self)
         if (id !== undefined && id !== null) self.__id = id
-        if (mutable) self.__meta.mutable = true     // this allows EDIT_xxx operations on the object and prevents caching in Schemat's registry
-        return item
+        return obj
     }
 
     static async from_data(id, data, opts = {}) {
@@ -727,6 +731,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     validate() {
+        // TODO SECURITY: make sure that __data does NOT contain special props: __meta, __self, __proxy, __id etc!
+
         for (const [prop, value] of this.__data) {          // validate each individual property in __data ...
             let type = this.__schema.get(prop)
             if (!type)                                      // the property `prop` is not present in the schema? skip or raise an error
@@ -907,6 +913,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     edit(op, args) {
         // print('edit:', this.__id, op)
+        // TODO SECURITY: make sure that edits don't touch special props, like __meta __self __proxy __id etc!
         return schemat.site.service.submit_edits([this.__id, op, args])
     }
 
