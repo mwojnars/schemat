@@ -78,7 +78,7 @@ class ItemProxy {
 
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
-        return new Proxy(target, {get: this.proxy_get(target.__meta)}) //, set: this.proxy_set(target.__meta)})
+        return new Proxy(target, {get: this.proxy_get}) //, set: this.proxy_set})
     }
 
     static proxy_set = ({mutable, edits}) => function(target, prop, value, receiver)
@@ -102,12 +102,12 @@ class ItemProxy {
         return true
     }
 
-    static proxy_get = ({mutable, cache}) => function(target, prop, receiver)
+    static proxy_get(target, prop, receiver)
     {
-        let val
+        let val, {cache} = target.__meta
 
         // try reading the value from `cache` first
-        if ((val = cache.get(prop)) !== undefined) {print('from cache:',prop); return val === ItemProxy.UNDEFINED ? undefined : val}
+        if ((val = cache?.get(prop)) !== undefined) {print('from cache:',prop); return val === ItemProxy.UNDEFINED ? undefined : val}
 
         // try reading the value from regular JS attributes of the `target`: either defined as such, or cached over there...
         val = Reflect.get(target, prop, receiver)
@@ -117,8 +117,8 @@ class ItemProxy {
 
         // ...otherwise cache the value IF it comes from a cachable getter, and return; (no point in re-assigning regular attrs)
         if (target.constructor.cachable_getters.has(prop)) {
-            if (val?.[ItemProxy.NO_CACHING]) return val.value   // NO_CACHING set? return without caching
-            if (!mutable) cache.set(prop, val)                  // caching only allowed in immutable objects
+            if (val?.[ItemProxy.NO_CACHING]) return val.value       // NO_CACHING flag? return immediately
+            cache?.set(prop, val)
             return val
         }
 
@@ -139,7 +139,7 @@ class ItemProxy {
 
         let values = target._compute_property(prop)             // ALL repeated values are computed here, even if plural=false
 
-        if (!mutable) {                                         // caching only allowed in immutable objects
+        if (cache) {                                         // caching only allowed in immutable objects
 
             ItemProxy._cache_property(target, prop, values)
         }
@@ -318,7 +318,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         pending_url:    undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
-        cache:          new Map(),  // Map of properties loaded from __data, imputed or inherited; cached for performance
+        cache:          undefined,  // Map of properties loaded from __data, imputed or inherited, stored here for performance; ONLY present in immutable object
         // local:          undefined,  // Map of properties assigned/modified locally by the caller through edit operations
         edits:          undefined,  // array of edit operations that were reflected in `local` so far, for replay on the DB
 
@@ -378,11 +378,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if(_fail) throw new Error('web object must be instantiated through CLASS.create() instead of new CLASS()')
 
         this.__self = this              // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
-        this.__meta.mutable = mutable
 
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
         // only on the client this flag can be changed after object creation
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
+        if (!mutable) this.__meta.cache = new Map()
 
         // if (mutable) {
         //     this.__meta.local = new Map()
