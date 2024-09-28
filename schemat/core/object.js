@@ -116,10 +116,9 @@ class ItemProxy {
 
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning multiple values to '${prop}'`)
-                target.__data.setAll(base, ...value)
-                edits.push(new Edit('update', {path: prop, entry: {value}}))
+                target.make_edit('set_all', {key: prop, values: value})
             }
-            else target.make_edit('update', {path: prop, entry: {value}})
+            else target.make_edit('update', {path: prop, value})
                 // target.__data.set(prop, value)
                 // edits.push(new Edit('update', {path: prop, entry: {value}}))
             return true
@@ -1030,6 +1029,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Move a property or a field inside a nested Catalog. */
         let pos = path.pop()
         this.__data.move(path, pos, pos + delta)
+    }
+
+    EDIT_set_all({key, values}) {
+        /* Update a property; or a field inside a nested Catalog. */
+        this.__data.setAll(key, ...values)
     }
 
 
