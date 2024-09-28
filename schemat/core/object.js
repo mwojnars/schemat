@@ -120,9 +120,9 @@ class ItemProxy {
                 edits.push(new Edit('update', {path: prop, entry: {value}}))
             }
             else {
-                // target.__data.set(prop, value)
-                let edit = target.edit('update', {path: prop, entry: {value}})
-                edits.push(edit)  //new Edit('update', {path: prop, entry: {value}}))
+                target.__data.set(prop, value)
+                edits.push(new Edit('update', {path: prop, entry: {value}}))
+                // edits.push(target._make_edit('update', {path: prop, entry: {value}}))
             }
             return true
         }
@@ -964,10 +964,20 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Client-side edit methods. Return a Promise.  ***/
 
+
+    make_edit(op, args) {
+        /* Perform the edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). */
+        assert(this.__meta.edits, `cannot perform an edit (${op}) on immutable object [${this.id}]`)
+        let edit = [this.__id, op, args]
+        this._apply_edits(edit)
+        this.__meta.edits.push(edit)
+    }
+
     edit(op, args) {
         // print('edit:', this.__id, op)
         // TODO SECURITY: make sure that edits don't touch special props, like __meta __self __proxy __id etc!
-        return schemat.site.service.submit_edits([this.__id, op, args])
+        let edit = [this.__id, op, args]
+        return schemat.site.service.submit_edits(edit)
     }
 
     edit_insert(path, entry)        { return this.edit('insert', {path, entry}) }
@@ -988,7 +998,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _apply_edits(...edits) {
         /* Apply edits before saving a modified object to the DB. For server-side use only. Each `edit` is an instance of Edit. */
         for (const edit of edits) {
-            assert(edit instanceof Edit)
+            let {op, args} = (edit instanceof Edit) ? edit : {op: edit[1], args: edit[2]}
             const method = `EDIT_${edit.op}`
             if (!this[method]) throw new Error(`object does not support edit operation: '${edit.op}'`)
             this[method](edit.args)
