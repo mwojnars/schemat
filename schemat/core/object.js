@@ -82,32 +82,31 @@ class ItemProxy {
         return new Proxy(target, {get: this.proxy_get(target.__meta)})
     }
 
-    static proxy_get = ({mutable, cache, local, edits}) => function(target, prop, receiver)
+    static proxy_get = ({mutable, local, cache}) => function(target, prop, receiver)
     {
         // let val
-        // if ((val = local[prop]) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
-        // if ((val = cache[prop]) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
+        // if ((val = local?.get(prop)) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
 
-        let value = Reflect.get(target, prop, receiver)
+        let val = Reflect.get(target, prop, receiver)
 
-        if (typeof value === 'object' && value?.[ItemProxy.FROM_CACHE])         // if the value comes from cache return it immediately
-            return value.value
+        if (typeof val === 'object' && val?.[ItemProxy.FROM_CACHE])             // if the value comes from cache return it immediately
+            return val.value
 
         // cache the value if it comes from a cachable getter
         if (target.constructor.cachable_getters.has(prop)) {
-            if (typeof value === 'object' && value?.[ItemProxy.NO_CACHING])     // this particular value must not be cached for some reason?
-                return value.value
+            if (typeof val === 'object' && val?.[ItemProxy.NO_CACHING])         // this particular value must not be cached for some reason?
+                return val.value
 
             if (!mutable) {                                                     // caching is only allowed in immutable objects
-                let stored = {value, [ItemProxy.FROM_CACHE]: true}
+                let stored = {value: val, [ItemProxy.FROM_CACHE]: true}
                 Object.defineProperty(target.__self, prop, {value: stored, writable: false, configurable: true})
                 // print('saved in cache:', prop)
             }
-            return value
+            return val
         }
 
-        if (value === ItemProxy.UNDEFINED) return undefined
-        if (value !== undefined) return value
+        if (val === ItemProxy.UNDEFINED) return undefined
+        if (val !== undefined) return val
 
         if (!target.__data) return undefined
         if (typeof prop !== 'string') return undefined          // `prop` can be a symbol like [Symbol.toPrimitive] - ignore
@@ -310,9 +309,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         pending_url:    undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
-        cache:          {},         // properties loaded from __data, imputed or inherited; cached for performance
-        local:          {},         // properties assigned/modified locally by the caller through edit operations
-        edits:          [],         // list of edit operations that were reflected in `local` so far, for replay on the DB
+        cache:          new Map(),  // Map of properties loaded from __data, imputed or inherited; cached for performance
+        local:          undefined,  // Map of properties assigned/modified locally by the caller through edit operations
+        edits:          undefined,  // array of edit operations that were reflected in `local` so far, for replay on the DB
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -373,6 +372,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // mutable=true allows edit operations on the object and prevents server-side caching in Registry;
         // __meta.mutable is immutable and can be set only once during construction
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: false, configurable: false})
+
+        if (mutable) {
+            this.__meta.local = new Map()
+            this.__meta.edits = []
+        }
     }
 
     static create_stub(id = null, opts = {}) {
