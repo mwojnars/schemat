@@ -107,7 +107,7 @@ class ItemProxy {
         let val, {cache} = target.__meta
 
         // try reading the value from `cache` first
-        if ((val = cache?.get(prop)) !== undefined) {print('from cache:',prop); return val === ItemProxy.UNDEFINED ? undefined : val}
+        if ((val = cache?.get(prop)) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
 
         // try reading the value from regular JS attributes of the `target`: either defined as such, or cached over there...
         val = Reflect.get(target, prop, receiver)
@@ -131,42 +131,39 @@ class ItemProxy {
             || ItemProxy.SPECIAL.includes(prop)
         ) return undefined
 
-        // fetch a single value or an array of values of a property `prop` from the target object's __data ...
-
         let suffix = ItemProxy.PLURAL_SUFFIX
         let plural = prop.endsWith(suffix)
         if (plural) prop = prop.slice(0, -suffix.length)        // use the base property name without the suffix
 
-        let values = target._compute_property(prop)             // ALL repeated values are computed here, even if plural=false
+        // fetch ALL repeated values of `prop` from __data, or ancestors, or imputation (even if plural=false)...
+        let values = target._compute_property(prop)
 
-        if (cache) {                                         // caching only allowed in immutable objects
+        if (cache) {
             cache.set(prop + suffix, values)
             cache.set(prop, values.length ? values[0] : ItemProxy.UNDEFINED)
-            // ItemProxy._cache_property(target, prop, values)
         }
-
         return plural ? values : values[0]
     }
 
-    static _cache_property(target, prop, values) {
-        /* Cache the result in target.__self; __self is used instead of `target` because the latter
-           can be a derived object (e.g., a View) that only inherits from __self through the JS prototype chain
-         */
-        let suffix = ItemProxy.PLURAL_SUFFIX
-        let single = values[0]
-        let single_cached = (single !== undefined) ? single : ItemProxy.UNDEFINED
-
-        let self = target.__self
-        let writable = (prop[0] === '_' && prop[prop.length - 1] !== '_')       // only private props, _xxx, remain writable after caching
-
-        if (writable) {
-            self[prop] = single_cached
-            self[prop + suffix] = values
-        } else {
-            Object.defineProperty(self, prop, {value: single_cached, writable, configurable: true})
-            Object.defineProperty(self, prop + suffix, {value: values, writable, configurable: true})
-        }
-    }
+    // static _cache_property(target, prop, values) {
+    //     /* Cache the result in target.__self; __self is used instead of `target` because the latter
+    //        can be a derived object (e.g., a View) that only inherits from __self through the JS prototype chain
+    //      */
+    //     let suffix = ItemProxy.PLURAL_SUFFIX
+    //     let single = values[0]
+    //     let single_cached = (single !== undefined) ? single : ItemProxy.UNDEFINED
+    //
+    //     let self = target.__self
+    //     let writable = (prop[0] === '_' && prop[prop.length - 1] !== '_')       // only private props, _xxx, remain writable after caching
+    //
+    //     if (writable) {
+    //         self[prop] = single_cached
+    //         self[prop + suffix] = values
+    //     } else {
+    //         Object.defineProperty(self, prop, {value: single_cached, writable, configurable: true})
+    //         Object.defineProperty(self, prop + suffix, {value: values, writable, configurable: true})
+    //     }
+    // }
 }
 
 /**********************************************************************************************************************/
