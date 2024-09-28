@@ -67,9 +67,6 @@ class ItemProxy {
     // these special props are always read from regular POJO attributes and NEVER from object's __data
     static SPECIAL = ['__id', '__meta', '__data', '__record']
 
-    // these special props can still be written to after the value read from __data was undefined
-    static WRITABLE_IF_UNDEFINED = ['__url', '__path']
-
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
     static UNDEFINED    = Symbol.for('ItemProxy.UNDEFINED')
@@ -166,9 +163,6 @@ class ItemProxy {
 
         let self = target.__self
         let writable = (prop[0] === '_' && prop[prop.length - 1] !== '_')       // only private props, _xxx, remain writable after caching
-
-        if (single === undefined && ItemProxy.WRITABLE_IF_UNDEFINED.includes(prop))
-            writable = true
 
         if (writable) {
             self[prop] = single_cached
