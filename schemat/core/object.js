@@ -309,7 +309,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     __meta = {                      // some special properties are grouped here to avoid cluttering the object's interface ...
         loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
-        mutable:        false,      // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and must be EXCLUDED from the registry
+        mutable:        false,      // true if item's data can be modified through .edit(); editable item may contain uncommitted changes and is excluded from the server-side registry
         loaded_at:      undefined,  // timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
         expire_at:      undefined,  // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
         pending_url:    undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
@@ -366,10 +366,15 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Instantiation  ***/
 
-    constructor(_fail = true) {
-        /* For internal use! Always call Item.create() or category.create() instead of `new Item()`. */
+    constructor(_fail = true, {mutable = CLIENT} = {}) {
+        /* For internal use! Always call Item.create() or category.create() instead of `new Item()`.
+           By default, the object is mutable on client (where all modifications are local to the single client process),
+           but immutable on server (where any modifications might spoil other web requests).
+         */
         if(_fail) throw new Error('web object must be instantiated through CLASS.create() instead of new CLASS()')
-        this.__self = this      // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
+
+        this.__self = this                  // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
+        this.__meta.mutable = mutable       // mutable=true allows edit operations on the object and prevents server-side caching in Registry
     }
 
     __create__(...args) {
@@ -387,21 +392,16 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return wait instanceof Promise ? wait.then(() => obj) : obj
     }
 
-    static create_stub(id = null, {mutable = CLIENT} = {}) {
-        /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards.
-           By default, the result object is mutable on client (where all modifications are local to the single client process),
-           but immutable on server (where any modifications might spoil other web requests).
-         */
+    static create_stub(id = null, opts = {}) {
+        /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
 
         // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
         if (id === ROOT_ID && !this.__is_root_category)
             return RootCategory.create_stub(id)
 
-        let self = new this(false)
-        if (mutable) self.__meta.mutable = true                 // this allows edit operations on the object and prevents server-side caching in Registry
-        let obj = self.__proxy = ItemProxy.wrap(self)
-        if (id !== undefined && id !== null) self.__id = id
-        return obj
+        let obj = new this(false, opts)
+        if (id !== undefined && id !== null) obj.__id = id
+        return obj.__proxy = ItemProxy.wrap(obj)
     }
 
     static async from_data(id, data, opts = {}) {
