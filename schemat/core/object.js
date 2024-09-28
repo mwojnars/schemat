@@ -106,18 +106,21 @@ class ItemProxy {
     {
         let val
 
-        // try reading the value from `cache`, return if found
+        // try reading the value from `cache` first
         if ((val = cache.get(prop)) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
 
         // try reading the value from regular JS attributes of the `target`: either defined as such, or cached over there...
         val = Reflect.get(target, prop, receiver)
 
-        // ...the value was already cached? return immediately
+        // ...the value was previously cached? return immediately
         if (typeof val === 'object' && val?.[ItemProxy.FROM_CACHE]) return val.value
 
         // ...otherwise cache the value IF it comes from a cachable getter, and return; (no point in re-assigning regular attrs)
-        if (target.constructor.cachable_getters.has(prop))
-            return ItemProxy._cache_singleton(target, prop, val, mutable)
+        if (target.constructor.cachable_getters.has(prop)) {
+            if (mutable) cache.set(prop, val)
+            return val
+            // return ItemProxy._cache_singleton(target, prop, val, mutable)
+        }
 
         // return if the value was found (above in JS attrs)
         if (val !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
@@ -145,10 +148,8 @@ class ItemProxy {
     }
 
     static _cache_singleton(target, prop, val, mutable) {
-        if (typeof val === 'object' && val?.[ItemProxy.NO_CACHING])         // this particular value must not be cached for some reason?
-            return val.value
-
-        if (!mutable) {                                                     // caching is only allowed in immutable objects
+        if (val?.[ItemProxy.NO_CACHING]) return val.value        // NO_CACHING: this particular value must not be cached for some reason?
+        if (!mutable) {                                          // caching is only allowed in immutable objects
             let stored = {value: val, [ItemProxy.FROM_CACHE]: true}
             Object.defineProperty(target.__self, prop, {value: stored, writable: false, configurable: true})
             // print('saved in cache:', prop)
