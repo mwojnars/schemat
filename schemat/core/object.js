@@ -110,17 +110,17 @@ class ItemProxy {
 
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
         if (schema?.has(base) || (!schema?.props.strict && regular)) {
-            let {edits} = target.__meta
-            if (!edits) throw new Error(`cannot set '${prop}' on immutable object`)
+            let {mutable} = target.__meta
+            if (!mutable)
+                if (SERVER) throw new Error(`cannot set '${prop}' on immutable object`)
+                else target._make_mutable()         // on client, an immutable object becomes mutable on the first modification attempt
             print('proxy_set updating:', prop)
 
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning multiple values to '${prop}'`)
-                target.make_edit('set_all', {key: prop, values: value})
+                target.make_edit('set_all', {key: base, values: value})
             }
             else target.make_edit('update', {path: prop, value})
-                // target.__data.set(prop, value)
-                // edits.push(new Edit('update', {path: prop, entry: {value}}))
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${prop})`)
@@ -357,8 +357,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
 
         cache:          undefined,  // Map of properties loaded from __data, imputed or inherited, stored here for performance; ONLY present in immutable object
-        // local:          undefined,  // Map of properties assigned/modified locally by the caller through edit operations
         edits:          undefined,  // array of edit operations that were reflected in `local` so far, for replay on the DB
+        // local:          undefined,  // Map of properties assigned/modified locally by the caller through edit operations
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -961,6 +961,13 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Client-side edit methods. Return a Promise.  ***/
 
+    _make_mutable() {
+        /* Make itself mutable. This removes the property cache, so read access becomes less efficient. Only allowed on client. */
+        assert(CLIENT)
+        delete this.__meta.cache
+        this.__meta.edits = []
+        this.mutable = true
+    }
 
     make_edit(op, args) {
         /* Perform the edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). */
