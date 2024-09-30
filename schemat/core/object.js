@@ -109,12 +109,7 @@ class ItemProxy {
 
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
         if (schema?.has(base) || (!schema?.props.strict && regular)) {
-            let {mutable} = target.__meta
-            if (!mutable)
-                if (SERVER) throw new Error(`cannot set '${prop}' on immutable object`)
-                else target._make_mutable()         // on client, an immutable object becomes mutable on the first modification attempt
             print('proxy_set updating:', prop)
-
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
                 target.make_edit('set_all', {prop: base, values: value})
@@ -934,18 +929,22 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         this.__meta.mutable = true
     }
 
-    make_edit(op, args) {
+    make_edit(op, args, save = false) {
         /* Perform the edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). */
-        assert(this.__meta.edits, `cannot perform an edit (${op}) on immutable object [${this.id}]`)
+        if (!this.__meta.edits)
+            if (SERVER) throw new Error(`cannot edit ('${op}') an immutable object [${this.id}]`)
+            else this._make_mutable()         // on client, an immutable object becomes mutable on the first modification attempt
+
         let edit = [this.__id, op, args]
         this._apply_edits(edit)
         this.__meta.edits.push(edit)
+        if (save) return this.save()
     }
 
-    save() {
+    async save() {
         /* Send __meta.edits (for an existing object), or __data (for a newly created object) to DB. */
         this.assert_loaded_or_newborn()
-        if (this.is_newborn()) return this.service.create_item(this.__data)
+        if (this.is_newborn()) return this.__category?.service.create_item(this.__data)
 
         if (!this.__meta.edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
         return schemat.site.service.submit_edits(...this.__meta.edits)
@@ -959,10 +958,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return schemat.site.service.submit_edits(edit)
     }
 
-    edit_insert(path, entry)        { return this.edit('insert', {path, ...entry}) }
-    edit_delete(path)               { return this.edit('delete', {path}) }
-    edit_update(path, entry)        { return this.edit('update', {path, ...entry}) }
-    edit_move(path, delta)          { return this.edit('move',   {path, delta}) }
+    edit_insert(path, entry)        { return this.make_edit('insert', {path, ...entry}, true) }
+    edit_delete(path)               { return this.make_edit('delete', {path}, true) }
+    edit_update(path, entry)        { return this.make_edit('update', {path, ...entry}, true) }
+    edit_move(path, delta)          { return this.make_edit('move',   {path, delta}, true) }
 
 
     /***  Server-side implementation of edits. NOT for direct use!  ***/
