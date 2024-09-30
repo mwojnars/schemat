@@ -116,7 +116,7 @@ class ItemProxy {
             print('proxy_set updating:', prop)
 
             if (plural) {
-                if (!(value instanceof Array)) throw new Error(`array expected when assigning multiple values to '${prop}'`)
+                if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
                 target.make_edit('set_all', {prop: base, values: value})
             }
             else target.make_edit('set', {prop, value})
@@ -929,9 +929,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _make_mutable() {
         /* Make itself mutable. This removes the property cache, so read access becomes less efficient. Only allowed on client. */
         assert(CLIENT)
-        delete this.__meta.cache
-        this.__meta.edits = []
-        this.mutable = true
+        let meta = this.__meta
+        delete meta.cache
+        meta.edits = []
+        meta.mutable = true
     }
 
     make_edit(op, args) {

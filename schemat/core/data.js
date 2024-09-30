@@ -455,7 +455,7 @@ export class Catalog {
         let locs = this.locs(key)
 
         if (!steps.length) {                    // no more steps to be done? delete leaf nodes here
-            for (let pos of locs) this._deleteAt(pos)
+            for (let pos of locs.reverse()) this._deleteAt(pos)
             return locs.length
         }
 
