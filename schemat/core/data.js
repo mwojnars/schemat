@@ -163,6 +163,19 @@ export class Catalog {
 
     /***  key-based modifications (no paths, no recursion)  ***/
 
+    set(key, value) {
+        /* If the `key` occurs exactly once, replace its value with `value` at the existing position.
+           Otherwise, remove all occurrences of `key` (if any) and append {key, value} entry at the end.
+         */
+        let locs = this.locs(key)
+        if (locs.length === 1) {
+            this._entries[locs[0]] = {key, value}
+            return this
+        }
+        if (locs.length) this.delete(key)
+        return this.append(key, value)
+    }
+
     setAll(key, ...values) {
         /* Remove all existing values for the `key` and insert new `values` at the end of the catalog. */
         this.delete(key)
@@ -206,14 +219,15 @@ export class Catalog {
 
     /***  Write access  ***/
 
-    set(path, value, {label, comment} = {}, create_path = false) {
-        /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
-           of an existing entry - the entry must be unique (!). If create_path is false (default),
-           all segments of `path` except the last one must already exist and be unique; otherwise,
-           new Catalog() entries are inserted in place of missing path segments.
-         */
-        return this.setEntry(path, {value, label, comment}, create_path)
-    }
+    // set(path, value, {label, comment} = {}, create_path = false) {
+    //     /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
+    //        of an existing entry - the entry must be unique (!). If create_path is false (default),
+    //        all segments of `path` except the last one must already exist and be unique; otherwise,
+    //        new Catalog() entries are inserted in place of missing path segments.
+    //      */
+    //     print(`Catalog.set(${path}, ${value})`)
+    //     return this.setEntry(path, {value, label, comment}, create_path)
+    // }
 
     setEntry(path, {value, label, comment} = {}, create_path = false) {
         /* Like set(), but with all props accepted in a single argument. */
