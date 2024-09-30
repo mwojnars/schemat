@@ -645,7 +645,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // if the property is atomic (non-repeated and non-compound) and an own value is present, skip inheritance to speed up
         if (!type.isRepeated() && !type.isCATALOG() && data.has(prop)) {
             let values = data.getAll(prop)
-            if (values.length > 1) print(`WARNING: multiple values present for a property declared as unique (${prop}), using the first value only`)
+            if (values.length > 1) print(`WARNING: multiple values present for a property declared as unique (${prop} in [${this.id}]), using the first value only`)
             return [values[0]]  //[data.get(prop)]
         }
 
@@ -946,8 +946,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         this.assert_loaded_or_newborn()
         if (this.is_newborn()) return this.__category?.service.create_item(this.__data)
 
-        if (!this.__meta.edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
-        return schemat.site.service.submit_edits(...this.__meta.edits)
+        let edits = this.__meta.edits
+        if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
+        return schemat.site.service.submit_edits(...edits).then(() => {edits.length = 0})
     }
 
 
@@ -979,7 +980,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             let {op, args} = (edit instanceof Edit) ? edit : {op: edit[1], args: edit[2]}
             const method = `EDIT_${op}`
             if (!this[method]) throw new Error(`object does not support edit operation: '${op}'`)
-            this[method](args)
+            this[method](structuredClone(args))     // `args` are deep-copied for safety, in case they get modified during the edit
         }
     }
 
