@@ -685,7 +685,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         // if the property is atomic (non-repeated and non-compound) and an own value is present, skip inheritance to speed up
         if (!type.isRepeated() && !type.isCATALOG() && data.has(prop)) {
             let values = data.getAll(prop)
-            if (values.length > 1) print(`WARNING: multiple values present for a property declared as non-repeated (${prop})`)
+            if (values.length > 1) print(`WARNING: multiple values present for a property declared as non-repeated (${prop}), using the first one only`)
             return [values[0]]  //[data.get(prop)]
         }
 
@@ -1003,9 +1003,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Apply edits before saving a modified object to the DB. For server-side use only. Each `edit` is an instance of Edit. */
         for (const edit of edits) {
             let {op, args} = (edit instanceof Edit) ? edit : {op: edit[1], args: edit[2]}
-            const method = `EDIT_${edit.op}`
-            if (!this[method]) throw new Error(`object does not support edit operation: '${edit.op}'`)
-            this[method](edit.args)
+            const method = `EDIT_${op}`
+            if (!this[method]) throw new Error(`object does not support edit operation: '${op}'`)
+            this[method](args)
         }
     }
 

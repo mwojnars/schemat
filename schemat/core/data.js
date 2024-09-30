@@ -403,17 +403,18 @@ export class Catalog {
 
     /***  Higher-level edit operations  ***/
 
-    _step(path, error = true) {
+    _step(path) {
         /* Make one step along a `path`. Return the position of the 1st entry on the path (must be unique),
            the remaining path, and the value object found after the 1st step. */
         path = this._normPath(path)
         assert(path.length >= 1)
 
         let step = path[0]
-        let pos = this.loc(step)
-        if (pos === undefined)
-            if (error) throw new Error(`path not found: ${step}`)
-            else return [-1]
+        let [pos, ...dups] = this.locs(step)
+
+        if (pos === undefined) throw new Error(`key not found: ${step}`)
+        if (dups.length) throw new Error(`key is not unique: ${step}`)
+
         let subpath = path.slice(1)
         let value = this._entries[pos].value
 
