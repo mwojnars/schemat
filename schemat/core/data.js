@@ -219,15 +219,15 @@ export class Catalog {
 
     /***  Write access  ***/
 
-    // set(path, value, {label, comment} = {}, create_path = false) {
-    //     /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
-    //        of an existing entry - the entry must be unique (!). If create_path is false (default),
-    //        all segments of `path` except the last one must already exist and be unique; otherwise,
-    //        new Catalog() entries are inserted in place of missing path segments.
-    //      */
-    //     print(`Catalog.set(${path}, ${value})`)
-    //     return this.setEntry(path, {value, label, comment}, create_path)
-    // }
+    setPath(path, value, {label, comment} = {}, create_path = false) {
+        /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
+           of an existing entry - the entry must be unique (!). If create_path is false (default),
+           all segments of `path` except the last one must already exist and be unique; otherwise,
+           new Catalog() entries are inserted in place of missing path segments.
+         */
+        print(`Catalog.set(${path}, ${value})`)
+        return this.setEntry(path, {value, label, comment}, create_path)
+    }
 
     setEntry(path, {value, label, comment} = {}, create_path = false) {
         /* Like set(), but with all props accepted in a single argument. */
@@ -240,7 +240,7 @@ export class Catalog {
 
         if (path.length <= 1)
             if (T.isNumber(step)) return this._overwrite(step, props)
-            else return this.setShallow(step, props)
+            else return this.set(step, value)
 
         if (this.hasMultiple(step)) throw new Error(`multiple occurrences of the key (${key}), cannot uniquely update the entry`)
 
@@ -250,7 +250,7 @@ export class Catalog {
 
         if (subcat === undefined)
             if (create_path && typeof step === 'string')                // create a missing intermediate Catalog() if so requested
-                this.setShallow({key: step, value: new Catalog()})
+                this.set(step, new Catalog())
             else
                 throw new Error(`path not found, missing '${step}' of '${spath}'`)
 
@@ -278,18 +278,18 @@ export class Catalog {
         throw new Error(`path not found: '${subpath.join('/')}'`)
     }
 
-    setShallow(key, props = {}) {
-        /* If `key` is present in the catalog, modify its value/label/comment in place; the entry must be unique (!).
-           Push a new entry otherwise.
-         */
-        assert(!T.isMissing(key))
-        if (!this.has(key)) return this.pushEntry({key, ...props})
-
-        let ids = this._keys.get(key)
-        if (ids.length > 1) throw new Error(`multiple entries (${ids.length}) for a key, '${key}'`)
-
-        return this._overwrite(ids[0], props)
-    }
+    // setShallow(key, props = {}) {
+    //     /* If `key` is present in the catalog, modify its value/label/comment in place; the entry must be unique (!).
+    //        Push a new entry otherwise.
+    //      */
+    //     assert(!T.isMissing(key))
+    //     if (!this.has(key)) return this.pushEntry({key, ...props})
+    //
+    //     let ids = this._keys.get(key)
+    //     if (ids.length > 1) throw new Error(`multiple entries (${ids.length}) for a key, '${key}'`)
+    //
+    //     return this._overwrite(ids[0], props)
+    // }
 
     _overwrite(id, {key, value, label, comment} = {}) {
         /* Overwrite in place some or all of the properties of an entry of a given `id` = position in this._entries.
