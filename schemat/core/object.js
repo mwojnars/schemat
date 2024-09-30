@@ -80,7 +80,7 @@ class ItemProxy {
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
     static UNDEFINED    = Symbol.for('ItemProxy.UNDEFINED')
-    static FROM_CACHE   = Symbol.for('ItemProxy.FROM_CACHE')   // marks a wrapper around a value that is stored in cache
+    // static FROM_CACHE   = Symbol.for('ItemProxy.FROM_CACHE')   // marks a wrapper around a value that is stored in cache
     static NO_CACHING   = Symbol.for('ItemProxy.NO_CACHING')   // marks a wrapper around a value (typically from a getter) that should not be cached
 
 
@@ -152,8 +152,11 @@ class ItemProxy {
         // try reading the value from regular JS attributes of the `target`: either defined as such, or cached over there...
         val = Reflect.get(target, prop, receiver)
 
-        // ...the value was previously cached? return immediately
-        if (typeof val === 'object' && val?.[ItemProxy.FROM_CACHE]) return val.value
+        // // ...the value was previously cached? return immediately
+        // if (typeof val === 'object' && val?.[ItemProxy.FROM_CACHE]) {
+        //     print(`FROM_CACHE:`, prop)
+        //     return val.value
+        // }
 
         // ...otherwise cache the value IF it comes from a cachable getter, and return; (no point in re-assigning regular attrs)
         if (target.constructor.cachable_getters.has(prop)) {
@@ -300,8 +303,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     set __record(record) {
         assert(record)
         assert(record.id === this.__id)
-        let cached = {[ItemProxy.FROM_CACHE]: true, value: record}      // caching in ItemProxy makes the property immutable, while we still may want to store a better record found in _load(), hence manual caching here with writable=true
-        Object.defineProperty(this.__self, '__record', {value: cached, writable: true})
+        this.__meta.cache?.set('__record', record)      // __record is a special property (ItemProxy.SPECIAL) and if we allow its modification the `cache` must be updated manually
+        // let cached = {[ItemProxy.FROM_CACHE]: true, value: record}      // caching in ItemProxy makes the property immutable, while we still may want to store a better record found in _load(), hence manual caching here with writable=true
+        // Object.defineProperty(this.__self, '__record', {value: cached, writable: true})
     }
 
     get __base() {
