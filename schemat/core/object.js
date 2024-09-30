@@ -928,11 +928,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _make_mutable() {
         /* Make itself mutable. This removes the property cache, so read access becomes less efficient. Only allowed on client. */
-        assert(CLIENT)
-        let meta = this.__meta
-        delete meta.cache
-        meta.edits = []
-        meta.mutable = true
+        assert(CLIENT && !this.__meta.mutable)
+        delete this.__meta.cache
+        this.__meta.edits = []
+        this.__meta.mutable = true
     }
 
     make_edit(op, args) {
@@ -942,6 +941,16 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         this._apply_edits(edit)
         this.__meta.edits.push(edit)
     }
+
+    save() {
+        /* Send __meta.edits (for an existing object), or __data (for a newly created object) to DB. */
+        this.assert_loaded_or_newborn()
+        if (this.is_newborn()) return this.service.create_item(this.__data)
+
+        if (!this.__meta.edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
+        return schemat.site.service.submit_edits(...this.__meta.edits)
+    }
+
 
     edit(op, args) {
         // print('edit:', this.__id, op)
