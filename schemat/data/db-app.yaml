@@ -8,6 +8,7 @@
     static error() { throw new Error('Varia/code/error()') }
   schema:
     title:
+      repeated: true
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   __category:
