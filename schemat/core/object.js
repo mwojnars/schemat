@@ -993,7 +993,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     EDIT_insert({path, key, value}) {
         /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
-        let pos = path.pop()
+        let pos = path[path.length - 1]
         this.__data.insert(path, pos, {key, value})
     }
 
@@ -1009,7 +1009,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     EDIT_move({path, delta}) {
         /* Move a property or a field inside a nested Catalog. */
-        let pos = path.pop()
+        let pos = path[path.length - 1]
         this.__data.move(path, pos, pos + delta)
     }
 
