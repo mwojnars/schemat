@@ -99,13 +99,13 @@ export class Schemat {
 
     get root_category() {
         /* The RootCategory object. Always present in cache, always fully loaded. */
-        let root = this.registry.get(ROOT_ID)
+        let root = this.registry.get_object(ROOT_ID)
         assert(root, `RootCategory not found in cache`)
         assert(root.is_loaded(), `RootCategory not loaded`)
         return root
     }
 
-    get site()      { return this.registry.get(this.site_id) }
+    get site()      { return this.registry.get_object(this.site_id) }
 
 
     // web objects currently being loaded/initialized with a call to .load()
@@ -209,7 +209,7 @@ export class Schemat {
         // this.session?.countRequested(id)
         // a stub has immediate expiry date (i.e., on next cache purge) unless its data is loaded and TLS updated;
         // this prevents keeping a large number of unused stubs indefinitely
-        let obj = this.registry.get(id) || this.registry.set(Item.create_stub(id))
+        let obj = this.registry.get_object(id) || this.registry.set_object(Item.create_stub(id))
         assert(CLIENT || !obj.__meta.mutable)
         return obj
     }
@@ -223,7 +223,7 @@ export class Schemat {
          */
         let id  = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id
         let obj = Item.create_stub(id)
-        return obj.load().then(() => this.registry.set(obj))
+        return obj.load().then(() => this.registry.set_object(obj))
     }
 
     async load_record(id, fast = true) {
@@ -277,7 +277,7 @@ export class Schemat {
     //     for await (const record of this.db.scan_all()) {                            // stream of ItemRecords
     //         if (limit !== undefined && count++ >= limit) break
     //         let item = await Item.from_record(record)
-    //         yield this.registry.set(item)
+    //         yield this.registry.set_object(item)
     //     }
     // }
 

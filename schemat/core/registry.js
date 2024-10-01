@@ -58,9 +58,9 @@ export class Registry {
     _purging_now = false                // if the previous purge is still in progress, a new one is abandoned
 
 
-    get(id)         { return this.objects.get(id) }
+    get_object(id)  { return this.objects.get(id) }
 
-    set(obj) {
+    set_object(obj) {
         /* Put `obj` in the cache. This may override an existing instance with the same ID. */
         assert(obj.__id !== undefined, `cannot register an object without an ID: ${obj}`)
         assert(CLIENT || !obj.__meta.mutable, `cannot register a mutable object: ${obj}`)
