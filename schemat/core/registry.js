@@ -24,8 +24,8 @@ export class ObjectsCache extends Map {
         let count = 0
 
         for (let [id, obj] of this.entries()) {
-            let expire_at = obj.__meta.expire_at
-            if (expire_at === undefined || expire_at > now) continue
+            let expire_at = obj.__meta.expire_at || 0
+            if (expire_at > now) continue
 
             let evicted = on_evict?.(obj)
             if (T.isPromise(evicted)) evicted = await evicted       // TODO: add to `pending` instead of awaiting here
@@ -52,7 +52,8 @@ export class ObjectsCache extends Map {
 export class Registry {
     /* Process-local cache of web objects, records and indexes loaded from DB, as well as dynamically loaded JS modules. */
 
-    objects = new ObjectsCache()        // cache of web objects
+    records = new Map()                 // cache of records; evicted en masse on every purge
+    objects = new ObjectsCache()        // cache of web objects; each object has its individual eviction period and time limit
 
     _purging_now = false                // if the previous purge is still in progress, a new one is abandoned
 
