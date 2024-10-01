@@ -58,7 +58,6 @@ export class Registry {
     _purging_now = false                // if the previous purge is still in progress, a new one is abandoned
 
 
-    has(id)         { return this.objects.has(id) }
     get(id)         { return this.objects.get(id) }
 
     set(obj) {
@@ -80,5 +79,6 @@ export class Registry {
         finally {
             this._purging_now = false
         }
+        this.records.clear()
     }
 }
