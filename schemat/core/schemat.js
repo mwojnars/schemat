@@ -196,8 +196,6 @@ export class Schemat {
         await this.reload(this.site_id)
         for (let obj of this.registry)
             if (obj.__data) await this.reload(obj)
-            // if (obj.__data && !obj.__url)
-            //     await obj.__meta.pending_url
     }
 
 
