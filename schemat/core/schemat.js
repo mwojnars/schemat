@@ -160,6 +160,7 @@ export class Schemat {
 
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         this.site_id = site_id
+
         await this._init_site()
         // await this._reset_class()
         assert(this.site)
@@ -194,8 +195,8 @@ export class Schemat {
            URLs are awaited, classes are imported dynamically from SUN instead of a static classpath.
          */
         await this.reload(this.site_id)
-        for (let obj of this.registry)
-            if (obj.__data) await this.reload(obj)
+        // for (let obj of this.registry)
+        //     if (obj.__data) await this.reload(obj)
     }
 
 
