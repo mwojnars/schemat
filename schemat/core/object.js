@@ -237,8 +237,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __status                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
     __ttl                   time-to-live of this object in the registry [seconds]; 0 = immediate eviction on the next cache purge
 
-    __path                  URL path of this object; similar to __url, but contains blanks segments
-    __url                   absolute URL path of this object; calculated right *after* __init__(); to be sure that __url is computed, await __meta.pending_url first
+    __path                  URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
+    __url                   absolute URL path of this object, calculated via type imputation in _impute_url()
     __assets                cached web Assets of this object's __schema
 
     __services              instance-level dictionary {...} of all Services; initialized once for the entire class and stored in the prototype (!), see _create_services()
@@ -313,8 +313,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         mutable:        false,      // if true, object can be edited; the edits are accumulated and committed to DB using .save(); this prop CANNOT be changed after construction; editable objects are excluded from server-side caching
         loaded_at:      undefined,  // timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
         expire_at:      undefined,  // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
-        pending_url:    undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
+        //pending_url:  undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
 
         cache:          undefined,  // Map of properties loaded from __data, imputed or inherited, stored here for performance; ONLY present in immutable object
         edits:          undefined,  // array of edit operations that were reflected in `local` so far, for replay on the DB
@@ -349,7 +349,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     is_newborn()    { return this.__id === undefined }              // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
     is_linked()     { return this.__id !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
-    //is_activated()  { return this.is_loaded() && this.__url}        // true if the object is loaded AND its URL is already computed
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
@@ -446,8 +445,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
          */
         if (this.__data || this.__meta.loading) {           // data is loaded or being loaded right now? do nothing except for awaiting the URL (previous load() may have been called with await_url=false)
             assert(!record)
-            if (await_url && schemat.site && this.__meta.pending_url)
-                await this.__meta.pending_url
+            // if (await_url && schemat.site && this.__meta.pending_url)
+            //     await this.__meta.pending_url
             return this.__meta.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
         }
         if (this.is_newborn() && !record) return this                       // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
@@ -487,11 +486,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             let init = this.__init__()                      // custom initialization after the data is loaded (optional);
             if (init instanceof Promise) await init         // if this.__url is needed inside __init__(), __meta.pending_url must be explicitly awaited there
 
-            // if (!schemat.site?.is_activated())
-            //     print(`site NOT yet fully activated when calculating url for [${this.__id}]`)
-
-            if (await_url && schemat.site && this.__meta.pending_url)
-                await this.__meta.pending_url
+            // if (await_url && schemat.site && this.__meta.pending_url)
+            //     await this.__meta.pending_url
 
             let now = Date.now()
             this.__meta.loaded_at = now
