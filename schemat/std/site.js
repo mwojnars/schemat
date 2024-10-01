@@ -160,7 +160,8 @@ export class Site extends Item {
          */
         for (let edit of plain_edits) {
             let [id, op, args] = edit
-            await this.database.update(id, new Edit(op, args))
+            let data = await this.database.update(id, new Edit(op, args))
+            // schemat.refresh_record(id, data)
             await schemat.reload(id)           // TODO: read the newest version of the object from update()'s feedback and send back to the client
         }
     })

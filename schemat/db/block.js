@@ -242,8 +242,8 @@ export class DataBlock extends Block {
         let wait = obj._bump_version(data)          // increment __ver and create a Revision for the previous `data`, if needed
         if (wait) await wait
 
-        let value = obj.__data.dump()
-        req = req.make_step(this, 'save', {id, key, value})
+        let new_data = obj.__data.dump()
+        req = req.make_step(this, 'save', {id, key, value: new_data})
 
         if (req.current_ring.readonly)              // can't write the update here in this ring? forward to a higher ring
             return req.forward_save()
@@ -251,7 +251,8 @@ export class DataBlock extends Block {
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-        return this.put(req)                        // change propagation is done here inside put()
+        await this.put(req)                         // change propagation is done here inside put()
+        return new_data
     }
 
     async delete(req) {

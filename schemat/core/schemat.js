@@ -213,8 +213,9 @@ export class Schemat {
 
     async get_loaded(id)     { return this.get_object(id).load() }
 
-    async reload(obj_or_id) {
-        /* Create a new instance of the object, load its data from DB, and when it is fully initialized
+    async reload(obj_or_id, deep = false) {
+        /* Create a new instance of the object using the most recent content for this ID as available in the registry.
+           load its data from DB, and when it is fully initialized
            replace the existing instance in the registry. Return the new object.
          */
         let id  = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id

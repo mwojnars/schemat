@@ -944,11 +944,23 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     async save() {
         /* Send __meta.edits (for an existing object), or __data (for a newly created object) to DB. */
         this.assert_loaded_or_newborn()
-        if (this.is_newborn()) return this.__category?.service.create_item(this.__data)
+        if (this.is_newborn())
+            return schemat.site.service.create_item(this.__data).then(record => {
+                // this.__meta.edits = []
+                // reload this.__data
+                // change back to immutable? (if on client, or in Block after saving the object in mutex)
+                // schemat.register_record(record)
+                // schemat.register_object(this)
+                // refresh GUI ??
+            })
+            //this.__category?.service.create_item(this.__data)
 
         let edits = this.__meta.edits
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
-        return schemat.site.service.submit_edits(...edits).then(() => {edits.length = 0})
+
+        return schemat.site.service.submit_edits(...edits).then(() => {
+            edits.length = 0
+        })
     }
 
 
@@ -993,7 +1005,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     EDIT_insert({path, key, value}) {
         /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
-        let pos = path[path.length - 1]
+        let pos = (path = [...path]).pop()
         this.__data.insert(path, pos, {key, value})
     }
 
@@ -1009,7 +1021,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     EDIT_move({path, delta}) {
         /* Move a property or a field inside a nested Catalog. */
-        let pos = path[path.length - 1]
+        let pos = (path = [...path]).pop()
         this.__data.move(path, pos, pos + delta)
     }
 
