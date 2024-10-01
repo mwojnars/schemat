@@ -460,7 +460,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         schemat.before_data_loading(this)
 
         try {
-            record = record || await this._load_record()
+            record = record || await schemat.load_record(this.__id) //this._load_record()
             assert(record instanceof ItemRecord)
 
             this.__data = record.data
@@ -509,15 +509,15 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         }
     }
 
-    async _load_record() {
-        this.assert_linked()
-        // schemat.session?.countLoaded(this.__id)
-
-        let req = new DataRequest(this, 'load', {id: this.__id})
-        let json = await schemat.db.select(req)
-        assert(typeof json === 'string', json)
-        return new ItemRecord(this.__id, json)
-    }
+    // async _load_record() {
+    //     this.assert_linked()
+    //     // schemat.session?.countLoaded(this.__id)
+    //
+    //     let req = new DataRequest(this, 'load', {id: this.__id})
+    //     let json = await schemat.db.select(req)
+    //     assert(typeof json === 'string', json)
+    //     return new ItemRecord(this.__id, json)
+    // }
 
     _load_prototypes() {
         /* Load all Schemat prototypes of this object. */
@@ -533,6 +533,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let path = this.__class || this.__category?.class
         if (path) return schemat.import(path)                   // the path can be missing, for no-category objects
     }
+
+    async recreate() {
+        /* Create a new instance of this object using the most recent version of this object's content
+           as available in the registry or downloaded from the DB. */
+    }
+
 
     /***  initialization of URL & services  ***/
 
@@ -951,7 +957,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
                 // change back to immutable? (if on client, or in Block after saving the object in mutex)
                 // schemat.register_record(record)
                 // schemat.register_object(this)
-                // refresh GUI ??
             })
             //this.__category?.service.create_item(this.__data)
 
