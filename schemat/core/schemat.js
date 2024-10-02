@@ -84,6 +84,7 @@ export class Schemat {
      */
 
     _db                         // client-side or bootstrap DB; regular server-side DB is taken from site.database
+    _site
     site_id                     // ID of the active Site object
 
     registry                    // cache of web objects, records and indexes loaded from DB
@@ -105,7 +106,7 @@ export class Schemat {
     //     return root
     // }
 
-    get site()      { return this.registry.get_object(this.site_id) }
+    get site()      { return this._site || this.registry.get_object(this.site_id) }
 
 
     // web objects currently being loaded/initialized with a call to .load()
@@ -195,7 +196,7 @@ export class Schemat {
         /* Load the `site` object and reload the existing (system) objects to make sure that they are fully activated:
            URLs are awaited, classes are imported dynamically from SUN instead of a static classpath.
          */
-        await this.reload(this.site_id)
+        this._site = await this.reload(this.site_id)
         // for (let obj of this.registry)
         //     if (obj.__data) await this.reload(obj)
 
@@ -275,8 +276,9 @@ export class Schemat {
     _on_evict(obj) {
         /* Special handling for the root category and `site` object during registry purge. */
         // if (obj.__id === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is (re)loaded, even after eviction
-        if (obj.__id === this.site.__id)
-            return this.reload(this.site)                               // ...same for the `site` object
+        if (obj.__id === this.site_id)
+            this.reload(this.site_id).then(site => this._site = site)
+            // return this.reload(this.site)                               // ...same for the `site` object
     }
 
 
