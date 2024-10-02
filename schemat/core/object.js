@@ -941,8 +941,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (this.is_newborn())
             return schemat.site.service.create_item(this.__data).then(record => {
                 // this.__meta.edits = []
-                // save new record in registry (as returned from the service)
-                // drop `this` from registry (so that other threads don't pick an old object)
+                // schemat.register_record(record)
             })
             //this.__category?.service.create_item(this.__data)
 
