@@ -1,7 +1,7 @@
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../common/binary.js"
 import {INTEGER} from "../types/type.js";
-import {ItemRecord, PlainRecord, RecordSchema, data_schema} from "./records.js";
+import {DataRecord, PlainRecord, RecordSchema, data_schema} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
 
@@ -119,7 +119,7 @@ export class PrimeIndexSequence extends Index {
            - 0, if the input_record is not allowed in this index or doesn't contain the required fields,
            - 2+, if some of the fields to be used in the key contain repeated values.
          */
-        let item_record = ItemRecord.from_binary(input_record)
+        let item_record = DataRecord.from_binary(input_record)
         if (!this.accept(item_record)) return undefined
 
         const value = this.generate_value(item_record)

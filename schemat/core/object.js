@@ -12,7 +12,7 @@ import {Data} from './data.js'
 import {REF} from "../types/type.js"
 import {DATA_GENERIC} from "../types/catalog.js"
 
-import {ItemRecord} from "../db/records.js"
+import {DataRecord} from "../db/records.js"
 import {DataRequest} from "../db/data_request.js"
 
 import {html_page} from "../web/adapters.js"
@@ -219,7 +219,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     __data                  own properties of this object in raw form (before imputation etc.), as a Data object created during .load()
 
-    __record                ItemRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
+    __record                DataRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
                             undefined in a newborn item; immutable after the first assignment
 
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
@@ -256,7 +256,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     get __record() {
         this.assert_linked()
         this.assert_loaded()
-        return new ItemRecord(this.__id, this.__data.dump())
+        return new DataRecord(this.__id, this.__data.dump())
     }
     set __record(record) {
         assert(record)
@@ -417,12 +417,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     static async from_json(id, json, opts = {}) {
         /* Create a new Item instance given an encoded JSON string with the object's content. */
         assert(typeof json === 'string')
-        return Item.from_record(new ItemRecord(id, json), opts)
+        return Item.from_record(new DataRecord(id, json), opts)
     }
 
-    static async from_record(record /*ItemRecord*/, opts = {}) {
+    static async from_record(record /*DataRecord*/, opts = {}) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no ID yet);
-           or an instance loaded from DB and filled out with data from `record` (an ItemRecord).
+           or an instance loaded from DB and filled out with data from `record` (an DataRecord).
            In any case, the item returned is *booted* (this.__data is initialized) and activated (__init__() was called).
          */
         // TODO: if the record is already cached in binary registry, return the cached item...
@@ -439,7 +439,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Loading & initialization ***/
 
-    async load({record = null /*ItemRecord*/, await_url = true} = {}) {
+    async load({record = null /*DataRecord*/, await_url = true} = {}) {
         /* Load full data of this item from `record` or from DB, if not loaded yet. Return this object.
            The data can only be loaded ONCE for a given Item instance due to item's immutability.
            If you want to refresh the data, create a new instance or use refresh() instead.
@@ -455,14 +455,14 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return this.__meta.loading = this._load(record, await_url)          // keep a Promise that will eventually load the data; this is needed to avoid race conditions
     }
 
-    async _load(record /*ItemRecord*/, await_url) {
+    async _load(record /*DataRecord*/, await_url) {
         /* Load this.__data from `record` or DB. Set up the class and prototypes. Call __init__(). */
 
         schemat.before_data_loading(this)
 
         try {
             record = record || await schemat.load_record(this.__id)
-            assert(record instanceof ItemRecord)
+            assert(record instanceof DataRecord)
 
             this.__data = record.data
             if (record.id !== undefined)                    // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned

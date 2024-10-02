@@ -2,7 +2,7 @@ import {DatabaseError} from "../common/errors.js"
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
 import {Item, Edit} from "../core/object.js"
 import {DataOperator} from "./sequence.js";
-import {Record, ItemRecord} from "./records.js";
+import {Record, DataRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence, IndexSequence, Subsequence} from "./sequence.js";
 import {Catalog, Data} from "../core/data.js";
@@ -79,7 +79,7 @@ export class Ring extends Item {
     // async rebuild_indexes() {
     //     // rebuild all indexes from the data sequence
     //     await this.index_sequence.erase()
-    //     for await (let record /*ItemRecord*/ of this.scan_all()) {
+    //     for await (let record /*DataRecord*/ of this.scan_all()) {
     //         // TODO: use this._subsequences here...
     //         for (let index of this.indexes.values()) {
     //             const binary_key = data_schema.encode_key([record.id])
@@ -165,10 +165,10 @@ export class Ring extends Item {
     }
 
     async* scan_all() {
-        /* Yield all items of this ring as ItemRecord objects. For rebuilding indexes from scratch. */
+        /* Yield all items of this ring as DataRecord objects. For rebuilding indexes from scratch. */
         let data = DataOperator.create()
         for await (let record of data.scan(this.data_sequence))
-            yield ItemRecord.from_binary(record)
+            yield DataRecord.from_binary(record)
     }
 }
 

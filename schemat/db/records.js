@@ -1,6 +1,6 @@
 /*
     Low-level representation of items and index records, for storage and transmission from/to the database.
-    Instances of Record, ItemRecord, ChangeRequest - should be used as IMMUTABLE objects, i.e., once created,
+    Instances of Record, DataRecord, ChangeRequest - should be used as IMMUTABLE objects, i.e., once created,
     they should not be modified (except for lazy internal calculation of missing derived fields).
  */
 
@@ -113,8 +113,8 @@ export class PlainRecord extends Record {
 
 /**********************************************************************************************************************/
 
-export class ItemRecord {
-    /* Raw item as an {id, data} pair, with the data initialized from a JSONx string or a Data object. */
+export class DataRecord {
+    /* Pair of {id, data} of a particular web object, with the data initialized from a JSONx string. */
 
     id                          // item ID; can be undefined (new item, not yet inserted into DB)
     _data_object                // item data as a Data object decoded from _data_plain
@@ -157,7 +157,7 @@ export class ItemRecord {
 
     encoded() {
         // if(!(JSONx.decode(this.data_plain) instanceof Data)) assert(false)
-        assert(this.id !== undefined, `missing 'id' in ItemRecord.encoded(), data=${this.data_plain}`)
+        assert(this.id !== undefined, `missing 'id' in DataRecord.encoded(), data=${this.data_plain}`)
         return {id: this.id, data: this.data_plain}
     }
 
@@ -166,29 +166,24 @@ export class ItemRecord {
     }
 
     static from_binary(bin_record /*Record*/) {
-        /* Create an ItemRecord from a binary Record, where key = [id] and value is a JSONx-serialized Data object. */
+        /* Create an DataRecord from a binary Record, where key = [id] and value is a JSONx-serialized Data object. */
         assert(bin_record instanceof Record, `invalid binary record: ${bin_record}, should be a Record`)
         let json = bin_record.string_value          // plain object, JSONx-encoded Data of an item
         let key = bin_record.key                    // array of key fields, decoded
         assert(key.length === 1)                    // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
         let id = key[0]
-        return new ItemRecord(id, json)
+        return new DataRecord(id, json)
     }
 
     constructor(id, data) {
         /* `id` is a Number; `data` is either a JSONx string, or a Data object. */
         if (id !== undefined && id !== null) this.id = id
-        assert(data, `missing 'data' for ItemRecord, id=${this.id}`)
+        assert(data, `missing 'data' for DataRecord, id=${this.id}`)
 
         if (typeof data === 'string') this._data_json = data
         else throw new Error(`invalid type of 'data'`)
         // else if (data instanceof Data) this._data_object = data
-        // else assert(false, `plain data objects not accepted for ItemRecord, id=${this.id}: ${data}`)
-
-        // else {
-        //     assert(JSONx.decode(data) instanceof Data, `invalid 'data' for ItemRecord, id=${id}: ${data}`)
-        //     this._data_plain = data
-        // }
+        // else assert(false, `plain data objects not accepted for DataRecord, id=${this.id}: ${data}`)
     }
 }
 

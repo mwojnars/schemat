@@ -52,7 +52,7 @@ export class ObjectsCache extends Map {
 export class Registry {
     /* Process-local cache of web objects, records and indexes loaded from DB, as well as dynamically loaded JS modules. */
 
-    records = new Map()                 // cache of ItemRecord instances; evicted en masse on every purge
+    records = new Map()                 // cache of DataRecord instances; evicted en masse on every purge
     objects = new ObjectsCache()        // cache of web objects; each object has its individual eviction period and time limit
 
     _purging_now = false                // if the previous purge is still in progress, a new one is abandoned

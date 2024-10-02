@@ -5,7 +5,7 @@ import {Category, ROOT_ID} from './category.js'
 import {Registry} from "./registry.js";
 import {RequestContext} from "../web/request.js";
 import {DataRequest} from "../db/data_request.js";
-import {ItemRecord} from "../db/records.js";
+import {DataRecord} from "../db/records.js";
 // import Resources from "../web/resources.js";
 
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -227,7 +227,7 @@ export class Schemat {
     }
 
     async load_record(id, fast = true) {
-        /* Read object data from DB and return as ItemRecord; or use a record from the registry, if present and fast=true.
+        /* Read object data from DB and return as DataRecord; or use a record from the registry, if present and fast=true.
            If a new record was created, keep it in the registry for future use.
          */
         assert(id !== undefined)
@@ -240,7 +240,7 @@ export class Schemat {
         let json = await this.db.select(req)
         assert(typeof json === 'string', json)
 
-        let record = new ItemRecord(id, json)
+        let record = new DataRecord(id, json)
         return this.register_record(record)
     }
 
