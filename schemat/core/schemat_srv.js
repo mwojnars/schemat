@@ -29,13 +29,6 @@ export class ServerSchemat extends Schemat {
         // this.loader = new Loader(import.meta.url)
     }
 
-    async _init_site() {
-        await super._init_site()
-
-        // schedule periodical cache eviction; the interval is taken from site.cache_purge_interval and may change over time
-        setTimeout(() => this._purge_registry(), 1000)
-    }
-
     async _reset_class(ServerSchemat) {
         /* Re-import the class of this Schemat object using dynamic imports from the SUN path; in this way,
            all other imports in the dependant modules will be interpreted as SUN imports, as well.
@@ -46,25 +39,6 @@ export class ServerSchemat extends Schemat {
         await this._init_classpath()
         // await this.reload(this.site_id)
         print('ServerSchemat class reloaded')
-    }
-
-
-    async _purge_registry() {
-        if (this.is_closing) return
-        try {
-            return this.registry.purge(this._on_evict.bind(this))
-        }
-        finally {
-            const interval = (this.site?.cache_purge_interval || 1) * 1000      // [ms]
-            setTimeout(() => this._purge_registry(), interval)
-        }
-    }
-
-    _on_evict(obj) {
-        /* Special handling for the root category and `site` object during registry purge. */
-        if (obj.__id === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is (re)loaded, even after eviction
-        if (obj.__id === this.site.__id)
-            return this.reload(this.site)                               // ...same for the `site` object
     }
 
 

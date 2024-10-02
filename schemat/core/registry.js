@@ -57,6 +57,11 @@ export class Registry {
 
     _purging_now = false                // if the previous purge is still in progress, a new one is abandoned
 
+
+    constructor(on_evict) {
+        this.on_evict = on_evict
+    }
+
     get_record(id)  { return this.records.get(id) }
     set_record(rec) { this.records.set(rec.id, rec); return rec }
 

@@ -197,7 +197,11 @@ export class Schemat {
         await this.reload(this.site_id)
         // for (let obj of this.registry)
         //     if (obj.__data) await this.reload(obj)
+
+        // schedule periodical cache eviction; the interval is taken from site.cache_purge_interval and may change over time
+        if (SERVER) setTimeout(() => this._purge_registry(), 1000)
     }
+
 
 
     /***  Access to web objects  ***/
@@ -244,9 +248,34 @@ export class Schemat {
         return this.register_record(record)
     }
 
+
+    /***  Registry management  ***/
+
     register_record(item_record) {
         this.registry.set_record(item_record)
         return item_record
+    }
+
+    invalidate_object(id) {
+        this.registry.evict_object(id)
+    }
+
+    async _purge_registry() {
+        if (this.is_closing) return
+        try {
+            return this.registry.purge(this._on_evict.bind(this))
+        }
+        finally {
+            const interval = (this.site?.cache_purge_interval || 1) * 1000      // [ms]
+            setTimeout(() => this._purge_registry(), interval)
+        }
+    }
+
+    _on_evict(obj) {
+        /* Special handling for the root category and `site` object during registry purge. */
+        if (obj.__id === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is (re)loaded, even after eviction
+        if (obj.__id === this.site.__id)
+            return this.reload(this.site)                               // ...same for the `site` object
     }
 
 

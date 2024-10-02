@@ -255,6 +255,7 @@ export class DataBlock extends Block {
 
         await this.put(req)                         // save changes and perform change propagation
         schemat.register_record(new DataRecord(id, new_data))
+        // schemat.invalidate_object(id)
 
         return new_data
     }
