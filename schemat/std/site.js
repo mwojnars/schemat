@@ -5,6 +5,7 @@ import {Item, Edit} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonService} from "../web/services.js";
 import {Data} from "../core/data.js";
+import {JSONx} from "../core/jsonx.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -155,10 +156,8 @@ export class Site extends Item {
 
     static ['POST/create_item'] = new JsonService(
         async function(request, data_state) {
-            /* Create a new object with provided __data. */
-            let data = Data.__setstate__(data_state)
-            // data.set('__category', this)
-            let record = await schemat.db.insert(data)
+            /* Create a new object with __data as provided; `data_state` is a flat object, the result of Catalog.__getstate__(). */
+            let record = await schemat.db.insert(JSONx.stringify(data_state))
             return record.encoded()
         },
     )
@@ -178,6 +177,26 @@ export class Site extends Item {
     {
         return this.database.delete(id)
     })
+
+    // POST_create_item() { return new Service({
+    //     client: async (url, ...args) => {},
+    //     encode: (...args) => {},
+    //     submit: (...args) => {},
+    //     accept: (...args) => {},
+    //     regret: (...args) => {},   //error catch expose reject fail decline abort crash finish cancel giveup refuse discard
+    //
+    //     handle: (request) => {},
+    //     decode: (request) => {},
+    //     server: async (...args) => {
+    //         /* Create a new item in this category based on request data. */
+    //         let data = Data.__setstate__(data_state)
+    //         let id = await schemat.db.insert(data)
+    //         let obj = await schemat.get_loaded(id)
+    //         return obj.__record.encoded()
+    //     },
+    //     answer: (...args) => {},   //result()
+    //     reject: (...args) => {},
+    // })}
 
 
     /***  Dynamic imports  ***/

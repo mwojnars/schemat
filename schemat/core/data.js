@@ -595,7 +595,7 @@ export class Data extends Catalog {
         assert(!obj.is_linked?.())
 
         const KEEP = ['__class', '__category']
-        const DROP = ['action']
+        const DROP = ['service']
 
         // identify __category & __class of the object and perform conversions if needed
         let __category = obj.__category || obj.constructor.__category || undefined
