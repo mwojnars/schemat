@@ -197,7 +197,9 @@ export class DataBlock extends Block {
 
         req = req.make_step(this, null, {id, key, value: data})
 
-        await this.put(req)                         // change propagation is done here inside put()
+        await this.put(req)                                 // change propagation is done here inside put()
+        // schemat.register_record(obj.__record)
+
         return id
     }
 

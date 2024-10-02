@@ -61,17 +61,6 @@ export class Category extends Item {
         return wait instanceof Promise ? wait.then(() => obj) : obj
     }
 
-    // async new(data = {}) {
-    //     /* Create a newborn item of this category (not yet in DB) and set its `data`; set its ID if given.
-    //        The order of `data` and `id` arguments can be swapped.
-    //      */
-    //     // if (typeof data === 'number') [data, id] = [id, data]
-    //     assert(data)
-    //     if (!(data instanceof Data)) data = new Data(data)
-    //     data.set('__category', this)
-    //     return Item.from_data(null, data)
-    // }
-
     async list_objects(opts = {}) {
         /* Return an array of all objects in this category, possibly truncated or re-ordered according to `opts`. */
         return schemat.list_category(this, opts)

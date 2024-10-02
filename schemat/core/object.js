@@ -261,6 +261,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     set __record(record) {
         assert(record)
         assert(record.id === this.__id)
+        if (this.__meta.mutable) return                 // no caching of __record in a mutable object
         this.__meta.cache?.set('__record', record)      // __record is a special prop (ItemProxy.SPECIAL), so if we allow its modification the `cache` must be updated manually
     }
 
@@ -415,6 +416,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     static async from_data(id, data, opts = {}) {
         /* Create a new Item instance; `data` is a Data object, or an encoded JSON string. */
+        assert(typeof data === 'string')
         return Item.from_record(new ItemRecord(id, data), opts)
     }
 

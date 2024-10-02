@@ -244,7 +244,10 @@ export class Schemat {
         return this.register_record(record)
     }
 
-    register_record(item_record) { this.registry.set_record(item_record); return item_record }
+    register_record(item_record) {
+        this.registry.set_record(item_record)
+        return item_record
+    }
 
 
     /***  Indexes  ***/
