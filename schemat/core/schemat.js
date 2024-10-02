@@ -83,13 +83,13 @@ export class Schemat {
        loading and caching of web objects, dynamic module import, classpath management, session management etc.
      */
 
-    _db                             // client-side or bootstrap DB; regular server-side DB is taken from site.database
-    site_id                         // ID of the active Site object
+    _db                         // client-side or bootstrap DB; regular server-side DB is taken from site.database
+    site_id                     // ID of the active Site object
 
-    registry = new Registry()       // cache of web objects, records and indexes loaded from DB
-    builtin                         // a Classpath containing built-in classes and their paths
+    registry                    // cache of web objects, records and indexes loaded from DB
+    builtin                     // a Classpath containing built-in classes and their paths
 
-    is_closing = false              // true if the Schemat node is in the process of shutting down
+    is_closing = false          // true if the Schemat node is in the process of shutting down
 
 
     get db() {
@@ -141,6 +141,7 @@ export class Schemat {
         globalThis.schemat = this
         this.Item = Item                    // schemat.Item is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
+        this.registry = new Registry(this._on_evict.bind(this))
     }
 
     async boot(site_id, bootstrap_db, open_bootstrap_db = null) {
@@ -263,7 +264,7 @@ export class Schemat {
     async _purge_registry() {
         if (this.is_closing) return
         try {
-            return this.registry.purge(this._on_evict.bind(this))
+            return this.registry.purge()
         }
         finally {
             const interval = (this.site?.cache_purge_interval || 1) * 1000      // [ms]
