@@ -237,7 +237,7 @@ export class DataBlock extends Block {
         let obj = await Item.from_json(id, data, {mutable: true})
 
         // apply edits & validate the object's data and the values of individual properties
-        obj._apply_edits(...edits)
+        obj.apply_edits(...edits)
         obj.validate()                              // may raise validation exceptions
 
         let wait = obj._bump_version(data)          // increment __ver and create a Revision for the previous `data`, if needed

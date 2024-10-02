@@ -318,8 +318,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         //pending_url:  undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
 
         cache:          undefined,  // Map of properties loaded from __data, imputed or inherited, stored here for performance; ONLY present in immutable object
-        edits:          undefined,  // array of edit operations that were reflected in `local` so far, for replay on the DB
-        // local:          undefined,  // Map of properties assigned/modified locally by the caller through edit operations
+        edits:          undefined,  // array of edit operations that were reflected in `local` so far, for replay on the DB; each edit is a pair: [op, args]
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -925,12 +924,13 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     make_edit(op, args, save = false) {
         /* Perform the edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). */
-        if (!this.__meta.edits)
-            if (SERVER) throw new Error(`cannot edit ('${op}') an immutable object [${this.id}]`)
+        let {mutable, edits} = this.__meta
+        if (!mutable || !edits)
+            if (SERVER) throw new Error(`cannot apply an edit operation ('${op}') to an immutable object [${this.id}]`)
             else this._make_mutable()         // on client, an immutable object becomes mutable on the first modification attempt
 
         let edit = [op, args]
-        this._apply_edits(edit)
+        this.apply_edits(edit)
         this.__meta.edits.push(edit)
         if (save) return this.save()
     }
@@ -957,12 +957,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
 
-    edit(op, args) {
-        // print('edit:', this.__id, op)
-        // TODO SECURITY: make sure that edits don't touch special props, like __meta __self __proxy __id etc!
-        return schemat.site.service.submit_edits(this.id, [op, args])
-    }
-
     edit_insert(path, entry)        { return this.make_edit('insert', {path, ...entry}, true) }
     edit_delete(path)               { return this.make_edit('delete', {path}, true) }
     edit_update(path, entry)        { return this.make_edit('update', {path, ...entry}, true) }
@@ -978,7 +972,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
           Typically, when adding a new OP, a corresponding client method, edit_OP(), is added, too.
      ***/
 
-    _apply_edits(...edits) {
+    apply_edits(...edits) {
         /* Apply edits before saving a modified object to the DB. For server-side use only. Each `edit` is an instance of Edit. */
         for (const edit of edits) {
             let {op, args} = (edit instanceof Edit) ? edit : {op: edit[0], args: edit[1]}
