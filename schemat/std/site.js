@@ -158,12 +158,15 @@ export class Site extends Item {
            where `id` is the ID of the object to be edited, `op` is the name of the EDIT_* operation to be executed,
            and `args` is a dictionary of arguments to be passed to the operation.
          */
-        for (let edit of plain_edits) {
-            let [id, op, args] = edit
-            let data = await this.database.update(id, new Edit(op, args))
-            // schemat.refresh_record(id, data)
-            await schemat.reload(id)           // TODO: read the newest version of the object from update()'s feedback and send back to the client
-        }
+        // for (let edit of plain_edits) {
+        //     let [id, op, args] = edit
+        //     let data = await this.database.update(id, new Edit(op, args))
+        //     await schemat.reload(id)
+        // }
+        let id = plain_edits[0][0]
+        let edits = plain_edits.map(([id, op, args]) => new Edit(op, args))
+        let record = await this.database.update(id, ...edits)
+        return record.encoded()
     })
 
     static ['POST/delete_object'] = new JsonService(async function(request, id)

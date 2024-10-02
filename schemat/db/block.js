@@ -199,10 +199,7 @@ export class DataBlock extends Block {
 
         await this.put(req)                                 // save the new object and perform change propagation
 
-        let record = new DataRecord(id, data)
-        schemat.register_record(record)
-
-        return record
+        return schemat.register_record(new DataRecord(id, data))
     }
 
     _assign_id(req) {
@@ -256,9 +253,7 @@ export class DataBlock extends Block {
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
         await this.put(req)                         // save changes and perform change propagation
-        schemat.register_record(new DataRecord(id, new_data))
-
-        return new_data
+        return schemat.register_record(new DataRecord(id, new_data))
     }
 
     async delete(req) {
