@@ -528,6 +528,17 @@ export class Catalog {
 
     /***  Serialization  ***/
 
+    encode() {
+        /* Encode this catalog through JSONx, but do NOT stringify. Return a plain-objects tree that can be subsequently
+           stringified through the standard JSON.stringify(). */
+        return JSONx.encode(this.__getstate__())
+    }
+
+    dump() {
+        /* Encode & stringify this catalog through JSONx. Return a string. */
+        return JSONx.stringify(this.__getstate__())
+    }
+
     __getstate__() {
         /* Encode this Catalog's state either as an object (more compact but requires unique string keys and no annotations),
            or as an array of [key, value] tuples - some tuples may additionally contain a label and a comment.
@@ -627,11 +638,6 @@ export class Data extends Catalog {
         let data = JSONx.parse(json)
         assert(data instanceof Data, 'JSON string does not contain a Data object')
         return data
-    }
-
-    dump() {
-        /* Encode & stringify self through JSONx. Return a JSON string representing the entire contents of this Data instance. */
-        return JSONx.stringify(this.__getstate__())
     }
 
     find_references() {

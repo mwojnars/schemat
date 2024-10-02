@@ -118,7 +118,7 @@ export class DataRecord {
 
     id                          // item ID; can be undefined (new item, not yet inserted into DB)
     _data_object                // item data as a Data object decoded from _data_plain
-    _data_plain                 // item data as a plain JS object parsed form _data_json or encoded from _data_object
+    _data_plain                 // item data as a plain JS object parsed from _data_json or encoded from _data_object
     _data_json                  // item data as a JSONx-encoded and JSON-stringified string
 
 
@@ -190,6 +190,11 @@ export class DataRecord {
         else throw new Error(`invalid type of 'data'`)
         // else if (data instanceof Data) this._data_object = data
         // else assert(false, `plain data objects not accepted for DataRecord, id=${this.id}: ${data}`)
+    }
+
+    static decode({id, data}) {
+        /* Recreate a DataRecord from the plain-object result of .encoded(). */
+        return new DataRecord(id, JSON.stringify(data))
     }
 }
 

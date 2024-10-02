@@ -461,7 +461,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         try {
             record = record || await schemat.load_record(this.__id)
-            assert(record instanceof DataRecord)
+            assert(record instanceof DataRecord, record)
 
             this.__data = record.data_copy
             if (record.id !== undefined)                    // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
@@ -954,14 +954,15 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             edits.length = 0                // truncate all edits up to now, they should be already reflected in __data
             let state = this.__data.__getstate__()
             return schemat.site.service.create_item(state).then(rec => {
-                this.__id = rec.id
-                schemat.register_record(rec)
+                this.__id = schemat.register_record(DataRecord.decode(rec)).id
             })
         }
 
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
 
-        let submit = schemat.site.service.submit_edits(this.id, ...edits).then(rec => {schemat.register_record(rec)})
+        let submit = schemat.site.service.submit_edits(this.id, ...edits).then(rec => {
+            schemat.register_record(DataRecord.decode(rec))
+        })
         edits.length = 0
         return submit
     }
@@ -986,6 +987,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     EDIT_overwrite({data}) {
         /* Replace the entire set of own properties, __data, with a new Data object. */
+        assert(false, 'not used?')
         if (typeof data === 'string') data = Data.load(data)
         assert(data instanceof Data)
         this.__data = data
