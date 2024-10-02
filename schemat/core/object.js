@@ -464,7 +464,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             record = record || await schemat.load_record(this.__id)
             assert(record instanceof DataRecord)
 
-            this.__data = record.data
+            this.__data = record.data_copy
             if (record.id !== undefined)                    // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
                 this.__record = record
 

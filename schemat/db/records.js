@@ -121,6 +121,12 @@ export class DataRecord {
     _data_plain                 // item data as a plain JS object parsed form _data_json or encoded from _data_object
     _data_json                  // item data as a JSONx-encoded and JSON-stringified string
 
+
+    get data_copy() {
+        let data = JSONx.decode(JSON.parse(this._data_json))
+        return data instanceof Data ? data : Data.__setstate__(data)
+    }
+
     get data() {
         return this._data_object || this._decode_data()
     }
@@ -166,7 +172,7 @@ export class DataRecord {
     }
 
     static from_binary(bin_record /*Record*/) {
-        /* Create an DataRecord from a binary Record, where key = [id] and value is a JSONx-serialized Data object. */
+        /* Create a DataRecord from a binary Record, where key = [id] and value is a JSONx-serialized Data object. */
         assert(bin_record instanceof Record, `invalid binary record: ${bin_record}, should be a Record`)
         let json = bin_record.string_value          // plain object, JSONx-encoded Data of an item
         let key = bin_record.key                    // array of key fields, decoded
