@@ -185,7 +185,7 @@ export class AdminProcess extends BackendProcess {
                 }
             }
 
-            new_id = await ring.insert(new_id, obj.dump_data())
+            new_id = (await ring.insert(new_id, obj.dump_data())).id
             await db.delete(id)
             await this._update_references(id, new_id)
 

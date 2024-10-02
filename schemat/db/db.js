@@ -310,7 +310,7 @@ export class Database extends Item {
 
         // 1st phase: insert stubs
         for (let item of items)
-            item.__meta.provisional_id = await this.insert(empty_data)      // TODO: await all in parallel (here and below)
+            item.__meta.provisional_id = (await this.insert(empty_data)).id     // TODO: await all in parallel (here and below)
 
         // 2nd phase: update records with actual data
         for (let item of items) {

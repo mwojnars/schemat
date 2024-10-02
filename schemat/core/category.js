@@ -205,8 +205,8 @@ export class Category extends Item {
             /* Create a new item in this category based on request data. */
             let data = Data.__setstate__(data_state)
             data.set('__category', this)
-            let id = await schemat.db.insert(data)
-            let obj = await schemat.get_loaded(id)
+            let rec = await schemat.db.insert(data)
+            let obj = await schemat.get_loaded(rec.id)
             return obj.__record.encoded()
         },
     // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
