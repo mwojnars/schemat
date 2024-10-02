@@ -232,12 +232,19 @@ export class Schemat {
          */
         assert(id !== undefined)
         // this.session?.countLoaded(id)
-        let req = new DataRequest(this, 'load', {id})
+
+        let rec = this.registry.get_record(id)
+        if (rec) return rec
+
+        let req = new DataRequest(null, 'load', {id})
         let json = await this.db.select(req)
         assert(typeof json === 'string', json)
+
         let record = new ItemRecord(id, json)
-        return record
+        return this.register_record(record)
     }
+
+    register_record(item_record) { this.registry.set_record(item_record); return item_record }
 
 
     /***  Indexes  ***/

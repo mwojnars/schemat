@@ -165,11 +165,11 @@ export class ItemRecord {
         return {id: this.id, data: this.data_json}
     }
 
-    static from_binary(binary_record /*Record*/) {
+    static from_binary(bin_record /*Record*/) {
         /* Create an ItemRecord from a binary Record, where key = [id] and value is a JSONx-serialized Data object. */
-        assert(binary_record instanceof Record, `invalid binary_record: ${binary_record}, should be a Record`)
-        let json = binary_record.string_value       // plain object, JSONx-encoded Data of an item
-        let key = binary_record.key                 // array of key fields, decoded
+        assert(bin_record instanceof Record, `invalid binary record: ${bin_record}, should be a Record`)
+        let json = bin_record.string_value          // plain object, JSONx-encoded Data of an item
+        let key = bin_record.key                    // array of key fields, decoded
         assert(key.length === 1)                    // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
         let id = key[0]
         return new ItemRecord(id, json)
