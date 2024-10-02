@@ -1,7 +1,7 @@
 import {assert, print, T} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {Item} from '../core/object.js'
-import {ChangeRequest, data_schema} from "./records.js";
+import {ChangeRequest, data_schema, DataRecord} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../common/binary.js";
 import {INTEGER} from "../types/type.js";
 
@@ -197,8 +197,8 @@ export class DataBlock extends Block {
 
         req = req.make_step(this, null, {id, key, value: data})
 
-        await this.put(req)                                 // change propagation is done here inside put()
-        // schemat.register_record(obj.__record)
+        await this.put(req)                                 // save the new object and perform change propagation
+        schemat.register_record(new DataRecord(id, data))
 
         return id
     }
@@ -253,7 +253,9 @@ export class DataBlock extends Block {
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-        await this.put(req)                         // change propagation is done here inside put()
+        await this.put(req)                         // save changes and perform change propagation
+        schemat.register_record(new DataRecord(id, new_data))
+
         return new_data
     }
 
