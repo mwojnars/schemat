@@ -181,10 +181,9 @@ export class ItemRecord {
         assert(data, `missing 'data' for ItemRecord, id=${this.id}`)
 
         if (typeof data === 'string') this._data_json = data
-        else if (data instanceof Data) this._data_object = data
-        else
-            assert(false, `plain data objects not accepted for ItemRecord, id=${this.id}: ${data}`)
-            // for now, it's not needed to accept plain objects as data - this can change later
+        else throw new Error(`invalid type of 'data'`)
+        // else if (data instanceof Data) this._data_object = data
+        // else assert(false, `plain data objects not accepted for ItemRecord, id=${this.id}: ${data}`)
 
         // else {
         //     assert(JSONx.decode(data) instanceof Data, `invalid 'data' for ItemRecord, id=${id}: ${data}`)

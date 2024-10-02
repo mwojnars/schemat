@@ -256,7 +256,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     get __record() {
         this.assert_linked()
         this.assert_loaded()
-        return new ItemRecord(this.__id, this.__data)
+        return new ItemRecord(this.__id, this.__data.dump())
     }
     set __record(record) {
         assert(record)
@@ -414,10 +414,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by Item.create(). */
     }
 
-    static async from_data(id, data, opts = {}) {
-        /* Create a new Item instance; `data` is a Data object, or an encoded JSON string. */
-        assert(typeof data === 'string')
-        return Item.from_record(new ItemRecord(id, data), opts)
+    static async from_json(id, json, opts = {}) {
+        /* Create a new Item instance given an encoded JSON string with the object's content. */
+        assert(typeof json === 'string')
+        return Item.from_record(new ItemRecord(id, json), opts)
     }
 
     static async from_record(record /*ItemRecord*/, opts = {}) {
