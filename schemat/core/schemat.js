@@ -226,19 +226,23 @@ export class Schemat {
         assert(typeof json === 'string', json)
 
         let record = new DataRecord(id, json)
-        return this.register_record(record)
+        return this.register_record(record, false)
     }
 
 
     /***  Registry management  ***/
 
-    register_record(item_record) {
-        this.registry.set_record(item_record)
-        return item_record
+    register_record(record /*DataRecord*/, invalidate = true) {
+        let {id} = record
+        this.registry.set_record(record)        // from now on, `record` is considered the most recent (raw) representation of the object #id
+        if (invalidate) this.invalidate_object(id)
+        return record
     }
 
     invalidate_object(id) {
-        this.registry.evict_object(id)
+        /* Remove an (outdated) object from the registry. If a stub, or currently loading, the object is kept. */
+        let obj = this.registry.get_object(id)
+        if (obj?.is_loaded()) this._on_evict(obj) || this.registry.delete_object(id)
     }
 
     async _purge_registry() {

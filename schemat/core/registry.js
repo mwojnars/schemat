@@ -73,13 +73,9 @@ export class Registry {
         this.objects.set(obj.__id, obj)
         return obj
     }
+    delete_object(id) { return this.objects.delete(id) }
 
     *[Symbol.iterator]()    { yield* this.objects.values() }
-
-    evict_object(id) {
-        let obj = this.objects.get(id)
-        if (obj) this.on_evict?.(obj) || this.objects.delete(id)
-    }
 
     async purge() {
         /* Evict expired objects from the cache. */
