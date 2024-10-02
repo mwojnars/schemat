@@ -97,14 +97,6 @@ export class Schemat {
         return (SERVER && this.site?.database) || this._db
     }
 
-    // get root_category() {
-    //     /* The RootCategory object. Always present in cache, always fully loaded. */
-    //     let root = this.registry.get_object(ROOT_ID)
-    //     assert(root, `RootCategory not found in cache`)
-    //     assert(root.is_loaded(), `RootCategory not loaded`)
-    //     return root
-    // }
-
     get site()      { return this.registry.get_object(this.site_id) }
 
 
@@ -196,8 +188,6 @@ export class Schemat {
            URLs are awaited, classes are imported dynamically from SUN instead of a static classpath.
          */
         await this.reload(this.site_id)
-        // for (let obj of this.registry)
-        //     if (obj.__data) await this.reload(obj)
 
         // schedule periodical cache eviction; the interval is taken from site.cache_purge_interval and may change over time
         if (SERVER) setTimeout(() => this._purge_registry(), 1000)
