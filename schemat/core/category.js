@@ -205,33 +205,32 @@ export class Category extends Item {
             /* Create a new item in this category based on request data. */
             let data = Data.__setstate__(data_state)
             data.set('__category', this)
-            let rec = await schemat.db.insert(data)
-            let obj = await schemat.get_loaded(rec.id)
-            return obj.__record.encoded()
+            let record = await schemat.db.insert(data)
+            return record.encoded()
         },
     // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
     )
 
-    POST_create_item() { return new Service({
-        client: async (url, ...args) => {},
-        encode: (...args) => {},
-        submit: (...args) => {},
-        accept: (...args) => {},
-        regret: (...args) => {},   //error catch expose reject fail decline abort crash finish cancel giveup refuse discard
-
-        handle: (request) => {},
-        decode: (request) => {},
-        server: async (...args) => {
-            /* Create a new item in this category based on request data. */
-            let data = Data.__setstate__(data_state)
-            data.set('__category', this)
-            let id = await schemat.db.insert(data)
-            let obj = await schemat.get_loaded(id)
-            return obj.__record.encoded()
-        },
-        answer: (...args) => {},   //result()
-        reject: (...args) => {},
-    })}
+    // POST_create_item() { return new Service({
+    //     client: async (url, ...args) => {},
+    //     encode: (...args) => {},
+    //     submit: (...args) => {},
+    //     accept: (...args) => {},
+    //     regret: (...args) => {},   //error catch expose reject fail decline abort crash finish cancel giveup refuse discard
+    //
+    //     handle: (request) => {},
+    //     decode: (request) => {},
+    //     server: async (...args) => {
+    //         /* Create a new item in this category based on request data. */
+    //         let data = Data.__setstate__(data_state)
+    //         data.set('__category', this)
+    //         let id = await schemat.db.insert(data)
+    //         let obj = await schemat.get_loaded(id)
+    //         return obj.__record.encoded()
+    //     },
+    //     answer: (...args) => {},   //result()
+    //     reject: (...args) => {},
+    // })}
 
 
     /***  Actions  ***/
