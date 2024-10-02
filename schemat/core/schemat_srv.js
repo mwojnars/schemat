@@ -28,17 +28,17 @@ export class ServerSchemat extends Schemat {
         // this.loader = new Loader(import.meta.url)
     }
 
-    async _reset_class(ServerSchemat) {
-        /* Re-import the class of this Schemat object using dynamic imports from the SUN path; in this way,
-           all other imports in the dependant modules will be interpreted as SUN imports, as well.
-           Reinitialize `classpath` so that builtin classes are also imported from the SUN namespace.
-         */
-        // let {ServerSchemat} = await this.import('/$/local/schemat/core/schemat_srv.js')
-        T.setClass(this, ServerSchemat)
-        await this._init_classpath()
-        // await this.reload(this.site_id)
-        print('ServerSchemat class reloaded')
-    }
+    // async _reset_class(ServerSchemat) {
+    //     /* Re-import the class of this Schemat object using dynamic imports from the SUN path; in this way,
+    //        all other imports in the dependant modules will be interpreted as SUN imports, as well.
+    //        Reinitialize `classpath` so that builtin classes are also imported from the SUN namespace.
+    //      */
+    //     // let {ServerSchemat} = await this.import('/$/local/schemat/core/schemat_srv.js')
+    //     T.setClass(this, ServerSchemat)
+    //     await this._init_classpath()
+    //     // await this.reload(this.site_id)
+    //     print('ServerSchemat class reloaded')
+    // }
 
 
     /***  Events  ***/

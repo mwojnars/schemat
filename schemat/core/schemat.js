@@ -154,11 +154,15 @@ export class Schemat {
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         this.site_id = site_id
 
-        await this._init_site()
-        // await this._reset_class()
+        await this.reload(this.site_id)
         assert(this.site)
 
         await this.site.load_globals()
+
+        // schedule periodical cache eviction; the interval is taken from site.cache_purge_interval and may change over time
+        if (SERVER) setTimeout(() => this._purge_registry(), 1000)
+
+        // await this._reset_class()
     }
 
     async _init_classpath() {
@@ -180,19 +184,6 @@ export class Schemat {
         await builtin.fetch("../types/type.js", {accept})
         await builtin.fetch("../types/catalog.js", {accept})
     }
-
-    async _reset_class() { /* on server only */ }
-
-    async _init_site() {
-        /* Load the `site` object and reload the existing (system) objects to make sure that they are fully activated:
-           URLs are awaited, classes are imported dynamically from SUN instead of a static classpath.
-         */
-        await this.reload(this.site_id)
-
-        // schedule periodical cache eviction; the interval is taken from site.cache_purge_interval and may change over time
-        if (SERVER) setTimeout(() => this._purge_registry(), 1000)
-    }
-
 
 
     /***  Access to web objects  ***/
