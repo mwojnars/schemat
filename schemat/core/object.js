@@ -912,7 +912,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     // }
 
 
-    /***  Client-side edit methods. Return a Promise.  ***/
+    /***  Object editing  ***/
 
     _make_mutable() {
         /* Make itself mutable. This removes the property cache, so read access becomes less efficient. Only allowed on client. */
@@ -933,6 +933,16 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         this.apply_edits(edit)
         this.__meta.edits.push(edit)
         if (save) return this.save()
+    }
+
+    apply_edits(...edits) {
+        /* Apply edits before saving a modified object to the DB. For server-side use only. Each `edit` is an instance of Edit. */
+        for (const edit of edits) {
+            let {op, args} = (edit instanceof Edit) ? edit : {op: edit[0], args: edit[1]}
+            const method = `EDIT_${op}`
+            if (!this[method]) throw new Error(`object does not support edit operation: '${op}'`)
+            this[method](structuredClone(args))     // `args` are deep-copied for safety, in case they get modified during the edit
+        }
     }
 
     async save() {
@@ -957,6 +967,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
 
+    // specialized edits for UI ...
+
     edit_insert(path, entry)        { return this.make_edit('insert', {path, ...entry}, true) }
     edit_delete(path)               { return this.make_edit('delete', {path}, true) }
     edit_update(path, entry)        { return this.make_edit('update', {path, ...entry}, true) }
@@ -971,16 +983,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
           The names of methods (the {op} suffix) must match the names of operations passed by callers to .edit().
           Typically, when adding a new OP, a corresponding client method, edit_OP(), is added, too.
      ***/
-
-    apply_edits(...edits) {
-        /* Apply edits before saving a modified object to the DB. For server-side use only. Each `edit` is an instance of Edit. */
-        for (const edit of edits) {
-            let {op, args} = (edit instanceof Edit) ? edit : {op: edit[0], args: edit[1]}
-            const method = `EDIT_${op}`
-            if (!this[method]) throw new Error(`object does not support edit operation: '${op}'`)
-            this[method](structuredClone(args))     // `args` are deep-copied for safety, in case they get modified during the edit
-        }
-    }
 
     EDIT_overwrite({data}) {
         /* Replace the entire set of own properties, __data, with a new Data object. */
