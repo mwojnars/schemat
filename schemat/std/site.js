@@ -4,6 +4,7 @@ import {Request} from '../web/request.js'
 import {Item, Edit} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonService} from "../web/services.js";
+import {Data} from "../core/data.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -151,6 +152,16 @@ export class Site extends Item {
 
 
     /***  Endpoints  ***/
+
+    static ['POST/create_item'] = new JsonService(
+        async function(request, data_state) {
+            /* Create a new object with provided __data. */
+            let data = Data.__setstate__(data_state)
+            // data.set('__category', this)
+            let record = await schemat.db.insert(data)
+            return record.encoded()
+        },
+    )
 
     static ['POST/submit_edits'] = new JsonService(async function(request, id, ...plain_edits)
     {

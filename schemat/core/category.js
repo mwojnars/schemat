@@ -200,16 +200,16 @@ export class Category extends Item {
         }),
     })
 
-    static ['POST/create_item'] = new JsonService(
-        async function(request, data_state) {
-            /* Create a new item in this category based on request data. */
-            let data = Data.__setstate__(data_state)
-            data.set('__category', this)
-            let record = await schemat.db.insert(data)
-            return record.encoded()
-        },
-    // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
-    )
+    // static ['POST/create_item'] = new JsonService(
+    //     async function(request, data_state) {
+    //         /* Create a new item in this category based on request data. */
+    //         let data = Data.__setstate__(data_state)
+    //         data.set('__category', this)
+    //         let record = await schemat.db.insert(data)
+    //         return record.encoded()
+    //     },
+    // // }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
+    // )
 
     // POST_create_item() { return new Service({
     //     client: async (url, ...args) => {},
@@ -236,7 +236,6 @@ export class Category extends Item {
     /***  Actions  ***/
 
     list_items()            { return this.service.read('list_items') }
-    create_item(data)       { return this.service.create_item(data) }
 }
 
 

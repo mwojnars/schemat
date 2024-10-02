@@ -346,7 +346,7 @@ export class CategoryRecordView extends ItemRecordView {
             // let name = input.current.value
             // let json = JSON.stringify(Array.from(fdata))
 
-            let data = Object.fromEntries([...fdata])
+            let data = Object.fromEntries([...fdata, ['__category', this]])
             let obj = await schemat.client_insert(this, data)
             await obj.load()                                // initialize the object's URL
 

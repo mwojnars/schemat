@@ -952,11 +952,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         if (this.is_newborn()) {
             edits.length = 0                // truncate all edits up to now, they should be already reflected in __data
-            return this.__category?.service.create_item(this.__data).then(rec => {
+            return schemat.site.service.create_item(this.__data).then(rec => {
                 this.__id = rec.id
                 schemat.register_record(rec)
             })
-            //schemat.site.service.create_item(this.__data)
         }
 
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
@@ -967,7 +966,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
 
-    // specialized edits for UI ...
+    // specialized edits for UI with immediate commit ...
 
     edit_insert(path, entry)        { return this.make_edit('insert', {path, ...entry}, true) }
     edit_delete(path)               { return this.make_edit('delete', {path}, true) }
