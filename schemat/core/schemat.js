@@ -84,7 +84,6 @@ export class Schemat {
      */
 
     _db                         // client-side or bootstrap DB; regular server-side DB is taken from site.database
-    // _site                       // the active Site object
     site_id                     // ID of the active Site object
 
     registry                    // cache of web objects, records and indexes loaded from DB
@@ -106,15 +105,7 @@ export class Schemat {
     //     return root
     // }
 
-    // get site()      { return this._site || this.registry.get_object(this.site_id) }
     get site()      { return this.registry.get_object(this.site_id) }
-
-    // get site() {
-    //     let current = this.registry.get_object(this.site_id)
-    //     if (!current?.is_loaded()) current = null
-    //     if (!current && this._site?.is_loaded()) this.reload(this.site_id)         // no need to await
-    //     return this._site = current || this._site
-    // }
 
 
     // web objects currently being loaded/initialized with a call to .load()
@@ -282,10 +273,8 @@ export class Schemat {
 
     _on_evict(obj) {
         /* Special handling for system objects during registry purge. */
-        // if (obj.__id === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is (re)loaded, even after eviction
         if (obj.__id === this.site_id) {
-            // return this.reload(this.site)                               // ...same for the `site` object
-            this.reload(this.site_id)              // scheduling an async reload instead of eviction so that the site object is *always* present in registry
+            this.reload(this.site_id)           // scheduling an async reload *instead* of eviction so that the site object is *always* present in registry
             return true
         }
     }
