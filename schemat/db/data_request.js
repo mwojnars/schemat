@@ -95,7 +95,7 @@ export class DataRequest {
     }
 
     forward_down()              { return this.current_db.forward_down(this) }
-    forward_save()              { return this.current_db.save(this) }
+    forward_save()              { return this.current_db.save_update(this) }
 
     // assert_valid_id(msg)        { return this.current_ring.assert_valid_id(this.args?.id, msg || `item ID is outside of the valid range for the ring`) }
 

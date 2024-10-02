@@ -522,7 +522,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (path) return schemat.import(path)                   // the path can be missing, for no-category objects
     }
 
-    async recreate() {
+    async reload() {
         /* Create a new instance of this object using the most recent version of this object's content
            as available in the registry or downloaded from the DB. */
     }
@@ -938,19 +938,22 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     async save() {
         /* Send __meta.edits (for an existing object), or __data (for a newly created object) to DB. */
         this.assert_loaded_or_newborn()
-        if (this.is_newborn())
-            return schemat.site.service.create_item(this.__data).then(record => {
-                // this.__meta.edits = []
-                // schemat.register_record(record)
-            })
-            //this.__category?.service.create_item(this.__data)
-
         let edits = this.__meta.edits
+
+        if (this.is_newborn()) {
+            edits.length = 0                // truncate all edits up to now, they should be already reflected in __data
+            return this.__category?.service.create_item(this.__data).then(record => {
+                this.__id = record.id
+                schemat.register_record(record)
+            })
+            //schemat.site.service.create_item(this.__data)
+        }
+
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
 
-        return schemat.site.service.submit_edits(...edits).then(() => {
-            edits.length = 0
-        })
+        let submit = schemat.site.service.submit_edits(...edits)
+        edits.length = 0
+        return submit
     }
 
 

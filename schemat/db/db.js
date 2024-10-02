@@ -372,8 +372,8 @@ export class Database extends Item {
         return req.error_id_not_found()
     }
 
-    save(req) {
-        /* Save an item update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
+    save_update(req) {
+        /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
            Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
            No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
          */
