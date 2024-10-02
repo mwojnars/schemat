@@ -77,7 +77,8 @@ export class Registry {
     *[Symbol.iterator]()    { yield* this.objects.values() }
 
     evict_object(id) {
-        this.objects.delete(id)
+        let obj = this.objects.get(id)
+        if (obj) this.on_evict?.(obj) || this.objects.delete(id)
     }
 
     async purge() {
