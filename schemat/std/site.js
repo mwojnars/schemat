@@ -152,19 +152,13 @@ export class Site extends Item {
 
     /***  Endpoints  ***/
 
-    static ['POST/submit_edits'] = new JsonService(async function(request, ...plain_edits)
+    static ['POST/submit_edits'] = new JsonService(async function(request, id, ...plain_edits)
     {
         /* Submit a list of object edits to the DB. Each plain edit is a 3-element array: [id, op, args],
            where `id` is the ID of the object to be edited, `op` is the name of the EDIT_* operation to be executed,
            and `args` is a dictionary of arguments to be passed to the operation.
          */
-        // for (let edit of plain_edits) {
-        //     let [id, op, args] = edit
-        //     let data = await this.database.update(id, new Edit(op, args))
-        //     await schemat.reload(id)
-        // }
-        let id = plain_edits[0][0]
-        let edits = plain_edits.map(([id, op, args]) => new Edit(op, args))
+        let edits = plain_edits.map(([op, args]) => new Edit(op, args))
         let record = await this.database.update(id, ...edits)
         return record.encoded()
     })

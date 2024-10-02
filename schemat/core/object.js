@@ -929,7 +929,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             if (SERVER) throw new Error(`cannot edit ('${op}') an immutable object [${this.id}]`)
             else this._make_mutable()         // on client, an immutable object becomes mutable on the first modification attempt
 
-        let edit = [this.__id, op, args]
+        let edit = [op, args]
         this._apply_edits(edit)
         this.__meta.edits.push(edit)
         if (save) return this.save()
@@ -951,7 +951,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
 
-        let submit = schemat.site.service.submit_edits(...edits).then(rec => {schemat.register_record(rec)})
+        let submit = schemat.site.service.submit_edits(this.id, ...edits).then(rec => {schemat.register_record(rec)})
         edits.length = 0
         return submit
     }
@@ -960,8 +960,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     edit(op, args) {
         // print('edit:', this.__id, op)
         // TODO SECURITY: make sure that edits don't touch special props, like __meta __self __proxy __id etc!
-        let edit = [this.__id, op, args]
-        return schemat.site.service.submit_edits(edit)
+        return schemat.site.service.submit_edits(this.id, [op, args])
     }
 
     edit_insert(path, entry)        { return this.make_edit('insert', {path, ...entry}, true) }
@@ -982,7 +981,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _apply_edits(...edits) {
         /* Apply edits before saving a modified object to the DB. For server-side use only. Each `edit` is an instance of Edit. */
         for (const edit of edits) {
-            let {op, args} = (edit instanceof Edit) ? edit : {op: edit[1], args: edit[2]}
+            let {op, args} = (edit instanceof Edit) ? edit : {op: edit[0], args: edit[1]}
             const method = `EDIT_${op}`
             if (!this[method]) throw new Error(`object does not support edit operation: '${op}'`)
             this[method](structuredClone(args))     // `args` are deep-copied for safety, in case they get modified during the edit
