@@ -28,7 +28,6 @@ export class ObjectsCache extends Map {
             if (expire_at > now) continue
 
             let evicted = on_evict?.(obj)
-            if (T.isPromise(evicted)) evicted = await evicted       // TODO: add to `pending` instead of awaiting here
             if (!evicted) this.delete(id)
             // else print(`custom eviction done for: [${id}]`)
             count++

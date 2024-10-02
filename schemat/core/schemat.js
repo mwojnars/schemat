@@ -84,7 +84,7 @@ export class Schemat {
      */
 
     _db                         // client-side or bootstrap DB; regular server-side DB is taken from site.database
-    _site
+    // _site                       // the active Site object
     site_id                     // ID of the active Site object
 
     registry                    // cache of web objects, records and indexes loaded from DB
@@ -106,7 +106,15 @@ export class Schemat {
     //     return root
     // }
 
-    get site()      { return this._site || this.registry.get_object(this.site_id) }
+    // get site()      { return this._site || this.registry.get_object(this.site_id) }
+    get site()      { return this.registry.get_object(this.site_id) }
+
+    // get site() {
+    //     let current = this.registry.get_object(this.site_id)
+    //     if (!current?.is_loaded()) current = null
+    //     if (!current && this._site?.is_loaded()) this.reload(this.site_id)         // no need to await
+    //     return this._site = current || this._site
+    // }
 
 
     // web objects currently being loaded/initialized with a call to .load()
@@ -196,7 +204,7 @@ export class Schemat {
         /* Load the `site` object and reload the existing (system) objects to make sure that they are fully activated:
            URLs are awaited, classes are imported dynamically from SUN instead of a static classpath.
          */
-        this._site = await this.reload(this.site_id)
+        await this.reload(this.site_id)
         // for (let obj of this.registry)
         //     if (obj.__data) await this.reload(obj)
 
@@ -223,9 +231,8 @@ export class Schemat {
     async get_loaded(id)     { return this.get_object(id).load() }
 
     async reload(obj_or_id) {
-        /* Create a new instance of the object using the most recent content for this ID as available in the registry.
-           load its data from DB, and when it is fully initialized
-           replace the existing instance in the registry. Return the new object.
+        /* Create a new instance of the object using the most recent content for this ID as available in the registry;
+           load its data from DB, and when it is fully initialized replace the existing instance in the registry. Return the new object.
          */
         let id  = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id
         let obj = Item.create_stub(id)
@@ -274,11 +281,13 @@ export class Schemat {
     }
 
     _on_evict(obj) {
-        /* Special handling for the root category and `site` object during registry purge. */
+        /* Special handling for system objects during registry purge. */
         // if (obj.__id === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is (re)loaded, even after eviction
-        if (obj.__id === this.site_id)
-            this.reload(this.site_id).then(site => this._site = site)
+        if (obj.__id === this.site_id) {
             // return this.reload(this.site)                               // ...same for the `site` object
+            this.reload(this.site_id)              // scheduling an async reload instead of eviction so that the site object is *always* present in registry
+            return true
+        }
     }
 
 
