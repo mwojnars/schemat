@@ -97,13 +97,13 @@ export class Schemat {
         return (SERVER && this.site?.database) || this._db
     }
 
-    get root_category() {
-        /* The RootCategory object. Always present in cache, always fully loaded. */
-        let root = this.registry.get_object(ROOT_ID)
-        assert(root, `RootCategory not found in cache`)
-        assert(root.is_loaded(), `RootCategory not loaded`)
-        return root
-    }
+    // get root_category() {
+    //     /* The RootCategory object. Always present in cache, always fully loaded. */
+    //     let root = this.registry.get_object(ROOT_ID)
+    //     assert(root, `RootCategory not found in cache`)
+    //     assert(root.is_loaded(), `RootCategory not loaded`)
+    //     return root
+    // }
 
     get site()      { return this.registry.get_object(this.site_id) }
 
@@ -274,7 +274,7 @@ export class Schemat {
 
     _on_evict(obj) {
         /* Special handling for the root category and `site` object during registry purge. */
-        if (obj.__id === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is (re)loaded, even after eviction
+        // if (obj.__id === ROOT_ID) return this.reload(ROOT_ID)           // make sure that the root category object is present at all times and is (re)loaded, even after eviction
         if (obj.__id === this.site.__id)
             return this.reload(this.site)                               // ...same for the `site` object
     }

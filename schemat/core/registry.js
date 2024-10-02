@@ -77,6 +77,10 @@ export class Registry {
 
     *[Symbol.iterator]()    { yield* this.objects.values() }
 
+    evict_object(id) {
+        this.objects.delete(id)
+    }
+
     async purge() {
         /* Evict expired objects from the cache. */
         if (this._purging_now) return
