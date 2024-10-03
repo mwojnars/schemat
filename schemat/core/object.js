@@ -216,9 +216,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     __data                  own properties of this object in raw form (before imputation etc.), as a Data object created during .load()
 
-    //__record                DataRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
-    //                        undefined in a newborn item; immutable after the first assignment
-
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
                             that inherits (like from prototypes) from all __category$ categories listed in this object
 
@@ -249,18 +246,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     get id() { return this.__id }           // alias for __id
-
-    // get __record() {
-    //     this.assert_linked()
-    //     this.assert_loaded()
-    //     return new DataRecord(this.__id, this.__data.dump())
-    // }
-    // set __record(record) {
-    //     assert(record)
-    //     assert(record.id === this.__id)
-    //     if (this.__meta.mutable) return                 // no caching of __record in a mutable object
-    //     this.__meta.cache?.set('__record', record)      // __record is a special prop (ItemProxy.SPECIAL), so if we allow its modification the `cache` must be updated manually
-    // }
 
     get __base() {
         let cats = this.__category$
@@ -461,8 +446,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             assert(record instanceof DataRecord, record)
 
             this.__data = record.data_copy
-            // if (record.id !== undefined)                    // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
-            //     this.__record = record
 
             let proto = this._load_prototypes()             // load prototypes
             if (proto instanceof Promise) await proto
