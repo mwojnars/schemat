@@ -402,15 +402,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return obj.load({data_json: json})
     }
 
-    // static async from_record(record /*DataRecord*/, opts = {}) {
-    //     /* Create a new item instance: either a newborn one (intended for insertion to DB, no ID yet);
-    //        or an instance loaded from DB and filled out with data from `record` (an DataRecord).
-    //        In any case, the item returned is *booted* (this.__data is initialized) and activated (__init__() was called).
-    //      */
-    //     let item = Item.create_stub(record.id, opts)
-    //     return item.load({record})
-    // }
-
     _get_write_id() {
         /* Either __id or __meta.provisional_id. */
         return this.__id !== undefined ? this.__id : this.__meta.provisional_id
@@ -439,10 +430,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         schemat.before_data_loading(this)
 
         try {
-            // record = record || await schemat.load_record(this.__id)
-            // assert(record instanceof DataRecord, record)
-            // this.__data = record.data_copy
-
             data_json = data_json || (await schemat.load_record(this.id)).data_json
             this.__data = Data.load(data_json)
 

@@ -539,6 +539,11 @@ export class Catalog {
         return JSONx.stringify(this.__getstate__())
     }
 
+    static load(json) {
+        let catalog = JSONx.parse(json)
+        return catalog instanceof this ? catalog : this.__setstate__(catalog)
+    }
+
     __getstate__() {
         /* Encode this Catalog's state either as an object (more compact but requires unique string keys and no annotations),
            or as an array of [key, value] tuples - some tuples may additionally contain a label and a comment.
@@ -632,13 +637,6 @@ export class Data extends Catalog {
 
         // print(`from_object(${obj}) =>`, entries)
         return new Data(Object.fromEntries(entries))
-    }
-
-    static load(json) {
-        let data = JSONx.parse(json)
-        return data instanceof Data ? data : Data.__setstate__(data)
-        // assert(data instanceof Data, 'JSON string does not contain a Data object')
-        // return data
     }
 
     find_references() {
