@@ -157,7 +157,7 @@ export class Site extends Item {
     static ['POST/create_item'] = new JsonService(
         async function(request, data_state) {
             /* Create a new object with __data as provided; `data_state` is the result of Catalog.__getstate__(). */
-            let record = await schemat.db.insert(JSONx.stringify(data_state))
+            let record = await this.database.insert(JSONx.stringify(data_state))
             return record.encoded()
         },
     )

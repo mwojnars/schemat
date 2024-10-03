@@ -224,9 +224,6 @@ export class Schemat {
         let req = new DataRequest(null, 'load', {id})
         data = await this.db.select(req)
         return this.register_data(id, data, false)
-
-        // let record = new DataRecord(id, data)
-        // return this.register_record(record, false).data_json
     }
 
 
@@ -240,7 +237,7 @@ export class Schemat {
         let record = new DataRecord(id, data)
         this.registry.set_record(record)
         if (invalidate) this.invalidate_object(id)
-        return record.data_json
+        return data
     }
 
     register_record(record /*DataRecord*/, invalidate = true) {
