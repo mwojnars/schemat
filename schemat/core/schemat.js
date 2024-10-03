@@ -242,9 +242,11 @@ export class Schemat {
 
     register_record(record /*DataRecord or {id,data}*/, invalidate = true) {
         /* Keep `record` as the most up-to-date (raw) representation of the corresponding object; to be used on the next object (re)load. */
-        assert(record instanceof DataRecord)
-        let {id} = record
-        this.registry.set_record(record.id, record.data_json)
+        let id, data
+        if (record instanceof DataRecord) ({id, data_json: data} = record)
+        else ({id, data} = record)
+
+        this.registry.set_record(id, data)
         if (invalidate) this.invalidate_object(id)
         return record
     }
