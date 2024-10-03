@@ -9,11 +9,11 @@ import {Data} from "../core/data.js";
 export class MessageEncoder {
     /* Encoder for an input/output message transmitted between client & server of a service. */
 
-    encode(...elements) {
-        /* Convert message element(s) to a string that will be passed to the recipient. */
+    encode(...args) {
+        /* Convert argument(s) of client-side call to a message (typically, a string) that will be passed to the recipient. */
     }
     decode(message) {
-        /* Convert encoded message (string) back to an array of [...elements]. */
+        /* Convert encoded message (string) back to an array of [...arguments] for the server. */
     }
 
     encode_error(error) {
@@ -73,8 +73,8 @@ export class Service {
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                         // like a method of the "target"; `request` is a Request, or {} if called directly on the server
 
-    in_message          // MessageEncoder for input messages (client > server)
-    out_message         // MessageEncoder for output messages (server > client)
+    input               // MessageEncoder for input messages (client > server)
+    output              // MessageEncoder for output messages (server > client)
 
     opts = {}           // configuration options
     static opts = {}    // default values of configuration options
@@ -87,9 +87,9 @@ export class Service {
         this.service_function = service_function
         this.opts = {...this.constructor.opts, ...opts}
 
-        let {in_message, out_message} = this.opts
-        this.in_message = T.isClass(in_message) ? new in_message() : in_message
-        this.out_message = T.isClass(out_message) ? new out_message() : out_message
+        let {input, output} = this.opts
+        this.input = T.isClass(input) ? new input() : input
+        this.output = T.isClass(output) ? new output() : output
     }
 
     bindAt(endpoint) { this.endpoint = endpoint }
@@ -205,9 +205,9 @@ export class JsonService extends HttpService {
         if (args !== undefined) {
             if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
 
-            if (this.in_message) {
-                // print('encoding via in_message:', this.in_message)
-                let msg = this.in_message.encode(...args)
+            if (this.input) {
+                // print('encoding via input:', this.input)
+                let msg = this.input.encode(...args)
                 if (typeof msg !== 'string') msg = JSON.stringify(msg)
                 params.body = msg
             }
@@ -228,10 +228,10 @@ export class JsonService extends HttpService {
         let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
         if (this.opts.encodeArgs) args = JSONx.decode(args)
 
-        if (this.in_message) {
-            // print('decoding via in_message:', this.in_message)
+        if (this.input) {
+            // print('decoding via input:', this.input)
             assert(typeof body === 'string')
-            args = this.in_message.decode(body)
+            args = this.input.decode(body)
         }
 
         if (!T.isArray(args)) throw new Error("incorrect format of arguments in the web request")
