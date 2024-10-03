@@ -6,8 +6,8 @@ import {Data} from "../core/data.js";
 
 /**********************************************************************************************************************/
 
-export class Message {
-    /* Type definition for an input/output message transmitted between client & server endpoints of a service. */
+export class MessageEncoder {
+    /* Encoder for an input/output message transmitted between client & server of a service. */
 
     encode(...elements) {
         /* Convert message element(s) to a string that will be passed to the recipient. */
@@ -24,7 +24,7 @@ export class Message {
     }
 }
 
-export class mData extends Message {
+export class mData extends MessageEncoder {
     /* Encoding/decoding of a Data instance. */
 
     encode(data) {   // ...args
@@ -73,8 +73,8 @@ export class Service {
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                         // like a method of the "target"; `request` is a Request, or {} if called directly on the server
 
-    in_message          // type of input message (client > server), as an instance of Message
-    out_message         // type of output message (server > client), as an instance of Message
+    in_message          // MessageEncoder for input messages (client > server)
+    out_message         // MessageEncoder for output messages (server > client)
 
     opts = {}           // configuration options
     static opts = {}    // default values of configuration options
@@ -100,13 +100,6 @@ export class Service {
         if (parts.length !== 2) throw new Error(`incorrect endpoint format: ${this.endpoint}`)
         return parts
     }
-
-    // merge(service) {
-    //     /* Create a Service that combines this one and `service`. By default, the new `service` is returned,
-    //        so redefining a service in an API means *overriding* the previous one with a new one (no merging).
-    //      */
-    //     return service
-    // }
 
     // the methods below may return a Promise or be declared as async in subclasses...
 
