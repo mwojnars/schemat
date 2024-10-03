@@ -929,8 +929,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         if (this.is_newborn()) {
             edits.length = 0                // truncate all edits up to now, they should be already reflected in __data
-            let state = this.__data.__getstate__()
-            return schemat.site.service.create_item(state).then(rec => {
+            // let state = this.__data.__getstate__()
+            return schemat.site.service.create_item(this.__data).then(rec => {
                 this.__id = schemat.register_record(DataRecord.decode(rec)).id
             })
         }

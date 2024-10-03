@@ -3,7 +3,7 @@ import {UrlPathNotFound} from "../common/errors.js"
 import {Request} from '../web/request.js'
 import {Item, Edit} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
-import {JsonService} from "../web/services.js";
+import {JsonService, mData} from "../web/services.js";
 import {Data} from "../core/data.js";
 import {JSONx} from "../core/jsonx.js";
 
@@ -161,6 +161,7 @@ export class Site extends Item {
             let record = await this.database.insert(JSONx.stringify(data_state))
             return record.encoded()
         },
+        {in_message: new mData()}
     )
 
     static ['POST/submit_edits'] = new JsonService(async function(request, id, ...plain_edits)

@@ -13,7 +13,7 @@ export class Message {
         /* Convert message element(s) to a string that will be passed to the recipient. */
     }
     decode(message) {
-        /* Convert encoded message (string) back to an array of elements. */
+        /* Convert encoded message (string) back to an array of [...elements]. */
     }
 
     encode_error(error) {
@@ -33,7 +33,7 @@ export class mData extends Message {
     }
     decode(message) {
         let data = JSONx.parse(message)
-        return data instanceof Data ? data : Data.__setstate__(data)
+        return [data instanceof Data ? data : Data.__setstate__(data)]
     }
 }
 
@@ -73,6 +73,9 @@ export class Service {
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                         // like a method of the "target"; `request` is a Request, or {} if called directly on the server
 
+    in_message          // type of input message (client > server), as an instance of Message
+    out_message         // type of output message (server > client), as an instance of Message
+
     opts = {}           // configuration options
     static opts = {}    // default values of configuration options
 
@@ -83,6 +86,10 @@ export class Service {
     constructor(service_function = null, opts = {}) {
         this.service_function = service_function
         this.opts = {...this.constructor.opts, ...opts}
+
+        let {in_message, out_message} = this.opts
+        this.in_message = in_message
+        this.out_message = out_message
     }
 
     bindAt(endpoint) { this.endpoint = endpoint }
@@ -204,8 +211,17 @@ export class JsonService extends HttpService {
         let params = {method, headers: {}}
         if (args !== undefined) {
             if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
-            if (this.opts.encodeArgs) args = JSONx.encode(args)
-            params.body = JSON.stringify(args)
+
+            if (this.in_message) {
+                // print('encoding via in_message:', this.in_message)
+                let msg = this.in_message.encode(...args)
+                if (typeof msg !== 'string') msg = JSON.stringify(msg)
+                params.body = msg
+            }
+            else {
+                if (this.opts.encodeArgs) args = JSONx.encode(args)
+                params.body = JSON.stringify(args)
+            }
         }
         return [url, params]
     }
@@ -217,9 +233,15 @@ export class JsonService extends HttpService {
 
         // the arguments may have already been JSON-parsed by middleware if mimetype=json was set in the request; it can also be {}
         let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
+        if (this.opts.encodeArgs) args = JSONx.decode(args)
+
+        if (this.in_message) {
+            // print('decoding via in_message:', this.in_message)
+            assert(typeof body === 'string')
+            args = this.in_message.decode(body)
+        }
 
         if (!T.isArray(args)) throw new Error("incorrect format of arguments in the web request")
-        if (this.opts.encodeArgs) args = JSONx.decode(args)
         return args
     }
 
