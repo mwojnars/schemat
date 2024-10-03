@@ -235,16 +235,16 @@ export class Schemat {
          */
         assert(typeof data === 'string', data)
         let record = new DataRecord(id, data)
-        this.registry.set_record(record)
+        this.registry.set_record(record.id, record.data_json)
         if (invalidate) this.invalidate_object(id)
         return data
     }
 
-    register_record(record /*DataRecord*/, invalidate = true) {
+    register_record(record /*DataRecord or {id,data}*/, invalidate = true) {
         /* Keep `record` as the most up-to-date (raw) representation of the corresponding object; to be used on the next object (re)load. */
         assert(record instanceof DataRecord)
         let {id} = record
-        this.registry.set_record(record)
+        this.registry.set_record(record.id, record.data_json)
         if (invalidate) this.invalidate_object(id)
         return record
     }

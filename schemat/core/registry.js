@@ -62,8 +62,8 @@ export class Registry {
         this.on_evict = on_evict
     }
 
-    get_record(id)  { return this.records.get(id) } //let json = this.records.get(id); if (json) return new DataRecord(id, json) }
-    set_record(rec) { this.records.set(rec.id, rec.data_json); return rec }
+    get_record(id)          { return this.records.get(id) } //let json = this.records.get(id); if (json) return new DataRecord(id, json) }
+    set_record(id, data)    { assert(typeof data === 'string'); this.records.set(id, data) }
 
     // get_record(id)  { return this.records.get(id) }
     // set_record(rec) { this.records.set(rec.id, rec); return rec }
