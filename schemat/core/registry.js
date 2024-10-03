@@ -1,4 +1,5 @@
 import {T, assert, print} from "../common/utils.js";
+import {DataRecord} from "../db/records.js";
 // import BTree from 'sorted-btree'
 
 
@@ -51,7 +52,7 @@ export class ObjectsCache extends Map {
 export class Registry {
     /* Process-local cache of web objects, records and indexes loaded from DB, as well as dynamically loaded JS modules. */
 
-    records = new Map()                 // cache of DataRecord instances; evicted en masse on every purge
+    records = new Map()                 // cache of JSONx-stringified object's data, {id: data_json}; evicted en masse on every purge
     objects = new ObjectsCache()        // cache of web objects; each object has its individual eviction period and time limit
 
     _purging_now = false                // if the previous purge is still in progress, a new one is abandoned
@@ -61,8 +62,11 @@ export class Registry {
         this.on_evict = on_evict
     }
 
-    get_record(id)  { return this.records.get(id) }
-    set_record(rec) { this.records.set(rec.id, rec); return rec }
+    get_record(id)  { let data_json = this.records.get(id); if (data_json) return new DataRecord(id, data_json) }
+    set_record(rec) { this.records.set(rec.id, rec.data_json); return rec }
+
+    // get_record(id)  { return this.records.get(id) }
+    // set_record(rec) { this.records.set(rec.id, rec); return rec }
 
     get_object(id)  { return this.objects.get(id) }
 
