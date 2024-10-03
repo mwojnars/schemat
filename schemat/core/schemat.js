@@ -223,14 +223,25 @@ export class Schemat {
 
         let req = new DataRequest(null, 'load', {id})
         data = await this.db.select(req)
-        assert(typeof data === 'string', data)
+        return this.register_data(id, data, false)
 
-        let record = new DataRecord(id, data)
-        return this.register_record(record, false).data_json
+        // let record = new DataRecord(id, data)
+        // return this.register_record(record, false).data_json
     }
 
 
     /***  Registry management  ***/
+
+    register_data(id, data, invalidate = true) {
+        /* Keep JSON-stringified `data` of an object as the most up-to-date (raw) representation of the corresponding object,
+           to be used on the next (re)load of the same object.
+         */
+        assert(typeof data === 'string', data)
+        let record = new DataRecord(id, data)
+        this.registry.set_record(record)
+        if (invalidate) this.invalidate_object(id)
+        return record.data_json
+    }
 
     register_record(record /*DataRecord*/, invalidate = true) {
         /* Keep `record` as the most up-to-date (raw) representation of the corresponding object; to be used on the next object (re)load. */
