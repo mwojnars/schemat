@@ -192,7 +192,7 @@ export class Site extends Item {
     //         let data = Data.__setstate__(data_state)
     //         let id = await schemat.db.insert(data)
     //         let obj = await schemat.get_loaded(id)
-    //         return obj.__record.encoded()
+    //         return obj.self_encode()
     //     },
     //     answer: (...args) => {},   //result()
     //     reject: (...args) => {},

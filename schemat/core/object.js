@@ -681,6 +681,16 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
 
+    self_encode() {
+        /* Encode this object's content into plain objects and return as {id, data}, where `data` is encoded through JSONx.
+           Encoded objects can be combined into larger structures for transfer or storage, and serialized together with the standard JSON.stringify().
+         */
+        return this.__record.encoded()
+    }
+    self_stringify() {
+        return JSON.stringify(this.self_encode())
+    }
+
     dump_data() {
         /* Encode and stringify this.__data through JSONx. Return a string. Nested values are recursively encoded. */
         return this.__data.dump()
@@ -1040,7 +1050,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     GET__test_res({res})    { res.send("TEST res.send() ...") }         // works
     GET__test_html()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
 
-    GET__json({res})        { res.json(this.__record.encoded()) }
+    GET__json({res})        { res.json(this.self_encode()) }
 
     // CALL__self()     { print('CALL__self'); return this }
     // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })

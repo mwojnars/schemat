@@ -182,7 +182,7 @@ export class Category extends Item {
                 return this.list_objects({load: true, offset, limit})
             },
             encode_result(items) {
-                return items.map(item => item.__record.encoded())
+                return items.map(item => item.self_encode())
             },
             async decode_result(records) {
                 /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
