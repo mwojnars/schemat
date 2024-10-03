@@ -161,7 +161,7 @@ export class Site extends Item {
             let record = await this.database.insert(JSONx.stringify(data_state))
             return record.encoded()
         },
-        {in_message: new mData()}
+        {in_message: mData}
     )
 
     static ['POST/submit_edits'] = new JsonService(async function(request, id, ...plain_edits)

@@ -88,8 +88,8 @@ export class Service {
         this.opts = {...this.constructor.opts, ...opts}
 
         let {in_message, out_message} = this.opts
-        this.in_message = in_message
-        this.out_message = out_message
+        this.in_message = T.isClass(in_message) ? new in_message() : in_message
+        this.out_message = T.isClass(out_message) ? new out_message() : out_message
     }
 
     bindAt(endpoint) { this.endpoint = endpoint }
