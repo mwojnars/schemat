@@ -685,7 +685,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Encode this object's content into plain objects and return as {id, data}, where `data` is encoded through JSONx.
            Encoded objects can be combined into larger structures for transfer or storage, and serialized together with the standard JSON.stringify().
          */
-        return this.__record.encoded()
+        if (this.id === undefined) throw new Error(`trying to encode a newborn object (no ID)`)
+        if (!this.__data) throw new Error(`trying to encode a stub object (no __data)`)
+        return {id: this.id, data: this.__data.encode()}
     }
     self_stringify() {
         return JSON.stringify(this.self_encode())
