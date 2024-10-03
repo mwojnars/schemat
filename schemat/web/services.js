@@ -1,6 +1,41 @@
 import {print, assert, T, isPromise} from "../common/utils.js"
 import { NotFound, RequestFailed } from '../common/errors.js'
 import { JSONx } from '../core/jsonx.js'
+import {Data} from "../core/data.js";
+
+
+/**********************************************************************************************************************/
+
+export class Message {
+    /* Type definition for an input/output message transmitted between client & server endpoints of a service. */
+
+    encode(...elements) {
+        /* Convert message element(s) to a string that will be passed to the recipient. */
+    }
+    decode(message) {
+        /* Convert encoded message (string) back to an array of elements. */
+    }
+
+    encode_error(error) {
+        return [error.message || 'Internal Error', error.code]
+    }
+    decode_error(message, code) {
+        throw new RequestFailed({code, message})
+    }
+}
+
+export class mData extends Message {
+    /* Encoding/decoding of a Data instance. */
+
+    encode(data) {   // ...args
+        if (typeof data === 'string') return data       // already encoded
+        return JSONx.stringify(data instanceof Data ? data.__getstate__() : data)
+    }
+    decode(message) {
+        let data = JSONx.parse(message)
+        return data instanceof Data ? data : Data.__setstate__(data)
+    }
+}
 
 
 /**********************************************************************************************************************/
