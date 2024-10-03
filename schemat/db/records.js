@@ -112,11 +112,11 @@ export class DataRecord {
     id                          // item ID; can be undefined (new item, not yet inserted into DB)
     _data_object                // item data as a Data object decoded from _data_plain
     //_data_plain               // item data as a plain JS object parsed from _data_json or encoded from _data_object
-    _data_json                  // item data as a JSONx-encoded and JSON-stringified string
+    data_json                   // item data as a JSONx-encoded and JSON-stringified string
 
 
     get data_copy() {
-        let data = JSONx.parse(this._data_json)
+        let data = JSONx.parse(this.data_json)
         return data instanceof Data ? data : Data.__setstate__(data)
     }
 
@@ -126,12 +126,8 @@ export class DataRecord {
     }
 
     get data_plain() {
-        return JSON.parse(this._data_json)
+        return JSON.parse(this.data_json)
         // return this._data_plain || (this._data_json && this._parse_data())   //|| (this._data_object && this._encode_data())
-    }
-
-    get data_json() {
-        return this._data_json   //|| this._stringify_data()
     }
 
     _decode_data() {
@@ -140,7 +136,11 @@ export class DataRecord {
         // if (!(data instanceof Data)) this._data_object = Data.__setstate__(data)
         // return this._data_object
     }
-    
+
+    // get data_json() {
+    //     return this._data_json   //|| this._stringify_data()
+    // }
+    //
     // _parse_data() {
     //     return this._data_plain = JSON.parse(this._data_json)
     //     // if(!(JSONx.decode(this._data_plain) instanceof Data)) assert(false)
@@ -166,7 +166,7 @@ export class DataRecord {
         if (id !== undefined && id !== null) this.id = id
         assert(data, `missing 'data' for DataRecord, id=${this.id}`)
 
-        if (typeof data === 'string') this._data_json = data
+        if (typeof data === 'string') this.data_json = data
         else throw new Error(`invalid type of 'data'`)
         // else if (data instanceof Data) this._data_object = data
         // else assert(false, `plain data objects not accepted for DataRecord, id=${this.id}: ${data}`)
