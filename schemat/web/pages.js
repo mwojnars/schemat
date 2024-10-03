@@ -123,6 +123,8 @@ export class HtmlPage extends HttpService {
 
 /**********************************************************************************************************************/
 
+// export class ActivePage extends HtmlPage {}
+
 export class RenderedPage extends HtmlPage {
     /* An HTML page that is rendered from a component (e.g., React) and can be (re-)rendered on the client. */
 

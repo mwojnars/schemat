@@ -932,10 +932,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             let state = this.__data.__getstate__()
             return schemat.site.service.create_item(state).then(rec => {
                 this.__id = schemat.register_record(DataRecord.decode(rec)).id
-                // {id, data} => {
-                //      this.__id = id
-                //      schemat.register_record(
-                // }
             })
         }
 
