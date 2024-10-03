@@ -96,25 +96,18 @@ export class Record {
             assert(typeof this._string_value === 'string', `invalid string value: ${this._string_value}`)
         }
     }
-}
 
-export class BinaryRecord extends Record {
-    /* A Record initialized with encoded (binary) data. */
-
-    constructor(schema, key, value)     { super(schema, null, {key, value}) }
-}
-
-export class PlainRecord extends Record {
-    /* A Record initialized with decoded (plain) data. */
-
-    constructor(schema, key, value)     { super(schema, {key, value}, null) }
+    static binary(schema, key, value)   { return new Record(schema, null, {key, value}) }
+    static plain(schema, key, value)    { return new Record(schema, {key, value}, null) }
 }
 
 
 /**********************************************************************************************************************/
 
 export class DataRecord {
-    /* Pair of {id, data} of a particular web object, with the data initialized from a JSONx string. */
+    /* Pair of {id, data} of a particular web object or index record, with the data initialized from a JSONx string.
+       It is assumed that, if `data` or `data_plain` are read from this record, they are NOT modified by the caller!
+     */
 
     id                          // item ID; can be undefined (new item, not yet inserted into DB)
     _data_object                // item data as a Data object decoded from _data_plain
@@ -128,6 +121,7 @@ export class DataRecord {
     }
 
     get data() {
+        // assert(false)
         return this._data_object || this._decode_data()
     }
 
@@ -167,9 +161,9 @@ export class DataRecord {
         return {id: this.id, data: this.data_plain}
     }
 
-    stringified() {
-        return {id: this.id, data: this.data_json}
-    }
+    // stringified() {
+    //     return {id: this.id, data: this.data_json}
+    // }
 
     static from_binary(bin_record /*Record*/) {
         /* Create a DataRecord from a binary Record, where key = [id] and value is a JSONx-serialized Data object. */
@@ -212,8 +206,8 @@ export class ChangeRequest {
     value_old           // null if missing record (insertion); undefined if empty value, but record exists (update)
     value_new           // null if missing record (deletion); undefined if empty value, but record exists (update)
 
-    record_old(schema)  { return this.value_old !== null && new BinaryRecord(schema, this.key, this.value_old) }
-    record_new(schema)  { return this.value_new !== null && new BinaryRecord(schema, this.key, this.value_new) }
+    record_old(schema)  { return this.value_old !== null && Record.binary(schema, this.key, this.value_old) }
+    record_new(schema)  { return this.value_new !== null && Record.binary(schema, this.key, this.value_new) }
 
     constructor(key, value_old = null, value_new = null) {
         this.key = key

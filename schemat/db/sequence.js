@@ -1,4 +1,4 @@
-import {BinaryRecord, data_schema} from "./records.js";
+import {Record, data_schema} from "./records.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock, IndexBlock} from "./block.js";
 import {Item} from "../core/object.js";
@@ -227,7 +227,7 @@ export class Operator extends Item {
         stop = stop && rschema.encode_key(stop)
 
         for await (let [key, value] of sequence.scan_binary({...opts, start, stop}))
-            yield new BinaryRecord(rschema, key, value)
+            yield Record.binary(rschema, key, value)
     }
 }
 

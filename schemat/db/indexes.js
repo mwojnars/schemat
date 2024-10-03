@@ -1,7 +1,7 @@
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../common/binary.js"
 import {INTEGER} from "../types/type.js";
-import {DataRecord, PlainRecord, RecordSchema, data_schema} from "./records.js";
+import {DataRecord, Record, RecordSchema, data_schema} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
 
@@ -124,7 +124,7 @@ export class PrimeIndexSequence extends Index {
 
         const value = this.generate_value(item_record)
         for (const key of this.generate_keys(item_record))
-            yield new PlainRecord(this.record_schema, key, value)
+            yield Record.plain(this.record_schema, key, value)
     }
 
     accept(record) {

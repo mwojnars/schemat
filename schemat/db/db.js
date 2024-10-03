@@ -165,7 +165,7 @@ export class Ring extends Item {
     }
 
     async* scan_all() {
-        /* Yield all items of this ring as DataRecord objects. For rebuilding indexes from scratch. */
+        /* Yield all objects in this ring as DataRecord instances. For rebuilding indexes from scratch. */
         let data = DataOperator.create()
         for await (let record of data.scan(this.data_sequence))
             yield DataRecord.from_binary(record)
