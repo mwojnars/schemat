@@ -130,7 +130,7 @@ export class DataRecord {
     }
 
     get data_json() {
-        return this._data_json || this._stringify_data()
+        return this._data_json   //|| this._stringify_data()
     }
 
     _decode_data() {
@@ -145,25 +145,30 @@ export class DataRecord {
         // return this._data_plain
     }
     
-    _stringify_data() {
-        return this._data_json = JSON.stringify(this.data_plain)
-    }
-
-    _encode_data() {
-        return this._data_plain = JSONx.encode(this._data_object.__getstate__())
-        // if(!(JSONx.decode(this._data_plain) instanceof Data)) assert(false)
-        // return this._data_plain
-    }
-
-    encoded() {
-        // if(!(JSONx.decode(this.data_plain) instanceof Data)) assert(false)
-        assert(this.id !== undefined, `missing 'id' in DataRecord.encoded(), data=${this.data_plain}`)
-        return {id: this.id, data: this.data_plain}
-    }
-
+    // _stringify_data() {
+    //     return this._data_json = JSON.stringify(this.data_plain)
+    // }
+    //
+    // _encode_data() {
+    //     return this._data_plain = JSONx.encode(this._data_object.__getstate__())
+    //     // if(!(JSONx.decode(this._data_plain) instanceof Data)) assert(false)
+    //     // return this._data_plain
+    // }
+    //
     // stringified() {
     //     return {id: this.id, data: this.data_json}
     // }
+
+    constructor(id, data) {
+        /* `id` is a Number; `data` is either a JSONx string, or a Data object. */
+        if (id !== undefined && id !== null) this.id = id
+        assert(data, `missing 'data' for DataRecord, id=${this.id}`)
+
+        if (typeof data === 'string') this._data_json = data
+        else throw new Error(`invalid type of 'data'`)
+        // else if (data instanceof Data) this._data_object = data
+        // else assert(false, `plain data objects not accepted for DataRecord, id=${this.id}: ${data}`)
+    }
 
     static from_binary(bin_record /*Record*/) {
         /* Create a DataRecord from a binary Record, where key = [id] and value is a JSONx-serialized Data object. */
@@ -175,15 +180,10 @@ export class DataRecord {
         return new DataRecord(id, json)
     }
 
-    constructor(id, data) {
-        /* `id` is a Number; `data` is either a JSONx string, or a Data object. */
-        if (id !== undefined && id !== null) this.id = id
-        assert(data, `missing 'data' for DataRecord, id=${this.id}`)
-
-        if (typeof data === 'string') this._data_json = data
-        else throw new Error(`invalid type of 'data'`)
-        // else if (data instanceof Data) this._data_object = data
-        // else assert(false, `plain data objects not accepted for DataRecord, id=${this.id}: ${data}`)
+    encoded() {
+        // if(!(JSONx.decode(this.data_plain) instanceof Data)) assert(false)
+        assert(this.id !== undefined, `missing 'id' in DataRecord.encoded(), data=${this.data_plain}`)
+        return {id: this.id, data: this.data_plain}
     }
 
     static decode({id, data}) {
