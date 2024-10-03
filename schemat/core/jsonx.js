@@ -5,6 +5,24 @@ import {assert, print, T} from '../common/utils.js'
 
 /*************************************************************************************************/
 
+export class State {
+    /* Wrapper for any object that needs to be encoded/decoded and serialized/deserialized, back and forth, via JSONx.
+       Internally, it keeps the stringified state of the object only, but gives access to its intermediate forms via getters:
+          .object  >  .plain   >  .json
+       Every access to .object or .plain returns a new object, so the objects can be owned and modified by the caller.
+     */
+
+    json            // base internal representation of the object
+    get plain()     { return JSON.parse(this.json) }
+    get object()    { return JSONx.parse(this.json) }
+
+    constructor(object_or_json) {
+        this.json = (typeof object_or_json === 'string') ? object_or_json : JSONx.stringify(object_or_json)
+    }
+}
+
+/*************************************************************************************************/
+
 export class JSONx {
     /*
     Dump & load arbitrary objects to/from JSON strings.
