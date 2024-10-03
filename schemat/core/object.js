@@ -398,8 +398,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     static async from_json(id, json, opts = {}) {
         /* Create a new Item instance given an encoded JSON string with the object's content. */
         assert(typeof json === 'string')
-        let item = Item.create_stub(id, opts)
-        return item.load({record: new DataRecord(id, json)})
+        let obj = Item.create_stub(id, opts)
+        return obj.load({data_json: json})
     }
 
     // static async from_record(record /*DataRecord*/, opts = {}) {
@@ -419,32 +419,32 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Loading & initialization ***/
 
-    async load({record = null /*DataRecord*/, await_url = true} = {}) {
-        /* Load full data of this item from `record` or from DB, if not loaded yet. Return this object.
+    async load({data_json = null, await_url = true} = {}) {
+        /* Load full data of this item from `data_json` or from DB, if not loaded yet. Return this object.
            The data can only be loaded ONCE for a given Item instance due to item's immutability.
            If you want to refresh the data, create a new instance or use refresh() instead.
            `await_url` has effect only after the schemat.site is loaded, not during boot up.
          */
         if (this.__data || this.__meta.loading) {           // data is loaded or being loaded right now? do nothing except for awaiting the URL (previous load() may have been called with await_url=false)
-            assert(!record)
-            // if (await_url && schemat.site && this.__meta.pending_url)
-            //     await this.__meta.pending_url
+            assert(!data_json)
             return this.__meta.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
         }
-        if (this.is_newborn() && !record) return this                       // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
-        return this.__meta.loading = this._load(record, await_url)          // keep a Promise that will eventually load the data; this is needed to avoid race conditions
+        if (this.is_newborn() && !data_json) return this                       // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
+        return this.__meta.loading = this._load(data_json, await_url)          // keep a Promise that will eventually load the data; this is needed to avoid race conditions
     }
 
-    async _load(record /*DataRecord*/, await_url) {
-        /* Load this.__data from `record` or DB. Set up the class and prototypes. Call __init__(). */
+    async _load(data_json, await_url) {
+        /* Load this.__data from `data_json` or DB. Set up the class and prototypes. Call __init__(). */
 
         schemat.before_data_loading(this)
 
         try {
-            record = record || await schemat.load_record(this.__id)
-            assert(record instanceof DataRecord, record)
+            // record = record || await schemat.load_record(this.__id)
+            // assert(record instanceof DataRecord, record)
+            // this.__data = record.data_copy
 
-            this.__data = record.data_copy
+            data_json = data_json || (await schemat.load_record(this.id)).data_json
+            this.__data = Data.load(data_json)
 
             let proto = this._load_prototypes()             // load prototypes
             if (proto instanceof Promise) await proto
@@ -453,7 +453,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
                 if (!category.is_loaded() && category !== this)
                     await category.load({await_url: false}) // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
-            if (this.__status) print(`WARNING: object [${this.__id}] has status ${this.__status}`)
+            if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
 
             let cls = await this._load_class()              // set the target JS class on this object; stubs only have Item as their class, which must be changed when the data is loaded and the item is linked to its category
             T.setClass(this, cls || Item)

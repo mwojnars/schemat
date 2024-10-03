@@ -636,8 +636,9 @@ export class Data extends Catalog {
 
     static load(json) {
         let data = JSONx.parse(json)
-        assert(data instanceof Data, 'JSON string does not contain a Data object')
-        return data
+        return data instanceof Data ? data : Data.__setstate__(data)
+        // assert(data instanceof Data, 'JSON string does not contain a Data object')
+        // return data
     }
 
     find_references() {
