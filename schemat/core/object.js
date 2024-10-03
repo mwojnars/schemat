@@ -398,19 +398,18 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     static async from_json(id, json, opts = {}) {
         /* Create a new Item instance given an encoded JSON string with the object's content. */
         assert(typeof json === 'string')
-        return Item.from_record(new DataRecord(id, json), opts)
+        let item = Item.create_stub(id, opts)
+        return item.load({record: new DataRecord(id, json)})
     }
 
-    static async from_record(record /*DataRecord*/, opts = {}) {
-        /* Create a new item instance: either a newborn one (intended for insertion to DB, no ID yet);
-           or an instance loaded from DB and filled out with data from `record` (an DataRecord).
-           In any case, the item returned is *booted* (this.__data is initialized) and activated (__init__() was called).
-         */
-        // TODO: if the record is already cached in binary registry, return the cached item...
-        // TODO: otherwise, create a new item and cache it in binary registry
-        let item = Item.create_stub(record.id, opts)
-        return item.load({record})
-    }
+    // static async from_record(record /*DataRecord*/, opts = {}) {
+    //     /* Create a new item instance: either a newborn one (intended for insertion to DB, no ID yet);
+    //        or an instance loaded from DB and filled out with data from `record` (an DataRecord).
+    //        In any case, the item returned is *booted* (this.__data is initialized) and activated (__init__() was called).
+    //      */
+    //     let item = Item.create_stub(record.id, opts)
+    //     return item.load({record})
+    // }
 
     _get_write_id() {
         /* Either __id or __meta.provisional_id. */
