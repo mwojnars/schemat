@@ -111,12 +111,12 @@ export class DataRecord {
 
     id                          // item ID; can be undefined (new item, not yet inserted into DB)
     _data_object                // item data as a Data object decoded from _data_plain
-    _data_plain                 // item data as a plain JS object parsed from _data_json or encoded from _data_object
+    //_data_plain               // item data as a plain JS object parsed from _data_json or encoded from _data_object
     _data_json                  // item data as a JSONx-encoded and JSON-stringified string
 
 
     get data_copy() {
-        let data = JSONx.decode(JSON.parse(this._data_json))
+        let data = JSONx.parse(this._data_json)
         return data instanceof Data ? data : Data.__setstate__(data)
     }
 
@@ -126,7 +126,8 @@ export class DataRecord {
     }
 
     get data_plain() {
-        return this._data_plain || (this._data_json && this._parse_data()) || (this._data_object && this._encode_data())
+        return JSON.parse(this._data_json)
+        // return this._data_plain || (this._data_json && this._parse_data())   //|| (this._data_object && this._encode_data())
     }
 
     get data_json() {
@@ -134,17 +135,18 @@ export class DataRecord {
     }
 
     _decode_data() {
-        let data = this._data_object = JSONx.decode(this.data_plain)
-        if (!(data instanceof Data)) this._data_object = Data.__setstate__(data)
-        return this._data_object
+        return this._data_object = this.data_copy
+        // let data = this._data_object = JSONx.decode(this.data_plain)
+        // if (!(data instanceof Data)) this._data_object = Data.__setstate__(data)
+        // return this._data_object
     }
     
-    _parse_data() {
-        return this._data_plain = JSON.parse(this._data_json)
-        // if(!(JSONx.decode(this._data_plain) instanceof Data)) assert(false)
-        // return this._data_plain
-    }
-    
+    // _parse_data() {
+    //     return this._data_plain = JSON.parse(this._data_json)
+    //     // if(!(JSONx.decode(this._data_plain) instanceof Data)) assert(false)
+    //     // return this._data_plain
+    // }
+    //
     // _stringify_data() {
     //     return this._data_json = JSON.stringify(this.data_plain)
     // }
@@ -181,8 +183,7 @@ export class DataRecord {
     }
 
     encoded() {
-        // if(!(JSONx.decode(this.data_plain) instanceof Data)) assert(false)
-        assert(this.id !== undefined, `missing 'id' in DataRecord.encoded(), data=${this.data_plain}`)
+        assert(this.id !== undefined, `missing 'id' in DataRecord.encoded()`)
         return {id: this.id, data: this.data_plain}
     }
 
