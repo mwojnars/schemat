@@ -11,10 +11,7 @@ import {NotLinked, NotLoaded, ValidationError} from '../common/errors.js'
 import {Data} from './data.js'
 import {REF} from "../types/type.js"
 import {DATA_GENERIC} from "../types/catalog.js"
-
 import {DataRecord} from "../db/records.js"
-import {DataRequest} from "../db/data_request.js"
-
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {Request} from "../web/request.js"
@@ -75,7 +72,7 @@ class ItemProxy {
     // these special props are always read from regular POJO attributes and NEVER from object's __data;
     // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
     // defining a custom `then` prop is unsafe, hence we disallow it
-    static SPECIAL = ['then', '__id', '__meta', '__data', '__record']
+    static SPECIAL = ['then', '__id', '__meta', '__data']
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
@@ -219,8 +216,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     __data                  own properties of this object in raw form (before imputation etc.), as a Data object created during .load()
 
-    __record                DataRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
-                            undefined in a newborn item; immutable after the first assignment
+    //__record                DataRecord that contains this item's ID and data as loaded from DB during last load() or assigned directly;
+    //                        undefined in a newborn item; immutable after the first assignment
 
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
                             that inherits (like from prototypes) from all __category$ categories listed in this object
@@ -253,17 +250,17 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     get id() { return this.__id }           // alias for __id
 
-    get __record() {
-        this.assert_linked()
-        this.assert_loaded()
-        return new DataRecord(this.__id, this.__data.dump())
-    }
-    set __record(record) {
-        assert(record)
-        assert(record.id === this.__id)
-        if (this.__meta.mutable) return                 // no caching of __record in a mutable object
-        this.__meta.cache?.set('__record', record)      // __record is a special prop (ItemProxy.SPECIAL), so if we allow its modification the `cache` must be updated manually
-    }
+    // get __record() {
+    //     this.assert_linked()
+    //     this.assert_loaded()
+    //     return new DataRecord(this.__id, this.__data.dump())
+    // }
+    // set __record(record) {
+    //     assert(record)
+    //     assert(record.id === this.__id)
+    //     if (this.__meta.mutable) return                 // no caching of __record in a mutable object
+    //     this.__meta.cache?.set('__record', record)      // __record is a special prop (ItemProxy.SPECIAL), so if we allow its modification the `cache` must be updated manually
+    // }
 
     get __base() {
         let cats = this.__category$
@@ -464,8 +461,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             assert(record instanceof DataRecord, record)
 
             this.__data = record.data_copy
-            if (record.id !== undefined)                    // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
-                this.__record = record
+            // if (record.id !== undefined)                    // don't keep a record without ID: it's useless and creates inconsistency when ID is assigned
+            //     this.__record = record
 
             let proto = this._load_prototypes()             // load prototypes
             if (proto instanceof Promise) await proto
@@ -680,18 +677,17 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return false
     }
 
-
     self_encode() {
-        /* Encode this object's content into plain objects and return as {id, data}, where `data` is encoded through JSONx.
-           Encoded objects can be combined into larger structures for transfer or storage, and serialized together with the standard JSON.stringify().
+        /* Encode this object's content into plain-object form and return as {id, data}, where `data` is encoded through JSONx.
+           Encoded objects can be combined into larger structures for transfer or storage, and then serialized altogether
+           with a single call to the standard JSON.stringify() - which would be inefficient if JSON-stringified representations
+           of each object were used, because this would lead to *double* stringification.
          */
         if (this.id === undefined) throw new Error(`trying to encode a newborn object (no ID)`)
         if (!this.__data) throw new Error(`trying to encode a stub object (no __data)`)
         return {id: this.id, data: this.__data.encode()}
     }
-    self_stringify() {
-        return JSON.stringify(this.self_encode())
-    }
+    // self_stringify() { return JSON.stringify(this.self_encode()) }
 
     dump_data() {
         /* Encode and stringify this.__data through JSONx. Return a string. Nested values are recursively encoded. */
