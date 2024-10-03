@@ -111,8 +111,8 @@ export class DataRecord {
 
     id                          // item ID; can be undefined (new item, not yet inserted into DB)
     _data_object                // item data as a Data object decoded from _data_plain
-    //_data_plain               // item data as a plain JS object parsed from _data_json or encoded from _data_object
     data_json                   // item data as a JSONx-encoded and JSON-stringified string
+    //_data_plain               // item data as a plain JS object parsed from _data_json or encoded from _data_object
 
 
     get data_copy() {
@@ -120,14 +120,13 @@ export class DataRecord {
         return data instanceof Data ? data : Data.__setstate__(data)
     }
 
-    get data() {
-        // assert(false)
-        return this._data_object || this._decode_data()
-    }
-
     get data_plain() {
         return JSON.parse(this.data_json)
         // return this._data_plain || (this._data_json && this._parse_data())   //|| (this._data_object && this._encode_data())
+    }
+
+    get data() {
+        return this._data_object || this._decode_data()
     }
 
     _decode_data() {
