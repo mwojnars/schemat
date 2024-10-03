@@ -430,7 +430,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         schemat.before_data_loading(this)
 
         try {
-            data_json = data_json || (await schemat.load_record(this.id)).data_json
+            data_json = data_json || await schemat.load_record(this.id)
             this.__data = Data.load(data_json)
 
             let proto = this._load_prototypes()             // load prototypes

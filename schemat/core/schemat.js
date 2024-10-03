@@ -212,21 +212,21 @@ export class Schemat {
     }
 
     async load_record(id, fast = true) {
-        /* Read object data from DB and return as DataRecord; or use a record from the registry, if present and fast=true.
-           If a new record was created, keep it in the registry for future use.
+        /* Read object's raw data (JSON string) from DB, or from the registry (if present there and fast=true).
+           In the former case, the newly retrieved data is saved in the registry for future use.
          */
         assert(id !== undefined)
         // this.session?.countLoaded(id)
 
-        let rec = this.registry.get_record(id)
-        if (rec) return rec
+        let data = this.registry.get_record(id)
+        if (data) return data
 
         let req = new DataRequest(null, 'load', {id})
-        let json = await this.db.select(req)
-        assert(typeof json === 'string', json)
+        data = await this.db.select(req)
+        assert(typeof data === 'string', data)
 
-        let record = new DataRecord(id, json)
-        return this.register_record(record, false)
+        let record = new DataRecord(id, data)
+        return this.register_record(record, false).data_json
     }
 
 
