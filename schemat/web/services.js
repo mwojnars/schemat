@@ -119,7 +119,10 @@ export class Service {
     output              // MessageEncoder for output messages (server > client)
 
     opts = {}           // configuration options
-    static opts = {}    // default values of configuration options
+    static opts = {     // default values of configuration options
+        input: mJsonObjects,
+        output: mJsonObject,
+    }
 
 
     get endpoint_type()   { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
@@ -285,15 +288,17 @@ export class JsonService extends HttpService {
            HTTP status code if an exception was caught. */
         res.type('json')
         if (result === undefined) return res.end()                      // missing result --> empty response body
-        if (this.opts.encodeResult) result = JSONx.encode(result)
-        res.send(JSON.stringify(result))
+        res.send(this.output.encode(result))
+        // if (this.opts.encodeResult) result = JSONx.encode(result)
+        // res.send(JSON.stringify(result))
     }
 
     recv_result(result, ...args) {
-        if (!result) return
-        result = JSON.parse(result)
-        if (this.opts.encodeResult) result = JSONx.decode(result)
-        return result
+        return this.output.decode(result)
+        // if (!result) return
+        // result = JSON.parse(result)
+        // if (this.opts.encodeResult) result = JSONx.decode(result)
+        // return result
     }
 
     send_error(target, {res}, error, code = 500) {
