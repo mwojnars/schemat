@@ -190,8 +190,8 @@ export class Category extends Item {
                 for (const rec of records) {                    // rec's shape: {id, data}
                     if (rec.data) {
                         rec.data = JSON.stringify(rec.data)
-                        schemat.db.cache(rec)                   // need to cache the item in ClientDB
-                        // schemat.unregister(rec.id)          // evict the item from the cache to allow re-loading
+                        schemat.register_record(rec)
+                        // schemat.db.cache(rec)                   // need to cache the item in ClientDB
                     }
                     items.push(await schemat.get_loaded(rec.id))
                 }

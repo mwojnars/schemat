@@ -110,7 +110,7 @@ export class ClientSchemat extends Schemat {
         print('client_insert() response record:', record)
         schemat.register_record(record)
 
-        schemat.db.cache(record)                         // record == {id: id, data: data-encoded}
+        // schemat.db.cache(record)                         // record == {id: id, data: data-encoded}
         return this.get_object(record.id)
     }
 }
