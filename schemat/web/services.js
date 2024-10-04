@@ -2,6 +2,7 @@ import {print, assert, T, isPromise} from "../common/utils.js"
 import { NotFound, RequestFailed } from '../common/errors.js'
 import { JSONx } from '../core/jsonx.js'
 import {Data} from "../core/data.js";
+import {DataRecord} from "../db/records.js";
 
 
 /**********************************************************************************************************************/
@@ -25,7 +26,7 @@ export class MessageEncoder {
 }
 
 export class mData extends MessageEncoder {
-    /* Encoding/decoding of a Data instance. */
+    /* Encoding of a Data instance. */
 
     encode(data) {   // ...args
         if (typeof data === 'string') return data       // already encoded
@@ -34,6 +35,21 @@ export class mData extends MessageEncoder {
     decode(message) {
         let data = JSONx.parse(message)
         return [data instanceof Data ? data : Data.__setstate__(data)]
+    }
+}
+
+export class mDataRecord extends MessageEncoder {
+    /* Encoding an object of the form {id, data}, where `data` is a Data instance. */
+
+    encode(rec) {   // ...args
+        if (typeof rec === 'string') return rec         // already encoded
+        if (rec instanceof DataRecord) return JSON.stringify(rec.encoded())
+        return JSONx.stringify({id: rec.id, data: rec.data.__getstate__()})
+    }
+    decode(message) {
+        let {id, data} = JSONx.parse(message)
+        if (!(data instanceof Data)) data = Data.__setstate__(data)
+        return {id, data}
     }
 }
 
