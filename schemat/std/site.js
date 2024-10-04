@@ -158,10 +158,11 @@ export class Site extends Item {
         async function(request, data_state) {
             /* Create a new object with __data as provided; `data_state` is the result of Catalog.__getstate__(). */
             // data_json  = request.message
-            let record = await this.database.insert(JSONx.stringify(data_state))
-            return record.encoded()
+            return this.database.insert(JSONx.stringify(data_state))
+            // let record = await this.database.insert(JSONx.stringify(data_state))
+            // return record.encoded()
         },
-        {input: mData, } //output: mDataRecord}
+        {input: mData, output: mDataRecord}
     )
 
     static ['POST/submit_edits'] = new JsonService(async function(request, id, ...plain_edits)

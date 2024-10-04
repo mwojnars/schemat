@@ -68,14 +68,20 @@ export class mDataRecord extends MessageEncoder {
     /* Encoding of an object of the form {id, data}, where `data` is a Data instance. */
 
     encode(rec) {   // ...args
+        print(`mDataRecord.encode()`)
         if (typeof rec === 'string') return rec         // already encoded
         if (rec instanceof DataRecord) return JSON.stringify(rec.encoded())
         return JSONx.stringify({id: rec.id, data: rec.data.__getstate__()})
     }
     decode(message) {
-        let {id, data} = JSONx.parse(message)
-        if (!(data instanceof Data)) data = Data.__setstate__(data)
-        return {id, data}
+        print(`mDataRecord.decode()`)
+        return JSON.parse(message)
+        // let {id, data} = JSON.parse(message)
+        // return DataRecord.decode({id, data})
+
+        // let {id, data} = JSONx.parse(message)
+        // if (!(data instanceof Data)) data = Data.__setstate__(data)
+        // return {id, data}
     }
 }
 
