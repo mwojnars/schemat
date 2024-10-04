@@ -232,7 +232,9 @@ export class Schemat {
     /***  Registry management  ***/
 
     register_record(record /*DataRecord or {id,data}*/, invalidate = true) {
-        /* Keep `record` as the most up-to-date (raw) representation of the corresponding object; to be used on the next object (re)load. */
+        /* Keep `record` as the most up-to-date (raw) representation of the corresponding object that will be used on the next object (re)load.
+           `data` is either a JSON string, or an encoded (plain) representation of the Data instance.
+         */
         let id, data
         if (record instanceof DataRecord) ({id, data_json: data} = record)
         else ({id, data} = record)

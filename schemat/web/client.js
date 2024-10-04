@@ -106,6 +106,10 @@ export class ClientSchemat extends Schemat {
         assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items
         let record = await schemat.site.service.create_item(data_state)
         if (!record) throw new Error(`failed to insert a new object`)
+
+        print('client_insert() response record:', record)
+        schemat.register_record(record)
+
         schemat.db.cache(record)                         // record == {id: id, data: data-encoded}
         return this.get_object(record.id)
     }

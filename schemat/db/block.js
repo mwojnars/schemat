@@ -199,7 +199,7 @@ export class DataBlock extends Block {
 
         await this.put(req)                                 // save the new object and perform change propagation
 
-        return schemat.register_record({id, data})  //new DataRecord(id, data))
+        return schemat.register_record({id, data})
     }
 
     _assign_id(req) {

@@ -63,7 +63,13 @@ export class Registry {
     }
 
     get_record(id)          { return this.records.get(id) } //let json = this.records.get(id); if (json) return new DataRecord(id, json) }
-    set_record(id, data)    { assert(typeof data === 'string'); this.records.set(id, data) }
+    set_record(id, data) {
+        if (typeof data === 'object') {
+            assert(!(data instanceof DataRecord))
+            data = JSON.stringify(data)
+        }
+        this.records.set(id, data)
+    }
 
     // get_record(id)  { return this.records.get(id) }
     // set_record(rec) { this.records.set(rec.id, rec); return rec }
