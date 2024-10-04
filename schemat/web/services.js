@@ -57,23 +57,27 @@ export class mJsonxObjects extends MessageEncoder {
 /**********************************************************************************************************************/
 
 export class mData extends MessageEncoder {
-    /* Input:  a Data instance, either in its original form, or after __getstate__(), but NOT yet JSONx-encoded.
-       Output: stringified Data instance (no decoding).
+    /* Encode: a Data instance, either in its original form, or after __getstate__(), but NOT yet JSONx-encoded.
+       Decode: fully parsed and decoded Data instance.
      */
     encode(data) {   // ...args
         if (typeof data === 'string') return data       // already encoded
         return JSONx.stringify(data instanceof Data ? data.__getstate__() : data)
     }
     decode(message) {
-        return message
-        // let data = JSONx.parse(message)
-        // return data instanceof Data ? data : Data.__setstate__(data)
+        let data = JSONx.parse(message)
+        return data instanceof Data ? data : Data.__setstate__(data)
     }
 }
 
+export class mDataString extends mData {
+    /* Like mData, but no decoding: decode() returns a JSONx string representing the Data instance. */
+    decode(message) { return message }
+}
+
 export class mDataRecord extends MessageEncoder {
-    /* Input:  object of the form {id, data}, where `data` is a stringified or *encoded* (plain-object) representation of a Data instance.
-       Output: {id, data}, where `data` is still JSONx-encoded, but no longer stringified.
+    /* Encode: object of the form {id, data}, where `data` is a stringified or *encoded* (plain-object) representation of a Data instance.
+       Decode: {id, data}, where `data` is still JSONx-encoded, but no longer stringified.
      */
     encode(rec) {   // ...args
         if (typeof rec === 'string') assert(false)  //return rec         // already encoded
