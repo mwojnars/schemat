@@ -25,6 +25,32 @@ export class MessageEncoder {
     }
 }
 
+export class mJsonObject extends MessageEncoder {
+    /* Encode one, but arbitrary, object through JSON.stringify(). */
+    encode(obj)     { return JSON.stringify(obj) }
+    decode(message) { return JSON.parse(message) }
+}
+
+export class mJsonObjects extends MessageEncoder {
+    /* Encode an array of objects through JSON.stringify(). */
+    encode(...objs) { return JSON.stringify(objs) }
+    decode(message) { return JSON.parse(message) }
+}
+
+export class mJsonxObject extends MessageEncoder {
+    /* Encode one, but arbitrary, object through JSONx.stringify(). */
+    encode(obj)     { return JSONx.stringify(obj) }
+    decode(message) { return JSONx.parse(message) }
+}
+
+export class mJsonxObjects extends MessageEncoder {
+    /* Encode an array of objects through JSONx.stringify(). */
+    encode(...objs) { return JSONx.stringify(objs) }
+    decode(message) { return JSONx.parse(message) }
+}
+
+/**********************************************************************************************************************/
+
 export class mData extends MessageEncoder {
     /* Encoding of a Data instance. */
 
@@ -39,7 +65,7 @@ export class mData extends MessageEncoder {
 }
 
 export class mDataRecord extends MessageEncoder {
-    /* Encoding an object of the form {id, data}, where `data` is a Data instance. */
+    /* Encoding of an object of the form {id, data}, where `data` is a Data instance. */
 
     encode(rec) {   // ...args
         if (typeof rec === 'string') return rec         // already encoded
