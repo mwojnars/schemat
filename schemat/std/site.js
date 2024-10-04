@@ -157,17 +157,15 @@ export class Site extends Item {
     static ['POST/create_item'] = new JsonService(
         async function(request, data_json) {
             /* Create a new object with __data as provided; `data_state` is the result of Catalog.__getstate__(). */
-            // data_json  = request.message
-            return this.database.insert(data_json) //JSONx.stringify(data_state))
+            return this.database.insert(data_json)
         },
         {input: mDataString, output: mDataRecord}
     )
 
     static ['POST/submit_edits'] = new JsonService(async function(request, id, ...plain_edits)
     {
-        /* Submit a list of object edits to the DB. Each plain edit is a 3-element array: [id, op, args],
-           where `id` is the ID of the object to be edited, `op` is the name of the EDIT_* operation to be executed,
-           and `args` is a dictionary of arguments to be passed to the operation.
+        /* Submit a list of object edits to the DB. Each plain edit is a 2-element array: [op, args],
+           where `op` is the name of the EDIT_* operation to be executed, and `args` is a dict {...} of arguments to be passed to the operation.
          */
         let edits = plain_edits.map(([op, args]) => new Edit(op, args))
         let record = await this.database.update(id, ...edits)
