@@ -10,6 +10,9 @@ import {DataRecord} from "../db/records.js";
 export class MessageEncoder {
     /* Encoder for an input/output message transmitted between client & server of a service. */
 
+    array = false       // if true, the result of decode() must be an Array of arguments for subsequent client/server function;
+                        // otherwise, the result of decode(), even if an Array, is treated as a single argument
+
     encode(...args) {
         /* Convert argument(s) of client-side call to a message (typically, a string) that will be passed to the recipient. */
     }
@@ -33,6 +36,7 @@ export class mJsonObject extends MessageEncoder {
 
 export class mJsonObjects extends MessageEncoder {
     /* Encode an array of objects through JSON.stringify(). */
+    array = true
     encode(...objs) { return JSON.stringify(objs) }
     decode(message) { return JSON.parse(message) }
 }
@@ -45,6 +49,7 @@ export class mJsonxObject extends MessageEncoder {
 
 export class mJsonxObjects extends MessageEncoder {
     /* Encode an array of objects through JSONx.stringify(). */
+    array = true
     encode(...objs) { return JSONx.stringify(objs) }
     decode(message) { return JSONx.parse(message) }
 }
@@ -52,15 +57,17 @@ export class mJsonxObjects extends MessageEncoder {
 /**********************************************************************************************************************/
 
 export class mData extends MessageEncoder {
-    /* Encoding of a Data instance. */
-
+    /* Input:  a Data instance, either in its original form, or after __getstate__(), but NOT yet JSONx-encoded.
+       Output: stringified Data instance (no decoding).
+     */
     encode(data) {   // ...args
         if (typeof data === 'string') return data       // already encoded
         return JSONx.stringify(data instanceof Data ? data.__getstate__() : data)
     }
     decode(message) {
-        let data = JSONx.parse(message)
-        return [data instanceof Data ? data : Data.__setstate__(data)]
+        return message
+        // let data = JSONx.parse(message)
+        // return data instanceof Data ? data : Data.__setstate__(data)
     }
 }
 
@@ -282,6 +289,7 @@ export class JsonService extends HttpService {
             // print('decoding via input:', this.input)
             assert(typeof body === 'string')
             args = this.input.decode(body)
+            if (!this.input.array) args = [args]
         }
 
         if (!T.isArray(args)) throw new Error("incorrect format of arguments in the web request")
