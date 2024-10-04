@@ -185,17 +185,13 @@ export class Category extends Item {
                 return items.map(item => item.self_encode())
             },
             async decode_result(records) {
-                /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
-                let items = []
-                for (const rec of records) {                    // rec's shape: {id, data}
-                    if (rec.data) {
-                        rec.data = JSON.stringify(rec.data)
-                        schemat.register_record(rec)
-                        // schemat.db.cache(rec)                   // need to cache the item in ClientDB
-                    }
-                    items.push(await schemat.get_loaded(rec.id))
+                /* Convert records to objects on client and keep in local registry to avoid repeated web requests. */
+                let objects = []
+                for (let {id, data} of records) {
+                    schemat.register_record({id, data})
+                    objects.push(await schemat.get_loaded(id))
                 }
-                return items
+                return objects
             }
         }),
     })
