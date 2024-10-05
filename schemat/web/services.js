@@ -70,7 +70,7 @@ export class mData extends MessageEncoder {
     }
 }
 
-export class mDataStr extends mData {
+export class mDataString extends mData {
     /* Like mData, but no decoding: decode() returns a JSONx string representing the Data instance. */
     decode(message) { return message }
 }

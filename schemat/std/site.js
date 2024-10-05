@@ -3,7 +3,7 @@ import {UrlPathNotFound} from "../common/errors.js"
 import {Request} from '../web/request.js'
 import {Item, Edit} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
-import {JsonService, mDataRecord, mDataStr} from "../web/services.js";
+import {JsonService, mDataRecord, mDataString} from "../web/services.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -157,7 +157,7 @@ export class Site extends Item {
             /* Create a new object with __data as provided; `data_state` is the result of Catalog.__getstate__(). */
             return this.database.insert(data_json)
         },
-        {input: mDataStr, output: mDataRecord}
+        {input: mDataString, output: mDataRecord}
     )
 
     static ['POST/submit_edits'] = new JsonService(async function(request, id, ...plain_edits)
