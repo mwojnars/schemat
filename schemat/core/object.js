@@ -940,7 +940,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
 
         let submit = schemat.site.service.submit_edits(this.id, ...edits).then(rec => {
-            schemat.register_record(DataRecord.decode(rec))
+            schemat.register_record(rec)
+            // schemat.register_record(DataRecord.decode(rec))
         })
         edits.length = 0
         return submit

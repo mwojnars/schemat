@@ -252,7 +252,7 @@ export class DataBlock extends Block {
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
         await this.put(req)                         // save changes and perform change propagation
-        return schemat.register_record(new DataRecord(id, new_data))
+        return schemat.register_record({id, data: new_data})
     }
 
     async delete(req) {
