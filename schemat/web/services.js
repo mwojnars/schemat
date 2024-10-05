@@ -24,7 +24,7 @@ export class MessageEncoder {
         return [error.message || 'Internal Error', error.code]
     }
     decode_error(message, code) {
-        throw new RequestFailed({code, message})
+        throw new RequestFailed({message, code})
     }
 }
 
@@ -34,26 +34,41 @@ export class mString extends MessageEncoder {
     decode(message) { return message }
 }
 
-export class mJsonObject extends MessageEncoder {
+
+export class mJsonError extends MessageEncoder {
+    encode_error(error) {
+        return [JSON.stringify({error}), error.code]
+    }
+    decode_error(message, code) {
+        let error = JSON.parse(message)
+        throw new RequestFailed({...error, code})
+    }
+    // send_error(target, {res}, error, code = 500) {
+    //     res.type('json')
+    //     throw error
+    // }
+}
+
+export class mJsonObject extends mJsonError {
     /* Encode one, but arbitrary, object through JSON.stringify(). */
     encode(obj)     { return JSON.stringify(obj) }
     decode(message) { return JSON.parse(message) }
 }
 
-export class mJsonObjects extends MessageEncoder {
+export class mJsonObjects extends mJsonError {
     /* Encode an array of objects through JSON.stringify(). */
     array = true
     encode(...objs) { return JSON.stringify(objs) }
     decode(message) { return JSON.parse(message) }
 }
 
-export class mJsonxObject extends MessageEncoder {
+export class mJsonxObject extends mJsonError {
     /* Encode one, but arbitrary, object through JSONx.stringify(). */
     encode(obj)     { return JSONx.stringify(obj) }
     decode(message) { return JSONx.parse(message) }
 }
 
-export class mJsonxObjects extends MessageEncoder {
+export class mJsonxObjects extends mJsonError {
     /* Encode an array of objects through JSONx.stringify(). */
     array = true
     encode(...objs) { return JSONx.stringify(objs) }
