@@ -36,17 +36,8 @@ export class mString extends MessageEncoder {
 
 
 export class mJsonError extends MessageEncoder {
-    encode_error(error) {
-        return [JSON.stringify({error}), error.code]
-    }
-    decode_error(message, code) {
-        let error = JSON.parse(message)
-        throw new RequestFailed({...error, code})
-    }
-    // send_error(target, {res}, error, code = 500) {
-    //     res.type('json')
-    //     throw error
-    // }
+    encode_error(error)     { return [JSON.stringify({error}), error.code] }
+    decode_error(msg, code) { throw new RequestFailed({...JSON.parse(msg).error, code}) }
 }
 
 export class mJsonObject extends mJsonError {
@@ -154,9 +145,11 @@ export class Service {
 
     input               // MessageEncoder for input messages (client > server)
     output              // MessageEncoder for output messages (server > client)
+    error               // MessageEncoder for error messages (server > client); same as `output` if missing
 
     static input        // class default for this.input
-    static output       // class default for this.output
+    static output
+    static error
 
 
     get endpoint_type()   { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
@@ -168,9 +161,14 @@ export class Service {
     }
 
     _init_encoders(opts) {
-        let {input = this.constructor.input, output = this.constructor.output} = opts
-        this.input = T.isClass(input) ? new input() : input
+        let {input  = this.constructor.input,
+             output = this.constructor.output,
+             error  = this.constructor.error } = opts
+        error = error || output
+
+        this.input  = T.isClass(input)  ? new input()  : input
         this.output = T.isClass(output) ? new output() : output
+        this.error  = T.isClass(error)  ? new error()  : error
     }
 
     bindAt(endpoint) { this.endpoint = endpoint }
@@ -230,9 +228,10 @@ export class HttpService extends Service {
         let [url, options] = this.encode_args(base_url, ...args)
 
         let ret = await fetch(url, options)                 // `ret` is client-side JS Response object
-        if (!ret.ok) return this.output.decode_error(ret.statusText, ret.status)
-
         let result = await ret.text()
+
+        if (!ret.ok) return this.error.decode_error(result, ret.status)
+
         return this.output.decode(result)
     }
 
@@ -245,7 +244,10 @@ export class HttpService extends Service {
         }
         catch (ex) {
             print('ERROR in HttpService.serve():', ex)
-            this.send_error(target, request, ex)
+            let [msg, code] = this.error.encode_error(ex)
+            request.res.status(code).send(msg)
+            throw ex
+            // this.send_error(target, request, ex)
         }
     }
 
@@ -258,10 +260,10 @@ export class HttpService extends Service {
         request.res.send(result)
     }
 
-    send_error(target, request, error, code = 500) {        // on the server, encode the error and send it to the client
-        request.res.status(error?.code || code).send(error?.message || 'Internal Error')
-        if (error) throw error
-    }
+    // send_error(target, request, error, code = 500) {        // on the server, encode the error and send it to the client
+    //     request.res.status(error?.code || code).send(error?.message || 'Internal Error')
+    //     if (error) throw error
+    // }
 }
 
 
@@ -313,17 +315,17 @@ export class JsonService extends HttpService {
         res.send(this.output.encode(result))
     }
 
-    send_error(target, {res}, error, code = 500) {
-        res.type('json')
-        res.status(error.code || code)
-        res.send({error})
-        throw error
-    }
-
-    async recv_error(ret) {
-        let error = await ret.json()
-        throw new RequestFailed({...error, code: ret.status})
-    }
+    // send_error(target, {res}, error, code = 500) {
+    //     res.type('json')
+    //     res.status(error.code || code)
+    //     res.send({error})
+    //     throw error
+    // }
+    //
+    // async recv_error(ret) {
+    //     let {error} = await ret.json()
+    //     throw new RequestFailed({...error, code: ret.status})
+    // }
 }
 
 export class Task {
