@@ -179,6 +179,7 @@ export class Schemat {
         await builtin.fetch("../db/sequence.js")
         await builtin.fetch("../db/indexes.js")
         await builtin.fetch("../db/db.js")
+        // await builtin.fetch("../common/errors.js")       // needed if mJsonxError is used for transmitting service errors back to client
 
         let accept = (name) => name.toUpperCase() === name
         await builtin.fetch("../types/type.js", {accept})

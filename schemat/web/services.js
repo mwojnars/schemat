@@ -34,11 +34,18 @@ export class mString extends MessageEncoder {
     decode(message) { return message }
 }
 
+/**********************************************************************************************************************/
 
 export class mJsonError extends MessageEncoder {
     encode_error(error)     { return [JSON.stringify({error}), error.code] }
     decode_error(msg, code) { throw new RequestFailed({...JSON.parse(msg).error, code}) }
 }
+
+export class mJsonxError extends MessageEncoder {
+    encode_error(error)     { return [JSONx.stringify({error}), error.code] }
+    decode_error(msg, code) { throw JSONx.parse(msg).error }
+}
+
 
 export class mJsonObject extends mJsonError {
     /* Encode one, but arbitrary, object through JSON.stringify(). */
@@ -221,6 +228,7 @@ export class HttpService extends Service {
 
     static input  = mJsonObjects   // client submits an array of JSON-encoded objects by default
     static output = mString
+    static error  = mJsonError
 
 
     async client(target, ...args) {
@@ -278,6 +286,7 @@ export class JsonService extends HttpService {
 
     static input  = mJsonObjects   // client submits an array of JSON-encoded objects by default
     static output = mJsonObject    // server responds with a single JSON-encoded object by default
+
 
     encode_args(url, ...args) {
         /* Fetch the `url` while including the `args` (if any) in the request body, json-encoded.
