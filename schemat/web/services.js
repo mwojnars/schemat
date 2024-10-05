@@ -136,7 +136,7 @@ export class Service {
 
     opts = {}           // configuration options
     static opts = {     // default values of configuration options
-        input: mJsonObjects,
+        input:  mJsonObjects,
         output: mJsonObject,
     }
 
@@ -252,11 +252,6 @@ export class JsonService extends HttpService {
        objects as arguments or results, you should perform JSONx.encode/decode() before and after the call.
      */
 
-    opts = {
-        encodeArgs:   true,         // if true, the arguments of RPC calls are auto-encoded via JSONx before sending
-        encodeResult: false,        // if true, the results of RPC calls are auto-encoded via JSONx before sending
-    }
-
     encode_args(url, ...args) {
         /* Fetch the `url` while including the `args` (if any) in the request body, json-encoded.
            For GET requests, `args` must be missing (undefined), as we don't allow body in GET.
@@ -265,17 +260,9 @@ export class JsonService extends HttpService {
         let params = {method, headers: {}}
         if (args !== undefined) {
             if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
-
-            if (this.input) {
-                // print('encoding via input:', this.input)
-                let msg = this.input.encode(...args)
-                if (typeof msg !== 'string') msg = JSON.stringify(msg)
-                params.body = msg
-            }
-            else {
-                if (this.opts.encodeArgs) args = JSONx.encode(args)
-                params.body = JSON.stringify(args)
-            }
+            let msg = this.input.encode(...args)
+            if (typeof msg !== 'string') msg = JSON.stringify(msg)
+            params.body = msg
         }
         return [url, params]
     }
@@ -284,17 +271,10 @@ export class JsonService extends HttpService {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
 
         let body = request.req.body             // `req` is Express's request object
+        assert(typeof body === 'string')
 
-        // the arguments may have already been JSON-parsed by middleware if mimetype=json was set in the request; it can also be {}
-        let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
-        if (this.opts.encodeArgs) args = JSONx.decode(args)
-
-        if (this.input) {
-            // print('decoding via input:', this.input)
-            assert(typeof body === 'string')
-            args = this.input.decode(body)
-            if (!this.input.array) args = [args]
-        }
+        let args = this.input.decode(body)
+        if (!this.input.array) args = [args]
 
         if (!T.isArray(args)) throw new Error("incorrect format of arguments in the web request")
         return args
@@ -304,18 +284,12 @@ export class JsonService extends HttpService {
         /* JSON-encode and send the result of the service execution, or an {error} with a proper
            HTTP status code if an exception was caught. */
         res.type('json')
-        if (result === undefined) return res.end()                      // missing result --> empty response body
+        if (result === undefined) return res.end()          // missing result --> empty response body
         res.send(this.output.encode(result))
-        // if (this.opts.encodeResult) result = JSONx.encode(result)
-        // res.send(JSON.stringify(result))
     }
 
     recv_result(result, ...args) {
         return this.output.decode(result)
-        // if (!result) return
-        // result = JSON.parse(result)
-        // if (this.opts.encodeResult) result = JSONx.decode(result)
-        // return result
     }
 
     send_error(target, {res}, error, code = 500) {
