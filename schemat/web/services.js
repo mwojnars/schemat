@@ -134,18 +134,14 @@ export class Service {
     input  = mJsonObjects   // MessageEncoder for input messages (client > server)
     output = mJsonObject    // MessageEncoder for output messages (server > client)
 
-    opts = {}           // configuration options
-    static opts = {}    // default values of configuration options
-
 
     get endpoint_type()   { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
     get endpoint_name()   { return this._splitEndpoint()[1] }       // name of the endpoint (function/action to execute)
 
     constructor(service_function = null, opts = {}) {
         this.service_function = service_function
-        this.opts = {...this.constructor.opts, ...opts}
 
-        let {input = this.input, output = this.output} = this.opts
+        let {input = this.input, output = this.output} = opts
         this.input = T.isClass(input) ? new input() : input
         this.output = T.isClass(output) ? new output() : output
     }
@@ -335,33 +331,6 @@ export class TaskService extends JsonService {
         super(null, opts)
         this.tasks = tasks
     }
-
-    // merge(service) {
-    //     /* If `service` is of the exact same class as self, merge tasks of both services, otherwise return `service`.
-    //        The `opts` in both services must be exactly THE SAME, otherwise the tasks from one service could not
-    //        work properly with the options from another one.
-    //      */
-    //
-    //     let c1 = T.getClass(this)
-    //     let c2 = T.getClass(service)
-    //     if (c1 !== c2) throw new Error(`overriding TaskService instance with a different service (${c2}) is not allowed`)
-    //     // if (c1 !== c2) return service          // `service` can be null
-    //     assert(this.endpoint === service.endpoint, this.endpoint, service.endpoint)
-    //
-    //     // check that the options are the same
-    //     let opts1 = JSON.stringify(this.opts)
-    //     let opts2 = JSON.stringify(service.opts)
-    //     if (opts1 !== opts2)
-    //         throw new Error(`cannot merge services that have different options: ${opts1} != ${opts2}`)
-    //
-    //     // create a new service instance with the tasks combined; copy the endpoint
-    //     let tasks = {...this.tasks, ...service.tasks}
-    //     let opts = {...this.opts, ...service.opts}
-    //     let merged = new c1(tasks, opts)
-    //     merged.bindAt(this.endpoint)
-    //
-    //     return merged
-    // }
 
     async client(target, ...args) {
         /* Call super.client() with optional pre- and postprocessing of the arguments and the result. */
