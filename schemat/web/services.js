@@ -21,7 +21,7 @@ export class MessageEncoder {
     }
 
     encode_error(error) {
-        return [error.message || 'Internal Error', error.code]
+        return [error.message || 'Internal Error', error.code || 500]
     }
     decode_error(message, code) {
         throw new RequestFailed({message, code})
@@ -37,12 +37,12 @@ export class mString extends MessageEncoder {
 /**********************************************************************************************************************/
 
 export class mJsonError extends MessageEncoder {
-    encode_error(error)     { return [JSON.stringify({error}), error.code] }
+    encode_error(error)     { return [JSON.stringify({error}), error.code || 500] }
     decode_error(msg, code) { throw new RequestFailed({...JSON.parse(msg).error, code}) }
 }
 
 export class mJsonxError extends MessageEncoder {
-    encode_error(error)     { return [JSONx.stringify({error}), error.code] }
+    encode_error(error)     { return [JSONx.stringify({error}), error.code || 500] }
     decode_error(msg, code) { throw JSONx.parse(msg).error }
 }
 
@@ -60,13 +60,13 @@ export class mJsonObjects extends mJsonError {
     decode(message) { return JSON.parse(message) }
 }
 
-export class mJsonxObject extends mJsonError {
+export class mJsonxObject extends mJsonxError {
     /* Encode one, but arbitrary, object through JSONx.stringify(). */
     encode(obj)     { return JSONx.stringify(obj) }
     decode(message) { return JSONx.parse(message) }
 }
 
-export class mJsonxObjects extends mJsonError {
+export class mJsonxObjects extends mJsonxError {
     /* Encode an array of objects through JSONx.stringify(). */
     array = true
     encode(...objs) { return JSONx.stringify(objs) }
@@ -267,11 +267,6 @@ export class HttpService extends Service {
     send_result(target, request, result, ...args) {         // on the server, encode the result and send it to the client
         request.res.send(result)
     }
-
-    // send_error(target, request, error, code = 500) {        // on the server, encode the error and send it to the client
-    //     request.res.status(error?.code || code).send(error?.message || 'Internal Error')
-    //     if (error) throw error
-    // }
 }
 
 
@@ -323,18 +318,6 @@ export class JsonService extends HttpService {
         if (result === undefined) return res.end()          // missing result --> empty response body
         res.send(this.output.encode(result))
     }
-
-    // send_error(target, {res}, error, code = 500) {
-    //     res.type('json')
-    //     res.status(error.code || code)
-    //     res.send({error})
-    //     throw error
-    // }
-    //
-    // async recv_error(ret) {
-    //     let {error} = await ret.json()
-    //     throw new RequestFailed({...error, code: ret.status})
-    // }
 }
 
 export class Task {
