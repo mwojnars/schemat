@@ -181,15 +181,15 @@ export class DataRecord {
         return new DataRecord(id, json)
     }
 
-    encoded() {
-        assert(this.id !== undefined, `missing 'id' in DataRecord.encoded()`)
-        return {id: this.id, data: this.data_plain}
-    }
-
-    static decode({id, data}) {
-        /* Recreate a DataRecord from the plain-object result of .encoded(). */
-        return new DataRecord(id, JSON.stringify(data))
-    }
+    // encoded() {
+    //     assert(this.id !== undefined, `missing 'id' in DataRecord.encoded()`)
+    //     return {id: this.id, data: this.data_plain}
+    // }
+    //
+    // static decode({id, data}) {
+    //     /* Recreate a DataRecord from the plain-object result of .encoded(). */
+    //     return new DataRecord(id, JSON.stringify(data))
+    // }
 }
 
 /**********************************************************************************************************************/
