@@ -10,6 +10,7 @@ import {DataRecord} from "../db/records.js";
 export class MessageEncoder {
     /* Encoder for an input/output message transmitted between client & server of a service. */
 
+    type                // optional HTTP response type (mime)
     array = false       // if true, the result of decode() must be an Array of arguments for subsequent client/server function;
                         // otherwise, the result of decode(), even if an Array, is treated as a single argument
 
@@ -36,12 +37,16 @@ export class mString extends MessageEncoder {
 
 /**********************************************************************************************************************/
 
-export class mJsonError extends MessageEncoder {
+export class mJsonBase extends MessageEncoder {
+    type = 'json'
+}
+
+export class mJsonError extends mJsonBase {
     encode_error(error)     { return [JSON.stringify({error}), error.code || 500] }
     decode_error(msg, code) { throw new RequestFailed({...JSON.parse(msg).error, code}) }
 }
 
-export class mJsonxError extends MessageEncoder {
+export class mJsonxError extends mJsonBase {
     encode_error(error)     { return [JSONx.stringify({error}), error.code || 500] }
     decode_error(msg, code) { throw JSONx.parse(msg).error }
 }
@@ -264,8 +269,10 @@ export class HttpService extends Service {
     encode_args(url, ...args)      { return [url, {}] }     // on the client, encode the arguments as [URL, options for fetch()]; here, args are ignored, but subclasses may use them
     decode_args(target, request)   { return [] }            // on the server, decode the arguments from the request object
 
-    send_result(target, request, result, ...args) {         // on the server, encode the result and send it to the client
-        request.res.send(result)
+    send_result(target, {res}, result, ...args) {           // on the server, encode the result and send it to the client
+        if (this.output.type) res.type(this.output.type)
+        if (result === undefined) return res.end()          // missing result --> empty response body
+        res.send(this.output.encode(result))
     }
 }
 
@@ -309,14 +316,6 @@ export class JsonService extends HttpService {
 
         if (!T.isArray(args)) throw new Error("incorrect format of arguments in the web request")
         return args
-    }
-
-    send_result(target, {res}, result, ...args) {
-        /* JSON-encode and send the result of the service execution, or an {error} with a proper
-           HTTP status code if an exception was caught. */
-        res.type('json')
-        if (result === undefined) return res.end()          // missing result --> empty response body
-        res.send(this.output.encode(result))
     }
 }
 
