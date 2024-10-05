@@ -131,14 +131,11 @@ export class Service {
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                         // like a method of the "target"; `request` is a Request, or {} if called directly on the server
 
-    input               // MessageEncoder for input messages (client > server)
-    output              // MessageEncoder for output messages (server > client)
+    input  = mJsonObjects   // MessageEncoder for input messages (client > server)
+    output = mJsonObject    // MessageEncoder for output messages (server > client)
 
     opts = {}           // configuration options
-    static opts = {     // default values of configuration options
-        input:  mJsonObjects,
-        output: mJsonObject,
-    }
+    static opts = {}    // default values of configuration options
 
 
     get endpoint_type()   { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
@@ -148,7 +145,7 @@ export class Service {
         this.service_function = service_function
         this.opts = {...this.constructor.opts, ...opts}
 
-        let {input, output} = this.opts
+        let {input = this.input, output = this.output} = this.opts
         this.input = T.isClass(input) ? new input() : input
         this.output = T.isClass(output) ? new output() : output
     }
