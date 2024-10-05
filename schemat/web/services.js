@@ -240,14 +240,8 @@ export class HttpService extends Service {
         let base_url = target.url(this.endpoint_name)       // it's assumed the `target` is an Item instance with .url()
         let message  = this.input.encode(...args)
         let response = await this.submit(base_url, message)
-
-        // let [url, options] = this.encode_args(base_url, ...args)
-        // let response = await fetch(url, options)            // `response` is client-side JS Response object
-
-        let result = await response.text()
-        if (!response.ok) return this.error.decode_error(result, response.status)
-
-        return this.output.decode(result)
+        let result   = await response.text()
+        return response.ok ? this.output.decode(result) : this.error.decode_error(result, response.status)
     }
 
     async submit(url, message) { return fetch(url, {}) }    // `message` not used for now in the HttpService base class
@@ -264,11 +258,9 @@ export class HttpService extends Service {
             let [msg, code] = this.error.encode_error(ex)
             request.res.status(code).send(msg)
             throw ex
-            // this.send_error(target, request, ex)
         }
     }
 
-    // encode_args(url, ...args)      { return [url, {}] }     // on the client, encode the arguments as [URL, options for fetch()]; here, args are ignored, but subclasses may use them
     decode_args(target, request)   { return [] }            // on the server, decode the arguments from the request object
 
     send_result(target, {res}, result, ...args) {           // on the server, encode the result and send it to the client
@@ -300,21 +292,6 @@ export class JsonService extends HttpService {
         let params = {method, body: message, headers: {}}
         return fetch(url, params)
     }
-
-    // encode_args(url, ...args) {
-    //     /* Fetch the `url` while including the `args` (if any) in the request body, json-encoded.
-    //        For GET requests, `args` must be missing (undefined), as we don't allow body in GET.
-    //      */
-    //     let method = this.endpoint_type || 'POST'
-    //     let params = {method, headers: {}}
-    //     if (args !== undefined) {
-    //         if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
-    //         let msg = this.input.encode(...args)
-    //         if (typeof msg !== 'string') msg = JSON.stringify(msg)
-    //         params.body = msg
-    //     }
-    //     return [url, params]
-    // }
 
     decode_args(target, request) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
