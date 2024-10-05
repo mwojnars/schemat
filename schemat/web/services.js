@@ -131,8 +131,11 @@ export class Service {
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                         // like a method of the "target"; `request` is a Request, or {} if called directly on the server
 
-    input  = mJsonObjects   // MessageEncoder for input messages (client > server)
-    output = mJsonObject    // MessageEncoder for output messages (server > client)
+    input               // MessageEncoder for input messages (client > server)
+    output              // MessageEncoder for output messages (server > client)
+
+    static input
+    static output
 
 
     get endpoint_type()   { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
@@ -140,8 +143,11 @@ export class Service {
 
     constructor(service_function = null, opts = {}) {
         this.service_function = service_function
+        this._init_encoders(opts)
+    }
 
-        let {input = this.input, output = this.output} = opts
+    _init_encoders(opts) {
+        let {input = this.constructor.input, output = this.constructor.output} = opts
         this.input = T.isClass(input) ? new input() : input
         this.output = T.isClass(output) ? new output() : output
     }
@@ -193,6 +199,11 @@ export class HttpService extends Service {
        should use `req` and `res` objects directly, and it is also responsible for error handling.
        client() returns response body as a raw string.
      */
+
+    static input  = mJsonObjects   // client submits an array of JSON-encoded objects by default
+    static output = mJsonObject    // server responds with a single JSON-encoded object by default
+
+
     async client(target, ...args) {
         let base_url = target.url(this.endpoint_name)       // it's assumed the `target` is an Item instance with .url()
         let [url, options] = this.encode_args(base_url, ...args)
@@ -244,6 +255,9 @@ export class JsonService extends HttpService {
        The standard JSON object is used here, *not* JSONx, so if you want to transfer more complex Schemat-native
        objects as arguments or results, you should perform JSONx.encode/decode() before and after the call.
      */
+
+    static input  = mJsonObjects   // client submits an array of JSON-encoded objects by default
+    static output = mJsonObject    // server responds with a single JSON-encoded object by default
 
     encode_args(url, ...args) {
         /* Fetch the `url` while including the `args` (if any) in the request body, json-encoded.
