@@ -28,6 +28,12 @@ export class MessageEncoder {
     }
 }
 
+export class mString extends MessageEncoder {
+    /* No encoding. A plain string (or any object) is passed along unchanged. */
+    encode(arg)     { return arg }
+    decode(message) { return message }
+}
+
 export class mJsonObject extends MessageEncoder {
     /* Encode one, but arbitrary, object through JSON.stringify(). */
     encode(obj)     { return JSON.stringify(obj) }
@@ -134,8 +140,8 @@ export class Service {
     input               // MessageEncoder for input messages (client > server)
     output              // MessageEncoder for output messages (server > client)
 
-    static input
-    static output
+    static input        // class default for this.input
+    static output       // class default for this.output
 
 
     get endpoint_type()   { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
@@ -201,7 +207,7 @@ export class HttpService extends Service {
      */
 
     static input  = mJsonObjects   // client submits an array of JSON-encoded objects by default
-    static output = mJsonObject    // server responds with a single JSON-encoded object by default
+    static output = mString
 
 
     async client(target, ...args) {
@@ -212,7 +218,7 @@ export class HttpService extends Service {
         if (!ret.ok) return this.recv_error(ret)
 
         let result = await ret.text()
-        return this.recv_result(result, ...args)
+        return this.output.decode(result)
     }
 
     async handle(target, request) {
@@ -242,7 +248,6 @@ export class HttpService extends Service {
         if (error) throw error
     }
 
-    recv_result(result, ...args)   { return result }        // on the client, decode (and store) the result received from the server
     recv_error(ret, ...args)       { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
 }
 
@@ -293,10 +298,6 @@ export class JsonService extends HttpService {
         res.type('json')
         if (result === undefined) return res.end()          // missing result --> empty response body
         res.send(this.output.encode(result))
-    }
-
-    recv_result(result, ...args) {
-        return this.output.decode(result)
     }
 
     send_error(target, {res}, error, code = 500) {
