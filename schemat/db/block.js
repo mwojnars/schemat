@@ -3,7 +3,6 @@ import {DataAccessError, DataConsistencyError, NotImplemented} from '../common/e
 import {Item} from '../core/object.js'
 import {ChangeRequest, data_schema, DataRecord} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../common/binary.js";
-import {INTEGER} from "../types/type.js";
 
 // import { Kafka } from 'kafkajs'
 

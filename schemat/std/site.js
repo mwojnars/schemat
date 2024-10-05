@@ -1,7 +1,7 @@
 import {print, assert, T, delay, splitLast} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Request} from '../web/request.js'
-import {Item, Edit} from '../core/object.js'
+import {Item} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonService, mDataRecord, mDataString} from "../web/services.js";
 
@@ -154,18 +154,17 @@ export class Site extends Item {
 
     static ['POST/create_item'] = new JsonService(
         async function(request, data_json) {
-            /* Create a new object with __data as provided; `data_state` is the result of Catalog.__getstate__(). */
+            /* Create a new object with __data initialized from the provided JSONx-stringified representation. */
             return this.database.insert(data_json)
         },
         {input: mDataString, output: mDataRecord}
     )
 
-    static ['POST/submit_edits'] = new JsonService(async function(request, id, ...plain_edits)
+    static ['POST/submit_edits'] = new JsonService(async function(request, id, ...edits)
     {
         /* Submit a list of object edits to the DB. Each plain edit is a 2-element array: [op, args],
            where `op` is the name of the EDIT_* operation to be executed, and `args` is a dict {...} of arguments to be passed to the operation.
          */
-        let edits = plain_edits.map(([op, args]) => new Edit(op, args))
         let record = await this.database.update(id, ...edits)
         return record.encoded()
     })
