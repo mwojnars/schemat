@@ -215,7 +215,7 @@ export class HttpService extends Service {
         let [url, options] = this.encode_args(base_url, ...args)
 
         let ret = await fetch(url, options)                 // `ret` is client-side JS Response object
-        if (!ret.ok) return this.recv_error(ret)
+        if (!ret.ok) return this.output.decode_error(ret.statusText, ret.status)
 
         let result = await ret.text()
         return this.output.decode(result)
@@ -247,8 +247,6 @@ export class HttpService extends Service {
         request.res.status(error?.code || code).send(error?.message || 'Internal Error')
         if (error) throw error
     }
-
-    recv_error(ret, ...args)       { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
 }
 
 
