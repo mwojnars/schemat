@@ -1,7 +1,7 @@
 import {assert, print, T} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {Item} from '../core/object.js'
-import {ChangeRequest, data_schema, DataRecord} from "./records.js";
+import {ChangeRequest, data_schema} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../common/binary.js";
 
 // import { Kafka } from 'kafkajs'

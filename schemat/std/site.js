@@ -161,14 +161,12 @@ export class Site extends Item {
     )
 
     static ['POST/submit_edits'] = new JsonService(async function(request, id, ...edits)
-    {
-        /* Submit a list of object edits to the DB. Each plain edit is a 2-element array: [op, args],
-           where `op` is the name of the EDIT_* operation to be executed, and `args` is a dict {...} of arguments to be passed to the operation.
-         */
-        return this.database.update(id, ...edits)
-        // let record = await this.database.update(id, ...edits)
-        // return record.encoded()
-    },
+        {
+            /* Submit a list of object edits to the DB. Each plain edit is a 2-element array: [op, args],
+               where `op` is the name of the EDIT_* operation to be executed, and `args` is a dict {...} of arguments to be passed to the operation.
+             */
+            return this.database.update(id, ...edits)
+        },
         {output: mDataRecord}
     )
 

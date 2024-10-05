@@ -11,7 +11,6 @@ import {NotLinked, NotLoaded, ValidationError} from '../common/errors.js'
 import {Data} from './data.js'
 import {REF} from "../types/type.js"
 import {DATA_GENERIC} from "../types/catalog.js"
-import {DataRecord} from "../db/records.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {Request} from "../web/request.js"
@@ -929,11 +928,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         if (this.is_newborn()) {
             edits.length = 0                // truncate all edits up to now, they should be already reflected in __data
-            // let state = this.__data.__getstate__()
             return schemat.site.service.create_item(this.__data).then(rec => {
                 this.__id = rec.id
                 schemat.register_record(rec)
-                // this.__id = schemat.register_record(DataRecord.decode(rec)).id
             })
         }
 
@@ -941,7 +938,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         let submit = schemat.site.service.submit_edits(this.id, ...edits).then(rec => {
             schemat.register_record(rec)
-            // schemat.register_record(DataRecord.decode(rec))
         })
         edits.length = 0
         return submit
