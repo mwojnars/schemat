@@ -171,8 +171,8 @@ export class RenderedPage extends HtmlPage {
 }
 
 export class ReactPage extends RenderedPage {
-    /* Generates a React-based HTML page whose main content is rendered from a React functional component, Main().
-       By default, Main() is written to the #page-main element in the page body, and any additional
+    /* Generates a React-based HTML page whose main content is rendered from a React functional component, Page().
+       By default, Page() is written to the #page-main element in the page body, and any additional
        (meta)data is written to the #page-data element. A <script> tag is added to the page to load
        the client-side JS code that will render the same component on the client side.
        The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
@@ -185,9 +185,9 @@ export class ReactPage extends RenderedPage {
         let root  = document.querySelector("#page-main")
         let view  = this.create_view(target)
         let props = await view.prepare('client') || {}
-        let main  = e(view.Main, props)
-        return ReactDOM.hydrateRoot(root, main)
-        // return ReactDOM.createRoot(root).render(main)    // this re-renders the entire tree from scratch (no hydration)
+        let page  = e(view.Page, props)
+        return ReactDOM.hydrateRoot(root, page)
+        // return ReactDOM.createRoot(root).render(page)    // this re-renders the entire tree from scratch (no hydration)
     }
 
     static View = class extends RenderedPage.View {
@@ -203,17 +203,17 @@ export class ReactPage extends RenderedPage {
             this.assert_loaded()
             print(`SSR render('${request.endpoint}') of ID=${this.__id}`)
 
-            // print('React tree:\n', ReactDOM.renderToStaticMarkup(e(this.Main, props)))
-            // printReactTree(this.Main())
+            // print('React tree:\n', ReactDOM.renderToStaticMarkup(e(this.Page, props)))
+            // printReactTree(this.Page())
 
-            let main = e(this.Main, props)
-            return ReactDOM.renderToString(main)
+            let page = e(this.Page, props)
+            return ReactDOM.renderToString(page)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
         }
 
-        Main() {
+        Page() {
             /* The React functional component to be rendered as the page's content. */
-            throw new NotImplemented('Main() component must be implemented in subclasses')
+            throw new NotImplemented('Page() component must be implemented in subclasses')
         }
     }
 }
@@ -242,7 +242,7 @@ export class ItemRecordView extends ReactPage.View {
         return assets .filter(a => a?.trim()) .join('\n')
     }
 
-    Main({extra = null} = {}) {
+    Page({extra = null} = {}) {
         /* Detailed (admin) view of an item. */
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
@@ -291,7 +291,7 @@ export class CategoryRecordView extends ItemRecordView {
         return {items}
     }
 
-    Main({items: preloaded}) {
+    Page({items: preloaded}) {
         const scan = () => this.service.list_objects()
         const [items, setItems] = useState(preloaded)           // existing child items; state prevents re-scan after every itemAdded()
                                                                 // TODO: use materialized list of items to explicitly control re-scanning
@@ -301,7 +301,7 @@ export class CategoryRecordView extends ItemRecordView {
         const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
         const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
-        return super.Main({extra: FRAGMENT(
+        return super.Page({extra: FRAGMENT(
             H2('Members'),
             e(this.Items, {items: items, itemRemoved: async () => setItems(await scan()), key: 'items'}),
             H3('Create New'),

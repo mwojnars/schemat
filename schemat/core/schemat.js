@@ -3,7 +3,6 @@ import {DependenciesStack} from '../common/structs.js'
 import {Item} from './object.js'
 import {Category, ROOT_ID} from './category.js'
 import {Registry} from "./registry.js";
-import {RequestContext} from "../web/request.js";
 import {DataRequest} from "../db/data_request.js";
 import {DataRecord} from "../db/records.js";
 // import Resources from "../web/resources.js";
