@@ -188,34 +188,31 @@ export class Category extends Item {
         }
     )
 
-    static ['POST/read'] = new TaskService({
-        list_items: new Task({
-            /* Retrieve all children of `this` category server-side and send them to client as a JSON array
-               of flat, fully loaded records.
-             */
-            async process(request, offset, limit) {
-                return this.list_objects({load: true, offset, limit})
-            },
-            encode_result(items) {
-                return items.map(item => item.self_encode())
-            },
-            async decode_result(records) {
-                /* Convert records to objects on client and keep in local registry to avoid repeated web requests. */
-                let objects = []
-                for (let {id, data} of records) {
-                    schemat.register_record({id, data})
-                    objects.push(await schemat.get_loaded(id))
-                }
-                return objects
-            }
-        }),
-    })
+    // static ['POST/read'] = new TaskService({
+    //     list_items: new Task({
+    //         /* Retrieve all children of `this` category server-side and send them to client as a JSON array
+    //            of flat, fully loaded records.
+    //          */
+    //         async process(request, offset, limit) {
+    //             return this.list_objects({load: true, offset, limit})
+    //         },
+    //         encode_result(items) {
+    //             return items.map(item => item.self_encode())
+    //         },
+    //         async decode_result(records) {
+    //             /* Convert records to objects on client and keep in local registry to avoid repeated web requests. */
+    //             let objects = []
+    //             for (let {id, data} of records) {
+    //                 schemat.register_record({id, data})
+    //                 objects.push(await schemat.get_loaded(id))
+    //             }
+    //             return objects
+    //         }
+    //     }),
+    // })
 
-
-    /***  Actions  ***/
 
     list_items()    { return this.service.list_items() }
-    // list_items()    { return this.service.read('list_items') }
 }
 
 
