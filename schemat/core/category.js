@@ -36,11 +36,13 @@ export class Category extends Item {
         return new DATA({fields, strict: custom !== true})
     }
 
-    // get __child_class() { return schemat.site.import(this.class) }      // TODO: add smart caching of Promises in ItemProxy
+    get __child_class() { return schemat.import(this.class) }
 
 
     async __init__() {
-        this.__child_class = await schemat.import(this.class)
+        // this.__child_class = await schemat.import(this.class)
+        // print(`\nthis.__child_class [${this.id}]:`, this.__child_class)
+        await this.__child_class            // now, __child_class is a regular value, not a promise
         return this._init_schema()
     }
 

@@ -162,10 +162,8 @@ class ItemProxy {
         let values = target._compute_property(prop)
 
         if (cache) {
-            ItemProxy._cache_values(cache, prop + suffix, values)
             ItemProxy._cache_value(cache, prop, values.length ? values[0] : ItemProxy.UNDEFINED)
-            // cache.set(prop + suffix, values)
-            // cache.set(prop, values.length ? values[0] : ItemProxy.UNDEFINED)
+            ItemProxy._cache_values(cache, prop + suffix, values)
         }
         return plural ? values : values[0]
     }
