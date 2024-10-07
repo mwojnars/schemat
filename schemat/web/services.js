@@ -187,6 +187,7 @@ export class Service {
 
     constructor(service_function = null, opts = {}) {
         this.service_function = service_function
+        this.opts = opts
         this._init_encoders(opts)
     }
 
@@ -259,7 +260,10 @@ export class HttpService extends Service {
         let message  = this.input.encode(...args)
         let response = await this.submit(base_url, message)
         let result   = await response.text()
-        return response.ok ? this.output.decode(result) : this.error.decode_error(result, response.status)
+        if (!response.ok) return this.error.decode_error(result, response.status)
+
+        result = this.output.decode(result)
+        return this.opts.accept ? this.opts.accept(result) : result
     }
 
     async submit(url, message) { return fetch(url, {}) }    // `message` not used for now in the HttpService base class

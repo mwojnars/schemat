@@ -177,13 +177,11 @@ export class Site extends Item {
 
     // POST_create_item() { return new Service({
     //     client: async (url, ...args) => {},
-    //     encode: (...args) => {},
     //     submit: (...args) => {},
     //     accept: (...args) => {},
     //     regret: (...args) => {},   //error catch expose reject fail decline abort crash finish cancel giveup refuse discard
     //
     //     handle: (request) => {},
-    //     decode: (request) => {},
     //     server: async (...args) => {
     //         /* Create a new item in this category based on request data. */
     //         let data = Data.__setstate__(data_state)
