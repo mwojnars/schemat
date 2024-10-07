@@ -248,9 +248,9 @@ export class Schemat {
     }
 
     invalidate_object(id) {
-        /* Remove an (outdated) object from the registry. If a stub, or currently loading, the object is kept. */
+        /* Remove an (outdated) object from the registry. If a stub (no __data yet), the object is kept. */
         let obj = this.registry.get_object(id)
-        if (obj?.is_loaded()) this._on_evict(obj) || this.registry.delete_object(id)
+        if (obj?.__data) this._on_evict(obj) || this.registry.delete_object(id)
     }
 
     async _purge_registry() {
