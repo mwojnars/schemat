@@ -83,7 +83,7 @@ export class RequestContext {
         let items = new ObjectSet()
         let queue = [target, site, ...site.global?.values() || [], ...objects].filter(Boolean)
         
-        // extend the `items` set with all objects that are referenced from the `target` and `site` via __category or __extend
+        // extend the `items` set with all objects that are referenced from the `target` and `site` via __category, __extend or __container
         // TODO: deduplicate IDs when repeated by different object instances (e.g., this happens for the root category)
         while (queue.length) {
             let obj = queue.pop()
@@ -91,8 +91,9 @@ export class RequestContext {
             obj.assert_loaded()
 
             items.add(obj)
-            queue.push(obj.__category)
+            queue.push(...obj.__category$)
             queue.push(...obj.__prototypes)
+            queue.push(obj.__container)
         }
         items = [...items]
 
