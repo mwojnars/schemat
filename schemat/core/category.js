@@ -183,7 +183,6 @@ export class Category extends Item {
             accept: (records) => {
                 // replace records with fully-loaded objects; there's NO guarantee that a given object was actually built from
                 // `rec.data` as received in this particular request, because a newer record might have arrived in the meantime!
-                print(`list_items/accept()`)
                 return Promise.all(records.map(rec => schemat.get_loaded(rec.id)))
             }
         }
@@ -215,7 +214,8 @@ export class Category extends Item {
 
     /***  Actions  ***/
 
-    list_items()            { return this.service.read('list_items') }
+    list_items()    { return this.service.list_items() }
+    // list_items()    { return this.service.read('list_items') }
 }
 
 
