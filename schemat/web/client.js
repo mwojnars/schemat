@@ -9,19 +9,19 @@ import {RequestContext} from "./request.js"
 
 export class ClientDB {
 
-    async select(req /*DataRequest*/) {
-        /* Look up this._cache for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
-        let id = req.args.id
-        let {data} = await this._from_ajax(id)
-        return JSON.stringify(data)
-    }
-
-    async _from_ajax(id) {
-        /* Retrieve an object by its ID from a server-side DB. */
-        print(`ajax download [${id}]...`)
-        let url = schemat.site.default_path_of(id) + '::json'
-        return fetch(url).then(response => response.json())         // load object's JSON data from the server
-    }
+    // async select(req /*DataRequest*/) {
+    //     /* Look up this._cache for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
+    //     let id = req.args.id
+    //     let {data} = await this._from_ajax(id)
+    //     return JSON.stringify(data)
+    // }
+    //
+    // async _from_ajax(id) {
+    //     /* Retrieve an object by its ID from a server-side DB. */
+    //     print(`ajax download [${id}]...`)
+    //     let url = schemat.site.default_path_of(id) + '::json'
+    //     return fetch(url).then(response => response.json())         // load object's JSON data from the server
+    // }
 }
 
 
