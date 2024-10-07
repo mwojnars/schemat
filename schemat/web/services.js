@@ -84,7 +84,7 @@ export class mData extends MessageEncoder {
     /* Encode: a Data instance, either in its original form, or after __getstate__(), but NOT yet JSONx-encoded.
        Decode: fully parsed and decoded Data instance.
      */
-    encode(data) {   // ...args
+    encode(data) {
         if (typeof data === 'string') return data       // already encoded
         return JSONx.stringify(data instanceof Data ? data.__getstate__() : data)
     }
@@ -99,12 +99,13 @@ export class mDataString extends mData {
     decode(message) { return message }
 }
 
+
 export class mDataRecord extends MessageEncoder {
-    /* Encode: object of the form {id, data}, where `data` is a stringified or *encoded* (plain-object) representation of a Data instance.
-       Decode: {id, data}, where `data` is still JSONx-encoded, but no longer stringified.
-       After decoding, the record gets automatically registered as the newest representation of a given ID (!).
+    /* Encoded: object of the form {id, data}, where `data` is a stringified or *encoded* (plain-object) representation of a Data instance.
+       Decoded: {id, data}, where `data` is still JSONx-encoded, but no longer stringified.
+       After decoding, the record gets automatically registered as the newest representation of a given ID.
      */
-    encode(rec) {   // ...args
+    encode(rec) {
         if (typeof rec === 'string') assert(false)  //return rec         // already encoded
         if (rec instanceof DataRecord) assert(false)  //return JSON.stringify(rec.encoded())
 
@@ -119,6 +120,20 @@ export class mDataRecord extends MessageEncoder {
         // let {id, data} = JSONx.parse(message)
         // if (!(data instanceof Data)) data = Data.__setstate__(data)
         // return {id, data}
+    }
+}
+
+export class mDataRecords extends MessageEncoder {
+    /* Encoded: array of web objects, [obj1, obj2, ...].
+       Decoded: [{id, data},...], where `data` is a JSONx-encoded state of __data, not stringified.
+       After decoding, all records get automatically registered as the newest representations of the corresponding IDs.
+     */
+    array = true
+
+    encode(objects) { return objects.map(obj => obj.self_encode()) }
+    decode(message) {
+        let records = JSON.parse(message)
+        return records.map(rec => schemat.register_record(rec))
     }
 }
 
