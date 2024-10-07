@@ -173,7 +173,7 @@ export class Category extends Item {
 
     static ['GET/record'] = new ReactPage(CategoryRecordView)
 
-    static ['POST/list_items'] = new JsonService(
+    static ['POST/list_objects'] = new JsonService(
         async function(request, offset, limit) {
             /* Create a new object with __data initialized from the provided JSONx-stringified representation. */
             return this.list_objects({load: true, offset, limit})
@@ -210,9 +210,6 @@ export class Category extends Item {
     //         }
     //     }),
     // })
-
-
-    list_items()    { return this.service.list_items() }
 }
 
 
