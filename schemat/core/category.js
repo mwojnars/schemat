@@ -6,12 +6,12 @@
  */
 
 import {assert, print, T} from "../common/utils.js";
-import {Catalog, Data} from "./data.js";
+import {Catalog} from "./data.js";
 
 import {Item} from "./object.js";
 import {DATA} from "../types/catalog.js";
 import {ReactPage, CategoryRecordView} from "../web/pages.js"
-import {JsonService, mDataRecord, mDataRecords, mDataString, Task, TaskService} from "../web/services.js"
+import {JsonService, mDataRecords} from "../web/services.js"
 
 export const ROOT_ID = 0
 
@@ -187,29 +187,6 @@ export class Category extends Item {
             }
         }
     )
-
-    // static ['POST/read'] = new TaskService({
-    //     list_items: new Task({
-    //         /* Retrieve all children of `this` category server-side and send them to client as a JSON array
-    //            of flat, fully loaded records.
-    //          */
-    //         async process(request, offset, limit) {
-    //             return this.list_objects({load: true, offset, limit})
-    //         },
-    //         encode_result(items) {
-    //             return items.map(item => item.self_encode())
-    //         },
-    //         async decode_result(records) {
-    //             /* Convert records to objects on client and keep in local registry to avoid repeated web requests. */
-    //             let objects = []
-    //             for (let {id, data} of records) {
-    //                 schemat.register_record({id, data})
-    //                 objects.push(await schemat.get_loaded(id))
-    //             }
-    //             return objects
-    //         }
-    //     }),
-    // })
 }
 
 
