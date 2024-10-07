@@ -122,7 +122,7 @@
         info: Import path of the JS class ("path/file.js:ClassName") that will be linked
           to this object during loading. (NOTE this is likely obsolete, set
           category.class instead?)
-        "@": schemat/types/type.js:STRING
+        "@": schemat/types/type.js:IMPORT
       __extends:
         info: An object that serves as a prototype for this one, that is, provides
           default values for missing properties. Multiple prototypes are

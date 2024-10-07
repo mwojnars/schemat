@@ -450,6 +450,12 @@ export class PATH extends STRING {
     relative        // if True, relative paths are allowed in addition to absolute ones
 }
 
+export class IMPORT extends STRING {
+    /* Import path of the form "a/b/c.../file.js" or ".../file.js:object_name", pointing to a module or a symbol
+       (class, function etc.) inside a JS module.
+     */
+}
+
 /**********************************************************************************************************************
  **
  **  DATE* types
