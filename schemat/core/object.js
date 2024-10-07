@@ -928,17 +928,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
         if (this.is_newborn()) {
             edits.length = 0                // truncate all edits up to now, they should be already reflected in __data
-            return schemat.site.service.create_item(this.__data).then(rec => {
-                this.__id = rec.id
-                // schemat.register_record(rec)
-            })
+            return schemat.site.service.create_item(this.__data).then(({id}) => {this.__id = id})
         }
 
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
 
-        let submit = schemat.site.service.submit_edits(this.id, ...edits).then(rec => {
-            // schemat.register_record(rec)
-        })
+        let submit = schemat.site.service.submit_edits(this.id, ...edits)
         edits.length = 0
         return submit
     }
