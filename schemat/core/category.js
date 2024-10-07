@@ -11,7 +11,7 @@ import {Catalog, Data} from "./data.js";
 import {Item} from "./object.js";
 import {DATA} from "../types/catalog.js";
 import {ReactPage, CategoryRecordView} from "../web/pages.js"
-import {JsonService, Task, TaskService} from "../web/services.js"
+import {JsonService, mDataRecord, mDataRecords, mDataString, Task, TaskService} from "../web/services.js"
 
 export const ROOT_ID = 0
 
@@ -172,6 +172,21 @@ export class Category extends Item {
     /***  Endpoints  ***/
 
     static ['GET/record'] = new ReactPage(CategoryRecordView)
+
+    static ['POST/list_items'] = new JsonService(
+        async function(request, offset, limit) {
+            /* Create a new object with __data initialized from the provided JSONx-stringified representation. */
+            return this.list_objects({load: true, offset, limit})
+        },
+        {
+            output: mDataRecords,
+            accept: async (records) => {
+                // replace records with fully-loaded objects; there's NO guarantee that a given object was actually built from
+                // `rec.data` as received in this particular request, because a newer record might have arrived in the meantime (!)
+                return Promise.all(records.map(rec => schemat.get_loaded(rec.id)))
+            }
+        }
+    )
 
     static ['POST/read'] = new TaskService({
         list_items: new Task({
