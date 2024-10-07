@@ -162,8 +162,9 @@ class ItemProxy {
         let values = target._compute_property(prop)
 
         if (cache) {
-            cache.set(prop + suffix, values)
+            ItemProxy._cache_values(cache, prop + suffix, values)
             ItemProxy._cache_value(cache, prop, values.length ? values[0] : ItemProxy.UNDEFINED)
+            // cache.set(prop + suffix, values)
             // cache.set(prop, values.length ? values[0] : ItemProxy.UNDEFINED)
         }
         return plural ? values : values[0]
@@ -173,7 +174,11 @@ class ItemProxy {
         /* Save `value` in cache, but also provide special handling for promises, so that a promise is ultimately replaced with the fulfillment value,
            which may improve performance on subsequent accesses to the property (no need to await it again and again).
          */
-        cache?.set(prop, val instanceof Promise ? val.then(v => (cache.get(prop) === val) && cache.set(prop, v)) : val)
+        cache?.set(prop, val instanceof Promise ? val.then(v => cache.set(prop, v)) : val)
+    }
+    static _cache_values(cache, prop$, vals) {
+        /* Like _cache_value(), but for caching an array of repeated values, some of them possibly being promises. */
+        cache?.set(prop$, vals.some(v => v instanceof Promise) ? Promise.all(vals).then(vs => cache.set(prop$, vs)) : vals)
     }
 }
 
