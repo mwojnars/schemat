@@ -328,76 +328,76 @@ export class JsonService extends HttpService {
     }
 }
 
-
-export class Task {
-    /* A single task supported by a TaskService, as a collection of three functions that comprise the task.
-       Every function below (if present) is called with `this` bound to the target object (an owner of the task).
-       The functions can be sync or async.
-     */
-    // prepare      // client-side function args=prepare(...args) called before sending the arguments to the server
-    process         // server-side function process(request, ...args) called with the arguments received from the client
-    encode_result   // server-side function encode_result(result, ...args) called before sending the result to the client
-    decode_result   // client-side function decode_result(result, ...args) called with the result received from the server
-
-    constructor({process, encode_result, decode_result} = {}) {
-        // this.prepare = prepare
-        this.process = process
-        this.encode_result = encode_result
-        this.decode_result = decode_result
-    }
-}
-
-export class TaskService extends JsonService {
-    /* JSON-based service over HTTP POST that exposes multiple functions ("tasks") on a single endpoint.
-       The server interprets req.body as a JSON array of the form [task-name, ...args].
-       If the function completes correctly, its `result` is sent as a JSON-serialized object;
-       otherwise, if an exception (`error`) occurred, it's sent as a JSON-serialized object of the form: {error}.
-       Each task is either a plain function process(request, ...args) to be called on the server, or a Task instance
-       if any pre- or postprocessing is needed on the client.
-     */
-
-    tasks                 // tasks supported by this service, as {name: function_or_task} pairs
-
-    constructor(tasks = {}, opts = {}) {
-        super(null, opts)
-        this.tasks = tasks
-    }
-
-    async client(target, ...args) {
-        /* Call super.client() with optional pre- and postprocessing of the arguments and the result. */
-
-        let task_name = args[0]
-        let task = this.tasks[task_name]
-        let decode_result = task instanceof Task ? task.decode_result : null
-
-        // if (prepare) args = await prepare.call(target, ...args)
-        let result = await super.client(target, ...args)
-        if (decode_result) result = decode_result.call(target, result, ...args)
-
-        return result
-    }
-
-    server(target, request, task_name, ...args) {
-        let task = this.tasks[task_name]
-        if (!task) throw new NotFound(`unknown task name: '${task_name}'`)
-        let process = task instanceof Task ? task.process : task
-        return process.call(target, request, ...args)
-    }
-
-    async send_result(target, request, result, task_name, ...args) {
-        let task = this.tasks[task_name]
-        let encode_result = task instanceof Task ? task.encode_result : null
-        if (encode_result) {
-            result = encode_result.call(target, result, ...args)
-            if (isPromise(result)) result = await result
-        }
-        return super.send_result(target, request, result, ...args)
-    }
-
-    // ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
-}
-
 /**********************************************************************************************************************/
+
+// export class Task {
+//     /* A single task supported by a TaskService, as a collection of three functions that comprise the task.
+//        Every function below (if present) is called with `this` bound to the target object (an owner of the task).
+//        The functions can be sync or async.
+//      */
+//     // prepare      // client-side function args=prepare(...args) called before sending the arguments to the server
+//     process         // server-side function process(request, ...args) called with the arguments received from the client
+//     encode_result   // server-side function encode_result(result, ...args) called before sending the result to the client
+//     decode_result   // client-side function decode_result(result, ...args) called with the result received from the server
+//
+//     constructor({process, encode_result, decode_result} = {}) {
+//         // this.prepare = prepare
+//         this.process = process
+//         this.encode_result = encode_result
+//         this.decode_result = decode_result
+//     }
+// }
+//
+// export class TaskService extends JsonService {
+//     /* JSON-based service over HTTP POST that exposes multiple functions ("tasks") on a single endpoint.
+//        The server interprets req.body as a JSON array of the form [task-name, ...args].
+//        If the function completes correctly, its `result` is sent as a JSON-serialized object;
+//        otherwise, if an exception (`error`) occurred, it's sent as a JSON-serialized object of the form: {error}.
+//        Each task is either a plain function process(request, ...args) to be called on the server, or a Task instance
+//        if any pre- or postprocessing is needed on the client.
+//      */
+//
+//     tasks                 // tasks supported by this service, as {name: function_or_task} pairs
+//
+//     constructor(tasks = {}, opts = {}) {
+//         super(null, opts)
+//         this.tasks = tasks
+//     }
+//
+//     async client(target, ...args) {
+//         /* Call super.client() with optional pre- and postprocessing of the arguments and the result. */
+//
+//         let task_name = args[0]
+//         let task = this.tasks[task_name]
+//         let decode_result = task instanceof Task ? task.decode_result : null
+//
+//         // if (prepare) args = await prepare.call(target, ...args)
+//         let result = await super.client(target, ...args)
+//         if (decode_result) result = decode_result.call(target, result, ...args)
+//
+//         return result
+//     }
+//
+//     server(target, request, task_name, ...args) {
+//         let task = this.tasks[task_name]
+//         if (!task) throw new NotFound(`unknown task name: '${task_name}'`)
+//         let process = task instanceof Task ? task.process : task
+//         return process.call(target, request, ...args)
+//     }
+//
+//     async send_result(target, request, result, task_name, ...args) {
+//         let task = this.tasks[task_name]
+//         let encode_result = task instanceof Task ? task.encode_result : null
+//         if (encode_result) {
+//             result = encode_result.call(target, result, ...args)
+//             if (isPromise(result)) result = await result
+//         }
+//         return super.send_result(target, request, result, ...args)
+//     }
+//
+//     // ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
+// }
+
 
 // export class Network {
 //     /*
@@ -419,46 +419,4 @@ export class TaskService extends JsonService {
 //        adapter, incoming communication may originate NOT ONLY from actions (of a Network adapter of this or another node),
 //        but also from regular web requests initiated by the user's browser, so it still makes sense to have endpoints
 //        in the API that are not used by any action.
-//
-//        In the future, multiple APIs may be supported in a single Network adapter, with the target object playing
-//        different roles (of a client/server) in different APIs, all at the same time. Actions will be defined jointly for all APIs.
 //      */
-//
-//     target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
-//
-//     // trigger functions are created for each endpoint and grouped by endpoint type;
-//     // each trigger is internally bound to the target object and may return a Promise;
-//     // a trigger function makes a call to the server through the protocol if executed on the client;
-//     // or calls the service function directly if executed on the server...
-//     //
-//     GET  = {}           // {endpoint_name: trigger_function}
-//     POST = {}
-//     CALL = {}
-//     // ... other endpoint types are added dynamically if found in endpoint specification ...
-//
-//
-//     constructor(target, services) {
-//         this.target = target
-//
-//         // create triggers for all endpoints in the API
-//         for (let [endpoint, service] of Object.entries(services))
-//         {
-//             let {type, name} = new Endpoint(endpoint)
-//             let triggers = this[type] = this[type] || {}
-//             // if (!triggers) throw new Error(`unknown endpoint type: ${type}`)
-//
-//             if (typeof service === 'function') {
-//                 service = {
-//                     execute: () => service.call(target),
-//                     client:  (request) => service.call(target, request),
-//                 }
-//                 // service = service.call(target)
-//                 // service.bindAt(endpoint)
-//             }
-//
-//             triggers[name] = SERVER
-//                 ? (...args) => service.server(target, null, ...args)        // may return a Promise
-//                 : (...args) => service.client(target, ...args)              // may return a Promise
-//         }
-//     }
-// }

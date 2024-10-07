@@ -287,13 +287,11 @@ export class CategoryRecordView extends ItemRecordView {
     async prepare(side) {
         // TODO: on client, items could be pulled from response data to avoid re-scanning on 1st render?
         await super.prepare(side)
-        // let items = await this.list_objects({load: true})
         let items = await this.service.list_objects()           // preload the objects that belong to this category
         return {items}
     }
 
     Main({items: preloaded}) {
-        // const scan = () => this.list_objects({load: true})
         const scan = () => this.service.list_objects()
         const [items, setItems] = useState(preloaded)           // existing child items; state prevents re-scan after every itemAdded()
                                                                 // TODO: use materialized list of items to explicitly control re-scanning
