@@ -17,7 +17,8 @@ export class ServerSchemat extends Schemat {
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
-    async boot(site_id, boot_db) {
+    constructor() {
+        super()
 
         this.ROOT_DIRECTORY = process.cwd()                 // initialize ROOT_DIRECTORY from the current working dir
         // this.SCHEMAT_DIRECTORY = this.ROOT_DIRECTORY + '/schemat'
@@ -25,7 +26,6 @@ export class ServerSchemat extends Schemat {
         // check that it points to the installation's root folder and contains `schemat` subfolder with `config.yaml` file in it
         assert(fs.existsSync(this.ROOT_DIRECTORY + '/schemat/config.yaml'), 'The current working directory does not contain ./schemat/config.yaml file')
 
-        return super.boot(site_id, boot_db)
         // this.loader = new Loader(import.meta.url)
     }
 
