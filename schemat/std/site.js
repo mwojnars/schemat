@@ -153,27 +153,22 @@ export class Site extends Item {
 
     /***  Endpoints  ***/
 
-    static ['POST/create_item'] = new JsonService(
-        async function(request, data_json) {
-            /* Create a new object with __data initialized from the provided JSONx-stringified representation. */
-            return this.database.insert(data_json)
-        },
-        {input: mDataString, output: mDataRecord}
-    )
+    static ['POST/create_item'] = new JsonService({
+        // create a new object with __data initialized from the provided JSONx-stringified representation
+        server: function(request, data_json) { return this.database.insert(data_json) },
+        input:  mDataString,
+        output: mDataRecord,
+    })
 
-    static ['POST/submit_edits'] = new JsonService(async function(request, id, ...edits)
-        {
-            /* Submit a list of object edits to the DB. Each plain edit is a 2-element array: [op, args],
-               where `op` is the name of the EDIT_* operation to be executed, and `args` is a dict {...} of arguments to be passed to the operation.
-             */
-            return this.database.update(id, ...edits)
-        },
-        {output: mDataRecord}
-    )
+    static ['POST/submit_edits'] = new JsonService({
+        // submit a list of object edits to the DB. Each plain edit is a 2-element array: [op, args],
+        // where `op` is the name of the EDIT_* operation to be executed, and `args` is a dict {...} of arguments to be passed to the operation.
+        server: function(request, id, ...edits) { return this.database.update(id, ...edits) },
+        output: mDataRecord,
+    })
 
-    static ['POST/delete_object'] = new JsonService(async function(request, id)
-    {
-        return this.database.delete(id)
+    static ['POST/delete_object'] = new JsonService({
+        server: function(request, id) { return this.database.delete(id) }
     })
 
     // POST_create_item() { return new Service({

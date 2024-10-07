@@ -50,8 +50,14 @@ export class Service {
     get endpoint_name()   { return this._splitEndpoint()[1] }       // name of the endpoint (function/action to execute)
 
     constructor(service_function = null, opts = {}) {
-        this.service_function = service_function
+        if (typeof service_function === "function")
+            this.service_function = service_function
+        else
+            opts = {...service_function, ...opts}
+
         this.opts = opts
+        if (opts.server) this.service_function = opts.server
+
         this._init_encoders(opts)
     }
 
