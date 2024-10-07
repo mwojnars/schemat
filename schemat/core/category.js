@@ -174,20 +174,16 @@ export class Category extends Item {
 
     static ['GET/record'] = new ReactPage(CategoryRecordView)
 
-    static ['POST/list_objects'] = new JsonService(
-        async function(request, offset, limit) {
-            /* Create a new object with __data initialized from the provided JSONx-stringified representation. */
-            return this.list_objects({load: true, offset, limit})
-        },
-        {
-            output: mDataRecords,
-            accept: (records) => {
-                // replace records with fully-loaded objects; there's NO guarantee that a given object was actually built from
-                // `rec.data` as received in this particular request, because a newer record might have arrived in the meantime!
-                return Promise.all(records.map(rec => schemat.get_loaded(rec.id)))
-            }
+    static ['POST/list_objects'] = new JsonService({
+        // create a new object with __data initialized from the provided JSONx-stringified representation
+        server: function(request, offset, limit) { return this.list_objects({load: true, offset, limit}) },
+        output: mDataRecords,
+        accept: (records) => {
+            // replace records with fully-loaded objects; there's NO guarantee that a given object was actually built from
+            // `rec.data` as received in this particular request, because a newer record might have arrived in the meantime!
+            return Promise.all(records.map(rec => schemat.get_loaded(rec.id)))
         }
-    )
+    })
 }
 
 
