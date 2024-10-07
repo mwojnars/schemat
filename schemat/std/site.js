@@ -3,7 +3,8 @@ import {UrlPathNotFound} from "../common/errors.js"
 import {Request} from '../web/request.js'
 import {Item} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
-import {JsonService, mDataRecord, mDataString, mJsonObject} from "../web/services.js";
+import {JsonService} from "../web/services.js";
+import {mDataRecord, mDataString} from "../web/messages.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.

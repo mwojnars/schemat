@@ -11,7 +11,8 @@ import {Catalog} from "./data.js";
 import {Item} from "./object.js";
 import {DATA} from "../types/catalog.js";
 import {ReactPage, CategoryRecordView} from "../web/pages.js"
-import {JsonService, mDataRecords} from "../web/services.js"
+import {JsonService} from "../web/services.js"
+import {mDataRecords} from "../web/messages.js"
 
 export const ROOT_ID = 0
 
