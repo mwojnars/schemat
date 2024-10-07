@@ -457,14 +457,17 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
             this._init_services()
 
-            if (this.is_linked())
-                this.__meta.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
+            let container = this.__container
+            if (container && !container.is_loaded()) await container.load()
+
+            // if (this.is_linked())
+            //     this.__meta.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
 
             let init = this.__init__()                      // custom initialization after the data is loaded (optional);
             if (init instanceof Promise) await init         // if this.__url is needed inside __init__(), __meta.pending_url must be explicitly awaited there
 
-            if (await_url && schemat.site && this.__meta.pending_url)
-                await this.__meta.pending_url
+            // if (await_url && schemat.site && this.__meta.pending_url)
+            //     await this.__meta.pending_url
 
             let now = Date.now()
             this.__meta.loaded_at = now
@@ -505,21 +508,21 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  initialization of URL & services  ***/
 
-    async _init_url() {
-        while (!schemat.site) {                                     // wait until the site is created; important for bootstrap objects
-            await delay()
-            if (schemat.is_closing) return                          // site is closing? no need to wait any longer
-        }
-
-        let container = this.__container
-        if (!container) return this.__url                           // root Directory has no parent container; also, no-category objects have no *default* __container and no imputation of __path & __url
-
-        if (!container.is_loaded()) await container.load()          // container must be fully loaded
-        if (!container.__path) await container.__meta.pending_url   // container's path must be initialized
-
-        delete this.__meta.pending_url
-        return this.__url                                           // invokes calculation of __path and __url via impute functions
-    }
+    // async _init_url() {
+    //     while (!schemat.site) {                                     // wait until the site is created; important for bootstrap objects
+    //         await delay()
+    //         if (schemat.is_closing) return                          // site is closing? no need to wait any longer
+    //     }
+    //
+    //     let container = this.__container
+    //     if (!container) return this.__url                           // root Directory has no parent container; also, no-category objects have no *default* __container and no imputation of __path & __url
+    //
+    //     if (!container.is_loaded()) await container.load()          // container must be fully loaded
+    //     if (!container.__path) await container.__meta.pending_url   // container's path must be initialized
+    //
+    //     delete this.__meta.pending_url
+    //     return this.__url                                           // invokes calculation of __path and __url via impute functions
+    // }
 
     _impute__path() {
         /* Calculation of __path if missing. */
