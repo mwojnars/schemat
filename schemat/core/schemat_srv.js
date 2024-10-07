@@ -17,16 +17,18 @@ export class ServerSchemat extends Schemat {
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
-    constructor() {
-        super()
+    async boot(site_id, bootstrap_db, open_bootstrap_db) {
+
         this.ROOT_DIRECTORY = process.cwd()                 // initialize ROOT_DIRECTORY from the current working dir
         // this.SCHEMAT_DIRECTORY = this.ROOT_DIRECTORY + '/schemat'
 
         // check that it points to the installation's root folder and contains `schemat` subfolder with `config.yaml` file in it
         assert(fs.existsSync(this.ROOT_DIRECTORY + '/schemat/config.yaml'), 'The current working directory does not contain ./schemat/config.yaml file')
 
+        await super.boot(site_id, bootstrap_db, open_bootstrap_db)
         // this.loader = new Loader(import.meta.url)
     }
+
 
     // async _reset_class(ServerSchemat) {
     //     /* Re-import the class of this Schemat object using dynamic imports from the SUN path; in this way,
@@ -39,7 +41,6 @@ export class ServerSchemat extends Schemat {
     //     // await this.reload(this.site_id)
     //     print('ServerSchemat class reloaded')
     // }
-
 
     /***  Events  ***/
 

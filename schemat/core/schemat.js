@@ -141,8 +141,8 @@ export class Schemat {
 
         await this._init_classpath()
 
-        this._db = bootstrap_db             // on server, the ultimate DB is opened later: on the first access to this.db
         await open_bootstrap_db?.()
+        this._db = bootstrap_db             // on server, the ultimate DB is opened later: on the first access to this.db
 
         // if (cluster_id) {
         //     print(`Loading cluster ${cluster_id}...`)
