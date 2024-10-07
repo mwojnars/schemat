@@ -136,7 +136,7 @@ export class Schemat {
         this.registry = new Registry(this._on_evict.bind(this))
     }
 
-    async boot(site_id, bootstrap_db, open_bootstrap_db = null) {
+    async boot(site_id, bootstrap_db = null, open_bootstrap_db = null) {
         /* Initialize built-in objects, site_id, site, bootstrap DB. */
 
         await this._init_classpath()

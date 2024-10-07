@@ -7,26 +7,6 @@ import {RequestContext} from "./request.js"
 
 /**********************************************************************************************************************/
 
-export class ClientDB {
-
-    // async select(req /*DataRequest*/) {
-    //     /* Look up this._cache for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
-    //     let id = req.args.id
-    //     let {data} = await this._from_ajax(id)
-    //     return JSON.stringify(data)
-    // }
-    //
-    // async _from_ajax(id) {
-    //     /* Retrieve an object by its ID from a server-side DB. */
-    //     print(`ajax download [${id}]...`)
-    //     let url = schemat.site.default_path_of(id) + '::json'
-    //     return fetch(url).then(response => response.json())         // load object's JSON data from the server
-    // }
-}
-
-
-/**********************************************************************************************************************/
-
 export class ClientSchemat extends Schemat {
     /* Client-side global Schemat object. */
 
@@ -45,8 +25,7 @@ export class ClientSchemat extends Schemat {
 
         ctx.items.map(rec => schemat.register_record(rec))      // register {id,data} records of bootstrap objects
 
-        let db = new ClientDB()
-        await super.boot(ctx.site_id, db)
+        await super.boot(ctx.site_id)
 
         for (let rec of ctx.items)                              // preload bootstrap objects
             await this.get_loaded(rec.id)
@@ -60,24 +39,6 @@ export class ClientSchemat extends Schemat {
         this.requested = {target, endpoint, service}
         // check()
     }
-
-    // static _read_data(node, format = "json") {
-    //     /* Extract text contents of an element pointed to by a given selector.
-    //        If `format` is given, or the element has `format` attribute, and the format is "json",
-    //        the extracted string is JSON-decoded to an object.
-    //      */
-    //     if (typeof node === "string")
-    //         node = document.querySelector(node)
-    //
-    //     let value = node.textContent
-    //     if (!format) format = node.getAttribute('format')
-    //
-    //     // decode `value` depending on the `format`
-    //     if (format === "json") return JSON.parse(value)
-    //     if (format === "json+base64") return JSON.parse(decodeURIComponent(atob(value)))
-    //
-    //     return value
-    // }
 
 
     /***  DB  ***/
