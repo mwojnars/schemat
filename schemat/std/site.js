@@ -153,7 +153,7 @@ export class Site extends Item {
 
     /***  Endpoints  ***/
 
-    static ['POST/create_item'] = new JsonService({
+    static ['POST/create_object'] = new JsonService({
         // create a new object with __data initialized from the provided JSONx-stringified representation
         server: function(request, data_json) { return this.database.insert(data_json) },
         input:  mDataString,
@@ -170,24 +170,6 @@ export class Site extends Item {
     static ['POST/delete_object'] = new JsonService({
         server: function(request, id) { return this.database.delete(id) }
     })
-
-    // POST_create_item() { return new Service({
-    //     client: async (url, ...args) => {},
-    //     submit: (...args) => {},
-    //     accept: (...args) => {},
-    //     regret: (...args) => {},   //error catch expose reject fail decline abort crash finish cancel giveup refuse discard
-    //
-    //     handle: (request) => {},
-    //     server: async (...args) => {
-    //         /* Create a new item in this category based on request data. */
-    //         let data = Data.__setstate__(data_state)
-    //         let id = await schemat.db.insert(data)
-    //         let obj = await schemat.get_loaded(id)
-    //         return obj.self_encode()
-    //     },
-    //     answer: (...args) => {},   //result()
-    //     reject: (...args) => {},
-    // })}
 
 
     /***  Dynamic imports  ***/

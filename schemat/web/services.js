@@ -38,6 +38,9 @@ export class Service {
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                         // like a method of the "target"; `request` is a Request, or {} if called directly on the server
         accept: null,   // client-side postprocessing function, f(result), called after the result is decoded from web response
+        // answer
+        // reject
+        // regret
     }
 
     input               // MessageEncoder for input messages (client > server)
