@@ -142,7 +142,6 @@ class ItemProxy {
         if (target.constructor.cachable_getters.has(prop)) {
             if (val?.[ItemProxy.NO_CACHING]) return val.value       // NO_CACHING flag? return immediately
             ItemProxy._cache_value(cache, prop, val)
-            // cache?.set(prop, val)
             return val
         }
 
@@ -164,16 +163,17 @@ class ItemProxy {
 
         if (cache) {
             cache.set(prop + suffix, values)
-            cache.set(prop, values.length ? values[0] : ItemProxy.UNDEFINED)
+            ItemProxy._cache_value(cache, prop, values.length ? values[0] : ItemProxy.UNDEFINED)
+            // cache.set(prop, values.length ? values[0] : ItemProxy.UNDEFINED)
         }
         return plural ? values : values[0]
     }
 
     static _cache_value(cache, prop, val) {
-        /* Saves `value` in cache, but also provides special handling for promises, so that a promise is ultimately replaced with the fulfillment value,
+        /* Save `value` in cache, but also provide special handling for promises, so that a promise is ultimately replaced with the fulfillment value,
            which may improve performance on subsequent accesses to the property (no need to await it again and again).
          */
-        cache?.set(prop, val instanceof Promise ? val.then(v => cache.set(prop, v)) : val)
+        cache?.set(prop, val instanceof Promise ? val.then(v => (cache.get(prop) === val) && cache.set(prop, v)) : val)
     }
 }
 
