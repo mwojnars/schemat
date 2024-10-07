@@ -65,7 +65,7 @@ export class Registry {
 
     get_record(id)          { return this.records.get(id) } //let json = this.records.get(id); if (json) return new DataRecord(id, json) }
     set_record(id, data) {
-        assert(id !== undefined)
+        assert(id !== undefined && data)
         if (typeof data === 'object') {
             assert(!(data instanceof Data))
             assert(!(data instanceof DataRecord))

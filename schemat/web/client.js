@@ -3,7 +3,6 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 import {assert, print} from "../common/utils.js";
 import {Schemat} from "../core/schemat.js";
 import {RequestContext} from "./request.js"
-import {JSONx} from "../core/jsonx.js";
 
 
 /**********************************************************************************************************************/
@@ -13,28 +12,27 @@ export class ClientDB {
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
 
-    _cache = new Map()      // {id: data_json}, cache of item data received on initial or subsequent web requests;
-                            // each data is JSON-encoded for safety, to avoid accidental modification
-
-    // constructor(records = []) {
-    //     this.cache(...records)
+    // _cache = new Map()      // {id: data_json}, cache of item data received on initial or subsequent web requests;
+    //                         // each data is JSON-encoded for safety, to avoid accidental modification
+    //
+    // cache(...records) {
+    //     /* Save `records` in internal cache for future reference. */
+    //     for (let rec of records) {
+    //         if (!rec.data) continue                         // don't keep stubs
+    //         if (typeof rec.data !== 'string')               // always keep data as a JSON-encoded string, not a flat object
+    //             rec = {...rec, data: JSON.stringify(rec.data)}
+    //         this._cache.set(rec.id, rec.data)
+    //     }
     // }
-
-    cache(...records) {
-        /* Save `records` in internal cache for future reference. */
-        for (let rec of records) {
-            if (!rec.data) continue                         // don't keep stubs
-            if (typeof rec.data !== 'string')               // always keep data as a JSON-encoded string, not a flat object
-                rec = {...rec, data: JSON.stringify(rec.data)}
-            this._cache.set(rec.id, rec.data)
-        }
-    }
 
     async select(req /*DataRequest*/) {
         /* Look up this._cache for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
         let id = req.args.id
-        if (!this._cache.has(id)) this.cache(await this._from_ajax(id))
-        return this._cache.get(id)
+        let {data} = await this._from_ajax(id)
+        return JSON.stringify(data)
+
+        // if (!this._cache.has(id)) this.cache(await this._from_ajax(id))
+        // return this._cache.get(id)
     }
 
     async _from_ajax(id) {
@@ -66,7 +64,7 @@ export class ClientSchemat extends Schemat {
 
         ctx.items.map(rec => schemat.register_record(rec))      // register {id,data} records of bootstrap objects
 
-        let db = new ClientDB() //ctx.items)
+        let db = new ClientDB()
         await super.boot(ctx.site_id, db)
 
         for (let rec of ctx.items)                              // preload bootstrap objects
