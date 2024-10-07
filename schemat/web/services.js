@@ -154,8 +154,6 @@ export class HttpService extends Service {
 export class JsonService extends HttpService {
     /* JSON-based communication over HTTP POST: the service function accepts a series of arguments, `args`, that are
        encoded as a JSON array and sent to the server as a POST request body; the result is also encoded as JSON.
-       The standard JSON object is used here, *not* JSONx, so if you want to transfer more complex Schemat-native
-       objects as arguments or results, you should perform JSONx.encode/decode() before and after the call.
      */
 
     static input  = mJsonObjects   // client submits an array of JSON-encoded objects by default
@@ -193,75 +191,6 @@ export class JsonService extends HttpService {
 //      */
 //     handle(target, request)  { return this.server(target, request) }
 // }
-
-// export class Task {
-//     /* A single task supported by a TaskService, as a collection of three functions that comprise the task.
-//        Every function below (if present) is called with `this` bound to the target object (an owner of the task).
-//        The functions can be sync or async.
-//      */
-//     // prepare      // client-side function args=prepare(...args) called before sending the arguments to the server
-//     process         // server-side function process(request, ...args) called with the arguments received from the client
-//     encode_result   // server-side function encode_result(result, ...args) called before sending the result to the client
-//     decode_result   // client-side function decode_result(result, ...args) called with the result received from the server
-//
-//     constructor({process, encode_result, decode_result} = {}) {
-//         // this.prepare = prepare
-//         this.process = process
-//         this.encode_result = encode_result
-//         this.decode_result = decode_result
-//     }
-// }
-//
-// export class TaskService extends JsonService {
-//     /* JSON-based service over HTTP POST that exposes multiple functions ("tasks") on a single endpoint.
-//        The server interprets req.body as a JSON array of the form [task-name, ...args].
-//        If the function completes correctly, its `result` is sent as a JSON-serialized object;
-//        otherwise, if an exception (`error`) occurred, it's sent as a JSON-serialized object of the form: {error}.
-//        Each task is either a plain function process(request, ...args) to be called on the server, or a Task instance
-//        if any pre- or postprocessing is needed on the client.
-//      */
-//
-//     tasks                 // tasks supported by this service, as {name: function_or_task} pairs
-//
-//     constructor(tasks = {}, opts = {}) {
-//         super(null, opts)
-//         this.tasks = tasks
-//     }
-//
-//     async client(target, ...args) {
-//         /* Call super.client() with optional pre- and postprocessing of the arguments and the result. */
-//
-//         let task_name = args[0]
-//         let task = this.tasks[task_name]
-//         let decode_result = task instanceof Task ? task.decode_result : null
-//
-//         // if (prepare) args = await prepare.call(target, ...args)
-//         let result = await super.client(target, ...args)
-//         if (decode_result) result = decode_result.call(target, result, ...args)
-//
-//         return result
-//     }
-//
-//     server(target, request, task_name, ...args) {
-//         let task = this.tasks[task_name]
-//         if (!task) throw new NotFound(`unknown task name: '${task_name}'`)
-//         let process = task instanceof Task ? task.process : task
-//         return process.call(target, request, ...args)
-//     }
-//
-//     async send_result(target, request, result, task_name, ...args) {
-//         let task = this.tasks[task_name]
-//         let encode_result = task instanceof Task ? task.encode_result : null
-//         if (encode_result) {
-//             result = encode_result.call(target, result, ...args)
-//             if (isPromise(result)) result = await result
-//         }
-//         return super.send_result(target, request, result, ...args)
-//     }
-//
-//     // ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
-// }
-
 
 // export class Network {
 //     /*
