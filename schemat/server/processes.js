@@ -23,9 +23,8 @@ export class BackendProcess {
 
         opts.config ??= './schemat/config.yaml'
         let config = await this.load_config(opts.config)
-        let db = Database.create()
 
-        await new ServerSchemat().boot(config.site, db, () => this._open_bootstrap_db(db, config))
+        await new ServerSchemat().boot(config.site, () => this._open_bootstrap_db(config))
         // await schemat.db.insert_self()
 
         if (!cmd) return
@@ -43,10 +42,12 @@ export class BackendProcess {
         return yaml.parse(content)
     }
 
-    async _open_bootstrap_db(db, config) {
+    async _open_bootstrap_db(config) {
+        let db = Database.create()
         let rings = config.bootstrap_database.rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
         await db.open(rings)
+        return db
     }
 }
 

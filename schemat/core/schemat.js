@@ -136,13 +136,12 @@ export class Schemat {
         this.registry = new Registry(this._on_evict.bind(this))
     }
 
-    async boot(site_id, bootstrap_db = null, open_bootstrap_db = null) {
+    async boot(site_id, boot_db = null) {
         /* Initialize built-in objects, site_id, site, bootstrap DB. */
 
         await this._init_classpath()
 
-        await open_bootstrap_db?.()
-        this._db = bootstrap_db             // on server, the ultimate DB is opened later: on the first access to this.db
+        this._db = await boot_db?.()        // bootstrap DB; the ultimate DB is opened later: on the first access to this.db
 
         // if (cluster_id) {
         //     print(`Loading cluster ${cluster_id}...`)
