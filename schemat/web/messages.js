@@ -2,7 +2,6 @@ import {assert} from "../common/utils.js";
 import {RequestFailed} from "../common/errors.js";
 import {JSONx} from "../core/jsonx.js";
 import {Data} from "../core/data.js";
-import {DataRecord} from "../db/records.js";
 
 
 /**********************************************************************************************************************/
@@ -106,9 +105,7 @@ export class mDataRecord extends MessageEncoder {
        After decoding, the record gets automatically registered as the newest representation of a given ID.
      */
     encode(rec) {
-        if (typeof rec === 'string') assert(false)  //return rec         // already encoded
-        if (rec instanceof DataRecord) assert(false)  //return JSON.stringify(rec.encoded())
-
+        // if (rec instanceof DataRecord) return JSON.stringify(rec.encoded())
         let {id, data} = rec
         if (typeof data === 'string') return JSON.stringify({id, data: JSON.parse(data)})
         return JSONx.stringify({id, data: data.__getstate__()})

@@ -100,14 +100,6 @@ export class Service {
 }
 
 
-// export class InternalService extends Service {
-//     /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
-//        defined as SUN routing paths but executed server-side exclusively.
-//      */
-//     handle(target, request)  { return this.server(target, request) }
-// }
-
-
 export class HttpService extends Service {
     /* Base class for HTTP-based services. Does not interpret input/output data in any way; the service function
        should use `req` and `res` objects directly, and it is also responsible for error handling.
@@ -194,6 +186,13 @@ export class JsonService extends HttpService {
 
 
 /**********************************************************************************************************************/
+
+// export class InternalService extends Service {
+//     /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
+//        defined as SUN routing paths but executed server-side exclusively.
+//      */
+//     handle(target, request)  { return this.server(target, request) }
+// }
 
 // export class Task {
 //     /* A single task supported by a TaskService, as a collection of three functions that comprise the task.
