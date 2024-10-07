@@ -40,9 +40,7 @@ export class Category extends Item {
 
 
     async __init__() {
-        // this.__child_class = await schemat.import(this.class)
-        // print(`\nthis.__child_class [${this.id}]:`, this.__child_class)
-        await this.__child_class            // now, __child_class is a regular value, not a promise
+        await this.__child_class            // from now on, __child_class is a regular value not a promise
         return this._init_schema()
     }
 
