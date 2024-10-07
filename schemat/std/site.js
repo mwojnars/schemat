@@ -25,11 +25,11 @@ export class Site extends Item {
        A route whose name starts with asterisk (*NAME) is treated as blank.
      */
 
-    static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
-    static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
+    // static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
+    // static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
+    // static URL_SCHEMAT = '/$/schemat'       // url-path of the root of Schemat source code
 
     static URL_LOCAL = '/$/local'           // url-path of the application's local filesystem root folder
-    // static URL_SCHEMAT = '/$/schemat'       // url-path of the root of Schemat source code
 
     // properties:
     root
@@ -278,36 +278,6 @@ export class Site extends Item {
     //     Object.assign(flat_module, module.namespace)
     //     return flat_module
     //     // return {...module.namespace, __vmModule__: module}
-    // }
-    //
-    // _unprefix(path) { return path.startsWith(Site.DOMAIN_SCHEMAT) ? path.slice(Site.DOMAIN_SCHEMAT.length) : path }
-    //
-    // _normalize(path) {
-    //     /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
-    //     path = path.replaceAll('/./', '/')
-    //     let lead = path[0] === '/' ? path[0] : ''
-    //     if (lead) path = path.slice(1)
-    //
-    //     let parts = []
-    //     for (const part of path.split('/'))
-    //         if (part === '..')
-    //             if (!parts.length) throw new Error(`incorrect path: '${path}'`)
-    //             else parts.pop()
-    //         else parts.push(part)
-    //
-    //     return lead + parts.join('/')
-    // }
-    //
-    // _js_import_url(path) {
-    //     /* Schemat's client-side import path converted to a standard JS import URL for importing remote code from SUN namespace. */
-    //     return path + '::import'
-    // }
-    //
-    // _js_import_file(path) {
-    //     /* Schemat's server-side import path (/$/local/schemat/...) converted to a local filesystem path that can be used with standard import(). */
-    //     let local = schemat.PATH_LOCAL_SUN
-    //     if (!path.startsWith(local + '/')) throw new Error(`incorrect import path (${path}), should start with "${local}"`)
-    //     return schemat.PATH_LOCAL_FS + path.slice(local.length)
     // }
 }
 
