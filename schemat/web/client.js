@@ -82,6 +82,13 @@ export class ClientSchemat extends Schemat {
 
     /***  DB  ***/
 
+    async _select(id) {
+        /* Load an object from the server via AJAX call. */
+        let url = schemat.site.default_path_of(id) + '::json'
+        let {data} = await fetch(url).then(response => response.json())     // {id, data} encoded
+        return JSON.stringify(data)
+    }
+
     async client_insert(category, data_state) {
         /* `data` is a flat (encoded) object, possibly the result of Data.__getstate__() but not necessarily. */
         assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items

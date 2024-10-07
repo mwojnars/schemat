@@ -222,13 +222,16 @@ export class Schemat {
         let data = this.registry.get_record(id)
         if (data) return data
 
-        let req = new DataRequest(null, 'load', {id})
-        data = await this.db.select(req)
+        data = await this._select(id)
 
         this.register_record({id, data}, false)
         return data
     }
 
+    _select(id) {
+        let req = new DataRequest(null, 'load', {id})
+        return this.db.select(req)
+    }
 
     /***  Registry management  ***/
 
