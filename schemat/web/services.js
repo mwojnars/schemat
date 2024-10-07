@@ -33,9 +33,12 @@ export class Service {
     endpoint            // the target object's endpoint where this service is exposed; a string of the form "PROTOCOL/name",
                         // where PROTOCOL is one of GET/POST/CALL/..., and the name is a service name etc.
 
-    service_function    // a function, f(request, ...args), to be called on the server when the protocol is invoked;
+    opts = {
+        server: null,   // a function, f(request, ...args), to be called on the server when the protocol is invoked;
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                         // like a method of the "target"; `request` is a Request, or {} if called directly on the server
+        accept: null,   // client-side postprocessing function, f(result), called after the result is decoded from web response
+    }
 
     input               // MessageEncoder for input messages (client > server)
     output              // MessageEncoder for output messages (server > client)
@@ -49,15 +52,8 @@ export class Service {
     get endpoint_type()   { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
     get endpoint_name()   { return this._splitEndpoint()[1] }       // name of the endpoint (function/action to execute)
 
-    constructor(service_function = null, opts = {}) {
-        if (typeof service_function === "function")
-            this.service_function = service_function
-        else
-            opts = {...service_function, ...opts}
-
+    constructor(opts = {}) {
         this.opts = opts
-        if (opts.server) this.service_function = opts.server
-
         this._init_encoders(opts)
     }
 
@@ -98,10 +94,11 @@ export class Service {
 
     server(target, request, ...args) {
         /* The actual execution of the service, server-side, without pre- & post-processing of web requests/responses.
-           Here, `request` can be null, so server() can be called directly *outside* of a web request,
-           if only the service supports this.
+           Here, `request` can be null, so server() can be called directly *outside* of a web request, if only the service supports this.
          */
-        return this.service_function.call(target, request, ...args)
+        let {server} = this.opts
+        if (!server) throw new Error('missing `server()` function in service definition')
+        return server.call(target, request, ...args)
     }
 }
 
