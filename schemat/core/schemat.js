@@ -358,7 +358,7 @@ export class Schemat {
     }
 
     init_client(id_context) {
-        return `import {ClientSchemat} from "/$/local/schemat/web/client.js"; await new ClientSchemat().boot("#${id_context}");`
+        return `import {Client} from "/$/local/schemat/web/client.js"; await new Client().boot_from("#${id_context}");`
     }
 
 

@@ -7,7 +7,7 @@ import {RequestContext} from "./request.js"
 
 /**********************************************************************************************************************/
 
-export class ClientSchemat extends Schemat {
+export class Client extends Schemat {
     /* Client-side global Schemat object. */
 
     // attributes of the web request that invoked generation of this page by the server
@@ -19,7 +19,7 @@ export class ClientSchemat extends Schemat {
 
     /***  startup  ***/
 
-    async boot(context_path) {
+    async boot_from(context_path) {
         let ctx = RequestContext.from_element(context_path)
         print('request context:', ctx)
 
