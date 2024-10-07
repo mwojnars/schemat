@@ -8,7 +8,7 @@ import {RequestContext} from "./request.js"
 /**********************************************************************************************************************/
 
 export class Client extends Schemat {
-    /* Client-side global Schemat object. */
+    /* Client-side global Schemat object. Used in .init_client() and .client_block() of the server-side Schemat. */
 
     // attributes of the web request that invoked generation of this page by the server
     requested = {
