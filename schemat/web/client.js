@@ -16,9 +16,9 @@ export class ClientDB {
     _cache = new Map()      // {id: data_json}, cache of item data received on initial or subsequent web requests;
                             // each data is JSON-encoded for safety, to avoid accidental modification
 
-    constructor(records = []) {
-        this.cache(...records)
-    }
+    // constructor(records = []) {
+    //     this.cache(...records)
+    // }
 
     cache(...records) {
         /* Save `records` in internal cache for future reference. */
@@ -64,10 +64,12 @@ export class ClientSchemat extends Schemat {
         let ctx = RequestContext.from_element(context_path)
         print('request context:', ctx)
 
-        let db = new ClientDB(ctx.items)
+        ctx.items.map(rec => schemat.register_record(rec))      // register {id,data} records of bootstrap objects
+
+        let db = new ClientDB() //ctx.items)
         await super.boot(ctx.site_id, db)
 
-        for (let rec of ctx.items)                      // preload all boot objects
+        for (let rec of ctx.items)                              // preload bootstrap objects
             await this.get_loaded(rec.id)
 
         let target = this.get_object(ctx.target_id)
