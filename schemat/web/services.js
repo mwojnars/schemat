@@ -102,6 +102,7 @@ export class mDataString extends mData {
 export class mDataRecord extends MessageEncoder {
     /* Encode: object of the form {id, data}, where `data` is a stringified or *encoded* (plain-object) representation of a Data instance.
        Decode: {id, data}, where `data` is still JSONx-encoded, but no longer stringified.
+       After decoding, the record gets automatically registered in the registry as the newest representation of a given ID (!).
      */
     encode(rec) {   // ...args
         if (typeof rec === 'string') assert(false)  //return rec         // already encoded
@@ -112,7 +113,9 @@ export class mDataRecord extends MessageEncoder {
         return JSONx.stringify({id, data: data.__getstate__()})
     }
     decode(message) {
-        return JSON.parse(message)
+        let rec = JSON.parse(message)
+        schemat.register_record(rec)
+        return rec
         // let {id, data} = JSONx.parse(message)
         // if (!(data instanceof Data)) data = Data.__setstate__(data)
         // return {id, data}
@@ -283,7 +286,6 @@ export class JsonService extends HttpService {
     static input  = mJsonObjects   // client submits an array of JSON-encoded objects by default
     static output = mJsonObject    // server responds with a single JSON-encoded object by default
 
-
     async submit(url, message) {
         let method = this.endpoint_type || 'POST'
         if (message && typeof message !== 'string') message = JSON.stringify(message)
@@ -306,6 +308,7 @@ export class JsonService extends HttpService {
         return args
     }
 }
+
 
 export class Task {
     /* A single task supported by a TaskService, as a collection of three functions that comprise the task.
