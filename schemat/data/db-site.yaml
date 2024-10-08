@@ -94,6 +94,10 @@
     "@": 25
 - __id: 1009
   name: /$/sys
+  info: Core system objects and categories, for dynamic imports by path instead of
+    ID.
+  __container:
+    "@": 1019
   __category:
     "@": 5
 - __id: 1012
