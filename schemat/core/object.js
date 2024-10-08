@@ -839,8 +839,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _bump_version(prev) {
         /* Increment (or set/delete) the __ver number, depending on the category's `versioning` setting.
-           Create a new Revision with `prev` data (json) if keep_history=true in the category. May return a Promise.
+           If category.keep_history=true, create a new Revision with `prev` data (json) and link to it via this.__prev.
            The existing __ver may get *removed* if `versioning` was disabled in the meantime (!).
+           May return a Promise.
          */
         if (this.__base.versioning) {
             let ver = this.__ver || 0
@@ -854,6 +855,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     async _create_revision(data) {
         /* Create a new Revision object to preserve the old `data` snapshot (JSON string). */
         assert(SERVER)
+        print(`[${this.id}] _create_revision()...`)
+
         // let Revision = await schemat.import('/$/sys/Revision')
         let Revision = await schemat.site.find_item('/$/sys/Revision')
         print('Revision:', Revision)
@@ -1035,7 +1038,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     GET__json({res})        { res.json(this.self_encode()) }
 
-    // CALL__self()     { print('CALL__self'); return this }
+    CALL__self()            { return this }
     // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
 
     // GET__record(request)    { return new ReactPage(ItemRecordView).server(this, request) }
