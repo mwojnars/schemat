@@ -53,14 +53,17 @@ export class Category extends Item {
         if (calls.length) return Promise.all(calls)
     }
 
-    create(...args) {
-        /* Create an empty newborn object (no ID) in `this` category and execute its __new__(...args). Return the object.
-           If __new__() returns a Promise, this method returns a Promise too.
-         */
-        let obj = this.__child_class.create_stub(null, {mutable: true})               // newly-created objects are always mutable
-        obj.__category = this
-        let wait = obj.__new__(...args)
-        return wait instanceof Promise ? wait.then(() => obj) : obj
+    async create(data = {}, ...args) {
+        /* Create an empty newborn object (no ID) in this category and execute its __new__(...args). Return the object. */
+        let obj = this.__child_class.new(...args)
+        if (obj instanceof Promise) obj = await obj
+
+        let entries = (data instanceof Catalog) ? data : Object.entries(data)
+
+        obj.__data.appendEntries(entries)
+        obj.__data.append('__category', this)
+
+        return obj
     }
 
     async list_objects(opts = {}) {

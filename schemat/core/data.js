@@ -192,6 +192,11 @@ export class Catalog {
         return this
     }
 
+    appendEntries(entries) {
+        for (let [key, value] of entries)
+            this.append(key, value)
+    }
+
 
     /***  Read access  ***/
 

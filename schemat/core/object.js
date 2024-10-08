@@ -397,7 +397,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            If __new__() returns a Promise, this method returns a Promise too.
            This method should be used instead of the constructor.
          */
-        if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
+        // if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
         let obj  = this.create_stub(null, {mutable: true})               // newly-created objects are always mutable
         let wait = obj.__new__(...args)
         return wait instanceof Promise ? wait.then(() => obj) : obj
