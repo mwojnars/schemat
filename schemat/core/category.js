@@ -7,7 +7,7 @@
  */
 
 import {assert, print, T} from "../common/utils.js";
-import {Catalog} from "./data.js";
+import {Catalog, Data} from "./data.js";
 
 import {Item} from "./object.js";
 import {DATA} from "../types/catalog.js";
@@ -53,16 +53,14 @@ export class Category extends Item {
         if (calls.length) return Promise.all(calls)
     }
 
-    async create(data = {}, ...args) {
+    create(data = {}, ...args) {
         /* Create an empty newborn object (no ID) in this category and execute its __new__(...args). Return the object. */
-        let obj = this.__child_class.new(...args)
-        if (obj instanceof Promise) obj = await obj
+        // let obj = this.__child_class.new(data...args)
+        // if (obj instanceof Promise) obj = await obj
 
-        let entries = (data instanceof Catalog) ? data : Object.entries(data)
-
-        obj.__data.appendEntries(entries)
+        let obj  = this.__child_class.create_stub(null, {mutable: true})    // newly-created objects are always mutable
+        obj.__data = new Data(data)
         obj.__data.append('__category', this)
-
         return obj
     }
 

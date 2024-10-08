@@ -855,16 +855,14 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     async _create_revision(data) {
         /* Create a new Revision object to preserve the old `data` snapshot (JSON string). */
         assert(SERVER)
+        assert(typeof data === 'string')
         print(`[${this.id}] _create_revision()...`)
 
         // let Revision = await schemat.import('/$/sys/Revision')
         let Revision = await schemat.site.find_item('/$/sys/Revision')
-        print('Revision:', Revision)
 
-        // let rev = Revision.create()   ... Revision.create({data, target: this})
-        // rev.target = this
-        // rev.data = data
-        // return rev.save()
+        let rev = await Revision.create({data, target: this})
+        return rev.save()
     }
 
     // async insert_self() {
@@ -946,18 +944,18 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     async save() {
-        /* Send __meta.edits (for an existing object), or __data (for a newly created object) to DB. */
+        /* Send __meta.edits (for an existing object), or __data (for a newly created object) to DB. Return this. */
         this.assert_loaded_or_newborn()
         let edits = this.__meta.edits
 
         if (this.is_newborn()) {
             edits.length = 0                // truncate all edits up to now, they should be already reflected in __data
-            return schemat.site.service.create_object(this.__data).then(({id}) => {this.__id = id})
+            return schemat.site.service.create_object(this.__data).then(({id}) => {this.__id = id; return this})
         }
 
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
 
-        let submit = schemat.site.service.submit_edits(this.id, ...edits)
+        let submit = schemat.site.service.submit_edits(this.id, ...edits).then(() => this)
         edits.length = 0
         return submit
     }
