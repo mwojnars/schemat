@@ -105,7 +105,7 @@ export class IndexSequence extends Sequence {
     __create__(ring, filename) {
         super.__create__(ring)
         assert(filename.endsWith('.jl'))
-        this.blocks = [IndexBlock.create(this, filename)]
+        this.blocks = [IndexBlock.new(this, filename)]
     }
 }
 
@@ -175,7 +175,7 @@ export class DataSequence extends Sequence {
 
     __create__(ring, filename) {
         super.__create__(ring)
-        this.blocks = [DataBlock.create(this, filename)]
+        this.blocks = [DataBlock.new(this, filename)]
     }
 
     encode_key(id) {

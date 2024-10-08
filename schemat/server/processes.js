@@ -43,7 +43,7 @@ export class BackendProcess {
     }
 
     async _open_bootstrap_db(config) {
-        let db = Database.create()
+        let db = Database.new()
         let rings = config.bootstrap_database.rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
         await db.open(rings)

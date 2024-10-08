@@ -49,12 +49,12 @@ export class Ring extends Item {
 
         // create sequences: data and indexes...
 
-        this.data_sequence = DataSequence.create(this, this._file)
+        this.data_sequence = DataSequence.new(this, this._file)
         await this.data_sequence.open()
 
         let filename = this._file.replace(/\.yaml$/, '.index.jl')
 
-        this.index_sequence = IndexSequence.create(this, filename)
+        this.index_sequence = IndexSequence.new(this, filename)
         await this.index_sequence.open()
 
         // await this.rebuild_indexes()
@@ -166,7 +166,7 @@ export class Ring extends Item {
 
     async* scan_all() {
         /* Yield all objects in this ring as DataRecord instances. For rebuilding indexes from scratch. */
-        let data = DataOperator.create()
+        let data = DataOperator.new()
         for await (let record of data.scan(this.data_sequence))
             yield DataRecord.from_binary(record)
     }
@@ -207,9 +207,9 @@ export class Database extends Item {
             let ring =
                 spec instanceof Ring ? spec :
                 spec.item            ? await schemat.get_loaded(spec.item) :
-                                       await Ring.create(spec, new DataRequest(this, 'open'))
+                                       await Ring.new(spec, new DataRequest(this, 'open'))
 
-            await delay()       // strangely enough, without this delay, Ring.create() above is NOT fully awaited when using the custom module Loader (!?)
+            await delay()       // strangely enough, without this delay, Ring.new() above is NOT fully awaited when using the custom module Loader (!?)
 
             this.rings.push(ring)
             print(`... ring created [${ring.__id || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)

@@ -361,12 +361,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     /***  Instantiation  ***/
 
     constructor(_fail = true, {mutable = false} = {}) {
-        /* For internal use! Always call Item.create() or category.create() instead of `new Item()`.
+        /* For internal use! Always call Item.new() or category.create() instead of `new Item()`.
            By default, the object is created immutable, and on client (where all modifications are local to the single client process)
            this gets toggled automatically on the first attempt to object modification. On the server
            (where any modifications might spoil other web requests), changing `mutable` after creation is disallowed.
          */
-        if(_fail) throw new Error('web object must be instantiated through CLASS.create() instead of new CLASS()')
+        if(_fail) throw new Error('web object must be instantiated through CLASS.new() instead of new CLASS()')
 
         this.__self = this              // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
 
@@ -392,7 +392,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return obj.__proxy = ItemProxy.wrap(obj)
     }
 
-    static create(...args) {
+    static new(...args) {
         /* Create an empty newborn object, no ID, and execute its __create__(...args). Return the object.
            If __create__() returns a Promise, this method returns a Promise too.
            This method should be used instead of the constructor.
@@ -404,7 +404,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     __create__(...args) {
-        /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by Item.create(). */
+        /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by Item.new(). */
     }
 
     static async from_json(id, json, opts = {}) {
@@ -861,7 +861,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let Revision = await schemat.site.find_item('/$/sys/Revision')
         print('Revision:', Revision)
 
-        // let Revision = schemat.sys.Revision
         // let rev = Revision.create()   ... Revision.create({data, target: this})
         // rev.target = this
         // rev.data = data
