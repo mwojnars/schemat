@@ -566,6 +566,16 @@ export class REF extends Type {
  **
  */
 
+export class VARIANT extends Type {
+    /* Selection from a number of predefined (sub)types - choices. The value of this type must be a plain object
+       of the form {choice: value}, where `choice` is one of eligible choice names, and `value` matches this choice's type.
+     */
+    static props = {
+        choices: {},            // plain object interpreted as a dictionary of choices, {choice-name: type-definition}
+    }
+}
+
+
 export class ARRAY extends GENERIC {
     /* Represents arrays of objects, all of the same type (`type`, generic_type by default). */
 
