@@ -83,7 +83,7 @@ export class TypeWidget extends Component {
             this.close()
             return value
         }
-        catch (ex) { this.props.error(ex.toString()) }
+        catch (ex) { this.props.error(ex.toString()); console.error(ex) }
     }
 
     reject(e) {

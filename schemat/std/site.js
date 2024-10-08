@@ -4,7 +4,7 @@ import {Request} from '../web/request.js'
 import {Item} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonService} from "../web/services.js";
-import {mDataRecord, mDataString} from "../web/messages.js";
+import {mDataRecord, mDataString, mJsonxObjects} from "../web/messages.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -164,6 +164,7 @@ export class Site extends Item {
         // submit a list of object edits to the DB. Each plain edit is a 2-element array: [op, args],
         // where `op` is the name of the EDIT_* operation to be executed, and `args` is a dict {...} of arguments to be passed to the operation.
         server: function(request, id, ...edits) { return this.database.update(id, ...edits) },
+        input:  mJsonxObjects,
         output: mDataRecord,
     })
 
