@@ -324,7 +324,7 @@ export class CategoryRecordView extends ItemRecordView {
         let url  = item.system_url
         return TR(
             TD(`${item.__id} ${NBSP}`),
-            TD(url !== null ? A({href: url + '::record'}, name) : `${name} (no URL)`, ' ', NBSP),
+            TD(url !== null ? A({href: url + '::inspect'}, name) : `${name} (no URL)`, ' ', NBSP),
             TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
         )
     }

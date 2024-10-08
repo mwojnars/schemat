@@ -172,7 +172,7 @@ export class Category extends Item {
 
     /***  Endpoints  ***/
 
-    static ['GET/record'] = new ReactPage(CategoryRecordView)
+    static ['GET/inspect'] = new ReactPage(CategoryRecordView)
 
     static ['POST/list_objects'] = new JsonService({
         // create a new object with __data initialized from the provided JSONx-stringified representation

@@ -811,7 +811,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (endpoints.length) return endpoints
 
         // otherwise, use category defaults, OR global defaults (for no-category objects)
-        let glob_defaults = {GET: ['view', 'admin', 'record'], CALL: ['self']}
+        let glob_defaults = {GET: ['view', 'admin', 'inspect'], CALL: ['self']}
         let catg_defaults = this.__category?.default_endpoints.getAll(protocol)
         let defaults = catg_defaults || glob_defaults[protocol]
         if (defaults.length) return defaults
@@ -1034,7 +1034,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     // GET__record(request)    { return new ReactPage(ItemRecordView).server(this, request) }
     // GET__record()     { return react_page(ItemRecordView) }
-    static ['GET/record'] = new ReactPage(ItemRecordView)
+    static ['GET/inspect'] = new ReactPage(ItemRecordView)
 
 
 
