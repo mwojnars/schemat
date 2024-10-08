@@ -121,6 +121,7 @@ export class Site extends Item {
     async find_item(path) {
         /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
         // return this.route(new Request({path, method: '::item'}))
+        assert(path[0] === '/')
         return this.route_internal(path)
     }
 

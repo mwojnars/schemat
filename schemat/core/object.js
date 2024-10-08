@@ -848,12 +848,16 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             if (this.__base.keep_history)
                 return this._create_revision(prev).then(rev => this.__data.set('__prev', rev))
         }
-        else this.__data.delete('__ver')        // TODO: either drop orphaned revisions OR do garbage collection to save DB space and avoid accidental reuse when versioning starts again
+        else this.__data.delete('__ver')        // TODO: drop orphaned revisions OR garbage-collect them to save DB space and avoid accidental reuse when versioning starts again
     }
 
     async _create_revision(data) {
         /* Create a new Revision object to preserve the old `data` snapshot (JSON string). */
-        // let Revision = await schemat.import('/$/sys/Revision')  ??
+        assert(SERVER)
+        // let Revision = await schemat.import('/$/sys/Revision')
+        let Revision = await schemat.site.find_item('/$/sys/Revision')
+        print('Revision:', Revision)
+
         // let Revision = schemat.sys.Revision
         // let rev = Revision.create()   ... Revision.create({data, target: this})
         // rev.target = this
