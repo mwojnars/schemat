@@ -92,6 +92,10 @@
     "@": 1007
   __category:
     "@": 25
+- __id: 1009
+  name: /$/sys
+  __category:
+    "@": 5
 - __id: 1012
   ring:
     "@": 1003
@@ -156,6 +160,8 @@
       "@": 1021
     local:
       "@": 1020
+    sys:
+      "@": 1009
     "@": schemat:Catalog
   __container:
     "@": 1007
