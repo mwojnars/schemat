@@ -97,7 +97,7 @@ async function test_page(page, url, react_selector = null, strings = [])
     return page
 }
 
-function server_setup(port) {
+function server_setup(port, args = '') {
     let server, browser, page, messages
 
     before(async function () {
@@ -107,7 +107,7 @@ function server_setup(port) {
         // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
         // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
         // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
-        server = exec(`exec node --experimental-vm-modules schemat/server/run.js --port ${port}`, (error, stdout, stderr) => {
+        server = exec(`exec node --experimental-vm-modules schemat/server/run.js --port ${port} ${args}`, (error, stdout, stderr) => {
             if (error) console.error('\nError during server startup:', '\n' + stderr)
             else       console.log('\nServer stdout:', '\n' + stdout)
         })
@@ -186,68 +186,6 @@ describe('Schemat Tests', function () {
 
         let setup = server_setup(PORT)
         let server, browser, page, messages
-
-        // let server, browser, page, messages
-        //
-        // before(async function () {
-        //
-        //     // start the server...
-        //
-        //     // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
-        //     // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
-        //     // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
-        //     server = exec(`exec node --experimental-vm-modules schemat/server/run.js --port ${PORT}`, (error, stdout, stderr) => {
-        //         if (error) console.error('\nError during server startup:', '\n' + stderr)
-        //         else       console.log('\nServer stdout:', '\n' + stdout)
-        //     })
-        //
-        //     // console.log('Server started:', server.pid)
-        //     await delay(1000)                                       // wait for server to start
-        //     browser = await puppeteer.launch({headless: "new"})
-        //     page = await browser.newPage()
-        //
-        //     // page.on('pageerror', error => {
-        //     //     if (!error) { console.log('NO ERROR (!?)'); return }
-        //     //     page_error = error
-        //     //     console.log(`Error [${error.type()}]: `, error.text())
-        //     //     // console.log(Object.prototype.toString.call(error))
-        //     //     // for (const property in error) { console.log(`${property}: ${error[property]}`) }
-        //     //     // console.log(util.inspect(page_error, { showHidden: false, depth: null, colors: true }))
-        //     // })
-        //
-        //     page.on('console', msg => { messages.push(msg) })
-        //     page.on('pageerror', error => { messages.push({type: () => 'error', text: () => error}) })
-        //     await delay(300)
-        // })
-        //
-        // beforeEach(() => { messages = [] })
-        //
-        // afterEach(async () => {
-        //     await page.waitForNetworkIdle()                         // wait for page to render completely
-        //     // await page.waitForNetworkIdle({ idleTime: 500, timeout: 5000 })
-        //     // await delay(2000)
-        //
-        //     for (let msg of messages)
-        //         msg.type ? console.log(`Console [${msg.type()}]: `, msg.text()) : console.log(msg)
-        //
-        //     let error = messages.find(msg => msg.type?.() === 'error')
-        //     assert(!error, `(on client) ${error?.text() || error}`)
-        //
-        //     // if (page_error) {
-        //     //     console.log('\nPage error:', JSON.stringify(page_error))
-        //     //     // console.log('\nPage error:', util.inspect(page_error, { showHidden: false, depth: null }))
-        //     //     // console.log('Page error message:', page_error.message);
-        //     //     // console.log('Page error stack trace:\n', page_error.stack);
-        //     //     // console.error('\nPage error:', page_error, '\n')
-        //     // }
-        //     // expect(page_error).to.be.null
-        // })
-        //
-        // after(async function () {
-        //     await browser?.close()
-        //     let killed = server?.kill()
-        //     await delay(300)                                        // wait for server to stop
-        // })
 
         before(async function () {
             ({server, browser, page, messages} = setup())
@@ -358,6 +296,21 @@ describe('Schemat Tests', function () {
         //
         //     // ...additional tests for reverting the change
         // })
+    })
+
+    describe('Demo 01', function () {
+
+        let setup = server_setup(PORT, "--config ./demo/01_books/config.yaml")
+        let server, browser, page, messages
+
+        before(async function () {
+            ({server, browser, page, messages} = setup())
+        })
+
+        it('demo01/Category', async function () {
+            await test_page(page, `${DOMAIN}/$/id/0`, '#page-main',
+                ['Category:0', 'Category of objects', 'name', '__ttl', 'defaults', 'schema', 'Ring'])
+        })
     })
 
     after(function() {
