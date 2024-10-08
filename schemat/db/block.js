@@ -36,7 +36,7 @@ export class Block extends Item {
     _pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
 
-    __create__(sequence, filename) {
+    __new__(sequence, filename) {
         sequence.assert_loaded_or_newborn()
         this.sequence = sequence
         this.filename = filename

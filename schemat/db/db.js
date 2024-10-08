@@ -32,7 +32,7 @@ export class Ring extends Item {
     stop_id
 
 
-    async __create__({name, ...opts}, req) {
+    async __new__({name, ...opts}, req) {
         let {file} = opts
         this._file = file
         this.name = name || fileBaseName(file)

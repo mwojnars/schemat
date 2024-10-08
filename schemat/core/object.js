@@ -393,17 +393,17 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     static new(...args) {
-        /* Create an empty newborn object, no ID, and execute its __create__(...args). Return the object.
-           If __create__() returns a Promise, this method returns a Promise too.
+        /* Create an empty newborn object, no ID, and execute its __new__(...args). Return the object.
+           If __new__() returns a Promise, this method returns a Promise too.
            This method should be used instead of the constructor.
          */
         if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
         let obj  = this.create_stub(null, {mutable: true})               // newly-created objects are always mutable
-        let wait = obj.__create__(...args)
+        let wait = obj.__new__(...args)
         return wait instanceof Promise ? wait.then(() => obj) : obj
     }
 
-    __create__(...args) {
+    __new__(...args) {
         /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by Item.new(). */
     }
 
