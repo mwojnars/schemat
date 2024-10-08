@@ -1,5 +1,6 @@
 /**********************************************************************************************************************
- *  Main class of Schemat's web object model.
+ *
+ *  Main class of Schemat's Web Object model.
  *
  *  @author Marcin Wojnarski
  *

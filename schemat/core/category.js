@@ -1,4 +1,5 @@
 /**********************************************************************************************************************
+ *
  *  Category. Base class for web objects representing categories.
  *
  *  @author Marcin Wojnarski
