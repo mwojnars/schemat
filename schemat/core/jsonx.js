@@ -48,8 +48,9 @@ export class JSONx {
         return this.decode(state)
     }
 
-    static encode(obj, transform)           { return new JSONx(transform).encode(obj) }
-    static decode(state)                    { return new JSONx().decode(state) }
+    static encode(obj, transform)       { return new JSONx(transform).encode(obj) }
+    static decode(state)                { return new JSONx().decode(state) }
+    static deepcopy(obj)                { return JSONx.parse(JSONx.stringify(obj)) }
 
     static transform(json, transform) {
         /* Parse and decode a JSONx-encoded object, then encode and stringify it again while applying
@@ -60,6 +61,7 @@ export class JSONx {
         let state2 = jsonx.encode(object)           // `transform` is applied here to `object` and nested sub-objects
         return JSON.stringify(state2)
     }
+
 
     encode(obj) {
         /*

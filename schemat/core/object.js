@@ -8,6 +8,7 @@
 import {print, assert, T, escape_html, concat, unique, delay} from '../common/utils.js'
 import {NotLinked, NotLoaded, ValidationError} from '../common/errors.js'
 
+import {JSONx} from "./jsonx.js"
 import {Data} from './data.js'
 import {REF} from "../types/type.js"
 import {DATA_GENERIC} from "../types/catalog.js"
@@ -933,7 +934,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             let {op, args} = (edit instanceof Edit) ? edit : {op: edit[0], args: edit[1]}
             const method = `EDIT_${op}`
             if (!this[method]) throw new Error(`object does not support edit operation: '${op}'`)
-            this[method](structuredClone(args))     // `args` are deep-copied for safety, in case they get modified during the edit
+            this[method](JSONx.deepcopy(args))      // `args` are deep-copied for safety, in case they get modified during the edit
         }
     }
 
