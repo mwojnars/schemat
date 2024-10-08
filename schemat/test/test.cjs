@@ -187,9 +187,7 @@ describe('Schemat Tests', function () {
         let setup = server_setup(PORT)
         let server, browser, page, messages
 
-        before(async function () {
-            ({server, browser, page, messages} = setup())
-        })
+        before(async function () {({server, browser, page, messages} = setup())})
 
         it('Category', async function () {
             await test_page(page, `${DOMAIN}/$/id/0`, '#page-main',
@@ -303,13 +301,19 @@ describe('Schemat Tests', function () {
         let setup = server_setup(PORT, "--config ./demo/01_books/config.yaml")
         let server, browser, page, messages
 
-        before(async function () {
-            ({server, browser, page, messages} = setup())
-        })
+        before(async function () {({server, browser, page, messages} = setup())})
 
-        it('demo01/Category', async function () {
-            await test_page(page, `${DOMAIN}/$/id/0`, '#page-main',
-                ['Category:0', 'Category of objects', 'name', '__ttl', 'defaults', 'schema', 'Ring'])
+        it('demo01/Home', async function () {
+            await test_page(page, `${DOMAIN}`, '#page-main', ['home', 'Properties'])
+        })
+        it('demo01/Authors', async function () {
+            await test_page(page, `${DOMAIN}/authors`, null, ['Fitzgerald', 'Gatsby', 'Tolkien', 'Commander'])
+        })
+        it('demo01/Books', async function () {
+            await test_page(page, `${DOMAIN}/books`, null, ['9780743273565', 'Pratchett', '1945'])
+        })
+        it('demo01/Books', async function () {
+            await test_page(page, `${DOMAIN}/book/5004`, null, ['Hobbit', '9780547928227'])
         })
     })
 
