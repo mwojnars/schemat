@@ -97,6 +97,8 @@ async function test_page(page, url, react_selector = null, strings = [])
     return page
 }
 
+/**********************************************************************************************************************/
+
 function server_setup(port, args = '') {
     let server, browser, page, messages
 
@@ -264,7 +266,6 @@ describe('Schemat Tests', function () {
             const content = await response.text()
             expect(content).to.include('User-agent:')
         })
-
 
         // describe('UI Actions on $/id/1000', function () {
         //     before(async function () {
