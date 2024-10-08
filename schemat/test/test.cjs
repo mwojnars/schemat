@@ -26,12 +26,13 @@ let print = console.log
 let delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 
-function check_internet(fail) {
+function check_internet(fail, retries = 2) {
     /* Check that internet connection is available, otherwise the tests hang (even if running on localhost). */
+    const fail_or_retry = (retries > 0) ? () => check_internet(fail, retries-1) : fail
     const req = https.get('https://www.google.com/generate_204', {timeout: 5000}, (res) => {
-        if (res.statusCode !== 204) fail()
+        if (res.statusCode !== 204) fail_or_retry()
         req.destroy()                                  // terminate the request to avoid downloading the entire page
-    }).on('error', fail)
+    }).on('error', fail_or_retry)
 }
 
 /**********************************************************************************************************************/
@@ -98,11 +99,15 @@ async function test_page(page, url, react_selector = null, strings = [])
 
 /**********************************************************************************************************************/
 
-describe('Node.js Version Test', function() {
+describe('Environment Checks', function() {
     it('Node.js version', function() {
         const ver = process.version
-        console.log('Current Node.js version:', ver)
+        console.log('    Current Node.js version:', ver)
         assert.ok(ver)
+    })
+    it('Internet connection', function() {
+        // internet connection must be available even for tests that run on localhost, otherwise they hang
+        check_internet(() => { throw new Error('NO INTERNET CONNECTION. Terminating.') })
     })
 })
 
@@ -131,9 +136,6 @@ describe('Schemat Tests', function () {
         let server, browser, page, messages
 
         before(async function () {
-
-            // internet connection must be available even for tests that run on localhost, otherwise they hang
-            check_internet(() => { throw new Error('NO INTERNET CONNECTION. Terminating.') })
 
             // start the server...
 
