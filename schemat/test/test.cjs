@@ -115,7 +115,7 @@ function server_setup(port, args = '') {
         })
 
         // console.log('Server started:', server.pid)
-        await delay(1000)                                       // wait for server to start
+        await delay(500)                                       // wait for server to start
         browser = await puppeteer.launch({headless: "new"})
         page = await browser.newPage()
 
@@ -130,7 +130,7 @@ function server_setup(port, args = '') {
 
         page.on('console', msg => { messages.push(msg) })
         page.on('pageerror', error => { messages.push({type: () => 'error', text: () => error}) })
-        await delay(300)
+        await delay(100)
     })
 
     beforeEach(() => { messages = [] })
@@ -313,7 +313,7 @@ describe('Schemat Tests', function () {
         it('demo01/Books', async function () {
             await test_page(page, `${DOMAIN}/books`, null, ['9780743273565', 'Pratchett', '1945'])
         })
-        it('demo01/Books', async function () {
+        it('demo01/book (Hobbit)', async function () {
             await test_page(page, `${DOMAIN}/book/5004`, null, ['Hobbit', '9780547928227'])
         })
     })
