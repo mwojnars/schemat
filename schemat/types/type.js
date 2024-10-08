@@ -541,11 +541,10 @@ export class TYPE extends GENERIC {
 /**********************************************************************************************************************/
 
 export class REF extends Type {
-    /*
-    Reference to an Item, encoded as {"@": id} during serialization through JSONx.
-    REF without parameters is equivalent to GENERIC(Item), however, REF can also be parameterized,
-    which is not possible with a GENERIC.
-    */
+    /* Reference to an Item, encoded as {"@": id} during serialization through JSONx.
+       REF without parameters is equivalent to GENERIC(Item), however, REF can also be parameterized,
+       which is not possible with a GENERIC.
+     */
     static props = {
         category:  undefined,       // base category for all the items to be encoded
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
@@ -566,9 +565,17 @@ export class REF extends Type {
  **
  */
 
+export class CHOICE extends Type {
+    /* List of choices, the value must be one of them. */
+    static props = {
+        values: [],             // eligible choice values
+    }
+}
+
+
 export class VARIANT extends Type {
-    /* Selection from a number of predefined (sub)types - choices. The value of this type must be a plain object
-       of the form {choice: value}, where `choice` is one of eligible choice names, and `value` matches this choice's type.
+    /* Selection from a number of predefined (sub)types. The value must be a plain object of the form {choice: value},
+       where `choice` is one of the eligible choice names, and `value` matches this choice's corresponding type.
      */
     static props = {
         choices: {},            // plain object interpreted as a dictionary of choices, {choice-name: type-definition}
