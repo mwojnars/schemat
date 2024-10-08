@@ -29,7 +29,7 @@ export class Type {
 
     static props = {                // common properties of all types:
         info     : undefined,       // human-readable description of this type: what values are accepted and how they are interpreted
-        blank    : undefined,       // if true, `null` and `undefined` are treated as a valid value: stored and then decoded as "null"
+        blank    : true,            // if true, `null` and `undefined` are treated as a valid value: both are stored and decoded as "null"
         class    : undefined,       // if present, all values (except blank) must be instances of this JS class
         initial  : undefined,       // initial value assigned to a newly created data element of this type
         default  : undefined,       // default value to be used for a non-repeated property when no explicit value was provided;
