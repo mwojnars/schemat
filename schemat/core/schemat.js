@@ -334,9 +334,9 @@ export class Schemat {
 
     import(path) {
         /* May return a Promise. */
-        if (path.startsWith('schemat:') || !this.site) //?.is_loaded)
+        if (path.startsWith('schemat:') || !this.site)
             return this.get_builtin(path)
-        return this.site.import_dynamic(path)
+        return this.site.import_local(path)
     }
 
 

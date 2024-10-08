@@ -95,7 +95,7 @@ export class Site extends Item {
         return `${Site.URL_LOCAL}/${path}::import`          // ::import is sometimes needed to get the proper MIME header, esp. if target is a web object not a local file
     }
 
-    import_dynamic(path) {
+    import_local(path) {
         /* Import from a local `path` of the form ".../file.js" or ".../file.js:ClassName", pointing to a module or symbol
            inside the project's root folder which should include both Schemat and application's source code.
            This method can be called both on the server and on the client (!). In the latter case, the import path
