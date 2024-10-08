@@ -856,7 +856,6 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Create a new Revision object to preserve the old `data` snapshot (JSON string). */
         assert(SERVER)
         assert(typeof data === 'string')
-        print(`[${this.id}] _create_revision()...`)
 
         // let Revision = await schemat.import('/$/sys/Revision')
         let Revision = await schemat.site.find_item('/$/sys/Revision')
