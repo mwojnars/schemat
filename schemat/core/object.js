@@ -858,7 +858,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         assert(typeof data === 'string')
 
         // let Revision = await schemat.import('/$/sys/Revision')
-        let Revision = await schemat.site.find_item('/$/sys/Revision')
+        let Revision = await schemat.site.find_object('/$/sys/Revision')
 
         let rev = await Revision.create({data, target: this})
         return rev.save()

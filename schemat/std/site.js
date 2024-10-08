@@ -118,7 +118,7 @@ export class Site extends Item {
 
     /***  Request resolution  ***/
 
-    async find_item(path) {
+    async find_object(path) {
         /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
         // return this.route(new Request({path, method: '::item'}))
         assert(path[0] === '/')
