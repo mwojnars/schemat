@@ -178,10 +178,12 @@
         info: Version number of the object's content, automatically incremented on every
           update.
         min: 1
+        inherit: false
         "@": schemat/types/type.js:INTEGER
       __prev:
         info: The most recent Revision created for the object. Contains the previous
           state of this object (from before the last update).
+        inherit: false
         "@": schemat/types/type.js:REF
       "@": schemat:Catalog
     "@": schemat:Catalog
