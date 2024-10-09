@@ -173,6 +173,7 @@ export class DataBlock extends Block {
         let {id, key, data} = req.args
         let obj = await Item.from_json(id, data)        // the object must be instantiated for validation
 
+        obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
         obj.validate()
         obj._bump_version()                             // set __ver=1 if needed
         obj._seal_dependencies()                        // set __seal
@@ -238,7 +239,7 @@ export class DataBlock extends Block {
         let obj = await Item.from_json(id, data)
 
         // apply edits & validate the object's data and the values of individual properties
-        obj.apply_edits(...edits)
+        obj.apply_edits(...edits)                   // TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
         obj.validate()                              // may raise validation exceptions
 
         obj._bump_version()                         // increment __ver

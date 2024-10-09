@@ -447,7 +447,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             let proto = this._load_prototypes()             // load prototypes
             if (proto instanceof Promise) await proto
 
-            for (let category of this.__category$)          // this.__data is already loaded, so __category$ should be available, but still it can be empty (for non-categorized objects)
+            for (let category of this.__category$)          // load categories, if any (none for non-categorized objects)
                 if (!category.is_loaded() && category !== this)
                     await category.load() //{await_url: false}) // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
