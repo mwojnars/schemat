@@ -844,7 +844,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     async _create_revision(data) {
-        /* Create a new Revision to preserve the old `data` snapshot (JSON string) and link to it via __prev property. */
+        /* Create a new Revision to preserve an old `data` snapshot (JSON string) and link to it via __prev property. */
         assert(SERVER)
         assert(typeof data === 'string')
 
@@ -852,6 +852,24 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let rev = await Revision.create({data, target: this})
         await rev.save()
         this.__data.set('__prev', rev)
+    }
+
+    _seal_dependencies() {
+        /* Recalculate the __seal property which contains version numbers of all dependencies: prototypes and categories. */
+        if (!this.__base.seal_dependencies) return
+        if (!this.__ver) throw new Error(`cannot seal dependencies of [${this.id}], __ver of the object is missing`)
+
+        let deps = [...this.__prototype$, ...this.__category$]
+        for (let dep of deps) {
+            assert(dep.is_loaded())
+            if (!dep.__ver) throw new Error(`cannot seal dependencies of [${this.id}], __ver of a dependency [${dep.id}] is missing`)
+            if (!dep.__seal) throw new Error(`cannot seal dependencies of [${this.id}], __seal of a dependency [${dep.id}] is missing`)
+        }
+
+        let vers = deps.map(d => d.__ver)
+        let seal = vers.join('.') || '.'            // seal is always non-empty, even when no dependencies
+
+        this.__data.set('__seal', seal)
     }
 
     // async insert_self() {
