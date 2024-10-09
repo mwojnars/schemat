@@ -85,6 +85,15 @@
         update by creating an immutable Revision that stores the object's
         previous content. Only effective with set_version=true.
       "@": schemat/types/type.js:BOOLEAN
+    seal_dependencies:
+      default: false
+      info: If true, __seal is stored and recomputed on every update of an object in
+        this category to capture version numbers of all dependencies (prototypes
+        and categories). If __seal is present, the object's dependencies are
+        recreated in these specific versions upon object.load(), which ensures
+        the exact same behaviour of the object unless influenced by external
+        factors.
+      "@": schemat/types/type.js:BOOLEAN
     immutable:
       default: false
       info: If true, objects of this category cannot be modified after creation.
@@ -175,6 +184,7 @@
     "@": schemat:Catalog
   set_version: false
   save_revisions: false
+  seal_dependencies: false
   class: schemat:Category
 - __id: 1
   name: Site
