@@ -826,13 +826,12 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _bump_version() {
-        /* Increment (or set/delete) the __ver number, depending on the category's `set_version` setting.
-           The existing __ver gets *removed* if `set_version` was disabled in the meantime (!).
-         */
-        if (!this.__base.set_version) return this.__data.delete('__ver')
-
-        let ver = this.__ver || 0
-        this.__data.set('__ver', ver + 1)
+        /* Set or increment __ver number, if already present or category's `set_version` is true. */
+        if (this.__ver || this.__base.set_version) {
+            //return this.__data.delete('__ver')
+            let ver = this.__ver || 0
+            this.__data.set('__ver', ver + 1)
+        }
     }
 
     async _create_revision(data) {
