@@ -268,16 +268,13 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return this.__category?.__child_schema || new DATA_GENERIC()
     }
 
-    get __prototypes() { return this.__prototype$ }
-
-    get __proto_versions() { return this.__prototypes.map(proto => proto.__ver || 0) }      // DRAFT
+    get __proto_versions() { return this.__prototype$.map(proto => proto.__ver || 0) }      // DRAFT
 
     get __ancestors() {
         // TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
         // https://en.wikipedia.org/wiki/C3_linearization
         // http://python-history.blogspot.com/2010/06/method-resolution-order.html
-        let prototypes = this.__prototypes
-        let candidates = prototypes.map(proto => proto.__ancestors)
+        let candidates = this.__prototype$.map(proto => proto.__ancestors)
         return [this, ...unique(concat(candidates))]
     }
 
@@ -489,7 +486,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _load_prototypes() {
         /* Load all Schemat prototypes of this object. */
         let opts = {await_url: false}                                       // during boot up, URLs are not awaited to avoid circular dependencies (see category.load(...) inside _load())
-        let prototypes = this.__prototypes.filter(p => !p.is_loaded())
+        let prototypes = this.__prototype$.filter(p => !p.is_loaded())
         if (prototypes.length === 1) return prototypes[0].load(opts)        // performance: trying to avoid unnecessary awaits or Promise.all()
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load(opts)))
     }
@@ -607,7 +604,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (!data) throw new NotLoaded(this)
 
         // check the Type of the property in this object's __schema; special handling for:
-        // 1) __prototype: because it is used at an early stage of loading (_load_prototypes() > this.__prototypes), before the object's category (and schema) is fully loaded;
+        // 1) __prototype: because it is used at an early stage of loading (_load_prototypes()), before the object's category (and schema) is fully loaded;
         // 2) __category: because the schema is not yet available and reading the type from __schema would create circular dependency.
 
         let type =
@@ -657,7 +654,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            True if parent==this. All comparisons by item ID.
          */
         if (this.is_equivalent(parent)) return true
-        for (const proto of this.__prototypes)
+        for (const proto of this.__prototype$)
             if (proto.inherits_from(parent)) return true
         return false
     }

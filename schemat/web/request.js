@@ -92,7 +92,7 @@ export class RequestContext {
 
             items.add(obj)
             queue.push(...obj.__category$)
-            queue.push(...obj.__prototypes)
+            queue.push(...obj.__prototype$)
             queue.push(obj.__container)
         }
         items = [...items]
