@@ -123,7 +123,7 @@
           to this object during loading. (NOTE this is likely obsolete, set
           category.class instead?)
         "@": schemat/types/type.js:IMPORT
-      __extends:
+      __prototype:
         info: An object that serves as a prototype for this one, that is, provides
           default values for missing properties. Multiple prototypes are
           allowed, the first one has priority over subsequent ones. Prototypes
@@ -213,7 +213,7 @@
         objects. A real number.
       "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
-  __extends:
+  __prototype:
     "@": 5
   __category:
     "@": 0
@@ -247,7 +247,7 @@
 - __id: 4
   name: LocalFile
   info: File located on a local disk, identified by its local file path.
-  __extends:
+  __prototype:
     "@": 3
   schema:
     local_path:
@@ -272,7 +272,7 @@
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
   class: schemat/std/containers.js:Directory
-  __extends:
+  __prototype:
     "@": 2
   __category:
     "@": 0
@@ -309,7 +309,7 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   class: schemat/std/files.js:LocalDirectory
-  __extends:
+  __prototype:
     "@": 5
   __category:
     "@": 0
@@ -321,7 +321,7 @@
     placed as a leaf node on a URL route and does not contain nested
     containers."
   class: schemat/std/containers.js:Namespace
-  __extends:
+  __prototype:
     "@": 2
   __category:
     "@": 0
@@ -339,7 +339,7 @@
       "@": schemat/types/type.js:REF
     "@": schemat:Catalog
   class: schemat/std/containers.js:ObjectSpace
-  __extends:
+  __prototype:
     "@": 7
   __category:
     "@": 0
@@ -357,7 +357,7 @@
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
   class: schemat/std/containers.js:Category_IID_Namespace
-  __extends:
+  __prototype:
     "@": 7
   __category:
     "@": 0
@@ -435,14 +435,14 @@
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
   class: schemat/db/sequence.js:DataSequence
-  __extends:
+  __prototype:
     "@": 13
   __category:
     "@": 0
 - __id: 15
   name: Index
   info: Base category for indexes over the data sequence.
-  __extends:
+  __prototype:
     "@": 24
   __category:
     "@": 0
@@ -452,7 +452,7 @@
     input records represent objects.
   schema:
     "@": schemat:Catalog
-  __extends:
+  __prototype:
     "@": 15
   __category:
     "@": 0
@@ -461,7 +461,7 @@
   info: "Index that maps categories to member objects: the key is [category ID,
     item ID]."
   class: schemat/db/indexes.js:IndexByCategory
-  __extends:
+  __prototype:
     "@": 16
   __category:
     "@": 0
@@ -490,7 +490,7 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   class: schemat/db/block.js:DataBlock
-  __extends:
+  __prototype:
     "@": 18
   __category:
     "@": 0
@@ -500,7 +500,7 @@
   schema:
     "@": schemat:Catalog
   class: schemat/db/block.js:IndexBlock
-  __extends:
+  __prototype:
     "@": 18
   __category:
     "@": 0
@@ -512,7 +512,7 @@
   name: IndexSequence
   info: Category for sequences of index records.
   class: schemat/db/sequence.js:IndexSequence
-  __extends:
+  __prototype:
     "@": 13
   __category:
     "@": 0

@@ -233,8 +233,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     __schema                schema of this item's data, as a DATA object
 
-    __extends
-    __prototypes            array of direct ancestors (prototypes) of this object; alias for `__extends$`
+    __prototype             direct ancestor (prototype) of this object; there can be multiple __prototype$ for an object
     __ancestors             array of all ancestors, deduplicated and linearized, with `this` at the first position
 
     __class                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
@@ -269,7 +268,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         return this.__category?.__child_schema || new DATA_GENERIC()
     }
 
-    get __prototypes() { return this.__extends$ }
+    get __prototypes() { return this.__prototype$ }
 
     get __proto_versions() { return this.__prototypes.map(proto => proto.__ver || 0) }      // DRAFT
 
@@ -608,13 +607,13 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         if (!data) throw new NotLoaded(this)
 
         // check the Type of the property in this object's __schema; special handling for:
-        // 1) __extends: because it is used at an early stage of the loading process (_load_prototypes() > this.__prototypes), before the object's category (and schema) is fully loaded;
+        // 1) __prototype: because it is used at an early stage of loading (_load_prototypes() > this.__prototypes), before the object's category (and schema) is fully loaded;
         // 2) __category: because the schema is not yet available and reading the type from __schema would create circular dependency.
 
         let type =
-            prop === '__category' ? new REF() :
-            prop === '__extends'  ? new REF({inherit: false}) :
-                                    proxy.__schema.get(prop)
+            prop === '__category'  ? new REF() :
+            prop === '__prototype' ? new REF({inherit: false}) :
+                                     proxy.__schema.get(prop)
 
         if (!type) return []
 
@@ -629,7 +628,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let streams = ancestors.map(proto => proto._own_values(prop))
 
         // read `defaults` from the category and combine them with the `streams`
-        if (prop !== '__extends' && prop !== '__category')                  // avoid circular dependency for these special props
+        if (prop !== '__prototype' && prop !== '__category')                // avoid circular dependency for these special props
         {
             let category = proxy.__category
             if (this === category?.__self && prop === 'defaults')           // avoid circular dependency for RootCategory
