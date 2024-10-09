@@ -174,13 +174,15 @@ export class DataBlock extends Block {
         let obj = await Item.from_json(id, data, {mutable: true})       // the object must be instantiated for validation
 
         obj.validate()
-        obj._set_version()                                  // set __ver=1 if needed
+        obj._bump_version()                             // set __ver=1 if needed
+        obj._seal_dependencies()                        // set __seal
+
         data = obj.dump_data()
 
-        if (id === undefined || id === null) {              // assign a new ID if not provided for the new item
+        if (id === undefined || id === null) {          // assign a new ID if not provided for the new item
             id = this._assign_id(req)
             if (T.isPromise(id)) id = await id
-        } else                                              // fixed ID provided by the caller? check for uniqueness
+        } else                                          // fixed ID provided by the caller? check for uniqueness
             await this.assert_unique(key, id)
 
         const ring = req.current_ring
@@ -233,12 +235,14 @@ export class DataBlock extends Block {
         let data = await this._storage.get(key)
         if (data === undefined) return req.forward_down()
 
-        let obj = await Item.from_json(id, data, {mutable: true})
+        let obj = await Item.from_json(id, data, {mutable: true, sealed: false})
 
         // apply edits & validate the object's data and the values of individual properties
         obj.apply_edits(...edits)
         obj.validate()                              // may raise validation exceptions
-        obj._bump_version()                         // increment __ver, or remove it
+
+        obj._bump_version()                         // increment __ver
+        obj._seal_dependencies()                    // recompute __seal
 
         if (obj.__base.save_revisions)
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
