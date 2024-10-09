@@ -62,7 +62,7 @@ export class MySQL extends DataBlock {
 
         for (let [path, sqlTable] of tables) {
             assert(path)
-            let category = await schemat.site.find_object(path)
+            let category = await schemat.import(path)
             assert(category.is_loaded())
             assert(category.instanceof(schemat.get_object(ROOT_ID)))
 

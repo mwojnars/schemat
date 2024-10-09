@@ -41,11 +41,11 @@ export class Index extends Operator {
         const [del_records, put_records] = this._make_plan(change)
 
         // delete old records
-        for (let [key, value] of del_records || [])
+        for (let [key, value] of del_records || [])     // TODO: `key` may be duplicated (repeated values), remove duplicates beforehand
             sequence.del(req.safe_step(this, 'del', {key})) //|| print(`deleted [${key}]`)
 
         // (over)write new records
-        for (let [key, value] of put_records || [])
+        for (let [key, value] of put_records || [])     // TODO: `key` may be duplicated, keep the *first* one only
             sequence.put(req.safe_step(this, 'put', {key, value})) //|| print(`put [${key}]`)
     }
 

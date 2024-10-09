@@ -115,15 +115,23 @@ export class Site extends Item {
         })
     }
 
-
-    /***  Request resolution  ***/
-
-    async find_object(path) {
-        /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
-        // return this.route(new Request({path, method: '::item'}))
+    import_global(path) {
+        /* Import from an absolute URL path in the SUN namespace, like "/$/sys/Revision" etc.
+           TODO: The path must not contain any endpoint (::xxx), but it may contain an in-module selector (:symbol)
+         */
         assert(path[0] === '/')
         return this.route_internal(path)
     }
+
+
+    /***  Request resolution  ***/
+
+    // async find_object(path) {
+    //     /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
+    //     // return this.route(new Request({path, method: '::item'}))
+    //     assert(path[0] === '/')
+    //     return this.route_internal(path)
+    // }
 
     async route_internal(path) {
         /* Internal URL-call to a CALL/* endpoint of an object identified by a URL `path`.
