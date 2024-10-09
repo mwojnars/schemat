@@ -432,10 +432,10 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             return this.__meta.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
         }
         if (this.is_newborn() && !data_json) return this                       // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
-        return this.__meta.loading = this._load(data_json, await_url)          // keep a Promise that will eventually load the data; this is needed to avoid race conditions
+        return this.__meta.loading = this._load(data_json, sealed, await_url)  // keep a Promise that will eventually load the data; this is needed to avoid race conditions
     }
 
-    async _load(data_json, await_url) {
+    async _load(data_json, sealed, await_url) {
         /* Load this.__data from `data_json` or DB. Set up the class and prototypes. Call __init__(). */
 
         schemat.before_data_loading(this)
@@ -449,7 +449,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
             for (let category of this.__category$)          // this.__data is already loaded, so __category$ should be available, but still it can be empty (for non-categorized objects)
                 if (!category.is_loaded() && category !== this)
-                    await category.load({await_url: false}) // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
+                    await category.load() //{await_url: false}) // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
             if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
 
@@ -488,7 +488,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _load_prototypes() {
         /* Load all Schemat prototypes of this object. */
-        let opts = {await_url: false}                                       // during boot up, URLs are not awaited to avoid circular dependencies (see category.load(...) inside _load())
+        let opts = {} //await_url: false}                                   // during boot up, URLs are not awaited to avoid circular dependencies (see category.load(...) inside _load())
         let prototypes = this.__prototype$.filter(p => !p.is_loaded())
         if (prototypes.length === 1) return prototypes[0].load(opts)        // performance: trying to avoid unnecessary awaits or Promise.all()
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load(opts)))
