@@ -201,11 +201,10 @@ export class Schemat {
 
     async get_loaded(id)     { return this.get_object(id).load() }
 
-    async reload(obj_or_id) {
-        /* Create a new instance of the object using the most recent content for this ID as available in the registry;
-           load its data from DB, and when it is fully initialized replace the existing instance in the registry. Return the new object.
+    async reload(id) {
+        /* Create a new instance of the object using the most recent data for this ID as available in the record registry,
+           or download it from DB; when the object is fully initialized replace the existing instance in the registry. Return the object.
          */
-        let id  = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id
         let obj = Item.create_stub(id)
         return obj.load().then(() => this.registry.set_object(obj))
     }
