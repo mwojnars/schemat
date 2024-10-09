@@ -229,7 +229,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __data                  own properties of this object in raw form (before imputation etc.), as a Data object created during .load()
 
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
-                            that inherits (like from prototypes) from all __category$ categories listed in this object
+                            that inherits (like from prototypes) from all __category$ listed in this object or inherited
 
     __schema                schema of this item's data, as a DATA object
 
@@ -237,7 +237,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __ancestors             array of all ancestors, deduplicated and linearized, with `this` at the first position
 
     __class                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
-    __category              category of this item, as a Category object; there can be multiple __category$
+    __category              category of this item, as a Category object; there can be multiple __category$; they can be inherited from __prototype$
     __container             Container of this item, for canonical URL generation
     __status                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
     __ttl                   time-to-live of this object in the registry [seconds]; 0 = immediate eviction on the next cache purge
@@ -393,7 +393,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
            If __new__() returns a Promise, this method returns a Promise too.
            This method should be used instead of the constructor.
          */
-        // if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
+        if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
         let obj  = this.create_stub(null, {mutable: true})               // newly-created objects are always mutable
         let wait = obj.__new__(...args)
         return wait instanceof Promise ? wait.then(() => obj) : obj
@@ -855,21 +855,24 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     _seal_dependencies() {
-        /* Recalculate the __seal property which contains version numbers of all dependencies: prototypes and categories. */
-        if (!this.__base.seal_dependencies) return
+        /* Recalculate the __seal property as a string "v1.v2.v3..." of concatenated version numbers of all dependencies: prototypes + categories. */
+        let data = this.__data
+        if (!this.__base.seal_dependencies) return data.delete('__seal')
         if (!this.__ver) throw new Error(`cannot seal dependencies of [${this.id}], __ver of the object is missing`)
 
-        let deps = [...this.__prototype$, ...this.__category$]
+        // inherited categories are excluded from `deps`: they are already included in the seals of prototypes where they were originally declared
+        let deps = [...data.getAll('__prototype'), ...data.getAll('__category')]
+
         for (let dep of deps) {
             assert(dep.is_loaded())
-            if (!dep.__ver) throw new Error(`cannot seal dependencies of [${this.id}], __ver of a dependency [${dep.id}] is missing`)
-            if (!dep.__seal) throw new Error(`cannot seal dependencies of [${this.id}], __seal of a dependency [${dep.id}] is missing`)
+            if (!dep.__ver) throw new Error(`cannot seal dependencies of [${this.id}], __ver of the dependency [${dep.id}] is missing`)
+            if (!dep.__seal) throw new Error(`cannot seal dependencies of [${this.id}], __seal of the dependency [${dep.id}] is missing`)
         }
 
         let vers = deps.map(d => d.__ver)
-        let seal = vers.join('.') || '.'            // seal is always non-empty, even when no dependencies
+        let seal = vers.join('.') || '.'            // seal is always non-empty, even when no dependencies ('.')
 
-        this.__data.set('__seal', seal)
+        data.set('__seal', seal)
     }
 
     // async insert_self() {
