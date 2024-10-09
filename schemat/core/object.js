@@ -237,7 +237,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     __ancestors             array of all ancestors, deduplicated and linearized, with `this` at the first position
 
     __class                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
-    __category              category of this item, as a Category object
+    __category              category of this item, as a Category object; there can be multiple __category$
     __container             Container of this item, for canonical URL generation
     __status                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
     __ttl                   time-to-live of this object in the registry [seconds]; 0 = immediate eviction on the next cache purge
@@ -827,19 +827,19 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _set_version() {
         /* Set __ver=1 for a newly created object, if so requested in category settings. */
-        if (this.__base.versioning)
+        if (this.__base.set_version)
             this.__data.set('__ver', 1)
         else
             this.__data.delete('__ver')         // manually configuring __ver by the caller is disallowed
     }
 
     _bump_version(prev) {
-        /* Increment (or set/delete) the __ver number, depending on the category's `versioning` setting.
+        /* Increment (or set/delete) the __ver number, depending on the category's `set_version` setting.
            If category.keep_history=true, create a new Revision with `prev` data (json) and link to it via this.__prev.
-           The existing __ver may get *removed* if `versioning` was disabled in the meantime (!).
+           The existing __ver may get *removed* if `set_version` was disabled in the meantime (!).
            May return a Promise.
          */
-        if (this.__base.versioning) {
+        if (this.__base.set_version) {
             let ver = this.__ver || 0
             this.__data.set('__ver', ver + 1)
             if (this.__base.keep_history)
