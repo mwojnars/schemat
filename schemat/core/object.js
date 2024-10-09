@@ -210,6 +210,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     ? name     -- for fast generation of lists of hyperlinks without loading full data for each item; length limit ~100
     */
 
+    static SEAL_SEP = '.'
+
 
     /***  Common properties ***/
 
@@ -403,11 +405,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by Item.new(). */
     }
 
-    static async from_json(id, json, opts = {}) {
+    static async from_json(id, json, {mutable = true, sealed = false} = {}) {
         /* Create a new Item instance given an encoded JSON string with the object's content. */
         assert(typeof json === 'string')
-        let obj = Item.create_stub(id, opts)
-        return obj.load({data_json: json})
+        let obj = Item.create_stub(id, {mutable})
+        return obj.load({data_json: json, sealed})
     }
 
     _get_write_id() {
@@ -418,10 +420,11 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Loading & initialization ***/
 
-    async load({data_json = null, await_url = true} = {}) {
+    async load({data_json = null, sealed = true, await_url = true} = {}) {
         /* Load full data of this item from `data_json` or from DB, if not loaded yet. Return this object.
-           The data can only be loaded ONCE for a given Item instance due to item's immutability.
-           If you want to refresh the data, create a new instance or use refresh() instead.
+           If sealed=true and __seal is present in the object, the exact versions of dependencies (prototypes, categories)
+           as indicated by __seal are linked. The data can only be loaded ONCE for a given Item instance due to item's immutability.
+           If you want to refresh the data, create a new instance with .reload().
            `await_url` has effect only after the schemat.site is loaded, not during boot up.
          */
         if (this.__data || this.__meta.loading) {           // data is loaded or being loaded right now? do nothing except for awaiting the URL (previous load() may have been called with await_url=false)
@@ -501,6 +504,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     async reload() {
         /* Create a new instance of this object using the most recent version of this object's content
            as available in the registry or downloaded from the DB. */
+        return schemat.reload(this.id)
     }
 
 
@@ -860,8 +864,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             if (!dep.__seal) throw new Error(`cannot seal dependencies of [${this.id}], __seal of the dependency [${dep.id}] is missing`)
         }
 
+        let sep  = Item.SEAL_SEP
         let vers = deps.map(d => d.__ver)
-        let seal = vers.join('.') || '.'            // seal is always non-empty, even when no dependencies ('.')
+        let seal = vers.join(sep) || sep            // seal is always non-empty, even when no dependencies ('.')
 
         data.set('__seal', seal)
     }

@@ -171,7 +171,7 @@ export class DataBlock extends Block {
     async insert(req) {
         // calculate the `id` if not provided, update _autoincrement and write the data
         let {id, key, data} = req.args
-        let obj = await Item.from_json(id, data, {mutable: true})       // the object must be instantiated for validation
+        let obj = await Item.from_json(id, data)        // the object must be instantiated for validation
 
         obj.validate()
         obj._bump_version()                             // set __ver=1 if needed
@@ -235,7 +235,7 @@ export class DataBlock extends Block {
         let data = await this._storage.get(key)
         if (data === undefined) return req.forward_down()
 
-        let obj = await Item.from_json(id, data, {mutable: true, sealed: false})
+        let obj = await Item.from_json(id, data)
 
         // apply edits & validate the object's data and the values of individual properties
         obj.apply_edits(...edits)
