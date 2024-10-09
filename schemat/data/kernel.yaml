@@ -83,16 +83,19 @@
       default: false
       info: If true, old versions of objects in this category are preserved on every
         update by creating an immutable Revision that stores the object's
-        previous content. Only effective with set_version=true.
+        previous content. The most recently created revision is available in the
+        __prev property of the target object.
       "@": schemat/types/type.js:BOOLEAN
     seal_dependencies:
       default: false
-      info: If true, __seal is stored and recomputed on every update of an object in
-        this category to capture version numbers of all dependencies (prototypes
-        and categories). If __seal is present, the object's dependencies are
+      info: If true, __seal is stored and recomputed on every update of an object to
+        capture version numbers of all its dependencies (prototypes and
+        categories). If __seal is present, the object's dependencies are
         recreated in these specific versions upon object.load(), which ensures
         the exact same behaviour of the object unless influenced by external
-        factors.
+        factors. During update, the seal is recomputed to reflect the latest
+        version numbers of each dependency. Typically used to seal dependencies
+        of category objects.
       "@": schemat/types/type.js:BOOLEAN
     immutable:
       default: false
