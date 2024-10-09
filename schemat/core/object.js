@@ -835,14 +835,14 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     _bump_version(prev) {
         /* Increment (or set/delete) the __ver number, depending on the category's `set_version` setting.
-           If category.keep_history=true, create a new Revision with `prev` data (json) and link to it via this.__prev.
+           If category.save_revisions=true, create a new Revision with `prev` data (json) and link to it via this.__prev.
            The existing __ver may get *removed* if `set_version` was disabled in the meantime (!).
            May return a Promise.
          */
         if (this.__base.set_version) {
             let ver = this.__ver || 0
             this.__data.set('__ver', ver + 1)
-            if (this.__base.keep_history)
+            if (this.__base.save_revisions)
                 return this._create_revision(prev).then(rev => this.__data.set('__prev', rev))
         }
         else this.__data.delete('__ver')        // TODO: drop orphaned revisions OR garbage-collect them to save DB space and avoid accidental reuse when versioning starts again

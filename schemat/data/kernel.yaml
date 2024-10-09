@@ -79,7 +79,7 @@
         __ver property that holds this object's version number (1,2,3,...) and
         is automatically incremented on every update.
       "@": schemat/types/type.js:BOOLEAN
-    keep_history:
+    save_revisions:
       default: false
       info: If true, old versions of objects in this category are preserved on every
         update by creating an immutable Revision that stores the object's
@@ -174,7 +174,7 @@
       "@": schemat:Catalog
     "@": schemat:Catalog
   set_version: false
-  keep_history: false
+  save_revisions: false
   class: schemat:Category
 - __id: 1
   name: Site
