@@ -444,6 +444,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             data_json = data_json || await schemat.load_record(this.id)
             this.__data = Data.load(data_json)
 
+            let seal = this.__data.get('__seal')            // if seal is present, replace refs to prototypes/categories with proper versions of these dependency objects
+            if (seal && sealed) await this._load_dependencies(seal)
+
             let proto = this._load_prototypes()             // load prototypes
             if (proto instanceof Promise) await proto
 
@@ -474,6 +477,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             this.__meta.loaded_at = now
             this.__meta.expire_at = now + (this.__ttl || 0) * 1000
 
+            if (this.__ver && !this.__meta.mutable) schemat.register_version(this)
+
             return this
 
         } catch (ex) {
@@ -483,6 +488,23 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         } finally {
             this.__meta.loading = false                     // cleanup to allow another load attempt, even after an error
             schemat.after_data_loading(this)
+        }
+    }
+
+    async _load_dependencies(seal) {
+        print(`[${this.id}] _load_dependencies(), seal = ${seal}`)
+
+        let data = this.__data
+        let locs = [...data.locs('__prototype'), ...data.locs('__category')]
+        let refs = locs.map(i => data.get(i))
+        let vers = (seal === Item.SEAL_SEP) ? [] : seal.split(Item.SEAL_SEP)
+        if (locs.length !== vers.length) throw new Error(`different size of seal (${seal}) and dependencies [${locs}]`)
+
+        // replace references in `data` with proper versions of objects
+        for (let i = 0; i < locs.length; i++) {
+            let ref = refs[i], loc = locs[i], ver = vers[i]
+            if (ref !== this && (!ref.is_loaded() || ref.__ver !== ver))
+                data.set(loc, await schemat.get_version(ref.__id, ver))
         }
     }
 
