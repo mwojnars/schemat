@@ -14,10 +14,15 @@ export async function transpileJSX(path, {short = true} = {}) {
             presets: ['@babel/preset-react'],           // preset for transpiling JSX
         })
 
-        // optionally define `el()` shortcut and replace React.createElement() with el()
-        let alias = 'el'
+        // optionally define a shortcut for React.createElement() and use it instead of the full name
+        let alias = 'EL'
         let exist = new RegExp(`\\b${alias}\\b`)
-        if (short && !exist.test(code)) {
+        if (short) {
+            if (exist.test(code)) {
+                console.warn(`transpileJSX(${path}): the alias name (${alias}) is already used in the code, cannot replace React.createElement`)
+                return code
+            }
+
             code = code.replace(/React\.createElement/g, alias)
             // code = `let ${alias} = React.createElement;\n${code}`
 
@@ -25,7 +30,7 @@ export async function transpileJSX(path, {short = true} = {}) {
             let header = /^(\s*(\/\/[^\n]*|\/\*[\s\S]*?\*\/|\s*import[^\n]*))*\n?/
 
             // insert the alias after the header block, so that all imports execute beforehand
-            code = code.replace(header, match => match + '\nlet el = React.createElement;\n')
+            code = code.replace(header, match => match + `\nlet ${alias} = React.createElement;\n`)
         }
         return code
 
