@@ -497,7 +497,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let data = this.__data
         let locs = [...data.locs('__prototype'), ...data.locs('__category')]
         let refs = locs.map(i => data.get(i))
-        let vers = (seal === Item.SEAL_SEP) ? [] : seal.split(Item.SEAL_SEP)
+        let vers = (seal === Item.SEAL_SEP) ? [] : seal.split(Item.SEAL_SEP).map(Number)
         if (locs.length !== vers.length) throw new Error(`different size of seal (${seal}) and dependencies [${locs}]`)
 
         // replace references in `data` with proper versions of objects
