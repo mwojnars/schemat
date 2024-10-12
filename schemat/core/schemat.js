@@ -231,11 +231,21 @@ export class Schemat {
     }
 
     async get_version(id, ver) {
-        /* Restore a previous version, `ver`, of a given object, or take it from the registry if present. The returned object is loaded. */
+        /* Restore a previous version, `ver`, of a given object, or take it from the registry if present. The object returned is fully loaded. */
         let obj = this.registry.get_version(id, ver)
         if (obj) return obj
 
-        let base = await this.get_loaded(id)
+        obj = await this.get_loaded(id)
+        while (obj?.__ver && obj.__ver > ver) {         // start with the most recent version and move back through previous revisions...
+            let rev = obj.__prev
+            if (!rev) break
+            if (!rev.is_loaded()) await rev.load()
+            obj = await rev.restore()
+            this.register_version(obj)
+        }
+
+        if (obj?.__ver === ver) return obj
+        throw new Error(`version ${ver} not found for object [${id}]`)
     }
 
 
@@ -261,8 +271,7 @@ export class Schemat {
     }
 
     register_version(obj) {
-        /* Store the specific version (__ver) of a loaded web object for reuse. */
-
+        /* Cache the specific version (__ver) of a loaded web object for reuse. */
     }
 
     async _purge_registry() {
