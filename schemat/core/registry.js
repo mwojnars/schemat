@@ -1,6 +1,7 @@
 import {T, assert, print} from "../common/utils.js";
 import {DataRecord} from "../db/records.js";
 import {Data} from "./data.js";
+import {CustomMap} from "../common/structs.js";
 // import BTree from 'sorted-btree'
 
 
@@ -10,7 +11,7 @@ import {Data} from "./data.js";
  **
  */
 
-export class ObjectsCache extends Map {
+class ObjectsCache extends Map {
     /* A cache of {id: object} pairs. Provides manually-invoked eviction by LRU and per-item TTL.
        Eviction timestamps are stored in items and can be modified externally.
        Currently, the implementation scans all entries for TTL eviction, which should work well for up to ~1000 entries.
@@ -43,6 +44,13 @@ export class ObjectsCache extends Map {
     }
 }
 
+class VersionsCache extends CustomMap {
+    /* A cache of {id_ver: object} pairs. */
+
+    convert([id, ver])  { return `${id}.${ver}` }
+    reverse(key)        { return key.split('.').map(Number) }
+}
+
 
 /**********************************************************************************************************************
  **
@@ -53,8 +61,9 @@ export class ObjectsCache extends Map {
 export class Registry {
     /* Process-local cache of web objects, records and indexes loaded from DB, as well as dynamically loaded JS modules. */
 
-    records = new Map()                 // cache of JSONx-stringified object's data, {id: data_json}; evicted en masse on every purge
-    objects = new ObjectsCache()        // cache of web objects; each object has its individual eviction period and time limit
+    records  = new Map()                // cache of JSONx-stringified object's data, {id: data_json}; evicted en masse on every purge
+    objects  = new ObjectsCache()       // cache of web objects; each object has its individual eviction period and time limit
+    versions = new Map()
 
     _purging_now = false                // if the previous purge is still in progress, a new one is abandoned
 
@@ -74,9 +83,6 @@ export class Registry {
         this.records.set(id, data)
     }
 
-    // get_record(id)  { return this.records.get(id) }
-    // set_record(rec) { this.records.set(rec.id, rec); return rec }
-
     get_object(id)  { return this.objects.get(id) }
 
     set_object(obj) {
@@ -87,6 +93,9 @@ export class Registry {
         return obj
     }
     delete_object(id) { return this.objects.delete(id) }
+
+    get_version(id, ver)    {}
+    set_version(obj)        {}
 
     *[Symbol.iterator]()    { yield* this.objects.values() }
 

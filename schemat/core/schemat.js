@@ -230,6 +230,15 @@ export class Schemat {
         return this.db.select(req)
     }
 
+    async get_version(id, ver) {
+        /* Restore a previous version, `ver`, of a given object, or take it from the registry if present. The returned object is loaded. */
+        let obj = this.registry.get_version(id, ver)
+        if (obj) return obj
+
+        let base = await this.get_loaded(id)
+    }
+
+
     /***  Registry management  ***/
 
     register_record(record /*DataRecord or {id,data}*/, invalidate = true) {
@@ -249,6 +258,11 @@ export class Schemat {
         /* Remove an (outdated) object from the registry. If a stub (no __data yet), the object is kept. */
         let obj = this.registry.get_object(id)
         if (obj?.__data) this._on_evict(obj) || this.registry.delete_object(id)
+    }
+
+    register_version(obj) {
+        /* Store the specific version (__ver) of a loaded web object for reuse. */
+
     }
 
     async _purge_registry() {
@@ -286,7 +300,7 @@ export class Schemat {
         for await (const record of records) {
             let {cid, id} = record.object_key
             assert(full_scan || target === cid)
-            yield load ? await this.get_loaded(id) : this.get_object(id)
+            yield load ? this.get_loaded(id) : this.get_object(id)
         }
     }
 
