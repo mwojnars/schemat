@@ -1,6 +1,6 @@
 import {DatabaseError} from "../common/errors.js"
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
-import {Item, Edit} from "../core/object.js"
+import {WebObject, Edit} from "../core/object.js"
 import {DataOperator} from "./sequence.js";
 import {Record, DataRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
@@ -14,7 +14,7 @@ import {Catalog, Data} from "../core/data.js";
  **
  */
 
-export class Ring extends Item {
+export class Ring extends WebObject {
 
     static __category = 12  // ID of Ring category in the kernel
     static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
@@ -179,7 +179,7 @@ export class Ring extends Item {
  **
  */
 
-export class Database extends Item {
+export class Database extends WebObject {
     /* A number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
        ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
        If ItemNotFound/ReadOnly is caught, the next ring is tried.
@@ -356,7 +356,7 @@ export class Database extends Item {
     //     /* Scan each ring and merge the sorted streams of entries. */
     //     // TODO: remove duplicates while merging
     //     let streams = this.rings.map(r => r.scan_all())
-    //     yield* merge(Item.compare, ...streams)
+    //     yield* merge(WebObject.compare, ...streams)
     // }
 
 

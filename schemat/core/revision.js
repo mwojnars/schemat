@@ -1,7 +1,7 @@
-import {Item} from "./object.js";
+import {WebObject} from "./object.js";
 
 
-export class Revision extends Item {
+export class Revision extends WebObject {
 
     target      // target web object
     data        // stringified __data of the target object
@@ -9,6 +9,6 @@ export class Revision extends Item {
     restore() {
         /* Recreate the target object in the form represented by this revision. */
         let id  = this.target.id
-        return Item.from_json(id, this.data, {mutable: false})
+        return WebObject.from_json(id, this.data, {mutable: false})
     }
 }

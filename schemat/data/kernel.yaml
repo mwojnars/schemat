@@ -10,7 +10,7 @@
         Importantly, `class` impacts the category itself: all *static* endpoints
         defined in this class are treated as endpoints of the category object,
         not instances.'
-      default: schemat:Item
+      default: schemat:WebObject
       "@": schemat/types/type.js:STRING
     defaults:
       type_values:
@@ -32,7 +32,7 @@
       repeated: true
       info: Source code of the class (a body without heading) that will be created for
         this category. The class inherits from the `class`, or the class of the
-        first base category, or the top-level Item.
+        first base category, or the top-level WebObject.
       "@": schemat/types/type.js:CODE
     pages:
       type_values:

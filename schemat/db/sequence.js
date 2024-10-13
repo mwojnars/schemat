@@ -1,7 +1,7 @@
 import {Record, data_schema} from "./records.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock, IndexBlock} from "./block.js";
-import {Item} from "../core/object.js";
+import {WebObject} from "../core/object.js";
 import {BinaryInput} from "../common/binary.js";
 import {INTEGER} from "../types/type.js";
 
@@ -12,7 +12,7 @@ import {INTEGER} from "../types/type.js";
  **
  */
 
-export class Sequence extends Item {    // Series?
+export class Sequence extends WebObject {    // Series?
     /* Ordered binary sequence of key-value records, possibly distributed and/or replicated (TODO).
        Keys and values (payload) can be composite.
        May consist of multiple - possibly overlapping (replicated) - Blocks. TODO
@@ -112,7 +112,7 @@ export class IndexSequence extends Sequence {
 export class Subsequence {
     /* A sequence of binary key-value pairs that is physically stored as a subsequence of another Sequence, with keys prefixed
        by a constant: the IID of the Operator that produced this subsequence. As a thin wrapper around the underlying
-       physical (sub)sequence, this class is NOT stored in the DB, and does NOT inherit from Sequence nor Item.
+       physical (sub)sequence, this class is NOT stored in the DB, and does NOT inherit from Sequence nor WebObject.
      */
 
     base_sequence               // the underlying Sequence
@@ -214,7 +214,7 @@ export class DataSequence extends Sequence {
 
 /**********************************************************************************************************************/
 
-export class Operator extends Item {
+export class Operator extends WebObject {
 
     record_schema       // RecordSchema that defines keys and values of records produced by this operator
 

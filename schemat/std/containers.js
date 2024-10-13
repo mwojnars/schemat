@@ -3,13 +3,13 @@
  */
 
 import {assert, print, T} from "../common/utils.js"
-import {Item} from "../core/object.js"
+import {WebObject} from "../core/object.js"
 import {UrlPathNotFound, warn} from "../common/errors.js";
 
 
 /**********************************************************************************************************************/
 
-export class Container extends Item {
+export class Container extends WebObject {
     /*
        Bidirectional mapping of URL names to objects, and a collection of objects that are all published
        under the same URL path prefix as defined by the parent container(s).

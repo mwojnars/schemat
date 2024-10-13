@@ -185,7 +185,7 @@ class ItemProxy {
 
 /**********************************************************************************************************************/
 
-export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObject?
+export class WebObject {
 
     /*
     An application object that is persisted in a database, has a unique ID, is potentially accessible by a URL,
@@ -317,7 +317,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
 
-    static _cachable_getters         // a Set of names of getters of the Item class or its subclass - for caching in ItemProxy
+    static _cachable_getters        // a Set of names of getters of the WebObject class or its subclass - for caching in ItemProxy
 
     static _collect_cachable_getters() {
         /* Find all getter functions in the current class, combine with parent's set of getters and store in _cachable_getters. */
@@ -359,7 +359,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     /***  Instantiation  ***/
 
     constructor(_fail = true, {mutable = false} = {}) {
-        /* For internal use! Always call Item.new() or category.create() instead of `new Item()`.
+        /* For internal use! Always call WebObject.new() or category.create() instead of `new WebObject()`.
            By default, the object is created immutable, and on client (where all modifications are local to the single client process)
            this gets toggled automatically on the first attempt to object modification. On the server
            (where any modifications might spoil other web requests), changing `mutable` after creation is disallowed.
@@ -402,13 +402,13 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     }
 
     __new__(...args) {
-        /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by Item.new(). */
+        /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by WebObject.new(). */
     }
 
     static async from_json(id, json, {mutable = true, sealed = false} = {}) {
-        /* Create a new Item instance given an encoded JSON string with the object's content. */
+        /* Create a new WebObject instance given an encoded JSON string with the object's content. */
         assert(typeof json === 'string')
-        let obj = Item.create_stub(id, {mutable})
+        let obj = WebObject.create_stub(id, {mutable})
         return obj.load({data_json: json, sealed})
     }
 
@@ -423,7 +423,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     async load({data_json = null, sealed = true, await_url = true} = {}) {
         /* Load full data of this item from `data_json` or from DB, if not loaded yet. Return this object.
            If sealed=true and __seal is present in the object, the exact versions of dependencies (prototypes, categories)
-           as indicated by __seal are linked. The data can only be loaded ONCE for a given Item instance due to item's immutability.
+           as indicated by __seal are linked. The data can only be loaded ONCE for a given WebObject instance due to item's immutability.
            If you want to refresh the data, create a new instance with .reload().
            `await_url` has effect only after the schemat.site is loaded, not during boot up.
          */
@@ -456,8 +456,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
             if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
 
-            let cls = await this._load_class()              // set the target JS class on this object; stubs only have Item as their class, which must be changed when the data is loaded and the item is linked to its category
-            T.setClass(this, cls || Item)
+            let cls = await this._load_class()              // set the target JS class on this object; stubs only have WebObject as their class, which must be changed when the data is loaded and the item is linked to its category
+            T.setClass(this, cls || WebObject)
 
             this._init_services()
 
@@ -498,7 +498,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
         let data = this.__data
         let locs = [...data.locs('__prototype'), ...data.locs('__category')]
         let refs = locs.map(i => data.get(i))
-        let vers = (seal === Item.SEAL_SEP) ? [] : seal.split(Item.SEAL_SEP).map(Number)
+        let vers = (seal === WebObject.SEAL_SEP) ? [] : seal.split(WebObject.SEAL_SEP).map(Number)
         if (locs.length !== vers.length) throw new Error(`different size of seal (${seal}) and dependencies [${locs}]`)
 
         // replace references in `data` with proper versions of objects
@@ -557,7 +557,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     _impute__url() {
         /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
         return this.__path.replace(/\/\*[^/]*/g, '')
-        // let [url, on_blank_route] = Item._decode_access_path(this.__path)
+        // let [url, on_blank_route] = WebObject._decode_access_path(this.__path)
         // if (on_blank_route)                                         // if any of the ancestor containers has the same URL, use the system URL instead for this object
         //     for (let parent = this.__container; parent; parent = parent.__container)
         //         if (url === parent.__url) return this.system_url
@@ -887,7 +887,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             if (!dep.__seal) throw new Error(`cannot seal dependencies of [${this.id}], __seal of the dependency [${dep.id}] is missing`)
         }
 
-        let sep  = Item.SEAL_SEP
+        let sep  = WebObject.SEAL_SEP
         let vers = deps.map(d => d.__ver)
         let seal = vers.join(sep) || sep            // seal is always non-empty, even when no dependencies ('.')
 
@@ -1050,8 +1050,8 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Endpoints  ***/
 
-    // When endpoint functions (below) are called, `this` is always bound to the Item instance, so they execute
-    // in the context of their item like if they were regular methods of the Item (sub)class.
+    // When endpoint functions (below) are called, `this` is always bound to the WebObject instance, so they execute
+    // in the context of their item like if they were regular methods of the WebObject (sub)class.
     // The first argument, `request`, is a Request instance, followed by action-specific list of arguments.
     // In a special case when an action is called directly on the server through _triggers_.XXX(), `request` is null,
     // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
@@ -1065,7 +1065,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     GET__json({res})        { res.json(this.self_encode()) }
 
     CALL__self()            { return this }
-    // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: Item.CALL/self'); return this })
+    // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: WebObject.CALL/self'); return this })
 
     // GET__record(request)    { return new ReactPage(ItemRecordView).server(this, request) }
     // GET__record()     { return react_page(ItemRecordView) }
@@ -1075,7 +1075,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
 
     /***  Dynamic loading of source code  ***/
 
-    // parseClass(base = Item) {
+    // parseClass(base = WebObject) {
     //     /* Concatenate all the relevant `code_*` and `code` snippets of this item into a class body string,
     //        and dynamically parse them into a new class object - a subclass of `base` or the base class identified
     //        by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
@@ -1109,7 +1109,7 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
     //         if (typeof s !== 'string') return ''
     //         return s.replace(/\W/, '')                  // keep ascii-alphanum characters only, drop all others
     //     }
-    //     let domain   = Item.CODE_DOMAIN
+    //     let domain   = WebObject.CODE_DOMAIN
     //     let cat_name = clean(this.get('name'))
     //     let fil_name = `${cat_name}_${this.id_str}`
     //     return `${domain}:///items/${fil_name}/${path}`

@@ -1,6 +1,6 @@
 import {assert, print, T} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, NotImplemented} from '../common/errors.js'
-import {Item} from '../core/object.js'
+import {WebObject} from '../core/object.js'
 import {ChangeRequest, data_schema} from "./records.js";
 import {BinaryMap, compareUint8Arrays} from "../common/binary.js";
 
@@ -20,7 +20,7 @@ function createFileIfNotExists(filename, fs) {
  **
  */
 
-export class Block extends Item {
+export class Block extends WebObject {
     /* A continuous subrange of records of a data/index sequence, physically located on a single machine.
        Records are arranged by key using byte order. Unit of data replication and distribution (TODO).
      */
@@ -171,7 +171,7 @@ export class DataBlock extends Block {
     async insert(req) {
         // calculate the `id` if not provided, update _autoincrement and write the data
         let {id, key, data} = req.args
-        let obj = await Item.from_json(id, data)        // the object must be instantiated for validation
+        let obj = await WebObject.from_json(id, data)   // the object must be instantiated for validation
 
         obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
         obj.validate()
@@ -236,7 +236,7 @@ export class DataBlock extends Block {
         let data = await this._storage.get(key)
         if (data === undefined) return req.forward_down()
 
-        let obj = await Item.from_json(id, data)
+        let obj = await WebObject.from_json(id, data)
 
         // apply edits & validate the object's data and the values of individual properties
         obj.apply_edits(...edits)                   // TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)

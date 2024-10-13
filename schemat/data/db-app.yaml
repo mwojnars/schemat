@@ -67,11 +67,11 @@
     // console.log('TwitterPost/code executed')
 
     // import {check} from '/site/widgets.js'
-    // import {Item} from '/$/local/schemat/core/object.js'
+    // import {WebObject} from '/$/local/schemat/core/object.js'
     // import vm from 'vm'
     // check()
     // console.log('schemat:', schemat)
-    // console.log('Item:', Item)
+    // console.log('WebObject:', WebObject)
     // console.log('vm:', vm)
   views:
     view: |

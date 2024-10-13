@@ -541,8 +541,8 @@ export class TYPE extends GENERIC {
 /**********************************************************************************************************************/
 
 export class REF extends Type {
-    /* Reference to an Item, encoded as {"@": id} during serialization through JSONx.
-       REF without parameters is equivalent to GENERIC(Item), however, REF can also be parameterized,
+    /* Reference to an WebObject, encoded as {"@": id} during serialization through JSONx.
+       REF without parameters is equivalent to GENERIC(WebObject), however, REF can also be parameterized,
        which is not possible with a GENERIC.
      */
     static props = {

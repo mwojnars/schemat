@@ -1,9 +1,9 @@
-import {Item} from "../core/object.js"
+import {WebObject} from "../core/object.js"
 
 
 /**********************************************************************************************************************/
 
-export class Page extends Item {
+export class Page extends WebObject {
     /* Class for the [Page] category of objects that represents standalone web pages. */
 
     // properties...

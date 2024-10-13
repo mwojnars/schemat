@@ -4,7 +4,7 @@ import {print, assert, T} from "../common/utils.js";
 import {ItemNotFound} from "../common/errors.js";
 import {DataServer, WebServer} from "./servers.js";
 import {JSONx} from "../core/jsonx.js";
-import {Item} from "../core/object.js";
+import {WebObject} from "../core/object.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
 import {Database} from "../db/db.js";
@@ -199,7 +199,7 @@ export class AdminProcess extends BackendProcess {
     async _update_references(old_id, new_id) {
         /* Scan all items in the DB and replace references to `old_id` with references to `item`. */
         if (old_id === new_id) return
-        let item = Item.create_stub(new_id)
+        let item = WebObject.create_stub(new_id)
 
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
         let transform = (it => it?.__id === old_id ? item : it)
@@ -243,11 +243,11 @@ export class AdminProcess extends BackendProcess {
     //         for (const id of ids) {
     //             // the record might have been modified during this loop - must re-read ("select")
     //             let data = await ring.select(id)
-    //             let item = await Item.from_json(id, data)
+    //             let item = await WebObject.from_json(id, data)
     //
     //             print(`reinserting item [${id}]...`)
     //             let new_id = await ring.insert(null, item.dump_data())
-    //             // item = await Item.from_json(new_id, data)
+    //             // item = await WebObject.from_json(new_id, data)
     //
     //             print(`...new id=[${new_id}]`)
     //             await this._update_references(id, new_id)

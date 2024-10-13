@@ -1,7 +1,7 @@
 import {html_page} from "../../../schemat/web/adapters.js"
 
 
-export class Author extends schemat.Item {
+export class Author extends schemat.WebObject {
 
     static async GET__view() {
         // BookCategory below is a global object: declared in [site.global] in DB and loaded automatically during site initialization

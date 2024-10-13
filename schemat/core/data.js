@@ -607,9 +607,9 @@ export class Data extends Catalog {
     */
 
     static async from_object(obj) {
-        /* Convert a plain object - POJO or a newborn Item containing plain JS attributes - to a Data instance,
+        /* Convert a plain object - POJO or a newborn WebObject containing plain JS attributes - to a Data instance,
            which contains all own properties of `obj` except for those starting with '_',
-           or having undefined value, or Item's special attributes (like `action`).
+           or having undefined value, or WebObject's special attributes (like `action`).
            Special properties: __class, __category, are preserved.
            Properties defined by getters are ignored.
          */
@@ -625,7 +625,7 @@ export class Data extends Catalog {
         if (T.isString(__category)) __category = Number(__category)
         if (T.isNumber(__category)) __category = await schemat.get_loaded(__category)
 
-        if (__class === Object || __class === schemat.Item) __class = undefined
+        if (__class === Object || __class === schemat.WebObject) __class = undefined
         if (__class && !T.isString(__class)) __class = schemat.get_classpath(__class)     // convert __class to a classpath string
 
         // drop __class if it's already defined through category's default (by literal equality of classpath strings)
@@ -645,9 +645,9 @@ export class Data extends Catalog {
     }
 
     find_references() {
-        /* Extract an array of Item objects referenced from within this Data object. */
+        /* Extract an array of WebObjects referenced from within this Data object. */
         let refs = []
-        JSONx.encode(this, val => {if (val instanceof schemat.Item) { refs.push(val); return null; }})
+        JSONx.encode(this, val => {if (val instanceof schemat.WebObject) { refs.push(val); return null; }})
         return refs
     }
 }

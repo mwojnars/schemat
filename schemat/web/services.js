@@ -25,7 +25,7 @@ export class Service {
        Instead of exposing a single function, `service`, subclasses may implement a more complex protocol and,
        for instance, accept multiple different commands (actions) on the same endpoint.
 
-       The target object is typically an Item (although this is not a strict requirement), and it may change between
+       The target object is typically a WebObject (although this is not a strict requirement), and it may change between
        invocations of the Service's methods. Multiple services are usually combined into an API (see the API class)
        that can be linked through Network adapters to a number of different target objects.
      */
@@ -118,7 +118,7 @@ export class HttpService extends Service {
 
 
     async client(target, ...args) {
-        let base_url = target.url(this.endpoint_name)       // it's assumed the `target` is an Item instance with .url()
+        let base_url = target.url(this.endpoint_name)       // it's assumed the `target` is a WebObject instance with .url()
         let message  = this.input.encode(...args)
         let response = await this.submit(base_url, message)
         let result   = await response.text()
@@ -204,7 +204,7 @@ export class JsonService extends HttpService {
 //        communication through action calls: action.*(). The API exposed on the interface is defined by `api`.
 //        Typically, this class is instantiated as a .net property of the target, so the entire network-related
 //        functionality is accessible through a single property and doesn't clutter the target's own interface.
-//        Typically, a Network adapter is created for an Item object, but it may also be used for other JS objects.
+//        Typically, a Network adapter is created for a WebObject, but it may also be used for other JS objects.
 //
 //        Certain endpoints of the `api` may be used to define "actions", i.e., internal RPC calls, local or remote, that
 //        can be invoked on a server or client alike using the exact same syntax, so the caller does NOT

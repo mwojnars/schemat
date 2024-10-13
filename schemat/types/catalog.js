@@ -118,7 +118,7 @@ export class CATALOG extends Type {
 
 export class DATA extends CATALOG {
     /* Like CATALOG, but provides distinct value types for different predefined keys (fields) of a catalog.
-       Primarily used as a data type for Item.data, not intended for other uses.
+       Primarily used as a data type for WebObject.data, not intended for other uses.
      */
 
     static props = {

@@ -5,7 +5,7 @@
  */
 
 import {print, assert} from "../common/utils.js"
-import {Item} from "../core/object.js"
+import {WebObject} from "../core/object.js"
 import {Directory} from "./containers.js";
 
 const {transform_postcss} = SERVER && await import("./transforms.js")
@@ -35,7 +35,7 @@ function _set_mimetype(res, path, mimetype = null) {
 
 /**********************************************************************************************************************/
 
-export class File extends Item {
+export class File extends WebObject {
 
     content
     mimetype

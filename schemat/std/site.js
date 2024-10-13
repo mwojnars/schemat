@@ -1,7 +1,7 @@
 import {print, assert, T, delay, splitLast} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Request} from '../web/request.js'
-import {Item} from '../core/object.js'
+import {WebObject} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonService} from "../web/services.js";
 import {mDataRecord, mDataString, mJsonxObjects} from "../web/messages.js";
@@ -20,7 +20,7 @@ import {mDataRecord, mDataString, mJsonxObjects} from "../web/messages.js";
  **
  */
 
-export class Site extends Item {
+export class Site extends WebObject {
     /* Global configuration of all applications that comprise this website, with URL routing etc.
        A route whose name starts with asterisk (*NAME) is treated as blank.
      */

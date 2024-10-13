@@ -9,7 +9,7 @@
 import {assert, print, T} from "../common/utils.js";
 import {Catalog, Data} from "./data.js";
 
-import {Item} from "./object.js";
+import {WebObject} from "./object.js";
 import {DATA} from "../types/catalog.js";
 import {ReactPage, CategoryRecordView} from "../web/pages.js"
 import {JsonService} from "../web/services.js"
@@ -20,7 +20,7 @@ export const ROOT_ID = 0
 
 /**********************************************************************************************************************/
 
-export class Category extends Item {
+export class Category extends WebObject {
     /* A category is an item that describes other items: their schema and functionality;
        also acts as a manager that controls access to and creation of new items within category.
      */
@@ -125,7 +125,7 @@ export class Category extends Item {
     //     let [path, name] = this.getClassPath()
     //     if (name && path) return `import {${name} as Base} from '${path}'`
     //     else if (path)    return `import Base from '${path}'`
-    //     else              return 'let Base = Item'              // Item class is available globally, no need to import
+    //     else              return 'let Base = WebObject'              // WebObject class is available globally, no need to import
     // }
     // _codeClass(name) {
     //     /* Source code that defines a custom Class of this category, possibly in a reduced form of Class=Base. */

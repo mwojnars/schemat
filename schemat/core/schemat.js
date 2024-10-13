@@ -1,6 +1,6 @@
 import {T, print, assert, normalize_path} from '../common/utils.js'
 import {DependenciesStack} from '../common/structs.js'
-import {Item} from './object.js'
+import {WebObject} from './object.js'
 import {Category, ROOT_ID} from './category.js'
 import {Registry} from "./registry.js";
 import {DataRequest} from "../db/data_request.js";
@@ -130,7 +130,7 @@ export class Schemat {
         /* Create a new Schemat instance as a global object. */
         assert(!globalThis.schemat, `global Schemat instance already exists`)
         globalThis.schemat = this
-        this.Item = Item                    // schemat.Item is globally available for application code
+        this.WebObject = WebObject          // schemat.WebObject is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
         this.registry = new Registry(this._on_evict.bind(this))
     }
@@ -168,7 +168,7 @@ export class Schemat {
 
         builtin.set(":Map", Map)                                    // standard JS classes have an empty file part of the path
 
-        await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:Item"
+        await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:WebObject"
         await builtin.fetch("../std/files.js")
         await builtin.fetch("../std/site.js")
         await builtin.fetch("../std/containers.js")
@@ -194,7 +194,7 @@ export class Schemat {
         // this.session?.countRequested(id)
         // a stub has immediate expiry date (i.e., on next cache purge) unless its data is loaded and TLS updated;
         // this prevents keeping a large number of unused stubs indefinitely
-        let obj = this.registry.get_object(id) || this.registry.set_object(Item.create_stub(id))
+        let obj = this.registry.get_object(id) || this.registry.set_object(WebObject.create_stub(id))
         assert(CLIENT || !obj.__meta.mutable)
         return obj
     }
@@ -205,7 +205,7 @@ export class Schemat {
         /* Create a new instance of the object using the most recent data for this ID as available in the record registry,
            or download it from DB; when the object is fully initialized replace the existing instance in the registry. Return the object.
          */
-        let obj = Item.create_stub(id)
+        let obj = WebObject.create_stub(id)
         return obj.load().then(() => this.registry.set_object(obj))
     }
 
@@ -330,7 +330,7 @@ export class Schemat {
     //     let count = 0
     //     for await (const record of this.db.scan_all()) {                            // stream of ItemRecords
     //         if (limit !== undefined && count++ >= limit) break
-    //         let item = await Item.from_record(record)
+    //         let item = await WebObject.from_record(record)
     //         yield this.registry.set_object(item)
     //     }
     // }

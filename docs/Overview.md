@@ -18,7 +18,7 @@
 
 - DB rings
 
-### Item
+### WebObject
 
 - Properties (_data_)
 - Prototypes (on items)
