@@ -474,8 +474,9 @@ export class Item {     // WebObject? Entity? Artifact? durable-object? FlexObje
             //     await this.__meta.pending_url
 
             let now = Date.now()
+            let ttl = (this.__ttl || this.__base?.ttl || 0) * 1000
             this.__meta.loaded_at = now
-            this.__meta.expire_at = now + (this.__ttl || 0) * 1000
+            this.__meta.expire_at = now + ttl
 
             if (this.__ver && !this.__meta.mutable) schemat.register_version(this)
 

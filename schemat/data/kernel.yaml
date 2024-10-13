@@ -101,6 +101,13 @@
       default: false
       info: If true, objects of this category cannot be modified after creation.
       "@": schemat/types/type.js:BOOLEAN
+    ttl:
+      default: 10
+      info: Time To Live (TTL) of objects in this category, in seconds. Only used when
+        an instance-level `__ttl` is missing. Determines for how long the object
+        is kept in a server-side cache and reused after being loaded from DB. If
+        zero, the object is evicted on the nearest cache purge. A real number.
+      "@": schemat/types/type.js:NUMBER
     garbage_collect:
       default: false
       info: If true, objects of this category are automatically removed (TODO) if not
@@ -112,7 +119,6 @@
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   defaults:
-    __ttl: 60
     schema:
       name:
         info: Display name of the object. May contain spaces, punctuation, non-latin
@@ -168,7 +174,6 @@
         inherit: false
         "@": schemat/types/type.js:STRING
       __ttl:
-        default: 10
         info: Time To Live (TTL) of an object, in seconds. Determines for how long the
           object is kept in a server-side cache and reused after being loaded
           from DB. If zero, the object is evicted on the nearest cache purge. A
@@ -190,6 +195,7 @@
   set_version: false
   save_revisions: false
   seal_dependencies: false
+  ttl: 60
   class: schemat:Category
 - __id: 1
   name: Site
