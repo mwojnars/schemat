@@ -186,32 +186,9 @@ class ItemProxy {
 /**********************************************************************************************************************/
 
 export class WebObject {
-
-    /*
-    An application object that is persisted in a database, has a unique ID, is potentially accessible by a URL,
-    and can communicate with its own instances on other machines.
-
-    - last_update -- [UUID of the last "update request" message + set of output changes]; ensures idempotency of updates within kafka transactions:
-                     when a transaction is aborted, but the update was already written (without change propagation to derived indexes),
-                     the resumed transaction only sends out all change requests without rewriting the same update;
-                     after successful commit, the item record is re-written with the `last_update` field removed
-    - sum      -- checksum of `data` (or of full item with `sum` value excluded) to detect corruption due to disk i/o errors etc.
-    - itime, utime -- "inserted" timestamp, last "updated" timestamp
-      created, updated -- Unix timestamps [sec] or [ms]; converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
-    ? owner(s) + permissions -- the owner can be a group of users (e.g., all editors of a journal, all site admins, ...)
-    - honey    -- honeypot; artificial empty item for detection of spambots
-    - draft    -- this item is under construction, not fully functional yet (app-level feature) ??
-    - mock     -- a mockup object created for unit testing or integration tests; should stay invisible to users and be removed after tests
-    - removed  -- undelete during a predefined grace period since updated_at, eg. 1 day; after that, `data` is removed, but id+meta stay
-    - moved    -- ID of another item that contains more valid/complete data and replaces this one
-    - stopper  -- knowingly invalid item that's kept in DB to prevent re-insertion of the same data again; with a text explanation
-    - boot     -- true for a bootstrap item whose raw edits need to be saved to bootedits.yaml after being applied in DB
-    ? status   -- enum, "deleted" for tombstone items
-    ? name     -- for fast generation of lists of hyperlinks without loading full data for each item; length limit ~100
-    */
+    /* Web object. Persisted in the database; has a unique ID; can be exposed on the web at a particular URL. */
 
     static SEAL_SEP = '.'
-
 
     /***  Common properties ***/
 
