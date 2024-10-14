@@ -518,9 +518,9 @@
 - __id: 20
   name: IndexBlock
   info: Block of an Index sequence.
+  class: schemat/db/block.js:IndexBlock
   schema:
     "@": schemat:Catalog
-  class: schemat/db/block.js:IndexBlock
   __prototype:
     "@": 18
   __category:
@@ -587,6 +587,7 @@
   name: Revision
   info: Immutable snapshot of past content of the `target` object at a particular
     version number.
+  class: schemat/core/revision.js:Revision
   schema:
     target:
       info: The object whose older version is stored in this revision.
