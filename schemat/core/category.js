@@ -53,13 +53,11 @@ export class Category extends WebObject {
         if (calls.length) return Promise.all(calls)
     }
 
-    create(data = {}, ...args) {
-        /* Create an empty newborn object (no ID) in this category and execute its __new__(...args). Return the object. */
-        // let obj = this.__child_class.new(data...args)
-        // if (obj instanceof Promise) obj = await obj
-
-        let obj  = this.__child_class.create_stub(null, {mutable: true})    // newly-created objects are always mutable
-        obj.__data = new Data(data)
+    create(...args) {
+        /* Create an empty newborn object (no ID) in this category and execute its __create__(...args). Return the object. */
+        let obj = this.__child_class.create_stub(null, {mutable: true})     // newly-created objects are always mutable
+        obj.__create__(...args)
+        // obj.__data = new Data(data)
         obj.__data.append('__category', this)
         return obj
     }

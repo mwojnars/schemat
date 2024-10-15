@@ -751,14 +751,26 @@ export class WebObject {
     }
 
 
+    /***  Hooks  ***/
+
+    __create__(...args) {
+        /* Initialize own properties (__data) of this newborn object before its insertion to DB.
+           The JS class of the object is already configured to a proper subclass, but __category$ and __prototype$ are not yet present.
+           The default implementation just sets the entire __data using the first argument.
+           Subclasses may override this method to change this behavior and accept a different list of arguments.
+         */
+        let data = args[0] || {}
+        this.__data = new Data(data)
+    }
+
     __validate__() {}
-        /* Validate this object's properties before inserting to the database. Called *after* validation of individual values through their schema. */
+        /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema. */
 
     __setup__() {}
-        /* Custom setup after this object is created AND inserted to the database. Called once site-wise right after the insertion is committed. */
+        /* Custom setup after this object is created AND inserted to the database. Called once right after the insertion is committed. */
 
-    __teardown__() {}
-        /* Custom tear down that is executed right after this object is deleted from the database. */
+    __destroy__() {}
+        /* Custom tear down that is executed once before this object is permanently deleted from the database. */
 
     __init__() {}
         /* Optional item-specific initialization after this.__data is loaded.
