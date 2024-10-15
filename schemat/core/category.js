@@ -55,10 +55,12 @@ export class Category extends WebObject {
 
     create(...args) {
         /* Create an empty newborn object (no ID) in this category and execute its __create__(...args). Return the object. */
+
+        // return this.__child_class.create([this], ...args)
+
         let obj = this.__child_class.create_stub(null, {mutable: true})     // newly-created objects are always mutable
+        obj.__data = new Data({__category: this})
         obj.__create__(...args)
-        // obj.__data = new Data(data)
-        obj.__data.append('__category', this)
         return obj
     }
 

@@ -367,6 +367,13 @@ export class WebObject {
         return obj.__proxy = ItemProxy.wrap(obj)
     }
 
+    static create(categories = [], ...args) {
+        let obj = this.create_stub(null, {mutable: true})       // newly-created objects are always mutable
+        obj.__data = new Data(categories.length ? {__category: categories[0]} : {})  //{__category$: categories})
+        obj.__create__(...args)
+        return obj
+    }
+
     static new(...args) {
         /* Create an empty newborn object, no ID, and execute its __new__(...args). Return the object.
            If __new__() returns a Promise, this method returns a Promise too.
@@ -753,14 +760,13 @@ export class WebObject {
 
     /***  Hooks  ***/
 
-    __create__(...args) {
-        /* Initialize own properties (__data) of this newborn object before its insertion to DB.
-           The JS class of the object is already configured to a proper subclass, but __category$ and __prototype$ are not yet present.
-           The default implementation just sets the entire __data using the first argument.
+    __create__(data) {
+        /* Initialize own properties (__data) of this newborn object before its insertion to DB or transfer from client to server.
+           The JS class and __category$ of the object are already configured.
+           The default implementation just updates the entire __data using the first argument.
            Subclasses may override this method to change this behavior and accept a different list of arguments.
          */
-        let data = args[0] || {}
-        this.__data = new Data(data)
+        this.__data.updateAll(data)
     }
 
     __validate__() {}
