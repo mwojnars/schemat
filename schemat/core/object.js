@@ -68,7 +68,7 @@ class ItemProxy {
 
     // the suffix appended to the property name when a *plural* form of this property is requested
     // (i.e., an array of ALL values of a repeated field, not the first value only)
-    static PLURAL_SUFFIX = '$'
+    static PLURAL = '$'
 
     // these special props are always read from regular POJO attributes and NEVER from object's __data;
     // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
@@ -95,7 +95,7 @@ class ItemProxy {
             || ItemProxy.SPECIAL.includes(prop)
         ) return Reflect.set(target, prop, value, receiver)
 
-        let suffix = ItemProxy.PLURAL_SUFFIX
+        let suffix = ItemProxy.PLURAL
         let plural = prop.endsWith(suffix)
         let base = (plural ? prop.slice(0, -suffix.length) : prop)        // use the base property name without the suffix
         // if (plural) prop = prop.slice(0, -suffix.length)        // use the base property name without the suffix
@@ -156,7 +156,7 @@ class ItemProxy {
             || ItemProxy.SPECIAL.includes(prop)
         ) return undefined
 
-        let suffix = ItemProxy.PLURAL_SUFFIX
+        let suffix = ItemProxy.PLURAL
         let plural = prop.endsWith(suffix)
         if (plural) prop = prop.slice(0, -suffix.length)        // use the base property name without the suffix
 
