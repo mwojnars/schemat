@@ -468,8 +468,8 @@ export class WebObject {
         let proto = this._load_prototypes()             // load prototypes
         if (proto instanceof Promise) await proto
 
-        let cats = this.__category$.filter(c => !c.is_loaded() && c !== this)
-        if (cats.length) await Promise.all(cats.map(c => c.load()))     // load categories, if any (none for non-categorized objects)
+        let cats = this.__category$.filter(c => !c.is_loaded() && c !== this)   // load categories, if any (none for non-categorized objects)
+        if (cats.length) await (cats.length === 1 ? cats[0].load() : Promise.all(cats.map(c => c.load())))
 
         let container = this.__container
         if (container && !container.is_loaded()) await container.load()
