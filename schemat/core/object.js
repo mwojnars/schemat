@@ -468,9 +468,8 @@ export class WebObject {
         let proto = this._load_prototypes()             // load prototypes
         if (proto instanceof Promise) await proto
 
-        for (let category of this.__category$)          // load categories, if any (none for non-categorized objects)
-            if (!category.is_loaded() && category !== this)
-                await category.load() //{await_url: false}) // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
+        let cats = this.__category$.filter(c => !c.is_loaded() && c !== this)
+        if (cats.length) await Promise.all(cats.map(c => c.load()))     // load categories, if any (none for non-categorized objects)
 
         let container = this.__container
         if (container && !container.is_loaded()) await container.load()
