@@ -279,8 +279,9 @@ export class WebObject {
     __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
 
     __meta = {                      // some special properties are grouped here to avoid cluttering the object's interface ...
-        loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         mutable:        false,      // if true, object can be edited; the edits are accumulated and committed to DB using .save(); this prop CANNOT be changed after construction; editable objects are excluded from server-side caching
+        active:         false,      // set to true after full initialization procedure was completed; implies that full __data is present (newborn or loaded)
+        loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         loaded_at:      undefined,  // timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
         expire_at:      undefined,  // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
@@ -318,6 +319,7 @@ export class WebObject {
     is_newborn()    { return this.__id === undefined }              // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
     is_linked()     { return this.__id !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
+    is_active()     { return this.__meta.active }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
@@ -431,29 +433,10 @@ export class WebObject {
             let seal = this.__data.get('__seal')            // if seal is present, replace refs to prototypes/categories with proper versions of these dependency objects
             if (seal && sealed) await this._load_dependencies(seal)
 
-            let proto = this._load_prototypes()             // load prototypes
-            if (proto instanceof Promise) await proto
-
-            for (let category of this.__category$)          // load categories, if any (none for non-categorized objects)
-                if (!category.is_loaded() && category !== this)
-                    await category.load() //{await_url: false}) // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
-
-            if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
-
-            let cls = await this._load_class()              // set the target JS class on this object; stubs only have WebObject as their class, which must be changed when the data is loaded and the item is linked to its category
-            T.setClass(this, cls || WebObject)
-
-            this._init_services()
-
-            let container = this.__container
-            if (container && !container.is_loaded()) await container.load()
+            await this._activate()
 
             // if (this.is_linked())
             //     this.__meta.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
-
-            let init = this.__init__()                      // custom initialization after the data is loaded (optional);
-            if (init instanceof Promise) await init         // if this.__url is needed inside __init__(), __meta.pending_url must be explicitly awaited there
-
             // if (await_url && schemat.site && this.__meta.pending_url)
             //     await this.__meta.pending_url
 
@@ -474,6 +457,33 @@ export class WebObject {
             this.__meta.loading = false                     // cleanup to allow another load attempt, even after an error
             schemat.after_data_loading(this)
         }
+    }
+
+    async _activate() {
+        /* Make sure that dependencies are loaded. Set the JS class of this object. Init internals, call __init__().
+           Can be called both for a newborn, and deserialized (loaded from DB) object.
+         */
+        let proto = this._load_prototypes()             // load prototypes
+        if (proto instanceof Promise) await proto
+
+        for (let category of this.__category$)          // load categories, if any (none for non-categorized objects)
+            if (!category.is_loaded() && category !== this)
+                await category.load() //{await_url: false}) // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
+
+        if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
+
+        let cls = await this._load_class()              // set the target JS class on this object; stubs only have WebObject as their class, which must be changed when the data is loaded and the item is linked to its category
+        T.setClass(this, cls || WebObject)
+
+        this._init_services()
+
+        let container = this.__container
+        if (container && !container.is_loaded()) await container.load()
+
+        let init = this.__init__()                      // custom initialization after the data is loaded (optional)
+        if (init instanceof Promise) await init
+
+        this.__meta.active = true
     }
 
     async _load_dependencies(seal) {
