@@ -92,6 +92,9 @@ export class Catalog {
        - flags:  "key1.key2:label::first" or "key::last" (first/last flag at the end of a path, after ::)
     */
 
+    // suffix appended to the key when an array of *all* values of this key is requested
+    static PLURAL = '$'
+
     _entries = []               // plain objects with {key, value, label, comment} attributes
     _keys    = new Map()        // for each key, an array of positions in _entries where this key occurs, sorted (!)
 
@@ -195,6 +198,21 @@ export class Catalog {
     appendEntries(entries) {
         for (let [key, value] of entries)
             this.append(key, value)
+    }
+
+    updateAll(entries) {
+        /* Write all `entries` into `this` in a way that *overwrites* existing entries with the same key,
+           but keeps untouched other entries (not listed in `entries`).
+           `entries` can be an array of [k,v] pairs, or a plain object, or a Catalog.
+         */
+        if (T.isDict(entries)) entries = new Catalog(entries)
+        else if (T.isArray(entries)) entries = new Catalog(...entries)
+
+        for (let key of entries.keys()) {
+            let values = this.getAll(key)
+            if (values.length === 1) this.set(key, values[0])
+            else this.setAll(key, values)
+        }
     }
 
 
