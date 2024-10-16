@@ -101,7 +101,7 @@ export class Catalog {
 
     constructor(...entries) {
         /* Each argument can be a Catalog, or an object whose attributes will be used as entries,
-           or a [key, value] pair, or a {key, value} entry.
+           or a [key, value] pair, or a {key, value} entry, or an array of [key, value] pairs.
          */
         entries = entries.map(ent =>
                         (ent instanceof Catalog) ? ent._entries
@@ -200,16 +200,14 @@ export class Catalog {
             this.append(key, value)
     }
 
-    updateAll(entries) {
-        /* Write all `entries` into `this` in a way that *overwrites* existing entries with the same key,
-           but keeps untouched other entries (not listed in `entries`).
-           `entries` can be an array of [k,v] pairs, or a plain object, or a Catalog.
+    updateAll(catalog) {
+        /* Write all entries of the `catalog` into `this` in a way that removes (overwrites) existing entries with the same key,
+           but keeps untouched the other entries, whose keys are not listed in the `catalog`.
+           `catalog` can be a Catalog, a plain object, or an array of [k,v] pairs.
          */
-        if (T.isDict(entries)) entries = new Catalog(entries)
-        else if (T.isArray(entries)) entries = new Catalog(...entries)
-
-        for (let key of entries.keys()) {
-            let values = this.getAll(key)
+        if (!(catalog instanceof Catalog)) catalog = new Catalog(catalog)
+        for (let key of catalog.keys()) {
+            let values = catalog.getAll(key)
             if (values.length === 1) this.set(key, values[0])
             else this.setAll(key, values)
         }
@@ -659,7 +657,7 @@ export class Data extends Catalog {
         )
 
         // print(`from_object(${obj}) =>`, entries)
-        return new Data(Object.fromEntries(entries))
+        return new Data(entries)
     }
 
     find_references() {
