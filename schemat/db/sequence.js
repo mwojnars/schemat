@@ -34,6 +34,15 @@ export class Sequence extends WebObject {    // Series?
         this.ring = ring
     }
 
+    async open() {
+        // this method is only called when the sequence is created anew and its ID is not yet assigned!
+        for (let block of this.blocks) {
+            await block
+            await block.open()
+            // block._set_expiry('never')          // prevent eviction of this block from cache (!)
+        }
+    }
+
     async __init__() {
         // TODO: drop __init__() and perform lazy loading of blocks
         //  (but block.load() must only use lower rings to search for the block! otherwise infinite recursion occurs)
@@ -52,15 +61,6 @@ export class Sequence extends WebObject {    // Series?
     //     /* Add a derived sequence (index) that must be updated when this sequence changes. */
     //     this.derived.push(sequence)
     // }
-
-    async open() {
-        // this method is only called when the sequence is created anew and its ID is not yet assigned!
-        for (let block of this.blocks) {
-            await block
-            await block.open()
-            // block._set_expiry('never')          // prevent eviction of this block from cache (!)
-        }
-    }
 
 
     _find_block(binary_key)     { return this.blocks[0] }

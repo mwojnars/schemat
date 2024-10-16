@@ -42,22 +42,6 @@ export class Block extends WebObject {
         this.filename = filename
     }
 
-    async __init__() {
-        if (CLIENT) return                                          // don't initialize internals when on client
-        if (!this.sequence.is_loaded()) this.sequence.load()        // intentionally not awaited to avoid deadlock in the case when sequence loading needs to read from this block
-
-        let storage_class
-        // print(`Block.__init__() for ${this.filename}...`)
-
-        if      (this.format === 'data-yaml') storage_class = YamlDataStorage
-        else if (this.format === 'index-jl')  storage_class = JsonIndexStorage
-        else
-            throw new Error(`[${this.__id}] unsupported storage type, '${this.format}', for ${this.filename}`)
-
-        this._storage = new storage_class(this.filename, this)
-        return this._storage.open()
-    }
-
     async open() {
         let extension = this.filename.split('.').pop()
 
@@ -73,6 +57,22 @@ export class Block extends WebObject {
         else
             throw new Error(`unsupported storage type, '${this.format || extension}', for ${this.filename}`)
 
+        return this._storage.open()
+    }
+
+    async __init__() {
+        if (CLIENT) return                                          // don't initialize internals when on client
+        if (!this.sequence.is_loaded()) this.sequence.load()        // intentionally not awaited to avoid deadlock in the case when sequence loading needs to read from this block
+
+        let storage_class
+        // print(`Block.__init__() for ${this.filename}...`)
+
+        if      (this.format === 'data-yaml') storage_class = YamlDataStorage
+        else if (this.format === 'index-jl')  storage_class = JsonIndexStorage
+        else
+            throw new Error(`[${this.__id}] unsupported storage type, '${this.format}', for ${this.filename}`)
+
+        this._storage = new storage_class(this.filename, this)
         return this._storage.open()
     }
 
@@ -150,12 +150,12 @@ export class DataBlock extends Block {
     insert_mode             // if `compact`, new objects are inserted at the lowest possible IID in the block, possibly below _autoincrement; requires MemoryStorage
 
 
-    async __init__() {
-        this._autoincrement = await super.__init__()
-    }
-
     async open() {
         this._autoincrement = await super.open()
+    }
+
+    async __init__() {
+        this._autoincrement = await super.__init__()
     }
 
     async assert_unique(key, id, msg) {
