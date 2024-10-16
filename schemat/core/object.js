@@ -369,7 +369,7 @@ export class WebObject {
 
     static create(categories = [], ...args) {
         let obj = this.create_stub(null, {mutable: true})       // newly-created objects are always mutable
-        obj.__data = new Data(categories.length ? {__category: categories[0]} : {})  //{__category$: categories})
+        obj.__data = new Data(...categories.map(cat => ['__category', cat]))
         obj.__create__(...args)
         return obj
     }
@@ -761,16 +761,14 @@ export class WebObject {
     /***  Hooks  ***/
 
     __create__(data) {
-        /* Initialize own properties (__data) of this newborn object before its insertion to DB or transfer from client to server.
-           The JS class and __category$ of the object are already configured.
+        /* Initialize own properties (__data) of this newborn object before its insertion to DB or transfer to the server.
+           The JS class and `__category` property are already configured; this.__data is created.
            The default implementation just updates the entire __data using the first argument.
            Subclasses may override this method to change this behavior and accept a different list of arguments.
+           This method must be synchronous. Any async code should be placed in __init__() or __setup__().
          */
         this.__data.updateAll(data)
     }
-
-    __validate__() {}
-        /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema. */
 
     __setup__() {}
         /* Custom setup after this object is created AND inserted to the database. Called once right after the insertion is committed. */
@@ -784,6 +782,9 @@ export class WebObject {
          */
     __done__() {}
         /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
+
+    __validate__() {}
+        /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema. */
 
 
     /***  Request handling  ***/
