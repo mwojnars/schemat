@@ -417,7 +417,9 @@ export class WebObject {
             assert(!data_json)
             return this.__meta.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
         }
-        if (this.is_newborn() && !data_json) return this                       // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
+        if (this.is_newborn() && !data_json)
+            return this.__meta.active ? this : this._activate()
+            // return this                       // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
         return this.__meta.loading = this._load(data_json, sealed, await_url)  // keep a Promise that will eventually load the data; this is needed to avoid race conditions
     }
 
@@ -483,6 +485,7 @@ export class WebObject {
         if (init instanceof Promise) await init
 
         this.__meta.active = true
+        return this
     }
 
     async _load_dependencies(seal) {
