@@ -435,6 +435,8 @@ export class WebObject {
 
             await this._activate()
 
+            this._init_services()
+
             // if (this.is_linked())
             //     this.__meta.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
             // if (await_url && schemat.site && this.__meta.pending_url)
@@ -461,7 +463,7 @@ export class WebObject {
 
     async _activate() {
         /* Make sure that dependencies are loaded. Set the JS class of this object. Init internals, call __init__().
-           Can be called both for a newborn, and deserialized (loaded from DB) object.
+           Can be called for both newborn or deserialized (loaded from DB) object.
          */
         let proto = this._load_prototypes()             // load prototypes
         if (proto instanceof Promise) await proto
@@ -470,15 +472,13 @@ export class WebObject {
             if (!category.is_loaded() && category !== this)
                 await category.load() //{await_url: false}) // if category URLs were awaited, a circular dependency would occur between Container categories and their objects that comprise the filesystem where these categories are placed
 
+        let container = this.__container
+        if (container && !container.is_loaded()) await container.load()
+
         if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
 
         let cls = await this._load_class()              // set the target JS class on this object; stubs only have WebObject as their class, which must be changed when the data is loaded and the item is linked to its category
         T.setClass(this, cls || WebObject)
-
-        this._init_services()
-
-        let container = this.__container
-        if (container && !container.is_loaded()) await container.load()
 
         let init = this.__init__()                      // custom initialization after the data is loaded (optional)
         if (init instanceof Promise) await init
