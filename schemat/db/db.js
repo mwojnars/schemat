@@ -54,19 +54,13 @@ export class Ring extends WebObject {
         this.index_sequence = IndexSequence.new(this, index_file)
     }
 
-    async open() {
-        await this.data_sequence.open()
-        await this.index_sequence.open()
-        // await this.rebuild_indexes()
-        return this
-    }
-
     async __init__() {
         /* Initialize the ring after it's been loaded from DB. */
         if (CLIENT) return
         print(`... ring loaded [${this.__id}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
         await this.data_sequence.load()
         await this.index_sequence.load()
+        // await this.rebuild_indexes()
 
         this._subsequences = new Map()          // (temporary) a map {id: Subsequence} of logical sequences for each index
 
