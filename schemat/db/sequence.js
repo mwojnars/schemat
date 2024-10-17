@@ -29,7 +29,7 @@ export class Sequence extends WebObject {    // Series?
     // derived = []        // array of derived sequences (indexes) that must be updated when this sequence changes
 
 
-    __new__(ring) {
+    __create__(ring) {
         ring.assert_loaded_or_newborn()
         this.ring = ring
     }
