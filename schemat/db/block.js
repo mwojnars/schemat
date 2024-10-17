@@ -48,7 +48,6 @@ export class Block extends WebObject {
 
         let format = this.format
         let storage_class
-        // print(`Block.__init__() for ${this.filename}...`)
 
         // infer the storage type from the filename extension
         if (!format) {
