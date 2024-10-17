@@ -91,7 +91,6 @@ class ItemProxy {
             || ItemProxy.SPECIAL.includes(prop)
         ) return Reflect.set(target, prop, value, receiver)
 
-        let newborn = target.is_newborn()           // in a newborn, writes go to __data without recording "edits" (the object is not yet persisted, so no edits can be applied to its record in DB)
         let suffix = ItemProxy.PLURAL
         let plural = prop.endsWith(suffix)
         let base = (plural ? prop.slice(0, -suffix.length) : prop)        // base property name without the $ suffix
@@ -103,13 +102,11 @@ class ItemProxy {
 
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
         if (schema?.has(base) || (!schema?.props.strict && regular)) {
-            if (!newborn) print('proxy_set updating:', prop)
+            if (!target.is_newborn()) print('proxy_set updating:', prop)
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
-                if (newborn) target.__data.setAll(base, ...value)
-                else target.make_edit('set_all', {prop: base, values: value})
+                target.make_edit('set_all', {prop: base, values: value})
             }
-            else if (newborn) target.__data.set(prop, value)
             else target.make_edit('set', {prop, value})
             return true
         }
@@ -974,8 +971,8 @@ export class WebObject {
             let {op, args} = (edit instanceof Edit) ? edit : {op: edit[0], args: edit[1]}
             const method = `EDIT_${op}`
             if (!this[method]) throw new Error(`object does not support edit operation: '${op}'`)
-            this[method](JSONx.deepcopy(args))      // `args` are deep-copied for safety, in case they get modified during the edit
-            // this[method](args)                   // WARNING: `args` may get modified during the edit!
+            this[method](args)
+            // this[method](JSONx.deepcopy(args))      // `args` are deep-copied for safety, in case they get modified during the edit
         }
     }
 
@@ -1010,6 +1007,7 @@ export class WebObject {
           New edit ops can be added in subclasses. An EDIT_{op} method can be async or return a Promise.
           The names of methods (the {op} suffix) must match the names of operations passed by callers to .edit().
           Typically, when adding a new OP, a corresponding client method, edit_OP(), is added, too.
+          The edit function MUST NOT modify its arguments, because the same args may need to be sent from client to DB.
      ***/
 
     EDIT_overwrite({data}) {
