@@ -47,18 +47,10 @@ export class Block extends WebObject {
         let extension = this.filename.split('.').pop()
 
         // infer the storage type from the filename extension
-        if (extension === 'yaml') {
-            this.format = 'data-yaml'
-            this._storage = new YamlDataStorage(this.filename, this)
-        }
-        else if (extension === 'jl') {
-            this.format = 'index-jl'
-            this._storage = new JsonIndexStorage(this.filename, this)
-        }
-        else
-            throw new Error(`unsupported storage type, '${this.format || extension}', for ${this.filename}`)
+        if (extension === 'yaml') this.format = 'data-yaml'
+        if (extension === 'jl') this.format = 'index-jl'
 
-        return this._storage.open()
+        return this.__init__()
     }
 
     async __init__() {
