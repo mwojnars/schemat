@@ -962,14 +962,13 @@ export class WebObject {
 
     make_edit(op, args, save = false) {
         /* Perform the edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). */
-        let {mutable, edits} = this.__meta
-        if (!mutable || !edits)
+        if (!this.__meta.mutable)
             if (SERVER) throw new Error(`cannot apply an edit operation ('${op}') to an immutable object [${this.id}]`)
-            else this._make_mutable()         // on client, an immutable object becomes mutable on the first modification attempt
+            else this._make_mutable()       // on client, an immutable object becomes mutable on the first modification attempt
 
         let edit = [op, args]
         this.apply_edits(edit)
-        this.__meta.edits.push(edit)
+        this.__meta.edits?.push(edit)       // `edits` may not exist in a newborn object, the edit is not recorded then
         if (save) return this.save()
     }
 
