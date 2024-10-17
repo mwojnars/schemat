@@ -159,6 +159,7 @@ export class DataBlock extends Block {
         let obj = await WebObject.from_json(id, data)   // the object must be instantiated for validation
 
         obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
+        obj.validate()                                  // 1st validation (pre-setup), to give __setup__() confidence in input data
 
         if (id === undefined || id === null) {          // assign a new ID if not provided for the new item
             id = this._assign_id(req)
@@ -169,10 +170,10 @@ export class DataBlock extends Block {
         let setup = obj.__setup__(id)                   // here, the object may perform heavy operations, like inserting related objects
         if (setup instanceof Promise) await setup
 
-        obj.validate()
         obj._bump_version()                             // set __ver=1 if needed
         obj._seal_dependencies()                        // set __seal
 
+        obj.validate()                                  // 2nd validation (post-setup), to ensure consistency in DB
         data = obj.dump_data()
 
         const ring = req.current_ring
