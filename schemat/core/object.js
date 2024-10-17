@@ -744,7 +744,7 @@ export class WebObject {
         return steps.reverse()
     }
 
-    validate() {
+    validate(post_setup = true) {
         // TODO SECURITY: make sure that __data does NOT contain special props: __meta, __self, __proxy, __id etc!
 
         for (const [prop, value] of this.__data) {          // validate each individual property in __data ...
@@ -764,7 +764,7 @@ export class WebObject {
         // check multi-field constraints ...
 
         // run category-specific validation
-        this.__validate__()
+        this.__validate__(post_setup)
     }
 
 
@@ -795,7 +795,7 @@ export class WebObject {
     __done__() {}
         /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 
-    __validate__() {}
+    __validate__(post_setup = true) {}
         /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema. */
 
 

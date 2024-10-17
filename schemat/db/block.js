@@ -159,7 +159,7 @@ export class DataBlock extends Block {
         let obj = await WebObject.from_json(id, data)   // the object must be instantiated for validation
 
         obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
-        obj.validate()                                  // 1st validation (pre-setup), to give __setup__() confidence in input data
+        obj.validate(false)                             // 1st validation (pre-setup), to give __setup__() confidence in input data
 
         if (id === undefined || id === null) {          // assign a new ID if not provided for the new item
             id = this._assign_id(req)
@@ -173,7 +173,7 @@ export class DataBlock extends Block {
         obj._bump_version()                             // set __ver=1 if needed
         obj._seal_dependencies()                        // set __seal
 
-        obj.validate()                                  // 2nd validation (post-setup), to ensure consistency in DB
+        obj.validate(true)                              // 2nd validation (post-setup), to ensure consistency in DB
         data = obj.dump_data()
 
         const ring = req.current_ring
@@ -230,7 +230,7 @@ export class DataBlock extends Block {
 
         // apply edits & validate the object's data and the values of individual properties
         obj.apply_edits(...edits)                   // TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
-        obj.validate()                              // may raise validation exceptions
+        obj.validate(true)                          // may raise validation exceptions
 
         obj._bump_version()                         // increment __ver
         obj._seal_dependencies()                    // recompute __seal
