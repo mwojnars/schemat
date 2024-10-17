@@ -780,16 +780,18 @@ export class WebObject {
         if (T.isDict(data) || data instanceof Catalog) this.__data.updateAll(data)
     }
 
-    __setup__() {}
-        /* Custom setup after this object is created AND inserted to the database. Called once right after the insertion is committed. */
+    __init__() {}
+        /* Optional item-specific initialization after this.__data is created (in a newborn object), or loaded from DB. Can be async in subclasses. */
+
+    __setup__(id) {}
+        /* One-time global setup after this object was created (on client or server) AND is pending insertion to DB (on server),
+           BUT already has a provisional ID assigned (`id`). Typically, this method may insert related sub-objects.
+           Can be declared async in subclasses or return a Promise.
+         */
 
     __destroy__() {}
         /* Custom tear down that is executed once before this object is permanently deleted from the database. */
 
-    __init__() {}
-        /* Optional item-specific initialization after this.__data is loaded.
-           Subclasses may override this method as either sync or async.
-         */
     __done__() {}
         /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 
