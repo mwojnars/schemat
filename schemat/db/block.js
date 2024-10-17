@@ -44,12 +44,6 @@ export class Block extends WebObject {
 
     async open() {
         print(`    open() block [${this.id}]`)
-        let extension = this.filename.split('.').pop()
-
-        // infer the storage type from the filename extension
-        if (extension === 'yaml') this.format = 'data-yaml'
-        if (extension === 'jl') this.format = 'index-jl'
-
         return this.__init__()
     }
 
@@ -58,13 +52,21 @@ export class Block extends WebObject {
         if (CLIENT) return                                          // don't initialize internals when on client
         if (!this.sequence.is_loaded()) this.sequence.load()        // intentionally not awaited to avoid deadlock in the case when sequence loading needs to read from this block
 
+        let format = this.format
         let storage_class
         // print(`Block.__init__() for ${this.filename}...`)
 
-        if      (this.format === 'data-yaml') storage_class = YamlDataStorage
-        else if (this.format === 'index-jl')  storage_class = JsonIndexStorage
+        // infer the storage type from the filename extension
+        if (!format) {
+            let extension = this.filename.split('.').pop()
+            if (extension === 'yaml') format = 'data-yaml'
+            if (extension === 'jl')   format = 'index-jl'
+        }
+
+        if      (format === 'data-yaml') storage_class = YamlDataStorage
+        else if (format === 'index-jl')  storage_class = JsonIndexStorage
         else
-            throw new Error(`[${this.__id}] unsupported storage type, '${this.format}', for ${this.filename}`)
+            throw new Error(`[${this.__id}] unsupported storage type, '${format}', for ${this.filename}`)
 
         this._storage = new storage_class(this.filename, this)
         return this._storage.open()
