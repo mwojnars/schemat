@@ -406,7 +406,7 @@ export class WebObject {
            If you want to refresh the data, create a new instance with .reload().
            `await_url` has effect only after the schemat.site is loaded, not during boot up.
          */
-        if (this.__data || this.__meta.loading) {           // data is loaded or being loaded right now? do nothing except for awaiting the URL (previous load() may have been called with await_url=false)
+        if (!this.is_newborn() && (this.__data || this.__meta.loading)) {           // data is loaded or being loaded right now? do nothing except for awaiting the URL (previous load() may have been called with await_url=false)
             assert(!data_json)
             return this.__meta.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
         }

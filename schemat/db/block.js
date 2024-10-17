@@ -43,7 +43,6 @@ export class Block extends WebObject {
     }
 
     async __init__() {
-        print(`    __init__() block [${this.id}]`)
         if (CLIENT) return                                          // don't initialize internals when on client
         if (!this.sequence.is_loaded()) this.sequence.load()        // intentionally not awaited to avoid deadlock in the case when sequence loading needs to read from this block
 
