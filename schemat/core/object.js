@@ -18,12 +18,14 @@ import {Assets} from "../web/component.js"
 import {Request} from "../web/request.js"
 import {ReactPage, ItemRecordView} from "../web/pages.js"
 
+const ROOT_ID = 0
 
-let ROOT_ID, RootCategory
+
+let RootCategory
 
 // Due to circular dependency between object.js and category.js, RootCategory must be imported with dynamic import() and NOT awaited:
 import("./category.js").then(module => {
-    ROOT_ID = module.ROOT_ID
+    // ROOT_ID = module.ROOT_ID
     RootCategory = module.RootCategory
     print('imported RootCategory')
 })
@@ -322,6 +324,7 @@ export class WebObject {
     is_linked()     { return this.__id !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     is_active()     { return this.__meta.active }
+    is_category()   { return false }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
     assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }

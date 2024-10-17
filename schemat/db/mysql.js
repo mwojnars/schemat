@@ -1,7 +1,6 @@
 // import mysql from 'mysql2'
 import {assert, print, T} from '../common/utils.js'
 import { DataBlock } from './block.js'
-import {ROOT_ID} from "../core/category.js";
 
 //let db = mysql.createConnection(srv)
 //db.connect()
@@ -64,7 +63,7 @@ export class MySQL extends DataBlock {
             assert(path)
             let category = await schemat.import(path)
             assert(category.is_loaded())
-            assert(category.instanceof(schemat.get_object(ROOT_ID)))
+            assert(category.is_category())
 
             this._sqlTables.push(sqlTable)
             this._categories.push(category)

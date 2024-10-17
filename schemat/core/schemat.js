@@ -1,7 +1,7 @@
 import {T, print, assert, normalize_path} from '../common/utils.js'
 import {DependenciesStack} from '../common/structs.js'
 import {WebObject} from './object.js'
-import {Category, ROOT_ID} from './category.js'
+import {Category} from './category.js'
 import {Registry} from "./registry.js";
 import {DataRequest} from "../db/data_request.js";
 import {DataRecord} from "../db/records.js";

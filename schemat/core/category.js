@@ -15,8 +15,6 @@ import {ReactPage, CategoryRecordView} from "../web/pages.js"
 import {JsonService} from "../web/services.js"
 import {mDataRecords} from "../web/messages.js"
 
-export const ROOT_ID = 0
-
 
 /**********************************************************************************************************************/
 
@@ -39,6 +37,8 @@ export class Category extends WebObject {
 
     get __child_class() { return schemat.import(this.class) }
 
+
+    is_category()   { return true }
 
     async __init__() {
         await this.__child_class            // from now on, __child_class is a regular value not a promise
