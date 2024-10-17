@@ -32,7 +32,7 @@ export class Ring extends WebObject {
     stop_id
 
 
-    __new__({name, ...opts}, req) {
+    __create__({name, ...opts}, req) {
         let {file} = opts
         this._file = file
         this.name = name || fileBaseName(file)
