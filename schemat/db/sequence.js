@@ -34,13 +34,6 @@ export class Sequence extends WebObject {    // Series?
         this.ring = ring
     }
 
-    async open() {
-        // this method is only called when the sequence is created anew and its ID is not yet assigned!
-        for (let block of this.blocks)
-            await block.load()
-            // block._set_expiry('never')          // prevent eviction of this block from cache (!)
-    }
-
     async __init__() {
         // TODO: drop __init__() and perform lazy loading of blocks
         //  (but block.load() must only use lower rings to search for the block! otherwise infinite recursion occurs)
