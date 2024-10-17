@@ -400,32 +400,27 @@ export class WebObject {
 
     /***  Loading & initialization  ***/
 
-    async load({data_json = null, sealed = true} = {}) {
-        /* Load full data of this item from `data_json` or from DB, if not loaded yet. Return this object.
-           For a newborn object (__data already present), this function performs its *activation* (initialization), no data loading.
+    async load({sealed = true} = {}) {
+        /* Load full __data of this object from DB, if not loaded yet. Return this object.
+           For a newborn object (__data already present), only perform its *activation* (initialization), no data loading.
            If sealed=true and __seal is present in the object, the exact versions of dependencies (prototypes, categories)
            as indicated by __seal are linked. The data can only be loaded ONCE for a given WebObject instance due to immutability.
            If you want to refresh the data, create a new instance with .reload().
          */
-        if (this.__meta.active || this.__meta.loading) {    // data is loaded or being loaded right now? await the previous call if still running
-            assert(!data_json)
+        if (this.__meta.active || this.__meta.loading)      // data is loaded or being loaded right now? await the previous call if still running
             return this.__meta.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
-        }
 
-        // if (this.is_newborn() && !data_json)                // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
-        //     return this.__meta.active ? this : this._activate()
-
-        return this.__meta.loading = this._load(data_json, sealed)  // keep a Promise that will eventually load the data; this is needed to avoid race conditions
+        return this.__meta.loading = this._load(sealed)     // keep a Promise that will eventually load the data; this is needed to avoid race conditions
     }
 
-    async _load(data_json, sealed) {
-        /* Load this.__data from `data_json` or DB. Set up the class and prototypes. Call __init__(). */
+    async _load(sealed) {
+        /* Load this.__data from DB if needed. Initialize this object: set up the class and prototypes, run __init__() etc. */
 
         schemat.before_data_loading(this)
 
         try {
             if (!this.__data) {
-                data_json = data_json || await schemat.load_record(this.id)
+                let data_json = await schemat.load_record(this.id)
                 this.__data = Data.load(data_json)
             }
 
