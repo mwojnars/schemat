@@ -417,11 +417,13 @@ export class WebObject {
         /* Load this.__data from DB if needed. Initialize this object: set up the class and prototypes, run __init__() etc. */
 
         schemat.before_data_loading(this)
+        let data_loaded = false
 
         try {
             if (!this.__data) {
                 let data_json = await schemat.load_record(this.id)
                 this.__data = Data.load(data_json)
+                data_loaded = true
             }
 
             let seal = this.__data.get('__seal')            // if seal is present, replace refs to prototypes/categories with proper versions of these dependency objects
@@ -444,7 +446,7 @@ export class WebObject {
             return this
 
         } catch (ex) {
-            this.__data = undefined                         // on error, clear the data to mark this object as not loaded
+            if (data_loaded) this.__data = undefined        // on error, clear the data to mark this object as not loaded
             throw ex
 
         } finally {
