@@ -49,13 +49,9 @@ export class Ring extends WebObject {
 
         // create sequences: data and indexes...
 
+        let index_file = this._file.replace(/\.yaml$/, '.index.jl')
         this.data_sequence = DataSequence.new(this, this._file)
-        // await this.data_sequence.open()
-
-        let filename = this._file.replace(/\.yaml$/, '.index.jl')
-
-        this.index_sequence = IndexSequence.new(this, filename)
-        // await this.index_sequence.open()
+        this.index_sequence = IndexSequence.new(this, index_file)
     }
 
     async open() {

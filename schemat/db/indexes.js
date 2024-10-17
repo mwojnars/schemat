@@ -19,7 +19,7 @@ export class Index extends Operator {
 
     // source                      // Sequence that this index is derived from
     //
-    // __new__(source) {
+    // __create__(source) {
     //     this.source = source
     //     assert(source instanceof Operator)
     //     source.add_derived(this)                // make connection: data > index, for change propagation

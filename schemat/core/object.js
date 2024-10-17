@@ -377,14 +377,7 @@ export class WebObject {
            This method should be used instead of the constructor.
          */
         if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
-        // let obj  = this.create_stub(null, {mutable: true})               // newly-created objects are always mutable
-        let obj  = this.create([], ...args)
-        let wait = obj.__new__(...args)
-        return wait instanceof Promise ? wait.then(() => obj) : obj
-    }
-
-    __new__(...args) {
-        /* Override in subclasses to initialize properties of a newborn item (not from DB) returned by WebObject.new(). */
+        return this.create([], ...args)
     }
 
     static async from_json(id, json, {mutable = true, sealed = false} = {}) {
