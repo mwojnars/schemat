@@ -42,11 +42,6 @@ export class Block extends WebObject {
         this.filename = filename
     }
 
-    async open() {
-        print(`    open() block [${this.id}]`)
-        return this.__init__()
-    }
-
     async __init__() {
         print(`    __init__() block [${this.id}]`)
         if (CLIENT) return                                          // don't initialize internals when on client
@@ -145,10 +140,6 @@ export class DataBlock extends Block {
     // persistent properties
     insert_mode             // if `compact`, new objects are inserted at the lowest possible IID in the block, possibly below _autoincrement; requires MemoryStorage
 
-
-    async open() {
-        this._autoincrement = await super.open()
-    }
 
     async __init__() {
         this._autoincrement = await super.__init__()
