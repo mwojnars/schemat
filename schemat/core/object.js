@@ -380,7 +380,8 @@ export class WebObject {
            This method should be used instead of the constructor.
          */
         if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
-        return this.create([this.__category], ...args)
+        return this.create([], ...args)
+        // return this.create([this.__category], ...args)
     }
 
     static async from_json(id, json, {mutable = true, sealed = false} = {}) {
@@ -468,8 +469,10 @@ export class WebObject {
 
         if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
 
-        let cls = await this._load_class()              // set the target JS class on this object; stubs only have WebObject as their class, which must be changed when the data is loaded and the item is linked to its category
-        T.setClass(this, cls || WebObject)
+        if (this.constructor === WebObject) {           // set the target WebObject subclass if not yet present; stubs only have WebObject as their class, which must be changed when the data is loaded and the item is linked to its category
+            let cls = await this._load_class()
+            T.setClass(this, cls || WebObject)
+        }
 
         let init = this.__init__()                      // custom initialization after the data is loaded (optional)
         if (init instanceof Promise) await init

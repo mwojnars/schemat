@@ -36,11 +36,9 @@ export class Sequence extends WebObject {    // Series?
 
     async open() {
         // this method is only called when the sequence is created anew and its ID is not yet assigned!
-        for (let block of this.blocks) {
-            await block
-            await block.__init__()
+        for (let block of this.blocks)
+            await block._activate()
             // block._set_expiry('never')          // prevent eviction of this block from cache (!)
-        }
     }
 
     async __init__() {
