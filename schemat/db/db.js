@@ -32,7 +32,7 @@ export class Ring extends WebObject {
     stop_id
 
 
-    async __new__({name, ...opts}, req) {
+    __new__({name, ...opts}, req) {
         let {file} = opts
         this._file = file
         this.name = name || fileBaseName(file)
@@ -50,14 +50,19 @@ export class Ring extends WebObject {
         // create sequences: data and indexes...
 
         this.data_sequence = DataSequence.new(this, this._file)
-        await this.data_sequence.open()
+        // await this.data_sequence.open()
 
         let filename = this._file.replace(/\.yaml$/, '.index.jl')
 
         this.index_sequence = IndexSequence.new(this, filename)
-        await this.index_sequence.open()
+        // await this.index_sequence.open()
+    }
 
+    async open() {
+        await this.data_sequence.open()
+        await this.index_sequence.open()
         // await this.rebuild_indexes()
+        return this
     }
 
     async __init__() {
@@ -207,7 +212,7 @@ export class Database extends WebObject {
             let ring =
                 spec instanceof Ring ? spec :
                 spec.item            ? await schemat.get_loaded(spec.item) :
-                                       await Ring.new(spec, new DataRequest(this, 'open'))
+                                       await Ring.new(spec, new DataRequest(this, 'open')).open()
 
             await delay()       // strangely enough, without this delay, Ring.new() above is NOT fully awaited when using the custom module Loader (!?)
 

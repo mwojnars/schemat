@@ -400,7 +400,7 @@ export class WebObject {
     }
 
 
-    /***  Loading & initialization ***/
+    /***  Loading & initialization  ***/
 
     async load({data_json = null, sealed = true, await_url = true} = {}) {
         /* Load full data of this item from `data_json` or from DB, if not loaded yet. Return this object.
