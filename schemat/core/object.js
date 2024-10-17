@@ -315,7 +315,6 @@ export class WebObject {
     is_newborn()    { return this.__id === undefined }              // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
     is_linked()     { return this.__id !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
-    is_active()     { return this.__meta.active }
     is_category()   { return false }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
