@@ -10,7 +10,7 @@ import {print, assert, T, escape_html, concat, unique, delay} from '../common/ut
 import {NotLinked, NotLoaded, ValidationError} from '../common/errors.js'
 
 import {JSONx} from "./jsonx.js"
-import {Data} from './data.js'
+import {Catalog, Data} from './data.js'
 import {REF} from "../types/type.js"
 import {DATA_GENERIC} from "../types/catalog.js"
 import {html_page} from "../web/adapters.js"
@@ -90,28 +90,30 @@ class ItemProxy {
     {
         // special attributes are written directly to __self (outside __data, not sent to DB);
         // also, when the __data is not loaded yet, *every* write goes to __self
-        if (!target.is_loaded()
+        if (!(target.is_newborn() || target.is_loaded())
             || typeof prop !== 'string'             // `prop` can be a symbol like [Symbol.toPrimitive]
             || ItemProxy.SPECIAL.includes(prop)
         ) return Reflect.set(target, prop, value, receiver)
 
+        let newborn = target.is_newborn()           // in a newborn, writes go to __data without recording "edits" (the object is not yet persisted, so no edits can be applied to its record in DB)
         let suffix = ItemProxy.PLURAL
         let plural = prop.endsWith(suffix)
-        let base = (plural ? prop.slice(0, -suffix.length) : prop)        // use the base property name without the suffix
-        // if (plural) prop = prop.slice(0, -suffix.length)        // use the base property name without the suffix
+        let base = (plural ? prop.slice(0, -suffix.length) : prop)        // base property name without the $ suffix
 
-        // "_xyz" props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
-        // others are "regular" and can only be written to __data, never to __self
+        // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
+        // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
         let regular = (prop[0] !== '_' || prop.startsWith('__'))
         let schema = receiver.__schema              // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
 
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
         if (schema?.has(base) || (!schema?.props.strict && regular)) {
-            print('proxy_set updating:', prop)
+            if (!newborn) print('proxy_set updating:', prop)
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
-                target.make_edit('set_all', {prop: base, values: value})
+                if (newborn) target.__data.setAll(base, ...value)
+                else target.make_edit('set_all', {prop: base, values: value})
             }
+            else if (newborn) target.__data.set(prop, value)
             else target.make_edit('set', {prop, value})
             return true
         }
@@ -382,7 +384,8 @@ export class WebObject {
            This method should be used instead of the constructor.
          */
         if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
-        let obj  = this.create_stub(null, {mutable: true})               // newly-created objects are always mutable
+        // let obj  = this.create_stub(null, {mutable: true})               // newly-created objects are always mutable
+        let obj  = this.create([], ...args)
         let wait = obj.__new__(...args)
         return wait instanceof Promise ? wait.then(() => obj) : obj
     }
@@ -596,7 +599,7 @@ export class WebObject {
     _init_services() {
         /* Collect services for this object's class and create this.service.xxx() triggers for the object. */
         if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
-        let triggers = this.service = {}
+        let triggers = this.__self.service = {}
 
         for (let [endpoint, service] of Object.entries(this.__services)) {
             let [type, name] = endpoint.split('/')
@@ -779,7 +782,7 @@ export class WebObject {
            Subclasses may override this method to change this behavior and accept a different list of arguments.
            This method must be synchronous. Any async code should be placed in __init__() or __setup__().
          */
-        this.__data.updateAll(data)
+        if (T.isDict(data) || data instanceof Catalog) this.__data.updateAll(data)
     }
 
     __setup__() {}
@@ -977,6 +980,7 @@ export class WebObject {
             const method = `EDIT_${op}`
             if (!this[method]) throw new Error(`object does not support edit operation: '${op}'`)
             this[method](JSONx.deepcopy(args))      // `args` are deep-copied for safety, in case they get modified during the edit
+            // this[method](args)                   // WARNING: `args` may get modified during the edit!
         }
     }
 
