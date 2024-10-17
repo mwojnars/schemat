@@ -219,7 +219,7 @@ export class Database extends WebObject {
 
     async __init__() {
         if (CLIENT) return
-        print(`loading database [${this.__id}] ${this.name}...`)
+        print(`initializing database [${this.__id}] ...`)
         return Promise.all(this.rings.map(ring => ring.load()))             // load all rings
     }
 
