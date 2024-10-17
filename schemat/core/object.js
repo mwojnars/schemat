@@ -407,10 +407,13 @@ export class WebObject {
            as indicated by __seal are linked. The data can only be loaded ONCE for a given WebObject instance due to immutability.
            If you want to refresh the data, create a new instance with .reload().
          */
-        if (this.__meta.active || this.__meta.loading)      // data is loaded or being loaded right now? await the previous call if still running
-            return this.__meta.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
+        let {active, loading} = this.__meta
 
-        return this.__meta.loading = this._load(sealed)     // keep a Promise that will eventually load the data; this is needed to avoid race conditions
+        // data is loaded or being loaded right now? wait for the previous call to complete instead of starting a new one
+        if (active || loading) return loading || this
+
+        // keep and return a Promise that will eventually load the data; this is needed to avoid race conditions
+        return this.__meta.loading = this._load(sealed)
     }
 
     async _load(sealed) {
