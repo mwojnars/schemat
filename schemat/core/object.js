@@ -19,16 +19,10 @@ import {Request} from "../web/request.js"
 import {ReactPage, ItemRecordView} from "../web/pages.js"
 
 const ROOT_ID = 0
-
-
 let RootCategory
 
-// Due to circular dependency between object.js and category.js, RootCategory must be imported with dynamic import() and NOT awaited:
-import("./category.js").then(module => {
-    // ROOT_ID = module.ROOT_ID
-    RootCategory = module.RootCategory
-    print('imported RootCategory')
-})
+// due to circular dependency between object.js and category.js, RootCategory must be imported with dynamic import() and NOT awaited:
+import("./category.js").then(module => {RootCategory = module.RootCategory})
 
 
 // // AsyncFunction class is needed for parsing from-DB source code
