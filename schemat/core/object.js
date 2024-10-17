@@ -388,8 +388,8 @@ export class WebObject {
         /* Create a new WebObject instance given an encoded JSON string with the object's content. */
         assert(typeof json === 'string')
         let obj = WebObject.create_stub(id, {mutable})
-        this.__data = Data.load(json)
-        return obj.load({data_json: json, sealed})
+        obj.__data = Data.load(json)
+        return obj.load({sealed})
     }
 
     _get_write_id() {
@@ -402,6 +402,7 @@ export class WebObject {
 
     async load({data_json = null, sealed = true} = {}) {
         /* Load full data of this item from `data_json` or from DB, if not loaded yet. Return this object.
+           For a newborn object (__data already present), this function performs its *activation* (initialization), no data loading.
            If sealed=true and __seal is present in the object, the exact versions of dependencies (prototypes, categories)
            as indicated by __seal are linked. The data can only be loaded ONCE for a given WebObject instance due to immutability.
            If you want to refresh the data, create a new instance with .reload().
