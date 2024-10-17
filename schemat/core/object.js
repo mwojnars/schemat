@@ -433,8 +433,6 @@ export class WebObject {
 
             await this._activate()
 
-            this._init_services()
-
             // if (this.is_linked())
             //     this.__meta.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
             // if (await_url && schemat.site && this.__meta.pending_url)
@@ -479,6 +477,8 @@ export class WebObject {
 
         let init = this.__init__()                      // custom initialization after the data is loaded (optional)
         if (init instanceof Promise) await init
+
+        this._init_services()
 
         this.__meta.active = true
         return this
