@@ -32,7 +32,7 @@ export class Ring extends WebObject {
     stop_id
 
 
-    __create__({name, ...opts}, req) {
+    __create__({name, ...opts}) {
         let {file} = opts
         this._file = file
         this.name = name || fileBaseName(file)
@@ -208,7 +208,7 @@ export class Database extends WebObject {
             let ring =
                 spec instanceof Ring ? spec :
                 spec.item            ? await schemat.get_loaded(spec.item) :
-                                       await Ring.new(spec, new DataRequest(this, 'open')).load()
+                                       await Ring.new(spec).load()
 
             await delay()       // strangely enough, without this delay, Ring.new() above is NOT fully awaited when using the custom module Loader (!?)
 
