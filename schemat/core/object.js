@@ -286,7 +286,7 @@ export class WebObject {
         //pending_url:  undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
 
         cache:          undefined,  // Map of properties loaded from __data, imputed or inherited, stored here for performance; ONLY present in immutable object
-        edits:          undefined,  // array of edit operations that were reflected in `local` so far, for replay on the DB; each edit is a pair: [op, args]
+        edits:          undefined,  // array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
 
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -352,10 +352,8 @@ export class WebObject {
         // only on the client this flag can be changed after object creation
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
 
-        if (mutable)
-            this.__meta.edits = []
-        else
-            this.__meta.cache = new Map()
+        if (!mutable) this.__meta.cache = new Map()
+        if (mutable && !this.is_newborn()) this.__meta.edits = []
     }
 
     static create_stub(id = null, opts = {}) {
@@ -986,10 +984,8 @@ export class WebObject {
         this.assert_loaded_or_newborn()
         let edits = this.__meta.edits
 
-        if (this.is_newborn()) {
-            edits.length = 0                // truncate all edits up to now, they should be already reflected in __data
+        if (this.is_newborn())
             return schemat.site.service.create_object(this.__data).then(({id}) => {this.__id = id; return this})
-        }
 
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
 
