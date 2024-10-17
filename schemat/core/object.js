@@ -182,6 +182,7 @@ class ItemProxy {
 
 export class WebObject {
     /* Web object. Persisted in the database; has a unique ID; can be exposed on the web at a particular URL. */
+    // net object? internet object? active object? live object?
 
     static SEAL_SEP = '.'
 
@@ -365,7 +366,9 @@ export class WebObject {
     }
 
     static create(categories = [], ...args) {
+        /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
         let obj = this.create_stub(null, {mutable: true})       // newly-created objects are always mutable
+        categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat)
         obj.__data = new Data(...categories.map(cat => ['__category', cat]))
         obj.__create__(...args)
         return obj
@@ -377,7 +380,7 @@ export class WebObject {
            This method should be used instead of the constructor.
          */
         if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
-        return this.create([], ...args)
+        return this.create([this.__category], ...args)
     }
 
     static async from_json(id, json, {mutable = true, sealed = false} = {}) {
