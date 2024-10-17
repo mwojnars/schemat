@@ -339,13 +339,15 @@ export class WebObject {
 
     /***  Instantiation  ***/
 
-    constructor(_fail = true, {mutable = false} = {}) {
+    constructor(_fail = true, id = null, {mutable = false} = {}) {
         /* For internal use! Always call WebObject.new() or category.create() instead of `new WebObject()`.
            By default, the object is created immutable, and on client (where all modifications are local to the single client process)
            this gets toggled automatically on the first attempt to object modification. On the server
            (where any modifications might spoil other web requests), changing `mutable` after creation is disallowed.
          */
         if(_fail) throw new Error('web object must be instantiated through CLASS.new() instead of new CLASS()')
+
+        if (id !== undefined && id !== null) this.__id = id
 
         this.__self = this              // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
 
@@ -366,8 +368,7 @@ export class WebObject {
         if (id === ROOT_ID && !this.__is_root_category)
             return RootCategory.create_stub(id)
 
-        let obj = new this(false, opts)
-        if (id !== undefined && id !== null) obj.__id = id
+        let obj = new this(false, id, opts)
         return obj.__proxy = ItemProxy.wrap(obj)
     }
 

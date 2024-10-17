@@ -189,8 +189,6 @@ export class RootCategory extends Category {
 
     static __is_root_category = true
 
-    __id = ROOT_ID
-
     get __category$() { return [this.__proxy] }
     get __category()  { return this.__proxy }       // root category is a category for itself
     set __category(c) {}                            // only needed due to caching in ItemProxy; TODO: remove when a proper `cache` sub-object is introduced in ItemProxy
