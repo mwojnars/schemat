@@ -47,7 +47,6 @@ export class BackendProcess {
         let rings = config.bootstrap_database.rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
         await db.open(rings)
-        await db.__init__()     // TODO: temporary?
         return db
     }
 }
