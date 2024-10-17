@@ -388,6 +388,7 @@ export class WebObject {
         /* Create a new WebObject instance given an encoded JSON string with the object's content. */
         assert(typeof json === 'string')
         let obj = WebObject.create_stub(id, {mutable})
+        // this.__data = Data.load(json)
         return obj.load({data_json: json, sealed})
     }
 
@@ -406,13 +407,14 @@ export class WebObject {
            If you want to refresh the data, create a new instance with .reload().
            `await_url` has effect only after the schemat.site is loaded, not during boot up.
          */
-        if (!this.is_newborn() && (this.__data || this.__meta.loading)) {           // data is loaded or being loaded right now? do nothing except for awaiting the URL (previous load() may have been called with await_url=false)
+        if (this.__meta.active || this.__meta.loading) {    // data is loaded or being loaded right now? do nothing except for awaiting the URL (previous load() may have been called with await_url=false)
             assert(!data_json)
             return this.__meta.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
         }
-        if (this.is_newborn() && !data_json)
+
+        if (this.is_newborn() && !data_json)                // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
             return this.__meta.active ? this : this._activate()
-            // return this                       // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
+
         return this.__meta.loading = this._load(data_json, sealed, await_url)  // keep a Promise that will eventually load the data; this is needed to avoid race conditions
     }
 
