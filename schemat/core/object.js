@@ -388,7 +388,7 @@ export class WebObject {
         /* Create a new WebObject instance given an encoded JSON string with the object's content. */
         assert(typeof json === 'string')
         let obj = WebObject.create_stub(id, {mutable})
-        // this.__data = Data.load(json)
+        this.__data = Data.load(json)
         return obj.load({data_json: json, sealed})
     }
 
@@ -403,7 +403,7 @@ export class WebObject {
     async load({data_json = null, sealed = true, await_url = true} = {}) {
         /* Load full data of this item from `data_json` or from DB, if not loaded yet. Return this object.
            If sealed=true and __seal is present in the object, the exact versions of dependencies (prototypes, categories)
-           as indicated by __seal are linked. The data can only be loaded ONCE for a given WebObject instance due to item's immutability.
+           as indicated by __seal are linked. The data can only be loaded ONCE for a given WebObject instance due to immutability.
            If you want to refresh the data, create a new instance with .reload().
            `await_url` has effect only after the schemat.site is loaded, not during boot up.
          */
@@ -412,8 +412,8 @@ export class WebObject {
             return this.__meta.loading || this              // if a previous load() is still running (`loading` promise), wait for it to complete instead of starting a new one
         }
 
-        if (this.is_newborn() && !data_json)                // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
-            return this.__meta.active ? this : this._activate()
+        // if (this.is_newborn() && !data_json)                // newborn item with no ID and no data to load? fail silently; this allows using the same code for both newborn and in-DB items
+        //     return this.__meta.active ? this : this._activate()
 
         return this.__meta.loading = this._load(data_json, sealed, await_url)  // keep a Promise that will eventually load the data; this is needed to avoid race conditions
     }
@@ -424,8 +424,10 @@ export class WebObject {
         schemat.before_data_loading(this)
 
         try {
-            data_json = data_json || await schemat.load_record(this.id)
-            this.__data = Data.load(data_json)
+            if (!this.__data) {
+                data_json = data_json || await schemat.load_record(this.id)
+                this.__data = Data.load(data_json)
+            }
 
             let seal = this.__data.get('__seal')            // if seal is present, replace refs to prototypes/categories with proper versions of these dependency objects
             if (seal && sealed) await this._load_dependencies(seal)
