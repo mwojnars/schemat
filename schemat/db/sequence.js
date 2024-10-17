@@ -102,8 +102,8 @@ export class IndexSequence extends Sequence {
     /* A Sequence composed of IndexBlock type of blocks. */
     static __category = 22
 
-    __new__(ring, filename) {
-        super.__new__(ring)
+    __create__(ring, filename) {
+        super.__create__(ring)
         assert(filename.endsWith('.jl'))
         this.blocks = [IndexBlock.new(this, filename)]
     }
@@ -173,8 +173,8 @@ export class DataSequence extends Sequence {
     static role       = 'data'          // for use in ProcessingStep and DataRequest
     static COMMANDS   = ['get', 'put', 'select', 'insert', 'update', 'delete']
 
-    __new__(ring, filename) {
-        super.__new__(ring)
+    __create__(ring, filename) {
+        super.__create__(ring)
         this.blocks = [DataBlock.new(this, filename)]
     }
 
