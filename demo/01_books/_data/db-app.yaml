@@ -30,7 +30,7 @@
       "@": schemat/types/type.js:URL
     "@": schemat:Catalog
   __category:
-    "@": 0
+    "@": 1
 - __id: 5001
   name: Author
   class: demo/01_books/authors/author.js:Author
@@ -57,7 +57,7 @@
       "@": schemat/types/type.js:TEXT
     "@": schemat:Catalog
   __category:
-    "@": 0
+    "@": 1
 - __id: 5002
   title: The Great Gatsby
   author:

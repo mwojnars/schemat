@@ -18,7 +18,7 @@ import {Assets} from "../web/component.js"
 import {Request} from "../web/request.js"
 import {ReactPage, ItemRecordView} from "../web/pages.js"
 
-const ROOT_ID = 0
+const ROOT_ID = 1
 let RootCategory
 
 // due to circular dependency between object.js and category.js, RootCategory must be imported with dynamic import() and NOT awaited:

@@ -1,4 +1,4 @@
-- __id: 0
+- __id: 1
   name: Category
   info: Root category. Category of objects that represent categories. Is a
     category for itself and for other categories.
@@ -133,7 +133,7 @@
       __category:
         info: Category of this object. Determines its behavior and the schema of its
           properties. Each category itself is an object of the Root Category
-          (ID=0).
+          (ID=1).
         repeated: true
         "@": schemat/types/type.js:REF
       __class:
@@ -237,11 +237,11 @@
   __prototype:
     "@": 5
   __category:
-    "@": 0
+    "@": 1
 - __id: 3
   name: Container
   __category:
-    "@": 0
+    "@": 1
   schema:
     _is_container:
       default: true
@@ -264,7 +264,7 @@
     "@": schemat:Catalog
   class: schemat/std/files.js:File
   __category:
-    "@": 0
+    "@": 1
 - __id: 5
   name: Directory
   info: >-
@@ -284,7 +284,7 @@
   __prototype:
     "@": 3
   __category:
-    "@": 0
+    "@": 1
 - __id: 6
   name: LocalDirectory
   info: A Directory whose content is located on a local disk, in the folder
@@ -321,7 +321,7 @@
   __prototype:
     "@": 5
   __category:
-    "@": 0
+    "@": 1
 - __id: 7
   name: Namespace
   info: "Unbounded collection of objects: each object that satisfies the criteria
@@ -333,7 +333,7 @@
   __prototype:
     "@": 3
   __category:
-    "@": 0
+    "@": 1
 - __id: 8
   name: ObjectSpace
   info: Namespace that maps all objects to URLs of the form /<ID>. Optionally
@@ -341,7 +341,7 @@
   schema:
     category:
       category:
-        "@": 0
+        "@": 1
       info: Optional category(ies) of objects to be included in this namespace. Every
         object that is not an instance of at least one of these categories is
         excluded.
@@ -351,7 +351,7 @@
   __prototype:
     "@": 7
   __category:
-    "@": 0
+    "@": 1
 - __id: 9
   name: Category_IID_Namespace
   info: "Namespace for accessing public data through verbose paths of the form:
@@ -361,7 +361,7 @@
     spaces:
       type_values:
         category:
-          "@": 0
+          "@": 1
         "@": schemat/types/type.js:REF
       "@": schemat/types/catalog.js:CATALOG
     "@": schemat:Catalog
@@ -369,11 +369,11 @@
   __prototype:
     "@": 7
   __category:
-    "@": 0
+    "@": 1
 - __id: 10
   name: Cluster
   __category:
-    "@": 0
+    "@": 1
   schema:
     "@": schemat:Catalog
 - __id: 11
@@ -386,7 +386,7 @@
     "@": schemat:Catalog
   class: schemat/db/db.js:Database
   __category:
-    "@": 0
+    "@": 1
 - __id: 12
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
@@ -417,7 +417,7 @@
     "@": schemat:Catalog
   class: schemat/db/db.js:Ring
   __category:
-    "@": 0
+    "@": 1
 - __id: 13
   name: Sequence
   info: Base category for sequences of key-value records, either data or indexes.
@@ -439,7 +439,7 @@
     flush_delay: 0.01
     "@": schemat:Catalog
   __category:
-    "@": 0
+    "@": 1
 - __id: 14
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
@@ -447,14 +447,14 @@
   __prototype:
     "@": 13
   __category:
-    "@": 0
+    "@": 1
 - __id: 15
   name: Index
   info: Base category for indexes over the data sequence.
   __prototype:
     "@": 24
   __category:
-    "@": 0
+    "@": 1
 - __id: 16
   name: PrimeIndexSequence
   info: An index that receives record updates from the main data sequence, so
@@ -464,7 +464,7 @@
   __prototype:
     "@": 15
   __category:
-    "@": 0
+    "@": 1
 - __id: 17
   name: IndexByCategory
   info: "Index that maps categories to member objects: the key is [category ID,
@@ -473,7 +473,7 @@
   __prototype:
     "@": 16
   __category:
-    "@": 0
+    "@": 1
 - __id: 18
   name: Block
   info: A continuous subrange of records of a data/index sequence, physically
@@ -490,7 +490,7 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   __category:
-    "@": 0
+    "@": 1
 - __id: 19
   name: DataBlock
   info: Block of a DataSequence.
@@ -502,7 +502,7 @@
   __prototype:
     "@": 18
   __category:
-    "@": 0
+    "@": 1
 - __id: 20
   name: IndexBlock
   info: Block of an Index sequence.
@@ -512,11 +512,11 @@
   __prototype:
     "@": 18
   __category:
-    "@": 0
+    "@": 1
 - __id: 21
   name: Node
   __category:
-    "@": 0
+    "@": 1
 - __id: 22
   name: IndexSequence
   info: Category for sequences of index records.
@@ -524,7 +524,7 @@
   __prototype:
     "@": 13
   __category:
-    "@": 0
+    "@": 1
 - __id: 23
   name: index-by-category
   record_schema:
@@ -551,7 +551,7 @@
       "@": schemat/types/type.js:GENERIC
     "@": schemat:Catalog
   __category:
-    "@": 0
+    "@": 1
 - __id: 25
   name: Page
   info: >-
@@ -570,7 +570,7 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   __category:
-    "@": 0
+    "@": 1
 - __id: 26
   name: Revision
   info: Immutable snapshot of past content of the `target` object at a particular
@@ -589,7 +589,7 @@
     "@": schemat:Catalog
   immutable: true
   __category:
-    "@": 0
+    "@": 1
 - __id: 27
   name: LocalFile
   info: File located on a local disk, identified by its local file path.
@@ -601,4 +601,4 @@
     "@": schemat:Catalog
   class: schemat/std/files.js:LocalFile
   __category:
-    "@": 0
+    "@": 1

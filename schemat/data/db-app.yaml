@@ -12,7 +12,7 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   __category:
-    "@": 0
+    "@": 1
 - __id: 5001
   title: Ala ma kota Sierściucha i psa Kłapoucha.
   title/2: drugi tytuł...
@@ -53,7 +53,7 @@
     "@": schemat:Catalog
   class: schemat/db/mysql.js:MySQL
   __category:
-    "@": 0
+    "@": 1
 - __id: 5005
   name: TwitterPost
   schema:
@@ -97,7 +97,7 @@
         console.log('this.utils #1:', this.utils)
     }
   __category:
-    "@": 0
+    "@": 1
 - __id: 5006
   name: /apps
   entries:
@@ -142,7 +142,7 @@
   name: main-space
   spaces:
     sys.category:
-      "@": 0
+      "@": 1
     "@": schemat:Catalog
   __category:
     "@": 9
