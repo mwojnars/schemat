@@ -1018,7 +1018,6 @@ export class WebObject {
 
     EDIT_overwrite({data}) {
         /* Replace the entire set of own properties, __data, with a new Data object. */
-        assert(false, 'not used?')
         if (typeof data === 'string') data = Data.load(data)
         assert(data instanceof Data)
         this.__data = data

@@ -1,6 +1,6 @@
 import {DatabaseError} from "../common/errors.js"
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
-import {WebObject, Edit} from "../core/object.js"
+import {WebObject} from "../core/object.js"
 import {DataOperator} from "./sequence.js";
 import {Record, DataRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
@@ -133,7 +133,7 @@ export class Ring extends WebObject {
         let item = T.isNumber(id_or_item) ? null : id_or_item
         let id = item ? item._get_write_id() : id_or_item
         if (!data) data = item.dump_data()
-        let edits = [new Edit('overwrite', {data})]
+        let edits = [['overwrite', {data}]]
         return this.handle(req.safe_step(this, 'update', {id, edits}))
     }
 
@@ -272,7 +272,7 @@ export class Database extends WebObject {
     async update_full(item) {
         /* Replace all data inside the item's record in DB with item.data. */
         let data = item.dump_data()
-        return this.update(item.__id, new Edit('overwrite', {data}))
+        return this.update(item.__id, ['overwrite', {data}])
     }
 
     async insert(data, ring_name = null) {
