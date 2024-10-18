@@ -178,7 +178,7 @@ export function fileBaseName(filepath) {
     return filepath.replace(/^.*\/|\.[^.]*$/g, '')
 }
 
-export function normalize_path(path) {
+export function normalizePath(path) {
     /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
     while (path.includes('/./')) path = path.replaceAll('/./', '/')
     let lead = path[0] === '/' ? path[0] : ''

@@ -1,4 +1,4 @@
-import {print, assert, T, delay, splitLast} from '../common/utils.js'
+import {print, assert, T, delay, splitLast, normalizePath} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Request} from '../web/request.js'
 import {WebObject} from '../core/object.js'
@@ -115,10 +115,13 @@ export class Site extends WebObject {
         })
     }
 
-    import_global(path) {
+    import_global(path, referrer = null) {
         /* Import from an absolute URL path in the SUN namespace, like "/$/sys/Revision" etc.
            TODO: The path must not contain any endpoint (::xxx), but it may contain an in-module selector (:symbol)
          */
+        if (path[0] === '.')                // convert a relative URL path to an absolute one
+            path = normalizePath(referrer.__url + '/' + path)
+
         assert(path[0] === '/')
         return this.route_internal(path)
     }

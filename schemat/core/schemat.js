@@ -1,4 +1,4 @@
-import {T, print, assert, normalize_path} from '../common/utils.js'
+import {T, print, assert, normalizePath} from '../common/utils.js'
 import {DependenciesStack} from '../common/structs.js'
 import {WebObject} from './object.js'
 import {Category} from './category.js'
@@ -30,7 +30,7 @@ class Classpath {
         /* Import symbols from a module and add them to the cache. */
         let module = await import(module_url)
         let prefixed_url = `schemat/core/${module_url}`
-        let normalized_url = target_path || normalize_path(prefixed_url)
+        let normalized_url = target_path || normalizePath(prefixed_url)
 
         if (typeof symbols === "string")    symbols = symbols.split(' ')
         else if (!symbols)                  symbols = Object.keys(module)

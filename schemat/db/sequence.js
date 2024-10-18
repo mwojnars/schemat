@@ -99,7 +99,7 @@ export class IndexSequence extends Sequence {
         this.blocks = [IndexBlock.new(this, filename)]
     }
     async __setup__(id) {
-        // let {IndexBlock} = this.__category.palette
+        // let {IndexBlock} = this.__category.preloaded
         let IndexBlock = await this.__category.import('./IndexBlock')
         this.blocks = [await IndexBlock.insert(id, this.filename)]
     }
