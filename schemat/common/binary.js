@@ -1,6 +1,14 @@
 import {assert} from "./utils.js";
 import {CustomMap} from "./structs.js";
 
+/*
+    TODO: use CBOR binary format for object storage instead of JSON!
+    - compact binary syntax:  https://surrealdb.com/blog/understanding-cbor
+    - much smaller size, esp. with gzip:  https://gist.github.com/kajuberdut/0191ec20f14253094792cd3c00f06257
+    - fastest implementation is cbor-x:  https://jsonjoy.com/blog/json-codec-benchmarks / https://www.npmjs.com/package/cbor-x
+    - http://cbor.io/
+ */
+
 
 /**********************************************************************************************************************/
 
