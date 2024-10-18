@@ -219,7 +219,7 @@
         URL path is mapped to an object placed somewhere below the `root`
         container."
       category:
-        "@": 2
+        "@": 3
       "@": schemat/types/type.js:REF
     global:
       type_values:
@@ -238,7 +238,7 @@
     "@": 5
   __category:
     "@": 0
-- __id: 2
+- __id: 3
   name: Container
   __category:
     "@": 0
@@ -282,7 +282,7 @@
     "@": schemat:Catalog
   class: schemat/std/containers.js:Directory
   __prototype:
-    "@": 2
+    "@": 3
   __category:
     "@": 0
 - __id: 6
@@ -331,7 +331,7 @@
     containers."
   class: schemat/std/containers.js:Namespace
   __prototype:
-    "@": 2
+    "@": 3
   __category:
     "@": 0
 - __id: 8
