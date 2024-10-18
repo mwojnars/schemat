@@ -343,7 +343,7 @@ export class WebObject {
         return obj.__proxy = ItemProxy.wrap(obj)
     }
 
-    static create(categories = [], ...args) {
+    static _create(categories = [], ...args) {
         /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
         let obj = this.create_stub(null, {mutable: true})       // newly-created objects are always mutable
         categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat)
@@ -358,7 +358,7 @@ export class WebObject {
            This method should be used instead of the constructor.
          */
         // if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
-        return this.create([], ...args)
+        return this._create([], ...args)
         // return this.create([this.__category], ...args)
     }
 
