@@ -4,6 +4,12 @@ import {Data} from "./data.js";
 import {CustomMap} from "../common/structs.js";
 // import BTree from 'sorted-btree'
 
+/*
+    TODO:
+    TTL Cache package:  https://www.npmjs.com/package/@isaacs/ttlcache
+    LRU Cache package:  https://www.npmjs.com/package/lru-cache
+ */
+
 
 /**********************************************************************************************************************
  **
