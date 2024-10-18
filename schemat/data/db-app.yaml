@@ -119,7 +119,7 @@
 - __id: 5008
   content: export let print = console.log
   __category:
-    "@": 3
+    "@": 4
   __container:
     "@": 5007
 - __id: 5009
@@ -129,7 +129,7 @@
     //let fs = await import('fs')
     //print('fs:',fs)
   __category:
-    "@": 3
+    "@": 4
   __container:
     "@": 5007
 - __id: 5010

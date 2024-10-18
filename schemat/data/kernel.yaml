@@ -247,7 +247,7 @@
       default: true
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
-- __id: 3
+- __id: 4
   name: File
   info: File with a text content.
   schema:
@@ -594,7 +594,7 @@
   name: LocalFile
   info: File located on a local disk, identified by its local file path.
   __prototype:
-    "@": 3
+    "@": 4
   schema:
     local_path:
       "@": schemat/types/type.js:STRING
