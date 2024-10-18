@@ -265,18 +265,6 @@
   class: schemat/std/files.js:File
   __category:
     "@": 0
-- __id: 4
-  name: LocalFile
-  info: File located on a local disk, identified by its local file path.
-  __prototype:
-    "@": 3
-  schema:
-    local_path:
-      "@": schemat/types/type.js:STRING
-    "@": schemat:Catalog
-  class: schemat/std/files.js:LocalFile
-  __category:
-    "@": 0
 - __id: 5
   name: Directory
   info: >-
@@ -600,5 +588,17 @@
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   immutable: true
+  __category:
+    "@": 0
+- __id: 27
+  name: LocalFile
+  info: File located on a local disk, identified by its local file path.
+  __prototype:
+    "@": 3
+  schema:
+    local_path:
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  class: schemat/std/files.js:LocalFile
   __category:
     "@": 0

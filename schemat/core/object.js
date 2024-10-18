@@ -378,7 +378,7 @@ export class WebObject {
            If __new__() returns a Promise, this method returns a Promise too.
            This method should be used instead of the constructor.
          */
-        if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
+        // if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
         return this.create([], ...args)
         // return this.create([this.__category], ...args)
     }
