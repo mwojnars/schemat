@@ -154,7 +154,9 @@ export class SCHEMA extends CATALOG {
 }
 
 export class SCHEMA_GENERIC extends SCHEMA {
-    /* Generic SCHEMA, used when there's no category for a web object. */
+    /* Generic SCHEMA, used when there's no category for a web object. All property names are allowed in the web object,
+       and their type is `generic_type`.
+     */
     static props = {
         fields: {},
         strict: false,
