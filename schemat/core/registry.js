@@ -46,6 +46,7 @@ class ObjectsCache extends Map {
 
 class VersionsCache extends CustomMap {
     /* A cache of {id_ver: object} pairs. */
+    // TODO: use a standard LRU cache with a fixed capacity, no TTL
 
     convert([id, ver])  { return `${id}.${ver}` }
     reverse(key)        { return key.split('.').map(Number) }
