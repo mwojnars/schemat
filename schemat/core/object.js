@@ -182,7 +182,7 @@ export class WebObject {
                             for a newly created object that already has an ID assigned, but is not yet (fully) saved to DB, the ID must be kept
                             in __meta.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
 
-    __data                  own properties of this object in raw form (before imputation etc.), as a Data object created during .load()
+    __data                  own properties of this object in their raw form (before imputation etc.), as a Data object created during .load()
 
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
                             that inherits (like from prototypes) from all __category$ listed in this object or inherited
@@ -294,12 +294,10 @@ export class WebObject {
     /***  Object status  ***/
 
     is_newborn()    { return this.__id === undefined }              // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
-    is_linked()     { return this.__id !== undefined }              // object is "linked" when it has an ID, which means it's persisted in DB or is a stub of an object to be loaded from DB
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     is_category()   { return false }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
-    assert_linked() { if (!this.is_linked()) throw new NotLinked(this) }
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
     assert_loaded_or_newborn() { if (!this.is_loaded() && !this.is_newborn()) throw new NotLoaded(this) }
 

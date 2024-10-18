@@ -161,7 +161,7 @@ export class Directory extends Container {
     // }
 
     identify(item) {
-        item.assert_linked()
+        assert(item.__id)
         return this._entries_rev.get(item.__id)
     }
 }
@@ -204,7 +204,7 @@ export class ObjectSpace extends Namespace {
     }
 
     identify(obj) {
-        obj.assert_linked()
+        assert(obj.__id)
         return this._is_allowed(obj) ? `${obj.__id}` : null
     }
 

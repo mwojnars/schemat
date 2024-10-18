@@ -629,7 +629,7 @@ export class Data extends Catalog {
            Special properties: __class, __category, are preserved.
            Properties defined by getters are ignored.
          */
-        assert(!obj.is_linked?.())
+        assert(!obj.__id)
 
         const KEEP = ['__class', '__category']
         const DROP = ['service']
