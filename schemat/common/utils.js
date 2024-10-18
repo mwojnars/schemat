@@ -59,6 +59,11 @@ export async function tryimport(path, property = null) {
     } catch(ex) {}
 }
 
+export function nullObject() {
+    return Object.create(null)
+}
+
+
 const htmlEscapes = {
     '&': '&amp',
     '<': '&lt',
