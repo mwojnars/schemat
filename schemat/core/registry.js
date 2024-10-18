@@ -12,8 +12,8 @@ import {CustomMap} from "../common/structs.js";
  */
 
 class ObjectsCache extends Map {
-    /* A cache of {id: object} pairs. Provides manually-invoked eviction by LRU and per-item TTL.
-       Eviction timestamps are stored in items and can be modified externally.
+    /* A cache of {id: object} pairs. Provides manually-invoked eviction by TTL.
+       Eviction timestamps are stored in objects and can be modified externally.
        Currently, the implementation scans all entries for TTL eviction, which should work well for up to ~1000 entries.
        For larger sets, a BTree could possibly be used: import BTree from 'sorted-btree'
      */

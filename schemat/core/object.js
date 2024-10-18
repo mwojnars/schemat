@@ -111,7 +111,7 @@ class ItemProxy {
         let val, {cache} = target.__meta
 
         // try reading the value from `cache` first, return if found
-        if ((val = cache?.get(prop)) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
+        if ((val = cache?.[prop]) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
 
         // try reading the value from regular JS attributes of the `target`
         val = Reflect.get(target, prop, receiver)
@@ -119,7 +119,7 @@ class ItemProxy {
         // cache the value IF it comes from a cachable getter (no point in re-assigning regular attrs)
         if (target.constructor.cachable_getters.has(prop)) {
             if (val?.[ItemProxy.NO_CACHING]) return val.value       // NO_CACHING flag? return immediately
-            ItemProxy._cache_value(cache, prop, val)
+            if (cache) ItemProxy._cache_value(cache, prop, val)
             return val
         }
 
@@ -150,11 +150,13 @@ class ItemProxy {
         /* Save `value` in cache, but also provide special handling for promises, so that a promise is ultimately replaced with the fulfillment value,
            which may improve performance on subsequent accesses to the property (no need to await it again and again).
          */
-        cache?.set(prop, val instanceof Promise ? val.then(v => cache.set(prop, v)) : val)
+        cache[prop] = val instanceof Promise ? val.then(v => cache[prop] = v) : val
+        // cache.set(prop, val instanceof Promise ? val.then(v => cache.set(prop, v)) : val)
     }
     static _cache_values(cache, prop$, vals) {
         /* Like _cache_value(), but for caching an array of repeated values, some of them possibly being promises. */
-        cache?.set(prop$, vals.some(v => v instanceof Promise) ? Promise.all(vals).then(vs => cache.set(prop$, vs)) : vals)
+        cache[prop$] = vals.some(v => v instanceof Promise) ? Promise.all(vals).then(vs => cache[prop$] = vs) : vals
+        // cache.set(prop$, vals.some(v => v instanceof Promise) ? Promise.all(vals).then(vs => cache.set(prop$, vs)) : vals)
     }
 }
 
@@ -264,7 +266,7 @@ export class WebObject {
         provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
         //pending_url:  undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
 
-        cache:          undefined,  // Map of properties loaded from __data, imputed or inherited, stored here for performance; ONLY present in immutable object
+        cache:          undefined,  // null-prototype object for caching properties loaded from __data, imputed or inherited; ONLY present in immutable object
         edits:          undefined,  // array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
 
         // db         // the origin database of this item; undefined in newborn items
@@ -328,7 +330,7 @@ export class WebObject {
         // only on the client this flag can be changed after object creation
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
 
-        if (!mutable) this.__meta.cache = new Map()
+        if (!mutable) this.__meta.cache = Object.create(null) //new Map()
         if (mutable && !this.is_newborn()) this.__meta.edits = []
     }
 
