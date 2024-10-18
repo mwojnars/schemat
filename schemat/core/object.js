@@ -277,7 +277,7 @@ export class WebObject {
     static _collect_cachable_getters() {
         /* Find all getter functions in the current class, combine with parent's set of getters and store in _cachable_getters. */
         const prototype = this.prototype
-        const parent_getters = this.__proto__?.cachable_getters || []
+        const parent_getters = Object.getPrototypeOf(this)?.cachable_getters || []
         const own_getters = Object.getOwnPropertyNames(prototype)
                 .filter(prop => {
                     const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
