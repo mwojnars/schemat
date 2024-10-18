@@ -31,25 +31,6 @@ import("./category.js").then(module => {RootCategory = module.RootCategory})
 
 /**********************************************************************************************************************
  **
- **  EDIT container object
- **
- */
-
-export class Edit {
-    /* Specification of an edit operation that should be performed on an object inside the exclusive lock of its storage Block. */
-
-    op          // name of the operation to be performed on object properties, e.g. 'insert', 'delete', 'move', 'field' (meaning 'update')
-    args        // arguments for the operation, e.g. {field: 'name', value: 'new name'}
-
-    constructor(op = null, args = {}) {
-        this.op = op
-        this.args = args
-    }
-}
-
-
-/**********************************************************************************************************************
- **
  **  PROXY
  **
  */
@@ -970,9 +951,9 @@ export class WebObject {
     }
 
     apply_edits(...edits) {
-        /* Apply edits before saving a modified object to the DB. For server-side use only. Each `edit` is an instance of Edit. */
+        /* Apply `edits` to the __data. Each `edit` is a pair of [op-name, args]. */
         for (const edit of edits) {
-            let {op, args} = (edit instanceof Edit) ? edit : {op: edit[0], args: edit[1]}
+            let [op, args] = edit
             const method = `EDIT_${op}`
             if (!this[method]) throw new Error(`object does not support edit operation: '${op}'`)
             this[method](args)
