@@ -17,7 +17,7 @@
   cluster:
     "@": 1025
   __category:
-    "@": 1
+    "@": 2
 - __id: 1002
   name: database
   rings:
