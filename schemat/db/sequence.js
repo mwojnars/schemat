@@ -98,6 +98,11 @@ export class IndexSequence extends Sequence {
         assert(filename.endsWith('.jl'))
         this.blocks = [IndexBlock.new(this, filename)]
     }
+    async __setup__(id) {
+        // let {IndexBlock} = this.__category.palette
+        let IndexBlock = await this.__category.import('./IndexBlock')
+        this.blocks = [await IndexBlock.insert(id, this.filename)]
+    }
 }
 
 export class Subsequence {
