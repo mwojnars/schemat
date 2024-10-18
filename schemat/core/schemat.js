@@ -362,6 +362,10 @@ export class Schemat {
         return this.site.import_local(path)
     }
 
+    async save(...objects) {
+        /* Save changes in multiple objects all at once (concurrently). */
+        return Promise.all(objects.map(obj => obj.save()))
+    }
 
     /***  Dynamic import from SUN  ***/
 
