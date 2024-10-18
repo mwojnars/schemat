@@ -36,7 +36,7 @@ export class Type {
                                     // since repeated properties behave like lists of varying length, and zero is a valid length,
                                     // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
-        repeated : undefined,       // if true, the field described by this type can have multiple occurrences, typically inside a CATALOG/RECORD/DATA
+        repeated : undefined,       // if true, the field described by this type can have multiple occurrences, typically inside a CATALOG/RECORD/SCHEMA
                                     // - all the values (incl. inherited ones) can be retrieved via .field$ then; note that setting repeated=true has performance impact,
                                     // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object;
                                     // repeated fields of type CATALOG provide special behavior: they get merged altogether during the property's value computation

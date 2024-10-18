@@ -274,7 +274,7 @@ export class ItemRecordView extends ReactPage.View {
     }
 
     PropertiesTable() {
-        /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
+        /* Display this item's data as a SCHEMA.Widget table with possibly nested Catalog objects. */
         return e(CatalogTable, {item: this, type: this.__schema, catalog: this.__data, start_color: 1})
     }
 }

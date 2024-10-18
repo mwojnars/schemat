@@ -116,7 +116,7 @@ export class CATALOG extends Type {
 
 /**********************************************************************************************************************/
 
-export class DATA extends CATALOG {
+export class SCHEMA extends CATALOG {
     /* Like CATALOG, but provides distinct value types for different predefined keys (fields) of a catalog.
        Primarily used as a data type for WebObject.data, not intended for other uses.
      */
@@ -153,8 +153,8 @@ export class DATA extends CATALOG {
     }
 }
 
-export class DATA_GENERIC extends DATA {
-    /* Generic DATA schema, used when there's no category for a web object. */
+export class DATA_GENERIC extends SCHEMA {
+    /* Generic SCHEMA, used when there's no category for a web object. */
     static props = {
         fields: {},
         strict: false,
@@ -165,7 +165,7 @@ export class DATA_GENERIC extends DATA {
 
 
 // export class DATA_SCHEMA extends TYPE {
-//     /* An (imputed) instance of DATA that represents schema of objects in a category, wrapped up in a DATA. */
+//     /* An (imputed) instance of SCHEMA that represents schema of objects in a category, wrapped up in a SCHEMA. */
 //
 //     static props = {
 //         editable: false,
@@ -174,7 +174,7 @@ export class DATA_GENERIC extends DATA {
 //             // assert(this instanceof Category)
 //             let fields = this.schema.object()
 //             let custom = this.allow_custom_fields
-//             return new DATA({fields, strict: custom !== true})
+//             return new SCHEMA({fields, strict: custom !== true})
 //         }
 //     }
 // }
@@ -402,7 +402,7 @@ export class CatalogTable extends Component {
         initKey: (pos, key, catalogSchema) => {
             /* Confirm creation of a new entry with a given key; assign an ID to it.
                Store an initial value of a key after new entry creation.
-               `catalogSchema` is a DATA schema of a parent catalog, for checking if `key` is valid or not.
+               `catalogSchema` is a SCHEMA of a parent catalog, for checking if `key` is valid or not.
              */
 
             let type = trycatch(() => catalogSchema.subtype(key))

@@ -187,7 +187,7 @@ export class WebObject {
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
                             that inherits (like from prototypes) from all __category$ listed in this object or inherited
 
-    __schema                schema of this item's data, as a DATA object
+    __schema                schema of this item's data, as a SCHEMA object
 
     __prototype             direct ancestor (prototype) of this object; there can be multiple __prototype$ for an object
     __ancestors             array of all ancestors, deduplicated and linearized, with `this` at the first position

@@ -10,7 +10,7 @@ import {assert, print, T} from "../common/utils.js";
 import {Catalog, Data} from "./data.js";
 
 import {WebObject} from "./object.js";
-import {DATA} from "../types/catalog.js";
+import {SCHEMA} from "../types/catalog.js";
 import {ReactPage, CategoryRecordView} from "../web/pages.js"
 import {JsonService} from "../web/services.js"
 import {mDataRecords} from "../web/messages.js"
@@ -25,14 +25,14 @@ export class Category extends WebObject {
 
     /***  Special properties:
       __child_class         imported JS class of objects in this category
-      __child_schema        schema of objects in this category, as a DATA instance; NOT the schema of self (.__schema)
+      __child_schema        schema of objects in this category, as a SCHEMA instance; NOT the schema of self (.__schema)
       __source              module source code of this category: all code snippets combined, including inherited ones
     */
 
     get __child_schema() {
         let fields = this.schema.object()
         let custom = this.allow_custom_fields
-        return new DATA({fields, strict: custom !== true})
+        return new SCHEMA({fields, strict: custom !== true})
     }
 
     get __child_class() { return schemat.import(this.class) }
@@ -199,7 +199,7 @@ export class RootCategory extends Category {
         let default_fields = this.__data.get('defaults').get('schema')
         let fields = new Catalog(root_fields, default_fields)
         let custom = this.__data.get('allow_custom_fields')
-        return new DATA({fields: fields.object(), strict: custom !== true})
+        return new SCHEMA({fields: fields.object(), strict: custom !== true})
     }
 }
 
