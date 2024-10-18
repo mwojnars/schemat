@@ -92,7 +92,7 @@ export class Type {
     __getstate__()      { return this.__props }
 
     __setstate__(state) {
-        assert(T.isDict(state))
+        assert(T.isPOJO(state))
         this.__props = state
         this._init_props()
         return this

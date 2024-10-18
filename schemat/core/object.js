@@ -151,12 +151,10 @@ class ItemProxy {
            which may improve performance on subsequent accesses to the property (no need to await it again and again).
          */
         cache[prop] = val instanceof Promise ? val.then(v => cache[prop] = v) : val
-        // cache.set(prop, val instanceof Promise ? val.then(v => cache.set(prop, v)) : val)
     }
     static _cache_values(cache, prop$, vals) {
         /* Like _cache_value(), but for caching an array of repeated values, some of them possibly being promises. */
         cache[prop$] = vals.some(v => v instanceof Promise) ? Promise.all(vals).then(vs => cache[prop$] = vs) : vals
-        // cache.set(prop$, vals.some(v => v instanceof Promise) ? Promise.all(vals).then(vs => cache.set(prop$, vs)) : vals)
     }
 }
 
@@ -330,7 +328,7 @@ export class WebObject {
         // only on the client this flag can be changed after object creation
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
 
-        if (!mutable) this.__meta.cache = Object.create(null) //new Map()
+        if (!mutable) this.__meta.cache = Object.create(null)
         if (mutable && !this.is_newborn()) this.__meta.edits = []
     }
 
@@ -758,7 +756,7 @@ export class WebObject {
            Subclasses may override this method to change this behavior and accept a different list of arguments.
            This method must be synchronous. Any async code should be placed in __init__() or __setup__().
          */
-        if (T.isDict(data) || data instanceof Catalog) this.__data.updateAll(data)
+        if (T.isPOJO(data) || data instanceof Catalog) this.__data.updateAll(data)
     }
 
     __init__() {}

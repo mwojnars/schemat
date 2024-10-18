@@ -83,7 +83,7 @@ export class JSONx {
         if (T.isPrimitive(obj))  return obj
         if (T.isArray(obj))      return this.encode_array(obj)
 
-        if (T.isDict(obj)) {
+        if (T.isPOJO(obj)) {
             obj = this.encode_object(obj)
             if (!(JSONx.ATTR_CLASS in obj)) return obj
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
@@ -111,7 +111,7 @@ export class JSONx {
         }
 
         // wrap up the state in a dict, if needed, and append class designator
-        if (!T.isDict(state))
+        if (!T.isPOJO(state))
             state = {[JSONx.ATTR_STATE]: state}
 
         let t = T.getPrototype(obj)
@@ -128,24 +128,24 @@ export class JSONx {
                  object after this call may indirectly change the result (!).
         */
         let _state = state
-        let isdict = T.isDict(state)
+        let pojo = T.isPOJO(state)      // JS object without class
         let cls
 
         // decoding of a wrapped-up object that contained a pre-existing '@' key
-        if (isdict && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_WRAP)) {
+        if (pojo && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_WRAP)) {
             if (JSONx.ATTR_STATE in state)
                 state = state[JSONx.ATTR_STATE]
             return this.decode_object(state)
         }
 
         // decoding of a class object
-        if (isdict && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_TYPE)) {
+        if (pojo && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_TYPE)) {
             let classname = state[JSONx.ATTR_STATE]
             return schemat.get_builtin(classname)
         }
 
         // determine the expected class (constructor function) for the output object
-        if (!isdict)                                // `state` encodes a primitive value, or a list, or null;
+        if (!pojo)                                  // `state` encodes a primitive value, or a list, or null;
             cls = T.getClass(state)                 // cls=null denotes a class of null value
 
         else if (JSONx.ATTR_CLASS in state) {

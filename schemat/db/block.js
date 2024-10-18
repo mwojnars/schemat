@@ -400,7 +400,7 @@ export class YamlDataStorage extends MemoryStorage {
         let recs = [...this.scan()].map(([key, data_json]) => {
             let __id = data_schema.decode_key(key)[0]
             let data = JSON.parse(data_json)
-            return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
+            return T.isPOJO(data) ? {__id, ...data} : {__id, __data: data}
         })
         let out = this._mod_yaml.stringify(recs)
         this._mod_fs.writeFileSync(this.filename, out, 'utf8')

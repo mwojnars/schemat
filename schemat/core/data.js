@@ -105,7 +105,7 @@ export class Catalog {
          */
         entries = entries.map(ent =>
                         (ent instanceof Catalog) ? ent._entries
-                        : T.isDict(ent) ? Object.entries(ent).map(([key, value]) => ({key, value}))
+                        : T.isPOJO(ent) ? Object.entries(ent).map(([key, value]) => ({key, value}))
                         : T.isArray(ent) ? {key: ent[0], value: ent[1]}
                         : ent
                     )
@@ -156,7 +156,7 @@ export class Catalog {
     hasUniqueKeys()     { return this._keys.size === this.length }
     hasStringKeys()     { return this._entries.filter(e => typeof e.key !== 'string').length === 0 }
     hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
-    isDict()            { return this.hasUniqueKeys() && this.hasStringKeys() && !this.hasAnnot() }
+    // isDict()         { return this.hasUniqueKeys() && this.hasStringKeys() && !this.hasAnnot() }
 
     object() {
         /* Return an object containing {key: value} pairs of all the entries. For repeated keys, only the first value is included. */
@@ -288,7 +288,7 @@ export class Catalog {
 
             if (subcat instanceof Map)              // last step inside a Map
                 subcat.set(key, value)
-            else if (T.isDict(subcat) || (T.isArray(subcat) && T.isNumber(key)))
+            else if (T.isPOJO(subcat) || (T.isArray(subcat) && T.isNumber(key)))
                 subcat[key] = value                 // last step inside a plain object or array
             else
                 throw new Error(`can't write an entry at '${path}' inside a non-catalog object, ${subcat}`)
