@@ -243,15 +243,15 @@ export class Types {
     static isPrimitive      = (obj) => ["number", "string", "boolean"].includes(typeof obj) || obj === null
     static isPrimitiveClass = (cls) => [Number, String, Boolean, null].includes(cls)
     static isString       = (obj) => (typeof obj === 'string')
-    static isNumber       = (obj) => (typeof obj === 'number' && !isNaN(obj))                 // test if obj is a valid number, not NaN
+    static isNumber       = (obj) => (typeof obj === 'number' && !isNaN(obj))                 // true if obj is a valid number, not NaN
     static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
-    static isPOJO         = (obj) => (obj && !obj?.__proto__?.__proto__)                      // test if obj is a plain object (POJO), no class assigned; the only __proto__ in chain is Object.prototype
-    // static isPOJO         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype) // test if obj is a plain object (POJO), no class assigned
-    static ofType         = (x, T) => (x && T && Object.getPrototypeOf(x) === T.prototype)    // test if x is an object of class T exactly (NOT of a subclass)
-    static isFunction     = (f) => (f instanceof Function)                                    // test if f is a function; accepts class constructors, too (!)
-    static isClass        = (C) => (typeof C === "function" && C.prototype !== undefined)     // test if C is a class (a constructor function with .prototype); false for arrays
-    static isSubclass     = (C, B) => (C === B || C.prototype instanceof B)             // test if C is subclass of B, including C===B
-    static isMissing      = (obj) => (obj === null || obj === undefined)                // test if obj is null or undefined (two cases of "missingness")
+    static isPOJO         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype) // true if obj is a plain object (POJO), no class assigned; the only __proto__ in chain is Object.prototype
+    static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === null)             // true if obj is a null-prototype
+    static ofType         = (x, T) => (x && T && Object.getPrototypeOf(x) === T.prototype)    // true if x is an object of class T exactly (NOT of a subclass)
+    static isFunction     = (f) => (f instanceof Function)                                    // true if f is a function; accepts class constructors, too (!)
+    static isClass        = (C) => (typeof C === "function" && C.prototype !== undefined)     // true if C is a class (a constructor function with .prototype); false for arrays
+    static isSubclass     = (C, B) => (C === B || C.prototype instanceof B)                   // true if C is subclass of B, including C===B
+    static isMissing      = (obj) => (obj === null || obj === undefined)                      // true if obj is null or undefined (two cases of "missingness")
     static isEmpty        = (obj) => (!obj || Object.keys(obj).length === 0)
     static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
     static isPromise      = (obj) => (obj instanceof Promise)
