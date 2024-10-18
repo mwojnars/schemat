@@ -12,7 +12,7 @@ import {NotLinked, NotLoaded, ValidationError} from '../common/errors.js'
 import {JSONx} from "./jsonx.js"
 import {Catalog, Data} from './data.js'
 import {REF} from "../types/type.js"
-import {DATA_GENERIC} from "../types/catalog.js"
+import {SCHEMA_GENERIC} from "../types/catalog.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {Request} from "../web/request.js"
@@ -221,7 +221,7 @@ export class WebObject {
     }
 
     get __schema() {
-        return this.__category?.__child_schema || new DATA_GENERIC()
+        return this.__category?.__child_schema || new SCHEMA_GENERIC()
     }
 
     get __proto_versions() { return this.__prototype$.map(proto => proto.__ver || 0) }      // DRAFT

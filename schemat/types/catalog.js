@@ -118,7 +118,7 @@ export class CATALOG extends Type {
 
 export class SCHEMA extends CATALOG {
     /* Like CATALOG, but provides distinct value types for different predefined keys (fields) of a catalog.
-       Primarily used as a data type for WebObject.data, not intended for other uses.
+       Primarily used as a value type for WebObject.__data, not intended for other uses.
      */
 
     static props = {
@@ -153,7 +153,7 @@ export class SCHEMA extends CATALOG {
     }
 }
 
-export class DATA_GENERIC extends SCHEMA {
+export class SCHEMA_GENERIC extends SCHEMA {
     /* Generic SCHEMA, used when there's no category for a web object. */
     static props = {
         fields: {},
