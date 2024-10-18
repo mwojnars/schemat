@@ -123,43 +123,6 @@ export class Directory extends Container {
         return null
     }
 
-    // async resolve(path, explicit_blank = false) {
-    //     /* If `explicit_blank` is true, the path is an internal "container path" that includes explicit blank segment(s)
-    //        (a/*BLANK/b/c); otherwise, the path is a "URL path" with blank segments hidden (a/b/c).
-    //      */
-    //     if (path[0] === '/') path = path.slice(1)           // drop the leading slash
-    //     if (!path) return this
-    //     let step = path.split('/')[0]
-    //     let rest = path.slice(step.length + 1)
-    //
-    //     for (let [name, node] of this.entries || []) {
-    //
-    //         assert(name, "route name must be non-empty; use *NAME for a blank route to be excluded in public URLs")
-    //         let blank = (name[0] === '*')
-    //
-    //         // blank route? only consume the `step` and truncate the request path if explicit_blank=true;
-    //         // step into the nested Container only if it potentially contains the `step`
-    //         if (blank) {
-    //             if (!node.is_loaded()) await node.load()
-    //             assert(node._is_container, "blank route can only point to a Container (Directory, Namespace)")
-    //             if (explicit_blank) return rest ? node.resolve(rest, explicit_blank) : node
-    //
-    //             let target = node.resolve(path, explicit_blank)
-    //             if (T.isPromise(target)) target = await target
-    //             if (target) return target           // target=null means the object was not found and the next route should be tried
-    //         }
-    //         else if (name === step) {
-    //             if (!node.is_loaded()) await node.load()
-    //             // print('import.meta.url:', import.meta.url)
-    //             // print(`resolve():  ${name}  (rest: ${rest})  (${node instanceof Container})`)
-    //             if (node._is_container && rest) return node.resolve(rest, explicit_blank)
-    //             else if (rest) return null
-    //             else return node
-    //         }
-    //     }
-    //     return null
-    // }
-
     identify(item) {
         assert(item.__id)
         return this._entries_rev.get(item.__id)
