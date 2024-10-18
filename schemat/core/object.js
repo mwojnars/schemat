@@ -293,7 +293,7 @@ export class WebObject {
 
     /***  Object status  ***/
 
-    is_newborn()    { return this.__id === undefined }              // object is "newborn" when it hasn't been written to DB yet and has no ID assigned; "newborn" = "unlinked"
+    is_newborn()    { return !this.__id }       // object is "newborn" when it hasn't been written to DB yet and has no ID assigned
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     is_category()   { return false }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
@@ -320,7 +320,7 @@ export class WebObject {
          */
         if(_fail) throw new Error('web object must be instantiated through CLASS.new() instead of new CLASS()')
 
-        if (id !== undefined && id !== null) this.__id = id
+        if (id) this.__id = id
 
         this.__self = this              // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
 
