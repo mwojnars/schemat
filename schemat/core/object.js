@@ -1054,8 +1054,7 @@ export class WebObject {
     CALL__self()            { return this }
     // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: WebObject.CALL/self'); return this })
 
-    // GET__record(request)    { return new ReactPage(ItemRecordView).server(this, request) }
-    // GET__record()     { return react_page(ItemRecordView) }
+    // GET__inspect()     { return react_page(ItemRecordView) }
     static ['GET/inspect'] = new ReactPage(ItemRecordView)
 
 

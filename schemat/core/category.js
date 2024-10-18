@@ -170,6 +170,9 @@ export class Category extends WebObject {
 
     static ['GET/inspect'] = new ReactPage(CategoryRecordView)
 
+    // static cRPC_list_objects = .....
+    // static RPC_list_objects = .....
+
     static ['POST/list_objects'] = new JsonService({
         // create a new object with __data initialized from the provided JSONx-stringified representation
         server: function(request, offset, limit) { return this.list_objects({load: true, offset, limit}) },

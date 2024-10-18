@@ -34,10 +34,14 @@ export class Service {
                         // where PROTOCOL is one of GET/POST/CALL/..., and the name is a service name etc.
 
     opts = {
+        type:  'POST',
+        input:  null,
+        output: null,
         server: null,   // a function, f(request, ...args), to be called on the server when the protocol is invoked;
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                         // like a method of the "target"; `request` is a Request, or {} if called directly on the server
         accept: null,   // client-side postprocessing function, f(result), called after the result is decoded from web response
+        error:  null,
         // answer
         // reject
         // regret
