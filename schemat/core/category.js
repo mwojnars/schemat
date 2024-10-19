@@ -59,7 +59,8 @@ export class Category extends WebObject {
     }
 
     async list_objects(opts = {}) {
-        /* Return an array of all objects in this category, possibly truncated or re-ordered according to `opts`. */
+        /* NOT ISOMORPHIC. Return an array of all objects in this category, possibly truncated or re-ordered according to `opts`. */
+        assert(SERVER)
         return schemat.list_category(this, opts)
     }
 

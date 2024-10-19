@@ -317,7 +317,9 @@ export class Schemat {
         /* Return an array of objects found in a given category, or all objects if no category is specified.
            `category_or_id` should be a Category object (not necessarily loaded), or an ID. `opts` are the same as for
            `scan_category` and may include, among others: `load`, `limit`, `offset`, `reverse`.
+           NOT ISOMORPHIC. This method loads each object one by one. For this reason, it should only be used on server.
          */
+        assert(SERVER)
         let _opts = {...opts, load: false}              // it is better to load objects *after* scan, concurrently
         let objects = []
         for await (const obj of this.scan_category(category_or_id, _opts))
