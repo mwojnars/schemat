@@ -60,8 +60,8 @@ export class Category extends WebObject {
 
     async list_objects(opts = {}) {
         /* NOT ISOMORPHIC. Return an array of all objects in this category, possibly truncated or re-ordered according to `opts`. */
-        assert(SERVER)
-        return schemat.list_category(this, opts)
+        return this.POST.list_objects(opts)
+        // return schemat.list_category(this, opts)
     }
 
     _get_handler(endpoint) {
@@ -176,7 +176,7 @@ export class Category extends WebObject {
 
     static 'POST/list_objects' = new JsonService({
         // create a new object with __data initialized from the provided JSONx-stringified representation
-        server: function(request, offset, limit) { return this.list_objects({load: true, offset, limit}) },
+        server: function(request, opts) { return schemat.list_category(this, {load: true, ...opts}) },
         output: mDataRecords,
         accept: (records) => {
             // replace records with fully-loaded objects; there's NO guarantee that a given object was actually built from
