@@ -165,6 +165,14 @@ export class Site extends WebObject {
 
     /***  Endpoints  ***/
 
+    POST_create_object() {
+        return new JsonService({
+            server: (request, data_json) => { return this.database.insert(data_json) },
+            input:  mDataString,
+            output: mDataRecord,
+        })
+    }
+
     static ['POST/create_object'] = new JsonService({
         // create a new object with __data initialized from the provided JSONx-stringified representation
         server: function(request, data_json) { return this.database.insert(data_json) },

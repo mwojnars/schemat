@@ -202,8 +202,6 @@ export class WebObject {
     __url                   absolute URL path of this object, calculated via type imputation in _impute_url()
     __assets                cached web Assets of this object's __schema
 
-    __services              instance-level dictionary {...} of all Services; initialized once for the entire class and stored in the prototype (!), see _create_services()
-
     */
 
     set __id(id) {
@@ -273,6 +271,7 @@ export class WebObject {
 
 
     static _cachable_getters        // a Set of names of getters of the WebObject class or its subclass - for caching in ItemProxy
+    // static __services               // instance-level dictionary {...} of all Services; initialized once for the entire class and stored in the prototype (!), see _create_services()
 
     static _collect_cachable_getters() {
         /* Find all getter functions in the current class, combine with parent's set of getters and store in _cachable_getters. */
@@ -824,7 +823,7 @@ export class WebObject {
 
         // otherwise, use category defaults, OR global defaults (for no-category objects)
         let glob_defaults = {GET: ['view', 'admin', 'inspect'], CALL: ['self']}
-        let catg_defaults = this.__category?.default_endpoints.getAll(protocol)
+        let catg_defaults = this.__base?.default_endpoints.getAll(protocol)
         let defaults = catg_defaults || glob_defaults[protocol]
         if (defaults.length) return defaults
 
@@ -968,6 +967,7 @@ export class WebObject {
 
         if (this.is_newborn())
             return schemat.site.service.create_object(this.__data).then(({id}) => (this.__id = id))
+            // return schemat.site.create_object.send(this.__data).then(({id}) => (this.__id = id))
 
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
 
@@ -1038,11 +1038,14 @@ export class WebObject {
     /***  Endpoints  ***/
 
     // When endpoint functions (below) are called, `this` is always bound to the WebObject instance, so they execute
-    // in the context of their item like if they were regular methods of the WebObject (sub)class.
+    // in the context of their target object like if they were regular methods of the WebObject (sub)class.
     // The first argument, `request`, is a Request instance, followed by action-specific list of arguments.
     // In a special case when an action is called directly on the server through _triggers_.XXX(), `request` is null,
     // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
 
+
+    // static category_endpoints = ['...']
+    // static object_endpoints = ['view', 'admin', 'inspect', 'json', 'test_txt', 'test_fun', '...']
 
     GET__test_txt()         { return "TEST txt ..." }                   // works
     GET__test_fun()         { return () => "TEST function ..." }        // works
@@ -1054,7 +1057,15 @@ export class WebObject {
     CALL__self()            { return this }
     // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: WebObject.CALL/self'); return this })
 
-    // GET__inspect()     { return react_page(ItemRecordView) }
+    // inspect()         { return new ReactPage(ItemRecordView) }
+    // inspect()         { return react_page(ItemRecordView) }
+    // inspect()         { return ItemRecordView.page(this) }
+    // inspect()         { return ItemRecordView.page }
+
+    // GET_inspect()     { return react_page(this, ItemRecordView) }
+    // GET_inspect()     { return new ReactPage(this, ItemRecordView) }
+    // static PAGE_inspect = new ReactPage(ItemRecordView)
+
     static ['GET/inspect'] = new ReactPage(ItemRecordView)
 
 
