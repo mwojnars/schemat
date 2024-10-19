@@ -82,19 +82,11 @@ export class Schemat {
        loading and caching of web objects, dynamic module import, classpath management, session management etc.
      */
 
-    _db                         // client-side or bootstrap DB; regular server-side DB is taken from site.database
     site_id                     // ID of the active Site object
-
     registry                    // cache of web objects, records and indexes loaded from DB
     builtin                     // a Classpath containing built-in classes and their paths
-
     is_closing = false          // true if the Schemat node is in the process of shutting down
 
-
-    get db() {
-        /* The site's database instance, either a Database (on server) or a ClientDB (on client) */
-        return (SERVER && this.site?.database) || this._db
-    }
 
     get site()      { return this.registry.get_object(this.site_id) }
 
@@ -225,10 +217,7 @@ export class Schemat {
         return data
     }
 
-    _select(id) {
-        let req = new DataRequest(null, 'load', {id})
-        return this.db.select(req)
-    }
+    _select(id)     { throw new Error(`not implemented`) }
 
     async get_version(id, ver) {
         /* Restore a previous version, `ver`, of a given object, or take it from the registry if present. The object returned is fully loaded. */

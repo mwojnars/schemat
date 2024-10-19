@@ -5,6 +5,7 @@ import fs from 'node:fs'
 import {assert, print, T} from '../common/utils.js'
 import {Schemat} from './schemat.js'
 import {RequestContext} from "../web/request.js";
+import {DataRequest} from "../db/data_request.js";
 
 
 /**********************************************************************************************************************
@@ -17,6 +18,14 @@ export class ServerSchemat extends Schemat {
 
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
+
+    _db                         // bootstrap DB; regular server-side DB is taken from site.database
+
+    get db() {
+        /* The site's database instance, either a Database (on server) or a ClientDB (on client) */
+        return (SERVER && this.site?.database) || this._db
+    }
+
 
     constructor() {
         super()
@@ -49,6 +58,11 @@ export class ServerSchemat extends Schemat {
 
     init_client(id_context) {
         return `import {Client} from "/$/local/schemat/web/client.js"; await new Client().boot_from("#${id_context}");`
+    }
+
+    _select(id) {
+        let req = new DataRequest(null, 'load', {id})
+        return this.db.select(req)
     }
 
 
