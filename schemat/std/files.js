@@ -55,7 +55,7 @@ export class File extends WebObject {
         return this.process(this._content())
     }
 
-    // async CALL_import({request}) {
+    // async LOCAL_import({request}) {
     //     /* Parse the file as a JS module. Return the module, or a selected symbol if request.path is non-empty.
     //        A function for parsing module's source code, parse(source), must be passed in `args` by the caller,
     //        as well as a function for reloading the module from cache without parsing, loadCached(route).
@@ -69,10 +69,10 @@ export class File extends WebObject {
     //     return module[symbol]
     // }
     //
-    // static 'CALL/text' = new InternalService(function (request)
+    // static 'LOCAL/text' = new InternalService(function (request)
     // {
     //     /* Plain text of this File for Site.import() etc. */
-    //     assert(false, 'NOT USED: File.CALL/text')
+    //     assert(false, 'NOT USED: File.LOCAL/text')
     //     let txt = this.content_processed
     //     if (txt === undefined) request.throwNotFound()
     //     return txt
@@ -163,9 +163,9 @@ export class LocalDirectory extends Directory {
         let buffer = this._mod_fs.readFileSync(path)
         buffer = await this._apply_transforms(transforms, buffer, path)
 
-        // TODO: the code below implements CALL requests and should return a buffer instead (no utf-8 decoding) to support all files incl. binary
+        // TODO: the code below implements LOCAL requests and should return a buffer instead (no utf-8 decoding) to support all files incl. binary
         if (!res) {
-            assert(false, `LocalDirectory._read_file(): CALL request received for '${path}', returning file content as a string not binary`)
+            assert(false, `LocalDirectory._read_file(): LOCAL request received for '${path}', returning file content as a string not binary`)
             return this._mod_fs.readFileSync(path, {encoding: 'utf8'})
         }
 

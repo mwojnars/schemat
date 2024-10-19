@@ -241,7 +241,7 @@ export class WebObject {
     }
 
     service         // isomorphic service triggers created for this object from its class's __services; called as this.service.xxx(args) or this.service.xxx.TYPE(args),
-                    // where TYPE is GET/POST/CALL/... - works both on the client and server (in the latter case, the call executes server function directly without network communication)
+                    // where TYPE is GET/POST/LOCAL/... - works both on the client and server (in the latter case, the call executes server function directly without network communication)
 
 
     // static compare(obj1, obj2) {
@@ -556,7 +556,7 @@ export class WebObject {
     }
 
 
-    static _collect_handlers(protocols = ['GET', 'POST', 'CALL'], SEP = '_') {
+    static _collect_handlers(protocols = ['GET', 'POST', 'LOCAL'], SEP = '_') {
         /* Collect all web handlers of this class, so that service triggers can be generated for every new object. */
         let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
         let proto = this.prototype
@@ -835,7 +835,7 @@ export class WebObject {
         if (endpoints.length) return endpoints
 
         // otherwise, use category defaults, OR global defaults (for no-category objects)
-        let glob_defaults = {GET: ['view', 'admin', 'inspect'], CALL: ['self']}
+        let glob_defaults = {GET: ['view', 'admin', 'inspect'], LOCAL: ['self']}
         let catg_defaults = this.__base?.default_endpoints.getAll(protocol)
         let defaults = catg_defaults || glob_defaults[protocol]
         if (defaults.length) return defaults
@@ -1070,8 +1070,8 @@ export class WebObject {
 
     GET_json({res})        { res.json(this.self_encode()) }
 
-    CALL_self()            { return this }
-    // static 'CALL/self' = new InternalService(function() { assert(false, 'NOT USED: WebObject.CALL/self'); return this })
+    LOCAL_self()           { return this }
+    // static 'LOCAL/self' = new InternalService(function() { assert(false, 'NOT USED: WebObject.LOCAL/self'); return this })
 
     // inspect()         { return new ReactPage(ItemRecordView) }
     // inspect()         { return react_page(ItemRecordView) }

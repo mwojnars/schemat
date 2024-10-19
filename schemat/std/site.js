@@ -137,7 +137,7 @@ export class Site extends WebObject {
     // }
 
     async route_local(path) {
-        /* URL-call to a CALL/* endpoint of an object identified by a URL `path`.
+        /* URL-call to a LOCAL/* endpoint of an object identified by a URL `path`.
            The path should contain an endpoint name, otherwise the default endpoint is used.
          */
         return this.route(new Request({path}))

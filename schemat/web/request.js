@@ -15,7 +15,7 @@ export class Request {   // Connection ?
     req             // instance of node.js express' Request
     res             // instance of node.js express' Response
 
-    protocol        // endpoint type: CALL, GET, POST, (SOCK in the future)
+    protocol        // endpoint type: LOCAL, GET, POST, (SOCK in the future)
     path            // URL path with trailing ::endpoint name removed
 
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
@@ -30,7 +30,7 @@ export class Request {   // Connection ?
         this.res = res
 
         this.protocol =
-            !this.req                   ? "CALL" :          // CALL = internal call through Site.route_local()
+            !this.req                   ? "LOCAL" :         // LOCAL = internal call through Site.route_local()
             this.req.method === 'GET'   ? "GET"  :          // GET  = read access through HTTP GET
                                           "POST"            // POST = write access through HTTP POST
 

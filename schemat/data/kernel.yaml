@@ -60,7 +60,7 @@
         GET: view
         GET/2: admin
         GET/3: inspect
-        CALL: self
+        LOCAL: self
         "@": schemat:Catalog
       "@": schemat/types/catalog.js:CATALOG
     schema:

@@ -31,7 +31,7 @@ export class Service {
      */
 
     endpoint            // the target object's endpoint where this service is exposed; a string of the form "PROTOCOL/name",
-                        // where PROTOCOL is one of GET/POST/CALL/..., and the name is a service name etc.
+                        // where PROTOCOL is one of GET/POST/LOCAL/..., and the name is a service name etc.
 
     opts = {
         type:  'POST',
@@ -56,7 +56,7 @@ export class Service {
     static error
 
 
-    get endpoint_type()   { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
+    get endpoint_type()   { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/LOCAL/...
     get endpoint_name()   { return this._splitEndpoint()[1] }       // name of the endpoint (function/action to execute)
 
     constructor(opts = {}) {
@@ -203,13 +203,6 @@ export class JsonService extends HttpService {
 
 
 /**********************************************************************************************************************/
-
-// export class InternalService extends Service {
-//     /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
-//        defined as SUN routing paths but executed server-side exclusively.
-//      */
-//     handle(target, request)  { return this.server(target, request) }
-// }
 
 // export class Network {
 //     /*
