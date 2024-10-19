@@ -595,7 +595,7 @@ export class WebObject {
         for (let [endpoint, service] of Object.entries(this.__services)) {
             let [type, name] = endpoint.split('/')
             if (triggers[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
-            triggers[name] = service.trigger(this)  // service.xxx(...)
+            triggers[name] = service.invoke(this)   // service.xxx(...)
             // trigger[type] = trigger              // service.xxx.POST(...)
         }
     }

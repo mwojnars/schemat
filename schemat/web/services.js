@@ -108,9 +108,9 @@ export class Service {
         return server.call(target, request, ...args)
     }
 
-    trigger(target, ...args) {
+    invoke(target, ...args) {
         /* Isomorphic method that returns a "trigger" function that invokes this service no matter if it is on a client
-           (with network communication via this.client()) or a server (no communication, .server() called directly).
+           (with network communication via this.client()) or a server (no communication, .server() is called directly).
          */
         return SERVER
             ? (...args) => this.server(target, null, ...args)          // may return a Promise
