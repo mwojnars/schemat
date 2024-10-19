@@ -16,7 +16,7 @@ import {SCHEMA_GENERIC} from "../types/catalog.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {Request} from "../web/request.js"
-import {ReactPage, ItemRecordView} from "../web/pages.js"
+import {ReactPage, ItemInspectView} from "../web/pages.js"
 
 const ROOT_ID = 1
 let RootCategory
@@ -1076,16 +1076,16 @@ export class WebObject {
     LOCAL_self()           { return this }
     // static 'LOCAL/self' = new InternalService(function() { assert(false, 'NOT USED: WebObject.LOCAL/self'); return this })
 
-    // inspect()         { return new ReactPage(ItemRecordView) }
-    // inspect()         { return react_page(ItemRecordView) }
-    // inspect()         { return ItemRecordView.page(this) }
-    // inspect()         { return ItemRecordView.page }
+    // inspect()         { return new ReactPage(ItemInspectView) }
+    // inspect()         { return react_page(ItemInspectView) }
+    // inspect()         { return ItemInspectView.page(this) }
+    // inspect()         { return ItemInspectView.page }
 
-    // GET_inspect()     { return react_page(this, ItemRecordView) }
-    // GET_inspect()     { return new ReactPage(this, ItemRecordView) }
-    // static PAGE_inspect = new ReactPage(ItemRecordView)
+    // GET_inspect()     { return react_page(this, ItemInspectView) }
+    // GET_inspect()     { return new ReactPage(this, ItemInspectView) }
+    // static PAGE_inspect = new ReactPage(ItemInspectView)
 
-    static 'GET/inspect' = new ReactPage(ItemRecordView)
+    static 'GET/inspect' = new ReactPage(ItemInspectView)
 
 
 

@@ -220,7 +220,7 @@ export class ReactPage extends RenderedPage {
 
 /**********************************************************************************************************************/
 
-export class ItemRecordView extends ReactPage.View {
+export class ItemInspectView extends ReactPage.View {
     /* System-level view that displays raw properties of a web object. */
 
     html_title() {
@@ -281,7 +281,7 @@ export class ItemRecordView extends ReactPage.View {
 
 /**********************************************************************************************************************/
 
-export class CategoryRecordView extends ItemRecordView {
+export class CategoryInspectView extends ItemInspectView {
     /* System-level view that displays raw properties of a Category object and a list of its children (members of the category). */
 
     async prepare(side) {

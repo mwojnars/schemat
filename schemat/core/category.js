@@ -11,7 +11,7 @@ import {Catalog, Data} from "./data.js";
 
 import {WebObject} from "./object.js";
 import {SCHEMA} from "../types/catalog.js";
-import {ReactPage, CategoryRecordView} from "../web/pages.js"
+import {ReactPage, CategoryInspectView} from "../web/pages.js"
 import {JsonService} from "../web/services.js"
 import {mDataRecords} from "../web/messages.js"
 
@@ -168,7 +168,7 @@ export class Category extends WebObject {
 
     /***  Endpoints  ***/
 
-    static 'GET/inspect' = new ReactPage(CategoryRecordView)
+    static 'GET/inspect' = new ReactPage(CategoryInspectView)
 
     // static cRPC_list_objects = .....
     // static RPC_list_objects = .....
