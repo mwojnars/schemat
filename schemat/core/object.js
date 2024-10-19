@@ -794,7 +794,7 @@ export class WebObject {
 
         // find the first endpoint that matches this request and launch its handler
         for (let endpoint of endpoints) {
-            let service = this._get_handler(endpoint.replace('/','__'))
+            let service = this._get_handler(endpoint.replace('/','_'))
             service ??= this.__services[endpoint]
             if (!service) continue
 
@@ -1047,14 +1047,14 @@ export class WebObject {
     // static category_endpoints = ['...']
     // static object_endpoints = ['view', 'admin', 'inspect', 'json', 'test_txt', 'test_fun', '...']
 
-    GET__test_txt()         { return "TEST txt ..." }                   // works
-    GET__test_fun()         { return () => "TEST function ..." }        // works
-    GET__test_res({res})    { res.send("TEST res.send() ...") }         // works
-    GET__test_html()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
+    GET_test_txt()         { return "TEST txt ..." }                   // works
+    GET_test_fun()         { return () => "TEST function ..." }        // works
+    GET_test_res({res})    { res.send("TEST res.send() ...") }         // works
+    GET_test_html()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
 
-    GET__json({res})        { res.json(this.self_encode()) }
+    GET_json({res})        { res.json(this.self_encode()) }
 
-    CALL__self()            { return this }
+    CALL_self()            { return this }
     // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: WebObject.CALL/self'); return this })
 
     // inspect()         { return new ReactPage(ItemRecordView) }

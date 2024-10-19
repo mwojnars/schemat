@@ -3,7 +3,7 @@ import {html_page} from "../../../schemat/web/adapters.js"
 
 export class Author extends schemat.WebObject {
 
-    static async GET__view() {
+    static async GET_view() {
         // BookCategory below is a global object: declared in [site.global] in DB and loaded automatically during site initialization
         let authors = await this.list_objects({load: true})
         let books = await BookCategory.list_objects({load: true})

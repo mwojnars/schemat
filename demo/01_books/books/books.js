@@ -21,7 +21,7 @@ export class Book extends schemat.WebObject {
     //     if(this.is_loaded) return this.title
     // }
 
-    static async GET__view() {
+    static async GET_view() {
         let books = await this.list_objects({load: true})
 
         for (let book of books)
@@ -31,7 +31,7 @@ export class Book extends schemat.WebObject {
         return html_page(path, {books, title: "List of Books"})  //{async: true}
     }
 
-    async GET__view() {
+    async GET_view() {
         for (let author of this.author$) await author.load()
         let path = import.meta.resolve('./book.ejs')
         return html_page(path, {book: this, authors: []})
