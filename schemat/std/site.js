@@ -123,7 +123,7 @@ export class Site extends WebObject {
             path = normalizePath(referrer.__url + '/' + path)
 
         assert(path[0] === '/')
-        return this.route_internal(path)
+        return this.route_local(path)
     }
 
 
@@ -136,8 +136,8 @@ export class Site extends WebObject {
     //     return this.route_internal(path)
     // }
 
-    async route_internal(path) {
-        /* Internal URL-call to a CALL/* endpoint of an object identified by a URL `path`.
+    async route_local(path) {
+        /* URL-call to a CALL/* endpoint of an object identified by a URL `path`.
            The path should contain an endpoint name, otherwise the default endpoint is used.
          */
         return this.route(new Request({path}))
