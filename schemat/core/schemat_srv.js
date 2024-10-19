@@ -52,6 +52,50 @@ export class ServerSchemat extends Schemat {
     }
 
 
+    /***  Indexes  ***/
+
+    async *scan_category(category_or_id = null, {load=false, ...opts} = {}) {
+        /* Generate a stream of objects found in a given category, or all objects if no first argument is given.
+           `category_or_id` should be a Category object (not necessarily loaded), or an ID.
+         */
+        let full_scan = (category_or_id === null)
+        let target = (typeof category_or_id === 'number') ? category_or_id : category_or_id?.__id       // ID of the target category, or undefined (all categories)
+        let start = !full_scan && [target]                                              // [target] is a 1-element record compatible with the index schema
+        let stop  = !full_scan && [target + 1]
+        let records = this.db.scan_index('idx_category_item', {start, stop, ...opts})   // stream of plain Records
+
+        for await (const record of records) {
+            let {cid, id} = record.object_key
+            assert(full_scan || target === cid)
+            yield load ? this.get_loaded(id) : this.get_object(id)
+        }
+    }
+
+    async list_category(category_or_id = null, opts = {}) {
+        /* Return an array of objects found in a given category, or all objects if no category is specified.
+           `category_or_id` should be a Category object (not necessarily loaded), or an ID. `opts` are the same as for
+           `scan_category` and may include, among others: `load`, `limit`, `offset`, `reverse`.
+           NOT ISOMORPHIC. This method loads each object one by one. For this reason, it should only be used on server.
+         */
+        let _opts = {...opts, load: false}              // it is better to load objects *after* scan, concurrently
+        let objects = []
+        for await (const obj of this.scan_category(category_or_id, _opts))
+            objects.push(obj)
+        return opts.load ? Promise.all(objects.map(obj => obj.load())) : objects
+    }
+
+    // async *_scan_all({limit} = {}) {
+    //     /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
+    //     let count = 0
+    //     for await (const record of this.db.scan_all()) {                            // stream of ItemRecords
+    //         if (limit !== undefined && count++ >= limit) break
+    //         let item = await WebObject.from_record(record)
+    //         yield this.registry.set_object(item)
+    //     }
+    // }
+
+
+
     // async _reset_class(ServerSchemat) {
     //     /* Re-import the class of this Schemat object using dynamic imports from the SUN path; in this way,
     //        all other imports in the dependant modules will be interpreted as SUN imports, as well.
