@@ -159,7 +159,7 @@ export class Category extends WebObject {
     //         throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
     // }
     //
-    // static ['GET/import'] = new HttpService(function (request) {
+    // static 'GET/import' = new HttpService(function (request) {
     //     /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
     //     this._checkPath(request)
     //     request.res.type('js')
@@ -168,12 +168,12 @@ export class Category extends WebObject {
 
     /***  Endpoints  ***/
 
-    static ['GET/inspect'] = new ReactPage(CategoryRecordView)
+    static 'GET/inspect' = new ReactPage(CategoryRecordView)
 
     // static cRPC_list_objects = .....
     // static RPC_list_objects = .....
 
-    static ['POST/list_objects'] = new JsonService({
+    static 'POST/list_objects' = new JsonService({
         // create a new object with __data initialized from the provided JSONx-stringified representation
         server: function(request, offset, limit) { return this.list_objects({load: true, offset, limit}) },
         output: mDataRecords,

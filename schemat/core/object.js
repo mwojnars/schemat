@@ -202,6 +202,8 @@ export class WebObject {
     __url                   absolute URL path of this object, calculated via type imputation in _impute_url()
     __assets                cached web Assets of this object's __schema
 
+    __services              instance-level dictionary {...} of all Services; initialized once for the entire class and stored in the prototype (!), see _create_services()
+
     */
 
     set __id(id) {
@@ -271,7 +273,6 @@ export class WebObject {
 
 
     static _cachable_getters        // a Set of names of getters of the WebObject class or its subclass - for caching in ItemProxy
-    // static __services               // instance-level dictionary {...} of all Services; initialized once for the entire class and stored in the prototype (!), see _create_services()
 
     static _collect_cachable_getters() {
         /* Find all getter functions in the current class, combine with parent's set of getters and store in _cachable_getters. */
@@ -554,6 +555,15 @@ export class WebObject {
         return schemat.site.default_path_of(this)
     }
 
+
+    static _collect_handlers(protocols = ['GET', 'POST', 'CALL'], SEP = '_') {
+        /* Collect all web handlers of this class, so that service triggers can be generated for every new object. */
+        let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
+        let proto = this.prototype
+        let names = T.getAllPropertyNames(proto).filter(is_endpoint).filter(name => proto[name])
+        let handlers = names.map(name => [name, proto[name]])
+        return this.__handlers = new Map(handlers)
+    }
 
     static _collect_services() {
         /* Collect Services defined as static properties of the class and named "TYPE/endpoint" (TYPE in uppercase).
@@ -1055,7 +1065,7 @@ export class WebObject {
     GET_json({res})        { res.json(this.self_encode()) }
 
     CALL_self()            { return this }
-    // static ['CALL/self'] = new InternalService(function() { assert(false, 'NOT USED: WebObject.CALL/self'); return this })
+    // static 'CALL/self' = new InternalService(function() { assert(false, 'NOT USED: WebObject.CALL/self'); return this })
 
     // inspect()         { return new ReactPage(ItemRecordView) }
     // inspect()         { return react_page(ItemRecordView) }
@@ -1066,7 +1076,7 @@ export class WebObject {
     // GET_inspect()     { return new ReactPage(this, ItemRecordView) }
     // static PAGE_inspect = new ReactPage(ItemRecordView)
 
-    static ['GET/inspect'] = new ReactPage(ItemRecordView)
+    static 'GET/inspect' = new ReactPage(ItemRecordView)
 
 
 

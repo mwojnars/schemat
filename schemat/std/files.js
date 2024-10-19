@@ -69,7 +69,7 @@ export class File extends WebObject {
     //     return module[symbol]
     // }
     //
-    // static ['CALL/text'] = new InternalService(function (request)
+    // static 'CALL/text' = new InternalService(function (request)
     // {
     //     /* Plain text of this File for Site.import() etc. */
     //     assert(false, 'NOT USED: File.CALL/text')
@@ -78,7 +78,7 @@ export class File extends WebObject {
     //     return txt
     // })
     //
-    // static ['GET/file'] = new HttpService(function (request)
+    // static 'GET/file' = new HttpService(function (request)
     // {
     //     // plain text sent over HTTP with a MIME type inferred from URL file extension
     //     assert(false, 'NOT USED: File.GET/file')
