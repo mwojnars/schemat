@@ -240,7 +240,7 @@ export class WebObject {
         return assets
     }
 
-    service         // isomorphic service triggers created for this object from its class's __services; called as this.service.xxx(args) or this.service.xxx.TYPE(args),
+    service         // isomorphic service triggers created for this object from its class's __services; called as this.service.xxx(args) or this.PROTO.xxx(args),
                     // where TYPE is GET/POST/LOCAL/... - works both on the client and server (in the latter case, the call executes server function directly without network communication)
 
 
@@ -593,9 +593,12 @@ export class WebObject {
         let triggers = this.__self.service = {}
 
         for (let [endpoint, service] of Object.entries(this.__services)) {
-            let [type, name] = endpoint.split('/')
+            let [protocol, name] = endpoint.split('/')
             if (triggers[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
             triggers[name] = service.invoke(this)   // service.xxx(...)
+
+            this.__self[protocol] ??= Object.create(null)
+            this.__self[protocol][name] = service.invoke(this)   // service.PROTOCOL.xxx(...)
             // trigger[type] = trigger              // service.xxx.POST(...)
         }
     }
@@ -848,7 +851,7 @@ export class WebObject {
 
     delete_self() {
         /* Delete this object from the database. */
-        return schemat.site.service.delete_object(this.__id)
+        return schemat.site.POST.delete_object(this.__id)
     }
 
     _bump_version() {
@@ -979,7 +982,7 @@ export class WebObject {
         let edits = this.__meta.edits
 
         if (this.is_newborn())
-            return schemat.site.service.create_object(this.__data).then(({id}) => (this.__id = id))
+            return schemat.site.POST.create_object(this.__data).then(({id}) => (this.__id = id))
             // return schemat.site.create_object.send(this.__data).then(({id}) => (this.__id = id))
             // return schemat.site.rpc.create_object(this.__data).then(({id}) => (this.__id = id))
             // return schemat.site.POST.create_object(this.__data).then(({id}) => (this.__id = id))
@@ -987,7 +990,7 @@ export class WebObject {
 
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
 
-        let submit = schemat.site.service.submit_edits(this.id, ...edits) //.then(() => this)
+        let submit = schemat.site.POST.submit_edits(this.id, ...edits) //.then(() => this)
         edits.length = 0
         return submit
     }
