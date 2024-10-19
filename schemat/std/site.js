@@ -133,7 +133,7 @@ export class Site extends WebObject {
     //     /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
     //     // return this.route(new Request({path, method: '::item'}))
     //     assert(path[0] === '/')
-    //     return this.route_internal(path)
+    //     return this.route_local(path)
     // }
 
     async route_local(path) {
@@ -232,7 +232,7 @@ export class Site extends WebObject {
     //     // if (path.startsWith(local + '/'))
     //     //     return this._import_synthetic(this._js_import_file(path))
     //
-    //     let source = await this.route_internal(path + '::text')
+    //     let source = await this.route_local(path + '::text')
     //     if (!source) throw new Error(`Site.import_module(), path not found: ${path}`)
     //
     //     module = await this._parse_module(source, path)

@@ -30,7 +30,7 @@ export class Request {   // Connection ?
         this.res = res
 
         this.protocol =
-            !this.req                   ? "CALL" :          // CALL = internal call through Site.route_internal()
+            !this.req                   ? "CALL" :          // CALL = internal call through Site.route_local()
             this.req.method === 'GET'   ? "GET"  :          // GET  = read access through HTTP GET
                                           "POST"            // POST = write access through HTTP POST
 

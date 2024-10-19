@@ -1096,7 +1096,7 @@ export class WebObject {
     //     let name = this.get('_boot_class')
     //     if (name) base = schemat.get_builtin(name)
     //
-    //     let body = this.route_internal(('class')           // full class body from concatenated `code` and `code_*` snippets
+    //     let body = this.route_local(('class')           // full class body from concatenated `code` and `code_*` snippets
     //     if (!body) return base
     //
     //     let url = this.sourceURL('class')

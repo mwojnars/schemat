@@ -132,7 +132,7 @@ export class Category extends WebObject {
     // _codeBody() {
     //     /* Source code of this category's dynamic Class body. */
     //     return this._merge_snippets('class_body')
-    //     // let body = this.route_internal(('class_body')
+    //     // let body = this.route_local(('class_body')
     //     // let methods = []
     //     // let views = this.prop('views')                              // extend body with VIEW_* methods
     //     // for (let {key: vname, value: vbody} of views || [])
