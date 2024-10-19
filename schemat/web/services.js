@@ -107,6 +107,15 @@ export class Service {
         if (!server) throw new Error('missing `server()` function in service definition')
         return server.call(target, request, ...args)
     }
+
+    trigger(target, ...args) {
+        /* Isomorphic method that returns a "trigger" function that invokes this service no matter if it is on a client
+           (with network communication via this.client()) or a server (no communication, .server() called directly).
+         */
+        return SERVER
+            ? (...args) => this.server(target, null, ...args)          // may return a Promise
+            : (...args) => this.client(target, ...args)                // may return a Promise
+    }
 }
 
 

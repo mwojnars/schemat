@@ -564,6 +564,12 @@ export class WebObject {
         let handlers = names.map(name => [name, proto[name]])
         return this.__handlers = new Map(handlers)
     }
+    _create_triggers() {
+        /* For each endpoint of the form "PROTO/name" create a trigger method, "name(...args)",
+           that executes a given handler (client- or server-side), assumes the result is a Service instance,
+           and calls .send() on this service.
+         */
+    }
 
     static _collect_services() {
         /* Collect Services defined as static properties of the class and named "TYPE/endpoint" (TYPE in uppercase).
@@ -581,19 +587,16 @@ export class WebObject {
 
     _init_services() {
         /* Collect services for this object's class and create this.service.xxx() triggers for the object. */
+        this._create_triggers()
+
         if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
         let triggers = this.__self.service = {}
 
         for (let [endpoint, service] of Object.entries(this.__services)) {
             let [type, name] = endpoint.split('/')
             if (triggers[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
-
-            let trigger = SERVER
-                ? (...args) => service.server(this, null, ...args)          // may return a Promise
-                : (...args) => service.client(this, ...args)                // may return a Promise
-
-            triggers[name] = trigger        // service.xxx(...)
-            trigger[type] = trigger         // service.xxx.POST(...)
+            triggers[name] = service.trigger(this)  // service.xxx(...)
+            // trigger[type] = trigger              // service.xxx.POST(...)
         }
     }
 
@@ -978,6 +981,9 @@ export class WebObject {
         if (this.is_newborn())
             return schemat.site.service.create_object(this.__data).then(({id}) => (this.__id = id))
             // return schemat.site.create_object.send(this.__data).then(({id}) => (this.__id = id))
+            // return schemat.site.rpc.create_object(this.__data).then(({id}) => (this.__id = id))
+            // return schemat.site.POST.create_object(this.__data).then(({id}) => (this.__id = id))
+            // return schemat.site['POST/create_object']().client(this.__data).then(({id}) => (this.__id = id))
 
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
 
