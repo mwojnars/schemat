@@ -1091,14 +1091,15 @@ export class WebObject {
     // static category_endpoints = ['...']
     // static object_endpoints = ['view', 'admin', 'inspect', 'json', 'test_txt', 'test_fun', '...']
 
-    'GET.test_txt'()         { return "TEST txt ..." }                   // works
-    'GET.test_fun'()         { return () => "TEST function ..." }        // works
-    'GET.test_res'({res})    { res.send("TEST res.send() ...") }         // works
-    'GET.test_html'()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
+    'GET.test_txt'()        { return "TEST txt ..." }                   // works
+    'GET.test_fun'()        { return () => "TEST function ..." }        // works
+    'GET.test_res'({res})   { res.send("TEST res.send() ...") }         // works
+    'GET.test_html'()       { return html_page(import.meta.resolve('../test/views/page_02.html')) }
 
-    'GET.json'({res})        { res.json(this.self_encode()) }
+    'GET.json'({res})       { res.json(this.self_encode()) }
+    'GET.inspect'()         { return new ReactPage(ItemInspectView) }
 
-    'LOCAL.self'()           { return this }
+    'LOCAL.self'()          { return this }
     // static 'LOCAL/self' = new InternalService(function() { assert(false, 'NOT USED: WebObject.LOCAL/self'); return this })
 
     // inspect()         { return new ReactPage(ItemInspectView) }
@@ -1109,10 +1110,6 @@ export class WebObject {
     // GET_inspect()     { return react_page(this, ItemInspectView) }
     // GET_inspect()     { return new ReactPage(this, ItemInspectView) }
     // static PAGE_inspect = new ReactPage(ItemInspectView)
-
-    'GET.inspect'()     { return new ReactPage(ItemInspectView) }
-    // static 'GET/inspect' = new ReactPage(ItemInspectView)
-
 
 
     /***  Dynamic loading of source code  ***/

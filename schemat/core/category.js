@@ -169,7 +169,6 @@ export class Category extends WebObject {
     /***  Endpoints  ***/
 
     'GET.inspect'() { return new ReactPage(CategoryInspectView) }
-    // static 'GET/inspect' = new ReactPage(CategoryInspectView)
 
     'POST.list_objects'() {
         return new JsonService({
@@ -183,17 +182,6 @@ export class Category extends WebObject {
             }
         })
     }
-
-    // static 'POST/list_objects' = new JsonService({
-    //     // create a new object with __data initialized from the provided JSONx-stringified representation
-    //     server: function(request, opts) { return schemat.list_category(this, {load: true, ...opts}) },
-    //     output: mDataRecords,
-    //     accept: (records) => {
-    //         // replace records with fully-loaded objects; there's NO guarantee that a given object was actually built from
-    //         // `rec.data` as received in this particular request, because a newer record might have arrived in the meantime!
-    //         return Promise.all(records.map(rec => schemat.get_loaded(rec.id)))
-    //     }
-    // })
 }
 
 
