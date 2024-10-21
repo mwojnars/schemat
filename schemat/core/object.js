@@ -652,53 +652,6 @@ export class WebObject {
         return this.__data.dump()
     }
 
-    url(endpoint, args) {
-        /* Return the canonical URL of this object. `endpoint` is an optional name of ::endpoint,
-           `args` will be appended to URL as a query string.
-         */
-        let path = this.__url || this.system_url                        // no-category objects may have no __url because of lack of schema and __url imputation
-        if (endpoint) path += Request.SEP_ENDPOINT + endpoint           // append ::endpoint and ?args if present...
-        if (args) path += '?' + new URLSearchParams(args).toString()
-        return path
-    }
-
-    make_stamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
-        /* [CATEGORY:ID] string (stamp) if the category of `this` has a name; or [ID] otherwise.
-           If html=true, the category name is hyperlinked to the category's profile page (unless URL failed to generate)
-           and is HTML-escaped. If max_len is provided, category's suffix may be replaced with '...' to make its length <= max_len.
-         */
-        let cat = this.__category?.name || ""
-        if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
-        if (html) {
-            cat = escape_html(cat)
-            let url = this.__category?.url()
-            if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
-        }
-        let stamp = cat ? `${cat}:${this.__id}` : `${this.__id}`
-        return brackets ? `[${stamp}]` : stamp
-    }
-
-    get_breadcrumb(max_len = 10) {
-        /* Return an array of containers that lead from the site's root to this object.
-           The array contains pairs [segment, container] where `segment` is a string that identifies `container`
-           inside its parent; the last pair is [segment, this] (the object itself).
-           If containers are correctly configured, the first pair is [undefined, site_object] (the root).
-         */
-        let steps = []
-        let object = this
-
-        while (object) {
-            let parent = object.__container
-            let segment = parent?.identify(object)
-
-            steps.push([segment, object])
-
-            if (steps.length > max_len) break                // avoid infinite loops
-            object = parent
-        }
-        return steps.reverse()
-    }
-
     validate(post_setup = true) {
         // TODO SECURITY: make sure that __data does NOT contain special props: __meta, __self, __proxy, __id etc!
 
@@ -754,7 +707,7 @@ export class WebObject {
         /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema. */
 
 
-    /***  Networking and Request handling  ***/
+    /***  Networking  ***/
 
     static _collect_handlers(protocols = ['GET', 'POST', 'LOCAL'], SEP = '.') {
         /* Collect all web handlers of this class, so that service triggers can be generated for every new object. */
@@ -836,6 +789,53 @@ export class WebObject {
         if (defaults.length) return defaults
 
         request.throwNotFound(`endpoint not specified (protocol ${protocol})`)
+    }
+
+    url(endpoint, args) {
+        /* Return the canonical URL of this object. `endpoint` is an optional name of ::endpoint,
+           `args` will be appended to URL as a query string.
+         */
+        let path = this.__url || this.system_url                        // no-category objects may have no __url because of lack of schema and __url imputation
+        if (endpoint) path += Request.SEP_ENDPOINT + endpoint           // append ::endpoint and ?args if present...
+        if (args) path += '?' + new URLSearchParams(args).toString()
+        return path
+    }
+
+    make_stamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
+        /* [CATEGORY:ID] string (stamp) if the category of `this` has a name; or [ID] otherwise.
+           If html=true, the category name is hyperlinked to the category's profile page (unless URL failed to generate)
+           and is HTML-escaped. If max_len is provided, category's suffix may be replaced with '...' to make its length <= max_len.
+         */
+        let cat = this.__category?.name || ""
+        if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
+        if (html) {
+            cat = escape_html(cat)
+            let url = this.__category?.url()
+            if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
+        }
+        let stamp = cat ? `${cat}:${this.__id}` : `${this.__id}`
+        return brackets ? `[${stamp}]` : stamp
+    }
+
+    get_breadcrumb(max_len = 10) {
+        /* Return an array of containers that lead from the site's root to this object.
+           The array contains pairs [segment, container] where `segment` is a string that identifies `container`
+           inside its parent; the last pair is [segment, this] (the object itself).
+           If containers are correctly configured, the first pair is [undefined, site_object] (the root).
+         */
+        let steps = []
+        let object = this
+
+        while (object) {
+            let parent = object.__container
+            let segment = parent?.identify(object)
+
+            steps.push([segment, object])
+
+            if (steps.length > max_len) break                // avoid infinite loops
+            object = parent
+        }
+        return steps.reverse()
     }
 
 
@@ -1067,16 +1067,10 @@ export class WebObject {
     'GET.inspect'()         { return new ReactPage(ItemInspectView) }
 
     'LOCAL.self'()          { return this }
-    // static 'LOCAL/self' = new InternalService(function() { assert(false, 'NOT USED: WebObject.LOCAL/self'); return this })
 
-    // inspect()         { return new ReactPage(ItemInspectView) }
     // inspect()         { return react_page(ItemInspectView) }
     // inspect()         { return ItemInspectView.page(this) }
     // inspect()         { return ItemInspectView.page }
-
-    // GET_inspect()     { return react_page(this, ItemInspectView) }
-    // GET_inspect()     { return new ReactPage(this, ItemInspectView) }
-    // static PAGE_inspect = new ReactPage(ItemInspectView)
 
 
     /***  Dynamic loading of source code  ***/
