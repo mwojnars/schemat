@@ -75,13 +75,11 @@ export class Service {
         this.error  = T.isClass(error)  ? new error()  : error
     }
 
-    bindAt(endpoint) {
-        this.endpoint = endpoint.replace('.', '/')
-    }
+    bindAt(endpoint) { this.endpoint = endpoint.replace('/','.') }
 
     _splitEndpoint() {
         assert(this.endpoint, this.endpoint)
-        let parts = this.endpoint.split('/')
+        let parts = this.endpoint.split('.')
         if (parts.length !== 2) throw new Error(`incorrect endpoint format: ${this.endpoint}`)
         return parts
     }

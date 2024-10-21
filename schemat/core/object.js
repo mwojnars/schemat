@@ -829,12 +829,12 @@ export class WebObject {
 
         // convert endpoint names to full protocol-qualified endpoints: GET/xxx
         let names = this._get_endpoints(request)
-        let endpoints = names.map(e => `${request.protocol}/${e}`)
+        let endpoints = names.map(e => `${request.protocol}.${e}`)
 
         // find the first endpoint that matches this request and launch its handler
         for (let endpoint of endpoints) {
-            let service = this._get_handler(endpoint.replace('/','.'))
-            service ??= this.__services[endpoint]       // TODO: remove (old way of defining handlers)
+            let service = this._get_handler(endpoint)
+            service ??= this.__services[endpoint.replace('.','/')]       // TODO: remove (old way of defining handlers)
             if (!service) continue
 
             // print(`handle() endpoint: ${endpoint}`)
