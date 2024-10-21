@@ -155,7 +155,10 @@ export class HttpService extends Service {
         }
     }
 
-    decode_args(target, request)   { return [] }            // on the server, decode the arguments from the request object
+    decode_args(target, request) {                          // on the server, decode the arguments from the request object
+        let params = request.req.query                      // single argument: plain object carrying all GET query string parameters
+        return T.isEmpty(params) ? [] : [params]
+    }
 
     send_result(target, {res}, result, ...args) {           // on the server, encode the result and send it to the client
         if (this.output.type) res.type(this.output.type)
@@ -166,6 +169,9 @@ export class HttpService extends Service {
 
 
 /*************************************************************************************************/
+
+export class JsonGET extends HttpService {
+}
 
 export class JsonService extends HttpService {
     /* JSON-based communication over HTTP POST: the service function accepts a series of arguments, `args`, that are
@@ -197,7 +203,6 @@ export class JsonService extends HttpService {
         return args
     }
 }
-
 
 /**********************************************************************************************************************/
 
