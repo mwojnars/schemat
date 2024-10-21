@@ -1048,15 +1048,13 @@ export class WebObject {
 
     /***  Endpoints  ***/
 
-    // When endpoint functions (below) are called, `this` is always bound to the WebObject instance, so they execute
-    // in the context of their target object like if they were regular methods of the WebObject (sub)class.
-    // The first argument, `request`, is a Request instance, followed by action-specific list of arguments.
-    // In a special case when an action is called directly on the server through _triggers_.XXX(), `request` is null,
-    // which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
-
-
-    // static category_endpoints = ['...']
-    // static object_endpoints = ['view', 'admin', 'inspect', 'json', 'test_txt', 'test_fun', '...']
+    /* Handlers, below, take `request` (Request instance) as the only argument. However, when a handler is called via its
+       trigger function (this.GET.xxx(), this.POST.xxx() etc.), `request` is left undefined. Handler may either:
+       - return the web response (a string); or
+       - send the response by itself via `request.res`; or
+       - return a function, f(request), that will render the response; or
+       - return a Service instance that (on server) provides generation of response, and (on client) can invoke the service remotely.
+     */
 
     'GET.test_txt'()        { return "TEST txt ..." }                   // works
     'GET.test_fun'()        { return () => "TEST function ..." }        // works
