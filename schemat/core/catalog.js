@@ -668,19 +668,3 @@ export class Data extends Catalog {
     }
 }
 
-export class List extends Catalog {
-    /* A Catalog with values only; no keys, labels, comments. */
-}
-export class Record extends Catalog {
-    /* A Catalog with unique keys for all entries; no labels; comments allowed. */
-}
-
-// class CATALOG extends Type {
-//     use_keys Y/N
-//         allow_duplicate
-//         allow_missing
-//         allow_empty ??                // if true, '' string is a valid key (better skip this)
-//     use_labels
-//     use_comments
-// }
-

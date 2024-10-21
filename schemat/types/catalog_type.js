@@ -41,10 +41,6 @@ export class CATALOG extends Type {
         type_values:    new GENERIC(),                  // type of all values in the catalog
         initial:        () => new Catalog(),
         repeated:       false,                          // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)
-        // keys_mandatory : false,
-        // keys_forbidden : false,
-        // keys_unique    : false,
-        // keys_empty_ok  : false,
     }
 
     subtype(key)  { return this.props.type_values }     // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
