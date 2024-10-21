@@ -193,7 +193,7 @@ export class JsonGET extends HttpService {
     static output = mJsonObject         // server responds with a single JSON-encoded object by default
 }
 
-export class JsonService extends HttpService {
+export class JsonPOST extends HttpService {
     /* JSON-based communication over HTTP POST: the service function accepts a series of arguments, `args`, that are
        encoded as a JSON array and sent to the server as a POST request body; the result is also encoded as JSON.
      */
@@ -202,11 +202,9 @@ export class JsonService extends HttpService {
     static output = mJsonObject         // server responds with a single JSON-encoded object by default
 
     async submit(url, message) {
-        let method = this.endpoint_type || 'POST'
+        if (this.endpoint_type !== 'POST') throw new Error(`JsonPOST can only be exposed at HTTP POST endpoint, not ${this.endpoint}`)
         if (message && typeof message !== 'string') message = JSON.stringify(message)
-        if (message && method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body`)
-
-        let params = {method, body: message, headers: {}}
+        let params = {method: 'POST', body: message, headers: {}}
         return fetch(url, params)
     }
 
