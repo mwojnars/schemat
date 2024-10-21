@@ -270,7 +270,7 @@ export class WebObject {
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
     }
 
-    // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for network endpoints of this object; created in _init_services().
+    // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network endpoints, initialized in _init_services().
     // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
     //      this['<PROTO>.xxx']().invoke(this, '<PROTO>.xxx', ...args)
     // If the handler function doesn't return a service object, the corresponding trigger simply returns the handler's return value, whatever it is.
@@ -280,8 +280,8 @@ export class WebObject {
     LOCAL           // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
                     // ... Other trigger groups are created automatically for other protocol names.
 
-
-    static _cachable_getters        // a Set of names of getters of the WebObject class or its subclass - for caching in ItemProxy
+    static __handlers               // Map of network handlers defined by this class or parent classes; computed once in _collect_handlers()
+    static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in ItemProxy
 
     static _collect_cachable_getters() {
         /* Find all getter functions in the current class, combine with parent's set of getters and store in _cachable_getters. */
