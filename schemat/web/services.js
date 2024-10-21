@@ -122,14 +122,14 @@ export class HttpService extends Service {
        client() returns response body as a raw string.
      */
 
-    static input  = mJsonObjects   // client submits an array of JSON-encoded objects by default
+    static input  = null //mJsonObjects   // client submits an array of JSON-encoded objects by default
     static output = mString
     static error  = mJsonError
 
 
     async client(target, ...args) {
         let base_url = target.url(this.endpoint_name)      // `target` should be a WebObject with .url()
-        let message  = this.input.encode(...args)
+        let message  = this.input?.encode(...args)
         let response = await this.submit(base_url, message)
         let result   = await response.text()
         if (!response.ok) return this.error.decode_error(result, response.status)
@@ -138,7 +138,15 @@ export class HttpService extends Service {
         return this.opts.accept ? this.opts.accept(result) : result
     }
 
-    async submit(url, message) { return fetch(url, {}) }    // `message` not used for now in the HttpService base class
+    async submit(url, message) {
+        /* `message`, if present, should be a plain object to be encoded into GET query string ?k=v&... */
+        if (message) {
+            if (!T.isPlain(message)) throw new Error(`cannot encode arguments as a GET query string (${message})`)
+            url = new URL(url)
+            Object.keys(message).forEach(key => url.searchParams.append(key, message[key]))
+        }
+        return fetch(url, {})
+    }
 
     async handle(target, request) {
         try {
@@ -196,8 +204,8 @@ export class JsonService extends HttpService {
         let body = request.req.body             // `req` is Express's request object
         assert(typeof body === 'string')
 
-        let args = this.input.decode(body)
-        if (!this.input.array) args = [args]
+        let args = this.input?.decode(body)
+        if (!this.input?.array) args = [args]
 
         if (!T.isArray(args)) throw new Error("incorrect format of arguments in the web request")
         return args
