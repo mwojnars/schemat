@@ -565,72 +565,6 @@ export class WebObject {
     }
 
 
-    static _collect_handlers(protocols = ['GET', 'POST', 'LOCAL'], SEP = '.') {
-        /* Collect all web handlers of this class, so that service triggers can be generated for every new object. */
-        let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
-        let proto = this.prototype
-        let names = T.getAllPropertyNames(proto).filter(is_endpoint).filter(name => proto[name])
-        let handlers = names.map(name => [name, proto[name]])
-        return this.__handlers = new Map(handlers)
-    }
-
-    _init_services() {
-        /* For each endpoint of the form "PROTO.name" create a trigger method, "name(...args)",
-           that executes a given handler (client- or server-side) and, if the result is a Service instance,
-           calls its .client() or .server() depending on the current environment.
-         */
-        if (!this.constructor.prototype.hasOwnProperty('__handlers')) this.constructor._collect_handlers()
-        let self = this.__self
-
-        for (let [endpoint, handler] of this.constructor.__handlers.entries()) {
-            let [protocol, name] = endpoint.split('.')
-
-            self[protocol] ??= Object.create(null)
-            if (self[protocol][name]) throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
-
-            self[protocol][name] = (...args) => {
-                let result = handler.call(this)
-                return result instanceof Service ? result.invoke(this, endpoint, ...args) : result
-            }
-        }
-    }
-
-    // static _collect_services() {
-    //     /* Collect Services defined as static properties of the class and named "TYPE/endpoint" (TYPE in uppercase).
-    //        The result is cached in prototype.__services for reuse by all objects of this class.
-    //      */
-    //     let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
-    //     let names = T.getAllPropertyNames(this).filter(is_endpoint).filter(name => this[name])
-    //     let endpoints = names.map(endpoint => {
-    //         let service = this[endpoint]
-    //         service.bindAt(endpoint)
-    //         return [endpoint, service]
-    //     })
-    //     return this.prototype.__services = Object.fromEntries(endpoints)
-    // }
-    //
-    // _init_services() {
-    //     /* Collect services for this object's class and create this.service.xxx() triggers for the object. */
-    //     this._create_triggers()
-    //
-    //     if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
-    //     let self = this.__self
-    //     // let triggers = this.__self.service = {}
-    //
-    //     for (let [endpoint, service] of Object.entries(this.__services)) {
-    //         let [protocol, name] = endpoint.split('/')
-    //         // if (triggers[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
-    //         // triggers[name] = service.invoke(this)   // service.xxx(...)
-    //
-    //         self[protocol] ??= Object.create(null)
-    //         if (self[protocol][name]) continue //throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
-    //
-    //         self[protocol][name] = service.make_trigger(this)   // PROTOCOL.xxx(...)
-    //         // trigger[type] = trigger              // service.xxx.POST(...)
-    //     }
-    // }
-
-
     /***  access to properties  ***/
 
     _compute_property(prop) {
@@ -820,9 +754,39 @@ export class WebObject {
         /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema. */
 
 
-    /***  Request handling  ***/
+    /***  Networking and Request handling  ***/
 
-    async handle(request) {
+    static _collect_handlers(protocols = ['GET', 'POST', 'LOCAL'], SEP = '.') {
+        /* Collect all web handlers of this class, so that service triggers can be generated for every new object. */
+        let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
+        let proto = this.prototype
+        let names = T.getAllPropertyNames(proto).filter(is_endpoint).filter(name => proto[name])
+        let handlers = names.map(name => [name, proto[name]])
+        return this.__handlers = new Map(handlers)
+    }
+
+    _init_services(SEP = '.') {
+        /* For each endpoint of the form "PROTO.name" create a trigger method, "name(...args)",
+           that executes a given handler (client- or server-side) and, if the result is a Service instance,
+           calls its .client() or .server() depending on the current environment.
+         */
+        if (!this.constructor.prototype.hasOwnProperty('__handlers')) this.constructor._collect_handlers()
+        let self = this.__self
+
+        for (let [endpoint, handler] of this.constructor.__handlers.entries()) {
+            let [protocol, name] = endpoint.split(SEP)
+
+            self[protocol] ??= Object.create(null)
+            if (self[protocol][name]) throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
+
+            self[protocol][name] = (...args) => {
+                let result = handler.call(this)
+                return result instanceof Service ? result.invoke(this, endpoint, ...args) : result
+            }
+        }
+    }
+
+    async handle(request, SEP = '.') {
         /* Serve a web or internal Request by executing the corresponding service from this.net.
            Query parameters are passed in `req.query`, as:
            - a string if there's one occurrence of PARAM in a query string,
@@ -833,12 +797,11 @@ export class WebObject {
 
         // convert endpoint names to full protocol-qualified endpoints: GET.name
         let names = this._get_endpoints(request)
-        let endpoints = names.map(e => `${request.protocol}.${e}`)
+        let endpoints = names.map(e => `${request.protocol}${SEP}${e}`)
 
         // find the first endpoint that matches this request and launch its handler
         for (let endpoint of endpoints) {
             let service = this._get_handler(endpoint)
-            // service ??= this.__services[endpoint.replace('.','/')]
             if (!service) continue
 
             // print(`handle() endpoint: ${endpoint}`)

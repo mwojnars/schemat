@@ -75,7 +75,7 @@ export class Service {
         this.error  = T.isClass(error)  ? new error()  : error
     }
 
-    bindAt(endpoint) { this.endpoint = endpoint.replace('/','.') }
+    bindAt(endpoint) { this.endpoint = endpoint }
 
     _splitEndpoint() {
         assert(this.endpoint, this.endpoint)
@@ -113,15 +113,6 @@ export class Service {
             ? this.server(target, ...args)
             : this.client(target, ...args)
     }
-
-    // make_trigger(target) {
-    //     /* Isomorphic method that returns a "trigger" function that invokes this service no matter if it is on a client
-    //        (with network communication via this.client()) or a server (no communication, .server() is called directly).
-    //      */
-    //     return SERVER
-    //         ? (...args) => this.server(target, ...args)         // may return a Promise
-    //         : (...args) => this.client(target, ...args)         // may return a Promise
-    // }
 }
 
 
