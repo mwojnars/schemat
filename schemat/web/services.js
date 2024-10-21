@@ -100,19 +100,17 @@ export class Service {
     }
 
     server(target, request, ...args) {
-        /* The actual execution of the service, server-side, without pre- & post-processing of web requests/responses.
-           Here, `request` can be null, so server() can be called directly *outside* of a web request, if only the service supports this.
-         */
+        /* The actual execution of the service, server-side, without pre- & post-processing of web requests/responses. */
         let {server} = this.opts
         if (!server) throw new Error('missing `server()` function in service definition')
-        return server.call(target, request, ...args)
+        return server.call(target, ...args)
     }
 
     invoke(target, endpoint, ...args) {
         /* Isomorphic method to invoke this service on a client or a server, via .client() or .server() respectively. May return a Promise. */
         this.bindAt(endpoint)
         return SERVER
-            ? this.server(target, null, ...args)
+            ? this.server(target, ...args)
             : this.client(target, ...args)
     }
 
@@ -121,8 +119,8 @@ export class Service {
            (with network communication via this.client()) or a server (no communication, .server() is called directly).
          */
         return SERVER
-            ? (...args) => this.server(target, null, ...args)          // may return a Promise
-            : (...args) => this.client(target, ...args)                // may return a Promise
+            ? (...args) => this.server(target, ...args)         // may return a Promise
+            : (...args) => this.client(target, ...args)         // may return a Promise
     }
 }
 

@@ -173,7 +173,7 @@ export class Category extends WebObject {
     'POST.list_objects'() {
         return new JsonService({
             // create a new object with __data initialized from the provided JSONx-stringified representation
-            server: function(request, opts) { return schemat.list_category(this, {load: true, ...opts}) },
+            server: function(opts) { return schemat.list_category(this, {load: true, ...opts}) },
             output: mDataRecords,
             accept: (records) => {
                 // replace records with fully-loaded objects; there's NO guarantee that a given object was actually built from

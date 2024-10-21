@@ -167,7 +167,7 @@ export class Site extends WebObject {
 
     'POST.create_object'() {
         return new JsonService({
-            server: (request, data_json) => { return this.database.insert(data_json) },
+            server: (data_json) => { return this.database.insert(data_json) },
             input:  mDataString,
             output: mDataRecord,
         })
@@ -177,7 +177,7 @@ export class Site extends WebObject {
         return new JsonService({
             // submit a list of object edits to the DB. Each plain edit is a 2-element array: [op, args],
             // where `op` is the name of the EDIT_* operation to be executed, and `args` is a dict {...} of arguments to be passed to the operation.
-            server: function(request, id, ...edits) { return this.database.update(id, ...edits) },
+            server: function(id, ...edits) { return this.database.update(id, ...edits) },
             input:  mJsonxObjects,
             output: mDataRecord,
         })
@@ -185,7 +185,7 @@ export class Site extends WebObject {
 
     'POST.delete_object'() {
         return new JsonService({
-            server: function(request, id) { return this.database.delete(id) }
+            server: function(id) { return this.database.delete(id) }
         })
     }
 
