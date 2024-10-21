@@ -1,7 +1,7 @@
 import {assert} from "../common/utils.js";
 import {RequestFailed} from "../common/errors.js";
 import {JSONx} from "../core/jsonx.js";
-import {Data} from "../core/data.js";
+import {Data} from "../core/catalog.js";
 
 
 /**********************************************************************************************************************/

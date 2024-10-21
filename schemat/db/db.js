@@ -5,7 +5,7 @@ import {DataOperator} from "./sequence.js";
 import {Record, DataRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence, IndexSequence, Subsequence} from "./sequence.js";
-import {Catalog, Data} from "../core/data.js";
+import {Catalog, Data} from "../core/catalog.js";
 
 
 /**********************************************************************************************************************

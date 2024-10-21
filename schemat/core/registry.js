@@ -1,6 +1,6 @@
 import {T, assert, print} from "../common/utils.js";
 import {DataRecord} from "../db/records.js";
-import {Data} from "./data.js";
+import {Data} from "./catalog.js";
 import {CustomMap} from "../common/structs.js";
 // import BTree from 'sorted-btree'
 

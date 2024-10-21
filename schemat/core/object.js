@@ -10,7 +10,7 @@ import {print, assert, T, escape_html, concat, unique, delay} from '../common/ut
 import {NotLinked, NotLoaded, ValidationError} from '../common/errors.js'
 
 import {JSONx} from "./jsonx.js"
-import {Catalog, Data} from './data.js'
+import {Catalog, Data} from './catalog.js'
 import {REF} from "../types/type.js"
 import {SCHEMA_GENERIC} from "../types/catalog_type.js"
 import {html_page} from "../web/adapters.js"
