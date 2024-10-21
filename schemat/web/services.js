@@ -1,5 +1,5 @@
 import {print, assert, T, isPromise} from "../common/utils.js"
-import {mJsonError, mJsonObject, mJsonObjects, mString} from "./messages.js";
+import {mJsonError, mJsonObject, mJsonObjects, mQueryString, mString} from "./messages.js";
 
 
 /**********************************************************************************************************************/
@@ -117,19 +117,17 @@ export class Service {
 
 
 export class HttpService extends Service {
-    /* Base class for HTTP-based services. Does not interpret input/output data in any way; the service function
-       should use `req` and `res` objects directly, and it is also responsible for error handling.
-       client() returns response body as a raw string.
+    /* Base class for HTTP-based services. Input encoder should encode arguments into a single plain object
+       that will be sent as a URL query string - this behavior can be changed in subclasses.
      */
 
-    static input  = null //mJsonObjects   // client submits an array of JSON-encoded objects by default
+    static input  = mQueryString
     static output = mString
     static error  = mJsonError
 
-
     async client(target, ...args) {
         let base_url = target.url(this.endpoint_name)      // `target` should be a WebObject with .url()
-        let message  = this.input?.encode(...args)
+        let message  = this.input.encode(...args)
         let response = await this.submit(base_url, message)
         let result   = await response.text()
         if (!response.ok) return this.error.decode_error(result, response.status)
@@ -140,7 +138,7 @@ export class HttpService extends Service {
 
     async submit(url, message) {
         /* `message`, if present, should be a plain object to be encoded into GET query string ?k=v&... */
-        if (message) {
+        if (!T.isEmpty(message)) {
             if (!T.isPlain(message)) throw new Error(`cannot encode arguments as a GET query string (${message})`)
             url = new URL(url)
             Object.keys(message).forEach(key => url.searchParams.append(key, message[key]))
@@ -150,7 +148,8 @@ export class HttpService extends Service {
 
     async handle(target, request) {
         try {
-            let args = this.decode_args(target, request)
+            let msg = this.read_message(request)
+            let args = this.decode_args(msg)
             let result = this.server(target, request, ...args)
             if (isPromise(result)) result = await result
             return this.send_result(target, request, result, ...args)
@@ -163,10 +162,21 @@ export class HttpService extends Service {
         }
     }
 
-    decode_args(target, request) {                          // on the server, decode the arguments from the request object
-        let params = request.req.query                      // single argument: plain object carrying all GET query string parameters
-        return T.isEmpty(params) ? [] : [params]
+    read_message(request) {
+        return request.req.query                            // plain object carrying all GET query string parameters
     }
+
+    decode_args(msg) {                                      // on the server, decode the arguments from the request
+        let args = this.input.decode(msg)
+        if (!this.input.array) args = [args]
+        if (!T.isArray(args)) throw new Error("incorrect format of arguments in the web request")
+        return args
+    }
+
+    // decode_args(request) {
+    //     let args = this.input.decode(query)
+    //     return T.isEmpty(query) ? [] : [query]
+    // }
 
     send_result(target, {res}, result, ...args) {           // on the server, encode the result and send it to the client
         if (this.output.type) res.type(this.output.type)
@@ -179,6 +189,7 @@ export class HttpService extends Service {
 /*************************************************************************************************/
 
 export class JsonGET extends HttpService {
+    static output = mJsonObject         // server responds with a single JSON-encoded object by default
 }
 
 export class JsonService extends HttpService {
@@ -186,8 +197,8 @@ export class JsonService extends HttpService {
        encoded as a JSON array and sent to the server as a POST request body; the result is also encoded as JSON.
      */
 
-    static input  = mJsonObjects   // client submits an array of JSON-encoded objects by default
-    static output = mJsonObject    // server responds with a single JSON-encoded object by default
+    static input  = mJsonObjects        // client submits an array of JSON-encoded objects by default
+    static output = mJsonObject         // server responds with a single JSON-encoded object by default
 
     async submit(url, message) {
         let method = this.endpoint_type || 'POST'
@@ -198,17 +209,11 @@ export class JsonService extends HttpService {
         return fetch(url, params)
     }
 
-    decode_args(target, request) {
+    read_message(request) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
-
         let body = request.req.body             // `req` is Express's request object
         assert(typeof body === 'string')
-
-        let args = this.input?.decode(body)
-        if (!this.input?.array) args = [args]
-
-        if (!T.isArray(args)) throw new Error("incorrect format of arguments in the web request")
-        return args
+        return body
     }
 }
 
