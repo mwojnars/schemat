@@ -240,8 +240,8 @@ export class WebObject {
         return assets
     }
 
-    service         // isomorphic service triggers created for this object from its class's __services; called as this.service.xxx(args) or this.PROTO.xxx(args),
-                    // where TYPE is GET/POST/LOCAL/... - works both on the client and server (in the latter case, the call executes server function directly without network communication)
+    // service         // isomorphic service triggers created for this object from its class's __services; called as this.service.xxx(args) or this.PROTO.xxx(args),
+    //                 // where TYPE is GET/POST/LOCAL/... - works both on the client and server (in the latter case, the call executes server function directly without network communication)
 
 
     // static compare(obj1, obj2) {
@@ -251,6 +251,10 @@ export class WebObject {
 
 
     /***  Internal properties  ***/
+
+    GET             // null objects {...} with service triggers for particular network endpoints of this object...
+    POST
+    LOCAL
 
     __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
@@ -590,15 +594,18 @@ export class WebObject {
         this._create_triggers()
 
         if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
-        let triggers = this.__self.service = {}
+        let self = this.__self
+        // let triggers = this.__self.service = {}
 
         for (let [endpoint, service] of Object.entries(this.__services)) {
             let [protocol, name] = endpoint.split('/')
-            if (triggers[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
-            triggers[name] = service.invoke(this)   // service.xxx(...)
+            // if (triggers[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
+            // triggers[name] = service.invoke(this)   // service.xxx(...)
 
-            this.__self[protocol] ??= Object.create(null)
-            this.__self[protocol][name] = service.invoke(this)   // service.PROTOCOL.xxx(...)
+            self[protocol] ??= Object.create(null)
+            if (self[protocol][name]) throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
+
+            self[protocol][name] = service.invoke(this)   // service.PROTOCOL.xxx(...)
             // trigger[type] = trigger              // service.xxx.POST(...)
         }
     }
