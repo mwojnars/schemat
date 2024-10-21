@@ -833,7 +833,7 @@ export class WebObject {
 
         // find the first endpoint that matches this request and launch its handler
         for (let endpoint of endpoints) {
-            let service = this._get_handler(endpoint.replace('/','_'))
+            let service = this._get_handler(endpoint.replace('/','.'))
             service ??= this.__services[endpoint]
             if (!service) continue
 
@@ -841,6 +841,8 @@ export class WebObject {
             request.endpoint = endpoint
             let handler = (typeof service === 'function') ? service.bind(this) : (r) => service.handle(this, r)
             let result = handler(request)
+
+            if (result instanceof Service) result = result.handle(this, request)
             if (result instanceof Promise) result = await result
 
             return (typeof result === 'function') ? result.call(this, request) : result
@@ -1089,14 +1091,14 @@ export class WebObject {
     // static category_endpoints = ['...']
     // static object_endpoints = ['view', 'admin', 'inspect', 'json', 'test_txt', 'test_fun', '...']
 
-    GET_test_txt()         { return "TEST txt ..." }                   // works
-    GET_test_fun()         { return () => "TEST function ..." }        // works
-    GET_test_res({res})    { res.send("TEST res.send() ...") }         // works
-    GET_test_html()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
+    'GET.test_txt'()         { return "TEST txt ..." }                   // works
+    'GET.test_fun'()         { return () => "TEST function ..." }        // works
+    'GET.test_res'({res})    { res.send("TEST res.send() ...") }         // works
+    'GET.test_html'()        { return html_page(import.meta.resolve('../test/views/page_02.html')) }
 
-    GET_json({res})        { res.json(this.self_encode()) }
+    'GET.json'({res})        { res.json(this.self_encode()) }
 
-    LOCAL_self()           { return this }
+    'LOCAL.self'()           { return this }
     // static 'LOCAL/self' = new InternalService(function() { assert(false, 'NOT USED: WebObject.LOCAL/self'); return this })
 
     // inspect()         { return new ReactPage(ItemInspectView) }

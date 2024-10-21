@@ -101,7 +101,7 @@ export class LocalFile extends File {
         if (path) return this._mod_fs.readFileSync(path, {encoding})
     }
 
-    // GET_file({request}) {
+    // 'GET.file'({request}) {
     //     let path = this.local_path
     //     request.res.sendFile(path, {}, (err) => {if(err) request.res.sendStatus(err.status)})
     //
