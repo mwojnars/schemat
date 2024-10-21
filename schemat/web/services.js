@@ -2,6 +2,13 @@ import {print, assert, T, isPromise} from "../common/utils.js"
 import {mJsonError, mJsonObject, mJsonObjects, mQueryString, mString} from "./messages.js";
 
 
+export function url_query(url, params = {}) {
+    let entries = params instanceof Map ? params.entries() : Object.entries(params)
+    let query = entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&')
+    return query ? url + '?' + query : url
+}
+
+
 /**********************************************************************************************************************/
 
 export class Protocol {
@@ -139,9 +146,8 @@ export class HttpService extends Service {
     async submit(url, message) {
         /* `message`, if present, should be a plain object to be encoded into GET query string ?k=v&... */
         if (!T.isEmpty(message)) {
-            if (!T.isPlain(message)) throw new Error(`cannot encode arguments as a GET query string (${message})`)
-            url = new URL(url)
-            Object.keys(message).forEach(key => url.searchParams.append(key, message[key]))
+            if (!T.isPlain(message)) throw new Error(`cannot encode as a HTTP GET query string (${message})`)
+            url = url_query(url, message)
         }
         return fetch(url, {})
     }
@@ -172,11 +178,6 @@ export class HttpService extends Service {
         if (!T.isArray(args)) throw new Error("incorrect format of arguments in the web request")
         return args
     }
-
-    // decode_args(request) {
-    //     let args = this.input.decode(query)
-    //     return T.isEmpty(query) ? [] : [query]
-    // }
 
     send_result(target, {res}, result, ...args) {           // on the server, encode the result and send it to the client
         if (this.output.type) res.type(this.output.type)
