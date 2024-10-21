@@ -85,7 +85,9 @@ export class Service {
     // the methods below may return a Promise or be declared as async in subclasses...
 
     invoke(target, endpoint, ...args) {
-        /* Isomorphic method to invoke this service on a client or a server, via .client() or .server() respectively. May return a Promise. */
+        /* Isomorphic method to invoke this service on a client or a server, via .client() or .server() respectively.
+           If called on a server, passes request=null to this.server() method. May return a Promise.
+         */
         this.endpoint = endpoint
         return SERVER
             ? this.server(target, null, ...args)
