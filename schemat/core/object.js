@@ -754,18 +754,18 @@ export class WebObject {
 
         // find the first endpoint that matches this request and launch its handler
         for (let endpoint of endpoints) {
-            let service = this._get_handler(endpoint)
-            if (!service) continue
+            let handler = this._get_handler(endpoint)
+            if (!handler) continue
 
             // print(`handle() endpoint: ${endpoint}`)
             request.endpoint = endpoint
-            let handler = (typeof service === 'function') ? service.bind(this) : (r) => service.handle(this, r)
-            let result = handler(request)
+            let result = handler.call(this, request)
 
-            if (result instanceof Service) result = result.handle(this, request)
             if (result instanceof Promise) result = await result
+            if (result instanceof Service) result = result.handle(this, request)
+            if (typeof result === 'function') result = result.call(this, request)
 
-            return (typeof result === 'function') ? result.call(this, request) : result
+            return result
         }
 
         request.throwNotFound(`endpoint(s) not found in the target object: [${endpoints}]`)
