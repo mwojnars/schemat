@@ -834,7 +834,7 @@ export class WebObject {
         // find the first endpoint that matches this request and launch its handler
         for (let endpoint of endpoints) {
             let service = this._get_handler(endpoint.replace('/','.'))
-            service ??= this.__services[endpoint]
+            service ??= this.__services[endpoint]       // TODO: remove (old way of defining handlers)
             if (!service) continue
 
             // print(`handle() endpoint: ${endpoint}`)
@@ -1110,6 +1110,7 @@ export class WebObject {
     // GET_inspect()     { return new ReactPage(this, ItemInspectView) }
     // static PAGE_inspect = new ReactPage(ItemInspectView)
 
+    // 'GET.inspect'()     { return new ReactPage(ItemInspectView) }
     static 'GET/inspect' = new ReactPage(ItemInspectView)
 
 
