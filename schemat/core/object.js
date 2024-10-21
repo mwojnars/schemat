@@ -586,11 +586,7 @@ export class WebObject {
 
             self[protocol][name] = (...args) => {
                 let result = handler()
-                if (result instanceof Service) {
-                    result.bindAt(endpoint.replace('.', '/'))
-                    return result.invoke(this, ...args)
-                }
-                return result
+                return result instanceof Service ? result.invoke(this, endpoint, ...args) : result
             }
         }
     }

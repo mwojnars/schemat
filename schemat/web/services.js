@@ -108,8 +108,9 @@ export class Service {
         return server.call(target, request, ...args)
     }
 
-    invoke(target, ...args) {
+    invoke(target, endpoint, ...args) {
         /* Isomorphic method to invoke this service via .client() or .server(), depending if called on client or server. May return a Promise. */
+        this.bindAt(endpoint.replace('.', '/'))
         return SERVER
             ? this.server(target, null, ...args)
             : this.client(target, ...args)
