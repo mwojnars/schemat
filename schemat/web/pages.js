@@ -5,7 +5,7 @@ import {e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIE
         TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, printReactTree} from './react-utils.js'
 import {HttpService} from "./services.js";
 import {Styled} from "./component.js";
-import {CatalogTable} from "../types/catalog.js";
+import {CatalogTable} from "../types/catalog_type.js";
 import {RequestContext} from "./request.js";
 
 

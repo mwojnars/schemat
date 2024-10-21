@@ -12,7 +12,7 @@ import {NotLinked, NotLoaded, ValidationError} from '../common/errors.js'
 import {JSONx} from "./jsonx.js"
 import {Catalog, Data} from './data.js'
 import {REF} from "../types/type.js"
-import {SCHEMA_GENERIC} from "../types/catalog.js"
+import {SCHEMA_GENERIC} from "../types/catalog_type.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {Request} from "../web/request.js"

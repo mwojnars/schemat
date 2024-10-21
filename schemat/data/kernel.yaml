@@ -17,7 +17,7 @@
         "@": schemat/types/type.js:GENERIC
       info: Default values for properties of objects in this category. The key cannot
         be empty. Same key can be repeated.
-      "@": schemat/types/catalog.js:CATALOG
+      "@": schemat/types/catalog_type.js:CATALOG
     class_name:
       info: Custom internal name for the Class of this category, for debugging. Also
         used as an alias when exporting the Class from the category's module.
@@ -39,7 +39,7 @@
         "@": schemat/types/type.js:CODE
       info: Source code of functions that generate static HTML response for particular
         access methods of this category's items.
-      "@": schemat/types/catalog.js:CATALOG
+      "@": schemat/types/catalog_type.js:CATALOG
     views:
       type_values:
         "@": schemat/types/type.js:CODE
@@ -49,7 +49,7 @@
         to be rendered. Alternatively, the code of each view may consist of a
         method header, view() {...}, and be accompanied by supporting methods:
         title(), assets() - like in a class body."
-      "@": schemat/types/catalog.js:CATALOG
+      "@": schemat/types/catalog_type.js:CATALOG
     default_endpoints:
       type_values:
         "@": schemat/types/type.js:STRING
@@ -62,12 +62,12 @@
         GET/3: inspect
         LOCAL: self
         "@": schemat:Catalog
-      "@": schemat/types/catalog.js:CATALOG
+      "@": schemat/types/catalog_type.js:CATALOG
     schema:
       type_values:
         "@": schemat/types/type.js:TYPE
       info: Names and data types of properties of objects in this category.
-      "@": schemat/types/catalog.js:CATALOG
+      "@": schemat/types/catalog_type.js:CATALOG
     allow_custom_fields:
       default: false
       info: If true, it is allowed to set undeclared (out-of-schema) fields in objects
@@ -234,7 +234,7 @@
       info: A catalog of essential application objects - typically categories - that
         will be loaded and made globally available to the application code via
         `globalThis.XXX` right after initialization of `schemat.site` object.
-      "@": schemat/types/catalog.js:CATALOG
+      "@": schemat/types/catalog_type.js:CATALOG
     cache_purge_interval:
       default: 10
       info: Interval [sec] at which the server-side cache is purged from expired
@@ -285,7 +285,7 @@
     entries:
       type_values:
         "@": schemat/types/type.js:REF
-      "@": schemat/types/catalog.js:CATALOG
+      "@": schemat/types/catalog_type.js:CATALOG
     "@": schemat:Catalog
   class: schemat/std/containers.js:Directory
   __prototype:
@@ -370,7 +370,7 @@
         category:
           "@": 1
         "@": schemat/types/type.js:REF
-      "@": schemat/types/catalog.js:CATALOG
+      "@": schemat/types/catalog_type.js:CATALOG
     "@": schemat:Catalog
   class: schemat/std/containers.js:Category_IID_Namespace
   __prototype:

@@ -173,7 +173,7 @@ export class Schemat {
 
         let accept = (name) => name.toUpperCase() === name
         await builtin.fetch("../types/type.js", {accept})
-        await builtin.fetch("../types/catalog.js", {accept})
+        await builtin.fetch("../types/catalog_type.js", {accept})
     }
 
 

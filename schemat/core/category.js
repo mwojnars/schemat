@@ -10,7 +10,7 @@ import {assert, print, T} from "../common/utils.js";
 import {Catalog, Data} from "./data.js";
 
 import {WebObject} from "./object.js";
-import {SCHEMA} from "../types/catalog.js";
+import {SCHEMA} from "../types/catalog_type.js";
 import {ReactPage, CategoryInspectView} from "../web/pages.js"
 import {JsonService} from "../web/services.js"
 import {mDataRecords} from "../web/messages.js"
@@ -170,7 +170,7 @@ export class Category extends WebObject {
 
     'GET.inspect'() { return new ReactPage(CategoryInspectView) }
 
-    'POST.list_objects'() {             // TODO: should be GET.list_objects() ...
+    'POST.list_objects'() {
         return new JsonService({
             server: (opts) => schemat.list_category(this, {load: true, ...opts}),
             output: mDataRecords,

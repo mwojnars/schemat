@@ -45,7 +45,7 @@
       info: Mapping of categories (their paths) to names of sql tables.
       type_values:
         "@": schemat/types/type.js:STRING
-      "@": schemat/types/catalog.js:CATALOG
+      "@": schemat/types/catalog_type.js:CATALOG
     offset:
       "@": schemat/types/type.js:INTEGER
     readonly:
