@@ -203,8 +203,6 @@ export class WebObject {
     __url                   absolute URL path of this object, calculated via type imputation in _impute_url()
     __assets                cached web Assets of this object's __schema
 
-    __services              instance-level dictionary {...} of all Services; initialized once for the entire class and stored in the prototype (!), see _create_services()
-
     */
 
     set __id(id) {
@@ -253,10 +251,6 @@ export class WebObject {
 
     /***  Internal properties  ***/
 
-    GET             // null objects {...} with service triggers for particular network endpoints of this object...
-    POST
-    LOCAL
-
     __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
 
@@ -275,6 +269,16 @@ export class WebObject {
         // db         // the origin database of this item; undefined in newborn items
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
     }
+
+    // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for network endpoints of this object; created in _init_services().
+    // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
+    //      this['<PROTO>.xxx']().invoke(this, '<PROTO>.xxx', ...args)
+    // If the handler function doesn't return a service object, the corresponding trigger simply returns the handler's return value, whatever it is.
+
+    GET             // triggers for HTTP GET endpoints of this object
+    POST            // triggers for HTTP POST endpoints
+    LOCAL           // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
+                    // ... Other trigger groups are created automatically for other protocol names.
 
 
     static _cachable_getters        // a Set of names of getters of the WebObject class or its subclass - for caching in ItemProxy
@@ -570,7 +574,7 @@ export class WebObject {
         return this.__handlers = new Map(handlers)
     }
 
-    _create_triggers() {
+    _init_services() {
         /* For each endpoint of the form "PROTO.name" create a trigger method, "name(...args)",
            that executes a given handler (client- or server-side) and, if the result is a Service instance,
            calls its .client() or .server() depending on the current environment.
@@ -591,40 +595,40 @@ export class WebObject {
         }
     }
 
-    static _collect_services() {
-        /* Collect Services defined as static properties of the class and named "TYPE/endpoint" (TYPE in uppercase).
-           The result is cached in prototype.__services for reuse by all objects of this class.
-         */
-        let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
-        let names = T.getAllPropertyNames(this).filter(is_endpoint).filter(name => this[name])
-        let endpoints = names.map(endpoint => {
-            let service = this[endpoint]
-            service.bindAt(endpoint)
-            return [endpoint, service]
-        })
-        return this.prototype.__services = Object.fromEntries(endpoints)
-    }
-
-    _init_services() {
-        /* Collect services for this object's class and create this.service.xxx() triggers for the object. */
-        this._create_triggers()
-
-        if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
-        let self = this.__self
-        // let triggers = this.__self.service = {}
-
-        for (let [endpoint, service] of Object.entries(this.__services)) {
-            let [protocol, name] = endpoint.split('/')
-            // if (triggers[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
-            // triggers[name] = service.invoke(this)   // service.xxx(...)
-
-            self[protocol] ??= Object.create(null)
-            if (self[protocol][name]) continue //throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
-
-            self[protocol][name] = service.make_trigger(this)   // PROTOCOL.xxx(...)
-            // trigger[type] = trigger              // service.xxx.POST(...)
-        }
-    }
+    // static _collect_services() {
+    //     /* Collect Services defined as static properties of the class and named "TYPE/endpoint" (TYPE in uppercase).
+    //        The result is cached in prototype.__services for reuse by all objects of this class.
+    //      */
+    //     let is_endpoint = prop => prop.includes('/') && prop.split('/')[0] === prop.split('/')[0].toUpperCase()
+    //     let names = T.getAllPropertyNames(this).filter(is_endpoint).filter(name => this[name])
+    //     let endpoints = names.map(endpoint => {
+    //         let service = this[endpoint]
+    //         service.bindAt(endpoint)
+    //         return [endpoint, service]
+    //     })
+    //     return this.prototype.__services = Object.fromEntries(endpoints)
+    // }
+    //
+    // _init_services() {
+    //     /* Collect services for this object's class and create this.service.xxx() triggers for the object. */
+    //     this._create_triggers()
+    //
+    //     if (!this.constructor.prototype.hasOwnProperty('__services')) this.constructor._collect_services()
+    //     let self = this.__self
+    //     // let triggers = this.__self.service = {}
+    //
+    //     for (let [endpoint, service] of Object.entries(this.__services)) {
+    //         let [protocol, name] = endpoint.split('/')
+    //         // if (triggers[name]) throw new Error(`service with the same name already exists (${name}) in [${this.id}]`)
+    //         // triggers[name] = service.invoke(this)   // service.xxx(...)
+    //
+    //         self[protocol] ??= Object.create(null)
+    //         if (self[protocol][name]) continue //throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
+    //
+    //         self[protocol][name] = service.make_trigger(this)   // PROTOCOL.xxx(...)
+    //         // trigger[type] = trigger              // service.xxx.POST(...)
+    //     }
+    // }
 
 
     /***  access to properties  ***/
@@ -827,14 +831,14 @@ export class WebObject {
         assert(this.is_loaded)
         request.target = this
 
-        // convert endpoint names to full protocol-qualified endpoints: GET/xxx
+        // convert endpoint names to full protocol-qualified endpoints: GET.name
         let names = this._get_endpoints(request)
         let endpoints = names.map(e => `${request.protocol}.${e}`)
 
         // find the first endpoint that matches this request and launch its handler
         for (let endpoint of endpoints) {
             let service = this._get_handler(endpoint)
-            service ??= this.__services[endpoint.replace('.','/')]       // TODO: remove (old way of defining handlers)
+            // service ??= this.__services[endpoint.replace('.','/')]
             if (!service) continue
 
             // print(`handle() endpoint: ${endpoint}`)

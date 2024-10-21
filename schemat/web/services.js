@@ -114,14 +114,14 @@ export class Service {
             : this.client(target, ...args)
     }
 
-    make_trigger(target) {
-        /* Isomorphic method that returns a "trigger" function that invokes this service no matter if it is on a client
-           (with network communication via this.client()) or a server (no communication, .server() is called directly).
-         */
-        return SERVER
-            ? (...args) => this.server(target, ...args)         // may return a Promise
-            : (...args) => this.client(target, ...args)         // may return a Promise
-    }
+    // make_trigger(target) {
+    //     /* Isomorphic method that returns a "trigger" function that invokes this service no matter if it is on a client
+    //        (with network communication via this.client()) or a server (no communication, .server() is called directly).
+    //      */
+    //     return SERVER
+    //         ? (...args) => this.server(target, ...args)         // may return a Promise
+    //         : (...args) => this.client(target, ...args)         // may return a Promise
+    // }
 }
 
 
