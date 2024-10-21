@@ -1,4 +1,4 @@
-import {assert} from "../common/utils.js";
+import {assert, T} from "../common/utils.js";
 import {RequestFailed} from "../common/errors.js";
 import {JSONx} from "../core/jsonx.js";
 import {Data} from "../core/catalog.js";
@@ -28,10 +28,18 @@ export class MessageEncoder {
     }
 }
 
+/**********************************************************************************************************************/
+
 export class mString extends MessageEncoder {
     /* No encoding. A plain string (or any object) is passed along unchanged. */
     encode(arg)     { return arg }
     decode(message) { return message }
+}
+
+export class mQueryString extends MessageEncoder {
+    /* Encoding of a plain object {key:val} into a URL query string. */
+    encode(arg)     { assert(!arg || T.isPlain(arg)); return arg }
+    decode(msg)     { return msg }
 }
 
 /**********************************************************************************************************************/
