@@ -17,6 +17,7 @@ import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {Request} from "../web/request.js"
 import {ReactPage, ItemInspectView} from "../web/pages.js"
+import {Service} from "../web/services.js";
 
 const ROOT_ID = 1
 let RootCategory
@@ -560,7 +561,7 @@ export class WebObject {
     }
 
 
-    static _collect_handlers(protocols = ['GET', 'POST', 'LOCAL'], SEP = '_') {
+    static _collect_handlers(protocols = ['GET', 'POST', 'LOCAL'], SEP = '.') {
         /* Collect all web handlers of this class, so that service triggers can be generated for every new object. */
         let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
         let proto = this.prototype
@@ -568,11 +569,30 @@ export class WebObject {
         let handlers = names.map(name => [name, proto[name]])
         return this.__handlers = new Map(handlers)
     }
+
     _create_triggers() {
-        /* For each endpoint of the form "PROTO/name" create a trigger method, "name(...args)",
-           that executes a given handler (client- or server-side), assumes the result is a Service instance,
-           and calls .send() on this service.
+        /* For each endpoint of the form "PROTO.name" create a trigger method, "name(...args)",
+           that executes a given handler (client- or server-side) and, if the result is a Service instance,
+           calls its .client() or .server() depending on the current environment.
          */
+        if (!this.constructor.prototype.hasOwnProperty('__handlers')) this.constructor._collect_handlers()
+        let self = this.__self
+
+        for (let [endpoint, handler] of this.constructor.__handlers.entries()) {
+            let [protocol, name] = endpoint.split('.')
+
+            self[protocol] ??= Object.create(null)
+            if (self[protocol][name]) throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
+
+            self[protocol][name] = (...args) => {
+                let result = handler()
+                if (result instanceof Service) {
+                    result.bindAt(endpoint.replace('.', '/'))
+                    return result.invoke(this, ...args)
+                }
+                return result
+            }
+        }
     }
 
     static _collect_services() {
@@ -603,9 +623,9 @@ export class WebObject {
             // triggers[name] = service.invoke(this)   // service.xxx(...)
 
             self[protocol] ??= Object.create(null)
-            if (self[protocol][name]) throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
+            if (self[protocol][name]) continue //throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
 
-            self[protocol][name] = service.make_trigger(this)   // service.PROTOCOL.xxx(...)
+            self[protocol][name] = service.make_trigger(this)   // PROTOCOL.xxx(...)
             // trigger[type] = trigger              // service.xxx.POST(...)
         }
     }

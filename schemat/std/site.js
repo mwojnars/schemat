@@ -165,10 +165,8 @@ export class Site extends WebObject {
 
     /***  Endpoints  ***/
 
-    'GET.create_object'() {}
-    'POST.create_object'() {}
-
-    'GET+POST/create_object'() {
+    'POST.create_object'() {
+        print('POST.create_object()')
         return new JsonService({
             server: (request, data_json) => { return this.database.insert(data_json) },
             input:  mDataString,
