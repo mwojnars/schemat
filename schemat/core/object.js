@@ -605,7 +605,7 @@ export class WebObject {
             self[protocol] ??= Object.create(null)
             if (self[protocol][name]) throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
 
-            self[protocol][name] = service.invoke(this)   // service.PROTOCOL.xxx(...)
+            self[protocol][name] = service.make_trigger(this)   // service.PROTOCOL.xxx(...)
             // trigger[type] = trigger              // service.xxx.POST(...)
         }
     }
