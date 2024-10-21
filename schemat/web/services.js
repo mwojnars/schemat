@@ -30,8 +30,8 @@ export class Service {
        that can be linked through Network adapters to a number of different target objects.
      */
 
-    endpoint            // the target object's endpoint where this service is exposed; a string of the form "PROTOCOL/name",
-                        // where PROTOCOL is one of GET/POST/LOCAL/..., and the name is a service name etc.
+    endpoint            // the target object's endpoint where this service is exposed; a string of the form "PROTOCOL.name",
+                        // where PROTOCOL is one of GET/POST/LOCAL/..., and the name is a service name
 
     opts = {
         type:  'POST',
@@ -75,8 +75,6 @@ export class Service {
         this.error  = T.isClass(error)  ? new error()  : error
     }
 
-    bindAt(endpoint) { this.endpoint = endpoint }
-
     _splitEndpoint() {
         assert(this.endpoint, this.endpoint)
         let parts = this.endpoint.split('.')
@@ -85,6 +83,14 @@ export class Service {
     }
 
     // the methods below may return a Promise or be declared as async in subclasses...
+
+    invoke(target, endpoint, ...args) {
+        /* Isomorphic method to invoke this service on a client or a server, via .client() or .server() respectively. May return a Promise. */
+        this.endpoint = endpoint
+        return SERVER
+            ? this.server(target, null, ...args)
+            : this.client(target, ...args)
+    }
 
     client(target, ...args) {
         /* Client-side remote invocation (RPC) of the service through a network request
@@ -104,14 +110,6 @@ export class Service {
         let {server} = this.opts
         if (!server) throw new Error('missing `server()` function in service definition')
         return server.call(target, ...args)
-    }
-
-    invoke(target, endpoint, ...args) {
-        /* Isomorphic method to invoke this service on a client or a server, via .client() or .server() respectively. May return a Promise. */
-        this.bindAt(endpoint)
-        return SERVER
-            ? this.server(target, ...args)
-            : this.client(target, ...args)
     }
 }
 
