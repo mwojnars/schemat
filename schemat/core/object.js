@@ -585,7 +585,7 @@ export class WebObject {
             if (self[protocol][name]) throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
 
             self[protocol][name] = (...args) => {
-                let result = handler()
+                let result = handler.call(this)
                 return result instanceof Service ? result.invoke(this, endpoint, ...args) : result
             }
         }
