@@ -14,7 +14,6 @@ export class Client extends Schemat {
     requested = {
         target: null,           // target web object that was addressed by the request, already loaded
         endpoint: null,         // target's endpoint that was called
-        service: null,          // service (if any) that is exposed at the target's `endpoint`
     }
 
     /***  startup  ***/
@@ -33,11 +32,7 @@ export class Client extends Schemat {
         let target = this.get_object(ctx.target_id)
         target.assert_loaded()
 
-        let endpoint = ctx.endpoint
-        let service = target[endpoint]()
-        // let service = target.__services[endpoint]
-
-        this.requested = {target, endpoint, service}
+        this.requested = {target, endpoint: ctx.endpoint}
         // check()
     }
 

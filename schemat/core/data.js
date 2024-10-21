@@ -632,7 +632,7 @@ export class Data extends Catalog {
         assert(!obj.__id)
 
         const KEEP = ['__class', '__category']
-        const DROP = ['service']
+        const DROP = ['GET', 'POST', 'LOCAL']
 
         // identify __category & __class of the object and perform conversions if needed
         let __category = obj.__category || obj.constructor.__category || undefined
