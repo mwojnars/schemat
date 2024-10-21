@@ -75,7 +75,9 @@ export class Service {
         this.error  = T.isClass(error)  ? new error()  : error
     }
 
-    bindAt(endpoint) { this.endpoint = endpoint }
+    bindAt(endpoint) {
+        this.endpoint = endpoint.replace('.', '/')
+    }
 
     _splitEndpoint() {
         assert(this.endpoint, this.endpoint)
@@ -109,8 +111,8 @@ export class Service {
     }
 
     invoke(target, endpoint, ...args) {
-        /* Isomorphic method to invoke this service via .client() or .server(), depending if called on client or server. May return a Promise. */
-        this.bindAt(endpoint.replace('.', '/'))
+        /* Isomorphic method to invoke this service on a client or a server, via .client() or .server() respectively. May return a Promise. */
+        this.bindAt(endpoint)
         return SERVER
             ? this.server(target, null, ...args)
             : this.client(target, ...args)
@@ -139,7 +141,7 @@ export class HttpService extends Service {
 
 
     async client(target, ...args) {
-        let base_url = target.url(this.endpoint_name)       // it's assumed the `target` is a WebObject instance with .url()
+        let base_url = target.url(this.endpoint_name)      // `target` should be a WebObject with .url()
         let message  = this.input.encode(...args)
         let response = await this.submit(base_url, message)
         let result   = await response.text()
