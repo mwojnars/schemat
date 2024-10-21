@@ -39,7 +39,7 @@ export class mString extends MessageEncoder {
 export class mQueryString extends MessageEncoder {
     /* Encoding of a plain object {key:val} into a URL query string. */
     encode(arg)     { assert(!arg || T.isPlain(arg)); return arg }
-    decode(msg)     { return msg }
+    decode(msg)     { assert(!msg || T.isPlain(msg)); return msg }
 }
 
 /**********************************************************************************************************************/
