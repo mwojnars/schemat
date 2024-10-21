@@ -70,9 +70,6 @@ export class NotImplemented extends BaseError {
 export class ValidationError extends BaseError  { static message = "validation of object's fields failed" }
 export class ValueError extends ValidationError { static message = "incorrect value of an object's field" }
 
-export class NotLinked extends BaseError {
-    constructor(obj) { super(`object is unlinked (missing ID)`) }
-}
 export class NotLoaded extends BaseError {
     constructor(obj) { super(`object is not loaded yet, run 'await obj.load()', id=${obj.__id}`) }
 }
