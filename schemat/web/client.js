@@ -34,7 +34,8 @@ export class Client extends Schemat {
         target.assert_loaded()
 
         let endpoint = ctx.endpoint
-        let service = target.__services[endpoint]
+        // let service = target.__services[endpoint]
+        let service = target[endpoint.replace('/','.')]()
 
         this.requested = {target, endpoint, service}
         // check()

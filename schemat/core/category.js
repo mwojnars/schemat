@@ -168,8 +168,8 @@ export class Category extends WebObject {
 
     /***  Endpoints  ***/
 
-    // 'GET.inspect'() { return new ReactPage(CategoryInspectView) }
-    static 'GET/inspect' = new ReactPage(CategoryInspectView)
+    'GET.inspect'() { return new ReactPage(CategoryInspectView) }
+    // static 'GET/inspect' = new ReactPage(CategoryInspectView)
 
     'POST.list_objects'() {
         return new JsonService({

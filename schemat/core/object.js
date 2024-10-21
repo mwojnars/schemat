@@ -1110,8 +1110,8 @@ export class WebObject {
     // GET_inspect()     { return new ReactPage(this, ItemInspectView) }
     // static PAGE_inspect = new ReactPage(ItemInspectView)
 
-    // 'GET.inspect'()     { return new ReactPage(ItemInspectView) }
-    static 'GET/inspect' = new ReactPage(ItemInspectView)
+    'GET.inspect'()     { return new ReactPage(ItemInspectView) }
+    // static 'GET/inspect' = new ReactPage(ItemInspectView)
 
 
 
