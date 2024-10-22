@@ -670,12 +670,13 @@ export class WebObject {
                 if (this.__category.allow_custom_fields) continue
                 else throw new ValidationError(`unknown property: ${prop}`)
 
-            type.validate(value)                            // may raise an exception
-
             if (!type.options.repeated) {                   // check that a single-valued property has no repetitions
                 let count = this.__data.getAll(prop).length
                 if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop})`)
             }
+
+            let newval = type.validate(value)               // may raise an exception
+            if (post_setup) this.__data.set(prop, newval)
         }
 
         // check multi-field constraints ...
