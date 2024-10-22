@@ -81,10 +81,12 @@ class ItemProxy {
         // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
         let regular = (prop[0] !== '_' || prop.startsWith('__'))
         let schema = receiver.__schema              // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
+        let type = schema?.get(base)
 
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
         if (schema?.has(base) || (!schema?.options.strict && regular)) {
-            if (!target.is_newborn()) print('proxy_set updating:', prop)
+            // if (!target.is_newborn()) print('proxy_set updating:', prop)
+            if (type?.options.virtual) throw new Error(`cannot modify a virtual property (${prop})`)
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
                 target.make_edit('set_all', {prop: base, values: value})
