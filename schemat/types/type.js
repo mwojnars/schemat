@@ -27,7 +27,7 @@ export class Type {
     isRepeated()    { return this.props.repeated }
     isEditable()    { return this.props.editable }
 
-    static props = {                // common properties of all types:
+    static options = {              // settings shared by all types...
         info     : undefined,       // human-readable description of this type: what values are accepted and how they are interpreted
         blank    : true,            // if true, `null` and `undefined` are treated as a valid value: both are stored and decoded as "null"
         class    : undefined,       // if present, all values (except blank) must be instances of this JS class
@@ -69,12 +69,12 @@ export class Type {
     }
 
     static default_props() {
-        /* Return all props from the prototype chain combined. */
-        return Object.assign({}, ...T.getInherited(this, 'props'))
+        /* Return all options from the prototype chain combined. */
+        return Object.assign({}, ...T.getInherited(this, 'options'))
     }
 
     __props = {}                // own properties of this type instance (without defaults)
-    props                       // all properties of this type instance: own + defaults  (this.__props + constructor.props)
+    props                       // all properties of this type instance: own + defaults  (this.__props + constructor.options)
 
 
     constructor(props = {}) {
@@ -245,13 +245,13 @@ export class Primitive extends Type {
 
 export class BOOLEAN extends Primitive {
     static stype = "boolean"
-    static props = {initial: false}
+    static options = {initial: false}
 }
 
 export class NUMBER extends Primitive {
     /* Floating-point number */
     static stype = "number"
-    static props = {
+    static options = {
         // initial: 0,
         min:            undefined,         // minimum value allowed (>=)
         max:            undefined,         // maximum value allowed (<=)
@@ -272,7 +272,7 @@ export class INTEGER extends NUMBER {
 
     static DEFAULT_LENGTH_SIGNED = 6    // default length of the binary representation in bytes, for signed integers
 
-    static props = {
+    static options = {
         signed:  false,         // if true, values can be negative
         length:  undefined,     // number of bytes to be used to store values in DB indexes; adaptive encoding if undefined (for uint), or 6 (for signed int)
     }
@@ -374,7 +374,7 @@ export class INTEGER extends NUMBER {
 export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static stype = "string"
-    static props = {
+    static options = {
         initial:    '',
         charset:    undefined,
         // collator                 // optional collator object that defines the sort order and provides a (possibly one-way!) binary encoding for indexing
@@ -395,7 +395,7 @@ export class Textual extends Primitive {
 }
 
 export class STRING extends Textual {
-    static props = {
+    static options = {
         trim: true,                 // if true (default), the strings are trimmed before insertion to DB
     }
     _validate(str) {
@@ -408,12 +408,12 @@ export class FIELD extends STRING {
     /* A STRING than only contains alphanumeric characters (Unicode allowed!), "_" and "-",
        but no punctuation, spaces or control chars.
      */
-    static props = {charset: 'a-zA-Z0-9_\\-\\p{L}\\p{N}'}
+    static options = {charset: 'a-zA-Z0-9_\\-\\p{L}\\p{N}'}
 }
 
 export class IDENTIFIER extends STRING {
     /* A STRING than only contains ASCII alphanumeric characters and "_", but no punctuation, "-", spaces or control chars. */
-    static props = {charset: 'a-zA-Z0-9_'}
+    static options = {charset: 'a-zA-Z0-9_'}
 }
 
 export class URL extends STRING {
@@ -496,7 +496,7 @@ export let generic_string = new STRING()
 /**********************************************************************************************************************/
 
 export class TYPE extends GENERIC {
-    static props = {class: Type}
+    static options = {class: Type}
     static Widget = widgets.TYPE_Widget
 }
 
@@ -545,7 +545,7 @@ export class REF extends Type {
        REF without parameters is equivalent to GENERIC(WebObject), however, REF can also be parameterized,
        which is not possible with a GENERIC.
      */
-    static props = {
+    static options = {
         category:  undefined,       // base category for all the items to be encoded
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
     }
@@ -567,7 +567,7 @@ export class REF extends Type {
 
 export class CHOICE extends Type {
     /* List of choices, the value must be one of them. */
-    static props = {
+    static options = {
         values: [],             // eligible choice values
     }
 }
@@ -577,7 +577,7 @@ export class VARIANT extends Type {
     /* Selection from a number of predefined (sub)types. The value must be a plain object of the form {choice: value},
        where `choice` is one of the eligible choice names, and `value` matches this choice's corresponding type.
      */
-    static props = {
+    static options = {
         choices: {},            // plain object interpreted as a dictionary of choices, {choice-name: type-definition}
     }
 }
@@ -586,7 +586,7 @@ export class VARIANT extends Type {
 export class ARRAY extends GENERIC {
     /* Represents arrays of objects, all of the same type (`type`, generic_type by default). */
 
-    static props = {
+    static options = {
         type: generic_type,                 // type of all elements in the array, as a Type instance
     }
 
@@ -613,7 +613,7 @@ export class MAP extends Type {
     If no type is provided, `generic_type` is used as a default for values, or STRING() for keys.
     */
 
-    static props = {
+    static options = {
         class:      Object,                     // class of input objects
         keys:       new STRING(),               // Type of keys of app-layer dicts
         values:     generic_type,               // Type of values of app-layer dicts
@@ -637,7 +637,7 @@ export class RECORD extends Type {
     `this.type`, if present, is an exact class (NOT a base class) of accepted objects.
     */
 
-    static props = {
+    static options = {
         fields: {},                     // object containing field names and their schemas
     }
 
@@ -657,7 +657,7 @@ export class RECORD extends Type {
 //        By default, the computed value is cached. To disable caching, set `cache` to false.
 //      */
 //
-//     static props = {
+//     static options = {
 //         compute:    undefined,          // function(item) that computes the value of the field
 //         cache:      true,               // if true, the computed value is cached
 //     }
@@ -689,7 +689,7 @@ export class TypeWrapper extends Type {
        Specifies a type item + property values (type constraints etc.).
      */
 
-    static props = {
+    static options = {
         type_item:  undefined,          // item of the Type category (instance of TypeItem) implementing this.real_type
         properties: {},                 // properties to be passed to `type_item` to create this.real_type
     }

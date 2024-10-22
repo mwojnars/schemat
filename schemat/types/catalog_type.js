@@ -35,7 +35,7 @@ export class CATALOG extends Type {
 
     static get Widget() { return CatalogTable }
 
-    static props = {
+    static options = {
         class:          Catalog,
         type_keys:      new FIELD({blank: true}),       // type of all keys in the catalog; must be an instance of STRING or its subclass
         type_values:    new GENERIC(),                  // type of all values in the catalog
@@ -117,7 +117,7 @@ export class SCHEMA extends CATALOG {
        Primarily used as a value type for WebObject.__data, not intended for other uses.
      */
 
-    static props = {
+    static options = {
         fields: {},             // object with field names and their types; null means a default data type should be used for a given field
         strict: true,           // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields
     }
@@ -153,7 +153,7 @@ export class SCHEMA_GENERIC extends SCHEMA {
     /* Generic SCHEMA, used when there's no category for a web object. All property names are allowed in the web object,
        and their type is `generic_type`.
      */
-    static props = {
+    static options = {
         fields: {},
         strict: false,
     }
@@ -165,7 +165,7 @@ export class SCHEMA_GENERIC extends SCHEMA {
 // export class DATA_SCHEMA extends TYPE {
 //     /* An (imputed) instance of SCHEMA that represents schema of objects in a category, wrapped up in a SCHEMA. */
 //
-//     static props = {
+//     static options = {
 //         editable: false,
 //         impute() {
 //             /* `this` is expected to be a Category object that defines items' schema through its `fields` property. */
