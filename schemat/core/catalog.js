@@ -515,36 +515,36 @@ export class Catalog {
 
     /***  Transformations  ***/
 
-    transform(ops, {deep = true} = {}) {
-        /* Transform this Catalog and its nested subcatalogs (if deep=true) in place by applying the
-           {key, value, label, comment, entry} transformations as passed in `ops`.
-           Each operator in `ops` is a function that takes an original JS value and returns its replacement
-           (can be the same value). When an operator is missing, the corresponding value is left unchanged.
-         */
-        // let entries = this._entries.map(e => ({...e}))          // copy each individual entry for subsequent modifications
-        let entries = this._entries
-
-        if (deep)                                               // call transform() recursively on subcatalogs
-            for (let e of entries)
-                if (e.value instanceof Catalog)
-                    e.value.transform(ops, {deep})
-
-        if (ops.entry) {
-            entries = entries.map(ops.entry)                    // modify each entry as a whole
-            ops = {...ops}
-            delete ops.entry
-        }
-
-        for (const [prop, op] of Object.entries(ops))           // modify individual properties of each entry
-            entries = entries.map(e => {
-                if(prop in e && (e[prop] = op(e[prop])) === undefined)
-                    delete e[prop]
-                return e
-            })
-
-        this.init(entries)
-        // return new this.constructor(entries)
-    }
+    // transform(ops, {deep = true} = {}) {
+    //     /* Transform this Catalog and its nested subcatalogs (if deep=true) in place by applying the
+    //        {key, value, label, comment, entry} transformations as passed in `ops`.
+    //        Each operator in `ops` is a function that takes an original JS value and returns its replacement
+    //        (can be the same value). When an operator is missing, the corresponding value is left unchanged.
+    //      */
+    //     // let entries = this._entries.map(e => ({...e}))          // copy each individual entry for subsequent modifications
+    //     let entries = this._entries
+    //
+    //     if (deep)                                               // call transform() recursively on subcatalogs
+    //         for (let e of entries)
+    //             if (e.value instanceof Catalog)
+    //                 e.value.transform(ops, {deep})
+    //
+    //     if (ops.entry) {
+    //         entries = entries.map(ops.entry)                    // modify each entry as a whole
+    //         ops = {...ops}
+    //         delete ops.entry
+    //     }
+    //
+    //     for (const [prop, op] of Object.entries(ops))           // modify individual properties of each entry
+    //         entries = entries.map(e => {
+    //             if(prop in e && (e[prop] = op(e[prop])) === undefined)
+    //                 delete e[prop]
+    //             return e
+    //         })
+    //
+    //     this.init(entries)
+    //     // return new this.constructor(entries)
+    // }
 
 
     /***  Serialization  ***/
@@ -570,7 +570,7 @@ export class Catalog {
            or as an array of [key, value] tuples - some tuples may additionally contain a label and a comment.
          */
         let defined = (x) => x === undefined ? null : x             // function to replace "undefined" with null
-        let entries = this._entries.map(e =>
+        let entries = this._entries.filter(e => e.value !== undefined).map(e =>
         {
             let entry = [defined(e.key), defined(e.value)]          // entry = [key, value, label-maybe, comment-maybe]
             if (e.label || e.comment) entry.push(defined(e.label))
