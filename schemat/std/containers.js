@@ -37,8 +37,8 @@ export class Container extends WebObject {
         return null
     }
 
-    identify(item) {
-        /* Return a unique string identifier of `item` within this container. Empty string is a *valid* identifier!
+    identify(obj) {
+        /* Return a unique string identifier of `obj` within this container. Empty string is a *valid* identifier!
            An identifier of the form *XXX denotes a blank segment that should be removed when converting container access path to a URL path.
          */
         throw new Error('not implemented')
@@ -123,9 +123,9 @@ export class Directory extends Container {
         return null
     }
 
-    identify(item) {
-        assert(item.__id)
-        return this._entries_rev.get(item.__id)
+    identify(obj) {
+        assert(obj.__id)
+        return this._entries_rev.get(obj.__id)
     }
 }
 
@@ -194,17 +194,17 @@ export class Category_IID_Namespace extends Namespace {
         return schemat.get_loaded(Number(id))
     }
 
-    identify(item) {
+    identify(obj) {
         let sep = Category_IID_Namespace.ID_SEPARATOR
         let spaces_rev = this.spaces_rev
-        let space = spaces_rev.get(item.__category?.__id)
-        if (space) return `${space}${sep}${item.__id}`
+        let space = spaces_rev.get(obj.__category?.__id)
+        if (space) return `${space}${sep}${obj.__id}`
     }
 
     get spaces_rev() {
         /* A reverse mapping of category identifiers to space names. Cached. */
         let catalog = this.spaces
-        return new Map(catalog.map(({key, value:item}) => [item.__id, key]))
+        return new Map(catalog.map(({key, value:obj}) => [obj.__id, key]))
     }
 }
 
