@@ -515,23 +515,12 @@ export class WebObject {
     }
 
 
-    /***  initialization of URL & services  ***/
+    /***  URLs and URL paths  ***/
 
-    // async _init_url() {
-    //     while (!schemat.site) {                                     // wait until the site is created; important for bootstrap objects
-    //         await delay()
-    //         if (schemat.is_closing) return                          // site is closing? no need to wait any longer
-    //     }
-    //
-    //     let container = this.__container
-    //     if (!container) return this.__url                           // root Directory has no parent container; also, no-category objects have no *default* __container and no imputation of __path & __url
-    //
-    //     if (!container.is_loaded()) await container.load()          // container must be fully loaded
-    //     if (!container.__path) await container.__meta.pending_url   // container's path must be initialized
-    //
-    //     delete this.__meta.pending_url
-    //     return this.__url                                           // invokes calculation of __path and __url via impute functions
-    // }
+    get system_url() {
+        /* The internal URL of this object, typically /$/id/<ID> */
+        return schemat.site.default_path_of(this)
+    }
 
     _impute__path() {
         /* Calculation of __path if missing. */
@@ -548,6 +537,22 @@ export class WebObject {
         // return url
     }
 
+    // async _init_url() {
+    //     while (!schemat.site) {                                     // wait until the site is created; important for bootstrap objects
+    //         await delay()
+    //         if (schemat.is_closing) return                          // site is closing? no need to wait any longer
+    //     }
+    //
+    //     let container = this.__container
+    //     if (!container) return this.__url                           // root Directory has no parent container; also, no-category objects have no *default* __container and no imputation of __path & __url
+    //
+    //     if (!container.is_loaded()) await container.load()          // container must be fully loaded
+    //     if (!container.__path) await container.__meta.pending_url   // container's path must be initialized
+    //
+    //     delete this.__meta.pending_url
+    //     return this.__url                                           // invokes calculation of __path and __url via impute functions
+    // }
+    //
     // static _decode_access_path(path) {
     //     /* Convert a container access path to a URL path by removing all blank segments (/*xxx).
     //        NOTE 1: if the last segment is blank, the result URL can be a duplicate of the URL of a parent or ancestor container (!);
@@ -560,11 +565,6 @@ export class WebObject {
     //     let url = path.replace(/\/\*[^/]*/g, '')
     //     return [url, last_blank]
     // }
-
-    get system_url() {
-        /* The internal URL of this object, typically /$/id/<ID> */
-        return schemat.site.default_path_of(this)
-    }
 
 
     /***  access to properties  ***/
@@ -1079,7 +1079,7 @@ export class WebObject {
     // inspect()         { return ItemInspectView.page }
 
     'POST.move_to'() {
-        /* Move this object from its current __container to `directory`, which must be a Directory object or its URL.
+        /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL.
            Returns an array of objects affected: the current object, the target directory, and the previous container.
          */
         return new JsonPOST({
