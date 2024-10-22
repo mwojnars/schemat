@@ -199,8 +199,10 @@ export class WebObject {
     __status                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
     __ttl                   time-to-live of this object in the registry [seconds]; 0 = immediate eviction on the next cache purge
 
-    __path                  URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
-    __url                   absolute URL path of this object, calculated via type imputation in _impute_url()
+    __ident                 (virtual) string identifier of this object inside its __container
+    __path                  (virtual) URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
+    __url                   (virtual) absolute URL path of this object, calculated via type imputation in _impute_url()
+
     __assets                cached web Assets of this object's __schema
 
     */
@@ -350,10 +352,6 @@ export class WebObject {
 
         let obj = new this(false, id, opts)
         return obj.__proxy = ItemProxy.wrap(obj)
-    }
-
-    static mutable_stub(id) {
-        return this.stub(id, {mutable: true})
     }
 
     static _create(categories = [], ...args) {
@@ -943,7 +941,7 @@ export class WebObject {
         /* Create a fully-loaded, but mutable, instance of this web object. The object is recreated from scratch,
            so it may have different (newer) content than `this`.
          */
-        return WebObject.mutable_stub(this.__id).load()
+        return WebObject.stub(this.__id, {mutable: true}).load()
     }
 
     _make_mutable() {
@@ -1090,8 +1088,14 @@ export class WebObject {
                 if (typeof directory === 'string') directory = await schemat.import(directory)
                 // TODO: check that `directory` is a Directory
 
-                let obj = this.get_mutable()
+                let [obj, src, dir] = await schemat.get_mutable(this, this.__container, directory)
+                let ident = this.__ident || this.name || `${this.id}`
+
                 obj.__container = directory
+                dir.set_entry(ident, this)
+                src.del_entry(this.__ident, this)
+
+                return schemat.save(dir, obj, src)
             },
             output: mWebObjects,
         })
