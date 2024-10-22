@@ -167,17 +167,14 @@
       __ident:
         impute: _impute__ident
         virtual: true
-        inherit: false
         "@": schemat/types/type.js:STRING
       __path:
         impute: _impute__path
         virtual: true
-        inherit: false
         "@": schemat/types/type.js:STRING
       __url:
         impute: _impute__url
         virtual: true
-        inherit: false
         "@": schemat/types/type.js:STRING
       __status:
         info: Set to "DRAFT" if the object's record is not yet fully initialized in the

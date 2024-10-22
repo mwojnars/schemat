@@ -603,7 +603,8 @@ export class WebObject {
             return [values[0]]  //[data.get(prop)]
         }
 
-        let ancestors = type.options.inherit ? proxy.__ancestors : [proxy]  // `this` is always included as the first ancestor
+        let {inherit, virtual} = type.options
+        let ancestors = (inherit && !virtual) ? proxy.__ancestors : [proxy] // `this` is always included as the first ancestor
         let streams = ancestors.map(proto => proto._own_values(prop))
 
         // read `defaults` from the category and combine them with the `streams`
