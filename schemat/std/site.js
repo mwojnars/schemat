@@ -166,7 +166,7 @@ export class Site extends WebObject {
     /***  Endpoints  ***/
 
     'POST.create_object'() {
-        // create a new object with __data initialized from the provided JSONx-stringified representation
+        /* Create a new object with __data initialized from the provided JSONx-stringified representation. */
         return new JsonPOST({
             server: (data_json) => this.database.insert(data_json),
             input:  mDataString,
@@ -175,8 +175,9 @@ export class Site extends WebObject {
     }
 
     'POST.submit_edits'() {
-        // submit a list of object edits to the DB. Each plain edit is a 2-element array: [op, args],
-        // where `op` is the name of the EDIT_* operation to be executed, and `args` is a dict {...} of arguments to be passed to the operation.
+        /* Submit a list of object edits to the DB. Each plain edit is a 2-element array: [op, args],
+           where `op` is the name of the EDIT_* operation to be executed, and `args` is a dict {...} of arguments to be passed to the operation.
+         */
         return new JsonPOST({
             server: (id, ...edits) => this.database.update(id, ...edits),
             input:  mJsonxObjects,
