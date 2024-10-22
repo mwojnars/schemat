@@ -174,11 +174,11 @@ export class Category extends WebObject {
         return new JsonGET({
             server: (opts) => schemat.list_category(this, {load: true, ...opts}),
             output: mDataRecords,
-            accept: (records) => {
-                // replace records with fully-loaded objects; there's NO guarantee that a given object was actually built from
-                // `rec.data` received in this particular request, because a newer record might have arrived in the meantime!
-                return Promise.all(records.map(rec => schemat.get_loaded(rec.id)))
-            }
+            // accept: (records) => {
+            //     // replace records with fully-loaded objects; there's NO guarantee that a given object was actually built from
+            //     // `rec.data` received in this particular request, because a newer record might have arrived in the meantime!
+            //     return Promise.all(records.map(rec => schemat.get_loaded(rec.id)))
+            // }
         })
     }
 }
