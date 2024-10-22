@@ -46,14 +46,15 @@ export class Type {
                                     // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
                                     // the function must be *synchronous* and cannot return a Promise
 
-        virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, but is calculated with impute() or a default value is used;
-                                    // also, when virtual=true, inheritance is skipped during property calculation like if inherit=false
+        virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
+                                    // when virtual=true, inheritance is skipped during property calculation like if inherit=false
 
         // persist_imputed: false  // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
         // required : undefined,   // if true, the field described by this type must be present in the record or object's data during insert/update
 
         // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
         // hidden   : undefined,   // if true, the field described by this type is not displayed in the UI;
+        // deprecated: undefined,  // indicator that this field should no longer be used; for smooth transition from one type to another
 
         // locked  : undefined,   // if true, the field described by this type cannot be modified by the user in the UI
         editable : true,        // if false, the field described by this type cannot be edited by the user in the UI;
@@ -64,10 +65,6 @@ export class Type {
 
         // collation: undefined,  // collation to be used for sorting and comparison of values of this type; if undefined, the default collation is used
         // descending           // if true, the field sorts in descending order in UI and/or in DB indexes
-
-        // TODO: to be added in the future...
-        // deprecated: undefined,   // indicator that this field should no longer be used; for smooth transition from one type to another
-        // compress: undefined,     // whether to compress JSON output in stringify/parse()
     }
 
     static default_props() {
