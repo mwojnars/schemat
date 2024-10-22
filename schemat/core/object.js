@@ -342,7 +342,7 @@ export class WebObject {
     }
 
     static create_stub(id = null, opts = {}) {
-        /* Create a stub: an empty item with `id` assigned. To load data, load() must be called afterwards. */
+        /* Create a stub: an empty object with `id` assigned. To load data, load() must be called afterwards. */
 
         // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
         if (id === ROOT_ID && !this.__is_root_category)
@@ -350,6 +350,10 @@ export class WebObject {
 
         let obj = new this(false, id, opts)
         return obj.__proxy = ItemProxy.wrap(obj)
+    }
+
+    static mutable_stub(id) {
+        return this.create_stub(id, {mutable: true})
     }
 
     static _create(categories = [], ...args) {
@@ -935,6 +939,13 @@ export class WebObject {
 
     /***  Object editing  ***/
 
+    async get_mutable() {
+        /* Create a fully-loaded, but mutable, instance of this web object. The object is recreated from scratch,
+           so it may have different (newer) content than `this`.
+         */
+        return WebObject.mutable_stub(this.__id).load()
+    }
+
     _make_mutable() {
         /* Make itself mutable. This removes the property cache, so read access becomes less efficient. Only allowed on client. */
         assert(CLIENT && !this.__meta.mutable)
@@ -1077,7 +1088,10 @@ export class WebObject {
         return new JsonPOST({
             server: async (directory) => {
                 if (typeof directory === 'string') directory = await schemat.import(directory)
+                // TODO: check that `directory` is a Directory
 
+                let obj = this.get_mutable()
+                obj.__container = directory
             },
             output: mWebObjects,
         })
