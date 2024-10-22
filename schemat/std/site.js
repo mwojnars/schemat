@@ -180,7 +180,6 @@ export class Site extends WebObject {
          */
         return new JsonPOST({
             server: (id, ...edits) => this.database.update(id, ...edits),
-            input:  mJsonxObjects,
             output: mDataRecord,
         })
     }

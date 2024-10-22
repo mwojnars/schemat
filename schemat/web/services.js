@@ -1,5 +1,5 @@
 import {print, assert, T, isPromise} from "../common/utils.js"
-import {mJsonError, mJsonObject, mJsonObjects, mQueryString, mString} from "./messages.js";
+import {mJsonError, mJsonxObject, mJsonxObjects, mQueryString, mString} from "./messages.js";
 
 
 export function url_query(url, params = {}) {
@@ -190,16 +190,16 @@ export class HttpService extends Service {
 /*************************************************************************************************/
 
 export class JsonGET extends HttpService {
-    static output = mJsonObject         // server responds with a single JSON-encoded object by default
+    static output = mJsonxObject        // server responds with a single JSONx-encoded object by default
 }
 
 export class JsonPOST extends HttpService {
-    /* JSON-based communication over HTTP POST: the service function accepts a series of arguments, `args`, that are
-       encoded as a JSON array and sent to the server as a POST request body; the result is also encoded as JSON.
+    /* JSON-based communication over HTTP POST. By default, the server accepts a series of arguments, `...args`, that are
+       encoded through JSONx and sent to the server in POST request body; the result is sent back as JSONx string
+       - this can be changed by passing a different `input` or `output` class in the constructor.
      */
-
-    static input  = mJsonObjects        // client submits an array of JSON-encoded objects by default
-    static output = mJsonObject         // server responds with a single JSON-encoded object by default
+    static input  = mJsonxObjects       // client submits an array of JSONx-encoded elements
+    static output = mJsonxObject        // server responds with a single JSONx-encoded object
 
     async submit(url, message) {
         if (this.endpoint_type !== 'POST') throw new Error(`JsonPOST can only be exposed at HTTP POST endpoint, not ${this.endpoint}`)
