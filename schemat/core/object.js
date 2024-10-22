@@ -939,9 +939,8 @@ export class WebObject {
 
     async get_mutable() {
         /* Create a fully-loaded, but mutable, instance of this web object. The object is recreated from scratch,
-           so it may have different (newer) content than `this`.
-         */
-        return WebObject.stub(this.__id, {mutable: true}).load()
+           so it may have different (newer) content than `this`. */
+        return schemat.get_mutable(this)
     }
 
     _make_mutable() {
