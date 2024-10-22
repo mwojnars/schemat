@@ -199,7 +199,7 @@ export class AdminProcess extends BackendProcess {
     async _update_references(old_id, new_id) {
         /* Scan all items in the DB and replace references to `old_id` with references to `item`. */
         if (old_id === new_id) return
-        let item = WebObject.create_stub(new_id)
+        let item = WebObject.stub(new_id)
 
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
         let transform = (it => it?.__id === old_id ? item : it)

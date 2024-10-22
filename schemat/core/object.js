@@ -341,24 +341,24 @@ export class WebObject {
         if (mutable && !this.is_newborn()) this.__meta.edits = []
     }
 
-    static create_stub(id = null, opts = {}) {
+    static stub(id = null, opts = {}) {
         /* Create a stub: an empty object with `id` assigned. To load data, load() must be called afterwards. */
 
         // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
         if (id === ROOT_ID && !this.__is_root_category)
-            return RootCategory.create_stub(id)
+            return RootCategory.stub(id)
 
         let obj = new this(false, id, opts)
         return obj.__proxy = ItemProxy.wrap(obj)
     }
 
     static mutable_stub(id) {
-        return this.create_stub(id, {mutable: true})
+        return this.stub(id, {mutable: true})
     }
 
     static _create(categories = [], ...args) {
         /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
-        let obj = this.create_stub(null, {mutable: true})       // newly-created objects are always mutable
+        let obj = this.stub(null, {mutable: true})          // newly-created objects are always mutable
         categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat)
         obj.__data = new Data(...categories.map(cat => ['__category', cat]))
         obj.__create__(...args)
@@ -378,7 +378,7 @@ export class WebObject {
     static async from_json(id, json, {mutable = true, sealed = false} = {}) {
         /* Create a new WebObject instance given an encoded JSON string with the object's content. */
         assert(typeof json === 'string')
-        let obj = WebObject.create_stub(id, {mutable})
+        let obj = WebObject.stub(id, {mutable})
         obj.__data = Data.load(json)
         return obj.load({sealed})
     }
