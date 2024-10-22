@@ -537,6 +537,10 @@ export class WebObject {
         // return url
     }
 
+    _impute__ident() {
+        return this.__container?.identify(this)
+    }
+
     // async _init_url() {
     //     while (!schemat.site) {                                     // wait until the site is created; important for bootstrap objects
     //         await delay()

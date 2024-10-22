@@ -164,12 +164,19 @@
           object, which can be converted to a canonical URL path of the object
           by removing blank segments.
         "@": schemat/types/type.js:REF
+      __ident:
+        impute: _impute__ident
+        virtual: true
+        inherit: false
+        "@": schemat/types/type.js:STRING
       __path:
         impute: _impute__path
+        virtual: true
         inherit: false
         "@": schemat/types/type.js:STRING
       __url:
         impute: _impute__url
+        virtual: true
         inherit: false
         "@": schemat/types/type.js:STRING
       __status:
