@@ -606,8 +606,8 @@ export class WebObject {
         }
 
         let {inherit, virtual} = type.options
-        let ancestors = (inherit && !virtual) ? proxy.__ancestors : [proxy] // `this` is always included as the first ancestor
-        let streams = ancestors.map(proto => proto._own_values(prop))
+        let ancestors = inherit && !virtual ? proxy.__ancestors : [proxy]               // `this` included as the first ancestor
+        let streams = virtual ? [] : ancestors.map(proto => proto._own_values(prop))    // for virtual field, __data[field] is not used even if present
 
         // read `defaults` from the category and combine them with the `streams`
         if (prop !== '__prototype' && prop !== '__category')                // avoid circular dependency for these special props
