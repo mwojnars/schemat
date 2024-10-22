@@ -128,11 +128,12 @@ export class mDataRecord extends MessageEncoder {
     }
 }
 
-export class mDataRecords extends MessageEncoder {
-    /* Encoded: array of web objects, [obj1, obj2, ...].
-       Decoded: [{id, data},...], where `data` is a JSONx-encoded state of __data, not stringified.
+/**********************************************************************************************************************/
+
+export class mWebObjects extends MessageEncoder {
+    /* Encodes and decodes an array of web objects, [obj1, obj2, ...], through JSONx.
        After decoding, all records get automatically registered as the newest representations of the corresponding IDs
-       and get replaced with fully-loaded web objects. However, there's NO guarantee that a particular returned object
+       and get converted to fully-loaded web objects. However, there's NO guarantee that a particular returned object
        was actually built from `rec.data` received in this particular request (!) - this is because a newer record might
        have arrived in the registry in the meantime while the asynchronous .get_loaded() was running!
      */
@@ -142,7 +143,6 @@ export class mDataRecords extends MessageEncoder {
     decode(message) {
         let records = JSON.parse(message)
         return Promise.all(records.map(rec => schemat.register_record(rec) && schemat.get_loaded(rec.id)))
-        // return records.map(rec => schemat.register_record(rec))
     }
 }
 
