@@ -41,7 +41,7 @@ export class Type {
                                     // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object;
                                     // repeated fields of type CATALOG provide special behavior: they get merged altogether during the property's value computation
 
-        inherit  : true,            // if false, inheritance is disabled for this field; used particularly for some system fields
+        inherit  : true,            // if false, inheritance is disabled for this field; used especially for some system fields
         impute   : undefined,       // a function to be used for imputation of missing values; `this` references the item;
                                     // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
                                     // the function must be *synchronous* and cannot return a Promise
