@@ -991,10 +991,6 @@ export class WebObject {
 
         if (this.is_newborn())
             return schemat.site.POST.create_object(this.__data).then(({id}) => (this.__id = id))
-            // return schemat.site.create_object.send(this.__data).then(({id}) => (this.__id = id))
-            // return schemat.site.rpc.create_object(this.__data).then(({id}) => (this.__id = id))
-            // return schemat.site.POST.create_object(this.__data).then(({id}) => (this.__id = id))
-            // return schemat.site['POST/create_object']().client(this.__data).then(({id}) => (this.__id = id))
 
         if (!edits?.length) throw new Error(`no edits to be submitted for ${this.id}`)
 
@@ -1102,7 +1098,7 @@ export class WebObject {
                 dir.set_entry(ident, this)
                 src.del_entry(this.__ident, this)
 
-                return schemat.save(dir, obj, src)
+                return schemat.save_reload(dir, obj, src)
             },
             output: mWebObjects,
         })
