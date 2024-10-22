@@ -27,7 +27,7 @@ export class Type {
     isRepeated()    { return this.options.repeated }
     isEditable()    { return this.options.editable }
 
-    static options = {              // settings shared by all types...
+    static options = {              // configuration options shared by all types...
         info     : undefined,       // human-readable description of this type: what values are accepted and how they are interpreted
         blank    : true,            // if true, `null` and `undefined` are treated as a valid value: both are stored and decoded as "null"
         class    : undefined,       // if present, all values (except blank) must be instances of this JS class
@@ -73,28 +73,28 @@ export class Type {
         return Object.assign({}, ...T.getInherited(this, 'options'))
     }
 
-    __props = {}                // own properties of this type instance (without defaults)
-    options                     // all properties of this type instance: own + defaults  (this.__props + constructor.options)
+    _options = {}               // own config options of this type instance (without defaults)
+    options                     // all config options of this type instance: own + defaults  (this._options + constructor.options)
 
 
     constructor(options = {}) {
-        this.__props = options || {}      // options=null/undefined is also valid
-        this._init_props()
+        this._options = options || {}       // options=null/undefined is also valid
+        this._init_options()
     }
 
     init() {}                   // called from Category.init(); subclasses should override this method as async to perform asynchronous initialization
 
-    _init_props() {
-        /* Create this.options by combining the constructor's default options (own and inherited) with instance options (this.__props). */
-        this.options = {...this.constructor.default_props(), ...this.__props}
+    _init_options() {
+        /* Create this.options by combining the constructor's default options (own and inherited) with instance options (this._options). */
+        this.options = {...this.constructor.default_props(), ...this._options}
     }
 
-    __getstate__()      { return this.__props }
+    __getstate__()      { return this._options }
 
     __setstate__(state) {
         assert(T.isPOJO(state))
-        this.__props = state
-        this._init_props()
+        this._options = state
+        this._init_options()
         return this
     }
 
@@ -690,28 +690,28 @@ export class TypeWrapper extends Type {
      */
 
     static options = {
-        type_item:  undefined,          // item of the Type category (instance of TypeItem) implementing this.real_type
-        properties: {},                 // properties to be passed to `type_item` to create this.real_type
+        type_item:  undefined,          // web object of the Type category (instance of TypeItem) implementing this.real_type
+        options: {},                    // config options to be passed to `type_item` to create this.real_type
     }
 
     real_type                           // the actual Type instance provided by `type_item` during init()
     
     async init() {
         if (this.real_type) return
-        let {type_item, properties} = this.options
+        let {type_item, options} = this.options
         await type_item.load()
         // let {TypeItem} = await import('./type_item.js')
         // assert(type_item instanceof TypeItem, type_item)
-        this.real_type = await type_item.create_real_type(properties)
+        this.real_type = await type_item.create_real_type(options)
     }
     instanceof(cls)     { return this.real_type instanceof cls }
     validate(obj)       { return this.real_type.validate(obj) }
     display(props)      { return this.real_type.display(props) }
 
-    __getstate__()          { return [this.options.type_item, this.options.properties] }
+    __getstate__()          { return [this.options.type_item, this.options.options] }
     __setstate__(state)     {
-        [this.__props.type_item, this.__props.properties] = state
-        this._init_props()
+        [this._options.type_item, this._options.options] = state
+        this._init_options()
         return this
     }
 }
