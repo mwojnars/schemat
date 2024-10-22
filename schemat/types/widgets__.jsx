@@ -18,19 +18,19 @@ export class TYPE_Widget__ extends GENERIC_Widget {
             if (!type.real_type) return "TypeWrapper (not loaded)"
             type = type.real_type
         }
-        let dflt = `${type.props.default}`
+        let dflt = `${type.options.default}`
 
         return (
             <span>
                 {`${type}`}
-                {type.props.default !== undefined && (
+                {type.options.default !== undefined && (
                     <span className="default" title={`default value: ${truncate(dflt, 1000)}`}>
                         {` (${truncate(dflt, 100)})`}
                     </span>
                 )}
-                {type.props.info && (
+                {type.options.info && (
                     <span className="info">
-                        {` • ${type.props.info}`} {/* smaller dot: &middot; larger dot: • */}
+                        {` • ${type.options.info}`} {/* smaller dot: &middot; larger dot: • */}
                     </span>
                 )}
             </span>

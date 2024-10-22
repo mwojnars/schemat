@@ -272,12 +272,12 @@ export class TYPE_Widget extends GENERIC_Widget {
         //     if (!type.real_type) return "TypeWrapper (not loaded)"
         //     type = type.real_type
         // }
-        let dflt = `${type.props.default}`
+        let dflt = `${type.options.default}`
         return SPAN(`${type}`,
-                type.props.default !== undefined &&
+                type.options.default !== undefined &&
                     SPAN(cl('default'), {title: `default value: ${truncate(dflt,1000)}`}, ` (${truncate(dflt,100)})`),
-                type.props.info &&
-                    SPAN(cl('info'), ` • ${type.props.info}`),   // smaller dot: &middot;  larger dot: •
+                type.options.info &&
+                    SPAN(cl('info'), ` • ${type.options.info}`),   // smaller dot: &middot;  larger dot: •
                 )
     }
 }

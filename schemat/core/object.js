@@ -82,7 +82,7 @@ class ItemProxy {
         let schema = receiver.__schema              // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
 
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
-        if (schema?.has(base) || (!schema?.props.strict && regular)) {
+        if (schema?.has(base) || (!schema?.options.strict && regular)) {
             if (!target.is_newborn()) print('proxy_set updating:', prop)
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
@@ -596,7 +596,7 @@ export class WebObject {
             return [values[0]]  //[data.get(prop)]
         }
 
-        let ancestors = type.props.inherit ? proxy.__ancestors : [proxy]    // `this` is always included as the first ancestor
+        let ancestors = type.options.inherit ? proxy.__ancestors : [proxy]  // `this` is always included as the first ancestor
         let streams = ancestors.map(proto => proto._own_values(prop))
 
         // read `defaults` from the category and combine them with the `streams`
@@ -662,7 +662,7 @@ export class WebObject {
 
             type.validate(value)                            // may raise an exception
 
-            if (!type.props.repeated) {                     // check that a single-valued property has no repetitions
+            if (!type.options.repeated) {                   // check that a single-valued property has no repetitions
                 let count = this.__data.getAll(prop).length
                 if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop})`)
             }

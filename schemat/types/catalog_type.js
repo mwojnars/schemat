@@ -43,25 +43,25 @@ export class CATALOG extends Type {
         repeated:       false,                          // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)
     }
 
-    subtype(key)  { return this.props.type_values }     // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
+    subtype(key)  { return this.options.type_values }   // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     getValidKeys()  { return undefined }
 
-    constructor(props = {}) {
-        super(props)
-        let {type_keys} = props
+    constructor(options = {}) {
+        super(options)
+        let {type_keys} = options
         if (type_keys && !(type_keys.instanceof(STRING)))
             throw new ValidationError(`data type of keys must be an instance of STRING or its subclass, not ${type_keys}`)
     }
 
     collect(assets) {
-        this.props.type_keys.collect(assets)
-        this.props.type_values.collect(assets)
+        this.options.type_keys.collect(assets)
+        this.options.type_values.collect(assets)
         CatalogTable.collect(assets)            // CatalogTable is the widget used to display catalogs in the UI
     }
 
     toString() {
         let name = this.constructor.name
-        let {type_keys, type_values} = this.props
+        let {type_keys, type_values} = this.options
         return T.ofType(type_keys, STRING) ? `${name}(${type_values})` : `${name}(${type_values}, ${type_keys})`
     }
 
@@ -81,23 +81,23 @@ export class CATALOG extends Type {
         if (!values.length) return this._impute(item)
 
         // include the default value in the merge, if present
-        let default_ = this.props.default
+        let default_ = this.options.default
         let catalogs = (default_ !== undefined) ? [...values, default_] : values
 
         return Catalog.merge(catalogs, !this.isRepeated())          // merge all values (catalogs) into a single catalog
 
         // TODO: inside Catalog.merge(), if repeated=false, overlapping values should be merged recursively
-        //       through combine() of props.type_values type
+        //       through combine() of options.type_values type
     }
 
     _validate(obj) {
         obj = super._validate(obj)
 
-        let {type_keys, type_values} = this.props
+        let {type_keys, type_values} = this.options
         for (let key of obj.keys()) type_keys.validate(key)
         for (let val of obj.values()) type_values.validate(val)
 
-        if (!type_keys.props.repeated) {
+        if (!type_keys.options.repeated) {
             let dups = new Set()
             for (let key of obj.keys()) {
                 if (key === undefined || key === null) continue
@@ -123,28 +123,28 @@ export class SCHEMA extends CATALOG {
     }
 
     isValidKey(key) {
-        return is_valid_field_name(key) && (!this.props.strict || Object.hasOwn(this.props.fields, key))
+        return is_valid_field_name(key) && (!this.options.strict || Object.hasOwn(this.options.fields, key))
     }
 
-    has(key) { return !!this.props.fields[key] }    // true if `key` is EXPLICITLY declared here as a valid field
-    get(key) { return this.props.fields[key] || (!this.props.strict && generic_type) || undefined }
+    has(key) { return !!this.options.fields[key] }      // true if `key` is EXPLICITLY declared here as a valid field
+    get(key) { return this.options.fields[key] || (!this.options.strict && generic_type) || undefined }
 
     subtype(key) {
-        let {fields} = this.props
-        if (!fields.hasOwnProperty(key) && this.props.strict)
+        let {fields} = this.options
+        if (!fields.hasOwnProperty(key) && this.options.strict)
             throw new ValidationError(`Unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
-        return fields[key] || this.props.type_values
+        return fields[key] || this.options.type_values
     }
     collect(assets) {
         for (let type of this._all_subtypes())
             type.collect(assets)
         CatalogTable.collect(assets)
     }
-    _all_subtypes() { return Object.values(this.props.fields) }
+    _all_subtypes() { return Object.values(this.options.fields) }
 
     getValidKeys() {
-        let fields = Object.getOwnPropertyNames(this.props.fields)
-        fields = fields.filter(f => this.props.fields[f].isEditable())      // only keep user-editable fields
+        let fields = Object.getOwnPropertyNames(this.options.fields)
+        fields = fields.filter(f => this.options.fields[f].isEditable())      // only keep user-editable fields
         return fields.sort()
     }
 }
@@ -157,7 +157,7 @@ export class SCHEMA_GENERIC extends SCHEMA {
         fields: {},
         strict: false,
     }
-    subtype(key)    { return this.props.fields[key] || generic_type }
+    subtype(key)    { return this.options.fields[key] || generic_type }
     _all_subtypes() { return [...super._all_subtypes(), generic_type] }
 }
 
@@ -321,7 +321,7 @@ export class CatalogTable extends Component {
         let valueElement = type && this.embed(type.Widget, props)
 
         return DIV(cl('entry-head'),
-                  DIV(cl('cell cell-key'),   this.key(entry, type?.props.info, ops)),
+                  DIV(cl('cell cell-key'),   this.key(entry, type?.options.info, ops)),
                   DIV(cl('cell cell-value'), valueElement, flashBox, errorBox),
                )
     }
@@ -332,7 +332,7 @@ export class CatalogTable extends Component {
         let empty  = false //!subcat.length   -- this becomes INVALID when entries are inserted/deleted inside `subcat`
         let toggle = () => !empty && setFolded(f => !f)
         let expand = {state: empty && 'empty' || folded && 'folded' || 'expanded', toggle}
-        let key    = this.key(entry, type?.props.info, ops, expand)
+        let key    = this.key(entry, type?.options.info, ops, expand)
 
         return FRAGMENT(
             DIV(cl('entry-head'), {key: 'head'},

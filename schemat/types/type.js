@@ -24,8 +24,8 @@ export class Type {
 
     isCATALOG()     { return false }
     // isCompound() { return this.isCATALOG() }     // "compound" type implements a custom mergeEntries(), which prevents some optimizations
-    isRepeated()    { return this.props.repeated }
-    isEditable()    { return this.props.editable }
+    isRepeated()    { return this.options.repeated }
+    isEditable()    { return this.options.editable }
 
     static options = {              // settings shared by all types...
         info     : undefined,       // human-readable description of this type: what values are accepted and how they are interpreted
@@ -74,19 +74,19 @@ export class Type {
     }
 
     __props = {}                // own properties of this type instance (without defaults)
-    props                       // all properties of this type instance: own + defaults  (this.__props + constructor.options)
+    options                     // all properties of this type instance: own + defaults  (this.__props + constructor.options)
 
 
-    constructor(props = {}) {
-        this.__props = props || {}      // props=null/undefined is also valid
+    constructor(options = {}) {
+        this.__props = options || {}      // options=null/undefined is also valid
         this._init_props()
     }
 
     init() {}                   // called from Category.init(); subclasses should override this method as async to perform asynchronous initialization
 
     _init_props() {
-        /* Create this.props by combining the constructor's default props (own and inherited) with instance props (this.__props). */
-        this.props = {...this.constructor.default_props(), ...this.__props}
+        /* Create this.options by combining the constructor's default options (own and inherited) with instance options (this.__props). */
+        this.options = {...this.constructor.default_props(), ...this.__props}
     }
 
     __getstate__()      { return this.__props }
@@ -99,8 +99,8 @@ export class Type {
     }
 
     get_initial() {
-        /* `props.initial` can be a value or a function; this method provides support for both cases. */
-        let {initial} = this.props //this.constructor.initial
+        /* `options.initial` can be a value or a function; this method provides support for both cases. */
+        let {initial} = this.options //this.constructor.initial
         return (typeof initial === 'function') ? initial() : initial
     }
 
@@ -115,10 +115,10 @@ export class Type {
            Return the processed value, or raise an exception if the value is invalid.
          */
         if (value === null || value === undefined)
-            if (this.props.blank) return null
+            if (this.options.blank) return null
             else throw new ValueError(`expected a non-blank (non-missing) value, got '${value}' instead`)
 
-        let class_ = this.props.class
+        let class_ = this.options.class
         if (class_ && !(value instanceof class_))
             throw new ValueError(`expected an instance of ${class_}, got ${value} instead`)
 
@@ -152,7 +152,7 @@ export class Type {
         /* Only used for single-valued schemas (when prop.repeated == false).
            Merge multiple inherited arrays of values matching this type (TODO: check against incompatible inheritance).
            Return the merged value, or undefined if it cannot be determined.
-           The merged value may include or consist of the type's imputed value (props.impute()) or default (props.default).
+           The merged value may include or consist of the type's imputed value (options.impute()) or default (options.default).
            Base class implementation returns the first value of `arrays`, or the default value, or impute()
            Only the CATALOG and its subclasses provide a different implementation that performs a merge of catalogs
            across all prototypes of a given object.
@@ -168,9 +168,9 @@ export class Type {
 
     _impute(obj = null) {
         /* Impute a value for an object`s field described by this type. This may return the default value (if present),
-           or run the props.impute() function, or run the obj[props.impute] method on the target object.
+           or run the options.impute() function, or run the obj[options.impute] method on the target object.
          */
-        let {default: value, impute} = this.props
+        let {default: value, impute} = this.options
         if (value !== undefined) return value
         if (!impute || !obj) return undefined
 
@@ -260,7 +260,7 @@ export class NUMBER extends Primitive {
     }
     _validate(value) {
         value = super._validate(value)
-        let {min, max} = this.props
+        let {min, max} = this.options
         if (min !== undefined && value < min) throw new ValueError(`the number (${value}) is out of bounds, should be >= ${min}`)
         if (max !== undefined && value > max) throw new ValueError(`the number (${value}) is out of bounds, should be <= ${max}`)
         return value
@@ -280,7 +280,7 @@ export class INTEGER extends NUMBER {
     _validate(value) {
         value = super._validate(value)
         if (!Number.isInteger(value)) throw new ValueError(`expected an integer, got ${value} instead`)
-        if (!this.props.signed && value < 0) throw new ValueError(`expected a positive integer, got ${value} instead`)
+        if (!this.options.signed && value < 0) throw new ValueError(`expected a positive integer, got ${value} instead`)
         if (value < Number.MIN_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too small to be stored in JavaScript`)
         if (value > Number.MAX_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too large to be stored in JavaScript`)
         return value
@@ -288,7 +288,7 @@ export class INTEGER extends NUMBER {
 
     binary_encode(value, last = false) {
         value = this.validate(value)
-        let {signed, length} = this.props
+        let {signed, length} = this.options
         if (!signed) return this.encode_uint(value, length)
 
         // for signed integers, shift the value range upwards and encode as unsigned
@@ -299,7 +299,7 @@ export class INTEGER extends NUMBER {
     }
 
     binary_decode(input, last = false) {
-        let {signed, length} = this.props
+        let {signed, length} = this.options
         if (!signed) return this.decode_uint(input, length)
 
         // decode as unsigned and shift the value range downwards after decoding to restore the original signed value
@@ -314,7 +314,7 @@ export class INTEGER extends NUMBER {
            is encoded on the minimum required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER)
            - in such case the detected byte length is written to the output in the first byte.
          */
-        const {blank} = this.props
+        const {blank} = this.options
         const adaptive = !length
         const offset = adaptive ? 1 : 0
 
@@ -338,7 +338,7 @@ export class INTEGER extends NUMBER {
 
     decode_uint(input, length = 0) {
         /* `input` must be a BinaryInput. */
-        const {blank} = this.props
+        const {blank} = this.options
         const adaptive = !length
         const offset = adaptive ? 1 : 0
         const buffer = input.current()
@@ -383,7 +383,7 @@ export class Textual extends Primitive {
 
     _validate(str) {
         str = super._validate(str)
-        let {charset} = this.props
+        let {charset} = this.options
         if (charset) {
             let regex = new RegExp(`^[${charset}]*$`, 'u')
             if (!regex.test(str)) throw new ValueError(`some characters are outside the charset (${charset})`)
@@ -400,7 +400,7 @@ export class STRING extends Textual {
     }
     _validate(str) {
         str = super._validate(str)
-        return this.props.trim ? str.trim() : str               // trim leading/trailing whitespace
+        return this.options.trim ? str.trim() : str               // trim leading/trailing whitespace
     }
 }
 
@@ -553,7 +553,7 @@ export class REF extends Type {
 
     _validate(obj) {
         obj = super._validate(obj)
-        // TODO: check that props.category.__id is present in the list of object's ancestors, obj.__ancestor_ids
+        // TODO: check that options.category.__id is present in the list of object's ancestors, obj.__ancestor_ids
         return obj
     }
 }
@@ -591,17 +591,17 @@ export class ARRAY extends GENERIC {
     }
 
     collect(assets) {
-        this.props.type.collect(assets)
+        this.options.type.collect(assets)
     }
 
     _validate(value) {
         value = super._validate(value)
         if (!Array.isArray(value)) throw new ValueError(`expected an array, got ${typeof value}`)
-        return value.map(elem => this.props.type.validate(elem))
+        return value.map(elem => this.options.type.validate(elem))
     }
 
     toString() {
-        return `${this.constructor.name}(${this.props.type})`
+        return `${this.constructor.name}(${this.options.type})`
     }
 }
 
@@ -620,13 +620,13 @@ export class MAP extends Type {
     }
 
     collect(assets) {
-        this.props.keys.collect(assets)
-        this.props.values.collect(assets)
+        this.options.keys.collect(assets)
+        this.options.values.collect(assets)
     }
 
     toString() {
         let name   = this.constructor.name
-        return `${name}(${this.props.values}, ${this.props.keys})`
+        return `${name}(${this.options.values}, ${this.options.keys})`
     }
 }
 
@@ -642,7 +642,7 @@ export class RECORD extends Type {
     }
 
     collect(assets) {
-        for (let type of Object.values(this.props.fields))
+        for (let type of Object.values(this.options.fields))
             type.collect(assets)
     }
 }
@@ -666,7 +666,7 @@ export class RECORD extends Type {
 //
 //     compute(item) {
 //         if (this.cache !== undefined) return this.cache
-//         let {compute, cache} = this.props
+//         let {compute, cache} = this.options
 //         if (!compute) throw new ValidationError(`virtual field ${this.name} has no compute() function`)
 //         let value = compute(item)
 //         if (cache) this.cache = value
@@ -698,7 +698,7 @@ export class TypeWrapper extends Type {
     
     async init() {
         if (this.real_type) return
-        let {type_item, properties} = this.props
+        let {type_item, properties} = this.options
         await type_item.load()
         // let {TypeItem} = await import('./type_item.js')
         // assert(type_item instanceof TypeItem, type_item)
@@ -708,7 +708,7 @@ export class TypeWrapper extends Type {
     validate(obj)       { return this.real_type.validate(obj) }
     display(props)      { return this.real_type.display(props) }
 
-    __getstate__()          { return [this.props.type_item, this.props.properties] }
+    __getstate__()          { return [this.options.type_item, this.options.properties] }
     __setstate__(state)     {
         [this.__props.type_item, this.__props.properties] = state
         this._init_props()
