@@ -16,7 +16,8 @@ import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {Request} from "../web/request.js"
 import {ReactPage, ItemInspectView} from "../web/pages.js"
-import {Service} from "../web/services.js";
+import {JsonPOST, Service} from "../web/services.js";
+import {mDataRecord, mWebObjects, mDataString} from "../web/messages.js";
 
 const ROOT_ID = 1
 let RootCategory
@@ -1068,6 +1069,19 @@ export class WebObject {
     // inspect()         { return react_page(ItemInspectView) }
     // inspect()         { return ItemInspectView.page(this) }
     // inspect()         { return ItemInspectView.page }
+
+    'POST.move_to'() {
+        /* Move this object from its current __container to `directory`, which must be a Directory object or its URL.
+           Returns an array of objects affected: the current object, the target directory, and the previous container.
+         */
+        return new JsonPOST({
+            server: async (directory) => {
+                if (typeof directory === 'string') directory = await schemat.import(directory)
+
+            },
+            output: mWebObjects,
+        })
+    }
 
 
     /***  Dynamic loading of source code  ***/
