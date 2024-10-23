@@ -36,12 +36,12 @@ import("./category.js").then(module => {RootCategory = module.RootCategory})
  **
  */
 
-class ItemProxy {
-    /* A Proxy wrapper for web objects: either stubs, newly created (unlinked) objects, or loaded from DB.
+class Intercept {
+    /* A Proxy wrapper for all kinds of web objects: stubs, newborn, or loaded from DB.
        Combines plain object attributes with loaded properties and makes them all accessible with the `obj.prop` syntax.
        Performs caching of computed properties in plain attributes of the `target` object.
        Ensures immutability of regular properties.
-       Since a Proxy class can't be subclassed, all methods and properties of ItemProxy are static.
+       Since a Proxy class can't be subclassed, all methods and properties of Intercept are static.
      */
 
     // the suffix appended to the property name when a *plural* form of this property is requested
@@ -55,8 +55,8 @@ class ItemProxy {
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
-    static UNDEFINED    = Symbol.for('ItemProxy.UNDEFINED')
-    static NO_CACHING   = Symbol.for('ItemProxy.NO_CACHING')   // marks a wrapper around a value (typically from a getter) that should not be cached
+    static UNDEFINED    = Symbol.for('Intercept.UNDEFINED')
+    static NO_CACHING   = Symbol.for('Intercept.NO_CACHING')   // marks a wrapper around a value (typically from a getter) that should not be cached
 
 
     static wrap(target) {
@@ -70,10 +70,10 @@ class ItemProxy {
         // also, when the __data is not loaded yet, *every* write goes to __self
         if (!(target.is_newborn() || target.is_loaded())
             || typeof prop !== 'string'             // `prop` can be a symbol like [Symbol.toPrimitive]
-            || ItemProxy.SPECIAL.includes(prop)
+            || Intercept.SPECIAL.includes(prop)
         ) return Reflect.set(target, prop, value, receiver)
 
-        let suffix = ItemProxy.PLURAL
+        let suffix = Intercept.PLURAL
         let plural = prop.endsWith(suffix)
         let base = (plural ? prop.slice(0, -suffix.length) : prop)        // base property name without the $ suffix
 
@@ -114,28 +114,28 @@ class ItemProxy {
         let val, {cache} = target.__meta
 
         // try reading the value from `cache` first, return if found
-        if ((val = cache?.get(prop)) !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
+        if ((val = cache?.get(prop)) !== undefined) return val === Intercept.UNDEFINED ? undefined : val
 
         // try reading the value from regular JS attributes of the `target`
         val = Reflect.get(target, prop, receiver)
 
         // cache the value IF it comes from a cachable getter (no point in re-assigning regular attrs)
         if (target.constructor.cachable_getters.has(prop)) {
-            if (val?.[ItemProxy.NO_CACHING]) return val.value       // NO_CACHING flag? return immediately
-            if (cache) ItemProxy._cache_value(cache, prop, val)
+            if (val?.[Intercept.NO_CACHING]) return val.value       // NO_CACHING flag? return immediately
+            if (cache) Intercept._cache_value(cache, prop, val)
             return val
         }
 
         // return if the value was found in a regular JS attr (not a getter)
-        if (val !== undefined) return val === ItemProxy.UNDEFINED ? undefined : val
+        if (val !== undefined) return val === Intercept.UNDEFINED ? undefined : val
 
         // return if the object is not loaded yet, or the property is special in any way
         if (!target.__data
             || typeof prop !== 'string'                 // `prop` can be a symbol like [Symbol.toPrimitive] - should skip
-            || ItemProxy.SPECIAL.includes(prop)
+            || Intercept.SPECIAL.includes(prop)
         ) return undefined
 
-        let suffix = ItemProxy.PLURAL
+        let suffix = Intercept.PLURAL
         let plural = prop.endsWith(suffix)
         if (plural) prop = prop.slice(0, -suffix.length)        // use the base property name without the suffix
 
@@ -143,8 +143,8 @@ class ItemProxy {
         let values = target._compute_property(prop)
 
         if (cache) {
-            ItemProxy._cache_value(cache, prop, values.length ? values[0] : ItemProxy.UNDEFINED)
-            ItemProxy._cache_values(cache, prop + suffix, values)
+            Intercept._cache_value(cache, prop, values.length ? values[0] : Intercept.UNDEFINED)
+            Intercept._cache_values(cache, prop + suffix, values)
         }
         return plural ? values : values[0]
     }
@@ -285,7 +285,7 @@ export class WebObject {
                     // ... Other trigger groups are created automatically for other protocol names.
 
     static __handlers               // Map of network handlers defined by this class or parent classes; computed once in _collect_handlers()
-    static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in ItemProxy
+    static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in Intercept
 
     static _collect_cachable_getters() {
         /* Find all getter functions in the current class, combine with parent's set of getters and store in _cachable_getters. */
@@ -331,7 +331,7 @@ export class WebObject {
            this gets toggled automatically on the first attempt to object modification. On the server
            (where any modifications might spoil other web requests), changing `mutable` after creation is disallowed.
          */
-        if(_fail) throw new Error('web object must be instantiated through CLASS.new() instead of new CLASS()')
+        if(_fail) throw new Error('web objects should be instantiated with CLASS._create() or category.create() instead of new CLASS()')
 
         if (id) this.__id = id
 
@@ -353,7 +353,7 @@ export class WebObject {
             return RootCategory.stub(id)
 
         let obj = new this(false, id, opts)
-        return obj.__proxy = ItemProxy.wrap(obj)
+        return obj.__proxy = Intercept.wrap(obj)
     }
 
     static _create(categories = [], ...args) {

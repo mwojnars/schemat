@@ -107,7 +107,7 @@ export class Schemat {
             return `[${ids}]  --  [${names.join(', ')}]`
         }
         _name(obj) {
-            if (typeof obj.__self.name === 'string') return obj.__self.name     // watch out for ItemProxy.UNDEFINED
+            if (typeof obj.__self.name === 'string') return obj.__self.name     // watch out for Intercept.UNDEFINED
             return obj.__data?.get('name') || ''                                //(obj.is_loaded ? obj.name : obj.__self.name)
         }
     }

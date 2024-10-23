@@ -187,7 +187,7 @@ export class RootCategory extends Category {
 
     get __category$() { return [this.__proxy] }
     get __category()  { return this.__proxy }       // root category is a category for itself
-    set __category(c) {}                            // only needed due to caching in ItemProxy; TODO: remove when a proper `cache` sub-object is introduced in ItemProxy
+    set __category(c) {}                            // only needed due to caching in Intercept; TODO: remove when a proper `cache` sub-object is introduced in Intercept
 
     get __child_schema() {
         /* In RootCategory, this == this.__category, and to avoid infinite recursion we must perform schema inheritance manually. */
