@@ -327,7 +327,7 @@ export class Schemat {
 
     async save_reload(...objects) {
         /* Save changes in multiple objects all at once (concurrently) and return their updated versions. */
-        return Promise.all(objects.map(obj => obj?.save().then(() => obj?.reload())))
+        return Promise.all(objects.map(obj => obj?.save()?.then(() => obj?.reload())))
     }
 
     /***  Dynamic import from SUN  ***/
