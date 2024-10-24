@@ -668,19 +668,26 @@ export class WebObject {
     validate(post_setup = true) {
         // TODO SECURITY: make sure that __data does NOT contain special props: __meta, __self, __proxy, __id etc!
 
-        for (const [prop, value] of this.__data) {          // validate each individual property in __data ...
+        let data = this.__data
+
+        // validate each individual property in __data ... values in __data entries may get modified (!)
+
+        for (let loc = 0; loc < data.length; loc++) {
+            let entry = data._entries[loc]
+            let prop = entry.key
             let type = this.__schema.get(prop)
+
             if (!type)                                      // the property `prop` is not present in the schema? skip or raise an error
                 if (this.__category.allow_custom_fields) continue
                 else throw new ValidationError(`unknown property: ${prop}`)
 
             if (!type.options.repeated) {                   // check that a single-valued property has no repetitions
-                let count = this.__data.getAll(prop).length
+                let count = data.getAll(prop).length
                 if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop})`)
             }
 
-            let newval = type.validate(value)               // may raise an exception
-            if (post_setup) this.__data.set(prop, newval)
+            let newval = type.validate(entry.value)         // may raise an exception
+            if (post_setup) entry.value = newval
         }
 
         // check multi-field constraints ...
