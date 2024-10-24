@@ -194,13 +194,15 @@ export class Schemat {
     async get_mutable(...objects_or_ids) {
         /* Create fully-loaded, but mutable, instances of given object(s). Return an array (if multiple args), or a single result object. */
         let objs = objects_or_ids.map(obj => {
+            if (!obj) return obj
             let id = typeof obj === 'number' ? obj : obj.__id
             return WebObject.stub(id, {mutable: true}).load()
         })
         return objs.length > 1 ? Promise.all(objs) : objs[0]
     }
 
-    async get_loaded(id)     { return this.get_object(id).load() }
+    async get_loaded(id)    { return this.get_object(id).load() }
+    async load(id)          { return this.get_loaded(id) }      // alias
 
     async reload(id) {
         /* Create a new instance of the object using the most recent data for this ID as available in the record registry,
@@ -325,7 +327,7 @@ export class Schemat {
 
     async save_reload(...objects) {
         /* Save changes in multiple objects all at once (concurrently) and return their updated versions. */
-        return Promise.all(objects.map(obj => obj.save().then(() => obj.reload())))
+        return Promise.all(objects.map(obj => obj?.save().then(() => obj?.reload())))
     }
 
     /***  Dynamic import from SUN  ***/

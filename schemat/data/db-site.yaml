@@ -99,6 +99,8 @@
   entries:
     Revision:
       "@": 26
+    LocalFile:
+      "@": 27
     "@": schemat:Catalog
   __container:
     "@": 1019

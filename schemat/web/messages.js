@@ -139,10 +139,10 @@ export class mWebObjects extends MessageEncoder {
      */
     array = true
 
-    encode(objects) { return objects.map(obj => obj.self_encode()) }
+    encode(objects) { return objects.map(obj => obj?.self_encode()) }
     decode(message) {
         let records = JSON.parse(message)
-        return Promise.all(records.map(rec => schemat.register_record(rec) && schemat.get_loaded(rec.id)))
+        return Promise.all(records.map(rec => rec && schemat.register_record(rec) && schemat.get_loaded(rec.id)))
     }
 }
 

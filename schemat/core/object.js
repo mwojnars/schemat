@@ -942,6 +942,10 @@ export class WebObject {
     //     return this.__data = await Data.from_object(this)
     // }
 
+    async move_to(directory) {
+        return this.POST.move_to(directory)
+    }
+
 
     /***  Object editing  ***/
 
@@ -1094,7 +1098,8 @@ export class WebObject {
         return new JsonPOST({
             async server(directory, overwrite = false)
             {
-                if (typeof directory === 'string') directory = await schemat.import(directory)
+                if (typeof directory === 'number') directory = await schemat.get_loaded(directory)
+                else if (typeof directory === 'string') directory = await schemat.import(directory)
                 // TODO: check that `directory` is a Directory
 
                 let [obj, src, dir] = await schemat.get_mutable(this, this.__container, directory)
@@ -1103,10 +1108,12 @@ export class WebObject {
                 if (!overwrite && dir.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dir})`)
 
                 obj.__container = dir
-                dir.set_entry(ident, this)
+                dir.make_edit('set_entry', {key: ident, target: this})
+                // dir.set_entry(ident, this)
 
-                if (src.has_entry(this.__ident, obj))
-                    src.del_entry(this.__ident)
+                if (src?.has_entry(this.__ident, obj))
+                    src.make_edit('del_entry', {key: this.__ident})
+                    // src.del_entry(this.__ident)
 
                 return schemat.save_reload(dir, obj, src)
             },
