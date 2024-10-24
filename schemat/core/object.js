@@ -464,7 +464,7 @@ export class WebObject {
 
         let container = this.__container
         if (container && !container.is_loaded())
-            if (this.__id === ROOT_ID) container.load(); else await container.load()
+            if (this.__id <= 5) container.load(); else await container.load()   // __container of [Category] and [Container] must not be awaited
 
         if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
 
