@@ -476,6 +476,7 @@ export class WebObject {
         let init = this.__init__()                      // custom initialization after the data is loaded (optional)
         if (init instanceof Promise) await init
 
+        this._init_edits()
         this._init_services()
 
         this.__meta.active = true
@@ -769,7 +770,7 @@ export class WebObject {
         if (!this.constructor.prototype.hasOwnProperty('__edits')) this.constructor._collect_methods()
         let edit = this.edit = {}
 
-        for (let name of this.constructor.__edits.entries())
+        for (let name of this.constructor.__edits)
             edit[name] = (...args) => this.make_edit(name, ...args)
     }
 
@@ -1132,11 +1133,13 @@ export class WebObject {
                 if (!overwrite && dir.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dir})`)
 
                 obj.__container = dir
-                dir.make_edit('set_entry', {key: ident, target: this})
+                // dir.make_edit('set_entry', {key: ident, target: this})
+                dir.edit.set_entry({key: ident, target: this})
                 // dir.edit.set_entry(ident, this)
 
                 if (src?.has_entry(this.__ident, obj))
-                    src.make_edit('del_entry', {key: this.__ident})
+                    // src.make_edit('del_entry', {key: this.__ident})
+                    src.edit.del_entry({key: this.__ident})
                     // src.edit.del_entry(this.__ident)
 
                 return schemat.save_reload(dir, obj, src)
