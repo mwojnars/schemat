@@ -1005,9 +1005,9 @@ export class WebObject {
         /* Apply `edits` to the __data. Each `edit` is a pair of [op-name, args]. */
         for (const edit of edits) {
             let [op, args] = edit
-            const method = `EDIT_${op}`
-            if (!this[method]) throw new Error(`object does not support edit operation: '${op}'`)
-            this[method](...args)
+            const func = this[`edit.${op}`] || this[`EDIT_${op}`]
+            if (!func) throw new Error(`object does not support edit operation: '${op}'`)
+            func.call(this, ...args)
             // this[method](JSONx.deepcopy(args))      // `args` are deep-copied for safety, in case they get modified during the edit
         }
     }
