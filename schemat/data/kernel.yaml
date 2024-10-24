@@ -304,6 +304,8 @@
     "@": 3
   __category:
     "@": 1
+  __container:
+    "@": 1009
 - __id: 6
   name: LocalDirectory
   info: A Directory whose content is located on a local disk, in the folder
