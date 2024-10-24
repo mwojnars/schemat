@@ -89,9 +89,9 @@ class Intercept {
             if (type?.options.virtual) throw new Error(`cannot modify a virtual property (${prop})`)
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
-                target.make_edit('set_all', {prop: base, values: value})
+                target.make_edit('set_values', {prop: base, values: value})
             }
-            else target.make_edit('set', {prop, value})
+            else target.make_edit('set_value', {prop, value})
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${prop})`)
@@ -1058,11 +1058,11 @@ export class WebObject {
     }
 
 
-    EDIT_set({prop, value}) {
+    EDIT_set_value({prop, value}) {
         this.__data.set(prop, value)
     }
 
-    EDIT_set_all({prop, values}) {
+    EDIT_set_values({prop, values}) {
         /* Set multiple (repeated) values for a given property, remove the existing ones. */
         this.__data.setAll(prop, ...values)
     }
@@ -1110,11 +1110,11 @@ export class WebObject {
 
                 obj.__container = dir
                 dir.make_edit('set_entry', {key: ident, target: this})
-                // dir.set_entry(ident, this)
+                // dir.edit.set_entry(ident, this)
 
                 if (src?.has_entry(this.__ident, obj))
                     src.make_edit('del_entry', {key: this.__ident})
-                    // src.del_entry(this.__ident)
+                    // src.edit.del_entry(this.__ident)
 
                 return schemat.save_reload(dir, obj, src)
             },
