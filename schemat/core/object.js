@@ -1100,11 +1100,13 @@ export class WebObject {
                 let [obj, src, dir] = await schemat.get_mutable(this, this.__container, directory)
                 let ident = this.__ident || this.name || `${this.id}`
 
-                if (dir.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dir})`)
+                if (!overwrite && dir.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dir})`)
 
-                obj.__container = directory
+                obj.__container = dir
                 dir.set_entry(ident, this)
-                src.del_entry(this.__ident, this)
+
+                if (src.has_entry(this.__ident, obj))
+                    src.del_entry(this.__ident)
 
                 return schemat.save_reload(dir, obj, src)
             },

@@ -68,6 +68,8 @@ export class Container extends WebObject {
 
 export class Directory extends Container {
 
+    entries     // Catalog of {name: object} elements in this directory
+
     get _entries_rev() {
         /* Reverse mapping of objects IDs to their names for fast lookups.
            If an object occurs multiple times in this.entries, the LAST occurrence is recorded (!)
@@ -127,6 +129,14 @@ export class Directory extends Container {
         assert(obj.__id)
         return this._entries_rev.get(obj.__id)
     }
+
+    has_entry(key, obj = null) {
+        /* If `obj` (web object) is given, check that this particular object (and not any other) is present at a given key. */
+        return obj ? obj.is_equivalent(this.entries.get(key)) : this.entries.has(key)
+    }
+
+    del_entry(key) { return this.entries.delete(key) }
+    set_entry(key, obj) { return this.entries.set(key, obj) }
 }
 
 
