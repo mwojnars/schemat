@@ -989,7 +989,7 @@ export class WebObject {
         this.__meta.mutable = true
     }
 
-    make_edit(op, args) {
+    make_edit(op, ...args) {
         /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). Return this object. */
         if (!this.__meta.mutable)
             if (SERVER) throw new Error(`cannot apply edit operation ('${op}') to immutable object [${this.id}]`)
@@ -1007,7 +1007,7 @@ export class WebObject {
             let [op, args] = edit
             const method = `EDIT_${op}`
             if (!this[method]) throw new Error(`object does not support edit operation: '${op}'`)
-            this[method](args)
+            this[method](...args)
             // this[method](JSONx.deepcopy(args))      // `args` are deep-copied for safety, in case they get modified during the edit
         }
     }
@@ -1134,12 +1134,10 @@ export class WebObject {
                 if (!overwrite && dir.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dir})`)
 
                 obj.__container = dir
-                // dir.make_edit('set_entry', {key: ident, target: this})
                 dir.edit.set_entry({key: ident, target: this})
                 // dir.edit.set_entry(ident, this)
 
                 if (src?.has_entry(this.__ident, obj))
-                    // src.make_edit('del_entry', {key: this.__ident})
                     src.edit.del_entry({key: this.__ident})
                     // src.edit.del_entry(this.__ident)
 
