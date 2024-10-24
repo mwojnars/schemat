@@ -49,7 +49,7 @@ export class mJsonBase extends MessageEncoder {
 }
 
 export class mJsonError extends mJsonBase {
-    encode_error(error)     { return [JSON.stringify({error}), error.code || 500] }
+    encode_error(error)     { let {name, message} = error; return [JSON.stringify({error: {name, message}}), error.code || 500] }
     decode_error(msg, code) { throw new RequestFailed({...JSON.parse(msg).error, code}) }
 }
 
