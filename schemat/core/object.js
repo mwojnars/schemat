@@ -1018,6 +1018,11 @@ export class WebObject {
           The edit function MUST NOT modify its arguments, because the same args may need to be sent from client to DB.
      ***/
 
+    EDIT_if_version({ver}) {
+        /* Only apply the remaining edits if this.__ver=ver. */
+        if (this.__ver !== ver) throw new Error(`object has changed`)
+    }
+
     EDIT_overwrite({data}) {
         /* Replace the entire set of own properties, __data, with a new Data object. */
         if (typeof data === 'string') data = Data.load(data)
@@ -1087,12 +1092,15 @@ export class WebObject {
            Returns an array of objects affected: the current object, the target directory, and the previous container.
          */
         return new JsonPOST({
-            server: async (directory) => {
+            async server(directory, overwrite = false)
+            {
                 if (typeof directory === 'string') directory = await schemat.import(directory)
                 // TODO: check that `directory` is a Directory
 
                 let [obj, src, dir] = await schemat.get_mutable(this, this.__container, directory)
                 let ident = this.__ident || this.name || `${this.id}`
+
+                if (dir.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dir})`)
 
                 obj.__container = directory
                 dir.set_entry(ident, this)
