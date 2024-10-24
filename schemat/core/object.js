@@ -980,7 +980,7 @@ export class WebObject {
         this.__meta.mutable = true
     }
 
-    make_edit(op, args, save = false) {
+    make_edit(op, args) {
         /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). Return this object. */
         if (!this.__meta.mutable)
             if (SERVER) throw new Error(`cannot apply edit operation ('${op}') to immutable object [${this.id}]`)
@@ -989,7 +989,7 @@ export class WebObject {
         let edit = [op, args]
         this.apply_edits(edit)
         this.__meta.edits?.push(edit)       // `edits` may not exist in a newborn object, the edit is not recorded then
-        if (save) return this.save()
+        return this
     }
 
     apply_edits(...edits) {
@@ -1023,10 +1023,10 @@ export class WebObject {
 
     // specialized edits for UI with immediate commit ...
 
-    edit_insert(path, entry)        { return this.make_edit('insert', {path, ...entry}, true) }
-    edit_delete(path)               { return this.make_edit('delete', {path}, true) }
-    edit_update(path, entry)        { return this.make_edit('update', {path, ...entry}, true) }
-    edit_move(path, delta)          { return this.make_edit('move',   {path, delta}, true) }
+    edit_insert(path, entry)        { return this.make_edit('insert', {path, ...entry}).save() }
+    edit_delete(path)               { return this.make_edit('delete', {path}).save() }
+    edit_update(path, entry)        { return this.make_edit('update', {path, ...entry}).save() }
+    edit_move(path, delta)          { return this.make_edit('move',   {path, delta}).save() }
 
 
     /***  Server-side implementation of edits. NOT for direct use!  ***/
