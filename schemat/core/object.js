@@ -1134,12 +1134,10 @@ export class WebObject {
                 if (!overwrite && dir.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dir})`)
 
                 obj.__container = dir
-                dir.edit.set_entry({key: ident, target: this})
-                // dir.edit.set_entry(ident, this)
+                dir.edit.set_entry(ident, this)
 
                 if (src?.has_entry(this.__ident, obj))
-                    src.edit.del_entry({key: this.__ident})
-                    // src.edit.del_entry(this.__ident)
+                    src.edit.del_entry(this.__ident)
 
                 return schemat.save_reload(dir, obj, src)
             },

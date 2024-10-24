@@ -135,11 +135,8 @@ export class Directory extends Container {
         return obj ? obj.is(this.entries.get(key)) : this.entries.has(key)
     }
 
-    EDIT_del_entry({key})           { return this.entries.delete(key) }
-    EDIT_set_entry({key, target})   { return this.entries.set(key, target) }
-
-    'edit.del_entry'({key})           { return this.entries.delete(key) }
-    'edit.set_entry'({key, target})   { return this.entries.set(key, target) }
+    'edit.del_entry'(key)           { return this.entries.delete(key) }
+    'edit.set_entry'(key, target)   { return this.entries.set(key, target) }
 }
 
 
