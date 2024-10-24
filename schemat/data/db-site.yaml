@@ -101,6 +101,10 @@
       "@": 26
     LocalFile:
       "@": 27
+    LocalDirectory:
+      "@": 6
+    Site:
+      "@": 2
     "@": schemat:Catalog
   __container:
     "@": 1019
