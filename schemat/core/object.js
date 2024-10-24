@@ -469,7 +469,8 @@ export class WebObject {
         if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
 
         if (this.constructor === WebObject) {           // set the target WebObject subclass if not yet present; stubs only have WebObject as their class, which must be changed when the data is loaded and the item is linked to its category
-            let cls = await this._load_class()
+            let cls = this._load_class()
+            if (cls instanceof Promise) cls = await cls
             T.setClass(this, cls || WebObject)
         }
 
@@ -768,7 +769,7 @@ export class WebObject {
 
     _init_edits(SEP = '.') {
         if (!this.constructor.prototype.hasOwnProperty('__edits')) this.constructor._collect_methods()
-        let edit = this.edit = {}
+        let edit = this.__self.edit = {}
 
         for (let name of this.constructor.__edits)
             edit[name] = (...args) => this.make_edit(name, ...args)
