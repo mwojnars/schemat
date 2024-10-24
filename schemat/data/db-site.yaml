@@ -105,6 +105,8 @@
       "@": 6
     Site:
       "@": 2
+    Category:
+      "@": 1
     "@": schemat:Catalog
   __container:
     "@": 1019

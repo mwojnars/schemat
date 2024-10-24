@@ -350,7 +350,7 @@ export class WebObject {
 
         // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
         if (id === ROOT_ID && !this.__is_root_category)
-            return RootCategory.stub(id)
+            return RootCategory.stub(id, opts)
 
         let obj = new this(false, id, opts)
         return obj.__proxy = Intercept.wrap(obj)
@@ -460,7 +460,8 @@ export class WebObject {
         if (cats.length) await (cats.length === 1 ? cats[0].load() : Promise.all(cats.map(c => c.load())))
 
         let container = this.__container
-        if (container && !container.is_loaded()) await container.load()
+        if (container && !container.is_loaded())
+            if (this.__id === ROOT_ID) container.load(); else await container.load()
 
         if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
 

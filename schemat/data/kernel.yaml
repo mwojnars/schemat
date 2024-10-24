@@ -210,6 +210,8 @@
   seal_dependencies: false
   ttl: 60
   class: schemat:Category
+  __container:
+    "@": 1009
 - __id: 2
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
