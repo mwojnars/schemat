@@ -314,7 +314,7 @@ export class WebObject {
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
     assert_loaded_or_newborn() { if (!this.is_loaded() && !this.is_newborn()) throw new NotLoaded(this) }
 
-    is_equivalent(other) {
+    is(other) {
         /* True if `this` and `other` object have the same ID; they still can be two different instances
            AND may contain different data (!), for example, if one of them contains more recent updates than the other.
            If `other` is undefined or any of the objects has a missing ID, they are considered NOT equivalent.
@@ -638,7 +638,7 @@ export class WebObject {
         /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
            True if parent==this. All comparisons by item ID.
          */
-        if (this.is_equivalent(parent)) return true
+        if (this.is(parent)) return true
         for (const proto of this.__prototype$)
             if (proto.inherits_from(parent)) return true
         return false

@@ -128,7 +128,7 @@ export class PrimeIndexSequence extends Index {
     }
 
     accept(record) {
-        return !this.category || this.category.is_equivalent(record.data.get('__category'))
+        return !this.category || this.category.is(record.data.get('__category'))
     }
 
     generate_value(item_record) {
