@@ -286,7 +286,7 @@ export class WebObject {
     LOCAL           // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
                     // ... Other trigger groups are created automatically for other protocol names.
 
-    static __edits                  // Map of edit operators {xxx: 'edit.xxx'()} defined by this class or parent classes; computed in _collect_methods()
+    static __edits                  // array of edit names ('xyz') for which an edit operator, 'edit.xyz'(), is defined in this class or parent classes; computed in _collect_methods()
     static __handlers               // Map of network handlers defined by this class or parent classes; computed in _collect_methods()
     static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in Intercept
 
@@ -726,7 +726,7 @@ export class WebObject {
     static _collect_methods(protocols = ['GET', 'POST', 'LOCAL'], SEP = '.') {
         /* Collect all special methods of this class: web handlers + edit operators. */
         let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
-        let is_operator = prop => prop.startsWith('edit' + SEP)
+        let is_editfunc = prop => prop.startsWith('edit' + SEP)
 
         let proto = this.prototype
         let props = T.getAllPropertyNames(proto)
@@ -734,8 +734,7 @@ export class WebObject {
         let handlers = props.filter(is_endpoint).filter(name => proto[name]).map(name => [name, proto[name]])
         this.__handlers = new Map(handlers)
 
-        let operators = props.filter(is_operator).filter(name => proto[name]).map(name => [name.slice(5), proto[name]])
-        this.__edits = new Map(operators)
+        this.__edits = props.filter(is_editfunc).filter(name => proto[name]).map(name => name.slice(5))
     }
 
     _init_services(SEP = '.') {
@@ -763,9 +762,8 @@ export class WebObject {
         if (!this.constructor.prototype.hasOwnProperty('__edits')) this.constructor._collect_methods()
         let edit = this.edit = {}
 
-        for (let [name, operator] of this.constructor.__edits.entries()) {
+        for (let name of this.constructor.__edits.entries())
             edit[name] = (...args) => this.make_edit(name, ...args)
-        }
     }
 
     async handle(request, SEP = '.') {
@@ -983,7 +981,7 @@ export class WebObject {
     }
 
     make_edit(op, args, save = false) {
-        /* Perform the edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). */
+        /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). Return this object. */
         if (!this.__meta.mutable)
             if (SERVER) throw new Error(`cannot apply edit operation ('${op}') to immutable object [${this.id}]`)
             else this._make_mutable()       // on client, an immutable object becomes mutable on the first modification attempt
