@@ -1047,12 +1047,12 @@ export class WebObject {
           They must NOT modify their arguments, because the same args may need to be sent later from client to DB.
      ***/
 
-    'edit.if_version'({ver}) {
+    'edit.if_version'(ver) {
         /* Only apply the remaining edits if this.__ver=ver. */
         if (this.__ver !== ver) throw new Error(`object has changed`)
     }
 
-    'edit.overwrite'({data}) {
+    'edit.overwrite'(data) {
         /* Replace the entire set of own properties, __data, with a new Data object. */
         if (typeof data === 'string') data = Data.load(data)
         assert(data instanceof Data)
