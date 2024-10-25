@@ -115,6 +115,8 @@
       "@": 7
     Revision:
       "@": 26
+    ObjectSpace:
+      "@": 8
     "@": schemat:Catalog
   __container:
     "@": 1019

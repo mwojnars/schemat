@@ -63,6 +63,8 @@ export class Container extends WebObject {
 
         return this.__path + '/' + ident
     }
+
+    'edit.del_entry'(key)   {}
 }
 
 
