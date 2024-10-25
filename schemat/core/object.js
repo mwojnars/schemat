@@ -61,7 +61,7 @@ class Intercept {
 
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
-        return new Proxy(target, {get: this.proxy_get, set: this.proxy_set})
+        return new Proxy(target, {get: this.proxy_get, set: this.proxy_set, deleteProperty: this.proxy_delete})
     }
 
     static proxy_set(target, prop, value, receiver)
@@ -100,14 +100,9 @@ class Intercept {
         return Reflect.set(target, prop, value, receiver)
     }
 
-    // static _edit_prop(target, prop, value) {
-    //     let {edits} = target.__meta
-    //     if (!edits) throw new Error(`cannot set '${prop}' on immutable object`)
-    //     print('proxy_set updating:', prop)
-    //     target.__data.set(prop, value)
-    //     edits.push(new Edit('update', {path: prop, entry: {value}}))
-    //     return true
-    // }
+    static proxy_delete(target, prop) {
+        throw new Error('not implemented')
+    }
 
     static proxy_get(target, prop, receiver)
     {
