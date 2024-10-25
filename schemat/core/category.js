@@ -60,7 +60,7 @@ export class Category extends WebObject {
 
     async insert(...args) {
         /* Create a new object in this category, execute its __create__(...args) and save it to DB.
-           Return the reloaded object in the exact form as saved in the DB.
+           Return the reloaded object in the exact form as written to the DB (after validation, imputation etc.).
          */
         let obj = this.create(...args)
         let id = await obj.save()
