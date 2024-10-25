@@ -175,8 +175,8 @@ export class Site extends WebObject {
     }
 
     'POST.submit_edits'() {
-        /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args],
-           where `op` is the name of the EDIT_* operation to be executed, and `args` are 0+ arguments to be passed to the operation.
+        /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
+           of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
          */
         return new JsonPOST({
             server: (id, ...edits) => this.database.update(id, ...edits),
