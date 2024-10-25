@@ -89,9 +89,9 @@ class Intercept {
             if (type?.options.virtual) throw new Error(`cannot modify a virtual property (${prop})`)
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
-                target._make_edit('set_values', {prop: base, values: value})
+                target._make_edit('set_values', base, value)
             }
-            else target._make_edit('set_value', {prop, value})
+            else target._make_edit('set_value', prop, value)
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${prop})`)
@@ -477,7 +477,7 @@ export class WebObject {
         let init = this.__init__()                      // custom initialization after the data is loaded (optional)
         if (init instanceof Promise) await init
 
-        this._init_edits()
+        this._init_edit_triggers()
         this._init_services()
 
         this.__meta.active = true
@@ -767,7 +767,8 @@ export class WebObject {
         }
     }
 
-    _init_edits(SEP = '.') {
+    _init_edit_triggers(SEP = '.') {
+        /* Create this.edit.*() edit triggers. Done once per object during activation. */
         if (!this.constructor.prototype.hasOwnProperty('__edits')) this.constructor._collect_methods()
         let edit = this.__self.edit = {}
 
@@ -990,14 +991,14 @@ export class WebObject {
     }
 
     _make_edit(op, ...args) {
-        /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). Return this object. */
+        /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). Return `this`. */
         if (!this.__meta.mutable)
             if (SERVER) throw new Error(`cannot apply edit operation ('${op}') to immutable object [${this.id}]`)
             else this._make_mutable()       // on client, an immutable object becomes mutable on the first modification attempt
 
         let edit = [op, ...args]
         this.apply_edits(edit)
-        this.__meta.edits?.push(edit)       // `edits` may not exist in a newborn object, the edit is not recorded then
+        this.__meta.edits?.push(edit)       // `edits` does not exist in newborn objects, so `edit` is not recorded then, but is still applied to __data
         return this
     }
 
@@ -1038,14 +1039,12 @@ export class WebObject {
     edit_move(path, delta)          { return this.edit.move({path, delta}).save() }
 
 
-    /***  Server-side implementation of edits. NOT for direct use!  ***/
+    /***  Individual edits. Should be called via this.edit.*()  ***/
 
-    /***  "Edits" are methods that manipulate directly on the object's __data instead of the object wrapper.
-          They are only called on the server, inside the block's object-level lock, when modifications are to be committed to DB.
-          New edit ops can be added in subclasses. An EDIT_{op} method can be async or return a Promise.
-          The names of methods (the {op} suffix) must match the names of operations passed by callers to .edit().
-          Typically, when adding a new OP, a corresponding client method, edit_OP(), is added, too.
-          The edit function MUST NOT modify its arguments, because the same args may need to be sent from client to DB.
+    /***  "Edits" are methods that manipulate directly on the object's __data. Typically, they're first applied temporarily
+          on the client; recorded in __meta.edits; then replayed on the server to do the permanent update in the database.
+          New edit methods can be added in subclasses. They must be synchronous.
+          They must NOT modify their arguments, because the same args may need to be sent later from client to DB.
      ***/
 
     'edit.if_version'({ver}) {
@@ -1083,11 +1082,11 @@ export class WebObject {
     }
 
 
-    'edit.set_value'({prop, value}) {
+    'edit.set_value'(prop, value) {
         this.__data.set(prop, value)
     }
 
-    'edit.set_values'({prop, values}) {
+    'edit.set_values'(prop, values) {
         /* Set multiple (repeated) values for a given property, remove the existing ones. */
         this.__data.setAll(prop, ...values)
     }
