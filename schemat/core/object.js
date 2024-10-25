@@ -878,7 +878,7 @@ export class WebObject {
 
     /***  Database operations on self  ***/
 
-    delete_self() {
+    delete() {
         /* Delete this object from the database. */
         return schemat.site.POST.delete_object(this.__id)
     }

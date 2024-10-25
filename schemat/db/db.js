@@ -317,11 +317,11 @@ export class Database extends WebObject {
         }
     }
 
-    async delete(item_or_id) {
-        /* Find and delete the top-most occurrence of the item or ID.
+    async delete(obj_or_id) {
+        /* Find and delete the top-most occurrence of a web object, or ID.
            Return true on success, or false if the ID was not found (no modifications are done in such case).
          */
-        let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.__id
+        let id = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id
         return this.forward_down(new DataRequest(this, 'delete', {id}))
     }
 
