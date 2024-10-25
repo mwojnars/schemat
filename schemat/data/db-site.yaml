@@ -97,22 +97,24 @@
   info: Core system objects and categories, for dynamic imports by path instead of
     ID.
   entries:
-    Revision:
-      "@": 26
-    LocalFile:
-      "@": 27
-    LocalDirectory:
-      "@": 6
-    Site:
-      "@": 2
     Category:
       "@": 1
     Container:
       "@": 3
+    Site:
+      "@": 2
     Directory:
       "@": 5
+    File:
+      "@": 4
+    LocalDirectory:
+      "@": 6
+    LocalFile:
+      "@": 27
     Namespace:
       "@": 7
+    Revision:
+      "@": 26
     "@": schemat:Catalog
   __container:
     "@": 1019
