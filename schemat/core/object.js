@@ -1032,10 +1032,10 @@ export class WebObject {
 
     // specialized edits for UI with immediate commit ...
 
-    edit_insert(path, entry)        { return this.make_edit('insert', {path, ...entry}).save() }
-    edit_delete(path)               { return this.make_edit('delete', {path}).save() }
-    edit_update(path, entry)        { return this.make_edit('update', {path, ...entry}).save() }
-    edit_move(path, delta)          { return this.make_edit('move',   {path, delta}).save() }
+    edit_insert(path, entry)        { return this.edit.insert({path, ...entry}).save() }
+    edit_delete(path)               { return this.edit.delete({path}).save() }
+    edit_update(path, entry)        { return this.edit.update({path, ...entry}).save() }
+    edit_move(path, delta)          { return this.edit.move({path, delta}).save() }
 
 
     /***  Server-side implementation of edits. NOT for direct use!  ***/
@@ -1048,46 +1048,46 @@ export class WebObject {
           The edit function MUST NOT modify its arguments, because the same args may need to be sent from client to DB.
      ***/
 
-    EDIT_if_version({ver}) {
+    'edit.if_version'({ver}) {
         /* Only apply the remaining edits if this.__ver=ver. */
         if (this.__ver !== ver) throw new Error(`object has changed`)
     }
 
-    EDIT_overwrite({data}) {
+    'edit.overwrite'({data}) {
         /* Replace the entire set of own properties, __data, with a new Data object. */
         if (typeof data === 'string') data = Data.load(data)
         assert(data instanceof Data)
         this.__data = data
     }
 
-    EDIT_insert({path, key, value}) {
+    'edit.insert'({path, key, value}) {
         /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
         let pos = (path = [...path]).pop()
         this.__data.insert(path, pos, {key, value})
     }
 
-    EDIT_delete({path}) {
+    'edit.delete'({path}) {
         /* Delete a property; or a field inside a nested Catalog in a property. */
         this.__data.delete(path)
     }
 
-    EDIT_update({path, key, value}) {
+    'edit.update'({path, key, value}) {
         /* Update a property; or a field inside a nested Catalog. */
         this.__data.update(path, {key, value})
     }
 
-    EDIT_move({path, delta}) {
+    'edit.move'({path, delta}) {
         /* Move a property or a field inside a nested Catalog. */
         let pos = (path = [...path]).pop()
         this.__data.move(path, pos, pos + delta)
     }
 
 
-    EDIT_set_value({prop, value}) {
+    'edit.set_value'({prop, value}) {
         this.__data.set(prop, value)
     }
 
-    EDIT_set_values({prop, values}) {
+    'edit.set_values'({prop, values}) {
         /* Set multiple (repeated) values for a given property, remove the existing ones. */
         this.__data.setAll(prop, ...values)
     }
