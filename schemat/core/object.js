@@ -995,16 +995,16 @@ export class WebObject {
             if (SERVER) throw new Error(`cannot apply edit operation ('${op}') to immutable object [${this.id}]`)
             else this._make_mutable()       // on client, an immutable object becomes mutable on the first modification attempt
 
-        let edit = [op, args]
+        let edit = [op, ...args]
         this.apply_edits(edit)
         this.__meta.edits?.push(edit)       // `edits` may not exist in a newborn object, the edit is not recorded then
         return this
     }
 
     apply_edits(...edits) {
-        /* Apply `edits` to the __data. Each `edit` is a pair of [op-name, args]. */
+        /* Apply `edits` to the __data. Each `edit` is an array: [op-name, ...args]. */
         for (const edit of edits) {
-            let [op, args] = edit
+            let [op, ...args] = edit
             let func = this[`edit.${op}`]
             if (!func) throw new Error(`object does not support edit operation: '${op}'`)
             func.call(this, ...args)
