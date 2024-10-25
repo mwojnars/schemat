@@ -89,9 +89,9 @@ class Intercept {
             if (type?.options.virtual) throw new Error(`cannot modify a virtual property (${prop})`)
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
-                target.make_edit('set_values', {prop: base, values: value})
+                target._make_edit('set_values', {prop: base, values: value})
             }
-            else target.make_edit('set_value', {prop, value})
+            else target._make_edit('set_value', {prop, value})
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${prop})`)
@@ -274,7 +274,7 @@ export class WebObject {
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
     }
 
-    edit = {}       // triggers of edit operations: obj.edit.xxx(...args) invokes obj.make_edit('edit.xxx', ...args)
+    edit = {}       // triggers of edit operations: obj.edit.xxx(...args) invokes obj._make_edit('edit.xxx', ...args)
 
     // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network endpoints, initialized in _init_services().
     // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
@@ -772,7 +772,7 @@ export class WebObject {
         let edit = this.__self.edit = {}
 
         for (let name of this.constructor.__edits)
-            edit[name] = (...args) => this.make_edit(name, ...args)
+            edit[name] = (...args) => this._make_edit(name, ...args)
     }
 
     async handle(request, SEP = '.') {
@@ -989,7 +989,7 @@ export class WebObject {
         this.__meta.mutable = true
     }
 
-    make_edit(op, ...args) {
+    _make_edit(op, ...args) {
         /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). Return this object. */
         if (!this.__meta.mutable)
             if (SERVER) throw new Error(`cannot apply edit operation ('${op}') to immutable object [${this.id}]`)
@@ -1005,7 +1005,7 @@ export class WebObject {
         /* Apply `edits` to the __data. Each `edit` is a pair of [op-name, args]. */
         for (const edit of edits) {
             let [op, args] = edit
-            const func = this[`edit.${op}`] || this[`EDIT_${op}`]
+            let func = this[`edit.${op}`]
             if (!func) throw new Error(`object does not support edit operation: '${op}'`)
             func.call(this, ...args)
             // this[method](JSONx.deepcopy(args))      // `args` are deep-copied for safety, in case they get modified during the edit
