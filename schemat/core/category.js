@@ -54,8 +54,17 @@ export class Category extends WebObject {
     }
 
     create(...args) {
-        /* Create an empty newborn object (no ID) in this category and execute its __create__(...args). Return the object. */
+        /* Create a new object in this category and execute its __create__(...args). Return the object. The object has no ID yet. */
         return this.__child_class._create([this], ...args)
+    }
+
+    async insert(...args) {
+        /* Create a new object in this category, execute its __create__(...args) and save it to DB.
+           Return the reloaded object in the exact form as saved in the DB.
+         */
+        let obj = this.create(...args)
+        let id = await obj.save()
+        return schemat.reload(id)
     }
 
     async list_objects(opts = {}) {
