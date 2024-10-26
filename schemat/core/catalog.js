@@ -85,7 +85,7 @@ export class Catalog {
     // suffix appended to the key when an array of *all* values of this key is requested
     static PLURAL = '$'
 
-    _entries = []               // plain objects with {key, value, label, comment} attributes
+    _entries = []               // plain objects with {key, value} attributes
     _keys    = new Map()        // for each key, an array of positions in _entries where this key occurs, sorted (!)
 
 
@@ -228,78 +228,6 @@ export class Catalog {
     }
 
     /***  Write access  ***/
-
-    setPath(path, value, {label, comment} = {}, create_path = false) {
-        /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
-           of an existing entry - the entry must be unique (!). If create_path is false (default),
-           all segments of `path` except the last one must already exist and be unique; otherwise,
-           new Catalog() entries are inserted in place of missing path segments.
-         */
-        print(`Catalog.set(${path}, ${value})`)
-        return this.setEntry(path, {value, label, comment}, create_path)
-    }
-
-    setEntry(path, {value, label, comment} = {}, create_path = false) {
-        /* Like set(), but with all props accepted in a single argument. */
-        path = this._normPath(path)
-        assert(path.length >= 1)
-
-        let step  = path[0]
-        let spath = path.join('/')
-        let props = {value, label, comment}
-
-        if (path.length <= 1)
-            if (T.isNumber(step)) return this._overwrite(step, props)
-            else return this.set(step, value)
-
-        if (this.hasMultiple(step)) throw new Error(`multiple occurrences of the key (${key}), cannot uniquely update the entry`)
-
-        // make one step forward, then call set() recursively
-        let subpath = path.slice(1)
-        let subcat  = this.get(step)
-
-        if (subcat === undefined)
-            if (create_path && typeof step === 'string')                // create a missing intermediate Catalog() if so requested
-                this.set(step, new Catalog())
-            else
-                throw new Error(`path not found, missing '${step}' of '${spath}'`)
-
-        // subcat is a Catalog? make a recursive call
-        if (subcat instanceof Catalog)
-            return subcat.setEntry(subpath, props, create_path)
-
-        let key = subpath[0]
-
-        // subcat is a Map, Array, or plain object? go forward one more step, but no deeper
-        if (subpath.length === 1) {
-            if (label   !== undefined) throw new Error(`can't assign a label (${label}) at '${spath}' inside a non-catalog, ${subcat}`)
-            if (comment !== undefined) throw new Error(`can't assign a comment (${comment}) at '${spath}' inside a non-catalog, ${subcat}`)
-
-            if (subcat instanceof Map)              // last step inside a Map
-                subcat.set(key, value)
-            else if (T.isPOJO(subcat) || (T.isArray(subcat) && T.isNumber(key)))
-                subcat[key] = value                 // last step inside a plain object or array
-            else
-                throw new Error(`can't write an entry at '${path}' inside a non-catalog object, ${subcat}`)
-
-            return {key, value}                     // a "virtual" entry is returned for consistent API, only for reading
-        }
-
-        throw new Error(`path not found: '${subpath.join('/')}'`)
-    }
-
-    // setShallow(key, props = {}) {
-    //     /* If `key` is present in the catalog, modify its value/label/comment in place; the entry must be unique (!).
-    //        Push a new entry otherwise.
-    //      */
-    //     assert(!T.isMissing(key))
-    //     if (!this.has(key)) return this.pushEntry({key, ...props})
-    //
-    //     let ids = this._keys.get(key)
-    //     if (ids.length > 1) throw new Error(`multiple entries (${ids.length}) for a key, '${key}'`)
-    //
-    //     return this._overwrite(ids[0], props)
-    // }
 
     _overwrite(id, {key, value, label, comment} = {}) {
         /* Overwrite in place some or all of the properties of an entry of a given `id` = position in this._entries.
