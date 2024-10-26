@@ -93,7 +93,7 @@ export class Catalog {
          */
         let locs = this.locs(key)
         if (locs.length === 1) {
-            this._entries[locs[0]] = {key, value}
+            this._entries[locs[0]] = [key, value]
             return this
         }
         if (locs.length) this.delete(key)
@@ -109,7 +109,7 @@ export class Catalog {
     append(key, ...values) {
         /* Insert (key, value[i]) pairs at the end of the catalog. */
         let start = this._entries.length
-        this._entries.push(...values.map(value => ({key, value})))
+        this._entries.push(...values.map(value => [key, value]))
         let locs = this._keys.get(key)
         if (!locs) this._keys.set(key, locs = [])
         locs.push(...values.map((_, i) => start + i))
@@ -155,13 +155,13 @@ export class Catalog {
         for (const cat of catalogs)
             for (const entry of (cat._entries || []))
                 if (entry[0] !== undefined && !catalog.has(entry[0]))
-                    catalog.pushEntry({...entry})
+                    catalog._pushEntry(entry)
         return catalog
     }
 
     /***  Write access  ***/
 
-    _overwrite(id, {key, value} = {}) {
+    _overwrite(id, key, value) {
         /* Overwrite in place some or all of the properties of an entry of a given `id` = position in this._entries.
            Return the modified entry. Passing `null` as a key will delete a corresponding property. */
         let e = this._entries[id]
@@ -173,7 +173,7 @@ export class Catalog {
             if (!T.isMissing(prevKey)) this._deleteKey(prevKey, id)
             if (!T.isMissing(key))     this._insertKey(key, id)
         }
-        return e
+        return {key: e[0], value: e[1]}
     }
     _insertKey(key, id) {
         /* Insert `id` at a proper position in a list of entry indices for a `key`, this._keys[key]. */
@@ -194,14 +194,12 @@ export class Catalog {
 
     push(key, value) {
         /* Create and append a new entry without deleting existing occurrencies of the key. */
-        return this.pushEntry({key, value})
+        return this._pushEntry([key, value])
     }
 
-    pushEntry(entry) {
-        /* Append `entry` (no copy!) to this._entries while keeping the existing occurrencies of key.
-           Drop unneeded props in `entry`, insert into this._entries, update this._keys.
-         */
-        let [key, value] = entry = this._clean(entry)
+    _pushEntry([key, value]) {
+        /* Append `entry` to this._entries while keeping the existing occurrencies of key. Update this._keys. */
+        let entry = this._clean([key, value])
         let pos = this._entries.push(entry) - 1             // insert to this._entries and get its position
         if (!T.isMissing(key)) {                            // update this._keys
             let ids = this._keys.get(key) || []
@@ -238,7 +236,6 @@ export class Catalog {
         }
         else {
             // general case: delete the entry, rearrange the _entries array, and rebuild this._keys from scratch
-            let entry = this._entries[pos]
             let entries = [...this._entries.slice(0,pos), ...this._entries.slice(pos+1)]
             this.init(entries)
         }
@@ -249,10 +246,9 @@ export class Catalog {
         if (pos < 0) pos = N + pos
         if (pos < 0 || pos > N) throw new Error(`invalid position (${pos}) where to insert a new entry`)
         if (pos === N)
-            this.pushEntry(entry)       // special case: inserting at the END does NOT require rebuilding the entire _keys maps
+            this._pushEntry(entry)       // special case: inserting at the END does NOT require rebuilding the entire _keys maps
         else {
             // general case: insert the entry, rearrange the _entries array, and rebuild this._keys from scratch
-            entry = this._clean(entry)
             let entries = [...this._entries.slice(0,pos), entry, ...this._entries.slice(pos)]
             this.init(entries)
         }
@@ -299,9 +295,10 @@ export class Catalog {
         return [pos, subpath, value]
     }
 
-    insert(path, pos, entry) {
+    insert(path, pos, {key, value}) {
         /* Insert a new `entry` at position `pos` in a subcatalog identified by `path`; empty path denotes this catalog. */
         path = this._normPath(path)
+        let entry = this._clean([key, value])
         if (!path.length) return this._insertAt(pos, entry)
         let [_, subpath, subcat] = this._step(path)
         if (subcat instanceof Catalog) return subcat.insert(subpath, pos, entry)        // nested Catalog? make a recursive call
@@ -336,13 +333,12 @@ export class Catalog {
            This method should be used to apply manual data modifications.
            Automated changes, which are less reliable, should go through update() to allow for deduplication etc. - TODO
          */
-        let props = {key, value}
         let [pos, subpath] = this._step(path)
-        if (!subpath.length) return this._overwrite(pos, props)     // `path` has only one segment, make the modifications and return
+        if (!subpath.length) return this._overwrite(pos, key, value)    // `path` has only one segment, make the modifications and return
 
         let subcat = this._entries[pos][1]
         if (subcat instanceof Catalog)                              // nested Catalog? make a recursive call
-            return subcat.update(subpath, props)
+            return subcat.update(subpath, {key, value})
 
         throw new Error(`path not found: ${subpath}`)
     }
