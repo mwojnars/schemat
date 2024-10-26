@@ -85,30 +85,30 @@ export class Catalog {
     // suffix appended to the key when an array of *all* values of this key is requested
     static PLURAL = '$'
 
-    _entries = []               // plain objects with {key, value} attributes
+    _entries = []               // array of [key, value] pairs
     _keys    = new Map()        // for each key, an array of positions in _entries where this key occurs, sorted (!)
 
 
     constructor(...entries) {
         /* Each argument can be a Catalog, or an object whose attributes will be used as entries,
-           or a [key, value] pair, or a {key, value} entry, or an array of [key, value] pairs.
+           or a [key, value] pair, or an array of [key, value] pairs.
          */
         entries = entries.map(ent =>
                         (ent instanceof Catalog) ? ent._entries
-                        : T.isPOJO(ent) ? Object.entries(ent).map(([key, value]) => ({key, value}))
-                        : T.isArray(ent) ? {key: ent[0], value: ent[1]}
+                        : T.isPOJO(ent) ? Object.entries(ent)
+                        : T.isArray(ent) ? [ent[0], ent[1]]
                         : ent
                     )
         this.init(concat(entries), true)
     }
 
     init(entries, clean = false) {
-        /* (Re)build this._entries and this._keys from an array of `entries`, each entry is an object {key, value, ...}. */
+        /* (Re)build this._entries and this._keys from an array of `entries`, each entry is a [key, value] pair. */
         this._keys = new Map()
         this._entries = clean ? entries.map(e => this._clean(e)) : [...entries]
 
         for (const [pos, entry] of this._entries.entries()) {
-            const key = entry.key
+            const key = entry[0]
             if (key === undefined || key === null) continue
             let ids = this._keys.get(key) || []
             if (ids.push(pos) === 1) this._keys.set(key, ids)
@@ -123,33 +123,33 @@ export class Catalog {
     get length()        { return this._entries.length }
 
     // everywhere below, `key` can be a string, or an index (number) into _entries ...
-    get(key)            { return this._entries[this.loc(key)]?.value }
+    get(key)            { return this._entries[this.loc(key)]?.[1] }
     has(key)            { return (typeof key === 'number') ? 0 <= key < this._entries.length : this._keys.has(key)  }
-    map(fun)            { return this._entries.map(e => fun(e.value)) }
+    map(fun)            { return this._entries.map(e => fun(e[1])) }
     *keys()             { yield* this._keys.keys() }
-    *values()           { yield* this._entries.map(e => e.value) }
-    *entries()          { yield* this }                                         // same as the .iterator() below
-    *[Symbol.iterator](){ yield* this._entries.map(e => [e.key, e.value]) }     // iterator over [key,value] pairs, NOT this._entries!
-    forEach(fun, this_) { this._entries.forEach(e => {fun.call(this_, e.value, e.key, this)})}
+    *values()           { yield* this._entries.map(e => e[1]) }
+    *entries()          { yield* this }                                     // same as the .iterator() below
+    *[Symbol.iterator](){ yield* this._entries.map(e => [...e]) }           // iterator over [key,value] pairs
+    forEach(fun, this_) { this._entries.forEach(e => {fun.call(this_, e[1], e[0], this)})}
 
     // custom extensions ...
 
     loc(key)            { return (typeof key === 'number') ? key : this._keys.get(key)?.[0] }       // location of the first occurrence of a string `key`, or `key` if already a number
     locs(key)           { return (typeof key === 'number') ? [key] : this._keys.get(key) || [] }    // locations of all occurrences of a string `key`, [] if none, or [key] if already a number
 
-    getAll(key)         { return this.locs(key).map(i => this._entries[i].value) }                  // array of all values of a (repeated) key
-    getRecord(key)      { return this._entries[this.loc(key)] }
-    getRecords(key)     { return key === undefined ? [...this._entries] : this.locs(key).map(i => this._entries[i]) }
+    getAll(key)         { return this.locs(key).map(i => this._entries[i][1]) }                     // array of all values of a (repeated) key
+    getRecord(key)      { return [key, this._entries[this.loc(key)]] }
+    getRecords(key)     { return key === undefined ? this._entries.map(([key,value]) => ({key,value})) : this.locs(key).map(i => [key, this._entries[i][1]]) }
     hasMultiple(key)    { return this.locs(key).length >= 2 }           // true if 2 or more values are present for `key`
 
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this.length }
-    hasStringKeys()     { return this._entries.filter(e => typeof e.key !== 'string').length === 0 }
+    hasStringKeys()     { return this._entries.filter(e => typeof e[0] !== 'string').length === 0 }
     // isDict()         { return this.hasUniqueKeys() && this.hasStringKeys() }
 
     object() {
         /* Return an object containing {key: value} pairs of all the entries. For repeated keys, only the first value is included. */
-        return Object.fromEntries(this._entries.map(e => [e.key, e.value]).reverse())
+        return Object.fromEntries(this._entries.reverse())
     }
 
 
@@ -161,7 +161,7 @@ export class Catalog {
          */
         let locs = this.locs(key)
         if (locs.length === 1) {
-            this._entries[locs[0]] = {key, value}
+            this._entries[locs[0]] = [key, value]
             return this
         }
         if (locs.length) this.delete(key)
@@ -177,7 +177,7 @@ export class Catalog {
     append(key, ...values) {
         /* Insert (key, value[i]) pairs at the end of the catalog. */
         let start = this._entries.length
-        this._entries.push(...values.map(value => ({key, value})))
+        this._entries.push(...values.map(value => [key, value]))
         let locs = this._keys.get(key)
         if (!locs) this._keys.set(key, locs = [])
         locs.push(...values.map((_, i) => start + i))
@@ -222,26 +222,26 @@ export class Catalog {
         let catalog = new Catalog()
         for (const cat of catalogs)
             for (const entry of (cat._entries || []))
-                if (entry.key !== undefined && !catalog.has(entry.key))
-                    catalog.pushEntry({...entry})
+                if (entry[0] !== undefined && !catalog.has(entry[0]))
+                    catalog._pushEntry(entry)
         return catalog
     }
 
     /***  Write access  ***/
 
-    _overwrite(id, {key, value} = {}) {
+    _overwrite(id, key, value) {
         /* Overwrite in place some or all of the properties of an entry of a given `id` = position in this._entries.
            Return the modified entry. Passing `null` as a key will delete a corresponding property. */
         let e = this._entries[id]
-        let prevKey = e.key
-        if (value !== undefined) e.value = value
-        if (key   !== undefined) {if (key) e.key = key; else delete e.key}
+        let prevKey = e[0]
+        if (value !== undefined) e[1] = value
+        if (key   !== undefined) e[0] = key
 
         if (prevKey !== key && key !== undefined) {             // `key` has changed? update this._keys accordingly
             if (!T.isMissing(prevKey)) this._deleteKey(prevKey, id)
             if (!T.isMissing(key))     this._insertKey(key, id)
         }
-        return e
+        return {key: e[0], value: e[1]}
     }
     _insertKey(key, id) {
         /* Insert `id` at a proper position in a list of entry indices for a `key`, this._keys[key]. */
@@ -262,31 +262,27 @@ export class Catalog {
 
     push(key, value) {
         /* Create and append a new entry without deleting existing occurrencies of the key. */
-        return this.pushEntry({key, value})
+        return this._pushEntry([key, value])
     }
 
-    pushEntry(entry) {
-        /* Append `entry` (no copy!) to this._entries while keeping the existing occurrencies of entry.key.
-           Drop unneeded props in `entry`, insert into this._entries, update this._keys.
-         */
-        entry = this._clean(entry)
-        let pos = this._entries.push(entry) - 1                 // insert to this._entries and get its position
-        if (!T.isMissing(entry.key)) {                          // update this._keys
-            let ids = this._keys.get(entry.key) || []
+    _pushEntry([key, value]) {
+        /* Append `entry` to this._entries while keeping the existing occurrencies of key. Update this._keys. */
+        let entry = this._clean([key, value])
+        let pos = this._entries.push(entry) - 1             // insert to this._entries and get its position
+        if (!T.isMissing(key)) {                            // update this._keys
+            let ids = this._keys.get(key) || []
             if (ids.push(pos) === 1)
-                this._keys.set(entry.key, ids)
+                this._keys.set(key, ids)
         }
         return entry
     }
 
-    _clean(entry) {
+    _clean([key, value]) {
         /* Validate and clean up the new entry's properties. */
-        if(entry.value === undefined)
-            assert(false)
-        assert(entry.value !== undefined)
-        assert(isstring(entry.key))
-        if (T.isMissing(entry.key)) delete entry.key
-        return entry
+        assert(value !== undefined)
+        assert(isstring(key))
+        if (key === null) key = undefined
+        return [key, value]
     }
 
     _deleteAt(pos) {
@@ -299,16 +295,15 @@ export class Catalog {
         if (pos === N - 1) {
             // special case: deleting the LAST entry does NOT require rebuilding the entire _keys maps
             let entry = this._entries.pop()
-            if (!T.isMissing(entry.key)) {
-                let ids = this._keys.get(entry.key)
+            if (!T.isMissing(entry[0])) {
+                let ids = this._keys.get(entry[0])
                 let id  = ids.pop()                 // indices in `ids` are stored in increasing order, so `pos` must be the last one
                 assert(id === pos)
-                if (!ids.length) this._keys.delete(entry.key)
+                if (!ids.length) this._keys.delete(entry[0])
             }
         }
         else {
             // general case: delete the entry, rearrange the _entries array, and rebuild this._keys from scratch
-            let entry = this._entries[pos]
             let entries = [...this._entries.slice(0,pos), ...this._entries.slice(pos+1)]
             this.init(entries)
         }
@@ -319,10 +314,9 @@ export class Catalog {
         if (pos < 0) pos = N + pos
         if (pos < 0 || pos > N) throw new Error(`invalid position (${pos}) where to insert a new entry`)
         if (pos === N)
-            this.pushEntry(entry)       // special case: inserting at the END does NOT require rebuilding the entire _keys maps
+            this._pushEntry(entry)       // special case: inserting at the END does NOT require rebuilding the entire _keys maps
         else {
             // general case: insert the entry, rearrange the _entries array, and rebuild this._keys from scratch
-            entry = this._clean(entry)
             let entries = [...this._entries.slice(0,pos), entry, ...this._entries.slice(pos)]
             this.init(entries)
         }
@@ -364,17 +358,18 @@ export class Catalog {
         if (dups.length) throw new Error(`key is not unique: ${step}`)
 
         let subpath = path.slice(1)
-        let value = this._entries[pos].value
+        let value = this._entries[pos][1]
 
         return [pos, subpath, value]
     }
 
-    insert(path, pos, entry) {
+    insert(path, pos, key, value) {
         /* Insert a new `entry` at position `pos` in a subcatalog identified by `path`; empty path denotes this catalog. */
         path = this._normPath(path)
+        let entry = this._clean([key, value])
         if (!path.length) return this._insertAt(pos, entry)
         let [_, subpath, subcat] = this._step(path)
-        if (subcat instanceof Catalog) return subcat.insert(subpath, pos, entry)        // nested Catalog? make a recursive call
+        if (subcat instanceof Catalog) return subcat.insert(subpath, pos, ...entry)     // nested Catalog? make a recursive call
         throw new Error(`path not found: ${subpath.join('/')}`)
     }
 
@@ -401,18 +396,17 @@ export class Catalog {
         return deleted
     }
 
-    update(path, {key, value}) {
+    update(path, key, value) {
         /* Modify an existing entry at a given `path`. The entry must be unique. Return the entry after modifications.
            This method should be used to apply manual data modifications.
            Automated changes, which are less reliable, should go through update() to allow for deduplication etc. - TODO
          */
-        let props = {key, value}
         let [pos, subpath] = this._step(path)
-        if (!subpath.length) return this._overwrite(pos, props)     // `path` has only one segment, make the modifications and return
+        if (!subpath.length) return this._overwrite(pos, key, value)    // `path` has only one segment, make the modifications and return
 
-        let subcat = this._entries[pos].value
+        let subcat = this._entries[pos][1]
         if (subcat instanceof Catalog)                              // nested Catalog? make a recursive call
-            return subcat.update(subpath, props)
+            return subcat.update(subpath, key, value)
 
         throw new Error(`path not found: ${subpath}`)
     }
@@ -450,7 +444,7 @@ export class Catalog {
            or as an array of [key, value] tuples.
          */
         let defined = (x) => x === undefined ? null : x             // function to replace "undefined" with null
-        let entries = this._entries.filter(e => e.value !== undefined).map(e => [defined(e.key), e.value])
+        let entries = this._entries.filter(e => e[1] !== undefined).map(e => [defined(e[0]), e[1]])
 
         if (!this.hasUniqueKeys()) {
             let counts = new Map()                                  // no. of occurrences of each key, so far
@@ -479,10 +473,10 @@ export class Catalog {
             state = Object.entries(state)
             state = state.map(([key, value]) => [key.split('/')[0], value])     // convert keys of the form "key/X" back to "key"
         }
-        state = state.map(([key, value]) => ({key, value}))     // convert each [key,value] entry to an object
         return new this().init(state)
     }
 }
+
 
 
 export class Data extends Catalog {

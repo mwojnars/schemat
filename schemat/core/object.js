@@ -668,11 +668,11 @@ export class WebObject {
 
         let data = this.__data
 
-        // validate each individual property in __data ... values in __data entries may get modified (!)
+        // validate each individual property in __data ... __data._entries may get directly modified (!)
 
         for (let loc = 0; loc < data.length; loc++) {
             let entry = data._entries[loc]
-            let prop = entry.key
+            let prop = entry[0]
             let type = this.__schema.get(prop)
 
             if (!type)                                      // the property `prop` is not present in the schema? skip or raise an error
@@ -684,8 +684,8 @@ export class WebObject {
                 if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop})`)
             }
 
-            let newval = type.validate(entry.value)         // may raise an exception
-            if (post_setup) entry.value = newval
+            let newval = type.validate(entry[1])         // may raise an exception
+            if (post_setup) entry[1] = newval
         }
 
         // check multi-field constraints ...
@@ -1058,7 +1058,7 @@ export class WebObject {
     'edit.insert'({path, key, value}) {
         /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
         let pos = (path = [...path]).pop()
-        this.__data.insert(path, pos, {key, value})
+        this.__data.insert(path, pos, key, value)
     }
 
     'edit.delete'({path}) {
@@ -1068,7 +1068,7 @@ export class WebObject {
 
     'edit.update'({path, key, value}) {
         /* Update a property; or a field inside a nested Catalog. */
-        this.__data.update(path, {key, value})
+        this.__data.update(path, key, value)
     }
 
     'edit.move'({path, delta}) {
