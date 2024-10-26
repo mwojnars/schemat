@@ -102,6 +102,7 @@ class Intercept {
 
     static proxy_delete(target, prop) {
         throw new Error('not implemented')
+        // return Reflect.deleteProperty(target, prop)
     }
 
     static proxy_get(target, prop, receiver)
