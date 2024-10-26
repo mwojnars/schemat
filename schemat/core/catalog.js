@@ -77,19 +77,9 @@ export class Path {
  */
 
 export class Catalog {
-    /* Catalog is an Array-like and Map-like collection of entries, an in-memory mini-database, where each entry
-       contains a `value`, an `id`, and an optional:
-       - key,
-       - label,
-       - comment.
-       Keys, labels, comments, if present, are strings. The same key can be repeated.
-       Keys may include all characters except ":", '.' and whitespace.
-       Labels may include all characters except ":", newline, tab (spaces allowed).
-       Comments may include all printable characters including whitespace.
-       Empty strings in label/comment are treated as missing. Empty string is a valid non-missing key.
-       Entries can be accessed by their key, or integer position (0,1,...), or a path. The path may contain
-       - labels: "key1:label1.key2:label2"
-       - flags:  "key1.key2:label::first" or "key::last" (first/last flag at the end of a path, after ::)
+    /* Catalog is an Array-like and Map-like collection of entries, a mini key-value store.
+       Keys, if present, are strings. The same key can be repeated.
+       Keys may include all characters except ":", '.', '$', '/', whitespace. Empty string is a valid non-missing key.
     */
 
     // suffix appended to the key when an array of *all* values of this key is requested
@@ -155,8 +145,7 @@ export class Catalog {
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this.length }
     hasStringKeys()     { return this._entries.filter(e => typeof e.key !== 'string').length === 0 }
-    hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
-    // isDict()         { return this.hasUniqueKeys() && this.hasStringKeys() && !this.hasAnnot() }
+    // isDict()         { return this.hasUniqueKeys() && this.hasStringKeys() }
 
     object() {
         /* Return an object containing {key: value} pairs of all the entries. For repeated keys, only the first value is included. */
@@ -566,22 +555,13 @@ export class Catalog {
     }
 
     __getstate__() {
-        /* Encode this Catalog's state either as an object (more compact but requires unique string keys and no annotations),
-           or as an array of [key, value] tuples - some tuples may additionally contain a label and a comment.
+        /* Encode this Catalog's state either as an object (more compact but requires unique string keys),
+           or as an array of [key, value] tuples.
          */
         let defined = (x) => x === undefined ? null : x             // function to replace "undefined" with null
-        let entries = this._entries.filter(e => e.value !== undefined).map(e =>
-        {
-            let entry = [defined(e.key), defined(e.value)]          // entry = [key, value, label-maybe, comment-maybe]
-            if (e.label || e.comment) entry.push(defined(e.label))
-            if (e.comment) entry.push(e.comment)
-            return entry
-        })
-
-        assert(!this.hasAnnot())
+        let entries = this._entries.filter(e => e.value !== undefined).map(e => [defined(e.key), e.value])
 
         if (!this.hasUniqueKeys()) {
-            // if (this.hasAnnot()) return entries
             let counts = new Map()                                  // no. of occurrences of each key, so far
 
             // convert entries with repeated values to [key/X, value] tuples
@@ -608,10 +588,7 @@ export class Catalog {
             state = Object.entries(state)
             state = state.map(([key, value]) => [key.split('/')[0], value])     // convert keys of the form "key/X" back to "key"
         }
-
-        // convert each entry [key,value,...] in the array to an object {key, value, ...}
-        state = state.map(([key, value, label, comment]) => ({key, value, label, comment}))
-
+        state = state.map(([key, value]) => ({key, value}))     // convert each [key,value] entry to an object
         return new this().init(state)
     }
 }
