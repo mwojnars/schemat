@@ -229,15 +229,13 @@ export class Catalog {
 
     /***  Write access  ***/
 
-    _overwrite(id, {key, value, label, comment} = {}) {
+    _overwrite(id, {key, value} = {}) {
         /* Overwrite in place some or all of the properties of an entry of a given `id` = position in this._entries.
-           Return the modified entry. Passing `null` as a key/label/comment will delete a corresponding property. */
+           Return the modified entry. Passing `null` as a key will delete a corresponding property. */
         let e = this._entries[id]
         let prevKey = e.key
         if (value !== undefined) e.value = value
         if (key   !== undefined) {if (key) e.key = key; else delete e.key}
-        if (label !== undefined) {if (label) e.label = label; else delete e.label}
-        if (comment !== undefined) {if (comment) e.comment = comment; else delete e.comment}
 
         if (prevKey !== key && key !== undefined) {             // `key` has changed? update this._keys accordingly
             if (!T.isMissing(prevKey)) this._deleteKey(prevKey, id)
@@ -262,9 +260,9 @@ export class Catalog {
         ids.length ? this._keys.set(key, ids) : this._keys.delete(key)
     }
 
-    push(key, value, {label, comment} = {}) {
+    push(key, value) {
         /* Create and append a new entry without deleting existing occurrencies of the key. */
-        return this.pushEntry({key, value, label, comment})
+        return this.pushEntry({key, value})
     }
 
     pushEntry(entry) {
@@ -286,10 +284,8 @@ export class Catalog {
         if(entry.value === undefined)
             assert(false)
         assert(entry.value !== undefined)
-        assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
+        assert(isstring(entry.key))
         if (T.isMissing(entry.key)) delete entry.key
-        if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
-        if (entry.comment === undefined) delete entry.comment
         return entry
     }
 
@@ -405,12 +401,12 @@ export class Catalog {
         return deleted
     }
 
-    update(path, {key, value, label, comment}, context = {}, sep = '/') {
+    update(path, {key, value}) {
         /* Modify an existing entry at a given `path`. The entry must be unique. Return the entry after modifications.
            This method should be used to apply manual data modifications.
            Automated changes, which are less reliable, should go through update() to allow for deduplication etc. - TODO
          */
-        let props = {key, value, label, comment}
+        let props = {key, value}
         let [pos, subpath] = this._step(path)
         if (!subpath.length) return this._overwrite(pos, props)     // `path` has only one segment, make the modifications and return
 
@@ -418,7 +414,7 @@ export class Catalog {
         if (subcat instanceof Catalog)                              // nested Catalog? make a recursive call
             return subcat.update(subpath, props)
 
-        throw new Error(`path not found: ${subpath.join('/')}`)
+        throw new Error(`path not found: ${subpath}`)
     }
 
     move(path, pos1, pos2) {
@@ -427,41 +423,8 @@ export class Catalog {
         if (!path.length) return this._move(pos1, pos2)
         let [_, subpath, subcat] = this._step(path)
         if (subcat instanceof Catalog) return subcat.move(subpath, pos1, pos2)        // nested Catalog? make a recursive call
-        throw new Error(`path not found: ${subpath.join('/')}`)
+        throw new Error(`path not found: ${subpath}`)
     }
-
-    /***  Transformations  ***/
-
-    // transform(ops, {deep = true} = {}) {
-    //     /* Transform this Catalog and its nested subcatalogs (if deep=true) in place by applying the
-    //        {key, value, label, comment, entry} transformations as passed in `ops`.
-    //        Each operator in `ops` is a function that takes an original JS value and returns its replacement
-    //        (can be the same value). When an operator is missing, the corresponding value is left unchanged.
-    //      */
-    //     // let entries = this._entries.map(e => ({...e}))          // copy each individual entry for subsequent modifications
-    //     let entries = this._entries
-    //
-    //     if (deep)                                               // call transform() recursively on subcatalogs
-    //         for (let e of entries)
-    //             if (e.value instanceof Catalog)
-    //                 e.value.transform(ops, {deep})
-    //
-    //     if (ops.entry) {
-    //         entries = entries.map(ops.entry)                    // modify each entry as a whole
-    //         ops = {...ops}
-    //         delete ops.entry
-    //     }
-    //
-    //     for (const [prop, op] of Object.entries(ops))           // modify individual properties of each entry
-    //         entries = entries.map(e => {
-    //             if(prop in e && (e[prop] = op(e[prop])) === undefined)
-    //                 delete e[prop]
-    //             return e
-    //         })
-    //
-    //     this.init(entries)
-    //     // return new this.constructor(entries)
-    // }
 
 
     /***  Serialization  ***/
