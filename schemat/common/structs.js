@@ -147,7 +147,7 @@ export class FastDiff {
         return s
     }
 
-    static compute(s1, s2, max_depth = 3, num_patches = 15, min_len = 3, min_patches = 3, min_improvement = 0.2, penalty = 10) {
+    static compute(s1, s2, max_depth = 3, num_patches = 15, min_len = 4, min_patches = 4, min_improvement = 0.2, penalty = 10) {
 
         let M = s1.length
         let N = s2.length
@@ -168,7 +168,7 @@ export class FastDiff {
         return plan
     }
 
-    static _diff(s1, s2, max_depth = 3, num_patches = 12, min_len = 4, min_patches = 4) {
+    static _diff(s1, s2, max_depth, num_patches, min_len, min_patches) {
         /* The core of the FastDiff algorithm. Always returns a plan, never undefined; does NOT truncate the tips (prefix/suffix).
            The plan is a list of replacements of the form [start, length, new_string], where every `start` position is
            relative to the original string, and replacements are ordered by *decreasing* start positions, so during execution of the plan,
