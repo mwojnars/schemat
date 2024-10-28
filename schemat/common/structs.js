@@ -134,34 +134,49 @@ export class ObjectSet {
 
 /**********************************************************************************************************************/
 
-export function fast_diff(s1, s2, max_depth = 3, num_patches = 15, min_len = 3, min_patches = 3, tips = true) {
-    /* Compute a list of replacements of the form [start, length, new_string] that transform `s1` string into `s2`.
-       If there are no such short replacements, undefined is returned, meaning that it is more efficient to replace the entire string.
+export function fast_diff(s1, s2, max_depth = 3, num_patches = 15, min_len = 3, min_patches = 3, min_improvement = 0.2, penalty = 10) {
+    /* O(n) approximate diff algorithm. Computes a list of replacements of the form [start, length, new_string] that transform `s1` string into `s2`.
+       If there are no such (short) replacements, undefined is returned, meaning that it is more efficient to replace the entire string.
+     */
+
+    let M = s1.length
+    let N = s2.length
+
+    // cut off the tips: common prefix/suffix
+    let L = commonPrefix(s1, s2).length
+    let R = commonSuffix(s1, s2).length
+
+    // build the replacement plan
+    let plan = _fast_diff(s1.substring(L, M-R), s2.substring(L, N-R), max_depth, num_patches, min_len, min_patches)
+
+    // check if the plan is at least 20% shorter than the full replacement, return undefined if not;
+    // `penalty` expresses the additional constant cost of encoding each replacement
+    let plan_length = plan.reduce((sum, repl) => sum + repl[2].length, 0)
+    if (plan_length + penalty * plan.length >= N * (1 - min_improvement)) return undefined
+
+    if (L) plan = plan.map(repl => [repl[0]+L, repl[1], repl[2]])
+    return plan
+}
+
+function _fast_diff(s1, s2, max_depth = 3, num_patches = 12, min_len = 4, min_patches = 4) {
+    /* The core of the diff algorithm. Always returns a plan, never undefined; does NOT truncate the tips (prefix/suffix). 
+       The plan is a list of replacements of the form [start, length, new_string], where every `start` position is
+       relative to the original string, and replacements are ordered by *decreasing* start positions, so during execution of the plan,
+       each start position remains valid even after the previous replacements have been applied.
      */
 
     if (s1 === s2) return []
 
     let M = s1.length
     let N = s2.length
+    let full = [[0, M, s2]]             // full replacement of s1 by s2
+
+    // already too deep? or too much discrepancy between string lengths? or one of the strings is empty?
+    if (max_depth <= 0 || M > 5*N || N > 5*M) return full
+
     let fl = Math.floor
-    let opts = [num_patches, min_len, min_patches, false]
-
-    if (max_depth <= 0 || M > 5*N || N > 5*M) return undefined      // too deep, or too much discrepancy between string lengths
-
-    // cut off the tips
-    if (tips) {
-        let L = commonPrefix(s1, s2).length
-        let R = commonSuffix(s1, s2).length
-        if (L || R) {
-            let plan = fast_diff(s1.substring(L, M-R), s2.substring(L, N-R), max_depth, ...opts)
-            if (plan) return L ? plan.map(repl => [repl[0]+L, repl[1], repl[2]]) : plan
-            if (L+R > 10) return [L, M-L-R, s2.substring(L, N-R)]
-            return undefined
-        }
-    }
-
-    num_patches = Math.min(num_patches, fl(N / min_len * 1.5))
-    if (num_patches < min_patches) return
+    num_patches = Math.min(num_patches, fl(N / (min_len * 3/4)))
+    if (num_patches < min_patches) return full
 
     let step = N / num_patches
     let margin = step / 3
@@ -170,31 +185,32 @@ export function fast_diff(s1, s2, max_depth = 3, num_patches = 15, min_len = 3, 
 
     // array of true/false values indicating which patch exists in s1
     let patches = [...Array(num_patches).keys()].map(i => s1.includes(s2.substring(...patch(i))))
-    if (patches.every(p => !p)) return
+    if (!patches.some(p => p)) return full
 
     // going in reverse order, sum up neighboring "true" values to find the longest sequence of true values
     for (let i = num_patches - 1; i >= 0; i--)
         if (patches[i]) patches[i] = 1 + (patches[i+1] || 0)
-    
-    // find the patch ("spot") having the maximum number of consecutive true values
+
+    // find the "spot": possibly the largest patch in s2 that matches a substring of s1
     let max = Math.max(...patches)
     let imax = patches.findIndex(len => len === max)
     let [left, right] = patch(imax)
     let match = s1.indexOf(s2.substring(left, right))
     assert(match >= 0)
 
-    // try to extend the `spot` to the left and to the right
+    // try to extend the spot to the left and to the right
     while (left > 0 && s1[match-1] === s2[left-1]) { left--; match-- }
     while (right < N && s1[match+right-left] === s2[right]) right++
     let length = right - left
-    
-    opts = [max_depth-1, ...opts]
 
-    // return two replacements: on the left and on the right of the `spot`; the spot remains unchanged
-    let left_repl = [0, match, s2.substring(0, left)]
-    let right_repl = [match+length, M-match-length, s2.substring(right)]
-    
-    // TODO: recursive calls
+    let opts = [max_depth-1, num_patches, min_len, min_patches]
 
-    return [left_repl, right_repl]
+    // do recursive calls to find replacements for the left and right substrings surrounding the spot
+    let left_plan = _fast_diff(s1.substring(0, match), s2.substring(0, left), ...opts)
+    let right_plan = _fast_diff(s1.substring(match+length, M), s2.substring(right, N), ...opts)
+
+    // shift positions in right_plan by the offset of the right edge of the spot (match+length)
+    right_plan = right_plan.map(repl => [repl[0]+match+length, repl[1], repl[2]])
+    
+    return [...right_plan, ...left_plan]
 }
