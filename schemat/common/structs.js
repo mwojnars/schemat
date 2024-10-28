@@ -134,83 +134,94 @@ export class ObjectSet {
 
 /**********************************************************************************************************************/
 
-export function fast_diff(s1, s2, max_depth = 3, num_patches = 15, min_len = 3, min_patches = 3, min_improvement = 0.2, penalty = 10) {
-    /* O(n) approximate diff algorithm. Computes a list of replacements of the form [start, length, new_string] that transform `s1` string into `s2`.
+export class FastDiff {
+    /* O(n) approximate diff algorithm. Computes a list of replacements of the form [start, length, new_string] that together
+       - when applied one by one in the provided order - will transform `s1` string into `s2`.
        If there are no such (short) replacements, undefined is returned, meaning that it is more efficient to replace the entire string.
      */
 
-    let M = s1.length
-    let N = s2.length
+    static apply(s, replacements) {
+        /* Apply replacements produced by compute() to the string `s`. */
+        for (const [start, length, new_string] of replacements)
+            s = s.substring(0, start) + new_string + s.substring(start + length)
+        return s
+    }
 
-    // cut off the tips: common prefix/suffix
-    let L = commonPrefix(s1, s2).length
-    let R = commonSuffix(s1, s2).length
+    static compute(s1, s2, max_depth = 3, num_patches = 15, min_len = 3, min_patches = 3, min_improvement = 0.2, penalty = 10) {
 
-    // build the replacement plan
-    let plan = _fast_diff(s1.substring(L, M-R), s2.substring(L, N-R), max_depth, num_patches, min_len, min_patches)
+        let M = s1.length
+        let N = s2.length
 
-    // check if the plan is at least 20% shorter than the full replacement, return undefined if not;
-    // `penalty` expresses the additional constant cost of encoding each replacement
-    let plan_length = plan.reduce((sum, repl) => sum + repl[2].length, 0)
-    if (plan_length + penalty * plan.length >= N * (1 - min_improvement)) return undefined
+        // cut off the tips: common prefix/suffix
+        let L = commonPrefix(s1, s2).length
+        let R = commonSuffix(s1, s2).length
 
-    if (L) plan = plan.map(repl => [repl[0]+L, repl[1], repl[2]])
-    return plan
-}
+        // build the replacement plan
+        let plan = this._diff(s1.substring(L, M-R), s2.substring(L, N-R), max_depth, num_patches, min_len, min_patches)
 
-function _fast_diff(s1, s2, max_depth = 3, num_patches = 12, min_len = 4, min_patches = 4) {
-    /* The core of the diff algorithm. Always returns a plan, never undefined; does NOT truncate the tips (prefix/suffix). 
-       The plan is a list of replacements of the form [start, length, new_string], where every `start` position is
-       relative to the original string, and replacements are ordered by *decreasing* start positions, so during execution of the plan,
-       each start position remains valid even after the previous replacements have been applied.
-     */
+        // check if the plan is at least 20% shorter than the full replacement, return undefined if not;
+        // `penalty` expresses the additional fixed cost of representing each replacement
+        let plan_length = plan.reduce((sum, repl) => sum + repl[2].length, 0)
+        if (plan_length + penalty * plan.length >= N * (1 - min_improvement)) return undefined
 
-    if (s1 === s2) return []
+        if (L) plan = plan.map(repl => [repl[0]+L, repl[1], repl[2]])
+        return plan
+    }
 
-    let M = s1.length
-    let N = s2.length
-    let full = [[0, M, s2]]             // full replacement of s1 by s2
+    static _diff(s1, s2, max_depth = 3, num_patches = 12, min_len = 4, min_patches = 4) {
+        /* The core of the FastDiff algorithm. Always returns a plan, never undefined; does NOT truncate the tips (prefix/suffix).
+           The plan is a list of replacements of the form [start, length, new_string], where every `start` position is
+           relative to the original string, and replacements are ordered by *decreasing* start positions, so during execution of the plan,
+           each start position remains valid even after the previous replacements have been applied.
+         */
 
-    // already too deep? or too much discrepancy between string lengths? or one of the strings is empty?
-    if (max_depth <= 0 || M > 5*N || N > 5*M) return full
+        if (s1 === s2) return []
 
-    let fl = Math.floor
-    num_patches = Math.min(num_patches, fl(N / (min_len * 3/4)))
-    if (num_patches < min_patches) return full
+        let M = s1.length
+        let N = s2.length
+        let full = [[0, M, s2]]             // full replacement of s1 by s2
 
-    let step = N / num_patches
-    let margin = step / 3
+        // already too deep? or too much discrepancy between string lengths? or one of the strings is empty?
+        if (max_depth <= 0 || M > 5*N || N > 5*M) return full
 
-    let patch = (i) => [fl(i*step), fl((i+1) * step + margin)]      // [start, end] of the i-th patch
+        let fl = Math.floor
+        num_patches = Math.min(num_patches, fl(N / (min_len * 3/4)))
+        if (num_patches < min_patches) return full
 
-    // array of true/false values indicating which patch exists in s1
-    let patches = [...Array(num_patches).keys()].map(i => s1.includes(s2.substring(...patch(i))))
-    if (!patches.some(p => p)) return full
+        let step = N / num_patches
+        let margin = step / 3
 
-    // going in reverse order, sum up neighboring "true" values to find the longest sequence of true values
-    for (let i = num_patches - 1; i >= 0; i--)
-        if (patches[i]) patches[i] = 1 + (patches[i+1] || 0)
+        let patch = (i) => [fl(i*step), fl((i+1) * step + margin)]      // [start, end] of the i-th patch
 
-    // find the "spot": possibly the largest patch in s2 that matches a substring of s1
-    let max = Math.max(...patches)
-    let imax = patches.findIndex(len => len === max)
-    let [left, right] = patch(imax)
-    let match = s1.indexOf(s2.substring(left, right))
-    assert(match >= 0)
+        // array of true/false values indicating which patch exists in s1
+        let patches = [...Array(num_patches).keys()].map(i => s1.includes(s2.substring(...patch(i))))
+        if (!patches.some(p => p)) return full
 
-    // try to extend the spot to the left and to the right
-    while (left > 0 && s1[match-1] === s2[left-1]) { left--; match-- }
-    while (right < N && s1[match+right-left] === s2[right]) right++
-    let length = right - left
+        // going in reverse order, sum up neighboring "true" values to find the longest sequence of true values
+        for (let i = num_patches - 1; i >= 0; i--)
+            if (patches[i]) patches[i] = 1 + (patches[i+1] || 0)
 
-    let opts = [max_depth-1, num_patches, min_len, min_patches]
+        // find the "spot": likely the largest patch in s2 that matches a substring of s1 and can be extended on both sides
+        let max = Math.max(...patches)
+        let imax = patches.indexOf(max)
+        let [left, right] = patch(imax)
+        let match = s1.indexOf(s2.substring(left, right))
+        assert(match >= 0)
 
-    // do recursive calls to find replacements for the left and right substrings surrounding the spot
-    let left_plan = _fast_diff(s1.substring(0, match), s2.substring(0, left), ...opts)
-    let right_plan = _fast_diff(s1.substring(match+length, M), s2.substring(right, N), ...opts)
+        // try to extend the spot to the left and to the right
+        while (left > 0 && s1[match-1] === s2[left-1]) { left--; match-- }
+        while (right < N && s1[match+right-left] === s2[right]) right++
+        let length = right - left
 
-    // shift positions in right_plan by the offset of the right edge of the spot (match+length)
-    right_plan = right_plan.map(repl => [repl[0]+match+length, repl[1], repl[2]])
-    
-    return [...right_plan, ...left_plan]
+        let opts = [max_depth-1, num_patches, min_len, min_patches]
+
+        // do recursive calls to find replacements for the left and right substrings surrounding the spot
+        let left_plan = this._diff(s1.substring(0, match), s2.substring(0, left), ...opts)
+        let right_plan = this._diff(s1.substring(match+length, M), s2.substring(right, N), ...opts)
+
+        // shift positions in right_plan by the offset of the right edge of the spot (match+length)
+        right_plan = right_plan.map(repl => [repl[0]+match+length, repl[1], repl[2]])
+
+        return [...right_plan, ...left_plan]
+    }
 }
