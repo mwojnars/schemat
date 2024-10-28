@@ -1,6 +1,8 @@
 /*
-    Useful data structures.
+    Common data structures and algorithms.
  */
+
+import {assert, commonPrefix, commonSuffix} from "./utils.js";
 
 
 /**********************************************************************************************************************/
@@ -130,4 +132,69 @@ export class ObjectSet {
     }
 }
 
+/**********************************************************************************************************************/
 
+export function fast_diff(s1, s2, max_depth = 3, num_patches = 15, min_len = 3, min_patches = 3, tips = true) {
+    /* Compute a list of replacements of the form [start, length, new_string] that transform `s1` string into `s2`.
+       If there are no such short replacements, undefined is returned, meaning that it is more efficient to replace the entire string.
+     */
+
+    if (s1 === s2) return []
+
+    let M = s1.length
+    let N = s2.length
+    let fl = Math.floor
+    let opts = [num_patches, min_len, min_patches, false]
+
+    if (max_depth <= 0 || M > 5*N || N > 5*M) return undefined      // too deep, or too much discrepancy between string lengths
+
+    // cut off the tips
+    if (tips) {
+        let L = commonPrefix(s1, s2).length
+        let R = commonSuffix(s1, s2).length
+        if (L || R) {
+            let plan = fast_diff(s1.substring(L, M-R), s2.substring(L, N-R), max_depth, ...opts)
+            if (plan) return L ? plan.map(repl => [repl[0]+L, repl[1], repl[2]]) : plan
+            if (L+R > 10) return [L, M-L-R, s2.substring(L, N-R)]
+            return undefined
+        }
+    }
+
+    num_patches = Math.min(num_patches, fl(N / min_len * 1.5))
+    if (num_patches < min_patches) return
+
+    let step = N / num_patches
+    let margin = step / 3
+
+    let patch = (i) => [fl(i*step), fl((i+1) * step + margin)]      // [start, end] of the i-th patch
+
+    // array of true/false values indicating which patch exists in s1
+    let patches = [...Array(num_patches).keys()].map(i => s1.includes(s2.substring(...patch(i))))
+    if (patches.every(p => !p)) return
+
+    // going in reverse order, sum up neighboring "true" values to find the longest sequence of true values
+    for (let i = num_patches - 1; i >= 0; i--)
+        if (patches[i]) patches[i] = 1 + (patches[i+1] || 0)
+    
+    // find the patch ("spot") having the maximum number of consecutive true values
+    let max = Math.max(...patches)
+    let imax = patches.findIndex(len => len === max)
+    let [left, right] = patch(imax)
+    let match = s1.indexOf(s2.substring(left, right))
+    assert(match >= 0)
+
+    // try to extend the `spot` to the left and to the right
+    while (left > 0 && s1[match-1] === s2[left-1]) { left--; match-- }
+    while (right < N && s1[match+right-left] === s2[right]) right++
+    let length = right - left
+    
+    opts = [max_depth-1, ...opts]
+
+    // return two replacements: on the left and on the right of the `spot`; the spot remains unchanged
+    let left_repl = [0, match, s2.substring(0, left)]
+    let right_repl = [match+length, M-match-length, s2.substring(right)]
+    
+    // TODO: recursive calls
+
+    return [left_repl, right_repl]
+}
