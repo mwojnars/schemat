@@ -49,7 +49,7 @@ export class Type {
         virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
                                     // when virtual=true, inheritance is skipped during property calculation like if inherit=false
 
-        // persist_imputed: false  // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
+        // explicit / persist_imputed: false  // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
         // required : undefined,   // if true, the field described by this type must be present in the record or object's data during insert/update
 
         // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
