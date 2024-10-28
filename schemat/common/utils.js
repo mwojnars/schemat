@@ -64,18 +64,86 @@ export function nullObject() {
 }
 
 
-const htmlEscapes = {
-    '&': '&amp',
-    '<': '&lt',
-    // '>': '&gt',
-    //'"': '&quot',
-    //"'": '&#39'
+export function fileBaseName(filepath) {
+    /* Extract the file name from the file path: drop the directory path and extension.
+       Similar (although not identical) to: path.basename(filepath, path.extname(filepath))
+       without importing the 'path' module.
+     */
+    return filepath.replace(/^.*\/|\.[^.]*$/g, '')
 }
-const reUnescapedHtml = /[&<]/g
 
-export function escape_html(string) {
-    // reduced version of Lodash's escape(): https://github.com/lodash/lodash/blob/9d11b48ce5758df247607dc837a98cbfe449784a/escape.js
-    return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
+export function normalizePath(path) {
+    /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
+    while (path.includes('/./')) path = path.replaceAll('/./', '/')
+    let lead = path[0] === '/' ? path[0] : ''
+    if (lead) path = path.slice(1)
+
+    let parts = []
+    for (const part of path.split('/'))
+        if (part === '..')
+            if (!parts.length) throw new Error(`incorrect path: '${path}'`)
+            else parts.pop()
+        else parts.push(part)
+
+    return lead + parts.join('/')
+}
+
+export function concat(arrays) {
+    /* Concatenate multiple arrays into a new array. */
+    return [].concat(...arrays)
+}
+
+export function unique(array) {
+    /* Filter out duplicates from `array` and return as a new array, order preserved. */
+    return array.filter((x, i, a) => a.indexOf(x) === i)
+}
+
+export const delay = async ms => new Promise(resolve => setTimeout(resolve, ms))
+export const sleep = delay
+
+export function timeout(ms, error = new Error('Timeout')) {
+    /* Return a promise that rejects with `error` after `ms` milliseconds. */
+    return new Promise((_, reject) => setTimeout(() => reject(error), ms))
+}
+
+
+/*************************************************************************************************
+ **
+ **  STRING functions
+ **
+ */
+
+export function commonPrefix(s1, s2) {
+    let N = Math.min(s1.length, s2.length)
+    for (let i = 0; i < N; i++)
+        if (s1[i] !== s2[i]) return s1.substring(0, i)
+    return s1.substring(0, N)
+}
+
+export function commonSuffix(s1, s2) {
+    let M = s1.length
+    let N = s2.length
+    let min = Math.min(M, N)
+    for (let i = 0; i < min; i++)
+        if (s1[M-i-1] !== s2[N-i-1]) return s1.substring(M-i)
+    return s1.substring(M-N)
+}
+
+export function splitFirst(s, sep = ' ') {
+    /* Split `s` on the first occurrence of `sep` and return BOTH substrings as [left, right].
+       Return [s, ""] if no occurrence of `sep` was found. */
+    let left = s.split(sep, 1)[0]
+    let right = s.slice(left.length + sep.length)
+    return [left, right]
+}
+
+export function splitLast(s, sep = ' ') {
+    /* Split `s` on the last occurrence of `sep` and return BOTH parts as an array, [left,right];
+       or return [s,""] if no occurrence of `sep` was found. */
+    if (!s.includes(sep)) return [s, ""]
+    let right = s.split(sep).pop()
+    let left = s.substring(0, s.length - right.length - sep.length)
+    return [left, right]
 }
 
 // def del_indent(text, indent = None):
@@ -158,65 +226,20 @@ export function truncate(s, length = 255, {end = '...', killwords = false, maxdr
     return result + end
 }
 
-export function splitFirst(s, sep = ' ') {
-    /* Split `s` on the first occurrence of `sep` and return BOTH substrings as [left, right].
-       Return [s, ""] if no occurrence of `sep` was found. */
-    let left = s.split(sep, 1)[0]
-    let right = s.slice(left.length + sep.length)
-    return [left, right]
+
+const htmlEscapes = {
+    '&': '&amp',
+    '<': '&lt',
+    // '>': '&gt',
+    //'"': '&quot',
+    //"'": '&#39'
 }
+const reUnescapedHtml = /[&<]/g
 
-export function splitLast(s, sep = ' ') {
-    /* Split `s` on the last occurrence of `sep` and return BOTH parts as an array, [left,right];
-       or return [s,""] if no occurrence of `sep` was found. */
-    if (!s.includes(sep)) return [s, ""]
-    let right = s.split(sep).pop()
-    let left = s.substring(0, s.length - right.length - sep.length)
-    return [left, right]
+export function escape_html(string) {
+    // reduced version of Lodash's escape(): https://github.com/lodash/lodash/blob/9d11b48ce5758df247607dc837a98cbfe449784a/escape.js
+    return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
 }
-
-export function fileBaseName(filepath) {
-    /* Extract the file name from the file path: drop the directory path and extension.
-       Similar (although not identical) to: path.basename(filepath, path.extname(filepath))
-       without importing the 'path' module.
-     */
-    return filepath.replace(/^.*\/|\.[^.]*$/g, '')
-}
-
-export function normalizePath(path) {
-    /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
-    while (path.includes('/./')) path = path.replaceAll('/./', '/')
-    let lead = path[0] === '/' ? path[0] : ''
-    if (lead) path = path.slice(1)
-
-    let parts = []
-    for (const part of path.split('/'))
-        if (part === '..')
-            if (!parts.length) throw new Error(`incorrect path: '${path}'`)
-            else parts.pop()
-        else parts.push(part)
-
-    return lead + parts.join('/')
-}
-
-export function concat(arrays) {
-    /* Concatenate multiple arrays into a new array. */
-    return [].concat(...arrays)
-}
-
-export function unique(array) {
-    /* Filter out duplicates from `array` and return as a new array, order preserved. */
-    return array.filter((x, i, a) => a.indexOf(x) === i)
-}
-
-export const delay = async ms => new Promise(resolve => setTimeout(resolve, ms))
-export const sleep = delay
-
-export function timeout(ms, error = new Error('Timeout')) {
-    /* Return a promise that rejects with `error` after `ms` milliseconds. */
-    return new Promise((_, reject) => setTimeout(() => reject(error), ms))
-}
-
 
 /*************************************************************************************************/
 
