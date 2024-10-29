@@ -161,7 +161,16 @@ export class Catalog {
 
     get(path) {
         path = this._normPath(path)
-        return this._get(path[0])
+        let obj = this._get(path[0])
+
+        for (let step of path.slice(1)) {
+            if (obj === undefined) return undefined
+            if (obj instanceof Catalog) obj = obj._get(step)
+            else if (obj instanceof Map) obj = (typeof step === 'number') ? [...obj.entries()][step]?.[1] : obj.get(step)
+            else if (obj instanceof Array && typeof step === 'number') obj = obj[step]
+            else return undefined
+        }
+        return obj
     }
 
 
