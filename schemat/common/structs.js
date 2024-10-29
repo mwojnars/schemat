@@ -134,10 +134,14 @@ export class ObjectSet {
 
 /**********************************************************************************************************************/
 
-export class FastDiff {
-    /* O(n) approximate diff algorithm. Computes a list of replacements of the form [start, length, new_string] that together
+export class SpotDiff {
+    /* Spot-diff is a fast, O(n) algorithm for detecting a limited (small) number of localised changes in a larger text.
+       It computes a list of replacements of the form [start, length, new_string] that together
        - when applied one by one in the provided order - will transform `s1` string into `s2`.
-       If there are no such (short) replacements, undefined is returned, meaning that it is more efficient to replace the entire string.
+       The maximum number of replacements returned is 2^max_depth -- if this is smaller than the actual number of changes,
+       some neighboring changes are represented by a single joint replacement.
+       If no good (short enough) replacement can be found, undefined is returned, meaning that it is more efficient
+       to replace the entire string than to compute a difference.
      */
 
     static apply(s, replacements) {
