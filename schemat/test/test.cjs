@@ -130,7 +130,7 @@ function server_setup(port, args = '') {
 
         page.on('console', msg => { messages.push(msg) })
         page.on('pageerror', error => { messages.push({type: () => 'error', text: () => error}) })
-        await delay(100)
+        await delay(300)
     })
 
     beforeEach(() => { messages = [] })
