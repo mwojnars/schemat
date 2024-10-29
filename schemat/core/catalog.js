@@ -294,64 +294,6 @@ export class Catalog {
         return [key, value]
     }
 
-    _deleteAt(pos) {
-        /* Delete an entry located at a given position in _entries. Rebuild the _entries array and _keys map.
-           `pos` can be negative, for example, pos=-1 means deleting the last entry.
-         */
-        let N = this._entries.length
-        if (pos < 0) pos = N + pos
-        if (pos < 0 || pos >= N) throw new Error("trying to delete a non-existing entry")
-        if (pos === N - 1) {
-            // special case: deleting the LAST entry does NOT require rebuilding the entire _keys maps
-            let entry = this._entries.pop()
-            if (!T.isMissing(entry[0])) {
-                let ids = this._keys.get(entry[0])
-                let id  = ids.pop()                 // indices in `ids` are stored in increasing order, so `pos` must be the last one
-                assert(id === pos)
-                if (!ids.length) this._keys.delete(entry[0])
-            }
-        }
-        else {
-            // general case: delete the entry, rearrange the _entries array, and rebuild this._keys from scratch
-            let entries = [...this._entries.slice(0,pos), ...this._entries.slice(pos+1)]
-            this.init(entries)
-        }
-    }
-    _insertAt(pos, entry) {
-        /* Insert new `entry` at a given position in this._entries. Update this._keys accordingly. `pos` can be negative. */
-        let N = this._entries.length
-        if (pos < 0) pos = N + pos
-        if (pos < 0 || pos > N) throw new Error(`invalid position (${pos}) where to insert a new entry`)
-        if (pos === N)
-            this._pushEntry(entry)       // special case: inserting at the END does NOT require rebuilding the entire _keys maps
-        else {
-            // general case: insert the entry, rearrange the _entries array, and rebuild this._keys from scratch
-            let entries = [...this._entries.slice(0,pos), entry, ...this._entries.slice(pos)]
-            this.init(entries)
-        }
-    }
-    _move(pos1, pos2) {
-        let N = this._entries.length
-        function check(pos, src = false) {
-            if (pos < 0) pos = N + pos
-            if (pos < 0 || pos >= N) throw new Error(`invalid position (${pos}) in a catalog for moving an entry`)
-            return pos
-        }
-        pos1 = check(pos1)
-        pos2 = check(pos2)
-        if (pos1 === pos2) return
-
-        // pull the entry at [pos1] out of this._entries...
-        let entry = this._entries[pos1]
-        let entries = [...this._entries.slice(0,pos1), ...this._entries.slice(pos1+1)]
-
-        // ...and reinsert at [pos2], treating pos2 as an index in the initial array
-        //if (pos2 > pos1) pos2--
-        entries = [...entries.slice(0,pos2), entry, ...entries.slice(pos2)]
-
-        this.init(entries)
-    }
-
     /***  Higher-level edit operations  ***/
 
     _step(path) {
@@ -381,6 +323,19 @@ export class Catalog {
         if (subcat instanceof Catalog) return subcat.insert(subpath, pos, ...entry)     // nested Catalog? make a recursive call
         throw new Error(`path not found: ${subpath.join('/')}`)
     }
+    _insertAt(pos, entry) {
+        /* Insert new `entry` at a given position in this._entries. Update this._keys accordingly. `pos` can be negative. */
+        let N = this._entries.length
+        if (pos < 0) pos = N + pos
+        if (pos < 0 || pos > N) throw new Error(`invalid position (${pos}) where to insert a new entry`)
+        if (pos === N)
+            this._pushEntry(entry)       // special case: inserting at the END does NOT require rebuilding the entire _keys maps
+        else {
+            // general case: insert the entry, rearrange the _entries array, and rebuild this._keys from scratch
+            let entries = [...this._entries.slice(0,pos), entry, ...this._entries.slice(pos)]
+            this.init(entries)
+        }
+    }
 
     delete(path) {
         /* Delete all (sub)entries identified by `path`. Return the number of entries removed (0 if nothing).
@@ -403,6 +358,29 @@ export class Catalog {
             if (obj instanceof Catalog) deleted += obj.delete(steps)
         }
         return deleted
+    }
+    _deleteAt(pos) {
+        /* Delete an entry located at a given position in _entries. Rebuild the _entries array and _keys map.
+           `pos` can be negative, for example, pos=-1 means deleting the last entry.
+         */
+        let N = this._entries.length
+        if (pos < 0) pos = N + pos
+        if (pos < 0 || pos >= N) throw new Error("trying to delete a non-existing entry")
+        if (pos === N - 1) {
+            // special case: deleting the LAST entry does NOT require rebuilding the entire _keys maps
+            let entry = this._entries.pop()
+            if (!T.isMissing(entry[0])) {
+                let ids = this._keys.get(entry[0])
+                let id  = ids.pop()                 // indices in `ids` are stored in increasing order, so `pos` must be the last one
+                assert(id === pos)
+                if (!ids.length) this._keys.delete(entry[0])
+            }
+        }
+        else {
+            // general case: delete the entry, rearrange the _entries array, and rebuild this._keys from scratch
+            let entries = [...this._entries.slice(0,pos), ...this._entries.slice(pos+1)]
+            this.init(entries)
+        }
     }
 
     update(path, key, value) {
@@ -427,6 +405,27 @@ export class Catalog {
         let [_, subpath, subcat] = this._step(path)
         if (subcat instanceof Catalog) return subcat.move(subpath, pos1, pos2)        // nested Catalog? make a recursive call
         throw new Error(`path not found: ${subpath}`)
+    }
+    _move(pos1, pos2) {
+        let N = this._entries.length
+        function check(pos, src = false) {
+            if (pos < 0) pos = N + pos
+            if (pos < 0 || pos >= N) throw new Error(`invalid position (${pos}) in a catalog for moving an entry`)
+            return pos
+        }
+        pos1 = check(pos1)
+        pos2 = check(pos2)
+        if (pos1 === pos2) return
+
+        // pull the entry at [pos1] out of this._entries...
+        let entry = this._entries[pos1]
+        let entries = [...this._entries.slice(0,pos1), ...this._entries.slice(pos1+1)]
+
+        // ...and reinsert at [pos2], treating pos2 as an index in the initial array
+        //if (pos2 > pos1) pos2--
+        entries = [...entries.slice(0,pos2), entry, ...entries.slice(pos2)]
+
+        this.init(entries)
     }
 
 
