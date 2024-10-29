@@ -314,8 +314,17 @@ export class Catalog {
         return [pos, subpath, value]
     }
 
+    // _findParent(_path) {
+    //     let path = this._normPath(_path)
+    //     if (!path.length) throw new Error(`path too short: ${_path}`)
+    // }
+
     insert(path, pos, key, value) {
         /* Insert a new `entry` at position `pos` in a subcatalog identified by `path`; empty path denotes this catalog. */
+        // let target = this.get(path)
+        // if (target === undefined) throw new Error(`path not found: ${path}`)
+        // throw new Error(`not a collection at: ${path}`)
+
         path = this._normPath(path)
         let entry = this._clean(key, value)
         if (!path.length) return this._insertAt(pos, entry)
