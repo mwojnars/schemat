@@ -105,7 +105,7 @@ export class Catalog {
     init(entries, clean = false) {
         /* (Re)build this._entries and this._keys from an array of `entries`, each entry is a [key, value] pair. */
         this._keys = new Map()
-        this._entries = clean ? entries.map(e => this._clean(e)) : [...entries]
+        this._entries = clean ? entries.map(e => this._clean(...e)) : [...entries]
 
         for (const [pos, entry] of this._entries.entries()) {
             const key = entry[0]
@@ -276,7 +276,7 @@ export class Catalog {
 
     _pushEntry([key, value]) {
         /* Append `entry` to this._entries while keeping the existing occurrencies of key. Update this._keys. */
-        let entry = this._clean([key, value])
+        let entry = this._clean(key, value)
         let pos = this._entries.push(entry) - 1             // insert to this._entries and get its position
         if (!T.isMissing(key)) {                            // update this._keys
             let ids = this._keys.get(key) || []
@@ -286,10 +286,10 @@ export class Catalog {
         return entry
     }
 
-    _clean([key, value]) {
+    _clean(key, value) {
         /* Validate and clean up the new entry's properties. */
-        assert(value !== undefined)
         assert(isstring(key))
+        assert(value !== undefined)
         if (key === null) key = undefined
         return [key, value]
     }
@@ -317,7 +317,7 @@ export class Catalog {
     insert(path, pos, key, value) {
         /* Insert a new `entry` at position `pos` in a subcatalog identified by `path`; empty path denotes this catalog. */
         path = this._normPath(path)
-        let entry = this._clean([key, value])
+        let entry = this._clean(key, value)
         if (!path.length) return this._insertAt(pos, entry)
         let [_, subpath, subcat] = this._step(path)
         if (subcat instanceof Catalog) return subcat.insert(subpath, pos, ...entry)     // nested Catalog? make a recursive call
