@@ -123,7 +123,7 @@ export class Catalog {
     get length()        { return this._entries.length }
 
     // everywhere below, `key` can be a string, or an index (number) into _entries ...
-    get(key)            { return this._entries[this.loc(key)]?.[1] }
+    _get(key)           { return this._entries[this.loc(key)]?.[1] }
     has(key)            { return (typeof key === 'number') ? 0 <= key < this._entries.length : this._keys.has(key)  }
     map(fun)            { return this._entries.map(e => fun(e[1])) }
     *keys()             { yield* this._keys.keys() }
@@ -153,7 +153,14 @@ export class Catalog {
     }
 
 
-    /***  key-based modifications (no paths, no recursion)  ***/
+    /***  Path-aware deep access & modifications  ***/
+
+    get(path) {
+        return this._get(path)
+    }
+
+
+    /***  Key-based modifications (no paths, no recursion)  ***/
 
     set(key, value) {
         /* If the `key` occurs exactly once, replace its value with `value` at the existing position.
