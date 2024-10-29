@@ -1084,7 +1084,7 @@ export class WebObject {
 
     'edit.set_values'(prop, values) {
         /* Set multiple (repeated) values for a given property, remove the existing ones. */
-        this.__data.setAll(prop, ...values)
+        this.__data.set(prop, ...values)
     }
 
 

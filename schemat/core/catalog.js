@@ -149,40 +149,46 @@ export class Catalog {
 
     object() {
         /* Return an object containing {key: value} pairs of all the entries. For repeated keys, only the first value is included. */
-        return Object.fromEntries(this._entries.reverse())
+        return Object.fromEntries(this._entries.toReversed())
     }
 
 
     /***  Path-aware deep access & modifications  ***/
 
+    _normPath(path) {
+        return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : [path]
+    }
+
     get(path) {
-        return this._get(path)
+        path = this._normPath(path)
+        return this._get(path[0])
     }
 
 
     /***  Key-based modifications (no paths, no recursion)  ***/
 
-    set(key, value) {
-        /* If the `key` occurs exactly once, replace its value with `value` at the existing position.
-           Otherwise, remove all occurrences of `key` (if any) and append {key, value} entry at the end.
+    set(key, ...values) {
+        /* If there's one value in `values` and the `key` occurs exactly once, replace its value with values[0] at the existing position.
+           Otherwise, remove all occurrences of `key` (if any) and append [key, value[i]] entries at the end.
          */
         let locs = this.locs(key)
-        if (locs.length === 1) {
-            this._entries[locs[0]] = [key, value]
+        if (values.length === 1 && locs.length === 1) {
+            this._entries[locs[0]] = [key, values[0]]
             return this
         }
         if (locs.length) this.delete(key)
-        return this.append(key, value)
-    }
-
-    setAll(key, ...values) {
-        /* Remove all existing values for the `key` and insert new `values` at the end of the catalog. */
-        this.delete(key)
         return this.append(key, ...values)
     }
 
+    // setAll(key, ...values) {
+    //     /* Remove all existing values for the `key` and insert new `values` at the end of the catalog. */
+    //     this.delete(key)
+    //     return this.append(key, ...values)
+    // }
+
     append(key, ...values) {
-        /* Insert (key, value[i]) pairs at the end of the catalog. */
+        /* Insert [key, value[i]] pairs at the end of the catalog. */
+        if (!values.length) return this
         let start = this._entries.length
         this._entries.push(...values.map(value => [key, value]))
         let locs = this._keys.get(key)
@@ -205,16 +211,12 @@ export class Catalog {
         for (let key of catalog.keys()) {
             let values = catalog.getAll(key)
             if (values.length === 1) this.set(key, values[0])
-            else this.setAll(key, values)
+            else this.set(key, ...values)
         }
     }
 
 
     /***  Read access  ***/
-
-    _normPath(path) {
-        return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : [path]
-    }
 
     static merge(catalogs, unique = true) {
         /* Merge multiple `catalogs` into a new Catalog. The order of entries is preserved.
@@ -391,7 +393,7 @@ export class Catalog {
         let locs = this.locs(key)
 
         if (!steps.length) {                    // no more steps to be done? delete leaf nodes here
-            for (let pos of locs.reverse()) this._deleteAt(pos)
+            for (let pos of locs.toReversed()) this._deleteAt(pos)
             return locs.length
         }
 
