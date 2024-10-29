@@ -135,13 +135,13 @@ export class ObjectSet {
 /**********************************************************************************************************************/
 
 export class SpotDiff {
-    /* Spot-diff is a fast, O(n) algorithm for detecting a limited (small) number of localised changes in a larger text.
+    /* Spot-diff is O(n) algorithm for detecting a (limited) number of localised changes in a larger text.
        It computes a list of replacements of the form [start, length, new_string] that together
        - when applied one by one in the provided order - will transform `s1` string into `s2`.
-       The maximum number of replacements returned is 2^max_depth -- if this is smaller than the actual number of changes,
-       some neighboring changes are represented by a single joint replacement.
+       The maximum number of replacements that can be returned is 2^max_depth -- if this is smaller than
+       the actual number of changes, some neighboring changes are represented by a single replacement.
        If no good (short enough) replacement can be found, undefined is returned, meaning that it is more efficient
-       to replace the entire string than to compute a difference.
+       to replace the entire string than to compute a difference. Spot-diff is a heuristic, it occasionally returns suboptimal plans.
      */
 
     static apply(s, replacements) {
@@ -151,7 +151,7 @@ export class SpotDiff {
         return s
     }
 
-    static compute(s1, s2, max_depth = 3, num_patches = 15, min_len = 4, min_patches = 4, min_improvement = 0.2, penalty = 10) {
+    static compute(s1, s2, max_depth = 3, num_patches = 15, min_len = 4, min_patches = 4, min_improvement = 0.1, penalty = 10) {
 
         let M = s1.length
         let N = s2.length
