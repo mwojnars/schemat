@@ -137,7 +137,7 @@ export class Catalog {
     loc(key)            { return (typeof key === 'number') ? key : this._keys.get(key)?.[0] }       // location of the first occurrence of a string `key`, or `key` if already a number
     locs(key)           { return (typeof key === 'number') ? [key] : this._keys.get(key) || [] }    // locations of all occurrences of a string `key`, [] if none, or [key] if already a number
 
-    getAll(key)         { return this.locs(key).map(i => this._entries[i][1]) }                     // array of all values of a (repeated) key
+    _getAll(key)        { return this.locs(key).map(i => this._entries[i][1]) }                     // array of all values of a (repeated) key
     getRecord(key)      { return [key, this._entries[this.loc(key)]] }
     getRecords(key)     { return key === undefined ? this._entries.map(([key,value]) => ({key,value})) : this.locs(key).map(i => [key, this._entries[i][1]]) }
     hasMultiple(key)    { return this.locs(key).length >= 2 }           // true if 2 or more values are present for `key`
@@ -161,6 +161,7 @@ export class Catalog {
 
     get(path) {
         path = this._normPath(path)
+        if (!path.length) return this
         let obj = this._get(path[0])
 
         for (let step of path.slice(1)) {
@@ -171,6 +172,27 @@ export class Catalog {
             else return undefined
         }
         return obj
+    }
+
+    getAll(path) {
+        path = this._normPath(path)
+        return [...Catalog.yieldAll(this, path)]
+    }
+
+    static *yieldAll(collection, path) {
+        if (!path.length) yield collection
+        if (!collection) return
+        let [step, ...rest] = path
+
+        if (collection instanceof Catalog)
+            for (let obj of collection._getAll(step))
+                yield* Catalog.yieldAll(obj, rest)
+        
+        else if (collection instanceof Map)
+            yield* Catalog.yieldAll(collection.get(step), rest)
+        
+        else if (collection instanceof Array && typeof step === 'number')
+            yield* Catalog.yieldAll(collection[step], rest)
     }
 
 
