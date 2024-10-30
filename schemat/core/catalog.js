@@ -69,6 +69,32 @@ export class Path {
     }
 }
 
+class Struct {
+    /* Static methods for working with collections: Catalog, Map, Array. */
+
+    static sizeOf(collection) {
+        if (collection instanceof Catalog) return collection.length
+        if (collection instanceof Map) return collection.size
+        if (collection instanceof Array) return collection.length
+        throw new Error(`not a collection: ${collection}`)
+    }
+
+    static *yieldAll(collection, path) {
+        if (!path.length) yield collection
+        if (!collection) return
+        let [step, ...rest] = path
+
+        if (collection instanceof Catalog)
+            for (let obj of collection._getAll(step))
+                yield* Struct.yieldAll(obj, rest)
+        
+        else if (collection instanceof Map)
+            yield* Struct.yieldAll(collection.get(step), rest)
+        
+        else if (collection instanceof Array && typeof step === 'number')
+            yield* Struct.yieldAll(collection[step], rest)
+    }
+}
 
 /**********************************************************************************************************************
  **
@@ -156,35 +182,19 @@ export class Catalog {
     /***  Path-aware deep access & modifications  ***/
 
     _normPath(path) {
-        return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : [path]
+        return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : T.isMissing(path) ? [] : [path]
     }
 
     get(path) {
         path = this._normPath(path)
         if (!path.length) return this
         if (path.length === 1) return this._get(path[0])
-        return Catalog.yieldAll(this, path).next().value
+        return Struct.yieldAll(this, path).next().value
     }
 
     getAll(path) {
         path = this._normPath(path)
-        return [...Catalog.yieldAll(this, path)]
-    }
-
-    static *yieldAll(collection, path) {
-        if (!path.length) yield collection
-        if (!collection) return
-        let [step, ...rest] = path
-
-        if (collection instanceof Catalog)
-            for (let obj of collection._getAll(step))
-                yield* Catalog.yieldAll(obj, rest)
-        
-        else if (collection instanceof Map)
-            yield* Catalog.yieldAll(collection.get(step), rest)
-        
-        else if (collection instanceof Array && typeof step === 'number')
-            yield* Catalog.yieldAll(collection[step], rest)
+        return [...Struct.yieldAll(this, path)]
     }
 
 
@@ -336,9 +346,9 @@ export class Catalog {
     //     if (!path.length) throw new Error(`path too short: ${_path}`)
     // }
 
-    insert(path, pos, key, value) {
+    insert(path = null, pos, key, value) {
         /* Insert a new `entry` at position `pos` in the collection identified by `path`. If `path` has multiple
-           occurrences, the first one is chosen, and it must be a collection. Empty path denotes this catalog.
+           occurrences, the first one is chosen, and it must be a collection. Empty path ([] or null) denotes this catalog.
          */
         let target = this.get(path)
         if (target === undefined) throw new Error(`path not found: ${path}`)
@@ -346,15 +356,19 @@ export class Catalog {
         let entry = this._clean(key, value)
         if (target instanceof Catalog) return target._insertAt(pos, entry)
 
-        throw new Error(`not a collection at: ${path}`)
+        // if (target instanceof Map) {
+        //     target.set(key, value)
+        //     return target
+        // }
 
-        // path = this._normPath(path)
-        // let entry = this._clean(key, value)
-        // if (!path.length) return this._insertAt(pos, entry)
-        // let [_, subpath, subcat] = this._step(path)
-        // if (subcat instanceof Catalog) return subcat.insert(subpath, pos, ...entry)     // nested Catalog? make a recursive call
-        // throw new Error(`path not found: ${subpath.join('/')}`)
+        // if (target instanceof Array) {
+        //     target.splice(pos, 0, entry)
+        //     return target
+        // }
+
+        throw new Error(`not a collection at: ${path}`)
     }
+
     _insertAt(pos, entry) {
         /* Insert new `entry` at a given position in this._entries. Update this._keys accordingly. `pos` can be negative. */
         let N = this._entries.length
@@ -367,6 +381,7 @@ export class Catalog {
             let entries = [...this._entries.slice(0,pos), entry, ...this._entries.slice(pos)]
             this.init(entries)
         }
+        return this
     }
 
     delete(path) {
