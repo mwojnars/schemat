@@ -204,14 +204,22 @@ export class Catalog {
     }
 
     _splitPath(path) {
-        /* Split an [a,b,...,y,z] path into [a,b,...,y] and z. Normalize the path first. */
+        /* Split an [a,...,y,z] path into [a,...,y] and z. Normalize the path first. */
         path = this._normPath(path)
         if (!path.length) throw new Error(`path is empty`)
         return [path.slice(0, -1), path[path.length - 1]]
     }
 
-    get(path) {
-        path = this._normPath(path)
+    _targetKey(path) {
+        /* Return the last-but-one object on a `path`, and the last segment key. */
+        let [subpath, key] = this._splitPath(path)
+        let target = this.get(subpath, false)
+        if (target === undefined) throw new Error(`path not found: ${path}`)
+        return [target, key]
+    }
+
+    get(path, norm = true) {
+        path = norm ? this._normPath(path) : path
         if (!path.length) return this
         if (path.length === 1) return this._get(path[0])
         return Struct.yieldAll(this, path).next().value
@@ -223,15 +231,15 @@ export class Catalog {
     }
 
     set(path, ...values) {
-        let [subpath, key] = this._splitPath(path)
-        let target = this.get(subpath)
-        if (target === undefined) throw new Error(`path not found: ${path}`)
+        let [target, key] = this._targetKey(path)
         Struct.set(target, key, ...values)
         return this
     }
 
     append(path, ...values) {
-
+        let [target, key] = this._targetKey(path)
+        if (target instanceof Catalog) return target._append(key, ...values)
+        throw new Error(`not a Catalog at: ${path}`)
     }
 
 
