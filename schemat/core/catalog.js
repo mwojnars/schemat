@@ -203,12 +203,6 @@ export class Catalog {
         return this.append(key, ...values)
     }
 
-    // setAll(key, ...values) {
-    //     /* Remove all existing values for the `key` and insert new `values` at the end of the catalog. */
-    //     this.delete(key)
-    //     return this.append(key, ...values)
-    // }
-
     append(key, ...values) {
         /* Insert [key, value[i]] pairs at the end of the catalog. */
         if (!values.length) return this
@@ -343,17 +337,23 @@ export class Catalog {
     // }
 
     insert(path, pos, key, value) {
-        /* Insert a new `entry` at position `pos` in a subcatalog identified by `path`; empty path denotes this catalog. */
-        // let target = this.get(path)
-        // if (target === undefined) throw new Error(`path not found: ${path}`)
-        // throw new Error(`not a collection at: ${path}`)
+        /* Insert a new `entry` at position `pos` in the collection identified by `path`. If `path` has multiple
+           occurrences, the first one is chosen, and it must be a collection. Empty path denotes this catalog.
+         */
+        let target = this.get(path)
+        if (target === undefined) throw new Error(`path not found: ${path}`)
 
-        path = this._normPath(path)
         let entry = this._clean(key, value)
-        if (!path.length) return this._insertAt(pos, entry)
-        let [_, subpath, subcat] = this._step(path)
-        if (subcat instanceof Catalog) return subcat.insert(subpath, pos, ...entry)     // nested Catalog? make a recursive call
-        throw new Error(`path not found: ${subpath.join('/')}`)
+        if (target instanceof Catalog) return target._insertAt(pos, entry)
+
+        throw new Error(`not a collection at: ${path}`)
+
+        // path = this._normPath(path)
+        // let entry = this._clean(key, value)
+        // if (!path.length) return this._insertAt(pos, entry)
+        // let [_, subpath, subcat] = this._step(path)
+        // if (subcat instanceof Catalog) return subcat.insert(subpath, pos, ...entry)     // nested Catalog? make a recursive call
+        // throw new Error(`path not found: ${subpath.join('/')}`)
     }
     _insertAt(pos, entry) {
         /* Insert new `entry` at a given position in this._entries. Update this._keys accordingly. `pos` can be negative. */
