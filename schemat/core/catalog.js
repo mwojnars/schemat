@@ -72,6 +72,10 @@ export class Path {
 class Struct {
     /* Static methods for working with collections: Catalog, Map, Array. */
 
+    static isCollection(obj) {
+        return obj instanceof Catalog || obj instanceof Map || obj instanceof Array
+    }
+
     static sizeOf(collection) {
         if (collection instanceof Catalog) return collection.length
         if (collection instanceof Map) return collection.size
@@ -259,7 +263,7 @@ export class Catalog {
         for (const cat of catalogs)
             for (const entry of (cat._entries || []))
                 if (entry[0] !== undefined && !catalog.has(entry[0]))
-                    catalog._pushEntry(entry)
+                    catalog._pushEntry(...entry)
         return catalog
     }
 
@@ -298,10 +302,10 @@ export class Catalog {
 
     push(key, value) {
         /* Create and append a new entry without deleting existing occurrencies of the key. */
-        return this._pushEntry([key, value])
+        return this._pushEntry(key, value)
     }
 
-    _pushEntry([key, value]) {
+    _pushEntry(key, value) {
         /* Append `entry` to this._entries while keeping the existing occurrencies of key. Update this._keys. */
         let entry = this._clean(key, value)
         let pos = this._entries.push(entry) - 1             // insert to this._entries and get its position
@@ -349,38 +353,33 @@ export class Catalog {
     insert(path = null, pos, key, value) {
         /* Insert a new `entry` at position `pos` in the collection identified by `path`. If `path` has multiple
            occurrences, the first one is chosen, and it must be a collection. Empty path ([] or null) denotes this catalog.
+           `pos` can be negative.
          */
         let target = this.get(path)
         if (target === undefined) throw new Error(`path not found: ${path}`)
 
         let entry = this._clean(key, value)
-        if (target instanceof Catalog) return target._insertAt(pos, entry)
+        let N = Struct.sizeOf(target)
 
-        // if (target instanceof Map) {
-        //     target.set(key, value)
-        //     return target
-        // }
-
-        // if (target instanceof Array) {
-        //     target.splice(pos, 0, entry)
-        //     return target
-        // }
-
-        throw new Error(`not a collection at: ${path}`)
-    }
-
-    _insertAt(pos, entry) {
-        /* Insert new `entry` at a given position in this._entries. Update this._keys accordingly. `pos` can be negative. */
-        let N = this._entries.length
         if (pos < 0) pos = N + pos
-        if (pos < 0 || pos > N) throw new Error(`invalid position (${pos}) where to insert a new entry`)
-        if (pos === N)
-            this._pushEntry(entry)       // special case: inserting at the END does NOT require rebuilding the entire _keys maps
-        else {
-            // general case: insert the entry, rearrange the _entries array, and rebuild this._keys from scratch
-            let entries = [...this._entries.slice(0,pos), entry, ...this._entries.slice(pos)]
-            this.init(entries)
+        if (pos < 0 || pos > N) throw new Error(`invalid insert position (${pos})`)
+        if (!Struct.isCollection(target)) throw new Error(`not a collection at: ${path}`)
+
+        if (target instanceof Catalog) {
+            if (pos === N)
+                target._pushEntry(...entry)     // special case: inserting at the END does NOT require rebuilding the entire _keys maps
+            else {
+                // general case: insert the entry, rearrange the _entries array, and rebuild this._keys from scratch
+                target._entries.splice(pos, 0, entry)
+                target.init(target._entries)
+            }
         }
+        else if (target instanceof Map) {
+            target.set(key, value)
+        }
+        else if (target instanceof Array)
+            target.splice(pos, 0, value)
+
         return this
     }
 
