@@ -344,21 +344,27 @@ export class Catalog {
     // }
 
     insert(path = null, pos, key, value) {
-        /* Insert a new `entry` at position `pos` in the collection identified by `path`. If `path` has multiple
-           occurrences, the first one is chosen, and it must be a collection. Empty path ([] or null) denotes this catalog.
-           `pos` can be negative.
+        /* Insert a new entry at position `pos` in the collection identified by `path`. If `path` has multiple
+           occurrences, the first one is chosen, and it must be a collection (Catalog/Map/Array).
+           Empty path ([] or null) denotes this catalog. `pos` can be negative.
+           If `path` points to an array, `key` is treated as the value to be inserted, and `value` is ignored.
          */
         let target = this.get(path)
         if (target === undefined) throw new Error(`path not found: ${path}`)
 
-        let entry = this._clean(key, value)
         let N = Struct.sizeOf(target)
-
         if (pos < 0) pos = N + pos
         if (pos < 0 || pos > N) throw new Error(`invalid insert position (${pos})`)
-        if (!Struct.isCollection(target)) throw new Error(`not a collection at: ${path}`)
 
-        if (target instanceof Catalog) {
+        if (target instanceof Array) {
+            target.splice(pos, 0, key)
+            return this
+        }
+
+        if (!Struct.isCollection(target)) throw new Error(`not a collection at: ${path}`)
+        let entry = this._clean(key, value)
+
+        if (target instanceof Catalog)
             if (pos === N)
                 target._append(...entry)    // special case: inserting at the END does NOT require rebuilding the entire _keys maps
             else {
@@ -366,13 +372,18 @@ export class Catalog {
                 target._entries.splice(pos, 0, entry)
                 target.init(target._entries)
             }
-        }
-        else if (target instanceof Map) {
-            target.set(key, value)
-        }
-        else if (target instanceof Array)
-            target.splice(pos, 0, value)
 
+        else if (target instanceof Map) {
+            if (target.has(key)) throw new Error(`key (${key}) already exists in the Map, cannot insert another one, use set() instead`)
+            if (pos === N) target.set(key, value)
+            else {
+                // convert the Map to an Array, insert the entry, push all entries back to the emptied Map
+                let entries = [...target.entries()]
+                target.clear()
+                entries.splice(pos, 0, entry)
+                entries.forEach(e => target.set(...e))
+            }
+        }
         return this
     }
 
