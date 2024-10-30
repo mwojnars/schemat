@@ -110,13 +110,14 @@ export class Catalog {
     /* Catalog is an Array-like and Map-like collection of entries, a mini key-value store.
        Keys, if present, are strings. The same key can be repeated.
        Keys may include all characters except ":", '.', '$', '/', whitespace. Empty string is a valid non-missing key.
+       Undefined key is replaced with null. Only not-null keys are indexed in _keys.
     */
 
     // suffix appended to the key when an array of *all* values of this key is requested
     static PLURAL = '$'
 
     _entries = []               // array of [key, value] pairs
-    _keys    = new Map()        // for each key, an array of positions in _entries where this key occurs, sorted (!)
+    _keys    = new Map()        // for each not-null key, an array of positions in _entries where this key occurs, sorted (!)
 
 
     constructor(...entries) {
@@ -222,15 +223,12 @@ export class Catalog {
         if (!values.length) return this
         let start = this._entries.length
         this._entries.push(...values.map(value => [key, value]))
-        let locs = this._keys.get(key)
-        if (!locs) this._keys.set(key, locs = [])
-        locs.push(...values.map((_, i) => start + i))
+        if (!T.isMissing(key)) {
+            let locs = this._keys.get(key)
+            if (!locs) this._keys.set(key, locs = [])
+            locs.push(...values.map((_, i) => start + i))
+        }
         return this
-    }
-
-    appendEntries(entries) {
-        for (let [key, value] of entries)
-            this.append(key, value)
     }
 
     updateAll(catalog) {
@@ -300,13 +298,14 @@ export class Catalog {
         ids.length ? this._keys.set(key, ids) : this._keys.delete(key)
     }
 
-    push(key, value) {
-        /* Create and append a new entry without deleting existing occurrencies of the key. */
-        return this._pushEntry(key, value)
-    }
+    // push(key, value) {
+    //     /* Create and append a new entry without deleting existing occurrences of the key. */
+    //     assert(false)
+    //     return this._pushEntry(key, value)
+    // }
 
     _pushEntry(key, value) {
-        /* Append `entry` to this._entries while keeping the existing occurrencies of key. Update this._keys. */
+        /* Append `entry` to this._entries while keeping the existing occurrences of key. Update this._keys. */
         let entry = this._clean(key, value)
         let pos = this._entries.push(entry) - 1             // insert to this._entries and get its position
         if (!T.isMissing(key)) {                            // update this._keys
