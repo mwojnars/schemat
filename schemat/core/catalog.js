@@ -237,9 +237,24 @@ export class Catalog {
     }
 
     append(path, ...values) {
+        /* Find a (nested) catalog pointed to by path[:-1] (all path segments except the last one) and append
+           [key, value] entries there, with key=path[-1].
+         */
         let [target, key] = this._targetKey(path)
         if (target instanceof Catalog) return target._append(key, ...values)
-        throw new Error(`not a Catalog at: ${path}`)
+        throw new Error(`not a Catalog at: ${this._normPath(path).slice(0,-1)}`)
+    }
+
+    push(path, ...values) {
+        /* Find a nested array pointed to be path and push all of `values` at the end of it.
+           Return this catalog (not the array and not the array length!).
+         */
+        let target = this.get(path)
+        if (target instanceof Array) {
+            target.push(...values)
+            return this
+        }
+        throw new Error(`not an Array at: ${path}`)
     }
 
 
