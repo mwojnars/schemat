@@ -76,27 +76,40 @@ class Struct {
         return obj instanceof Catalog || obj instanceof Map || obj instanceof Array
     }
 
-    static sizeOf(collection) {
-        if (collection instanceof Catalog) return collection.length
-        if (collection instanceof Map) return collection.size
-        if (collection instanceof Array) return collection.length
-        throw new Error(`not a collection: ${collection}`)
+    static sizeOf(target) {
+        if (target instanceof Catalog) return target.length
+        if (target instanceof Map) return target.size
+        if (target instanceof Array) return target.length
+        throw new Error(`not a collection: ${target}`)
     }
 
-    static *yieldAll(collection, path) {
-        if (!path.length) yield collection
-        if (!collection) return
+    static *yieldAll(target, path) {
+        if (!path.length) yield target
+        if (!target) return
         let [step, ...rest] = path
 
-        if (collection instanceof Catalog)
-            for (let obj of collection._getAll(step))
+        if (target instanceof Catalog)
+            for (let obj of target._getAll(step))
                 yield* Struct.yieldAll(obj, rest)
         
-        else if (collection instanceof Map)
-            yield* Struct.yieldAll(collection.get(step), rest)
+        else if (target instanceof Map)
+            yield* Struct.yieldAll(target.get(step), rest)
         
-        else if (collection instanceof Array && typeof step === 'number')
-            yield* Struct.yieldAll(collection[step], rest)
+        else if (target instanceof Array && typeof step === 'number')
+            yield* Struct.yieldAll(target[step], rest)
+    }
+
+    static set(target, key, ...values) {
+        if (!values.length) return target
+        if (target instanceof Catalog) target._set(key, ...values)
+        else if (target instanceof Map)
+            if (values.length === 1) target.set(key, values[0])
+            else throw new Error(`Map.set() requires one value, got ${values.length}`)
+        else if (target instanceof Array)
+            if (typeof key === 'number') target[key] = values[0]
+            else throw new Error(`not an array index (${key}) when setting a value inside an Array`)
+        else throw new Error(`not a collection: ${target}`)
+        return target
     }
 }
 
@@ -174,7 +187,7 @@ export class Catalog {
     hasMultiple(key)    { return this.locs(key).length >= 2 }           // true if 2 or more values are present for `key`
 
     hasKeys()           { return this._keys.size > 0  }
-    hasUniqueKeys()     { return this._keys.size === this.length }
+    hasUniqueKeys()     { return this._keys.size === this.length && !this._keys.has(null) }
     hasStringKeys()     { return this._entries.filter(e => typeof e[0] !== 'string').length === 0 }
     // isDict()         { return this.hasUniqueKeys() && this.hasStringKeys() }
 
@@ -190,6 +203,13 @@ export class Catalog {
         return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : T.isMissing(path) ? [] : [path]
     }
 
+    _splitPath(path) {
+        /* Split an [a,b,...,y,z] path into [a,b,...,y] and z. Normalize the path first. */
+        path = this._normPath(path)
+        if (!path.length) throw new Error(`path is empty`)
+        return [path.slice(0, -1), path[path.length - 1]]
+    }
+
     get(path) {
         path = this._normPath(path)
         if (!path.length) return this
@@ -202,10 +222,22 @@ export class Catalog {
         return [...Struct.yieldAll(this, path)]
     }
 
+    set(path, ...values) {
+        let [subpath, key] = this._splitPath(path)
+        let target = this.get(subpath)
+        if (target === undefined) throw new Error(`path not found: ${path}`)
+        Struct.set(target, key, ...values)
+        return this
+    }
+
+    append(path, ...values) {
+
+    }
+
 
     /***  Key-based modifications (no paths, no recursion)  ***/
 
-    set(key, ...values) {
+    _set(key, ...values) {
         /* If there's one value in `values` and the `key` occurs exactly once, replace its value with values[0] at the existing position.
            Otherwise, remove all occurrences of `key` (if any) and append [key, value[i]] entries at the end.
          */
