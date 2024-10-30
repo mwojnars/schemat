@@ -215,10 +215,10 @@ export class Catalog {
             return this
         }
         if (locs.length) this.delete(key)
-        return this.append(key, ...values)
+        return this._append(key, ...values)
     }
 
-    append(key, ...values) {
+    _append(key, ...values) {
         /* Insert [key, value[i]] pairs at the end of the catalog. */
         if (!values.length) return this
         let start = this._entries.length
@@ -261,7 +261,7 @@ export class Catalog {
         for (const cat of catalogs)
             for (const entry of (cat._entries || []))
                 if (entry[0] !== undefined && !catalog.has(entry[0]))
-                    catalog._pushEntry(...entry)
+                    catalog._append(...entry)
         return catalog
     }
 
@@ -298,23 +298,17 @@ export class Catalog {
         ids.length ? this._keys.set(key, ids) : this._keys.delete(key)
     }
 
-    // push(key, value) {
-    //     /* Create and append a new entry without deleting existing occurrences of the key. */
-    //     assert(false)
-    //     return this._pushEntry(key, value)
+    // _pushEntry(key, value) {
+    //     /* Append `entry` to this._entries while keeping the existing occurrences of key. Update this._keys. */
+    //     let entry = this._clean(key, value)
+    //     let pos = this._entries.push(entry) - 1             // insert to this._entries and get its position
+    //     if (!T.isMissing(key)) {                            // update this._keys
+    //         let ids = this._keys.get(key) || []
+    //         if (ids.push(pos) === 1)
+    //             this._keys.set(key, ids)
+    //     }
+    //     return entry
     // }
-
-    _pushEntry(key, value) {
-        /* Append `entry` to this._entries while keeping the existing occurrences of key. Update this._keys. */
-        let entry = this._clean(key, value)
-        let pos = this._entries.push(entry) - 1             // insert to this._entries and get its position
-        if (!T.isMissing(key)) {                            // update this._keys
-            let ids = this._keys.get(key) || []
-            if (ids.push(pos) === 1)
-                this._keys.set(key, ids)
-        }
-        return entry
-    }
 
     _clean(key, value) {
         /* Validate and clean up the new entry's properties. */
@@ -366,7 +360,7 @@ export class Catalog {
 
         if (target instanceof Catalog) {
             if (pos === N)
-                target._pushEntry(...entry)     // special case: inserting at the END does NOT require rebuilding the entire _keys maps
+                target._append(...entry)    // special case: inserting at the END does NOT require rebuilding the entire _keys maps
             else {
                 // general case: insert the entry, rearrange the _entries array, and rebuild this._keys from scratch
                 target._entries.splice(pos, 0, entry)
