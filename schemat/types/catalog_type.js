@@ -388,7 +388,7 @@ export class CatalogTable extends Component {
         move: async (pos, delta) => {
             // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
             assert(delta === -1 || delta === +1)
-            await item.edit_move([...path, pos], delta)
+            await item.edit_move([...path, pos], {delta})
             setEntries(prev => {
                 // if (pos+delta < 0 || pos+delta >= prev.length) return prev
                 let entries = [...prev];
