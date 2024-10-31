@@ -166,6 +166,30 @@ class Struct {
         }
         return 0
     }
+
+    static move(target, pos1, pos2) {
+        let N = Struct.sizeOf(target)
+
+        function check(pos) {
+            if (pos < 0) pos = N + pos
+            if (pos < 0 || pos >= N) throw new Error(`invalid position (${pos}) for moving an entry`)
+            return pos
+        }
+        pos1 = check(pos1)
+        pos2 = check(pos2)
+        if (pos1 === pos2) return
+
+        if (target instanceof Catalog) {
+            // pull the entry at [pos1] out of _entries...
+            let entry = target._entries[pos1]
+            let entries = [...target._entries.slice(0,pos1), ...target._entries.slice(pos1+1)]
+
+            // ...and reinsert at [pos2], treating pos2 as an index in the initial array
+            //if (pos2 > pos1) pos2--
+            entries = [...entries.slice(0,pos2), entry, ...entries.slice(pos2)]
+            target.init(entries)
+        }
+    }
 }
 
 /**********************************************************************************************************************
@@ -312,6 +336,43 @@ export class Catalog {
         throw new Error(`not an Array at: ${path}`)
     }
 
+    insert(path = null, pos, key, ...values) {
+        /* Insert a new entry at position `pos` in the collection identified by `path`. If `path` has multiple
+           occurrences, the first one is chosen, and it must be a collection (Catalog/Map/Array).
+           Empty path ([] or null) denotes this catalog. `pos` can be negative.
+           If `path` points to an array, `key` is treated as the first of all values to be inserted.
+         */
+        let target = this.get(path)
+        if (target === undefined) throw new Error(`path not found: ${path}`)
+        if (!Struct.isCollection(target)) throw new Error(`not a collection at: ${path}`)
+        // if (!(target instanceof Array)) ([key, value] = this._clean(key, value))
+
+        Struct.insert(target, pos, key, ...values)
+        return this
+    }
+
+    delete(path) {
+        /* Delete all (sub)entries that match the `path`. Return the number of entries removed (0 if nothing).
+           This is compatible with Map.delete(), but an integer is returned instead of a boolean.
+           Elements of nested Maps and Arrays can be deleted as well.
+         */
+        return Struct.delete(this, this._normPath(path))
+    }
+
+    move(path, {pos, delta}) {
+        /* Find the first (nested) element pointed to by `path` and move it to position `pos` (if present), 
+           or by `delta` positions further in its parent collection (Catalog/Map/Array). `delta` can be negative.
+         */
+        let [target, key] = this._targetKey(path)
+        if (!(typeof key === 'number')) key = this.loc(key)
+        
+        pos ??= key + delta
+        if (pos === key) return this
+        
+        Struct.move(target, key, pos)
+        return this
+    }
+
 
     /***  Key-based modifications (no paths, no recursion)  ***/
 
@@ -455,29 +516,6 @@ export class Catalog {
         return [pos, subpath, value]
     }
 
-    insert(path = null, pos, key, ...values) {
-        /* Insert a new entry at position `pos` in the collection identified by `path`. If `path` has multiple
-           occurrences, the first one is chosen, and it must be a collection (Catalog/Map/Array).
-           Empty path ([] or null) denotes this catalog. `pos` can be negative.
-           If `path` points to an array, `key` is treated as the first of all values to be inserted.
-         */
-        let target = this.get(path)
-        if (target === undefined) throw new Error(`path not found: ${path}`)
-        if (!Struct.isCollection(target)) throw new Error(`not a collection at: ${path}`)
-        // if (!(target instanceof Array)) ([key, value] = this._clean(key, value))
-
-        Struct.insert(target, pos, key, ...values)
-        return this
-    }
-
-    delete(path) {
-        /* Delete all (sub)entries that match the `path`. Return the number of entries removed (0 if nothing).
-           This is compatible with Map.delete(), but an integer is returned instead of a boolean.
-           Elements of nested Maps and Arrays can be deleted as well.
-         */
-        return Struct.delete(this, this._normPath(path))
-    }
-
     update(path, key, value) {
         /* Modify an existing entry at a given `path`. The entry must be unique. Return the entry after modifications.
            This method should be used to apply manual data modifications.
@@ -493,35 +531,35 @@ export class Catalog {
         throw new Error(`path not found: ${subpath}`)
     }
 
-    move(path, pos1, pos2) {
-        /* In a (sub)catalog pointed to by `path`, move the entry at position `pos1` to position `pos2` while shifting after entries. */
-        path = this._normPath(path)
-        if (!path.length) return this._move(pos1, pos2)
-        let [_, subpath, subcat] = this._step(path)
-        if (subcat instanceof Catalog) return subcat.move(subpath, pos1, pos2)        // nested Catalog? make a recursive call
-        throw new Error(`path not found: ${subpath}`)
-    }
-    _move(pos1, pos2) {
-        let N = this._entries.length
-        function check(pos, src = false) {
-            if (pos < 0) pos = N + pos
-            if (pos < 0 || pos >= N) throw new Error(`invalid position (${pos}) in a catalog for moving an entry`)
-            return pos
-        }
-        pos1 = check(pos1)
-        pos2 = check(pos2)
-        if (pos1 === pos2) return
-
-        // pull the entry at [pos1] out of this._entries...
-        let entry = this._entries[pos1]
-        let entries = [...this._entries.slice(0,pos1), ...this._entries.slice(pos1+1)]
-
-        // ...and reinsert at [pos2], treating pos2 as an index in the initial array
-        //if (pos2 > pos1) pos2--
-        entries = [...entries.slice(0,pos2), entry, ...entries.slice(pos2)]
-
-        this.init(entries)
-    }
+    // move(path, pos1, pos2) {
+    //     /* In a (sub)catalog pointed to by `path`, move the entry from position `pos1` to position `pos2` while shifting after entries. */
+    //     path = this._normPath(path)
+    //     if (!path.length) return this._move(pos1, pos2)
+    //     let [_, subpath, subcat] = this._step(path)
+    //     if (subcat instanceof Catalog) return subcat.move(subpath, pos1, pos2)        // nested Catalog? make a recursive call
+    //     throw new Error(`path not found: ${subpath}`)
+    // }
+    // _move(pos1, pos2) {
+    //     let N = this._entries.length
+    //     function check(pos, src = false) {
+    //         if (pos < 0) pos = N + pos
+    //         if (pos < 0 || pos >= N) throw new Error(`invalid position (${pos}) in a catalog for moving an entry`)
+    //         return pos
+    //     }
+    //     pos1 = check(pos1)
+    //     pos2 = check(pos2)
+    //     if (pos1 === pos2) return
+    //
+    //     // pull the entry at [pos1] out of this._entries...
+    //     let entry = this._entries[pos1]
+    //     let entries = [...this._entries.slice(0,pos1), ...this._entries.slice(pos1+1)]
+    //
+    //     // ...and reinsert at [pos2], treating pos2 as an index in the initial array
+    //     //if (pos2 > pos1) pos2--
+    //     entries = [...entries.slice(0,pos2), entry, ...entries.slice(pos2)]
+    //
+    //     this.init(entries)
+    // }
 
 
     /***  Serialization  ***/

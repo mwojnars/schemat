@@ -1056,7 +1056,7 @@ export class WebObject {
     }
 
     'edit.insert'(path, pos, key, value) {
-        /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
+        /* Insert a new property; or a new element inside a nested Catalog/Map/Array in an existing property. */
         this.__data.insert(path, pos, key, value)
     }
 
@@ -1072,8 +1072,8 @@ export class WebObject {
 
     'edit.move'(path, delta) {
         /* Move a property or a field inside a nested Catalog. */
-        let pos = (path = [...path]).pop()
-        this.__data.move(path, pos, pos + delta)
+        // let pos = (path = [...path]).pop()
+        this.__data.move(path, {delta})
     }
 
 
