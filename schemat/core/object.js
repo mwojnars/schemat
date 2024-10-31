@@ -1044,7 +1044,13 @@ export class WebObject {
      ***/
 
     'edit.set'(path, ...values) {
+        /* Set value of a given property or nested element. */
         this.__data.set(path, ...values)
+    }
+
+    'edit.setkey'(path, key) {
+        /* Change the key of a given property or nested element. */
+        this.__data.setkey(path, key)
     }
 
     'edit.insert'(path, pos, key, value) {

@@ -103,6 +103,7 @@ class Struct {
     }
 
     static set(target, key, ...values) {
+        /* Set value of `key` entry in the `target` collection. */
         if (!values.length) return
         if (target instanceof Catalog) target._set(key, ...values)
         else if (target instanceof Map)
@@ -115,6 +116,24 @@ class Struct {
             if (typeof key === 'number') target[key] = values[0]
             else throw new Error(`not an array index (${key}) when setting a value inside an Array`)
         else throw new Error(`not a collection: ${target}`)
+    }
+
+    static setkey(target, prev, key) {
+        /* Change the key from `prev` to `key` of the corresponding entry in the `target` collection. */
+        if (target instanceof Catalog) {
+            let pos = (typeof prev === 'string') ? target.loc(prev) : prev
+            if (T.isNullish(pos)) throw new Error(`key (${prev}) not found`)
+            target._setkey(pos, key)
+        }
+        else if (target instanceof Map) {
+            let entries = [...target.entries()]
+            let pos = (typeof prev === 'number') ? prev : entries.findIndex(e => e[0] === prev)
+            if (pos === -1) throw new Error(`key (${prev}) not found`)
+            entries[pos] = [key, entries[pos][1]]
+            target.clear()
+            entries.forEach(e => target.set(...e))
+        }
+        else throw new Error(`cannot set key of: ${target}`)
     }
 
     static insert(target, pos, key, ...values) {
@@ -325,6 +344,12 @@ export class Catalog {
         return this
     }
 
+    setkey(path, key) {
+        let [target, prev] = this._targetKey(path)
+        Struct.setkey(target, prev, key)
+        return this
+    }
+
     append(path, ...values) {
         /* Find a (nested) catalog pointed to by path[:-1] (all path segments except the last one) and append
            [key, value] entries there, with key=path[-1].
@@ -470,35 +495,48 @@ export class Catalog {
 
     /***  Write access  ***/
 
-    _overwrite(id, key, value) {
-        /* Overwrite in place some or all of the properties of an entry of a given `id` = position in this._entries.
-           Return the modified entry. Passing `null` as a key will delete a corresponding property. */
-        let e = this._entries[id]
-        let prevKey = e[0]
-        if (value !== undefined) e[1] = value
-        if (key   !== undefined) e[0] = key
-
-        if (prevKey !== key && key !== undefined) {             // `key` has changed? update this._keys accordingly
-            if (!T.isNullish(prevKey)) this._deleteKey(prevKey, id)
-            if (!T.isNullish(key))     this._insertKey(key, id)
+    _setkey(pos, key) {
+        /* Change (in place!) the key of the entry at a given position in this._entries. Return the entry. */
+        let e = this._entries[pos]
+        let prev = e[0]
+        if (prev !== key) {                 // the key needs to be changed? update this._keys accordingly
+            e[0] = key
+            if (!T.isNullish(prev)) this._deleteKey(prev, pos)
+            if (!T.isNullish(key))  this._insertKey(key, pos)
         }
-        return {key: e[0], value: e[1]}
+        return e
     }
-    _insertKey(key, id) {
+
+    // _overwrite(pos, key, value) {
+    //     /* Overwrite in place some or all of the properties of an entry of a given `id` = position in this._entries.
+    //        Return the modified entry. Passing `null` as a key will delete a corresponding property. */
+    //     let e = this._entries[pos]
+    //     let prevKey = e[0]
+    //     if (value !== undefined) e[1] = value
+    //     if (key   !== undefined) e[0] = key
+    //
+    //     if (prevKey !== key && key !== undefined) {             // `key` has changed? update this._keys accordingly
+    //         if (!T.isNullish(prevKey)) this._deleteKey(prevKey, pos)
+    //         if (!T.isNullish(key))     this._insertKey(key, pos)
+    //     }
+    //     return {key: e[0], value: e[1]}
+    // }
+
+    _insertKey(key, pos) {
         /* Insert `id` at a proper position in a list of entry indices for a `key`, this._keys[key]. */
         let ids = this._keys.get(key) || []
-        ids.push(id)
+        ids.push(pos)
         this._keys.set(key, ids.filter(Number).sort())
     }
-    _deleteKey(key, id) {
+    _deleteKey(key, pos) {
         /* Hard-delete `id` from a list of entry indices for a `key`, this._keys[key], withOUT leaving an "undefined". */
         if (key === undefined) return
-        let ids = this._keys.get(key)
-        let pos = ids.indexOf(id)
-        assert(pos >= 0)
-        ids[pos] = undefined
-        ids = ids.filter(Number).sort()
-        ids.length ? this._keys.set(key, ids) : this._keys.delete(key)
+        let locs = this._keys.get(key)
+        let idx = locs.indexOf(pos)
+        assert(idx >= 0)
+        locs[idx] = undefined
+        locs = locs.filter(Number).sort()
+        locs.length ? this._keys.set(key, locs) : this._keys.delete(key)
     }
 
     _clean(key, value) {
@@ -529,20 +567,20 @@ export class Catalog {
         return [pos, subpath, value]
     }
 
-    update(path, key, value) {
-        /* Modify an existing entry at a given `path`. The entry must be unique. Return the entry after modifications.
-           This method should be used to apply manual data modifications.
-           Automated changes, which are less reliable, should go through update() to allow for deduplication etc. - TODO
-         */
-        let [pos, subpath] = this._step(path)
-        if (!subpath.length) return this._overwrite(pos, key, value)    // `path` has only one segment, make the modifications and return
-
-        let subcat = this._entries[pos][1]
-        if (subcat instanceof Catalog)                              // nested Catalog? make a recursive call
-            return subcat.update(subpath, key, value)
-
-        throw new Error(`path not found: ${subpath}`)
-    }
+    // update(path, key, value) {
+    //     /* Modify an existing entry at a given `path`. The entry must be unique. Return the entry after modifications.
+    //        This method should be used to apply manual data modifications.
+    //        Automated changes, which are less reliable, should go through update() to allow for deduplication etc. - TODO
+    //      */
+    //     let [pos, subpath] = this._step(path)
+    //     if (!subpath.length) return this._overwrite(pos, key, value)    // `path` has only one segment, make the modifications and return
+    //
+    //     let subcat = this._entries[pos][1]
+    //     if (subcat instanceof Catalog)                              // nested Catalog? make a recursive call
+    //         return subcat.update(subpath, key, value)
+    //
+    //     throw new Error(`path not found: ${subpath}`)
+    // }
 
 
     /***  Serialization  ***/

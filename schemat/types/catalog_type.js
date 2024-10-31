@@ -431,7 +431,8 @@ export class CatalogTable extends Component {
             })
         },
         updateKey: (pos, newKey) => {
-            return item.edit_update([...path, pos], {key: newKey})
+            return item.edit.setkey([...path, pos], newKey).save()
+            // return item.edit_update([...path, pos], {key: newKey})
         },
         updateValue: (pos, newValue, type) => {
             return item.edit.set([...path, pos], newValue).save()
