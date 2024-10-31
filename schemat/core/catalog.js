@@ -510,7 +510,7 @@ export class Catalog {
     // }
 
     delete(path) {
-        /* Delete all (sub)entries identified by `path`. Return the number of entries removed (0 if nothing).
+        /* Delete all (sub)entries that match the `path`. Return the number of entries removed (0 if nothing).
            This is compatible with Map.delete(), but an integer is returned instead of a boolean.
            Elements of nested Maps and Arrays can be deleted as well.
          */
