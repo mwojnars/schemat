@@ -281,7 +281,6 @@ export class Types {
     static isClass        = (C) => (typeof C === "function" && C.prototype !== undefined)     // true if C is a class (a constructor function with .prototype); false for arrays
     static isSubclass     = (C, B) => (C === B || C.prototype instanceof B)                   // true if C is subclass of B, including C===B
     static isNullish      = (obj) => (obj === null || obj === undefined)                      // true if obj is null or undefined (two cases of "missingness")
-    static isMissing      = (obj) => (obj === null || obj === undefined)                      // true if obj is null or undefined (two cases of "missingness")
     static isEmpty        = (obj) => (!obj || Object.keys(obj).length === 0)
     static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
     static isPromise      = (obj) => (obj instanceof Promise)

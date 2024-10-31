@@ -286,7 +286,7 @@ export class Catalog {
     /***  Path-aware deep access & modifications  ***/
 
     _normPath(path) {
-        return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : T.isMissing(path) ? [] : [path]
+        return typeof path === 'string' ? path.split('.') : T.isArray(path) ? path : T.isNullish(path) ? [] : [path]
     }
 
     _splitPath(path) {
@@ -402,7 +402,7 @@ export class Catalog {
         if (!values.length) return this
         let start = this._entries.length
         this._entries.push(...values.map(value => [key, value]))
-        if (!T.isMissing(key)) {
+        if (!T.isNullish(key)) {
             let locs = this._keys.get(key)
             if (!locs) this._keys.set(key, locs = [])
             locs.push(...values.map((_, i) => start + i))
@@ -415,7 +415,7 @@ export class Catalog {
 
         if (pos === this.length - 1) {              // special case: deleting the LAST entry does NOT require rebuilding _keys
             let entry = this._entries.pop()
-            if (!T.isMissing(entry[0])) {
+            if (!T.isNullish(entry[0])) {
                 let ids = this._keys.get(entry[0])
                 let id  = ids.pop()                 // indices in `ids` are stored in increasing order, so `pos` must be the last one
                 assert(id === pos)
@@ -474,8 +474,8 @@ export class Catalog {
         if (key   !== undefined) e[0] = key
 
         if (prevKey !== key && key !== undefined) {             // `key` has changed? update this._keys accordingly
-            if (!T.isMissing(prevKey)) this._deleteKey(prevKey, id)
-            if (!T.isMissing(key))     this._insertKey(key, id)
+            if (!T.isNullish(prevKey)) this._deleteKey(prevKey, id)
+            if (!T.isNullish(key))     this._insertKey(key, id)
         }
         return {key: e[0], value: e[1]}
     }

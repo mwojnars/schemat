@@ -32,7 +32,7 @@ export class TypeWidget extends Component {
         }
     }
 
-    empty(v)    { return T.isMissing(v) && I('undefined') }     // view of an empty value, for display() and viewer()
+    empty(v)    { return T.isNullish(v) && I('undefined') }     // view of an empty value, for display() and viewer()
     view(v)     { return this.encode(v) }                       // view of a non-empty value, for display() and viewer()
     display(v)  { return this.empty(v) || this.view(v) }        // convert a value to a UI element for display in viewer()
     encode(v)   { return JSONx.stringify(v) }                   // convert a value to its editable representation
