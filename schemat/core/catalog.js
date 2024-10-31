@@ -167,8 +167,10 @@ class Struct {
         return 0
     }
 
-    static move(target, pos1, pos2) {
-        /* Move the element of `target` (Catalog/Map/Array) from position `pos1` to `pos2`. */
+    static move(target, pos1, pos2, count = 1) {
+        /* Move the element of `target` (Catalog/Map/Array) from position `pos1` to `pos2`.
+           If `count` is greater than 1, move `count` consecutive elements from `pos1` to `pos2`.
+         */
         let N = Struct.sizeOf(target)
 
         function check(pos) {
@@ -178,25 +180,22 @@ class Struct {
         }
         pos1 = check(pos1)
         pos2 = check(pos2)
-        if (pos1 === pos2) return
+        if (pos1 === pos2 || count === 0) return
 
         if (target instanceof Catalog) {
             // pull the entry at [pos1] out of _entries and reinsert at [pos2], treating pos2 as an index in the initial array
-            // let entry = target._entries[pos1]
-            // let entries = [...target._entries.slice(0,pos1), ...target._entries.slice(pos1+1)]
-            // entries = [...entries.slice(0,pos2), entry, ...entries.slice(pos2)]
             let entries = target._entries
-            entries.splice(pos2, 0, ...entries.splice(pos1, 1))
+            entries.splice(pos2, 0, ...entries.splice(pos1, count))
             target.init(entries)
         }
         else if (target instanceof Map) {
             let entries = [...target.entries()]
             target.clear()
-            entries.splice(pos2, 0, ...entries.splice(pos1, 1))
+            entries.splice(pos2, 0, ...entries.splice(pos1, count))
             entries.forEach(e => target.set(...e))
         }
         else if (target instanceof Array)
-            target.splice(pos2, 0, ...target.splice(pos1, 1))
+            target.splice(pos2, 0, ...target.splice(pos1, count))
     }
 }
 
@@ -367,9 +366,10 @@ export class Catalog {
         return Struct.delete(this, this._normPath(path))
     }
 
-    move(path, {pos, delta}) {
+    move(path, {pos, delta, count = 1}) {
         /* Find the first (nested) element pointed to by `path` and move it to position `pos` (if present), 
            or by `delta` positions further in its parent collection (Catalog/Map/Array). `delta` can be negative.
+           If `count` is present, move `count` consecutive elements instead of just one.
          */
         let [target, key] = this._targetKey(path)
         if (!(typeof key === 'number')) key = this.loc(key)
@@ -377,7 +377,7 @@ export class Catalog {
         pos ??= key + delta
         if (pos === key) return this
         
-        Struct.move(target, key, pos)
+        Struct.move(target, key, pos, count)
         return this
     }
 
