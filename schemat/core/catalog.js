@@ -168,6 +168,7 @@ class Struct {
     }
 
     static move(target, pos1, pos2) {
+        /* Move the element of `target` (Catalog/Map/Array) from position `pos1` to `pos2`. */
         let N = Struct.sizeOf(target)
 
         function check(pos) {
@@ -180,15 +181,22 @@ class Struct {
         if (pos1 === pos2) return
 
         if (target instanceof Catalog) {
-            // pull the entry at [pos1] out of _entries...
-            let entry = target._entries[pos1]
-            let entries = [...target._entries.slice(0,pos1), ...target._entries.slice(pos1+1)]
-
-            // ...and reinsert at [pos2], treating pos2 as an index in the initial array
-            //if (pos2 > pos1) pos2--
-            entries = [...entries.slice(0,pos2), entry, ...entries.slice(pos2)]
+            // pull the entry at [pos1] out of _entries and reinsert at [pos2], treating pos2 as an index in the initial array
+            // let entry = target._entries[pos1]
+            // let entries = [...target._entries.slice(0,pos1), ...target._entries.slice(pos1+1)]
+            // entries = [...entries.slice(0,pos2), entry, ...entries.slice(pos2)]
+            let entries = target._entries
+            entries.splice(pos2, 0, ...entries.splice(pos1, 1))
             target.init(entries)
         }
+        else if (target instanceof Map) {
+            let entries = [...target.entries()]
+            target.clear()
+            entries.splice(pos2, 0, ...entries.splice(pos1, 1))
+            entries.forEach(e => target.set(...e))
+        }
+        else if (target instanceof Array)
+            target.splice(pos2, 0, ...target.splice(pos1, 1))
     }
 }
 

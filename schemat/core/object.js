@@ -1072,7 +1072,6 @@ export class WebObject {
 
     'edit.move'(path, delta) {
         /* Move a property or a field inside a nested Catalog. */
-        // let pos = (path = [...path]).pop()
         this.__data.move(path, {delta})
     }
 
