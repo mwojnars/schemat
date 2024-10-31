@@ -115,35 +115,34 @@ class Struct {
         return target
     }
 
-    static insert(target, pos, key, value) {
+    static insert(target, pos, key, ...values) {
         let N = Struct.sizeOf(target)
         if (pos < 0) pos = N + pos
         if (pos < 0 || pos > N) throw new Error(`invalid insert position (${pos})`)
 
-        let entry = [key, value]
-
         if (target instanceof Catalog)
             if (pos === N)
-                target._append(...entry)    // special case: inserting at the END does NOT require rebuilding the entire _keys maps
+                target._append(key, ...values)      // special case: inserting at the END does NOT require rebuilding the entire _keys maps
             else {
                 // general case: insert the entry, rearrange the _entries array, and rebuild this._keys from scratch
-                target._entries.splice(pos, 0, entry)
+                target._entries.splice(pos, 0, ...values.map(v => [key, v]))
                 target.init(target._entries)
             }
 
         else if (target instanceof Map) {
             if (target.has(key)) throw new Error(`key (${key}) already exists in the Map, cannot insert another one, use set() instead`)
+            let value = values[0]
             if (pos === N) target.set(key, value)
             else {
                 // convert the Map to an Array, insert the entry, push all entries back to the emptied Map
                 let entries = [...target.entries()]
                 target.clear()
-                entries.splice(pos, 0, entry)
+                entries.splice(pos, 0, [key, value])
                 entries.forEach(e => target.set(...e))
             }
         }
         else if (target instanceof Array)
-            target.splice(pos, 0, key)
+            target.splice(pos, 0, key, ...values)
     }
 
     static delete(target, path) {
@@ -437,18 +436,18 @@ export class Catalog {
         return [pos, subpath, value]
     }
 
-    insert(path = null, pos, key, value) {
+    insert(path = null, pos, key, ...values) {
         /* Insert a new entry at position `pos` in the collection identified by `path`. If `path` has multiple
            occurrences, the first one is chosen, and it must be a collection (Catalog/Map/Array).
            Empty path ([] or null) denotes this catalog. `pos` can be negative.
-           If `path` points to an array, `key` is treated as the value to be inserted, and `value` is ignored.
+           If `path` points to an array, `key` is treated as the first of all values to be inserted.
          */
         let target = this.get(path)
         if (target === undefined) throw new Error(`path not found: ${path}`)
         if (!Struct.isCollection(target)) throw new Error(`not a collection at: ${path}`)
-        if (!(target instanceof Array)) ([key, value] = this._clean(key, value))
+        // if (!(target instanceof Array)) ([key, value] = this._clean(key, value))
 
-        Struct.insert(target, pos, key, value)
+        Struct.insert(target, pos, key, ...values)
         return this
     }
 
