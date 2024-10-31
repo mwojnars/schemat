@@ -151,8 +151,7 @@ class Struct {
         let [step, ...rest] = path
 
         if (target instanceof Catalog) {
-            // more steps to be done? delete recursively
-            let locs = target.locs(step)
+            let locs = target.locs(step)            // more steps to be done? delete recursively
             if (rest.length) return locs.reduce((count, loc) => count + Struct.delete(target.get(loc), rest), 0)
 
             // no more steps? delete leaf nodes here
@@ -167,30 +166,6 @@ class Struct {
             return rest.length ? Struct.delete(target[step], rest) : target.splice(step, 1).length
         }
         return 0
-    }
-
-    static _delete(target, pos) {
-        /* Delete an entry located at a given position in _entries. Rebuild the _entries array and _keys map.
-           `pos` can be negative, for example, pos=-1 means deleting the last entry.
-         */
-        let N = this._entries.length
-        if (pos < 0) pos = N + pos
-        if (pos < 0 || pos >= N) throw new Error("trying to delete a non-existing entry")
-        if (pos === N - 1) {
-            // special case: deleting the LAST entry does NOT require rebuilding the entire _keys maps
-            let entry = this._entries.pop()
-            if (!T.isMissing(entry[0])) {
-                let ids = this._keys.get(entry[0])
-                let id  = ids.pop()                 // indices in `ids` are stored in increasing order, so `pos` must be the last one
-                assert(id === pos)
-                if (!ids.length) this._keys.delete(entry[0])
-            }
-        }
-        else {
-            // general case: delete the entry, rearrange the _entries array, and rebuild this._keys from scratch
-            let entries = [...this._entries.slice(0,pos), ...this._entries.slice(pos+1)]
-            this.init(entries)
-        }
     }
 }
 
@@ -434,18 +409,6 @@ export class Catalog {
         ids.length ? this._keys.set(key, ids) : this._keys.delete(key)
     }
 
-    // _pushEntry(key, value) {
-    //     /* Append `entry` to this._entries while keeping the existing occurrences of key. Update this._keys. */
-    //     let entry = this._clean(key, value)
-    //     let pos = this._entries.push(entry) - 1             // insert to this._entries and get its position
-    //     if (!T.isMissing(key)) {                            // update this._keys
-    //         let ids = this._keys.get(key) || []
-    //         if (ids.push(pos) === 1)
-    //             this._keys.set(key, ids)
-    //     }
-    //     return entry
-    // }
-
     _clean(key, value) {
         /* Validate and clean up the new entry's properties. */
         assert(isstring(key))
@@ -489,26 +452,6 @@ export class Catalog {
         return this
     }
 
-    // delete(path) {
-    //     path = this._normPath(path)
-    //     if (!path.length) return 0
-    //
-    //     let [key, ...rest] = path
-    //     let locs = this.locs(key)
-    //
-    //     if (!rest.length) {                    // no more steps to be done? delete leaf nodes here
-    //         for (let pos of locs.toReversed()) this._delete(pos)
-    //         return locs.length
-    //     }
-    //
-    //     let deleted = 0                         // there are more steps to be done; do recursive calls into nested Catalogs
-    //     for (let i of locs) {
-    //         let obj = this.get(i)
-    //         if (obj instanceof Catalog) deleted += obj.delete(rest)
-    //     }
-    //     return deleted
-    // }
-
     delete(path) {
         /* Delete all (sub)entries that match the `path`. Return the number of entries removed (0 if nothing).
            This is compatible with Map.delete(), but an integer is returned instead of a boolean.
@@ -518,15 +461,9 @@ export class Catalog {
     }
 
     _delete(pos) {
-        /* Delete an entry located at a given position in _entries. Rebuild the _entries array and _keys map.
-           `pos` can be negative, for example, pos=-1 means deleting the last entry.
-         */
-        let N = this._entries.length
-        // if (pos < 0) pos = N + pos
-        // if (pos < 0 || pos >= N) throw new Error("trying to delete a non-existing entry")
+        /* Delete an entry located at a given position in _entries. Rebuild the _entries array and _keys map. */
 
-        if (pos === N - 1) {
-            // special case: deleting the LAST entry does NOT require rebuilding the entire _keys maps
+        if (pos === this.length - 1) {              // special case: deleting the LAST entry does NOT require rebuilding _keys
             let entry = this._entries.pop()
             if (!T.isMissing(entry[0])) {
                 let ids = this._keys.get(entry[0])
