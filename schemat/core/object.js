@@ -1029,10 +1029,10 @@ export class WebObject {
 
     // specialized edits for UI with immediate commit ...
 
-    edit_insert(path, entry)        { return this.edit.insert({path, ...entry}).save() }
-    edit_delete(path)               { return this.edit.delete({path}).save() }
-    edit_update(path, entry)        { return this.edit.update({path, ...entry}).save() }
-    edit_move(path, delta)          { return this.edit.move({path, delta}).save() }
+    edit_insert(path, entry)        { return this.edit.insert(path, entry.key, entry.value).save() }
+    edit_delete(path)               { return this.edit.delete(path).save() }
+    edit_update(path, entry)        { return this.edit.update(path, entry).save() }
+    edit_move(path, delta)          { return this.edit.move(path, delta).save() }
 
 
     /***  Individual edits. Should be called via this.edit.*()  ***/
@@ -1055,23 +1055,23 @@ export class WebObject {
         this.__data = data
     }
 
-    'edit.insert'({path, key, value}) {
+    'edit.insert'(path, key, value) {
         /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
         let pos = (path = [...path]).pop()
         this.__data.insert(path, pos, key, value)
     }
 
-    'edit.delete'({path}) {
+    'edit.delete'(path) {
         /* Delete a property; or a field inside a nested Catalog in a property. */
         this.__data.delete(path)
     }
 
-    'edit.update'({path, key, value}) {
+    'edit.update'(path, {key, value}) {
         /* Update a property; or a field inside a nested Catalog. */
         this.__data.update(path, key, value)
     }
 
-    'edit.move'({path, delta}) {
+    'edit.move'(path, delta) {
         /* Move a property or a field inside a nested Catalog. */
         let pos = (path = [...path]).pop()
         this.__data.move(path, pos, pos + delta)
