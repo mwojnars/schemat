@@ -64,47 +64,6 @@ class Intercept {
         return new Proxy(target, {get: this.proxy_get, set: this.proxy_set, deleteProperty: this.proxy_delete})
     }
 
-    static proxy_set(target, prop, value, receiver)
-    {
-        // special attributes are written directly to __self (outside __data, not sent to DB);
-        // also, when the __data is not loaded yet, *every* write goes to __self
-        if (!(target.is_newborn() || target.is_loaded())
-            || typeof prop !== 'string'             // `prop` can be a symbol like [Symbol.toPrimitive]
-            || Intercept.SPECIAL.includes(prop)
-        ) return Reflect.set(target, prop, value, receiver)
-
-        let suffix = Intercept.PLURAL
-        let plural = prop.endsWith(suffix)
-        let base = (plural ? prop.slice(0, -suffix.length) : prop)        // base property name without the $ suffix
-
-        // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
-        // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
-        let regular = (prop[0] !== '_' || prop.startsWith('__'))
-        let schema = receiver.__schema              // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
-        let type = schema?.get(base)
-
-        // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
-        if (schema?.has(base) || (!schema?.options.strict && regular)) {
-            // if (!target.is_newborn()) print('proxy_set updating:', prop)
-            if (type?.options.virtual) throw new Error(`cannot modify a virtual property (${prop})`)
-            if (plural) {
-                if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
-                target._make_edit('set', base, ...value)
-            }
-            else target._make_edit('set', prop, value)
-            return true
-        }
-        else if (regular) throw new Error(`property not in object schema (${prop})`)
-
-        // print('proxy_set() internal:', prop, '/', mutable)
-        return Reflect.set(target, prop, value, receiver)
-    }
-
-    static proxy_delete(target, prop) {
-        throw new Error('not implemented')
-        // return Reflect.deleteProperty(target, prop)
-    }
-
     static proxy_get(target, prop, receiver)
     {
         let val, {cache} = target.__meta
@@ -154,6 +113,47 @@ class Intercept {
     static _cache_values(cache, prop$, vals) {
         /* Like _cache_value(), but for caching an array of repeated values, some of them possibly being promises. */
         cache.set(prop$, vals.some(v => v instanceof Promise) ? Promise.all(vals).then(vs => cache.set(prop$, vs)) : vals)
+    }
+
+    static proxy_set(target, prop, value, receiver)
+    {
+        // special attributes are written directly to __self (outside __data, not sent to DB);
+        // also, when the __data is not loaded yet, *every* write goes to __self
+        if (!(target.is_newborn() || target.is_loaded())
+            || typeof prop !== 'string'             // `prop` can be a symbol like [Symbol.toPrimitive]
+            || Intercept.SPECIAL.includes(prop)
+        ) return Reflect.set(target, prop, value, receiver)
+
+        let suffix = Intercept.PLURAL
+        let plural = prop.endsWith(suffix)
+        let base = (plural ? prop.slice(0, -suffix.length) : prop)        // base property name without the $ suffix
+
+        // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
+        // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
+        let regular = (prop[0] !== '_' || prop.startsWith('__'))
+        let schema = receiver.__schema              // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
+        let type = schema?.get(base)
+
+        // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
+        if (schema?.has(base) || (!schema?.options.strict && regular)) {
+            // if (!target.is_newborn()) print('proxy_set updating:', prop)
+            if (type?.options.virtual) throw new Error(`cannot modify a virtual property (${prop})`)
+            if (plural) {
+                if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
+                target._make_edit('set', base, ...value)
+            }
+            else target._make_edit('set', prop, value)
+            return true
+        }
+        else if (regular) throw new Error(`property not in object schema (${prop})`)
+
+        // print('proxy_set() internal:', prop, '/', mutable)
+        return Reflect.set(target, prop, value, receiver)
+    }
+
+    static proxy_delete(target, prop) {
+        throw new Error('not implemented')
+        // return Reflect.deleteProperty(target, prop)
     }
 }
 
