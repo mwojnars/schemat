@@ -1031,8 +1031,8 @@ export class WebObject {
 
     edit_insert(path, pos, key, value)  { return this.edit.insert(path, pos, key, value).save() }
     edit_delete(path)               { return this.edit.delete(path).save() }
-    edit_update(path, entry)        { return this.edit.update(path, entry).save() }
     edit_move(path, {delta})        { return this.edit.move(path, {delta}).save() }
+    // edit_update(path, entry)        { return this.edit.update(path, entry).save() }
 
 
     /***  Individual edits. Should be called via this.edit.*()  ***/

@@ -496,31 +496,15 @@ export class Catalog {
     /***  Write access  ***/
 
     _setkey(pos, key) {
-        /* Change (in place!) the key of the entry at a given position in this._entries. Return the entry. */
+        /* Change (in place) the key of the entry at a given position in this._entries. */
         let e = this._entries[pos]
         let prev = e[0]
-        if (prev !== key) {                 // the key needs to be changed? update this._keys accordingly
-            e[0] = key
-            if (!T.isNullish(prev)) this._deleteKey(prev, pos)
-            if (!T.isNullish(key))  this._insertKey(key, pos)
-        }
-        return e
-    }
+        if (prev === key) return
 
-    // _overwrite(pos, key, value) {
-    //     /* Overwrite in place some or all of the properties of an entry of a given `id` = position in this._entries.
-    //        Return the modified entry. Passing `null` as a key will delete a corresponding property. */
-    //     let e = this._entries[pos]
-    //     let prevKey = e[0]
-    //     if (value !== undefined) e[1] = value
-    //     if (key   !== undefined) e[0] = key
-    //
-    //     if (prevKey !== key && key !== undefined) {             // `key` has changed? update this._keys accordingly
-    //         if (!T.isNullish(prevKey)) this._deleteKey(prevKey, pos)
-    //         if (!T.isNullish(key))     this._insertKey(key, pos)
-    //     }
-    //     return {key: e[0], value: e[1]}
-    // }
+        e[0] = key                  // change the key & update this._keys accordingly...
+        if (!T.isNullish(prev)) this._deleteKey(prev, pos)
+        if (!T.isNullish(key))  this._insertKey(key, pos)
+    }
 
     _insertKey(key, pos) {
         /* Insert `id` at a proper position in a list of entry indices for a `key`, this._keys[key]. */
@@ -528,6 +512,7 @@ export class Catalog {
         ids.push(pos)
         this._keys.set(key, ids.filter(Number).sort())
     }
+
     _deleteKey(key, pos) {
         /* Hard-delete `id` from a list of entry indices for a `key`, this._keys[key], withOUT leaving an "undefined". */
         if (key === undefined) return
@@ -566,21 +551,6 @@ export class Catalog {
 
         return [pos, subpath, value]
     }
-
-    // update(path, key, value) {
-    //     /* Modify an existing entry at a given `path`. The entry must be unique. Return the entry after modifications.
-    //        This method should be used to apply manual data modifications.
-    //        Automated changes, which are less reliable, should go through update() to allow for deduplication etc. - TODO
-    //      */
-    //     let [pos, subpath] = this._step(path)
-    //     if (!subpath.length) return this._overwrite(pos, key, value)    // `path` has only one segment, make the modifications and return
-    //
-    //     let subcat = this._entries[pos][1]
-    //     if (subcat instanceof Catalog)                              // nested Catalog? make a recursive call
-    //         return subcat.update(subpath, key, value)
-    //
-    //     throw new Error(`path not found: ${subpath}`)
-    // }
 
 
     /***  Serialization  ***/
