@@ -84,6 +84,9 @@ class Struct {
     }
 
     static *yieldAll(target, path) {
+        /* Yield all elements of a collection, `target`, that match a given `path`. 
+           The path is an array, not a string.
+         */
         if (!path.length) yield target
         if (!target) return
         let [step, ...rest] = path
@@ -141,6 +144,53 @@ class Struct {
         }
         else if (target instanceof Array)
             target.splice(pos, 0, key)
+    }
+
+    static delete(target, path) {
+        if (!target || !path.length) return 0
+        let [step, ...rest] = path
+
+        if (target instanceof Catalog) {
+            // more steps to be done? delete recursively
+            let locs = target.locs(step)
+            if (rest.length) return locs.reduce((count, loc) => count + Struct.delete(target.get(loc), rest), 0)
+
+            // no more steps? delete leaf nodes here
+            for (let pos of locs.toReversed()) target._delete(pos)
+            return locs.length
+        }
+        if (target instanceof Map)
+            return rest.length ? Struct.delete(target.get(step), rest) : Number(target.delete(step))
+
+        if (target instanceof Array) {
+            if (typeof step !== 'number') return 0
+            return rest.length ? Struct.delete(target[step], rest) : target.splice(step, 1).length
+        }
+        return 0
+    }
+
+    static _delete(target, pos) {
+        /* Delete an entry located at a given position in _entries. Rebuild the _entries array and _keys map.
+           `pos` can be negative, for example, pos=-1 means deleting the last entry.
+         */
+        let N = this._entries.length
+        if (pos < 0) pos = N + pos
+        if (pos < 0 || pos >= N) throw new Error("trying to delete a non-existing entry")
+        if (pos === N - 1) {
+            // special case: deleting the LAST entry does NOT require rebuilding the entire _keys maps
+            let entry = this._entries.pop()
+            if (!T.isMissing(entry[0])) {
+                let ids = this._keys.get(entry[0])
+                let id  = ids.pop()                 // indices in `ids` are stored in increasing order, so `pos` must be the last one
+                assert(id === pos)
+                if (!ids.length) this._keys.delete(entry[0])
+            }
+        }
+        else {
+            // general case: delete the entry, rearrange the _entries array, and rebuild this._keys from scratch
+            let entries = [...this._entries.slice(0,pos), ...this._entries.slice(pos+1)]
+            this.init(entries)
+        }
     }
 }
 
@@ -439,35 +489,42 @@ export class Catalog {
         return this
     }
 
+    // delete(path) {
+    //     path = this._normPath(path)
+    //     if (!path.length) return 0
+    //
+    //     let [key, ...rest] = path
+    //     let locs = this.locs(key)
+    //
+    //     if (!rest.length) {                    // no more steps to be done? delete leaf nodes here
+    //         for (let pos of locs.toReversed()) this._delete(pos)
+    //         return locs.length
+    //     }
+    //
+    //     let deleted = 0                         // there are more steps to be done; do recursive calls into nested Catalogs
+    //     for (let i of locs) {
+    //         let obj = this.get(i)
+    //         if (obj instanceof Catalog) deleted += obj.delete(rest)
+    //     }
+    //     return deleted
+    // }
+
     delete(path) {
         /* Delete all (sub)entries identified by `path`. Return the number of entries removed (0 if nothing).
            This is compatible with Map.delete(), but an integer is returned instead of a boolean.
+           Elements of nested Maps and Arrays can be deleted as well.
          */
-        path = this._normPath(path)
-        assert(path.length > 0)
-
-        let [key, ...steps] = path
-        let locs = this.locs(key)
-
-        if (!steps.length) {                    // no more steps to be done? delete leaf nodes here
-            for (let pos of locs.toReversed()) this._deleteAt(pos)
-            return locs.length
-        }
-
-        let deleted = 0                         // there are more steps to be done; do recursive calls into nested Catalogs
-        for (let i of locs) {
-            let obj = this.get(i)
-            if (obj instanceof Catalog) deleted += obj.delete(steps)
-        }
-        return deleted
+        return Struct.delete(this, this._normPath(path))
     }
-    _deleteAt(pos) {
+
+    _delete(pos) {
         /* Delete an entry located at a given position in _entries. Rebuild the _entries array and _keys map.
            `pos` can be negative, for example, pos=-1 means deleting the last entry.
          */
         let N = this._entries.length
-        if (pos < 0) pos = N + pos
-        if (pos < 0 || pos >= N) throw new Error("trying to delete a non-existing entry")
+        // if (pos < 0) pos = N + pos
+        // if (pos < 0 || pos >= N) throw new Error("trying to delete a non-existing entry")
+
         if (pos === N - 1) {
             // special case: deleting the LAST entry does NOT require rebuilding the entire _keys maps
             let entry = this._entries.pop()
