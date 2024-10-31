@@ -1029,7 +1029,7 @@ export class WebObject {
 
     // specialized edits for UI with immediate commit ...
 
-    edit_insert(path, entry)        { return this.edit.insert(path, entry.key, entry.value).save() }
+    edit_insert(path, pos, key, value)  { return this.edit.insert(path, pos, key, value).save() }
     edit_delete(path)               { return this.edit.delete(path).save() }
     edit_update(path, entry)        { return this.edit.update(path, entry).save() }
     edit_move(path, delta)          { return this.edit.move(path, delta).save() }
@@ -1055,9 +1055,8 @@ export class WebObject {
         this.__data = data
     }
 
-    'edit.insert'(path, key, value) {
+    'edit.insert'(path, pos, key, value) {
         /* Insert a new property; or a new field inside a nested Catalog in an existing property. */
-        let pos = (path = [...path]).pop()
         this.__data.insert(path, pos, key, value)
     }
 
