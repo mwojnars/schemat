@@ -11,8 +11,8 @@ export class Client extends Schemat {
     /* Client-side global Schemat object. Used in .init_client() and .client_block() of the server-side Schemat. */
 
     // attributes of the web request that invoked generation of this page by the server
-    requested = {
-        target: null,           // target web object that was addressed by the request, already loaded
+    web = {
+        object: null,           // target web object that was addressed by the request, already loaded
         endpoint: null,         // target's endpoint that was called
     }
 
@@ -29,10 +29,10 @@ export class Client extends Schemat {
         for (let rec of ctx.items)                              // preload bootstrap objects
             await this.get_loaded(rec.id)
 
-        let target = this.get_object(ctx.target_id)
-        target.assert_loaded()
+        let object = this.get_object(ctx.target_id)
+        object.assert_loaded()
 
-        this.requested = {target, endpoint: ctx.endpoint}
+        this.web = {object, endpoint: ctx.endpoint}
         // check()
     }
 
