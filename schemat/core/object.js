@@ -1027,9 +1027,8 @@ export class WebObject {
     }
 
 
-    /***  Individual edits. Should be called via this.edit.*()  ***/
-
-    /***  "Edits" are methods that manipulate directly on the object's __data. Typically, they're first applied temporarily
+    /***  Individual edits. Should be called via this.edit.*().
+          Edits are methods that manipulate directly on the object's __data. Typically, they're first applied temporarily
           on the client; recorded in __meta.edits; then replayed on the server to do the permanent update in the database.
           New edit methods can be added in subclasses. They must be synchronous.
           They must NOT modify their arguments, because the same args may need to be sent later from client to DB.
