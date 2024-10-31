@@ -1027,13 +1027,6 @@ export class WebObject {
     }
 
 
-    // specialized edits for UI with immediate commit ...
-
-    edit_insert(path, pos, key, value)  { return this.edit.insert(path, pos, key, value).save() }
-    edit_delete(path)               { return this.edit.delete(path).save() }
-    edit_move(path, {delta})        { return this.edit.move(path, {delta}).save() }
-
-
     /***  Individual edits. Should be called via this.edit.*()  ***/
 
     /***  "Edits" are methods that manipulate directly on the object's __data. Typically, they're first applied temporarily
