@@ -89,9 +89,9 @@ class Intercept {
             if (type?.options.virtual) throw new Error(`cannot modify a virtual property (${prop})`)
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
-                target._make_edit('set_values', base, value)
+                target._make_edit('set', base, ...value)
             }
-            else target._make_edit('set_value', prop, value)
+            else target._make_edit('set', prop, value)
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${prop})`)
@@ -1076,14 +1076,18 @@ export class WebObject {
     }
 
 
-    'edit.set_value'(prop, value) {
-        this.__data.set(prop, value)
+    'edit.set'(path, ...values) {
+        this.__data.set(path, ...values)
     }
 
-    'edit.set_values'(prop, values) {
-        /* Set multiple (repeated) values for a given property, remove the existing ones. */
-        this.__data.set(prop, ...values)
-    }
+    // 'edit.set_value'(prop, value) {
+    //     this.__data.set(prop, value)
+    // }
+    //
+    // 'edit.set_values'(prop, values) {
+    //     /* Set multiple (repeated) values for a given property, remove the existing ones. */
+    //     this.__data.set(prop, ...values)
+    // }
 
 
     /***  Endpoints  ***/

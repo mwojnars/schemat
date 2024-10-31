@@ -103,7 +103,7 @@ class Struct {
     }
 
     static set(target, key, ...values) {
-        if (!values.length) return target
+        if (!values.length) return
         if (target instanceof Catalog) target._set(key, ...values)
         else if (target instanceof Map)
             if (values.length === 1) target.set(key, values[0])
@@ -112,7 +112,6 @@ class Struct {
             if (typeof key === 'number') target[key] = values[0]
             else throw new Error(`not an array index (${key}) when setting a value inside an Array`)
         else throw new Error(`not a collection: ${target}`)
-        return target
     }
 
     static insert(target, pos, key, ...values) {
@@ -318,7 +317,8 @@ export class Catalog {
 
     set(path, ...values) {
         let [target, key] = this._targetKey(path)
-        Struct.set(target, key, ...values)
+        if (target === this) this._set(key, ...values)
+        else Struct.set(target, key, ...values)
         return this
     }
 
