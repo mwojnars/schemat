@@ -1035,27 +1035,27 @@ export class WebObject {
      ***/
 
     'edit.set'(path, ...values) {
-        /* Set value of a given property or nested element. */
+        /* Set value of a property or nested element inside a sub-catalog/map/array. */
         this.__data.set(path, ...values)
     }
 
     'edit.setkey'(path, key) {
-        /* Change the key of a given property or nested element. */
+        /* Change the key of a property or nested element inside a sub-catalog/map. */
         this.__data.setkey(path, key)
     }
 
     'edit.insert'(path, pos, key, value) {
-        /* Insert a new property; or a new element inside a nested Catalog/Map/Array in an existing property. */
+        /* Insert a new property or a nested element inside a sub-catalog/map/array. */
         this.__data.insert(path, pos, key, value)
     }
 
     'edit.delete'(path) {
-        /* Delete a property; or a field inside a nested Catalog in a property. */
+        /* Delete a property or a nested element inside a sub-catalog/map/array. */
         this.__data.delete(path)
     }
 
     'edit.move'(path, {pos, delta, count}) {
-        /* Move a property or field inside this.__data, or in a nested Catalog/Map/Array. */
+        /* Move a property or a nested element in a sub-catalog/map/array up or down inside its parent collection. */
         this.__data.move(path, {pos, delta, count})
     }
 
