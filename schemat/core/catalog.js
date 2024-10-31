@@ -341,6 +341,25 @@ export class Catalog {
         return this
     }
 
+    _delete(pos) {
+        /* Delete an entry located at a given position in _entries. Rebuild the _entries array and _keys map. */
+
+        if (pos === this.length - 1) {              // special case: deleting the LAST entry does NOT require rebuilding _keys
+            let entry = this._entries.pop()
+            if (!T.isMissing(entry[0])) {
+                let ids = this._keys.get(entry[0])
+                let id  = ids.pop()                 // indices in `ids` are stored in increasing order, so `pos` must be the last one
+                assert(id === pos)
+                if (!ids.length) this._keys.delete(entry[0])
+            }
+        }
+        else {
+            // general case: delete the entry, rearrange the _entries array, and rebuild this._keys from scratch
+            let entries = [...this._entries.slice(0,pos), ...this._entries.slice(pos+1)]
+            this.init(entries)
+        }
+    }
+
     updateAll(catalog) {
         /* Write all entries of the `catalog` into `this` in a way that removes (overwrites) existing entries with the same key,
            but keeps untouched the other entries, whose keys are not listed in the `catalog`.
@@ -457,25 +476,6 @@ export class Catalog {
            Elements of nested Maps and Arrays can be deleted as well.
          */
         return Struct.delete(this, this._normPath(path))
-    }
-
-    _delete(pos) {
-        /* Delete an entry located at a given position in _entries. Rebuild the _entries array and _keys map. */
-
-        if (pos === this.length - 1) {              // special case: deleting the LAST entry does NOT require rebuilding _keys
-            let entry = this._entries.pop()
-            if (!T.isMissing(entry[0])) {
-                let ids = this._keys.get(entry[0])
-                let id  = ids.pop()                 // indices in `ids` are stored in increasing order, so `pos` must be the last one
-                assert(id === pos)
-                if (!ids.length) this._keys.delete(entry[0])
-            }
-        }
-        else {
-            // general case: delete the entry, rearrange the _entries array, and rebuild this._keys from scratch
-            let entries = [...this._entries.slice(0,pos), ...this._entries.slice(pos+1)]
-            this.init(entries)
-        }
     }
 
     update(path, key, value) {
