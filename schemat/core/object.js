@@ -1032,7 +1032,6 @@ export class WebObject {
     edit_insert(path, pos, key, value)  { return this.edit.insert(path, pos, key, value).save() }
     edit_delete(path)               { return this.edit.delete(path).save() }
     edit_move(path, {delta})        { return this.edit.move(path, {delta}).save() }
-    // edit_update(path, entry)        { return this.edit.update(path, entry).save() }
 
 
     /***  Individual edits. Should be called via this.edit.*()  ***/
@@ -1061,11 +1060,6 @@ export class WebObject {
     'edit.delete'(path) {
         /* Delete a property; or a field inside a nested Catalog in a property. */
         this.__data.delete(path)
-    }
-
-    'edit.update'(path, {key, value}) {
-        /* Update a property; or a field inside a nested Catalog. */
-        this.__data.update(path, key, value)
     }
 
     'edit.move'(path, {pos, delta, count}) {
