@@ -106,7 +106,10 @@ class Struct {
         if (!values.length) return
         if (target instanceof Catalog) target._set(key, ...values)
         else if (target instanceof Map)
-            if (values.length === 1) target.set(key, values[0])
+            if (values.length === 1) {
+                if (typeof key === 'number') key = [...target.entries()][key][0]
+                target.set(key, values[0])
+            }
             else throw new Error(`Map.set() requires one value, got ${values.length}`)
         else if (target instanceof Array)
             if (typeof key === 'number') target[key] = values[0]
@@ -389,6 +392,8 @@ export class Catalog {
            Otherwise, remove all occurrences of `key` (if any) and append [key, value[i]] entries at the end.
          */
         let locs = this.locs(key)
+        if (typeof key === 'number') key = this._entries[key][0]
+
         if (values.length === 1 && locs.length === 1) {
             this._entries[locs[0]] = [key, values[0]]
             return this
