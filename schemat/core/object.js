@@ -1043,16 +1043,8 @@ export class WebObject {
           They must NOT modify their arguments, because the same args may need to be sent later from client to DB.
      ***/
 
-    'edit.if_version'(ver) {
-        /* Only apply the remaining edits if this.__ver=ver. */
-        if (this.__ver !== ver) throw new Error(`object has changed`)
-    }
-
-    'edit.overwrite'(data) {
-        /* Replace the entire set of own properties, __data, with a new Data object. */
-        if (typeof data === 'string') data = Data.load(data)
-        assert(data instanceof Data)
-        this.__data = data
+    'edit.set'(path, ...values) {
+        this.__data.set(path, ...values)
     }
 
     'edit.insert'(path, pos, key, value) {
@@ -1075,19 +1067,17 @@ export class WebObject {
         this.__data.move(path, {pos, delta, count})
     }
 
-
-    'edit.set'(path, ...values) {
-        this.__data.set(path, ...values)
+    'edit.overwrite'(data) {
+        /* Replace the entire set of own properties, __data, with a new Data object. */
+        if (typeof data === 'string') data = Data.load(data)
+        assert(data instanceof Data)
+        this.__data = data
     }
 
-    // 'edit.set_value'(prop, value) {
-    //     this.__data.set(prop, value)
-    // }
-    //
-    // 'edit.set_values'(prop, values) {
-    //     /* Set multiple (repeated) values for a given property, remove the existing ones. */
-    //     this.__data.set(prop, ...values)
-    // }
+    'edit.if_version'(ver) {
+        /* Only apply the remaining edits if this.__ver=ver. */
+        if (this.__ver !== ver) throw new Error(`object has changed`)
+    }
 
 
     /***  Endpoints  ***/
