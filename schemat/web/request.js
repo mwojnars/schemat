@@ -69,7 +69,7 @@ export class RequestContext {
      */
     site_id
     target_id
-    items
+    items           // objects in focus
     endpoint
 
     static from_request(request, ...objects) {

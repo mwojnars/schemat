@@ -9,7 +9,7 @@
 import {print, assert, T, escape_html, concat, unique, delay} from '../common/utils.js'
 import {NotLoaded, ValidationError} from '../common/errors.js'
 
-import {Catalog, Data} from './catalog.js'
+import {Catalog, Data, Struct} from './catalog.js'
 import {REF} from "../types/type.js"
 import {SCHEMA_GENERIC} from "../types/catalog_type.js"
 import {html_page} from "../web/adapters.js"
@@ -17,7 +17,7 @@ import {Assets} from "../web/component.js"
 import {Request} from "../web/request.js"
 import {ReactPage, ItemInspectView} from "../web/pages.js"
 import {JsonPOST, Service} from "../web/services.js";
-import {mDataRecord, mWebObjects, mDataString} from "../web/messages.js";
+import {mWebObjects} from "../web/messages.js";
 
 const ROOT_ID = 1
 let RootCategory
@@ -48,6 +48,9 @@ class Intercept {
     // (i.e., an array of ALL values of a repeated field, not the first value only)
     static PLURAL = '$'
 
+    // separator of path segments
+    static SPLIT = '.'
+
     // these special props are always read from regular POJO attributes and NEVER from object's __data;
     // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
     // defining a custom `then` prop is unsafe, hence we disallow it
@@ -66,6 +69,13 @@ class Intercept {
 
     static proxy_get(target, prop, receiver)
     {
+        // if (prop?.includes?.(Intercept.SPLIT)) {
+        //     let [base, ...path] = prop.split(Intercept.SPLIT)
+        //     let root = Intercept.proxy_get(target, base, receiver)
+        //     return Struct.get(root, path, true)
+        //     // return Struct.get(receiver[base], path, true)
+        // }
+
         let val, {cache} = target.__meta
 
         // try reading the value from `cache` first, return if found

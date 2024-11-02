@@ -69,7 +69,9 @@ export class Path {
     }
 }
 
-class Struct {
+/**********************************************************************************************************************/
+
+export class Struct {
     /* Static methods for working with collections: Catalog, Map, Array. */
 
     static isCollection(obj) {
@@ -83,7 +85,7 @@ class Struct {
         throw new Error(`not a collection: ${target}`)
     }
 
-    static *yieldAll(target, path) {
+    static *yieldAll(target, path, _objects = false) {
         /* Yield all elements of a collection, `target`, that match a given `path`. 
            The path is an array, not a string.
          */
@@ -93,13 +95,20 @@ class Struct {
 
         if (target instanceof Catalog)
             for (let obj of target._getAll(step))
-                yield* Struct.yieldAll(obj, rest)
+                yield* Struct.yieldAll(obj, rest, _objects)
         
         else if (target instanceof Map)
-            yield* Struct.yieldAll(target.get(step), rest)
+            yield* Struct.yieldAll(target.get(step), rest, _objects)
         
         else if (target instanceof Array && typeof step === 'number')
-            yield* Struct.yieldAll(target[step], rest)
+            yield* Struct.yieldAll(target[step], rest, _objects)
+
+        else if (_objects && typeof target === 'object')
+            yield* Struct.yieldAll(target[step], rest, _objects)
+    }
+
+    static get(target, path, _objects = false) {
+        return Struct.yieldAll(target, path, _objects).next().value
     }
 
     static set(target, key, ...values) {
@@ -329,7 +338,7 @@ export class Catalog {
         path = norm ? this._normPath(path) : path
         if (!path.length) return this
         if (path.length === 1) return this._get(path[0])
-        return Struct.yieldAll(this, path).next().value
+        return Struct.get(this, path)
     }
 
     getAll(path) {
