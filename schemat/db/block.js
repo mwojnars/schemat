@@ -167,7 +167,7 @@ export class DataBlock extends Block {
         } else                                          // fixed ID provided by the caller? check for uniqueness
             await this.assert_unique(key, id)
 
-        let setup = obj.__setup__(id)                   // here, the object may perform heavy operations, like inserting related objects
+        let setup = obj.__setup__(id)                   // here, the object may perform intensive operations, like inserting related objects to DB
         if (setup instanceof Promise) await setup
 
         obj._bump_version()                             // set __ver=1 if needed
