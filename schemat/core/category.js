@@ -74,7 +74,7 @@ export class Category extends WebObject {
 
     _get_handler(endpoint) {
         // the handler can be defined as a *static* method of this category's __child_class
-        return this[endpoint] || this.__child_class[endpoint]
+        return this.__self[endpoint] || this.__child_class[endpoint]
     }
 
     // get_defaults(prop) {

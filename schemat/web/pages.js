@@ -153,7 +153,7 @@ export class RenderedPage extends HtmlPage {
             return schemat.init_client('page-data') +
                 `
                     let {object, endpoint} = schemat.web;
-                    object[endpoint]().render_client(object);
+                    object.__self[endpoint]().render_client(object);
                 `
         }
 

@@ -67,14 +67,14 @@ class Intercept {
         return new Proxy(target, {get: this.proxy_get, set: this.proxy_set, deleteProperty: this.proxy_delete})
     }
 
-    static proxy_get(target, prop, receiver)
+    static proxy_get(target, prop, receiver, deep = true)
     {
-        // if (prop?.includes?.(Intercept.SPLIT)) {
-        //     let [base, ...path] = prop.split(Intercept.SPLIT)
-        //     let root = Intercept.proxy_get(target, base, receiver)
-        //     return Struct.get(root, path, true)
-        //     // return Struct.get(receiver[base], path, true)
-        // }
+        // special handling for multi-segment paths (a.b.c...)
+        if (prop?.includes?.(Intercept.SPLIT)) {
+            let [base, ...path] = prop.split(Intercept.SPLIT)
+            let root = Intercept.proxy_get(target, base, receiver, false)
+            return Struct.get(root, path, true)
+        }
 
         let val, {cache} = target.__meta
 
@@ -815,7 +815,7 @@ export class WebObject {
     }
 
     _get_handler(endpoint) {
-        return this[endpoint]
+        return this.__self[endpoint]
     }
 
     _get_endpoints(request) {
@@ -1012,7 +1012,7 @@ export class WebObject {
         /* Apply `edits` to the __data. Each `edit` is an array: [op-name, ...args]. */
         for (const edit of edits) {
             let [op, ...args] = edit
-            let func = this[`edit.${op}`]
+            let func = this.__self[`edit.${op}`]
             if (!func) throw new Error(`object does not support edit operation: '${op}'`)
             func.call(this, ...args)
             // this[method](JSONx.deepcopy(args))      // `args` are deep-copied for safety, in case they get modified during the edit
