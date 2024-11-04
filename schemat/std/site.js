@@ -157,7 +157,7 @@ export class Site extends WebObject {
         //     // TODO: redirect to the canonical URL
         // }
 
-        return object.handle(request)
+        return object.__handle__(request)
     }
 
     async resolve(path) { return this.root.resolve(path) }

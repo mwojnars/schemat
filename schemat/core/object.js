@@ -795,7 +795,7 @@ export class WebObject {
             edit[name] = (...args) => this._make_edit(name, ...args)
     }
 
-    async handle(request, SEP = '.') {
+    async __handle__(request, SEP = '.') {
         /* Serve a web or internal Request by executing the corresponding service from this.net.
            Query parameters are passed in `req.query`, as:
            - a string if there's one occurrence of PARAM in a query string,
