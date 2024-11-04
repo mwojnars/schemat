@@ -132,7 +132,7 @@ export class TextualWidget extends TypeWidget {
 /**********************************************************************************************************************/
 
 export class TEXT_Widget extends TextualWidget {
-    shadow_dom = true
+    shadow_dom = false
 
     static css_class = "TEXT"
     static css_file  = import.meta.resolve('./widgets.css')
