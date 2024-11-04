@@ -70,7 +70,7 @@ class Intercept {
     static proxy_get(target, prop, receiver, deep = true)
     {
         // special handling for multi-segment paths (a.b.c...)
-        if (prop?.includes?.(Intercept.SPLIT)) {
+        if (deep && prop?.includes?.(Intercept.SPLIT)) {
             let [base, ...path] = prop.split(Intercept.SPLIT)
             let root = Intercept.proxy_get(target, base, receiver, false)
             return Struct.get(root, path, true)
@@ -100,16 +100,16 @@ class Intercept {
             || Intercept.SPECIAL.includes(prop)
         ) return undefined
 
-        let suffix = Intercept.PLURAL
-        let plural = prop.endsWith(suffix)
-        if (plural) prop = prop.slice(0, -suffix.length)        // use the base property name without the suffix
+        let plural = prop.endsWith(Intercept.PLURAL)
+        let base = plural ? prop.slice(0, -1) : prop
+        // if (plural) prop = prop.slice(0, -1)        // use the base property name without the suffix
 
         // fetch ALL repeated values of `prop` from __data, ancestors, imputation etc. (even if plural=false)...
-        let values = target._compute_property(prop)
+        let values = target._compute_property(base)
 
         if (cache) {
-            Intercept._cache_value(cache, prop, values.length ? values[0] : Intercept.UNDEFINED)
-            Intercept._cache_values(cache, prop + suffix, values)
+            Intercept._cache_value(cache, base, values.length ? values[0] : Intercept.UNDEFINED)
+            Intercept._cache_values(cache, base + Intercept.PLURAL, values)
         }
         return plural ? values : values[0]
     }
