@@ -116,7 +116,8 @@ class Intercept {
     }
 
     static _get_deep(target, prop, receiver) {
-        /* Get a deep property value from `target` object (`prop` is a multi-segment path). */
+        /* Get a *deep* property value from `target` object; `prop` is a multi-segment path (a.b.c...),
+           optionally terminated with $ (plural path). */
         let [base, plural] = Intercept._check_plural(prop)
         let [step, ...path] = base.split(Intercept.SPLIT)
         if (plural) {
@@ -148,15 +149,16 @@ class Intercept {
         ) return Reflect.set(target, prop, value, receiver)
 
         let [base, plural] = Intercept._check_plural(prop)      // property name without the $ suffix
+        let [step] = base.split(Intercept.SPLIT)                // first segment of a deep path
 
         // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
         // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
         let regular = (prop[0] !== '_' || prop.startsWith('__'))
         let schema = receiver.__schema              // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
-        let type = schema?.get(base)
+        let type = schema?.get(step)
 
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
-        if (schema?.has(base) || (!schema?.options.strict && regular)) {
+        if (schema?.has(step) || (!schema?.options.strict && regular)) {
             // if (!target.is_newborn()) print('proxy_set updating:', prop)
             if (type?.options.virtual) throw new Error(`cannot modify a virtual property (${prop})`)
             if (plural) {
