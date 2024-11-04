@@ -260,7 +260,7 @@ export class Catalog {
         entries = entries.map(ent =>
                         (ent instanceof Catalog) ? ent._entries
                         : T.isPOJO(ent) ? Object.entries(ent)
-                        : T.isArray(ent) ? [ent[0], ent[1]]
+                        : T.isArray(ent) ? [ent.slice(0,2)]
                         : ent
                     )
         this.init(entries.flat(), true)
