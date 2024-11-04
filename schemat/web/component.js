@@ -171,7 +171,7 @@ export class Component extends Styled(React.Component) {
 
         // for CSS scoping, replace this.render() with a wrapper that adds an extra DIV around the rendered element;
         // directly overriding render() is inconvenient, because subclasses could no longer define their own render() !!
-        if (this._classes()) {
+        if (this._get_classes()) {
             this._render_original = this.render.bind(this)
             this.render = this._render_wrapped.bind(this)
         }
@@ -184,6 +184,18 @@ export class Component extends Styled(React.Component) {
 
         this._root = React.createRef()
         this._shadow = null
+    }
+
+    static _collect_classes() {
+        return this._classes = T.getPrototypes(this) .map(cls => T.getOwnProperty(cls, 'css_class')) .filter(Boolean)
+    }
+
+    _get_classes(prefix = null) {
+        /* Space-separated string containing all CSS classes that should be put in the component's root node. */
+        let cls = this.constructor
+        let classes = cls.hasOwnProperty('_classes') ? cls._classes : cls._collect_classes()
+        if (prefix) classes = classes.map(c => prefix + c)
+        return classes.join(' ')
     }
 
     componentDidMount()  { this._create_shadow() }
@@ -200,15 +212,6 @@ export class Component extends Styled(React.Component) {
         return ReactDOM.createPortal(this._shadow_content(), this._shadow)
     }
 
-    _classes(prefix = null) {
-        /* Space-separated string containing all CSS classes that should be put in the component's root node. */
-        let classes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'css_class')) .filter(Boolean)
-        // let scopes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'style')?.scope) .filter(Boolean)
-        // classes = [...new Set([...classes, ...scopes])].sort()
-        if (prefix) classes = classes.map(c => prefix + c)
-        return classes.join(' ')
-    }
-
     _shadow_styles() {
         /* Walk the class's prototype chain to collect all CSS code that should be put inside a shadow DOM. */
         return T.getInherited(this.constructor, 'css_style').join('\n')
@@ -223,7 +226,7 @@ export class Component extends Styled(React.Component) {
 
     _shadow_content() {
         /* Return the content of the component as a React element wrapped up in a <div> with proper classes for styling. */
-        let classes = cl(this._classes(), 'component')
+        let classes = cl(this._get_classes(), 'component')
         let css = this._shadow_styles()
         let style = css ? STYLE(compact_css(css)) : null
         let links = this._shadow_links()
@@ -238,7 +241,7 @@ export class Component extends Styled(React.Component) {
          */
         if (!this.shadow_dom) {
             let content = this._render_original()
-            let classes = this._classes()
+            let classes = this._get_classes()
             // console.log(`wrapping ${this.constructor.name} with classes: ${classes}`)
             return _wrap(content, classes)
         }
@@ -265,7 +268,7 @@ export class Component extends Styled(React.Component) {
            (recursive inclusion, direct OR indirect!).
          */
         if (typeof component === 'function') component = e(component, props)        // convert a component (class/function) to an element if needed
-        let classes = this._classes(this.constructor.epilog)
+        let classes = this._get_classes(this.constructor.epilog)
         return classes ? _wrap(component, classes) : component
     }
 }
