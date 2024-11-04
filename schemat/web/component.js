@@ -10,7 +10,6 @@ let csso = await tryimport('csso')
 
 function _wrap(elem, className) {
     if (!className || !elem || typeof elem === 'string') return elem
-    // print('_wrap(): ', className)
     return SPAN({className}, elem)
 }
 
@@ -162,7 +161,7 @@ export class Component extends Styled(React.Component) {
     // - css custom properties (variables)
     // - :host, :host(), ::slotted()
 
-    static epilog = 'after-'        // prefix added to CSS classes to fence off embedded subcomponents
+    static epilog = 'after-'        // prefix added to CSS classes in embed() to fence off subcomponent styles
 
     css_class  = null               // name of the CSS class for this component
     shadow_dom = false
@@ -265,7 +264,7 @@ export class Component extends Styled(React.Component) {
            (recursive inclusion, direct OR indirect!).
          */
         if (typeof component === 'function') component = e(component, props)        // convert a component (class/function) to an element if needed
-        let classes = this._classes() //this.constructor.epilog)
+        let classes = this._classes(this.constructor.epilog)
         return classes ? _wrap(component, classes) : component
     }
 }
