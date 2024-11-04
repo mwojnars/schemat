@@ -458,7 +458,11 @@
       "@": schemat/types/type.js:REF
     blocks:
       info: array of Blocks containing records of this sequence
-      "@": schemat/types/type.js:GENERIC
+      type:
+        category:
+          "@": 18
+        "@": schemat/types/type.js:REF
+      "@": schemat/types/type.js:ARRAY
     flush_delay:
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together

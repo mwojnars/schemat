@@ -542,7 +542,7 @@ export class TYPE extends GENERIC {
 /**********************************************************************************************************************/
 
 export class REF extends Type {
-    /* Reference to an WebObject, encoded as {"@": id} during serialization through JSONx.
+    /* Reference to a WebObject, encoded as {"@": id} during serialization through JSONx.
        REF without parameters is equivalent to GENERIC(WebObject), however, REF can also be parameterized,
        which is not possible with a GENERIC.
      */
@@ -585,10 +585,10 @@ export class VARIANT extends Type {
 
 
 export class ARRAY extends GENERIC {
-    /* Represents arrays of objects, all of the same type (`type`, generic_type by default). */
+    /* Represents arrays of objects, all of the same `type` (generic_type by default). */
 
     static options = {
-        type: generic_type,                 // type of all elements in the array, as a Type instance
+        type: generic_type,         // type of all elements in the array, as a Type instance
     }
 
     collect(assets) {
