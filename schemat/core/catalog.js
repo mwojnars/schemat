@@ -89,8 +89,8 @@ export class Struct {
         /* Yield all elements of a collection, `target`, that match a given `path`. 
            The path is an array, not a string.
          */
-        if (!path.length) yield target
         if (!target) return
+        if (!path.length) { yield target; return }
         let [step, ...rest] = path
 
         if (target instanceof Catalog)

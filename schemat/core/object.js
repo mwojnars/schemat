@@ -70,11 +70,8 @@ class Intercept {
     static proxy_get(target, prop, receiver, deep = true)
     {
         // special handling for multi-segment paths (a.b.c...)
-        if (deep && prop?.includes?.(Intercept.SPLIT)) {
-            let [base, ...path] = prop.split(Intercept.SPLIT)
-            let root = Intercept.proxy_get(target, base, receiver, false)
-            return Struct.get(root, path, true)
-        }
+        if (deep && prop?.includes?.(Intercept.SPLIT))
+            return Intercept._get_deep(target, prop, receiver)
 
         let val, {cache} = target.__meta
 
@@ -100,9 +97,7 @@ class Intercept {
             || Intercept.SPECIAL.includes(prop)
         ) return undefined
 
-        let plural = prop.endsWith(Intercept.PLURAL)
-        let base = plural ? prop.slice(0, -1) : prop
-        // if (plural) prop = prop.slice(0, -1)        // use the base property name without the suffix
+        let [base, plural] = Intercept._check_plural(prop)      // property name without the $ suffix
 
         // fetch ALL repeated values of `prop` from __data, ancestors, imputation etc. (even if plural=false)...
         let values = target._compute_property(base)
@@ -112,6 +107,24 @@ class Intercept {
             Intercept._cache_values(cache, base + Intercept.PLURAL, values)
         }
         return plural ? values : values[0]
+    }
+
+    static _check_plural(prop) {
+        let plural = prop.endsWith(Intercept.PLURAL)
+        let base = plural ? prop.slice(0, -1) : prop    // property name without the $ suffix
+        return [base, plural]
+    }
+
+    static _get_deep(target, prop, receiver) {
+        /* Get a deep property value from `target` object (`prop` is a multi-segment path). */
+        let [base, plural] = Intercept._check_plural(prop)
+        let [step, ...path] = base.split(Intercept.SPLIT)
+        if (plural) {
+            let roots = Intercept.proxy_get(target, step + Intercept.PLURAL, receiver, false) || []
+            return roots.flatMap(root => [...Struct.yieldAll(root, path, true)])
+        }
+        let root = Intercept.proxy_get(target, step, receiver, false)
+        return Struct.get(root, path, true)
     }
 
     static _cache_value(cache, prop, val) {
@@ -134,9 +147,7 @@ class Intercept {
             || Intercept.SPECIAL.includes(prop)
         ) return Reflect.set(target, prop, value, receiver)
 
-        let suffix = Intercept.PLURAL
-        let plural = prop.endsWith(suffix)
-        let base = (plural ? prop.slice(0, -suffix.length) : prop)        // base property name without the $ suffix
+        let [base, plural] = Intercept._check_plural(prop)      // property name without the $ suffix
 
         // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
         // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
