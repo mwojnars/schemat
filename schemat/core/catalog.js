@@ -114,17 +114,21 @@ export class Struct {
     static set(target, key, ...values) {
         /* Set value of `key` entry in the `target` collection. */
         if (!values.length) return
-        if (target instanceof Catalog) target._set(key, ...values)
-        else if (target instanceof Map)
-            if (values.length === 1) {
-                if (typeof key === 'number') key = [...target.entries()][key][0]
-                target.set(key, values[0])
-            }
-            else throw new Error(`Map.set() requires one value, got ${values.length}`)
+        if (target instanceof Catalog) return target._set(key, ...values)
+        if (values.length > 1) throw new Error(`cannot set multiple values (${values.length}) for key (${key}) in non-catalog`)
+
+        if (target instanceof Map) {
+            if (typeof key === 'number') key = [...target.entries()][key][0]
+            target.set(key, values[0])
+        }
         else if (target instanceof Array)
             if (typeof key === 'number') target[key] = values[0]
-            else throw new Error(`not an array index (${key}) when setting a value inside an Array`)
-        else throw new Error(`not a collection: ${target}`)
+            else throw new Error(`not an array index (${key}), cannot set a value inside an Array`)
+        // else if (typeof target === 'object')
+        //     target[key] = values[0]
+        else throw new Error(`not a collection nor an object: ${target}`)
+        
+        return this
     }
 
     static setkey(target, prev, key) {
