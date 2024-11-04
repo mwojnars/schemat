@@ -175,6 +175,8 @@ export const ItemLoadingHOC = (classComponent, config = {raise: false}) =>
        ItemLoadingHOC() does a similar thing as useItemLoading(), but for class components.
      */
     class ItemLoadingWrapper extends classComponent {
+        static css_class = 'loading-hoc'
+
         constructor(props) {
             super(props)
             assert(this.state.missingItems === undefined)

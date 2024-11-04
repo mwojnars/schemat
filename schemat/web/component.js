@@ -155,7 +155,7 @@ export class Component extends Styled(React.Component) {
 
     // If shadow_dom=true, the component is rendered inside a "shadow DOM" that is separate from the main DOM.
     // This provides style encapsulation (CSS scoping) and prevents styles of different components from interfering.
-    // HOWEVER, note that some styles of the parent DOM can still pass into the shadow DOM, like:
+    // HOWEVER, note that some styles of the parent DOM can still make it into the shadow DOM:
     // - inherited CSS properties: font-*, color, line-*, text-*, ...
     // - global styles and resets (*, body, html), which may influence the inherited styles
     // - css custom properties (variables)
@@ -232,14 +232,15 @@ export class Component extends Styled(React.Component) {
     }
 
     _render_wrapped() {
-        /* Wrap up the element returned by this.render() in a <div> of an appropriate "prolog" CSS class(es) for style scoping.
-           This method is assigned to `this.render` in the constructor, so that subclasses can still
-           override the render() as usual, but React calls this wrapper instead.
+        /* Wrap up the element returned by this.render() in a <span> of appropriate "prolog" CSS class(es) for style scoping.
+           This method is assigned to `this.render` in the constructor to allow subclasses override render()
+           as usual, but make React call this wrapper instead.
          */
         if (!this.shadow_dom) {
             let content = this._render_original()
             let classes = this._classes()
-            return _wrap(content, classes)                  // <span> wrapper applies a CSS class for style scoping
+            // console.log(`wrapping ${this.constructor.name} with classes: ${classes}`)
+            return _wrap(content, classes)
         }
 
         let shadow = cl('shadow')                           // CSS class(es) for the shadow DOM container (outer DIV)
