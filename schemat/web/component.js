@@ -1,6 +1,6 @@
 import {T, assert, print, tryimport} from '../common/utils.js'
 import {compact_css} from './css.js'
-import {e, cl, DIV, TEMPLATE, STYLE, FRAGMENT, LINK} from './react-utils.js'
+import {e, cl, SPAN, DIV, TEMPLATE, STYLE, FRAGMENT, LINK} from './react-utils.js'
 import {React} from './resources.js'
 
 let csso = await tryimport('csso')
@@ -10,7 +10,8 @@ let csso = await tryimport('csso')
 
 function _wrap(elem, className) {
     if (!className || !elem || typeof elem === 'string') return elem
-    return DIV({className}, elem)
+    // print('_wrap(): ', className)
+    return SPAN({className}, elem)
 }
 
 
@@ -161,7 +162,9 @@ export class Component extends Styled(React.Component) {
     // - css custom properties (variables)
     // - :host, :host(), ::slotted()
 
-    css_class  = null                   // name of the CSS class for this component
+    static epilog = 'after-'        // prefix added to CSS classes to fence off embedded subcomponents
+
+    css_class  = null               // name of the CSS class for this component
     shadow_dom = false
 
     constructor(props) {
@@ -195,14 +198,15 @@ export class Component extends Styled(React.Component) {
     _portal() {
         /* Create a React "portal" node that allows the rendered content to be inserted below the shadow DOM root. */
         if (!this._shadow) return null
-        return ReactDOM.createPortal(this._content(), this._shadow)
+        return ReactDOM.createPortal(this._shadow_content(), this._shadow)
     }
 
-    _classes() {
+    _classes(prefix = null) {
         /* Space-separated string containing all CSS classes that should be put in the component's root node. */
         let classes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'css_class')) .filter(Boolean)
         // let scopes = T.getPrototypes(this.constructor) .map(cls => T.getOwnProperty(cls, 'style')?.scope) .filter(Boolean)
         // classes = [...new Set([...classes, ...scopes])].sort()
+        if (prefix) classes = classes.map(c => prefix + c)
         return classes.join(' ')
     }
 
@@ -218,13 +222,13 @@ export class Component extends Styled(React.Component) {
         })
     }
 
-    _content() {
+    _shadow_content() {
         /* Return the content of the component as a React element wrapped up in a <div> with proper classes for styling. */
         let classes = cl(this._classes(), 'component')
         let css = this._shadow_styles()
         let style = css ? STYLE(compact_css(css)) : null
         let links = this._shadow_links()
-        let main = DIV(classes, this._render_original())
+        let main = SPAN(classes, this._render_original())
         return FRAGMENT(...links, style, main)      // including links/styles already in server-side HTML prevents the FOUC
     }
 
@@ -236,23 +240,23 @@ export class Component extends Styled(React.Component) {
         if (!this.shadow_dom) {
             let content = this._render_original()
             let classes = this._classes()
-            return _wrap(content, classes)                  // <div> wrapper applies a CSS class for style scoping
+            return _wrap(content, classes)                  // <span> wrapper applies a CSS class for style scoping
         }
 
-        let classes = cl('shadow')                          // CSS class(es) for the shadow DOM container (outer DIV)
+        let shadow = cl('shadow')                           // CSS class(es) for the shadow DOM container (outer DIV)
 
         // render the component inside a shadow DOM
         if (typeof window === 'undefined') {                // server-side: content rendered inside a <template> tag
-            let template = TEMPLATE({shadowrootmode: 'open'}, this._content())
-            return DIV(classes, template)
+            let template = TEMPLATE({shadowrootmode: 'open'}, this._shadow_content())
+            return SPAN(shadow, template)
         }
         else                                                // client-side: initially render the <div> container, shadow DOM content will be added in componentDidMount
-            return DIV(classes, {ref: this._root}, this._portal())
+            return SPAN(shadow, {ref: this._root}, this._portal())
     }
 
     embed(component, props = null) {
         /* Safely embed a React `component` (or element) inside this one by wrapping it up
-           in an "epilog" <div> with an appropriate css class for modular scoping.
+           in an "epilog" tag with an appropriate css class ("after-XXX") for modular scoping.
            Also, check if `this` declared the `component` in its assets and throw an exception if not (TODO).
 
            IMPORTANT: nested components should always be inserted into a page using this method, not createElement();
@@ -261,7 +265,7 @@ export class Component extends Styled(React.Component) {
            (recursive inclusion, direct OR indirect!).
          */
         if (typeof component === 'function') component = e(component, props)        // convert a component (class/function) to an element if needed
-        let classes = this._classes()
+        let classes = this._classes() //this.constructor.epilog)
         return classes ? _wrap(component, classes) : component
     }
 }
