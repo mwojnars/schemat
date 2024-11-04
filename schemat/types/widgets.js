@@ -1,4 +1,4 @@
-import {T, assert, truncate} from '../common/utils.js'
+import {T, assert, print, truncate, comma} from '../common/utils.js'
 import {JSONx} from '../core/jsonx.js'
 
 import {e, cl, st, createRef, useState, ItemLoadingHOC} from '../web/react-utils.js'
@@ -265,8 +265,7 @@ export class TYPE_Widget extends GENERIC_Widget {
     static css_class = "TYPE"
 
     viewer()  { return TypeWidget.prototype.viewer.call(this) }
-    view() {
-        let {value: type} = this.props
+    view(type) {
         if (type?.real_type) type = type.real_type          // unwrap a TypeWrapper
         // if (type instanceof TypeWrapper) {
         //     if (!type.real_type) return "TypeWrapper (not loaded)"
@@ -328,3 +327,11 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
     // }
 })
 
+export class ARRAY_Widget extends GENERIC_Widget {
+    view(array) {
+        let array_type = this.props.type
+        let elem_type = array_type.options.type
+        let items = array.map(value => e(elem_type.Widget, {value, type: elem_type}))
+        return FRAGMENT('[', ...comma(items), ']')
+    }
+}

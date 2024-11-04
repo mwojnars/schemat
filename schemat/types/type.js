@@ -590,6 +590,7 @@ export class ARRAY extends GENERIC {
     static options = {
         type: generic_type,         // type of all elements in the array, as a Type instance
     }
+    static Widget = widgets.ARRAY_Widget
 
     collect(assets) {
         this.options.type.collect(assets)
