@@ -92,6 +92,13 @@ export class TypeWidget extends Component {
         this.close()
     }
 
+    /***  public api  ***/
+
+    static element(props) {
+        /* Syntactic sugar: create a React element with a method call instead of createElement() or e(). */
+        return e(this, props)
+    }
+
     render() {
         let {type, value} = this.props
         if (!this.state.editing) return this.viewer()
@@ -330,8 +337,8 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
 export class ARRAY_Widget extends GENERIC_Widget {
     view(array) {
         let array_type = this.props.type
-        let elem_type = array_type.options.type
-        let items = array.map(value => e(elem_type.Widget, {value, type: elem_type}))
+        let type = array_type.options.type
+        let items = array.map(value => type.Widget.element({value, type}))
         return FRAGMENT('[', ...comma(items), ']')
     }
 }
