@@ -38,7 +38,7 @@ export class TypeWidget extends Component {
     encode(v)   { return JSONx.stringify(v) }                   // convert a value to its editable representation
     decode(v)   { return JSONx.parse(v) }                       // ...and back
 
-    viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
+    viewer()    { return DIV(cl('viewer'), {onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor()    { return INPUT({
                     defaultValue:   this.default,
                     ref:            this.input,
