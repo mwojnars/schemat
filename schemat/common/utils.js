@@ -241,6 +241,19 @@ export function escape_html(string) {
     return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
 }
 
+
+export function comma(items, sep = ', ') {
+    /* Return a comma-separated (`sep`-separated) array of `items` without concatenating them as strings.
+       Useful for React components that expect an array of children. */
+    const list = []
+    for (let i = 0; i < items.length; i++) {
+        if (i > 0) list.push(sep)
+        list.push(items[i])
+    }
+    return list
+}
+
+
 /*************************************************************************************************/
 
 export class Types {
