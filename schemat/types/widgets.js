@@ -16,9 +16,12 @@ export class TypeWidget extends Component {
     static defaultProps = {
         type:   undefined,      // Type of the `value` to be displayed
         value:  undefined,      // value object to be displayed by render()
+        inline:     false,      // if true, the component is displayed in inline mode and is inactive
+
         save:   undefined,      // callback save(newValue), called after `value` was edited by user
         flash:  undefined,      // callback flash(message, positive) for displaying confirmation messages after edits
         error:  undefined,      // callback error(message) for displaying error messages, typically related to validation after edit
+
         editing:    false,      // initial state.editing; is true, for instance, in CATALOG.NewKeyWidget
     }
 
@@ -99,12 +102,22 @@ export class TypeWidget extends Component {
         return e(this, props)
     }
 
+    static inline(props) {
+        /* Display an inline variant of this component rather than a block. In this variant, the component
+           is inactive and cannot be edited, unless the edit operation is handled by the parent. */
+        return e(this, {...props, inline: true})
+    }
+
     render() {
-        let {type, value} = this.props
-        if (!this.state.editing) return this.viewer()
-        this.initial = (value !== undefined) ? this.encode(value) : undefined
-        this.default = (this.initial !== undefined) ? this.initial : type.get_initial()
-        return this.editor()
+        let {type, value, inline} = this.props
+        if (inline) return this.display(value)
+
+        if (this.state.editing) {
+            this.initial = (value !== undefined) ? this.encode(value) : undefined
+            this.default = (this.initial !== undefined) ? this.initial : type.get_initial()
+            return this.editor()
+        }
+        return this.viewer()
     }
 }
 
@@ -338,7 +351,7 @@ export class ARRAY_Widget extends GENERIC_Widget {
     view(array) {
         let array_type = this.props.type
         let type = array_type.options.type
-        let items = array.map(value => type.Widget.element({value, type}))
+        let items = array.map(value => type.Widget.inline({value, type}))
         return FRAGMENT('[', ...comma(items), ']')
     }
 }
