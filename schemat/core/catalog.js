@@ -1,4 +1,4 @@
-import {T, print, assert, concat, splitFirst} from '../common/utils.js'
+import {T, print, assert, splitFirst} from '../common/utils.js'
 import {JSONx} from "./jsonx.js"
 
 
@@ -263,7 +263,7 @@ export class Catalog {
                         : T.isArray(ent) ? [ent[0], ent[1]]
                         : ent
                     )
-        this.init(concat(entries), true)
+        this.init(entries.flat(), true)
     }
 
     init(entries, clean = false) {
@@ -495,7 +495,7 @@ export class Catalog {
          */
         if (catalogs.length === 1) return catalogs[0]
         if (!unique) {
-            let entries = concat(catalogs.map(c => c._entries))
+            let entries = catalogs.map(c => c._entries).flat()
             return new Catalog(entries)
         }
         let catalog = new Catalog()
