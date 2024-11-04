@@ -352,6 +352,6 @@ export class ARRAY_Widget extends GENERIC_Widget {
         let array_type = this.props.type
         let type = array_type.options.type
         let items = array.map(value => type.Widget.inline({value, type}))
-        return FRAGMENT('[', ...comma(items), ']')
+        return FRAGMENT(...comma(items))
     }
 }
