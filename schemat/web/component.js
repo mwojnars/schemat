@@ -236,17 +236,17 @@ export class Component extends Styled(React.Component) {
         if (!this.shadow_dom) {
             let content = this._render_original()
             let classes = this._classes()
-            return _wrap(content, classes)                              // <div> wrapper applies a CSS class for style scoping
+            return _wrap(content, classes)                  // <div> wrapper applies a CSS class for style scoping
         }
 
-        let classes = cl('shadow')                                      // CSS class(es) for the shadow DOM container (outer DIV)
+        let classes = cl('shadow')                          // CSS class(es) for the shadow DOM container (outer DIV)
 
         // render the component inside a shadow DOM
-        if (typeof window === 'undefined') {                            // server-side: content rendered inside a <template> tag
+        if (typeof window === 'undefined') {                // server-side: content rendered inside a <template> tag
             let template = TEMPLATE({shadowrootmode: 'open'}, this._content())
             return DIV(classes, template)
         }
-        else                                                            // client-side: initially render the <div> container, shadow DOM content will be added in componentDidMount
+        else                                                // client-side: initially render the <div> container, shadow DOM content will be added in componentDidMount
             return DIV(classes, {ref: this._root}, this._portal())
     }
 
