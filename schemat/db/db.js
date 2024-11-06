@@ -1,5 +1,6 @@
-import {DatabaseError} from "../common/errors.js"
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
+import {DatabaseError} from "../common/errors.js"
+import {JSONx} from "../core/jsonx.js";
 import {WebObject} from "../core/object.js"
 import {DataOperator} from "./sequence.js";
 import {Record, DataRecord} from "./records.js";
@@ -279,7 +280,7 @@ export class Database extends WebObject {
         /* Find the top-most ring where the item's ID is writable and insert there. The newly assigned ID is returned.
            `ring` is an optional name of a ring to use.
          */
-        if (!T.isString(data)) data = data.dump()
+        if (!T.isString(data)) data = data.dump?.() || JSONx.stringify(data)
         let req = new DataRequest(this, 'insert', {data})
         let ring
 
