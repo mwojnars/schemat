@@ -16,8 +16,6 @@ export class Client extends Schemat {
         endpoint: null,         // target's endpoint that was called
     }
 
-    /***  startup  ***/
-
     async boot_from(context_path) {
         let ctx = RequestContext.from_element(context_path)
         print('request context:', ctx)
@@ -36,23 +34,12 @@ export class Client extends Schemat {
         // check()
     }
 
-
-    /***  DB  ***/
-
     async _select(id) {
         /* Load an object from the server via AJAX call. */
         let url = schemat.site.default_path_of(id) + '::json'
         let {data} = await fetch(url).then(response => response.json())     // {id, data} encoded
         return JSON.stringify(data)
     }
-
-    // async client_insert(category, data_state) {
-    //     /* `data` is a flat (encoded) object, possibly the result of Data.__getstate__() but not necessarily. */
-    //     assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items
-    //     let record = await schemat.site.POST.create_object(data_state) //{data: data_state})
-    //     if (!record) throw new Error(`failed to insert a new object`)
-    //     return this.get_object(record.id)
-    // }
 }
 
 // import {check} from "/site/widgets.js"
