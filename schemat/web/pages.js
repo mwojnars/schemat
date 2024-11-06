@@ -341,14 +341,17 @@ export class CategoryInspectView extends ItemInspectView {
         const submit = async (e) => {
             e.preventDefault()                  // not needed when button type='button', but then Enter still submits the form (!)
             let fdata = new FormData(form.current)
-            setFormDisabled(true)               // this must not preceed FormData(), otherwise fdata is empty
+            setFormDisabled(true)               // this must not precede FormData(), otherwise fdata is empty
             // fdata.append('name', 'another name')
             // let name = input.current.value
             // let json = JSON.stringify(Array.from(fdata))
 
-            let data = Object.fromEntries([...fdata, ['__category', this]])
-            let obj = await schemat.client_insert(this, data)
-            await obj.load()                                // initialize the object's URL
+            // let data = Object.fromEntries([...fdata, ['__category', this]])
+            // let obj = await schemat.client_insert(this, data)
+            // await obj.load()                                // initialize the object's URL
+            let data = Object.fromEntries([...fdata])
+            let obj = this.create(data)
+            await obj.save()
 
             form.current.reset()                            // clear input fields
             setFormDisabled(false)
