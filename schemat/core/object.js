@@ -1040,8 +1040,8 @@ export class WebObject {
         let edits = this.__meta.edits
 
         if (this.is_newborn())
-            return schemat.site.POST.create_object(this.__data).then(({id}) => (this.__id = id) && this)
-            // return schemat.site.POST.create_object({data: this.__data, opts}).then(({id}) => (this.__id = id))
+            // return schemat.site.POST.create_object(this.__data).then(({id}) => (this.__id = id) && this)
+            return schemat.site.POST.create_object({data: this.__data, opts}).then(({id}) => (this.__id = id) && this)
 
         if (!edits?.length) return //throw new Error(`no edits to be submitted for ${this.id}`)
 
