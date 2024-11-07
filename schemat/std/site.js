@@ -4,7 +4,7 @@ import {Request} from '../web/request.js'
 import {WebObject} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonPOST} from "../web/services.js";
-import {mDataRecord, mDataString, mJsonxObject, mJsonxObjects} from "../web/messages.js";
+import {mDataRecord, mDataString, mJsonx} from "../web/messages.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -171,7 +171,7 @@ export class Site extends WebObject {
             // server: (data_json) => this.database.insert(data_json),
             // input:  mDataString,
             server: ({data, opts}) => this.database.insert(data),
-            input:  mJsonxObject,
+            input:  mJsonx,
             output: mDataRecord,
         })
     }

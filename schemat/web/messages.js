@@ -59,26 +59,26 @@ export class mJsonxError extends mJsonBase {
 }
 
 
-export class mJsonObject extends mJsonError {
+export class mJson extends mJsonError {
     /* Encode one, but arbitrary, object through JSON.stringify(). */
     encode(obj)     { return JSON.stringify(obj) }
     decode(message) { return JSON.parse(message) }
 }
 
-export class mJsonObjects extends mJsonError {
-    /* Encode an array of objects through JSON.stringify(). */
+export class mJsonArray extends mJsonError {
+    /* Encode an array of values (arguments) through JSON.stringify(). */
     array = true
     encode(...objs) { return JSON.stringify(objs) }
     decode(message) { return JSON.parse(message) }
 }
 
-export class mJsonxObject extends mJsonxError {
+export class mJsonx extends mJsonxError {
     /* Encode one, but arbitrary, object through JSONx.stringify(). */
     encode(obj)     { return JSONx.stringify(obj) }
     decode(message) { return JSONx.parse(message) }
 }
 
-export class mJsonxObjects extends mJsonxError {
+export class mJsonxArray extends mJsonxError {
     /* Encode an array of objects through JSONx.stringify(). */
     array = true
     encode(...objs) { return JSONx.stringify(objs) }

@@ -1,5 +1,5 @@
 import {print, assert, T, isPromise} from "../common/utils.js"
-import {mJsonError, mJsonxObject, mJsonxObjects, mQueryString, mString} from "./messages.js";
+import {mJsonError, mJsonx, mJsonxArray, mQueryString, mString} from "./messages.js";
 
 
 export function url_query(url, params = {}) {
@@ -190,7 +190,7 @@ export class HttpService extends Service {
 /*************************************************************************************************/
 
 export class JsonGET extends HttpService {
-    static output = mJsonxObject        // server responds with a single JSONx-encoded object by default
+    static output = mJsonx          // server responds with a single JSONx-encoded object by default
 }
 
 export class JsonPOST extends HttpService {
@@ -198,8 +198,8 @@ export class JsonPOST extends HttpService {
        encoded through JSONx and sent to the server in POST request body; the result is sent back as JSONx string
        - this can be changed by passing a different `input` or `output` class in the constructor.
      */
-    static input  = mJsonxObjects       // client submits an array of JSONx-encoded elements
-    static output = mJsonxObject        // server responds with a single JSONx-encoded object
+    static input  = mJsonxArray     // client submits an array of JSONx-encoded elements
+    static output = mJsonx          // server responds with a single JSONx-encoded object
 
     async submit(url, message) {
         if (this.endpoint_type !== 'POST') throw new Error(`JsonPOST can only be exposed at HTTP POST endpoint, not ${this.endpoint}`)
