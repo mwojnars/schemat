@@ -243,7 +243,6 @@
   sequence:
     "@": 1017
   filename: ./schemat/data/db-app.yaml
-  format: data-yaml
   __category:
     "@": 19
 - __id: 1030

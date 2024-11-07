@@ -186,7 +186,7 @@ export class AdminProcess extends BackendProcess {
                 }
             }
 
-            new_id = (await ring.insert(new_id, obj.dump_data())).id
+            new_id = (await ring.insert(new_id, obj.__data.dump())).id
             await db.delete(id)
             await this._update_references(id, new_id)
 
@@ -246,7 +246,7 @@ export class AdminProcess extends BackendProcess {
     //             let item = await WebObject.from_json(id, data)
     //
     //             print(`reinserting item [${id}]...`)
-    //             let new_id = await ring.insert(null, item.dump_data())
+    //             let new_id = await ring.insert(null, item.__data.dump())
     //             // item = await WebObject.from_json(new_id, data)
     //
     //             print(`...new id=[${new_id}]`)

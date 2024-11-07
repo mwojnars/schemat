@@ -681,11 +681,6 @@ export class WebObject {
     }
     // self_stringify() { return JSON.stringify(this.self_encode()) }
 
-    dump_data() {
-        /* Encode and stringify this.__data through JSONx. Return a string. Nested values are recursively encoded. */
-        return this.__data.dump()
-    }
-
     validate(post_setup = true) {
         // TODO SECURITY: make sure that __data does NOT contain special props: __meta, __self, __proxy, __id etc!
 
@@ -1016,12 +1011,12 @@ export class WebObject {
             else this._make_mutable()       // on client, an immutable object becomes mutable on the first modification attempt
 
         let edit = [op, ...args]
-        this.apply_edits(edit)
+        this._apply_edits(edit)
         this.__meta.edits?.push(edit)       // `edits` does not exist in newborn objects, so `edit` is not recorded then, but is still applied to __data
         return this
     }
 
-    apply_edits(...edits) {
+    _apply_edits(...edits) {
         /* Apply `edits` to the __data. Each `edit` is an array: [op-name, ...args]. */
         for (const edit of edits) {
             let [op, ...args] = edit

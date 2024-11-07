@@ -174,7 +174,7 @@ export class DataBlock extends Block {
         obj._seal_dependencies()                        // set __seal
 
         obj.validate(true)                              // 2nd validation (post-setup), to ensure consistency in DB
-        data = obj.dump_data()
+        data = obj.__data.dump()
 
         const ring = req.current_ring
         if (ring.readonly) throw new DataAccessError(`cannot insert a new item, the ring [${ring.id}] is read-only`)
@@ -229,7 +229,7 @@ export class DataBlock extends Block {
         let obj = await WebObject.from_json(id, data)
 
         // apply edits & validate the object's data and the values of individual properties
-        obj.apply_edits(...edits)                   // TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
+        obj._apply_edits(...edits)                  // TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
 
         obj._bump_version()                         // increment __ver
         obj._seal_dependencies()                    // recompute __seal
