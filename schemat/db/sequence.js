@@ -58,13 +58,21 @@ export class Sequence extends WebObject {    // Series?
         // print('binary_key:', binary_key)
         if (!this.splits) return this.blocks[0]
 
-        // run binary search over `splits` to find the block containing the given key; 
-        // use compare_uint8() for comparison of uint8 arrays
-        
         let index = this.splits.findIndex(split => compare_uint8(split, binary_key) > 0)
         if (index === -1) index = this.blocks.length - 1
-
         return this.blocks[index]
+
+        // let left = 0
+        // let right = this.splits.length - 1
+        //
+        // // binary search over `splits` to find the block containing the given key
+        // while (left <= right) {
+        //     let mid = Math.floor((left + right) / 2)
+        //     let cmp = compare_uint8(this.splits[mid], binary_key)
+        //     if (cmp > 0) right = mid - 1
+        //     else left = mid + 1
+        // }
+        // return this.blocks[left]
     }
 
 
