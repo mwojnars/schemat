@@ -97,7 +97,7 @@ export class RequestContext {
         }
         items = [...items]
 
-        ctx.items = items.map(obj => obj.self_encode())
+        ctx.items = items.map(obj => obj.__record)
         ctx.site_id = site.__id
         ctx.target_id = target.__id
         ctx.endpoint = request.endpoint

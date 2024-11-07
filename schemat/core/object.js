@@ -676,16 +676,6 @@ export class WebObject {
         if (!this.__data) throw new Error(`cannot create a record for a stub object (no __data)`)
         return {id: this.id, data: this.__data.encode()}
     }
-    self_encode() {
-        /* Encode this object's content into plain-object form and return as {id, data}, where `data` is encoded through JSONx.
-           Encoded objects can be combined into larger structures for transfer or storage, and then serialized altogether
-           with a single call to the standard JSON.stringify() - which would be inefficient if JSON-stringified representations
-           of each object were used, because this would lead to *double* stringification.
-         */
-        if (this.id === undefined) throw new Error(`trying to encode a newborn object (no ID)`)
-        if (!this.__data) throw new Error(`trying to encode a stub object (no __data)`)
-        return {id: this.id, data: this.__data.encode()}
-    }
 
     validate(post_setup = true) {
         // TODO SECURITY: make sure that __data does NOT contain special props: __meta, __self, __proxy, __id etc!
@@ -1114,7 +1104,7 @@ export class WebObject {
     'GET.test_res'({res})   { res.send("TEST res.send() ...") }         // works
     'GET.test_html'()       { return html_page(import.meta.resolve('../test/views/page_02.html')) }
 
-    'GET.json'({res})       { res.json(this.self_encode()) }
+    'GET.json'({res})       { res.json(this.__record) }
     'GET.inspect'()         { return new ReactPage(ItemInspectView) }
 
     'LOCAL.self'()          { return this }
