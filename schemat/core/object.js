@@ -1033,21 +1033,23 @@ export class WebObject {
     }
 
     save(opts = {}) {
-        /* Send __meta.edits (for an existing object), or __data (for a newly created object) to DB.
-           In the latter case, the newly assigned ID is returned. May return a Promise.
+        /* Send __data (for a newly created object) or __meta.edits (for an existing object) to DB.
+           In the former case, the object itself is returned. May return a Promise.
          */
         this.assert_loaded_or_newborn()
         let edits = this.__meta.edits
 
-        if (this.is_newborn()) {
+        if (this.is_newborn()) {        // saving a newborn object...
             let data = this.__data.__getstate__()
             return schemat.site.POST.create_object({data, opts}).then(({id}) => (this.__id = id) && this)
         }
-        if (!edits?.length) return //throw new Error(`no edits to be submitted for ${this.id}`)
 
-        let submit = schemat.site.POST.submit_edits(this.id, ...edits) //.then(() => this)
-        edits.length = 0
-        return submit
+        if (edits?.length) {            // saving updates of an existing object...
+            let submit = schemat.site.POST.submit_edits(this.id, ...edits) //.then(() => this)
+            edits.length = 0
+            return submit
+        }
+        // throw new Error(`no edits to be submitted for ${this.id}`)
     }
 
 
