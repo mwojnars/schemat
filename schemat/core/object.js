@@ -225,6 +225,7 @@ export class WebObject {
     __url                   (virtual) absolute URL path of this object, calculated via type imputation in _impute_url()
 
     __assets                cached web Assets of this object's __schema
+    __record                JSONx-encoded representation of this object as {id, data}
 
     */
 
@@ -262,9 +263,13 @@ export class WebObject {
         return assets
     }
 
-    // service         // isomorphic service triggers created for this object from its class's __services; called as this.service.xxx(args) or this.PROTO.xxx(args),
-    //                 // where TYPE is GET/POST/LOCAL/... - works both on the client and server (in the latter case, the call executes server function directly without network communication)
-
+    get __record() {
+        /* JSONx-encoded representation of this object as {id, data}. NOT stringified.
+           Stringification can be done through plain JSON in the next step. */
+        if (!this.id) throw new Error(`cannot create a record for a newborn object (no ID)`)
+        if (!this.__data) throw new Error(`cannot create a record for a stub object (no __data)`)
+        return {id: this.id, data: this.__data.encode()}
+    }
 
     // static compare(obj1, obj2) {
     //     /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
@@ -667,14 +672,6 @@ export class WebObject {
         for (const proto of this.__prototype$)
             if (proto.inherits_from(parent)) return true
         return false
-    }
-
-    get __record() {
-        /* JSONx-encoded representation of this object as {id, data}. NOT stringified, this can be done through
-           plain JSON in the next step. */
-        if (!this.id) throw new Error(`cannot create a record for a newborn object (no ID)`)
-        if (!this.__data) throw new Error(`cannot create a record for a stub object (no __data)`)
-        return {id: this.id, data: this.__data.encode()}
     }
 
     validate(post_setup = true) {
