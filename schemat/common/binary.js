@@ -81,22 +81,17 @@ export class BinaryInput {
 export function compare_uint8(arr1, arr2) {
     /* Compare two Uint8Arrays byte by byte. Return -1 if arr1 < arr2, 1 if arr1 > arr2, 0 if arr1 === arr2. */
 
-    const minLength = Math.min(arr1.length, arr2.length)
+    let minlen = Math.min(arr1.length, arr2.length)
 
-    for (let i = 0; i < minLength; i++)
-        if (arr1[i] < arr2[i])
-            return -1
-        else if (arr1[i] > arr2[i])
-            return 1
+    for (let i = 0; i < minlen; i++)
+        if (arr1[i] < arr2[i]) return -1
+        else if (arr1[i] > arr2[i]) return 1
 
-    // At this point, all bytes up to minLength are equal.
-    // If one of the arrays is longer, it's considered "greater".
-    if (arr1.length < arr2.length)
-        return -1
-    else if (arr1.length > arr2.length)
-        return 1
+    // at this point, all bytes up to `minlen` are equal; if one of the arrays is longer, it's considered "greater"
+    if (arr1.length < arr2.length) return -1
+    else if (arr1.length > arr2.length) return 1
 
-    return 0        // Both arrays are fully equal
+    return 0        // both arrays are fully equal
 }
 
 export function bytes_uint(n) {
@@ -143,7 +138,7 @@ export function binaryToString(uint8array) {
     assert(uint8array instanceof Uint8Array)
     return String.fromCharCode(...uint8array)
 }
-export function binaryToString_Nodejs(uint8array) {
+export function binaryToString_nodejs(uint8array) {
     /* This only works in Node.js. */
     assert(uint8array instanceof Uint8Array)
     return Buffer.from(uint8array).toString('ascii')
@@ -158,7 +153,7 @@ export function asciiToBinary(str) {
         arr[i] = str.charCodeAt(i)
     return arr
 }
-export function asciiToBinary_Nodejs(str) {
+export function asciiToBinary_nodejs(str) {
     /* This only works in Node.js. */
     return new Uint8Array(Buffer.from(str, 'ascii'))
 }
