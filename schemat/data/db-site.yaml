@@ -122,6 +122,12 @@
     "@": 1019
   __category:
     "@": 5
+- __id: 1010
+  __category:
+    "@": 19
+  sequence:
+    "@": 1017
+  filename: ./schemat/data/db-app_02.yaml
 - __id: 1012
   ring:
     "@": 1003
@@ -164,6 +170,7 @@
     "@": 1016
   blocks:
     - "@": 1029
+    - "@": 1010
   __category:
     "@": 14
 - __id: 1018
