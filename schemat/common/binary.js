@@ -99,8 +99,8 @@ export function compare_uint8(arr1, arr2) {
     return 0        // Both arrays are fully equal
 }
 
-export function byteLengthOfUnsignedInteger(n) {
-    /* This implementation is 2-5x faster than when using Math.log(). */
+export function bytes_uint(n) {
+    /* Byte length of unsigned integer. This implementation is 2-5x faster than Math.log(). */
     if (n < 0) throw new Error(`expected unsigned integer instead of: ${n}`)
     if (n <= 0xFF) return 1
     if (n <= 0xFFFF) return 2
@@ -112,7 +112,8 @@ export function byteLengthOfUnsignedInteger(n) {
     return 8
 }
 
-export function byteLengthOfSignedInteger(n) {
+export function bytes_int(n) {
+    /* Byte length of signed integer. */
     if (n >= 0) {
         if (n <= 0x7F) return 1; // 127
         if (n <= 0x7FFF) return 2; // 32767

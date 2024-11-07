@@ -1,7 +1,7 @@
 import {A} from '../web/react-utils.js'
 import {assert, concat, print, T} from '../common/utils.js'
 import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
-import {byteLengthOfUnsignedInteger} from "../common/binary.js";
+import {bytes_uint} from "../common/binary.js";
 import * as widgets from './widgets.js'
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
@@ -322,7 +322,7 @@ export class INTEGER extends NUMBER {
         if (!blank) assert(value !== null)
 
         if (adaptive)
-            length = (value !== null) ? byteLengthOfUnsignedInteger(value) : 0          // length=0 encodes null in adaptive mode
+            length = (value !== null) ? bytes_uint(value) : 0   // length=0 encodes null in adaptive mode
         else if (blank)
             if (value === null) value = 0                       // in non-adaptive mode, 0 is reserved for "null", hence shifting all values by +1
             else value += 1
