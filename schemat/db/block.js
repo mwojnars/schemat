@@ -62,7 +62,7 @@ export class Block extends WebObject {
             throw new Error(`[${this.__id}] unsupported storage type, '${format}', for ${this.filename}`)
 
         this._storage = new storage_class(this.filename, this)
-        return this._storage.open()
+        return this._storage.open() || 1
     }
 
     async cmd_get(req)      { return this._storage.get(req.args.key) }
@@ -132,7 +132,7 @@ export class DataBlock extends Block {
 
     static __category = 19
 
-    _autoincrement = 0      // current maximum IID of records in this block; a new record is assigned id=_autoincrement+1 unless insert_mode='compact';
+    _autoincrement = 1      // current maximum IID of records in this block; a new record is assigned id=_autoincrement+1 unless insert_mode='compact';
                             // transient field: NOT saved in the block's configuration in DB but re-initialized during block instantiation
 
     // persistent properties
@@ -269,7 +269,7 @@ export class DataBlock extends Block {
 
     async erase(req) {
         /* Remove all records from this sequence; open() should be called first. */
-        this._autoincrement = 0
+        this._autoincrement = 1
         return super.erase(req)
     }
 }

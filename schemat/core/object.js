@@ -101,8 +101,6 @@ class Intercept {
 
         // fetch ALL repeated values of `prop` from __data, ancestors, imputation etc. (even if plural=false)...
         let values = target._compute_property(base)
-        // if (values.length && values[0] === undefined)
-        //     print(`proxy_get() undefined in ${target.__id}:  ${prop} [${values}] (${values.length})`)
 
         if (cache) {
             Intercept._cache_value(cache, base, values.length ? values[0] : Intercept.UNDEFINED)
