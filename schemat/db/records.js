@@ -6,7 +6,7 @@
 
 import {assert, print, T} from "../common/utils.js";
 import {JSONx} from "../core/jsonx.js";
-import {BinaryInput, BinaryOutput, compareUint8Arrays, fnv1aHash} from "../common/binary.js";
+import {BinaryInput, BinaryOutput, compare_uint8, fnv1aHash} from "../common/binary.js";
 import {Data} from "../core/catalog.js";
 import {INTEGER} from "../types/type.js";
 
@@ -77,7 +77,7 @@ export class Record {
 
     static compare(rec1, rec2) {
         /* Compare two records by their binary keys (byte order). */
-        return compareUint8Arrays(rec1.binary_key, rec2.binary_key)
+        return compare_uint8(rec1.binary_key, rec2.binary_key)
     }
 
     constructor(schema, plain = null, binary = null) {

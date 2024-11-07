@@ -54,7 +54,10 @@ export class Sequence extends WebObject {    // Series?
     // }
 
 
-    _find_block(binary_key)     { return this.blocks[0] }
+    _find_block(binary_key) {
+        print('binary_key:', binary_key)
+        return this.blocks[0]
+    }
 
 
     async put(req) {

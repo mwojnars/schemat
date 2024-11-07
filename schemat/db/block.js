@@ -2,7 +2,7 @@ import {assert, print, T} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {WebObject} from '../core/object.js'
 import {ChangeRequest, data_schema} from "./records.js";
-import {BinaryMap, compareUint8Arrays} from "../common/binary.js";
+import {BinaryMap, compare_uint8} from "../common/binary.js";
 
 // import { Kafka } from 'kafkajs'
 
@@ -322,11 +322,11 @@ export class MemoryStorage extends Storage {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
            are binary keys (Uint8Array).
          */
-        let sorted_keys = [...this._records.keys()].sort(compareUint8Arrays)
+        let sorted_keys = [...this._records.keys()].sort(compare_uint8)
         let total = sorted_keys.length
 
-        let start_index = start ? sorted_keys.findIndex(key => compareUint8Arrays(key, start) >= 0) : 0
-        let stop_index = stop ? sorted_keys.findIndex(key => compareUint8Arrays(key, stop) >= 0) : total
+        let start_index = start ? sorted_keys.findIndex(key => compare_uint8(key, start) >= 0) : 0
+        let stop_index = stop ? sorted_keys.findIndex(key => compare_uint8(key, stop) >= 0) : total
 
         if (start_index < 0) start_index = total
         if (stop_index < 0) stop_index = total

@@ -78,7 +78,7 @@ export class BinaryInput {
 
 /**********************************************************************************************************************/
 
-export function compareUint8Arrays(arr1, arr2) {
+export function compare_uint8(arr1, arr2) {
     /* Compare two Uint8Arrays byte by byte. Return -1 if arr1 < arr2, 1 if arr1 > arr2, 0 if arr1 === arr2. */
 
     const minLength = Math.min(arr1.length, arr2.length)
