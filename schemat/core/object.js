@@ -264,7 +264,7 @@ export class WebObject {
     }
 
     get __record() {
-        /* JSONx-encoded representation of this object as {id, data}. NOT stringified.
+        /* JSONx-encoded {id, data} representation of this object. NOT stringified.
            Stringification can be done through plain JSON in the next step. */
         if (!this.id) throw new Error(`cannot create a record for a newborn object (no ID)`)
         if (!this.__data) throw new Error(`cannot create a record for a stub object (no __data)`)
