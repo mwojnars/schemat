@@ -60,13 +60,13 @@ export class Sequence extends WebObject {    // Series?
     async put(req) {
         let block = this._find_block(req.args.key)
         if (!block.is_loaded()) block = await block.load()
-        return block.put(req)
+        return block.cmd_put(req)
     }
 
     async del(req) {
         let block = this._find_block(req.args.key)
         if (!block.is_loaded()) block = await block.load()
-        return block.del(req)
+        return block.cmd_del(req)
     }
 
     async* scan_binary({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
@@ -205,7 +205,7 @@ export class DataSequence extends Sequence {
         block.assert_loaded_or_newborn()
         // if (!block.is_loaded()) block = await block.load()
 
-        return block[command].call(block, req)
+        return block[`cmd_${command}`].call(block, req)
     }
 }
 

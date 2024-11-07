@@ -65,9 +65,9 @@ export class Block extends WebObject {
         return this._storage.open()
     }
 
-    async get(req)      { return this._storage.get(req.args.key) }
+    async cmd_get(req)      { return this._storage.get(req.args.key) }
 
-    async put(req) {
+    async cmd_put(req) {
         /* Write the `data` here in this block under the `id` and propagate the change to derived indexes.
            No forward of the request to another ring.
          */
@@ -78,7 +78,7 @@ export class Block extends WebObject {
         if (req.current_ring) await this.propagate(req, key, value_old, value)     // TODO: drop "if"
     }
 
-    async del(req) {
+    async cmd_del(req) {
         let {key, value} = req.args                     // `value` is needed for change calculation & propagation
 
         if (value === undefined) value = await this._storage.get(key)
@@ -94,7 +94,7 @@ export class Block extends WebObject {
     async *scan(opts = {}) { yield* this._storage.scan(opts) }
 
     async erase(req) {
-        /* Remove all records from this sequence; open() should be called first. */
+        /* Remove all records from this block. */
         await this._storage.erase()
         return this._flush(req)
     }
@@ -148,12 +148,12 @@ export class DataBlock extends Block {
             throw new DataConsistencyError(msg || "item with this ID already exists", {id})
     }
 
-    async select(req) {
+    async cmd_select(req) {
         let data = await this._storage.get(req.args.key)
         return data !== undefined ? data : req.forward_down()
     }
 
-    async insert(req) {
+    async cmd_insert(req) {
         // calculate the `id` if not provided, update _autoincrement and write the data
         let {id, key, data} = req.args
         let obj = await WebObject.from_json(id, data)   // the object must be instantiated for validation
@@ -189,7 +189,7 @@ export class DataBlock extends Block {
 
         req = req.make_step(this, null, {id, key, value: data})
 
-        await this.put(req)                                 // save the new object and perform change propagation
+        await this.cmd_put(req)             // save the new object and perform change propagation
 
         return schemat.register_record({id, data})
     }
@@ -217,7 +217,7 @@ export class DataBlock extends Block {
         return next                                             // no gaps found, return the next ID after the last record
     }
 
-    async update(req) {
+    async cmd_update(req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
@@ -248,11 +248,11 @@ export class DataBlock extends Block {
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-        await this.put(req)                         // save changes and perform change propagation
+        await this.cmd_put(req)                     // save changes and perform change propagation
         return schemat.register_record({id, data: new_data})
     }
 
-    async delete(req) {
+    async cmd_delete(req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
@@ -264,7 +264,7 @@ export class DataBlock extends Block {
             return req.error_access("cannot remove the item, the ring is read-only")
 
         req = req.make_step(this, null, {key, value: data})
-        return this.del(req)                                            // perform the delete
+        return this.cmd_del(req)                                        // perform the delete
     }
 
     async erase(req) {
