@@ -669,6 +669,13 @@ export class WebObject {
         return false
     }
 
+    get __record() {
+        /* JSONx-encoded representation of this object as {id, data}. NOT stringified, this can be done through
+           plain JSON in the next step. */
+        if (!this.id) throw new Error(`cannot create a record for a newborn object (no ID)`)
+        if (!this.__data) throw new Error(`cannot create a record for a stub object (no __data)`)
+        return {id: this.id, data: this.__data.encode()}
+    }
     self_encode() {
         /* Encode this object's content into plain-object form and return as {id, data}, where `data` is encoded through JSONx.
            Encoded objects can be combined into larger structures for transfer or storage, and then serialized altogether
@@ -679,7 +686,6 @@ export class WebObject {
         if (!this.__data) throw new Error(`trying to encode a stub object (no __data)`)
         return {id: this.id, data: this.__data.encode()}
     }
-    // self_stringify() { return JSON.stringify(this.self_encode()) }
 
     validate(post_setup = true) {
         // TODO SECURITY: make sure that __data does NOT contain special props: __meta, __self, __proxy, __id etc!
