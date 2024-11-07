@@ -4,7 +4,7 @@ import {Request} from '../web/request.js'
 import {WebObject} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonPOST} from "../web/services.js";
-import {mDataRecord, mDataString, mJsonx} from "../web/messages.js";
+import {mDataRecord, mJsonx} from "../web/messages.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.

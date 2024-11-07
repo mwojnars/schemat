@@ -276,22 +276,22 @@ export class Database extends WebObject {
         return this.update(item.__id, ['overwrite', data])
     }
 
-    async insert(data, ring_name = null) {
+    async insert(data, {ring, ring_name} = {}) {
         /* Find the top-most ring where the item's ID is writable and insert there. The newly assigned ID is returned.
            `ring` is an optional name of a ring to use.
          */
         if (!T.isString(data)) data = data.dump?.() || JSONx.stringify(data)
         let req = new DataRequest(this, 'insert', {data})
-        let ring
 
         if (ring_name) {                                            // find the ring by name
             ring = await this.find_ring({name: ring_name})
             if (!ring) return req.error_access(`target ring not found: '${ring_name}'`)
         }
-        else {
+        else if (!ring) {
             ring = this.rings_reversed.find(r => r.writable())     // find the first writable ring
             if (!ring) return req.error_access("all ring(s) are read-only")
         }
+        if (!ring.writable()) return req.error_access("the ring is read-only")
         return ring.handle(req)                                     // perform the insert & return newly assigned ID
     }
 
