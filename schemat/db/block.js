@@ -62,7 +62,7 @@ export class Block extends WebObject {
             throw new Error(`[${this.__id}] unsupported storage type, '${format}', for ${this.filename}`)
 
         this._storage = new storage_class(this.filename, this)
-        return this._storage.open() || 1
+        return this._storage.open()
     }
 
     async cmd_get(req)      { return this._storage.get(req.args.key) }
@@ -140,7 +140,7 @@ export class DataBlock extends Block {
 
 
     async __init__() {
-        this._autoincrement = await super.__init__()
+        this._autoincrement = await super.__init__() || 1
     }
 
     async assert_unique(key, id, msg) {
