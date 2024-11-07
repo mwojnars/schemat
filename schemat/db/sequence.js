@@ -56,15 +56,15 @@ export class Sequence extends WebObject {    // Series?
 
     _find_block(binary_key) {
         // print('binary_key:', binary_key)
-        return this.blocks[0]
+        if (!this.splits) return this.blocks[0]
 
         // run binary search over `splits` to find the block containing the given key; 
         // use compare_uint8() for comparison of uint8 arrays
         
-        // let index = this.splits.findIndex(split => compare_uint8(split, binary_key) > 0)
-        // if (index === -1) index = this.blocks.length - 1
-        //
-        // return this.blocks[index]
+        let index = this.splits.findIndex(split => compare_uint8(split, binary_key) > 0)
+        if (index === -1) index = this.blocks.length - 1
+
+        return this.blocks[index]
     }
 
 
