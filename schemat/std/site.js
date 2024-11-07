@@ -168,9 +168,7 @@ export class Site extends WebObject {
     'POST.create_object'() {
         /* Create a new object with __data initialized from the provided JSONx-stringified representation. */
         return new JsonPOST({
-            // server: (data_json) => this.database.insert(data_json),
-            // input:  mDataString,
-            server: ({data, opts}) => this.database.insert(data),
+            server: ({data, opts}) => this.database.insert(data, opts),
             input:  mJsonx,
             output: mDataRecord,
         })
