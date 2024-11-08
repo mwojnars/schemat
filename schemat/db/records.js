@@ -5,7 +5,7 @@
  */
 
 import {assert, print, T} from "../common/utils.js";
-import {JSONx} from "../core/jsonx.js";
+import {JSONx} from "../common/jsonx.js";
 import {BinaryInput, BinaryOutput, compare_uint8, fnv1aHash} from "../common/binary.js";
 import {Data} from "../core/catalog.js";
 import {INTEGER} from "../types/type.js";
