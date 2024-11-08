@@ -226,7 +226,7 @@ export class WebObject {
 
     __assets                cached web Assets of this object's __schema
     __record                JSONx-encoded representation of this object as {id, data}
-    __dump                  stringified representation of this object's __data; can be passed to Catalog.load()
+    __json                  stringified representation of this object's __data that can be passed to Catalog.load()
 
     */
 
@@ -272,7 +272,7 @@ export class WebObject {
         return {id: this.id, data: this.__data.encode()}
     }
 
-    get __dump() {
+    get __json() {
         return this.__data.dump()
     }
 

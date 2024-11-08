@@ -174,7 +174,7 @@ export class DataBlock extends Block {
         obj._seal_dependencies()                        // set __seal
 
         obj.validate(true)                              // 2nd validation (post-setup), to ensure consistency in DB
-        data = obj.__dump
+        data = obj.__json
 
         const ring = req.current_ring
         if (ring.readonly) throw new DataAccessError(`cannot insert a new item, the ring [${ring.id}] is read-only`)
@@ -239,7 +239,7 @@ export class DataBlock extends Block {
 
         obj.validate(true)                          // may raise validation exceptions
 
-        let new_data = obj.__dump
+        let new_data = obj.__json
         req = req.make_step(this, 'save', {id, key, value: new_data})
 
         if (req.current_ring.readonly)              // can't write the update here in this ring? forward to a higher ring
