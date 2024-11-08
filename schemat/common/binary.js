@@ -133,33 +133,37 @@ export function bytes_int(n) {
 
 /**********************************************************************************************************************/
 
-export function binaryToString(uint8array) {
+export function bin_to_ascii(uint8array) {
     /* Convert Uint8Array to a regular (ASCII) string by mapping bytes to characters one-to-one. */
     assert(uint8array instanceof Uint8Array)
     return String.fromCharCode(...uint8array)
 }
-export function binaryToString_nodejs(uint8array) {
+export function bin_to_ascii_nodejs(uint8array) {
     /* This only works in Node.js. */
     assert(uint8array instanceof Uint8Array)
     return Buffer.from(uint8array).toString('ascii')
 }
 
-export function asciiToBinary(str) {
+export function ascii_to_bin(str) {
     /* Convert an ASCII string (a regular string containing only ASCII characters) to Uint8Array.
-       Assert:  asciiToBinary(binaryToString(uint8)) === uint8
+       Assert:  ascii_to_bin(bin_to_ascii(uint8)) === uint8
      */
     const arr = new Uint8Array(str.length)
     for (let i = 0; i < str.length; i++)
         arr[i] = str.charCodeAt(i)
     return arr
 }
-export function asciiToBinary_nodejs(str) {
+export function ascii_to_bin_nodejs(str) {
     /* This only works in Node.js. */
     return new Uint8Array(Buffer.from(str, 'ascii'))
 }
 
+// export function bin_to_hex(uint8Array) {
+//     return Array.from(uint8Array, byte => byte.toString(16).padStart(2, '0')).join('');
+// }
+
 // const arr = Uint8Array.from({ length: 256 }, (_, i) => i)
-// asciiToBinary(binaryToString(arr)) is equal `arr`
+// ascii_to_bin(bin_to_ascii(arr)) is equal `arr`
 
 
 /**********************************************************************************************************************/
@@ -167,8 +171,8 @@ export function asciiToBinary_nodejs(str) {
 export class BinaryMap extends CustomMap {
     /* A Map that holds Uint8Array binary keys. */
 
-    convert(key)    { return binaryToString(key) }
-    reverse(str)    { return asciiToBinary(str) }
+    convert(key)    { return bin_to_ascii(key) }
+    reverse(str)    { return ascii_to_bin(str) }
 
     // convert(key)    { return [...key].join(",") }
     // reverse(str)    { return new Uint8Array(str.split(',').map(byte => +byte)) }
