@@ -49,7 +49,7 @@ export class Type {
         virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
                                     // when virtual=true, inheritance is skipped during property calculation like if inherit=false
 
-        // explicit / persist_imputed: false  // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
+        // explicit / persistent: false  // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
         // required : undefined,   // if true, the field described by this type must be present in the record or object's data during insert/update
 
         // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
@@ -517,33 +517,6 @@ export class TYPE extends GENERIC {
 //     }
 // }
 
-// export class FIELD extends TYPE {
-//
-//     unique          // if true (default), the field cannot be repeated (max. one value allowed) ...single
-//
-//     virtual         // the field is not stored in DB, only imputed upon request through a call to _impute_XYZ()
-//
-//     derived         // if true, the field's value can be automatically imputed, if missing,
-//                     // through a call to item._get_XYZ(); only available when multi=false
-//     persistent
-//     editable
-//     hidden
-//
-//     slow             // 1 means the field is stored in a separate "slow" column group #1 to allow faster loading
-//                      // of remaining fields stored in group #0 ("core" group, "fast" group);
-//                      // with large fields moved out to a "slow" group, these operations may become faster:
-//                      // - (partial) loading of an item's core fields, but only when slow fields are large: ~2x disk block size or more
-//                      // - category scan inside each table-partition; important for mapsort pipelines (!)
-//
-//     /*
-//       1) derived: transient non-editable hidden; refreshed on item's data change
-//       2) imputed: persistent editable displayed; not refreshed ??
-//
-//       1) impute on read -- similar to using a category default when value missing (but there, the value is declared with a type)
-//       2) impute on write
-//     */
-// }
-
 /**********************************************************************************************************************/
 
 export class REF extends Type {
@@ -653,36 +626,6 @@ export class RECORD extends Type {
             type.collect(assets)
     }
 }
-
-
-/**********************************************************************************************************************/
-
-// export class VIRTUAL_FIELD extends Type {
-//     /* A virtual field is a field that is not stored in the database, but is computed on the fly from other fields.
-//        It is used to implement computed fields, such as "name" for a person (first_name + last_name).
-//        The value is computed lazily (upon request) by a function `compute` that takes the item as an argument.
-//        By default, the computed value is cached. To disable caching, set `cache` to false.
-//      */
-//
-//     static options = {
-//         compute:    undefined,          // function(item) that computes the value of the field
-//         cache:      true,               // if true, the computed value is cached
-//     }
-//
-//     cache = undefined                   // cached computed value of the field
-//
-//     compute(item) {
-//         if (this.cache !== undefined) return this.cache
-//         let {compute, cache} = this.options
-//         if (!compute) throw new ValidationError(`virtual field ${this.name} has no compute() function`)
-//         let value = compute(item)
-//         if (cache) this.cache = value
-//         return value
-//     }
-// }
-//
-// export class VIRTUAL_ITEM_SCHEMA extends VIRTUAL_FIELD {
-// }
 
 
 /**********************************************************************************************************************
