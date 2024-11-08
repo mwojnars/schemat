@@ -228,6 +228,22 @@ export class Type {
 
 /**********************************************************************************************************************
  **
+ **  GENERIC data type
+ **
+ */
+
+export class GENERIC extends Type {
+    /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
+
+    static Widget = widgets.GENERIC_Widget
+}
+
+// the most generic type for encoding/decoding of objects of any types
+export let generic_type = new GENERIC()
+
+
+/**********************************************************************************************************************
+ **
  **  PRIMITIVE data types
  **
  */
@@ -405,6 +421,9 @@ export class STRING extends Textual {
     }
 }
 
+export let generic_string = new STRING()
+
+
 export class FIELD extends STRING {
     /* A STRING than only contains alphanumeric characters (Unicode allowed!), "_" and "-",
        but no punctuation, spaces or control chars.
@@ -479,22 +498,9 @@ export class DATETIME extends STRING {
 
 /**********************************************************************************************************************
  **
- **  ATOMIC data types
+ **  OTHER atomic data types
  **
  */
-
-export class GENERIC extends Type {
-    /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
-
-    static Widget = widgets.GENERIC_Widget
-}
-
-// the most generic type for encoding/decoding of objects of any types
-export let generic_type = new GENERIC()
-export let generic_string = new STRING()
-
-
-/**********************************************************************************************************************/
 
 export class TYPE extends GENERIC {
     static options = {class: Type}
@@ -514,7 +520,6 @@ export class TYPE extends GENERIC {
 // export class FIELD extends TYPE {
 //
 //     unique          // if true (default), the field cannot be repeated (max. one value allowed) ...single
-//     //repeated        // if true, the field can occur multiple times in an item
 //
 //     virtual         // the field is not stored in DB, only imputed upon request through a call to _impute_XYZ()
 //
