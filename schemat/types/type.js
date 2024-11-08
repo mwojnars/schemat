@@ -502,6 +502,10 @@ export class DATETIME extends STRING {
  **
  */
 
+export class BINARY extends GENERIC {
+    /* Type of Uint8Array objects. */
+}
+
 export class TYPE extends GENERIC {
     static options = {class: Type}
     static Widget = widgets.TYPE_Widget
