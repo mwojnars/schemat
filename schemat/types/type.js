@@ -504,6 +504,7 @@ export class DATETIME extends STRING {
 
 export class BINARY extends GENERIC {
     /* Type of Uint8Array objects. */
+    static options = {class: Uint8Array}
 }
 
 export class TYPE extends GENERIC {
