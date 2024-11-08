@@ -1,7 +1,7 @@
 /* Serialization of objects of arbitrary classes. */
 
 import {assert, print, T} from './utils.js'
-import {bin_to_hex} from "./binary.js"
+import {bin_to_hex, hex_to_bin} from "./binary.js"
 
 
 /*************************************************************************************************/
@@ -139,17 +139,19 @@ export class JSONx {
         let type = state?.[JSONx.ATTR_CLASS]
         let cls
 
-        // decoding of a wrapped-up object that contained a pre-existing '@' key
-        if (pojo && type === JSONx.FLAG_WRAP) {
-            if (JSONx.ATTR_STATE in state)
-                state = state[JSONx.ATTR_STATE]
-            return this.decode_object(state)
-        }
+        if (pojo && type) {
+            if (type === JSONx.FLAG_BIN)            // decoding of a Uint8Array
+                return hex_to_bin(state[JSONx.ATTR_STATE])
 
-        // decoding of a class object
-        if (pojo && type === JSONx.FLAG_TYPE) {
-            let classname = state[JSONx.ATTR_STATE]
-            return schemat.get_builtin(classname)
+            if (type === JSONx.FLAG_TYPE) {         // decoding of a class object
+                let classname = state[JSONx.ATTR_STATE]
+                return schemat.get_builtin(classname)
+            }
+            if (type === JSONx.FLAG_WRAP) {         // decoding of a wrapped-up object that contained a pre-existing '@' key
+                if (JSONx.ATTR_STATE in state)
+                    state = state[JSONx.ATTR_STATE]
+                return this.decode_object(state)
+            }
         }
 
         // determine the expected class (constructor function) for the output object
