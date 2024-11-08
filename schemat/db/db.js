@@ -133,7 +133,7 @@ export class Ring extends WebObject {
         req = req || new DataRequest()
         let item = T.isNumber(id_or_item) ? null : id_or_item
         let id = item ? item._get_write_id() : id_or_item
-        if (!data) data = item.__data.dump()
+        if (!data) data = item.__dump
         let edits = [['overwrite', data]]
         return this.handle(req.safe_step(this, 'update', {id, edits}))
     }
@@ -272,7 +272,7 @@ export class Database extends WebObject {
 
     async update_full(item) {
         /* Replace all data inside the item's record in DB with item.data. */
-        let data = item.__data.dump()
+        let data = item.__dump
         return this.update(item.__id, ['overwrite', data])
     }
 

@@ -226,6 +226,7 @@ export class WebObject {
 
     __assets                cached web Assets of this object's __schema
     __record                JSONx-encoded representation of this object as {id, data}
+    __dump                  stringified representation of this object's __data; can be passed to Catalog.load()
 
     */
 
@@ -269,6 +270,10 @@ export class WebObject {
         if (!this.id) throw new Error(`cannot create a record for a newborn object (no ID)`)
         if (!this.__data) throw new Error(`cannot create a record for a stub object (no __data)`)
         return {id: this.id, data: this.__data.encode()}
+    }
+
+    get __dump() {
+        return this.__data.dump()
     }
 
     // static compare(obj1, obj2) {
