@@ -1,6 +1,7 @@
 /* Serialization of objects of arbitrary classes. */
 
-import {assert, print, T} from '../common/utils.js'
+import {assert, print, T} from './utils.js'
+import {bin_to_hex} from "./binary.js"
 
 
 /*************************************************************************************************/
@@ -28,6 +29,7 @@ export class JSONx {
     Dump & load arbitrary objects to/from JSON strings.
     Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
     */
+    static FLAG_BIN   = "(bin)"         // special value of ATTR_CLASS that informs the value is an encoded Uint8Array instance
     static FLAG_TYPE  = "(class)"       // special value of ATTR_CLASS that informs the value is a class rather than an instance
     static FLAG_WRAP  = "(object)"      // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
     static ATTR_CLASS = "@"             // special attribute appended to object state to store a class name (with package) of the object being encoded
@@ -95,6 +97,11 @@ export class JSONx {
             else throw new Error(`Can't encode a newborn object (no ID): ${obj}`)
         }
 
+        if (obj instanceof Uint8Array) {
+            state = bin_to_hex(obj)
+            return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_BIN}
+        }
+
         if (T.isClass(obj)) {
             state = schemat.get_classpath(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
@@ -129,17 +136,18 @@ export class JSONx {
         */
         let _state = state
         let pojo = T.isPOJO(state)      // JS object without class
+        let type = state?.[JSONx.ATTR_CLASS]
         let cls
 
         // decoding of a wrapped-up object that contained a pre-existing '@' key
-        if (pojo && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_WRAP)) {
+        if (pojo && type === JSONx.FLAG_WRAP) {
             if (JSONx.ATTR_STATE in state)
                 state = state[JSONx.ATTR_STATE]
             return this.decode_object(state)
         }
 
         // decoding of a class object
-        if (pojo && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_TYPE)) {
+        if (pojo && type === JSONx.FLAG_TYPE) {
             let classname = state[JSONx.ATTR_STATE]
             return schemat.get_builtin(classname)
         }
@@ -148,7 +156,7 @@ export class JSONx {
         if (!pojo)                                  // `state` encodes a primitive value, or a list, or null;
             cls = T.getClass(state)                 // cls=null denotes a class of null value
 
-        else if (JSONx.ATTR_CLASS in state) {
+        else if (type) {
             state = {...state}                      // avoid mutating the original `state` object when doing T.pop() below
             let classname = T.pop(state, JSONx.ATTR_CLASS)
             if (JSONx.ATTR_STATE in state) {
