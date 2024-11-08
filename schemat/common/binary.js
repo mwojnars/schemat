@@ -138,29 +138,35 @@ export function bin_to_ascii(uint8array) {
     assert(uint8array instanceof Uint8Array)
     return String.fromCharCode(...uint8array)
 }
-export function bin_to_ascii_nodejs(uint8array) {
-    /* This only works in Node.js. */
-    assert(uint8array instanceof Uint8Array)
-    return Buffer.from(uint8array).toString('ascii')
-}
-
 export function ascii_to_bin(str) {
     /* Convert an ASCII string (a regular string containing only ASCII characters) to Uint8Array.
        Assert:  ascii_to_bin(bin_to_ascii(uint8)) === uint8
      */
-    const arr = new Uint8Array(str.length)
+    let arr = new Uint8Array(str.length)
     for (let i = 0; i < str.length; i++)
         arr[i] = str.charCodeAt(i)
     return arr
+}
+
+export function bin_to_ascii_nodejs(uint8array) {
+    /* This only works in Node.js. */
+    assert(uint8array instanceof Uint8Array)
+    return Buffer.from(uint8array).toString('ascii')
 }
 export function ascii_to_bin_nodejs(str) {
     /* This only works in Node.js. */
     return new Uint8Array(Buffer.from(str, 'ascii'))
 }
 
-// export function bin_to_hex(uint8Array) {
-//     return Array.from(uint8Array, byte => byte.toString(16).padStart(2, '0')).join('');
-// }
+export function bin_to_hex(uint8Array) {
+    return Array.from(uint8Array, byte => byte.toString(16).padStart(2, '0')).join('')
+}
+export function hex_to_bin(str) {
+    let bytes = [], len = str.length
+    for (let i = 0; i < len; i += 2)
+        bytes.push(parseInt(str.substr(i, 2), 16))
+    return new Uint8Array(bytes)
+}
 
 // const arr = Uint8Array.from({ length: 256 }, (_, i) => i)
 // ascii_to_bin(bin_to_ascii(arr)) is equal `arr`
