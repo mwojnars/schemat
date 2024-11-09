@@ -7,7 +7,7 @@
 import {assert, print, T} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {BinaryInput, BinaryOutput, compare_uint8, fnv1aHash} from "../common/binary.js";
-import {Data} from "../core/catalog.js";
+import {Catalog} from "../core/catalog.js";
 import {INTEGER} from "../types/type.js";
 
 
@@ -117,7 +117,7 @@ export class DataRecord {
 
     get data_copy() {
         let data = JSONx.parse(this.data_json)
-        return data instanceof Data ? data : Data.__setstate__(data)
+        return data instanceof Catalog ? data : Catalog.__setstate__(data)
     }
 
     get data_plain() {

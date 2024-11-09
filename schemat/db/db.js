@@ -302,7 +302,7 @@ export class Database extends WebObject {
            2) the objects are updated with actual data, with all references (incl. bidirectional) correctly replaced with IDs.
            This method can also be used to insert a single object that contains a self-reference.
          */
-        let empty_data = new Data({__status: 'DRAFT'}).dump()               // empty data
+        let empty_data = new Catalog({__status: 'DRAFT'}).dump()            // empty data
 
         // 1st phase: insert stubs
         for (let item of items)

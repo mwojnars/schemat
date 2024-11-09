@@ -664,7 +664,7 @@ export class Data extends Catalog {
         )
 
         // print(`from_object(${obj}) =>`, entries)
-        return new Data(entries)
+        return new Catalog(entries)
     }
 
     find_references() {

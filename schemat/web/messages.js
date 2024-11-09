@@ -1,7 +1,7 @@
 import {assert, T} from "../common/utils.js";
 import {RequestFailed} from "../common/errors.js";
 import {JSONx} from "../common/jsonx.js";
-import {Data} from "../core/catalog.js";
+import {Catalog} from "../core/catalog.js";
 
 
 /**********************************************************************************************************************/
@@ -93,11 +93,11 @@ export class mData extends MessageEncoder {
      */
     encode(data) {
         if (typeof data === 'string') return data       // already encoded
-        return JSONx.stringify(data instanceof Data ? data.__getstate__() : data)
+        return JSONx.stringify(data instanceof Catalog ? data.__getstate__() : data)
     }
     decode(message) {
         let data = JSONx.parse(message)
-        return data instanceof Data ? data : Data.__setstate__(data)
+        return data instanceof Catalog ? data : Catalog.__setstate__(data)
     }
 }
 

@@ -9,7 +9,7 @@
 import {print, assert, T, escape_html, concat, unique, delay} from '../common/utils.js'
 import {NotLoaded, ValidationError} from '../common/errors.js'
 
-import {Catalog, Data, Struct} from './catalog.js'
+import {Catalog, Struct} from './catalog.js'
 import {REF} from "../types/type.js"
 import {SCHEMA_GENERIC} from "../types/catalog_type.js"
 import {html_page} from "../web/adapters.js"
@@ -226,7 +226,7 @@ export class WebObject {
 
     __assets                cached web Assets of this object's __schema
     __record                JSONx-encoded representation of this object as {id, data}
-    __json                  stringified representation of this object's __data that can be passed to Catalog.load()
+    __json                  stringified representation of this object's __data; when passed to Catalog.load() the original __data structure is recreated
 
     */
 
@@ -392,7 +392,7 @@ export class WebObject {
         /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
         let obj = this.stub(null, {mutable: true})          // newly-created objects are always mutable
         categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat)
-        obj.__data = new Data(...categories.map(cat => ['__category', cat]))
+        obj.__data = new Catalog(...categories.map(cat => ['__category', cat]))
         obj.__create__(...args)
         return obj
     }
@@ -411,7 +411,7 @@ export class WebObject {
         /* Create a new WebObject instance given an encoded JSON string with the object's content. */
         assert(typeof json === 'string')
         let obj = WebObject.stub(id, {mutable})
-        obj.__data = Data.load(json)
+        obj.__data = Catalog.load(json)
         return obj.load({sealed})
     }
 
@@ -448,7 +448,7 @@ export class WebObject {
         try {
             if (!this.__data) {
                 let data_json = await schemat.load_record(this.id)
-                this.__data = Data.load(data_json)
+                this.__data = Catalog.load(data_json)
                 data_loaded = true
             }
 
@@ -1080,8 +1080,8 @@ export class WebObject {
 
     'edit.overwrite'(data) {
         /* Replace the entire set of own properties, __data, with a new Data object. */
-        if (typeof data === 'string') data = Data.load(data)
-        assert(data instanceof Data)
+        if (typeof data === 'string') data = Catalog.load(data)
+        assert(data instanceof Catalog)
         this.__data = data
     }
 

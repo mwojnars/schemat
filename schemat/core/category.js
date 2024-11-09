@@ -7,7 +7,7 @@
  */
 
 import {assert, print, T} from "../common/utils.js";
-import {Catalog, Data} from "./catalog.js";
+import {Catalog} from "./catalog.js";
 
 import {WebObject} from "./object.js";
 import {SCHEMA} from "../types/catalog_type.js";
