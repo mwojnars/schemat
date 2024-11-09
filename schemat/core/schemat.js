@@ -253,7 +253,7 @@ export class Schemat {
 
     register_record(record /*DataRecord or {id,data}*/, invalidate = true) {
         /* Keep `record` as the most up-to-date (raw) representation of the corresponding object that will be used on the next object (re)load.
-           `data` is either a JSON string, or an encoded (plain) representation of the Data instance.
+           `data` is either a JSON string, or an encoded (plain) representation of a Catalog instance.
          */
         let id, data
         if (record instanceof DataRecord) ({id, data_json: data} = record)

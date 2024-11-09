@@ -18,6 +18,7 @@ import {Request} from "../web/request.js"
 import {ReactPage, ItemInspectView} from "../web/pages.js"
 import {JsonPOST, Service} from "../web/services.js";
 import {mWebObjects} from "../web/messages.js";
+import {JSONx} from "../common/jsonx.js";
 
 const ROOT_ID = 1
 let RootCategory
@@ -204,7 +205,7 @@ export class WebObject {
                             for a newly created object that already has an ID assigned, but is not yet (fully) saved to DB, the ID must be kept
                             in __meta.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
 
-    __data                  own properties of this object in their raw form (before imputation etc.), as a Data object created during .load()
+    __data                  own properties of this object in their raw form (before imputation etc.), as a Catalog object created during .load()
 
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
                             that inherits (like from prototypes) from all __category$ listed in this object or inherited
@@ -275,6 +276,14 @@ export class WebObject {
     get __json() {
         return this.__data.dump()
     }
+
+    // // find_references()
+    // get __references() {
+    //     /* Extract an array of WebObjects referenced from within this Catalog object. */
+    //     let refs = []
+    //     JSONx.encode(this, val => {if (val instanceof schemat.WebObject) { refs.push(val); return null; }})
+    //     return refs
+    // }
 
     // static compare(obj1, obj2) {
     //     /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
@@ -978,7 +987,7 @@ export class WebObject {
     //      */
     //     if (this.__data) return this.__data
     //     if (this.is_linked()) throw new Error('cannot seal properties of a linked object')
-    //     return this.__data = await Data.from_object(this)
+    //     return this.__data = await Catalog.from_object(this)
     // }
 
     async move_to(directory) {
@@ -1079,7 +1088,7 @@ export class WebObject {
     }
 
     'edit.overwrite'(data) {
-        /* Replace the entire set of own properties, __data, with a new Data object. */
+        /* Replace the entire set of own properties, __data, with a new object. */
         if (typeof data === 'string') data = Catalog.load(data)
         assert(data instanceof Catalog)
         this.__data = data

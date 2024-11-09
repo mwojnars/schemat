@@ -14,7 +14,7 @@
       - class ("@")
       - reference ("@")
       - Classpath
-      - repeated fields (Catalog / Data)
+      - repeated fields (Catalog)
     - logical layer:
       - `__class`
       - `__category`: schema & defaults

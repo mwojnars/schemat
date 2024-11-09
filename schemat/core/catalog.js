@@ -620,21 +620,15 @@ export class Catalog {
         }
         return new this().init(state)
     }
-}
 
-
-
-export class Data extends Catalog {
-    /* Added functionality:
-       - derived features (and subfeatures?)
-    */
 
     static async from_object(obj) {
-        /* Convert a plain object - POJO or a newborn WebObject containing plain JS attributes - to a Data instance,
+        /* Convert a plain object - POJO or a newborn WebObject containing plain JS attributes - to a Catalog instance,
            which contains all own properties of `obj` except for those starting with '_',
            or having undefined value, or WebObject's special attributes (like `action`).
            Special properties: __class, __category, are preserved.
            Properties defined by getters are ignored.
+           TODO: this method is temporary, it likely needs to be discarded in the future.
          */
         assert(!obj.__id)
 
@@ -665,13 +659,6 @@ export class Data extends Catalog {
 
         // print(`from_object(${obj}) =>`, entries)
         return new Catalog(entries)
-    }
-
-    find_references() {
-        /* Extract an array of WebObjects referenced from within this Data object. */
-        let refs = []
-        JSONx.encode(this, val => {if (val instanceof schemat.WebObject) { refs.push(val); return null; }})
-        return refs
     }
 }
 

@@ -6,7 +6,7 @@ import {DataOperator} from "./sequence.js";
 import {Record, DataRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence, IndexSequence, Subsequence} from "./sequence.js";
-import {Catalog, Data} from "../core/catalog.js";
+import {Catalog} from "../core/catalog.js";
 
 
 /**********************************************************************************************************************
@@ -310,7 +310,7 @@ export class Database extends WebObject {
 
         // 2nd phase: update records with actual data
         for (let item of items) {
-            item.__data = item.__data || await Data.from_object(item)       // if item has no __data, create it from the object's properties
+            item.__data = item.__data || await Catalog.from_object(item)        // if item has no __data, create it from the object's properties
             item.__id = item.__meta.provisional_id
             // TODO: check if the line below is needed or not? ultimately need to be removed...
             // schemat._register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates

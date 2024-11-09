@@ -110,7 +110,7 @@ export class DataRecord {
      */
 
     id                          // item ID; can be undefined (new item, not yet inserted into DB)
-    _data_object                // item data as a Data object decoded from _data_plain
+    _data_object                // item data as a Catalog object decoded from _data_plain
     data_json                   // item data as a JSONx-encoded and JSON-stringified string
     //_data_plain               // item data as a plain JS object parsed from _data_json or encoded from _data_object
 
@@ -132,7 +132,7 @@ export class DataRecord {
     _decode_data() {
         return this._data_object = this.data_copy
         // let data = this._data_object = JSONx.decode(this.data_plain)
-        // if (!(data instanceof Data)) this._data_object = Data.__setstate__(data)
+        // if (!(data instanceof Catalog)) this._data_object = Catalog.__setstate__(data)
         // return this._data_object
     }
 
@@ -142,7 +142,7 @@ export class DataRecord {
     //
     // _parse_data() {
     //     return this._data_plain = JSON.parse(this._data_json)
-    //     // if(!(JSONx.decode(this._data_plain) instanceof Data)) assert(false)
+    //     // if(!(JSONx.decode(this._data_plain) instanceof Catalog)) assert(false)
     //     // return this._data_plain
     // }
     //
@@ -152,7 +152,7 @@ export class DataRecord {
     //
     // _encode_data() {
     //     return this._data_plain = JSONx.encode(this._data_object.__getstate__())
-    //     // if(!(JSONx.decode(this._data_plain) instanceof Data)) assert(false)
+    //     // if(!(JSONx.decode(this._data_plain) instanceof Catalog)) assert(false)
     //     // return this._data_plain
     // }
     //
@@ -161,20 +161,20 @@ export class DataRecord {
     // }
 
     constructor(id, data) {
-        /* `id` is a Number; `data` is either a JSONx string, or a Data object. */
+        /* `id` is a Number; `data` is either a JSONx string, or a Catalog object. */
         if (id !== undefined && id !== null) this.id = id
         assert(data, `missing 'data' for DataRecord, id=${this.id}`)
 
         if (typeof data === 'string') this.data_json = data
         else throw new Error(`invalid type of 'data'`)
-        // else if (data instanceof Data) this._data_object = data
+        // else if (data instanceof Catalog) this._data_object = data
         // else assert(false, `plain data objects not accepted for DataRecord, id=${this.id}: ${data}`)
     }
 
     static from_binary(bin_record /*Record*/) {
-        /* Create a DataRecord from a binary Record, where key = [id] and value is a JSONx-serialized Data object. */
+        /* Create a DataRecord from a binary Record, where key = [id] and value is a JSONx-serialized Catalog object. */
         assert(bin_record instanceof Record, `invalid binary record: ${bin_record}, should be a Record`)
-        let json = bin_record.string_value          // plain object, JSONx-encoded Data of an item
+        let json = bin_record.string_value          // plain object, JSONx-encoded __data of an item
         let key = bin_record.key                    // array of key fields, decoded
         assert(key.length === 1)                    // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
         let id = key[0]

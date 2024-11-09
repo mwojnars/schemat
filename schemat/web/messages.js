@@ -88,8 +88,8 @@ export class mJsonxArray extends mJsonxError {
 /**********************************************************************************************************************/
 
 export class mData extends MessageEncoder {
-    /* Encode: a Data instance, either in its original form, or after __getstate__(), but NOT yet JSONx-encoded.
-       Decode: fully parsed and decoded Data instance.
+    /* Encode: a Catalog, either in its original form, or after __getstate__(), but NOT yet JSONx-encoded.
+       Decode: fully parsed and decoded Catalog instance.
      */
     encode(data) {
         if (typeof data === 'string') return data       // already encoded
@@ -102,13 +102,13 @@ export class mData extends MessageEncoder {
 }
 
 export class mDataString extends mData {
-    /* Like mData, but no decoding: decode() returns a JSONx string representing the Data instance. */
+    /* Like mData, but no decoding: decode() returns a JSONx string representing the Catalog instance. */
     decode(message) { return message }
 }
 
 
 export class mDataRecord extends MessageEncoder {
-    /* Encoded: object of the form {id, data}, where `data` is a stringified or *encoded* (plain-object) representation of a Data instance.
+    /* Encoded: object of the form {id, data}, where `data` is a stringified or *encoded* (plain-object) representation of a Catalog instance.
        Decoded: {id, data}, where `data` is still JSONx-encoded, but no longer stringified.
        After decoding, the record gets automatically registered as the newest representation of a given ID.
      */
@@ -123,7 +123,7 @@ export class mDataRecord extends MessageEncoder {
         schemat.register_record(rec)
         return rec
         // let {id, data} = JSONx.parse(message)
-        // if (!(data instanceof Data)) data = Data.__setstate__(data)
+        // if (!(data instanceof Catalog)) data = Catalog.__setstate__(data)
         // return {id, data}
     }
 }
