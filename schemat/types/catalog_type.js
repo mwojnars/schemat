@@ -114,7 +114,7 @@ export class CATALOG extends Type {
 
 export class SCHEMA extends CATALOG {
     /* Like CATALOG, but provides distinct value types for different predefined keys (fields) of a catalog.
-       Primarily used as a value type for WebObject.__data, not intended for other uses.
+       Used as a value type for WebObject.__data, not intended for other uses.
      */
 
     static options = {
