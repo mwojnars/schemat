@@ -103,7 +103,7 @@ export class Struct {
         else if (target instanceof Array && typeof step === 'number')
             yield* Struct.yieldAll(target[step], rest, _objects)
 
-        else if (_objects && typeof target === 'object')
+        else if (_objects && target.hasOwnProperty?.(step))         // only OWN properties are allowed to be retrieved via deep paths
             yield* Struct.yieldAll(target[step], rest, _objects)
     }
 
