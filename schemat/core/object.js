@@ -1086,6 +1086,12 @@ export class WebObject {
         this.__data.move(path, {pos, delta, count})
     }
 
+    'edit.increment'(path, delta = 1) {
+        /* Increment a numeric value by `delta`. `path` should be unique, otherwise the duplicate occurrences will be removed. */
+        let value = this.__data.get(path)
+        this.__data.set(path, value + delta)
+    }
+
     'edit.overwrite'(data) {
         /* Replace the entire set of own properties, __data, with a new object. */
         if (typeof data === 'string') data = Catalog.load(data)
