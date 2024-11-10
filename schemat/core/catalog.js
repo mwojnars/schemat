@@ -242,7 +242,7 @@ export class Struct {
 export class Catalog {
     /* Catalog is an Array-like and Map-like collection of entries, a mini key-value store.
        Keys, if present, are strings. The same key can be repeated.
-       Keys may include all characters except ":", '.', '$', '/', whitespace. Empty string is a valid non-missing key.
+       Keys may include all characters except '.', '[', ']', '$', '/', ':', whitespace. Empty string is a valid non-missing key.
        Undefined key is replaced with null. Only not-null keys are indexed in _keys.
     */
 

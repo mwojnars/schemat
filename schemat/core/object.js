@@ -277,11 +277,10 @@ export class WebObject {
         return this.__data.dump()
     }
 
-    // // find_references()
-    // get __references() {
-    //     /* Extract an array of WebObjects referenced from within this Catalog object. */
+    // get __references() {       // find_references()
+    //     /* Array of WebObjects referenced from this one. */
     //     let refs = []
-    //     JSONx.encode(this, val => {if (val instanceof schemat.WebObject) { refs.push(val); return null; }})
+    //     JSONx.encode(this.__data, val => {if (val instanceof WebObject) { refs.push(val); return null; }})
     //     return refs
     // }
 
