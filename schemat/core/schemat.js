@@ -323,8 +323,21 @@ export class Schemat {
 
     /***  Object modifications (CRUD)  ***/
 
-    async insert(objects, opts = {}) {
+    async insert(objects, opts_ = {}) {
+        /* Insert multiple (related) objects all at once to the same DB block. The objects may reference each other and 
+           the references are allowed to be cyclic: they will be properly replaced in the DB with newly assigned object IDs.
+           All the objects must be newborn (no ID assigned yet).
+           After this call completes, the original `objects` will have their __id properties assigned.
+           The returned array is either the original `objects` array, or an array of reloaded objects, depending on the `reload` flag.
+         */
+        let {reload, ...opts} = opts_
+        objects.forEach(obj => {if (!obj.is_newborn()) throw new Error(`object ${obj} is not newborn (already has an ID)`)})
 
+        let data = objects.map(obj => obj.__data.__getstate__())
+        let records = await this.site.POST.insert({data, opts})
+        records.map(({id}, i) => objects[i].__id = id)
+
+        return reload ? Promise.all(objects.map(obj => obj.reload())) : objects
     }
 
     async save(objects, opts_ = {}) {

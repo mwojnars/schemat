@@ -1035,7 +1035,7 @@ export class WebObject {
 
     async save(opts = {}) {
         /* Send __data (for a newly created object) or __meta.edits (for an existing object) to DB.
-           In the former case, the object itself is returned.
+           In the former case, the object itself is returned. Some of the available options: {ring, ring_name, reload}.
          */
         this.assert_active()
         let edits = this.__meta.edits
