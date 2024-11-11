@@ -8,6 +8,9 @@ import {JSONx} from "../common/jsonx.js"
  **
  */
 
+class FieldPathNotFound extends Error {}
+
+
 function isstring(s) {
     return s === null || s === undefined || typeof s === 'string'
 }
@@ -118,7 +121,7 @@ export class Struct {
 
     static setDeep(target, path, ...values) {
         /* Find the first occurrence of path[:-1] where the value(s) for key=path[-1] can be assigned to.
-           When walking into custom-class objects, the *state* of these objects is used (getstate()),
+           When walking into custom-class objects, the *state* of these objects is modified (getstate()),
            and then the object is recreated with setstate(), which creates a new instance that must be reassigned
            in its parent collection - that is why this function is recursive and returns the (old or recreated) `target`.
          */
@@ -135,18 +138,19 @@ export class Struct {
 
         if (target instanceof Map) {
             if (typeof key === 'number') key = [...target.entries()][key][0]
-            target.set(key, values[0])
+            return target.set(key, values[0])
         }
-        else if (target instanceof Array)
-            if (typeof key === 'number') target[key] = values[0]
-            else throw new Error(`not an array index (${key}), cannot set a value inside an Array`)
-        
-        else if (typeof target === 'object' && !(target instanceof schemat.WebObject))
+        if (target instanceof Array) {
+            if (typeof key !== 'number') throw new FieldPathNotFound(`not an array index (${key}), cannot set a value inside an Array`)
             target[key] = values[0]
-
-        else throw new Error(`not a collection nor an object: ${target}`)
-        
-        return target
+            return target
+        }
+        if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+            let state = T.getstate(target)
+            state[key] = values[0]
+            return T.setstate(target.constructor, state)
+        }
+        throw new FieldPathNotFound(`not a collection nor an object: ${target}`)
     }
 
     static setkey(target, prev, key) {
