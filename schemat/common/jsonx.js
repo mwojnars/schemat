@@ -106,8 +106,8 @@ export class JSONx {
             state = schemat.get_classpath(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
         }
-        else if (obj instanceof Set)
-            state = this.encode_array(Array.from(obj))
+        // else if (obj instanceof Set)
+        //     state = this.encode_array(Array.from(obj))
         else if (obj instanceof Map)
             state = this.encode_object(Object.fromEntries(obj.entries()))
         else {
@@ -177,10 +177,10 @@ export class JSONx {
 
         // instantiate the output object; special handling for standard JSON types and WebObject
         if (T.isPrimitiveClass(cls))  return state
-        if (cls === Array)            return this.decode_array(state)
         if (cls === Object)           return this.decode_object(state)
-        if (cls === Set)              return new Set(this.decode_array(state))
+        if (cls === Array)            return this.decode_array(state)
         if (cls === Map)              return new Map(Object.entries(this.decode_object(state)))
+        // if (cls === Set)              return new Set(this.decode_array(state))
 
         // if (T.isSubclass(cls, schemat.WebObject) && T.isNumber(state))
         //     return schemat.get_object(state)
