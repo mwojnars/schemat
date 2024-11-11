@@ -269,10 +269,10 @@ export class Types {
     static getOwnProperty = (obj, prop) => obj.hasOwnProperty(prop) ? obj[prop] : undefined
     static get            = (obj, prop) => obj.hasOwnProperty(prop) ? obj[prop] : undefined      // alias for getOwnProperty()
     static pop            = (obj, prop) => {                         // pop() = get() own property of `obj`, delete, return value
-        if (!obj.hasOwnProperty(prop)) return undefined
-        let x = obj[prop];
-        delete obj[prop];
-        return x
+        if (!obj.hasOwnProperty(prop)) return
+        const val = obj[prop]
+        delete obj[prop]
+        return val
     }
     static subset       = (obj, ...props) => Object.fromEntries(props.map(p => [p, obj[p]]))    // return a new object with a subset of properties
 
