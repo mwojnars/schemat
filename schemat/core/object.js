@@ -352,7 +352,7 @@ export class WebObject {
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
-    assert_loaded_or_newborn() { if (!this.is_loaded() && !this.is_newborn()) throw new NotLoaded(this) }
+    assert_active() { if (!this.is_loaded() && !this.is_newborn()) throw new NotLoaded(this) }
 
     is(other) {
         /* True if `this` and `other` object have the same ID; they still can be two different instances
@@ -1037,7 +1037,7 @@ export class WebObject {
         /* Send __data (for a newly created object) or __meta.edits (for an existing object) to DB.
            In the former case, the object itself is returned. May return a Promise.
          */
-        this.assert_loaded_or_newborn()
+        this.assert_active()
         let edits = this.__meta.edits
 
         if (this.is_newborn()) {        // saving a newborn object...

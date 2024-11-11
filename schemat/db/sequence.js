@@ -30,7 +30,7 @@ export class Sequence extends WebObject {    // Series?
 
 
     __create__(ring) {
-        ring.assert_loaded_or_newborn()
+        ring.assert_active()
         this.ring = ring
     }
 
@@ -95,7 +95,7 @@ export class Sequence extends WebObject {    // Series?
            If `batch_size` is defined, yield items in batches of `batch_size` items.
          */
         let block = this._find_block(start)
-        block.assert_loaded_or_newborn()
+        block.assert_active()
         // if (!block.is_loaded()) block = await block.load()
         yield* block.scan({start, stop})
     }
@@ -221,7 +221,7 @@ export class DataSequence extends Sequence {
             req.make_step(this)
 
         let block = this._find_block(key)
-        block.assert_loaded_or_newborn()
+        block.assert_active()
         // if (!block.is_loaded()) block = await block.load()
 
         return block[`cmd_${command}`].call(block, req)

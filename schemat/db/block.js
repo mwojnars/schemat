@@ -37,7 +37,7 @@ export class Block extends WebObject {
 
 
     __create__(sequence, filename) {
-        sequence.assert_loaded_or_newborn()
+        sequence.assert_active()
         this.sequence = sequence
         this.filename = filename
     }
