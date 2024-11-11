@@ -376,12 +376,12 @@ export class Types {
     }
 
     static setstate = (cls, state) => {
-        // create an object of class `cls` and call its __setstate__() if present, or assign `state` directly;
-        // if __setstate__() is async, setstate() returns a promise;
-        // obj.__setstate__() must end with "return this" (!)
-        if (cls.__setstate__) return cls.__setstate__(state)
-        let obj = new cls()
-        if (obj.__setstate__) return obj.__setstate__(state)
+        /* Create an object of class `cls` by calling cls.__setstate__(state); or create a plain object with cls's prototype
+           and assign `state` to it directly. If cls.__setstate__() is async, setstate() returns a promise.
+         */
+        if (cls?.__setstate__) return cls.__setstate__(state)
+        let obj = Object.create(cls?.prototype)
+        // if (obj.__setstate__) return obj.__setstate__(state)     // __setstate__() must end with "return this" (!)
         return Object.assign(obj, state)
     }
 
