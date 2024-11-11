@@ -324,14 +324,25 @@ export class Schemat {
     /***  Object modifications (CRUD)  ***/
 
     async insert(objects, opts_ = {}) {
-        /* Insert multiple (related) objects all at once to the same DB block. The objects may reference each other and 
-           the references are allowed to be cyclic: they will be properly replaced in the DB with newly assigned object IDs.
+        /* Insert multiple (related) objects all at once to the same DB block. The objects may reference each other:
+           the links will be properly replaced in the DB with newly assigned object IDs, even if the references are cyclic.
            All the objects must be newborn (no ID assigned yet).
-           After this call completes, the original `objects` will have their __id properties assigned.
-           The returned array is either the original `objects` array, or an array of reloaded objects, depending on the `reload` flag.
+           After this call completes, objects in the original `objects` array have their __id values assigned.
+           The returned array is either the `objects` array, or an array of reloaded objects, depending on the `reload` flag.
          */
         let {reload, ...opts} = opts_
         objects.forEach(obj => {if (!obj.is_newborn()) throw new Error(`object ${obj} is not newborn (already has an ID)`)})
+
+        let unique = new Set(objects)
+        if (objects.length !== unique.size) throw new Error(`duplicate objects passed to insert()`)
+
+        let queue = [...objects]
+        let refs = []
+
+        // find all references to newborn objects not yet in `objects`
+        while (queue.length) {
+            let obj = queue.pop()
+        }
 
         let data = objects.map(obj => obj.__data.__getstate__())
         let records = await this.site.POST.insert({data, opts})
