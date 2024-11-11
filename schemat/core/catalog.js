@@ -85,10 +85,13 @@ export class Struct {
         throw new Error(`not a collection: ${target}`)
     }
 
+    static get(target, path, _objects = false) {
+        return Struct.yieldAll(target, path, _objects).next().value
+    }
+
     static *yieldAll(target, path, _objects = false) {
-        /* Yield all elements of a collection, `target`, that match a given `path`. 
-           The path is an array, not a string.
-         */
+        /* Yield all elements of a collection, `target`, that match a given `path`. The path is an array, not a string. */
+
         if (target !== undefined && !path.length) { yield target; return }
         if (!target) return
         let [step, ...rest] = path
@@ -113,8 +116,15 @@ export class Struct {
         }
     }
 
-    static get(target, path, _objects = false) {
-        return Struct.yieldAll(target, path, _objects).next().value
+    static setDeep(target, path, ...values) {
+        /* Find the first occurrence of path[:-1] where the value(s) for key=path[-1] can be assigned to.
+           When walking into custom-class objects, the *state* of these objects is used (getstate()),
+           and then the object is recreated with setstate(), which creates a new instance that must be reassigned
+           in its parent collection - that is why this function is recursive and returns the (old or recreated) `target`.
+         */
+        let [step, ...rest] = path
+        
+        return target
     }
 
     static set(target, key, ...values) {
@@ -130,11 +140,13 @@ export class Struct {
         else if (target instanceof Array)
             if (typeof key === 'number') target[key] = values[0]
             else throw new Error(`not an array index (${key}), cannot set a value inside an Array`)
-        else if (typeof target === 'object')
+        
+        else if (typeof target === 'object' && !(target instanceof schemat.WebObject))
             target[key] = values[0]
+
         else throw new Error(`not a collection nor an object: ${target}`)
         
-        return this
+        return target
     }
 
     static setkey(target, prev, key) {
