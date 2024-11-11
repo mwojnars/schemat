@@ -119,14 +119,14 @@ export class Struct {
         }
     }
 
-    static setDeep(target, path, ...values) {
+    static set(target, path, ...values) {
         /* Find the first occurrence of path[:-1] where the value(s) for key=path[-1] can be assigned to.
-           When walking into custom-class objects, the *state* (getstate()) of these objects is modified,
-           and then the object is recreated with setstate(), which creates a new instance that must be reassigned
+           When walking into custom-class objects, the *state* (from T.getstate()) of these objects is modified,
+           and then the object is recreated with T.setstate(), which creates a new instance that must be reassigned
            in its parent collection - that is why this function is recursive and returns the (original or recreated) `target`.
          */
         let [step, ...rest] = path
-        if (!rest.length) return Struct.set(target, step, ...values)
+        if (!rest.length) return Struct._set(target, step, ...values)
         let obj, modified
 
         if (target instanceof Catalog)
@@ -156,8 +156,8 @@ export class Struct {
         throw new FieldPathNotFound()
     }
 
-    static set(target, key, ...values) {
-        /* Set value of `key` entry in the `target` collection or object. */
+    static _set(target, key, ...values) {
+        /* Set value of `key` entry in the `target` collection or object. No path support, no recursion. */
         if (!values.length) return
         if (target instanceof Catalog) return target._set(key, ...values)
         if (values.length > 1) throw new Error(`cannot set multiple values (${values.length}) for key (${key}) in a non-catalog`)
@@ -429,7 +429,7 @@ export class Catalog {
     set(path, ...values) {
         let [target, key] = this._targetKey(path)
         if (target === this) this._set(key, ...values)
-        else Struct.set(target, key, ...values)
+        else Struct._set(target, key, ...values)
         return this
     }
 
