@@ -74,7 +74,6 @@ export class JSONx {
         Optional `transform` function preprocesses the `obj` and every nested object before they get encoded.
         */
         assert(schemat.WebObject, "missing global schemat.WebObject")
-        let state
 
         if (this.transform) {
             let transformed = this.transform(obj)
@@ -85,7 +84,7 @@ export class JSONx {
         if (T.isPrimitive(obj))  return obj
         if (T.isArray(obj))      return this.encode_array(obj)
 
-        if (T.isPOJO(obj)) {
+        if (T.isPlain(obj)) {
             obj = this.encode_object(obj)
             if (!(JSONx.ATTR_CLASS in obj)) return obj
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
@@ -98,17 +97,19 @@ export class JSONx {
         }
 
         if (obj instanceof Uint8Array) {
-            state = bin_to_hex(obj)
+            let state = bin_to_hex(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_BIN}
         }
 
         if (T.isClass(obj)) {
-            state = schemat.get_classpath(obj)
+            let state = schemat.get_classpath(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
         }
         // else if (obj instanceof Set)
         //     state = this.encode_array(Array.from(obj))
-        else if (obj instanceof Map)
+
+        let state
+        if (obj instanceof Map)
             state = this.encode_object(Object.fromEntries(obj.entries()))
         else {
             state = T.getstate(obj)
@@ -118,7 +119,7 @@ export class JSONx {
         }
 
         // wrap up the state in a dict, if needed, and append class designator
-        if (!T.isPOJO(state))
+        if (!T.isPlain(state))
             state = {[JSONx.ATTR_STATE]: state}
 
         let t = T.getPrototype(obj)
@@ -135,11 +136,11 @@ export class JSONx {
                  object after this call may indirectly change the result (!).
         */
         let _state = state
-        let pojo = T.isPOJO(state)      // JS object without class
+        let plain = T.isPlain(state)        // plain JS object (no custom class)
         let type = state?.[JSONx.ATTR_CLASS]
         let cls
 
-        if (pojo && type) {
+        if (plain && type) {
             if (type === JSONx.FLAG_BIN)            // decoding of a Uint8Array
                 return hex_to_bin(state[JSONx.ATTR_STATE])
 
@@ -155,7 +156,7 @@ export class JSONx {
         }
 
         // determine the expected class (constructor function) for the output object
-        if (!pojo)                                  // `state` encodes a primitive value, or a list, or null;
+        if (!plain)                                 // `state` encodes a primitive value, or a list, or null;
             cls = T.getClass(state)                 // cls=null denotes a class of null value
 
         else if (type) {
