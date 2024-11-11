@@ -88,11 +88,11 @@ export class Struct {
         throw new Error(`not a collection: ${target}`)
     }
 
-    static get(target, path, _objects = false) {
+    static get(target, path, _objects = true) {
         return Struct.yieldAll(target, path, _objects).next().value
     }
 
-    static *yieldAll(target, path, _objects = false) {
+    static *yieldAll(target, path, _objects = true) {
         /* Yield all elements of a collection, `target`, that match a given `path`. The path is an array, not a string. */
 
         if (target !== undefined && !path.length) { yield target; return }
@@ -115,7 +115,7 @@ export class Struct {
         else if (_objects && typeof target === 'object' && !(target instanceof schemat.WebObject)) {
             let state = T.getstate(target)
             if (state?.hasOwnProperty?.(step))
-                yield* Struct.yieldAll(target[step], rest, _objects)
+                yield* Struct.yieldAll(state[step], rest, _objects)
         }
     }
 
@@ -132,24 +132,24 @@ export class Struct {
         if (target instanceof Catalog)
             for (let loc of target.locs(step)) {
                 obj = target._entries[loc][1]
-                try { modified = Struct.setDeep(obj, rest, ...values) }
+                try { modified = Struct.set(obj, rest, ...values) }
                 catch (e) { if (e instanceof FieldPathNotFound) continue; else throw e }
                 target._entries[loc][1] = modified
                 return target
             }
         else if (target instanceof Map) {
-            modified = Struct.setDeep(target.get(step), rest, ...values)
+            modified = Struct.set(target.get(step), rest, ...values)
             return target.set(step, modified)
         }
         else if (target instanceof Array) {
             if (typeof step !== 'number') throw new FieldPathNotFound()
-            modified = Struct.setDeep(target[step], rest, ...values)
+            modified = Struct.set(target[step], rest, ...values)
             target[step] = modified
             return target
         }
         else if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
             let state = T.getstate(target)
-            modified = Struct.setDeep(state[step], rest, ...values)
+            modified = Struct.set(state[step], rest, ...values)
             state[step] = modified
             return state === target ? target : T.setstate(target.constructor, state)
         }
@@ -157,7 +157,7 @@ export class Struct {
     }
 
     static _set(target, key, ...values) {
-        /* Set value of `key` entry in the `target` collection or object. No path support, no recursion. */
+        /* Set the value of `key` entry in the `target` collection or object. No deep paths, no recursion into nested collections. */
         if (!values.length) return
         if (target instanceof Catalog) return target._set(key, ...values)
         if (values.length > 1) throw new Error(`cannot set multiple values (${values.length}) for key (${key}) in a non-catalog`)
@@ -427,10 +427,15 @@ export class Catalog {
     }
 
     set(path, ...values) {
-        let [target, key] = this._targetKey(path)
-        if (target === this) this._set(key, ...values)
-        else Struct._set(target, key, ...values)
-        return this
+        try { return Struct.set(this, this._normPath(path), ...values) }
+        catch (e) {
+            if (e instanceof FieldPathNotFound) throw new Error(`path not found: ${path}`)
+            throw e
+        }
+        // let [target, key] = this._targetKey(path)
+        // if (target === this) this._set(key, ...values)
+        // else Struct._set(target, key, ...values)
+        // return this
     }
 
     setkey(path, key) {

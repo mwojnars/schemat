@@ -123,10 +123,10 @@ class Intercept {
         let [step, ...path] = base.split(Intercept.SPLIT)
         if (plural) {
             let roots = Intercept.proxy_get(target, step + Intercept.PLURAL, receiver, false) || []
-            return roots.flatMap(root => [...Struct.yieldAll(root, path, true)])
+            return roots.flatMap(root => [...Struct.yieldAll(root, path)])
         }
         let root = Intercept.proxy_get(target, step, receiver, false)
-        return Struct.get(root, path, true)
+        return Struct.get(root, path)
     }
 
     static _cache_value(cache, prop, val) {
