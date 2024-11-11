@@ -100,10 +100,12 @@ export class Struct {
         else if (target instanceof Map)
             yield* Struct.yieldAll(target.get(step), rest, _objects)
         
-        else if (target instanceof Array && typeof step === 'number')
-            yield* Struct.yieldAll(target[step], rest, _objects)
+        else if (target instanceof Array) {
+            if (typeof step === 'number') yield* Struct.yieldAll(target[step], rest, _objects)
+        }
 
-        else if (_objects && target.hasOwnProperty?.(step))         // only OWN properties are allowed to be retrieved via deep paths
+        // walking into an object is only allowed for non-web-objects, and only through OWN properties (no inheritance)
+        else if (_objects && !(target instanceof schemat.WebObject) && target.hasOwnProperty?.(step))
             yield* Struct.yieldAll(target[step], rest, _objects)
     }
 
@@ -230,6 +232,13 @@ export class Struct {
         }
         else if (target instanceof Array)
             target.splice(pos2, 0, ...target.splice(pos1, count))
+    }
+
+    static collect(target, fun, path = []) {
+        /* Walk through the `target` structure and execute fun(node, path) at each visited node (pre-order).
+           If the result of fun() is truthy, children of `node` are skipped and the processing moves to the next sibling.
+         */
+
     }
 }
 
