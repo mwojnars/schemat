@@ -104,9 +104,13 @@ export class Struct {
             if (typeof step === 'number') yield* Struct.yieldAll(target[step], rest, _objects)
         }
 
-        // walking into an object is only allowed for non-web-objects, and only through OWN properties (no inheritance)
-        else if (_objects && !(target instanceof schemat.WebObject) && target.hasOwnProperty?.(step))
-            yield* Struct.yieldAll(target[step], rest, _objects)
+        // walking into an object is only allowed for non-WebObjects, and uses the *state* of the object rather than the object itself
+        // (this is compatible with JSONx encoding, except that unknown object classes are still walked into without raising errors)
+        else if (_objects && typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+            let state = T.getstate(target)
+            if (state?.hasOwnProperty?.(step))
+                yield* Struct.yieldAll(target[step], rest, _objects)
+        }
     }
 
     static get(target, path, _objects = false) {
