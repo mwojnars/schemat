@@ -235,10 +235,27 @@ export class Struct {
     }
 
     static collect(target, fun, path = []) {
-        /* Walk through the `target` structure and execute fun(node, path) at each visited node (pre-order).
-           If the result of fun() is truthy, children of `node` are skipped and the processing moves to the next sibling.
+        /* Walk through all (nested) nodes of the `target` structure and execute fun(node, path) at each node (in pre-order).
+           If the result of fun() is truthy, children of `node` are skipped and the processing moves to the next sibling,
+           otherwise it steps down to children. Typically, `fun` collects some information and saves it in an external structure.
+           The `path` is an array of keys or indices leading to the `target` node. Inside a Catalog, multiple nodes may have the same path.
          */
+        if (target === undefined) return
+        let skip = fun(target, path)
+        if (skip) return
 
+        if (target instanceof Catalog || target instanceof Map)
+            for (let [key, obj] of target.entries())
+                Struct.collect(obj, fun, [...path, key])
+        
+        else if (target instanceof Array)
+            for (let i = 0; i < target.length; i++)
+                Struct.collect(target[i], fun, [...path, i])
+
+        // walking into an object is only allowed for non-web-objects, and only through OWN properties (no inheritance)
+        else if (typeof target === 'object' && !(target instanceof schemat.WebObject))
+            for (let key of Object.keys(target))
+                Struct.collect(target[key], fun, [...path, key])
     }
 }
 
