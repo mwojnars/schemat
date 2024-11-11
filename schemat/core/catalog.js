@@ -253,7 +253,7 @@ export class Struct {
                 Struct.collect(target[i], fun, [...path, i])
 
         // walking into an object is only allowed for non-WebObjects, and uses the *state* of the object rather than the object itself
-        // (this is compatible with JSONx encoding, except that unknown object classes are still supported without raising errors)
+        // (this is compatible with JSONx encoding, except that unknown object classes are still walked into without raising errors)
         else if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
             let state = T.getstate(target)
             if (typeof state === 'object')
