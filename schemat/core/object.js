@@ -1033,9 +1033,9 @@ export class WebObject {
         }
     }
 
-    save(opts = {}) {
+    async save(opts = {}) {
         /* Send __data (for a newly created object) or __meta.edits (for an existing object) to DB.
-           In the former case, the object itself is returned. May return a Promise.
+           In the former case, the object itself is returned.
          */
         this.assert_active()
         let edits = this.__meta.edits
@@ -1159,7 +1159,7 @@ export class WebObject {
                 if (src?.has_entry(this.__ident, obj))
                     src.edit.del_entry(this.__ident)
 
-                return schemat.save_reload(dir, obj, src)
+                return schemat.save([dir, obj, src], {reload: true})
             },
             output: mWebObjects,
         })

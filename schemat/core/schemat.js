@@ -321,16 +321,19 @@ export class Schemat {
     }
 
 
-    /***  Object modification (CRUD)  ***/
+    /***  Object modifications (CRUD)  ***/
 
-    async save(...objects) {
-        /* Save changes in multiple objects all at once (concurrently). */
-        return Promise.all(objects.map(obj => obj.save()))
+    async insert(objects, opts = {}) {
+
     }
 
-    async save_reload(...objects) {
-        /* Save changes in multiple objects all at once (concurrently) and return their updated versions. */
-        return Promise.all(objects.map(obj => obj?.save()?.then(() => obj?.reload())))
+    async save(objects, opts_ = {}) {
+        /* Save changes in multiple objects all at once (concurrently). */
+        let {reload, ...opts} = opts_
+        return Promise.all(objects.map(obj => {
+            let save = obj?.save(opts)
+            return reload ? save?.then(() => obj.reload()) : save
+        }))
     }
 
 
