@@ -114,12 +114,12 @@ export class JSONx {
         else {
             state = T.getstate(obj)
             state = obj !== state ? this.encode(state) : this.encode_object(state)
-            if (JSONx.ATTR_CLASS in state)
-                throw new Error(`Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key`)
+            // if (JSONx.ATTR_CLASS in state)
+            //     throw new Error(`Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key`)
         }
 
         // wrap up the state in a dict, if needed, and append class designator
-        if (!T.isPlain(state))
+        if (!T.isPlain(state) || JSONx.ATTR_CLASS in state)
             state = {[JSONx.ATTR_STATE]: state}
 
         let t = T.getPrototype(obj)
