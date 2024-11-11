@@ -148,7 +148,7 @@ export class Struct {
         if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
             let state = T.getstate(target)
             state[key] = values[0]
-            return T.setstate(target.constructor, state)
+            return state === target ? target : T.setstate(target.constructor, state)
         }
         throw new FieldPathNotFound(`not a collection nor an object: ${target}`)
     }
