@@ -90,12 +90,17 @@ export class Type {
 
     __getstate__()      { return this._options }
 
-    __setstate__(state) {
+    static __setstate__(state) {
         assert(T.isPOJO(state))
-        this._options = state
-        this._init_options()
-        return this
+        return new this(state)
     }
+
+    // __setstate__(state) {
+    //     assert(T.isPOJO(state))
+    //     this._options = state
+    //     this._init_options()
+    //     return this
+    // }
 
     get_initial() {
         /* `options.initial` can be a value or a function; this method provides support for both cases. */
