@@ -121,13 +121,39 @@ export class Struct {
 
     static setDeep(target, path, ...values) {
         /* Find the first occurrence of path[:-1] where the value(s) for key=path[-1] can be assigned to.
-           When walking into custom-class objects, the *state* of these objects is modified (getstate()),
+           When walking into custom-class objects, the *state* (getstate()) of these objects is modified,
            and then the object is recreated with setstate(), which creates a new instance that must be reassigned
-           in its parent collection - that is why this function is recursive and returns the (old or recreated) `target`.
+           in its parent collection - that is why this function is recursive and returns the (original or recreated) `target`.
          */
         let [step, ...rest] = path
-        
-        return target
+        if (!rest.length) return Struct.set(target, step, ...values)
+        let obj, modified
+
+        if (target instanceof Catalog)
+            for (let loc of target.locs(step)) {
+                obj = target._entries[loc][1]
+                try { modified = Struct.setDeep(obj, rest, ...values) }
+                catch (e) { if (e instanceof FieldPathNotFound) continue; else throw e }
+                target._entries[loc][1] = modified
+                return target
+            }
+        else if (target instanceof Map) {
+            modified = Struct.setDeep(target.get(step), rest, ...values)
+            return target.set(step, modified)
+        }
+        else if (target instanceof Array) {
+            if (typeof step !== 'number') throw new FieldPathNotFound()
+            modified = Struct.setDeep(target[step], rest, ...values)
+            target[step] = modified
+            return target
+        }
+        else if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+            let state = T.getstate(target)
+            modified = Struct.setDeep(state[step], rest, ...values)
+            state[step] = modified
+            return state === target ? target : T.setstate(target.constructor, state)
+        }
+        throw new FieldPathNotFound()
     }
 
     static set(target, key, ...values) {
@@ -483,7 +509,7 @@ export class Catalog {
         if (typeof key === 'number') key = this._entries[key][0]
 
         if (values.length === 1 && locs.length === 1) {
-            this._entries[locs[0]] = [key, values[0]]
+            this._entries[locs[0]][1] = values[0]
             return this
         }
         if (locs.length) this.delete(key)
