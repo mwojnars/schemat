@@ -237,8 +237,8 @@ export class Struct {
     static collect(target, fun, path = []) {
         /* Walk through all (nested) nodes of the `target` structure and execute fun(node, path) at each node (in pre-order).
            If the result of fun() is truthy, children of `node` are skipped and the processing moves to the next sibling,
-           otherwise it steps down to children. Typically, `fun` collects some information and saves it in an external structure.
-           The `path` is an array of keys or indices leading to the `target` node. Inside a Catalog, multiple nodes may have the same path.
+           otherwise it steps into children. Typically, `fun` collects some information and saves it in an external structure.
+           The `path` is an array of keys or indices leading to the `target` node; inside a Catalog, multiple nodes may share the same path.
          */
         if (target === undefined) return
         let skip = fun(target, path)
@@ -252,10 +252,14 @@ export class Struct {
             for (let i = 0; i < target.length; i++)
                 Struct.collect(target[i], fun, [...path, i])
 
-        // walking into an object is only allowed for non-web-objects, and only through OWN properties (no inheritance)
-        else if (typeof target === 'object' && !(target instanceof schemat.WebObject))
-            for (let key of Object.keys(target))
-                Struct.collect(target[key], fun, [...path, key])
+        // walking into an object is only allowed for non-WebObjects, and uses the *state* of the object rather than the object itself
+        // (this is compatible with JSONx encoding, except that unknown object classes are still supported without raising errors)
+        else if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+            let state = T.getstate(target)
+            if (typeof state === 'object')
+                for (let key of Object.keys(state))
+                    Struct.collect(state[key], fun, [...path, key])
+        }
     }
 }
 
