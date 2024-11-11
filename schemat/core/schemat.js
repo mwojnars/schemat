@@ -177,6 +177,33 @@ export class Schemat {
     }
 
 
+    /***  Object <> classpath mapping (for de/serialization)  ***/
+
+    get_classpath(cls) {
+        /* Return a dotted module path of a given class or function as stored in a global Classpath.
+           `cls` should be either a constructor function, or a prototype with .constructor property.
+         */
+        if (typeof cls === "object")            // if `cls` is a class prototype, take its constructor instead
+            cls = cls.constructor
+        if (!cls) throw `Argument is empty or not a class: ${cls}`
+
+        return this.builtin.get_path(cls)
+    }
+
+    get_builtin(path) {
+        /* Retrieve a built-in class by its path of the form: <module-path>:<class-name>. */
+        return this.builtin.get_object(path)
+    }
+
+    import(path) {
+        /* May return a Promise. */
+        if (path.startsWith('schemat:') || !this.site)
+            return this.get_builtin(path)
+        if (path[0] === '/') return this.site.import_global(path)
+        return this.site.import_local(path)
+    }
+
+
     /***  Access to web objects  ***/
 
     get_object(id, {version = null} = {}) {
@@ -294,31 +321,7 @@ export class Schemat {
     }
 
 
-    /***  Object <> classpath mapping (for de/serialization)  ***/
-
-    get_classpath(cls) {
-        /* Return a dotted module path of a given class or function as stored in a global Classpath.
-           `cls` should be either a constructor function, or a prototype with .constructor property.
-         */
-        if (typeof cls === "object")            // if `cls` is a class prototype, take its constructor instead
-            cls = cls.constructor
-        if (!cls) throw `Argument is empty or not a class: ${cls}`
-
-        return this.builtin.get_path(cls)
-    }
-
-    get_builtin(path) {
-        /* Retrieve a built-in class by its path of the form: <module-path>:<class-name>. */
-        return this.builtin.get_object(path)
-    }
-
-    import(path) {
-        /* May return a Promise. */
-        if (path.startsWith('schemat:') || !this.site)
-            return this.get_builtin(path)
-        if (path[0] === '/') return this.site.import_global(path)
-        return this.site.import_local(path)
-    }
+    /***  Object modification (CRUD)  ***/
 
     async save(...objects) {
         /* Save changes in multiple objects all at once (concurrently). */
@@ -329,6 +332,21 @@ export class Schemat {
         /* Save changes in multiple objects all at once (concurrently) and return their updated versions. */
         return Promise.all(objects.map(obj => obj?.save()?.then(() => obj?.reload())))
     }
+
+
+    /***  Events & Debugging  ***/
+
+    before_data_loading(obj, MAX_LOADING = 10) {
+        /* Called at the beginning of data loading in an object, obj._load(). */
+        this._loading_stack.push(obj)
+        // if (count > MAX_LOADING) throw new Error(`Too many objects loading at once: ${count}`)
+    }
+
+    after_data_loading(obj) {
+        /* Called at the end of data loading in an object, obj._load(). */
+        this._loading_stack.pop(obj)
+    }
+
 
     /***  Dynamic import from SUN  ***/
 
@@ -347,19 +365,5 @@ export class Schemat {
     //     /* Schemat's client-side import path converted to a standard JS import URL for importing remote code from SUN namespace. */
     //     return path + '::import'
     // }
-
-
-    /***  Events & Debugging  ***/
-
-    before_data_loading(obj, MAX_LOADING = 10) {
-        /* Called at the beginning of data loading in an object, obj._load(). */
-        this._loading_stack.push(obj)
-        // if (count > MAX_LOADING) throw new Error(`Too many objects loading at once: ${count}`)
-    }
-
-    after_data_loading(obj) {
-        /* Called at the end of data loading in an object, obj._load(). */
-        this._loading_stack.pop(obj)
-    }
 }
 
