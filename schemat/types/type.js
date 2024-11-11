@@ -663,6 +663,7 @@ export class TypeWrapper extends Type {
 
     __getstate__()          { return [this.options.type_item, this.options.options] }
     __setstate__(state)     {
+        // TODO: convert to a static method
         [this._options.type_item, this._options.options] = state
         this._init_options()
         return this
