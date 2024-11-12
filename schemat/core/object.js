@@ -285,12 +285,12 @@ export class WebObject {
         return refs
     }
 
-    get __infant_references() {
-        /* Array of all newly-created (infant) WebObjects referenced from this one. */
-        let refs = []
-        Struct.collect(this.__data, obj => {if (obj instanceof WebObject && obj.is_infant()) refs.push(obj)})
-        return refs
-    }
+    // get __infant_references() {
+    //     /* Array of all newly-created (infant) WebObjects referenced from this one. */
+    //     let refs = []
+    //     Struct.collect(this.__data, obj => {if (obj instanceof WebObject && obj.is_infant()) refs.push(obj)})
+    //     return refs
+    // }
 
 
     // static compare(obj1, obj2) {

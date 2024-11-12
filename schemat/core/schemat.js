@@ -326,9 +326,9 @@ export class Schemat {
     async insert(objects, opts_ = {}) {
         /* Insert multiple (related) objects all at once to the same DB block. The objects may reference each other, and
            the links will be properly replaced in the DB with newly assigned object IDs even if the references are cyclic.
-           All the `objects` must be infants (no ID assigned yet). After this call completes, all the objects & references have 
-           their __id values assigned. The returned array either contains the original `objects` without references, 
-           or their new instances (reloaded objects) in the same order, depending on the `reload` flag.
+           All the `objects` must be infants (no ID assigned yet). After this call completes, the objects & references
+           get their __id values assigned. The returned array either contains the original `objects`,
+           or their new instances in the same order (reloaded objects), depending on the `reload` flag.
          */
         objects.forEach(obj => {if (!obj.is_infant()) throw new Error(`object ${obj} already has an ID, cannot be inserted to DB again`)})
 
@@ -341,8 +341,8 @@ export class Schemat {
         // find all references to newly-created objects not yet in `objects`
         while (queue.length) {
             let obj = queue.pop()
-            obj.__infant_references.forEach(ref => {
-                if (!unique.has(ref)) {unique.add(ref); queue.push(ref); objects.push(ref)}
+            obj.__references.forEach(ref => {
+                if (ref.is_infant() && !unique.has(ref)) {unique.add(ref); queue.push(ref); objects.push(ref)}
             })
         }
 
