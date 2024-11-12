@@ -277,12 +277,21 @@ export class WebObject {
         return this.__data.dump()
     }
 
-    // get __references() {       // find_references()
-    //     /* Array of WebObjects referenced from this one. */
-    //     let refs = []
-    //     JSONx.encode(this.__data, val => {if (val instanceof WebObject) { refs.push(val); return null; }})
-    //     return refs
-    // }
+    get __references() {       // find_references()
+        /* All WebObjects referenced from this one, as an array. */
+        let refs = []
+        Struct.collect(this.__data, val => {if (val instanceof WebObject) refs.push(val)})
+        // JSONx.encode(this.__data, val => {if (val instanceof WebObject) { refs.push(val); return null; }})
+        return refs
+    }
+
+    get __infant_references() {
+        /* All newly-created (infant) WebObjects referenced from this one. */
+        let refs = []
+        Struct.collect(this.__data, obj => {if (obj instanceof WebObject && obj.is_newborn()) refs.push(obj)})
+        return refs
+    }
+
 
     // static compare(obj1, obj2) {
     //     /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */

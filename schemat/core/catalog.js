@@ -281,7 +281,7 @@ export class Struct {
     }
 
     static collect(target, fun, path = []) {
-        /* Walk through all (nested) nodes of the `target` structure and execute fun(node, path) at each node (in pre-order).
+        /* Walk through all (nested) nodes of the `target` collection and execute fun(node, path) at each node (in pre-order).
            If the result of fun() is truthy, children of `node` are skipped and the processing moves to the next sibling,
            otherwise it steps into children. Typically, `fun` collects some information and saves it in an external structure.
            The `path` is an array of keys or indices leading to the `target` node; inside a Catalog, multiple nodes may share the same path.
