@@ -307,6 +307,40 @@ export class Struct {
                     Struct.collect(state[key], fun, [...path, key])
         }
     }
+
+    static transform(target, fun, path = []) {
+        /* Transform all (nested) values in the `target` collection through a function, fun(value, path), in pre-order.
+           If fun() returns undefined, the value is left unchanged and transform() proceeds to child nodes (if `value` is a data structure);
+           otherwise, the value is replaced with the returned object and the processing moves on to sibling nodes.
+           Returning an unchanged `value` from fun() is a way to skip the processing of its children.
+         */
+        if (target === undefined) return
+        let swap = fun(target, path)
+        if (swap !== undefined) return swap
+
+        if (target instanceof Catalog)
+            for (let entry of target._entries) {
+                let [key, value] = entry
+                entry[1] = Struct.transform(value, fun, [...path, key])
+            }
+        else if (target instanceof Map)
+            for (let [key, value] of target.entries())
+                target.set(key, Struct.transform(value, fun, [...path, key]))
+
+        else if (target instanceof Array)
+            for (let i = 0; i < target.length; i++)
+                target[i] = Struct.transform(target[i], fun, [...path, i])
+
+        else if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+            let state = T.getstate(target)
+            if (typeof state === 'object') {
+                for (let key of Object.keys(state))
+                    state[key] = Struct.transform(state[key], fun, [...path, key])
+                return state === target ? target : T.setstate(target.constructor, state)
+            }
+        }
+        return target
+    }
 }
 
 /**********************************************************************************************************************
