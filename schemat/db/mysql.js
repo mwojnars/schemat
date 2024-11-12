@@ -42,14 +42,14 @@ export class MySQL extends DataBlock {
     }
 
     iidToSQL(iid) {
-        /* Mapping Schemat IID to a SQL table name and row ID. */
+        /* Mapping Schemat ID to a SQL table name and row ID. */
         if (iid < this._offset) return []
         let row_id = Math.floor((iid - this._offset) / this._size)
         let table_id = (iid - this._offset) % this._size
         return [table_id, row_id]
     }
     iidFromSQL(table_id, row_id) {
-        /* Mapping SQL table and row ID to Schemat IID. */
+        /* Mapping SQL table and row ID to Schemat ID. */
         return this._offset + row_id * this._size + table_id
     }
 
@@ -99,7 +99,7 @@ export class MySQL extends DataBlock {
     }
 
     async *_scan({offset = 0, limit = 100} = {}) {
-        let items = []      // the result list is materialized here to allow IID sorting at the end
+        let items = []      // the result list is materialized here to allow ID sorting at the end
 
         for (let table_id = 0; table_id < this._size; table_id++) {
             let query = this._query_select(table_id)

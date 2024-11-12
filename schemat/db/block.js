@@ -132,11 +132,11 @@ export class DataBlock extends Block {
 
     static __category = 19
 
-    _autoincrement = 1      // current maximum IID of records in this block; a new record is assigned id=_autoincrement+1 unless insert_mode='compact';
+    _autoincrement = 1      // current maximum ID of records in this block; a new record is assigned id=_autoincrement+1 unless insert_mode='compact';
                             // transient field: NOT saved in the block's configuration in DB but re-initialized during block instantiation
 
     // persistent properties
-    insert_mode             // if `compact`, new objects are inserted at the lowest possible IID in the block, possibly below _autoincrement; requires MemoryStorage
+    insert_mode             // if `compact`, new objects are inserted at the lowest possible ID in the block, possibly below _autoincrement; requires MemoryStorage
 
 
     async __init__() {
@@ -193,6 +193,9 @@ export class DataBlock extends Block {
         return schemat.register_record({id, data})
     }
 
+    // _reserve_id(count)
+    // _reclaim_id(...ids)
+
     _assign_id(req) {
         /* Calculate a new `id` to be assigned to the record being inserted. */
         if (this.insert_mode === 'compact') return this._assign_id_compact(req)
@@ -201,7 +204,7 @@ export class DataBlock extends Block {
 
     _assign_id_compact(req) {
         /* Scan this._storage to find the first available `id` for the record to be inserted, starting at req.current_ring.start_id.
-           This method of IID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
+           This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
         if (!(this._storage instanceof MemoryStorage))
             throw new Error('Compact insert mode is only supported with MemoryStorage')

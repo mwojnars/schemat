@@ -128,14 +128,14 @@ export class IndexSequence extends Sequence {
 
 export class Subsequence {
     /* A sequence of binary key-value pairs that is physically stored as a subsequence of another Sequence, with keys prefixed
-       by a constant: the IID of the Operator that produced this subsequence. As a thin wrapper around the underlying
+       by a constant: the ID of the Operator that produced this subsequence. As a thin wrapper around the underlying
        physical (sub)sequence, this class is NOT stored in the DB, and does NOT inherit from Sequence nor WebObject.
      */
 
     base_sequence               // the underlying Sequence
-    id                          // IID of the Operator that produced this subsequence
+    id                          // ID of the Operator that produced this subsequence
 
-    static iid_type = new INTEGER({blank: false})       // for encoding/decoding the IID using variable-length encoding
+    static iid_type = new INTEGER({blank: false})       // for encoding/decoding the ID using variable-length encoding
 
     constructor(id, base_sequence) {
         this.base_sequence = base_sequence
