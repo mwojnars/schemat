@@ -990,9 +990,7 @@ export class WebObject {
     // }
     //
     // async seal_data() {
-    //     /* In a newborn (unlinked) object, create __data - if not present yet - by copying property values
-    //        from regular POJO attributes of the object.
-    //      */
+    //     /* In an infant object, create __data if not present yet, by copying property values from regular POJO attributes of the object. */
     //     if (this.__data) return this.__data
     //     if (this.is_linked()) throw new Error('cannot seal properties of a linked object')
     //     return this.__data = await Catalog.from_object(this)
