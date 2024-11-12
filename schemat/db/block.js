@@ -44,8 +44,8 @@ export class Block extends WebObject {
 
     async __init__() {
         if (CLIENT) return                                          // don't initialize internals when on client
-        if (!this.sequence.is_loaded()) this.sequence.load()        // intentionally not awaited to avoid deadlock in the case when sequence loading needs to read from this block
-
+        if (!this.sequence.is_loaded()) this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block;
+                                                                    // it's assumed that .sequence gets fully loaded before any CRUD operation (ins/upd/del) is executed
         let format = this.format
         let storage_class
 
@@ -163,7 +163,7 @@ export class DataBlock extends Block {
         obj.validate(false)                             // 1st validation (pre-setup), to give __setup__() confidence in input data
 
         if (id === undefined || id === null) {          // assign a new ID if not provided, update _autoincrement
-            id = this._assign_id(req)
+            id = this._assign_id()
             if (id instanceof Promise) id = await id
         } else                                          // fixed ID provided by the caller? check for uniqueness
             await this.assert_unique(key, id)
@@ -184,18 +184,18 @@ export class DataBlock extends Block {
     // _reserve_id(count)
     // _reclaim_id(...ids)
 
-    _assign_id(req) {
+    _assign_id() {
         /* Calculate a new `id` to be assigned to the record being inserted. */
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
         let ring = this.sequence.ring
-        let id = (this.insert_mode === 'compact') ? this._assign_id_compact(req) : Math.max(this._autoincrement + 1, ring.start_id)
+        let id = (this.insert_mode === 'compact') ? this._assign_id_compact() : Math.max(this._autoincrement + 1, ring.start_id)
         if (!ring.valid_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
         this._autoincrement = Math.max(id, this._autoincrement)
         return id
     }
 
-    _assign_id_compact(req) {
+    _assign_id_compact() {
         /* Scan this._storage to find the first available `id` for the record to be inserted, starting at ring.start_id.
            This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
@@ -239,7 +239,7 @@ export class DataBlock extends Block {
 
         let new_data = obj.__json
 
-        if (req.current_ring.readonly) {            // can't write the update here in this ring? forward to a higher ring
+        if (this.sequence.ring.readonly) {          // can't write the update here in this ring? forward to a higher ring
             req = req.make_step(this, 'save', {id, key, value: new_data})
             return req.forward_save()
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
@@ -259,11 +259,11 @@ export class DataBlock extends Block {
         let data = await this._storage.get(key)
         if (data === undefined) return req.forward_down()
 
-        if (req.current_ring.readonly)                                  // in a read-only ring no delete can be done
+        if (this.sequence.ring.readonly)
             return req.error_access("cannot remove the item, the ring is read-only")
 
         req = req.make_step(this, null, {key, value: data})
-        return this.cmd_del(req)                                        // perform the delete
+        return this.cmd_del(req)                    // perform the delete
     }
 
     async erase(req) {
