@@ -273,9 +273,7 @@ export class DataBlock extends Block {
             await this.sequence.load()
             await this.sequence.ring.load()
         }
-        // return this.sequence.ring.propagate(req, change)
 
-        // propagate `change` to all indexes
         let ring = this.sequence.ring
         for (let index of ring.indexes.values()) {
             let seq = ring._subsequences.get(index.id)
