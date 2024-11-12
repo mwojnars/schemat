@@ -151,7 +151,9 @@ export class DataBlock extends Block {
     }
 
     async cmd_insert(req) {
-        let ring = req.current_ring
+        let ring = this.sequence.ring //req.current_ring
+        assert(ring?.is_loaded())
+        
         if (ring.readonly) throw new DataAccessError(`cannot insert an object, the ring [${ring.id}] is read-only`)
 
         let {id, key, data} = req.args
@@ -173,7 +175,7 @@ export class DataBlock extends Block {
         obj._seal_dependencies()                        // set __seal
         obj.validate(true)                              // 2nd validation (post-setup), to ensure consistency in DB
         data = obj.__json
-        key ??= req.current_data.encode_key(id)
+        key ??= this.sequence.encode_key(id)
 
         await this._put(key, data)                      // save the object here and perform change propagation
         return schemat.register_record({id, data})
@@ -201,8 +203,8 @@ export class DataBlock extends Block {
             throw new Error('Compact insert mode is only supported with MemoryStorage')
 
         let next = req.current_ring.start_id
-        for (const [key, value] of this._storage.scan()) {
-            const id = req.current_data.decode_key(key)
+        for (let [key, value] of this._storage.scan()) {
+            let id = req.current_data.decode_key(key)
             if (id < req.current_ring.start_id) continue        // skip records outside the current ring's range
             if (id > next) return next                          // found a gap? return the first available ID
             next = id + 1
