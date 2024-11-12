@@ -236,15 +236,16 @@ export class DataBlock extends Block {
         obj.validate(true)                          // may raise validation exceptions
 
         let new_data = obj.__json
-        req = req.make_step(this, 'save', {id, key, value: new_data})
 
-        if (req.current_ring.readonly)              // can't write the update here in this ring? forward to a higher ring
+        if (req.current_ring.readonly) {            // can't write the update here in this ring? forward to a higher ring
+            req = req.make_step(this, 'save', {id, key, value: new_data})
             return req.forward_save()
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
+        }
 
-        await this.cmd_put(req)                     // save changes and perform change propagation
+        await this._put(key, new_data)              // save changes here and perform change propagation
         return schemat.register_record({id, data: new_data})
     }
 
