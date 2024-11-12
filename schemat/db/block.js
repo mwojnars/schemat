@@ -75,7 +75,11 @@ export class Block extends WebObject {
         let value_old = await this._storage.get(key) || null
         await this._storage.put(key, value)
         this._flush(req)
-        await this.propagate(req, key, value_old, value)
+        await this.propagate(key, value_old, value)
+    }
+
+    _put(key, value) {
+        
     }
 
     async cmd_del(req) {
@@ -86,7 +90,7 @@ export class Block extends WebObject {
 
         let deleted = this._storage.del(key)
         this._flush(req)
-        await this.propagate(req, key, value)
+        await this.propagate(key, value)
 
         return deleted
     }
@@ -265,7 +269,7 @@ export class DataBlock extends Block {
         return super.erase(req)
     }
 
-    async propagate(req, key, value_old = null, value_new = null) {
+    async propagate(key, value_old = null, value_new = null) {
         /* Push a change from this data block to derived indexes. */
         const change = new ChangeRequest(key, value_old, value_new)
 
