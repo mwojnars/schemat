@@ -68,14 +68,15 @@ export class Block extends WebObject {
     async cmd_get(req)      { return this._storage.get(req.args.key) }
 
     async cmd_put(req) {
-        /* Write the `data` here in this block under the `id` and propagate the change to derived indexes.
+        /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
            No forward of the request to another ring.
          */
         let {key, value} = req.args                     // handle 'value' arg instead of 'data'?
         let value_old = await this._storage.get(key) || null
         await this._storage.put(key, value)
         this._flush(req)
-        if (req.current_ring) await this.propagate(req, key, value_old, value)     // TODO: drop "if"
+        // print('cmd_put():', req.current_ring?.name, key, value)
+        await this.propagate(req, key, value_old, value)
     }
 
     async cmd_del(req) {
@@ -86,7 +87,7 @@ export class Block extends WebObject {
 
         let deleted = this._storage.del(key)
         this._flush(req)
-        if (req.current_ring) await this.propagate(req, key, value)               // TODO: drop "if"
+        await this.propagate(req, key, value)
 
         return deleted
     }
@@ -115,15 +116,8 @@ export class Block extends WebObject {
         return this._storage.flush()
     }
 
-    async propagate(req, key, value_old = null, value_new = null) {
-        /* Push a change from this block to derived indexes. */
-        const change = new ChangeRequest(key, value_old, value_new)
-
-        if (!this.sequence.ring?.is_loaded()) {
-            await this.sequence.load()
-            await this.sequence.ring.load()
-        }
-        return this.sequence.ring.propagate(req, change)
+    propagate() {
+        /* For now, there's NO propagation from index blocks, only from data blocks (see below). */
     }
 }
 
@@ -270,6 +264,17 @@ export class DataBlock extends Block {
         /* Remove all records from this sequence; open() should be called first. */
         this._autoincrement = 1
         return super.erase(req)
+    }
+
+    async propagate(req, key, value_old = null, value_new = null) {
+        /* Push a change from this data block to derived indexes. */
+        const change = new ChangeRequest(key, value_old, value_new)
+
+        if (!this.sequence.ring?.is_loaded()) {
+            await this.sequence.load()
+            await this.sequence.ring.load()
+        }
+        return this.sequence.ring.propagate(req, change)
     }
 }
 
