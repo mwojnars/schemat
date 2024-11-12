@@ -154,6 +154,9 @@ export class DataBlock extends Block {
     }
 
     async cmd_insert(req) {
+        const ring = req.current_ring
+        if (ring.readonly) throw new DataAccessError(`cannot insert an object, the ring [${ring.id}] is read-only`)
+
         let {id, key, data} = req.args
         let obj = await WebObject.from_json(id, data)   // the object must be instantiated for validation
 
@@ -171,21 +174,15 @@ export class DataBlock extends Block {
 
         obj._bump_version()                             // set __ver=1 if needed
         obj._seal_dependencies()                        // set __seal
-
         obj.validate(true)                              // 2nd validation (post-setup), to ensure consistency in DB
         data = obj.__json
 
-        const ring = req.current_ring
-        if (ring.readonly) throw new DataAccessError(`cannot insert a new item, the ring [${ring.id}] is read-only`)
         if (!ring.valid_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
-
-        this._autoincrement = Math.max(id, this._autoincrement)
 
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
 
         if (key === undefined) key = req.current_data.encode_key(id)
-
         req = req.make_step(this, null, {id, key, value: data})
 
         await this.cmd_put(req)             // save the new object and perform change propagation
@@ -198,8 +195,9 @@ export class DataBlock extends Block {
 
     _assign_id(req) {
         /* Calculate a new `id` to be assigned to the record being inserted. */
-        if (this.insert_mode === 'compact') return this._assign_id_compact(req)
-        return Math.max(this._autoincrement + 1, req.current_ring.start_id)      // no ID? use _autoincrement with the next available ID
+        let id = (this.insert_mode === 'compact') ? this._assign_id_compact(req) : Math.max(this._autoincrement + 1, req.current_ring.start_id)
+        this._autoincrement = Math.max(id, this._autoincrement)
+        return id
     }
 
     _assign_id_compact(req) {
