@@ -151,9 +151,9 @@ export class DataBlock extends Block {
     }
 
     async cmd_insert(req) {
-        let ring = this.sequence.ring //req.current_ring
+        let ring = this.sequence.ring
         assert(ring?.is_loaded())
-        
+
         if (ring.readonly) throw new DataAccessError(`cannot insert an object, the ring [${ring.id}] is read-only`)
 
         let {id, key, data} = req.args
@@ -188,7 +188,7 @@ export class DataBlock extends Block {
         /* Calculate a new `id` to be assigned to the record being inserted. */
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
-        let ring = req.current_ring
+        let ring = this.sequence.ring
         let id = (this.insert_mode === 'compact') ? this._assign_id_compact(req) : Math.max(this._autoincrement + 1, ring.start_id)
         if (!ring.valid_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
         this._autoincrement = Math.max(id, this._autoincrement)
@@ -196,20 +196,23 @@ export class DataBlock extends Block {
     }
 
     _assign_id_compact(req) {
-        /* Scan this._storage to find the first available `id` for the record to be inserted, starting at req.current_ring.start_id.
+        /* Scan this._storage to find the first available `id` for the record to be inserted, starting at ring.start_id.
            This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
         if (!(this._storage instanceof MemoryStorage))
             throw new Error('Compact insert mode is only supported with MemoryStorage')
 
-        let next = req.current_ring.start_id
+        let seq  = this.sequence
+        let ring = seq.ring
+        let next = ring.start_id
+
         for (let [key, value] of this._storage.scan()) {
-            let id = req.current_data.decode_key(key)
-            if (id < req.current_ring.start_id) continue        // skip records outside the current ring's range
-            if (id > next) return next                          // found a gap? return the first available ID
+            let id = seq.decode_key(key)
+            if (id < ring.start_id) continue            // skip records outside the current ring's range
+            if (id > next) return next                  // found a gap? return the first available ID
             next = id + 1
         }
-        return next                                             // no gaps found, return the next ID after the last record
+        return next                                     // no gaps found, return the next ID after the last record
     }
 
     async cmd_update(req) {
