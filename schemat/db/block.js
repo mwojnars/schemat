@@ -154,14 +154,13 @@ export class DataBlock extends Block {
     }
 
     async cmd_insert(req) {
-        // calculate the `id` if not provided, update _autoincrement and write the data
         let {id, key, data} = req.args
         let obj = await WebObject.from_json(id, data)   // the object must be instantiated for validation
 
         obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
         obj.validate(false)                             // 1st validation (pre-setup), to give __setup__() confidence in input data
 
-        if (id === undefined || id === null) {          // assign a new ID if not provided for the new item
+        if (id === undefined || id === null) {          // assign a new ID if not provided, update _autoincrement
             id = this._assign_id(req)
             if (id instanceof Promise) id = await id
         } else                                          // fixed ID provided by the caller? check for uniqueness

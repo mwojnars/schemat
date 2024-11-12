@@ -1047,12 +1047,13 @@ export class WebObject {
         this.assert_active()
         let edits = this.__meta.edits
 
-        if (this.is_infant()) {         // saving a newly-created object...
+        if (this.is_infant()) {         // save a newly-created object...
+            // return schemat.insert([this], opts).then(([obj]) => obj)
             let data = this.__data.__getstate__()
             return schemat.site.POST.create_object({data, opts}).then(({id}) => (this.__id = id) && this)
         }
 
-        if (edits?.length) {            // saving updates of an existing object...
+        if (edits?.length) {            // save updates of an existing object...
             let submit = schemat.site.POST.submit_edits(this.id, ...edits) //.then(() => this)
             edits.length = 0
             return submit

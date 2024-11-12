@@ -277,7 +277,7 @@ export class Database extends WebObject {
     }
 
     async insert(data, {ring, ring_name} = {}) {
-        /* Find the top-most ring where the item's ID is writable and insert there. The newly assigned ID is returned.
+        /* Find the top-most writable ring and insert `data` as a new entry there. Return {id, data} record.
            `ring` is an optional name of a ring to use.
          */
         if (!T.isString(data)) data = data.dump?.() || JSONx.stringify(data)

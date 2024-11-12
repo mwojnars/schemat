@@ -168,8 +168,8 @@ export class Site extends WebObject {
     'POST.insert'() {
         /* Insert new object(s) to DB with __data initialized from the provided JSONx-stringified representation(s).
            `data` is either an array of content objects, one for each web object to be created; or a single content object.
-           Every content object is a Catalog instance or the state of such instance (the result of .__getstate__()).
-           Respond is an array of {id, data} records, one for each object created, in the same order as in the request.
+           Every content object is a Catalog instance or an internal *state* of such instance (the result of .__getstate__()).
+           The respond is an array of {id, data} records, one for each object created, in the same order as in the request.
          */
         return new JsonPOST({
             server: ({data, opts}) => this.database.insert(data, opts),
