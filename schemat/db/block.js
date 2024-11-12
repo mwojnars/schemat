@@ -75,7 +75,6 @@ export class Block extends WebObject {
         let value_old = await this._storage.get(key) || null
         await this._storage.put(key, value)
         this._flush(req)
-        // print('cmd_put():', req.current_ring?.name, key, value)
         await this.propagate(req, key, value_old, value)
     }
 
@@ -274,7 +273,14 @@ export class DataBlock extends Block {
             await this.sequence.load()
             await this.sequence.ring.load()
         }
-        return this.sequence.ring.propagate(req, change)
+        // return this.sequence.ring.propagate(req, change)
+
+        // propagate `change` to all indexes
+        let ring = this.sequence.ring
+        for (let index of ring.indexes.values()) {
+            let seq = ring._subsequences.get(index.id)
+            index.apply(change, seq)                    // no need to await, the result is not used by the caller
+        }
     }
 }
 

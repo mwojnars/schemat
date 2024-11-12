@@ -141,13 +141,13 @@ export class Ring extends WebObject {
 
     /***  Indexes and Transforms. Change propagation.  ***/
 
-    propagate(req, change /*ChangeRequest*/) {
-        /* Propagate a change in this ring's data to all indexes. The change is submitted by a child block of the data_sequence. */
-        for (const index of this.indexes.values()) {
-            let seq = this._subsequences.get(index.id)
-            index.apply(change, seq)                    // no need to await, the result is not used by the caller
-        }
-    }
+    // propagate(req, change /*ChangeRequest*/) {
+    //     /* Propagate a change in this ring's data to all indexes. The change is submitted by a child block of the data_sequence. */
+    //     for (const index of this.indexes.values()) {
+    //         let seq = this._subsequences.get(index.id)
+    //         index.apply(change, seq)                    // no need to await, the result is not used by the caller
+    //     }
+    // }
 
     async *scan_index(name, {start, stop, limit=null, reverse=false, batch_size=100} = {}) {
         /* Scan an index `name` in the range [`start`, `stop`) and yield the results.
