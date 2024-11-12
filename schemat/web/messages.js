@@ -130,7 +130,7 @@ export class mDataRecord extends MessageEncoder {
 
 export class mDataRecords extends MessageEncoder {
     /* Input:  array of records of the form {id, data}, where each `data` is a Catalog or its stringified representation.
-       Output: {id, data}, where `data` is JSONx-encoded, but no longer stringified.
+       Output: array of {id, data} records, where each `data` is JSONx-encoded, but no longer stringified.
        After decoding, all records are automatically added to the Registry as the newest representations of their IDs.
      */
     encode(recs) {
