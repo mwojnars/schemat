@@ -72,14 +72,14 @@ export class Block extends WebObject {
            No forward of the request to another ring.
          */
         let {key, value} = req.args                     // handle 'value' arg instead of 'data'?
-        let value_old = await this._storage.get(key) || null
-        await this._storage.put(key, value)
-        this._flush(req)
-        await this.propagate(key, value_old, value)
+        return this._put(key, value)
     }
 
-    _put(key, value) {
-        
+    async _put(key, value) {
+        let value_old = await this._storage.get(key) || null
+        await this._storage.put(key, value)
+        this._flush()
+        await this.propagate(key, value_old, value)
     }
 
     async cmd_del(req) {
@@ -89,7 +89,7 @@ export class Block extends WebObject {
         if (value === undefined) return false           // TODO: notify about data inconsistency (there should no missing records)
 
         let deleted = this._storage.del(key)
-        this._flush(req)
+        this._flush()
         await this.propagate(key, value)
 
         return deleted
@@ -100,10 +100,10 @@ export class Block extends WebObject {
     async erase(req) {
         /* Remove all records from this block. */
         await this._storage.erase()
-        return this._flush(req)
+        return this._flush()
     }
 
-    _flush(req, with_delay = true) {
+    _flush(with_delay = true) {
         /* Flush all unsaved modifications to disk. If with_delay=true, the operation is delayed by `flush_delay`
            seconds (configured in the parent sequence) to combine multiple consecutive updates in one write
            - in such case you do NOT want to await the result.
@@ -113,7 +113,7 @@ export class Block extends WebObject {
         if (with_delay && delay) {
             if (this._pending_flush) return
             this._pending_flush = true
-            return setTimeout(() => this._flush(req, false), delay * 1000)
+            return setTimeout(() => this._flush(false), delay * 1000)
         }
         this._pending_flush = false
         return this._storage.flush()
