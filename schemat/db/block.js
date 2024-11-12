@@ -173,12 +173,9 @@ export class DataBlock extends Block {
         obj._seal_dependencies()                        // set __seal
         obj.validate(true)                              // 2nd validation (post-setup), to ensure consistency in DB
         data = obj.__json
+        key ??= req.current_data.encode_key(id)
 
-        if (key === undefined) key = req.current_data.encode_key(id)
-        req = req.make_step(this, null, {id, key, value: data})
-
-        await this.cmd_put(req)             // save the new object and perform change propagation
-
+        await this._put(key, data)                      // save the object here and perform change propagation
         return schemat.register_record({id, data})
     }
 
