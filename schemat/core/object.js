@@ -144,7 +144,7 @@ class Intercept {
     {
         // special attributes are written directly to __self (outside __data, not sent to DB);
         // also, when the __data is not loaded yet, *every* write goes to __self
-        if (!(target.is_newborn() || target.is_loaded())
+        if (!(target.is_infant() || target.is_loaded())
             || typeof prop !== 'string'             // `prop` can be a symbol like [Symbol.toPrimitive]
             || Intercept.SPECIAL.includes(prop)
         ) return Reflect.set(target, prop, value, receiver)
@@ -160,7 +160,7 @@ class Intercept {
 
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
         if (schema?.has(step) || (!schema?.options.strict && regular)) {
-            // if (!target.is_newborn()) print('proxy_set updating:', prop)
+            // if (!target.is_infant()) print('proxy_set updating:', prop)
             if (type?.options.virtual) throw new Error(`cannot modify a virtual property (${prop})`)
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
@@ -268,7 +268,7 @@ export class WebObject {
     get __record() {
         /* JSONx-encoded {id, data} representation of this object. NOT stringified.
            Stringification can be done through plain JSON in the next step. */
-        if (!this.id) throw new Error(`cannot create a record for a newborn object (no ID)`)
+        if (!this.id) throw new Error(`cannot create a record for a newly created object (no ID)`)
         if (!this.__data) throw new Error(`cannot create a record for a stub object (no __data)`)
         return {id: this.id, data: this.__data.encode()}
     }
@@ -278,17 +278,17 @@ export class WebObject {
     }
 
     get __references() {       // find_references()
-        /* All WebObjects referenced from this one, as an array. */
+        /* Array of all WebObjects referenced from this one. */
         let refs = []
-        Struct.collect(this.__data, val => {if (val instanceof WebObject) refs.push(val)})
+        Struct.collect(this.__data, obj => {if (obj instanceof WebObject) refs.push(obj)})
         // JSONx.encode(this.__data, val => {if (val instanceof WebObject) { refs.push(val); return null; }})
         return refs
     }
 
     get __infant_references() {
-        /* All newly-created (infant) WebObjects referenced from this one. */
+        /* Array of all newly-created (infant) WebObjects referenced from this one. */
         let refs = []
-        Struct.collect(this.__data, obj => {if (obj instanceof WebObject && obj.is_newborn()) refs.push(obj)})
+        Struct.collect(this.__data, obj => {if (obj instanceof WebObject && obj.is_infant()) refs.push(obj)})
         return refs
     }
 
@@ -355,13 +355,13 @@ export class WebObject {
 
     /***  Object status  ***/
 
-    is_newborn()    { return !this.__id }       // object is "newborn" when it hasn't been written to DB yet and has no ID assigned
+    is_infant()     { return !this.__id }       // object is an "infant" when it hasn't been saved to DB yet, so it has no ID assigned
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     is_category()   { return false }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
-    assert_active() { if (!this.is_loaded() && !this.is_newborn()) throw new NotLoaded(this) }
+    assert_active() { if (!this.is_loaded() && !this.is_infant()) throw new NotLoaded(this) }
 
     is(other) {
         /* True if `this` and `other` object have the same ID; they still can be two different instances
@@ -391,7 +391,7 @@ export class WebObject {
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
 
         if (!mutable) this.__meta.cache = new Map()
-        if (mutable && !this.is_newborn()) this.__meta.edits = []
+        if (mutable && !this.is_infant()) this.__meta.edits = []
     }
 
     static stub(id = null, opts = {}) {
@@ -957,7 +957,7 @@ export class WebObject {
     // async insert_self() {
     //     /* Insert this (newborn) object and, recursively, all the newborn objects referenced by this one, to the database. */
     //
-    //     assert(this.is_newborn(), 'trying to insert an object that is already stored in the database')
+    //     assert(this.is_infant(), 'trying to insert an object that is already stored in the database')
     //
     //     // find recursively all the objects referenced (directly or indirectly) by this one that are still
     //     // not persisted in the database; the graph of such objects may contain circular references -
@@ -979,7 +979,7 @@ export class WebObject {
     //      */
     //     let data = await this.seal_data()
     //     let refs = data.find_references()
-    //     let unlinked_refs = refs.filter(obj => obj.is_newborn() && !visited.has(obj))
+    //     let unlinked_refs = refs.filter(obj => obj.is_infant() && !visited.has(obj))
     //
     //     unlinked_refs.forEach(ref => visited.add(ref))
     //
@@ -1027,7 +1027,7 @@ export class WebObject {
 
         let edit = [op, ...args]
         this._apply_edits(edit)
-        this.__meta.edits?.push(edit)       // `edits` does not exist in newborn objects, so `edit` is not recorded then, but is still applied to __data
+        this.__meta.edits?.push(edit)       // `edits` does not exist in infant objects, so `edit` is not recorded then, but is still applied to __data
         return this
     }
 
@@ -1049,7 +1049,7 @@ export class WebObject {
         this.assert_active()
         let edits = this.__meta.edits
 
-        if (this.is_newborn()) {        // saving a newborn object...
+        if (this.is_infant()) {         // saving a newly-created object...
             let data = this.__data.__getstate__()
             return schemat.site.POST.create_object({data, opts}).then(({id}) => (this.__id = id) && this)
         }

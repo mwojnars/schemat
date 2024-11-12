@@ -93,7 +93,7 @@ export class JSONx {
         if (obj instanceof schemat.WebObject) {         //obj?.__id !== undefined || obj instanceof schemat.WebObject ||
             let id = obj._get_write_id()
             if(id !== undefined) return {[JSONx.ATTR_CLASS]: id}
-            else throw new Error(`Can't encode a newborn object (no ID): ${obj}`)
+            else throw new Error(`Can't encode an infant object (no ID): ${obj}`)
         }
 
         if (obj instanceof Uint8Array) {

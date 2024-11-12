@@ -326,12 +326,12 @@ export class Schemat {
     async insert(objects, opts_ = {}) {
         /* Insert multiple (related) objects all at once to the same DB block. The objects may reference each other:
            the links will be properly replaced in the DB with newly assigned object IDs, even if the references are cyclic.
-           All the objects must be newborn (no ID assigned yet).
+           All the objects must be infants (no ID assigned yet).
            After this call completes, objects in the original `objects` array have their __id values assigned.
            The returned array is either the `objects` array, or an array of reloaded objects, depending on the `reload` flag.
          */
         let {reload, ...opts} = opts_
-        objects.forEach(obj => {if (!obj.is_newborn()) throw new Error(`object ${obj} is not newborn (already has an ID)`)})
+        objects.forEach(obj => {if (!obj.is_infant()) throw new Error(`object ${obj} already has an ID, cannot be inserted to DB again`)})
 
         let unique = new Set(objects)
         if (objects.length !== unique.size) throw new Error(`duplicate objects passed to insert()`)

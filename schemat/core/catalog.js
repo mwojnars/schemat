@@ -704,7 +704,7 @@ export class Catalog {
 
 
     static async from_object(obj) {
-        /* Convert a plain object - POJO or a newborn WebObject containing plain JS attributes - to a Catalog instance,
+        /* Convert a plain object - POJO or an infant WebObject containing plain JS attributes - to a Catalog instance,
            which contains all own properties of `obj` except for those starting with '_',
            or having undefined value, or WebObject's special attributes (like `action`).
            Special properties: __class, __category, are preserved.
