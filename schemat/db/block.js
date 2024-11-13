@@ -1,8 +1,9 @@
 import {assert, print, T} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, NotImplemented} from '../common/errors.js'
-import {WebObject} from '../core/object.js'
-import {ChangeRequest, data_schema} from "./records.js";
+import {JSONx} from "../common/jsonx.js";
 import {BinaryMap, compare_uint8} from "../common/binary.js";
+import {ChangeRequest, data_schema} from "./records.js";
+import {WebObject} from '../core/object.js'
 
 // import { Kafka } from 'kafkajs'
 
@@ -140,7 +141,8 @@ export class DataBlock extends Block {
         this._autoincrement = await super.__init__() || 1
     }
 
-    async assert_unique(key, id, msg) {
+    async assert_unique(id, msg) {
+        let key = this.sequence.encode_key(id)
         if (await this._storage.get(key))
             throw new DataConsistencyError(msg || "item with this ID already exists", {id})
     }
@@ -154,11 +156,13 @@ export class DataBlock extends Block {
         let ring = this.sequence.ring
         assert(ring?.is_loaded())
 
-        if (ring.readonly) throw new DataAccessError(`cannot insert an object, the ring [${ring.id}] is read-only`)
+        if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
+        let {id, data} = req.args
 
-        let {id, key, data} = req.args
+        // if (typeof data === 'string') data = JSONx.parse(data)
+        // if (!(data instanceof Array)) data = [data]
 
-        if (id) await this.assert_unique(key, id)       // fixed ID provided by the caller? check for uniqueness
+        if (id) await this.assert_unique(id)            // fixed ID provided by the caller? check for uniqueness
         id ??= this._assign_id()                        // assign a new ID if not provided, update _autoincrement
 
         let obj = await WebObject.from_json(null, data) // the object must be instantiated for validation
@@ -172,9 +176,10 @@ export class DataBlock extends Block {
         obj._seal_dependencies()                        // set __seal
         obj.validate(true)                              // 2nd validation (post-setup), to ensure consistency in DB
         data = obj.__json
-        key ??= this.sequence.encode_key(id)
 
+        let key = this.sequence.encode_key(id)
         await this._put(key, data)                      // save the object here and perform change propagation
+
         return schemat.register_record({id, data})
     }
 
@@ -395,7 +400,7 @@ export class YamlDataStorage extends MemoryStorage {
             let key = data_schema.encode_key([id])
 
             // ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
-            await this.block.assert_unique(key, id, `duplicate item ID loaded from ${this.filename}`)
+            // await this.block.assert_unique(key, id, `duplicate item ID loaded from ${this.filename}`)
 
             max_id = Math.max(max_id, id)
 
