@@ -157,16 +157,13 @@ export class DataBlock extends Block {
         if (ring.readonly) throw new DataAccessError(`cannot insert an object, the ring [${ring.id}] is read-only`)
 
         let {id, key, data} = req.args
-        let obj = await WebObject.from_json(id, data)   // the object must be instantiated for validation
 
+        if (id) await this.assert_unique(key, id)       // fixed ID provided by the caller? check for uniqueness
+        id ??= this._assign_id()                        // assign a new ID if not provided, update _autoincrement
+
+        let obj = await WebObject.from_json(null, data) // the object must be instantiated for validation
         obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
         obj.validate(false)                             // 1st validation (pre-setup), to give __setup__() confidence in input data
-
-        if (id === undefined || id === null) {          // assign a new ID if not provided, update _autoincrement
-            id = this._assign_id()
-            if (id instanceof Promise) id = await id
-        } else                                          // fixed ID provided by the caller? check for uniqueness
-            await this.assert_unique(key, id)
 
         let setup = obj.__setup__(id)                   // here, the object may perform intensive operations, like inserting related objects to DB
         if (setup instanceof Promise) await setup
