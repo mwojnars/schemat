@@ -10,6 +10,6 @@ export class Revision extends WebObject {
         /* Recreate the target object in the form represented by this revision. */
         print(`Revision.restore(): rev [${this.id}] for target [${this.target}]`)
         let id  = this.target.id
-        return WebObject.from_json(id, this.data, {mutable: false})
+        return WebObject.from_data(id, this.data, {mutable: false})
     }
 }

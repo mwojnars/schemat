@@ -243,11 +243,11 @@ export class AdminProcess extends BackendProcess {
     //         for (const id of ids) {
     //             // the record might have been modified during this loop - must re-read ("select")
     //             let data = await ring.select(id)
-    //             let item = await WebObject.from_json(id, data)
+    //             let item = await WebObject.from_data(id, data)
     //
     //             print(`reinserting item [${id}]...`)
     //             let new_id = await ring.insert(null, item.__json)
-    //             // item = await WebObject.from_json(new_id, data)
+    //             // item = await WebObject.from_data(new_id, data)
     //
     //             print(`...new id=[${new_id}]`)
     //             await this._update_references(id, new_id)

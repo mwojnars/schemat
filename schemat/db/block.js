@@ -165,7 +165,7 @@ export class DataBlock extends Block {
         if (id) await this.assert_unique(id)            // fixed ID provided by the caller? check for uniqueness
         id ??= this._assign_id()                        // assign a new ID if not provided, update _autoincrement
 
-        let obj = await WebObject.from_json(null, data) // the object must be instantiated for validation
+        let obj = await WebObject.from_data(null, data) // the object must be instantiated for validation
         obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
         obj.validate(false)                             // 1st validation (pre-setup), to give __setup__() confidence in input data
 
@@ -226,7 +226,7 @@ export class DataBlock extends Block {
         let data = await this._storage.get(key)
         if (data === undefined) return req.forward_down()
 
-        let obj = await WebObject.from_json(id, data)
+        let obj = await WebObject.from_data(id, data)
 
         // apply edits & validate the object's data and the values of individual properties
         obj._apply_edits(...edits)                  // TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
