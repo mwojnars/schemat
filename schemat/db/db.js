@@ -266,7 +266,7 @@ export class Database extends WebObject {
         /* Find the top-most writable ring and insert `data` as a new entry there. Return {id, data} record.
            `ring` is an optional name of a ring to use.
          */
-        if (!T.isString(data)) data = data.dump?.() || JSONx.stringify(data)
+        // if (!T.isString(data)) data = data.dump?.() || JSONx.stringify(data)
         let req = new DataRequest(this, 'insert', {data})
 
         if (ring_name) {                                            // find the ring by name

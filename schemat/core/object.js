@@ -426,8 +426,9 @@ export class WebObject {
 
     static async from_data(id, data, {mutable = true, sealed = false} = {}) {
         /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSON string). */
+        // assert(typeof data === 'string' || data instanceof Catalog)
         let obj = WebObject.stub(id, {mutable})
-        obj.__data = (typeof data === 'string') ? Catalog.load(data) : data
+        obj.__data = (typeof data === 'string') ? Catalog.load(data) : data instanceof Catalog ? data : Catalog.__setstate__(data)
         return obj.load({sealed})
     }
 
