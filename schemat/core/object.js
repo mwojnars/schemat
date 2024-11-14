@@ -471,9 +471,12 @@ export class WebObject {
             }
 
             let seal = this.__data.get('__seal')            // if seal is present, replace refs to prototypes/categories with proper versions of these dependency objects
-            if (seal && sealed) await this._load_dependencies(seal)
+            if (seal && sealed) await this._sync_dependencies(seal)
 
             await this._initialize()
+
+            let init = this.__init__()                      // custom initialization after the data is loaded (optional)
+            if (init instanceof Promise) await init
 
             // if (this.is_linked())
             //     this.__meta.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
@@ -493,10 +496,28 @@ export class WebObject {
         }
     }
 
+    async _sync_dependencies(seal) {
+        /* When sealing of dependencies is used, make sure that proper versions of dependency objects are linked in __data. */
+
+        print(`[${this.id}] _load_dependencies(), seal = ${seal}`)
+
+        let data = this.__data
+        let locs = [...data.locs('__prototype'), ...data.locs('__category')]
+        let refs = locs.map(i => data.get(i))
+        let vers = (seal === WebObject.SEAL_SEP) ? [] : seal.split(WebObject.SEAL_SEP).map(Number)
+        if (locs.length !== vers.length) throw new Error(`different size of seal (${seal}) and dependencies [${locs}]`)
+
+        // replace references in `data` with proper versions of objects
+        for (let i = 0; i < locs.length; i++) {
+            let ref = refs[i], loc = locs[i], ver = vers[i]
+            if (ref !== this && (!ref.is_loaded() || ref.__ver !== ver))
+                data.set(loc, await schemat.get_version(ref.__id, ver))
+        }
+    }
+
     async _initialize() {
-        /* Make sure that dependencies are loaded. Set the JS class of this object. Init internals, call __init__().
-           Can be called both for newly-created and deserialized (loaded from DB) objects.
-         */
+        /* Initialize dependencies and set the JS class of this object. */
+
         let proto = this._load_prototypes()             // load prototypes
         if (proto instanceof Promise) await proto
 
@@ -514,9 +535,6 @@ export class WebObject {
             if (cls instanceof Promise) cls = await cls
             T.setClass(this, cls || WebObject)
         }
-
-        let init = this.__init__()                      // custom initialization after the data is loaded (optional)
-        if (init instanceof Promise) await init
     }
 
     _activate() {
@@ -534,23 +552,6 @@ export class WebObject {
         this.__meta.active = true
 
         if (this.__ver && !this.__meta.mutable) schemat.register_version(this)
-    }
-
-    async _load_dependencies(seal) {
-        print(`[${this.id}] _load_dependencies(), seal = ${seal}`)
-
-        let data = this.__data
-        let locs = [...data.locs('__prototype'), ...data.locs('__category')]
-        let refs = locs.map(i => data.get(i))
-        let vers = (seal === WebObject.SEAL_SEP) ? [] : seal.split(WebObject.SEAL_SEP).map(Number)
-        if (locs.length !== vers.length) throw new Error(`different size of seal (${seal}) and dependencies [${locs}]`)
-
-        // replace references in `data` with proper versions of objects
-        for (let i = 0; i < locs.length; i++) {
-            let ref = refs[i], loc = locs[i], ver = vers[i]
-            if (ref !== this && (!ref.is_loaded() || ref.__ver !== ver))
-                data.set(loc, await schemat.get_version(ref.__id, ver))
-        }
     }
 
     _load_prototypes() {
