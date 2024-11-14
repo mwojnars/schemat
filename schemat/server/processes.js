@@ -8,6 +8,7 @@ import {WebObject} from "../core/object.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
 import {Database} from "../db/db.js";
+import {Struct} from "../core/catalog.js";
 
 
 // print NODE_PATH:
@@ -204,12 +205,17 @@ export class AdminProcess extends BackendProcess {
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
         let transform = (obj => obj?.__id === old_id ? target : obj)
 
-        for (let ring of schemat.db.rings) {
-            for await (const record of ring.scan_all()) {               // search for references to `old_id` in all records
-                let id = record.id
-                let json = record.data_json
-                let data = JSONx.transform(json, transform)             // new json data
-                if (data === json) continue                             // no changes? don't update the record
+        for (let ring of schemat.db.rings)
+            for await (let record of ring.scan_all()) {                 // search for references to `old_id` in all records
+                let {id, data} = record
+                data = Struct.transform(data, transform)
+                let json = data.dump()
+                if (json === record.data_json) continue                 // no changes? don't update the record
+
+                // let id = record.id
+                // let json = record.data_json
+                // let data = JSONx.transform(json, transform)             // new json data
+                // if (data === json) continue                             // no changes? don't update the record
 
                 if (ring.readonly)
                     print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
@@ -219,7 +225,6 @@ export class AdminProcess extends BackendProcess {
                     // await ring.flush()
                 }
             }
-        }
     }
 
     // async _update_all() {

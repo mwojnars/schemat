@@ -129,11 +129,11 @@ export class Ring extends WebObject {
         return this.handle(req.safe_step(this, 'insert', {id, data}))
     }
 
-    async update_full(id_or_item, data = null, req = null) {
-        req = req || new DataRequest()
-        let item = T.isNumber(id_or_item) ? null : id_or_item
-        let id = item ? item._get_write_id() : id_or_item
-        if (!data) data = item.__json
+    async update_full(id_or_obj, data = null, req = null) {
+        req ??= new DataRequest()
+        let obj = T.isNumber(id_or_obj) ? null : id_or_obj
+        let id  = obj?.id || id_or_obj
+        data ??= obj.__data //__json
         let edits = [['overwrite', data]]
         return this.handle(req.safe_step(this, 'update', {id, edits}))
     }
