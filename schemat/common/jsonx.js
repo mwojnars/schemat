@@ -80,7 +80,7 @@ export class JSONx {
             if (transformed !== undefined) obj = transformed
         }
 
-        if (obj === undefined)   throw new Error("Can't encode an undefined value")
+        if (obj === undefined)   throw new Error("can't encode an undefined value")
         if (T.isPrimitive(obj))  return obj
         if (T.isArray(obj))      return this.encode_array(obj)
 
@@ -92,8 +92,8 @@ export class JSONx {
 
         if (obj instanceof schemat.WebObject) {         //obj?.__id !== undefined || obj instanceof schemat.WebObject ||
             let id = obj._get_write_id()
-            if(id !== undefined) return {[JSONx.ATTR_CLASS]: id}
-            else throw new Error(`Can't encode an infant object (no ID): ${obj}`)
+            if (id !== undefined) return {[JSONx.ATTR_CLASS]: id}
+            else throw new Error(`can't encode a reference to a newly-created object (no ID): ${obj}`)
         }
 
         if (obj instanceof Uint8Array) {
@@ -163,11 +163,15 @@ export class JSONx {
             if (JSONx.ATTR_STATE in state) {
                 let state_attr = T.pop(state, JSONx.ATTR_STATE)
                 if (T.notEmpty(state))
-                    throw new Error(`Invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`)
+                    throw new Error(`invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`)
                 state = state_attr
             }
-            if (T.isNumber(classname))                      // `classname` can be a web object ID, not a class name
-                return schemat.get_object(classname)        // all web objects must be loaded through the global Schemat instance
+            if (T.isNumber(classname)) {                // `classname` can be a web object ID, not a class name
+                let id = classname
+                return (id > 0) ?
+                    schemat.get_object(id) :            // all web objects must be loaded through the global Schemat instance;
+                    schemat.get_provisional(-id)        // special handling for references to infant objects - represented by negative ID
+            }
             cls = schemat.get_builtin(classname)
         }
         else cls = Object
@@ -211,7 +215,7 @@ export class JSONx {
 
         for (let [key, value] of Object.entries(out))
             if (typeof key !== "string")
-                throw new Error(`Non-serializable object state, contains a non-string key: ${key}`)
+                throw new Error(`non-serializable object state, contains a non-string key: ${key}`)
             else if (value === undefined)
                 delete out[key]
             else

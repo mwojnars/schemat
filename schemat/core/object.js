@@ -201,9 +201,11 @@ export class WebObject {
     (some of the props below have getters defined, so they must be commented out not to mask the getters)
 
     __id                    database ID of the object, globally unique; undefined in a newly created item; must never be changed for an existing item;
-                            it is assumed that if __id exists, the object is ALREADY stored in the DB (is "linked");
-                            for a newly created object that already has an ID assigned, but is not yet (fully) saved to DB, the ID must be kept
-                            in __meta.provisional_id instead (!) to avoid premature attempts to load the object's properties from DB
+                            it is assumed that if __id exists, the object is ALREADY stored in the DB; for newly-created objects,
+                            __provisional_id is used instead to keep a temporary ID of a batch of interconnected objects being saved to DB
+
+    __provisional_id        temporary ID (1,2,3...) of a newly-created object not yet saved to DB; only used to differentiate the object
+                            in a batch of interconnected objects that are being inserted to DB altogether
 
     __data                  own properties of this object in their raw form (before imputation etc.), as a Catalog object created during .load()
 
@@ -310,7 +312,6 @@ export class WebObject {
         loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         loaded_at:      undefined,  // timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
         expire_at:      undefined,  // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
-        provisional_id: undefined,  // ID of a newly created object that's not yet saved to DB, or the DB record is incomplete (e.g., the properties are not written yet)
         //pending_url:  undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
 
         cache:          undefined,  // Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
@@ -433,8 +434,8 @@ export class WebObject {
     }
 
     _get_write_id() {
-        /* Either __id or __meta.provisional_id. */
-        return this.__id !== undefined ? this.__id : this.__meta.provisional_id
+        /* Either __id, or negated __provisional_id, or undefined. */
+        return this.__id || (this.__provisional_id ? -this.__provisional_id : undefined)
     }
 
 

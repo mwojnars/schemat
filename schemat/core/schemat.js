@@ -218,6 +218,13 @@ export class Schemat {
         return obj
     }
 
+    get_provisional(id) {
+        /* Create a stub of a newly-created (infant) object before its insertion to DB; it only has __provisional_id, not __id. */
+        let obj = WebObject.stub()
+        obj.__provisional_id = id
+        return obj
+    }
+
     async get_mutable(...objects_or_ids) {
         /* Create fully-loaded, but mutable, instances of given object(s). Return an array (if multiple args), or a single result object. */
         let objs = objects_or_ids.map(obj => {
@@ -345,7 +352,7 @@ export class Schemat {
                 if (ref.is_infant() && !unique.has(ref)) {unique.add(ref); queue.push(ref); objects.push(ref)}
             })
         }
-        // set provisional IDs so that references to infant objects can be properly resolved in the DB when creating data records
+        // set provisional IDs so that cross-references to these objects are properly resolved in the DB when creating data records
         objects.forEach((obj, i) => obj.__provisional_id = i+1)     // 1, 2, 3, ...
 
         let {reload, ...opts} = opts_
