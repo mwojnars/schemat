@@ -35,11 +35,11 @@ export class JSONx {
     static ATTR_CLASS = "@"             // special attribute appended to object state to store a class name (with package) of the object being encoded
     static ATTR_STATE = "="             // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
 
-    constructor(transform) {
-        // for now, this constructor is only used internally in static encode() & static decode()
-        this.transform = transform      // optional preprocessing function applied to every nested object before it gets encoded;
-                                        // can also be used to collect information about the objects being encoded
-    }
+    // constructor(transform) {
+    //     // for now, this constructor is only used internally in static encode() & static decode()
+    //     this.transform = transform      // optional preprocessing function applied to every nested object before it gets encoded;
+    //                                     // can also be used to collect information about the objects being encoded
+    // }
 
     static stringify(obj, ...opts) {
         let state = this.encode(obj)
@@ -50,19 +50,19 @@ export class JSONx {
         return this.decode(state)
     }
 
-    static encode(obj, transform)       { return new JSONx(transform).encode(obj) }
-    static decode(state)                { return new JSONx().decode(state) }
-    static deepcopy(obj)                { return JSONx.parse(JSONx.stringify(obj)) }
+    static encode(obj)      { return new JSONx().encode(obj) }
+    static decode(state)    { return new JSONx().decode(state) }
+    static deepcopy(obj)    { return JSONx.parse(JSONx.stringify(obj)) }
 
-    static transform(json, transform) {
-        /* Parse and decode a JSONx-encoded object, then encode and stringify it again while applying
-           the `transform` function to all its (sub)objects. */
-        let jsonx  = new JSONx(transform)
-        let state1 = JSON.parse(json)
-        let object = jsonx.decode(state1)
-        let state2 = jsonx.encode(object)           // `transform` is applied here to `object` and nested sub-objects
-        return JSON.stringify(state2)
-    }
+    // static transform(json, transform) {
+    //     /* Parse and decode a JSONx-encoded object, then encode and stringify it again while applying
+    //        the `transform` function to all its (sub)objects. */
+    //     let jsonx  = new JSONx(transform)
+    //     let state1 = JSON.parse(json)
+    //     let object = jsonx.decode(state1)
+    //     let state2 = jsonx.encode(object)           // `transform` is applied here to `object` and nested sub-objects
+    //     return JSON.stringify(state2)
+    // }
 
 
     encode(obj) {
@@ -71,14 +71,13 @@ export class JSONx {
         yet it contains only JSON-compatible values and collections (possibly nested).
         Objects of custom classes are converted to dicts that store object's attributes,
         with a special attribute "@" to hold the class name or item ID. Nested objects are encoded recursively.
-        Optional `transform` function preprocesses the `obj` and every nested object before they get encoded.
         */
         assert(schemat.WebObject, "missing global schemat.WebObject")
 
-        if (this.transform) {
-            let transformed = this.transform(obj)
-            if (transformed !== undefined) obj = transformed
-        }
+        // if (this.transform) {
+        //     let transformed = this.transform(obj)
+        //     if (transformed !== undefined) obj = transformed
+        // }
 
         if (obj === undefined)   throw new Error("can't encode an undefined value")
         if (T.isPrimitive(obj))  return obj
