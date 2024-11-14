@@ -156,13 +156,19 @@ export class DataBlock extends Block {
         assert(ring?.is_loaded())
 
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
-        let {id: ids, data: datas} = req.args
+        let {id, data} = req.args
 
         // if (typeof data === 'string') data = JSONx.parse(data)
-        if (!(datas instanceof Array)) { ids = [ids]; datas = [datas] }
+        if (data instanceof Array) assert(!id)
+        else {
+            id = id ? [id] : null
+            data = [data]
+        }
 
-        let pairs = zip(ids, datas)
-        let records = await amap(pairs, ([id, data]) => this._insert_one(id, data))
+        id ??= this._reserve_id(data.length)
+
+        let pairs = zip(id, data)
+        let records = await amap(pairs, pair => this._insert_one(...pair))
 
         return records[0]
     }
@@ -189,7 +195,11 @@ export class DataBlock extends Block {
         return schemat.register_record({id, data})
     }
 
-    // _reserve_id(count)
+    _reserve_id(count) {
+        // call _assign_id() `count` times and return an array of `count` IDs
+        return Array.from({length: count}, () => this._assign_id())
+    }
+
     // _reclaim_id(...ids)
 
     _assign_id() {
