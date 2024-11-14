@@ -286,29 +286,6 @@ export class Database extends WebObject {
     //     let data = item.__json
     //     return this.update(item.__id, ['overwrite', data])
     // }
-    //
-    // async insert_many(...items) {
-    //     /* Insert multiple interconnected objects that reference each other and can't be inserted one by one.
-    //        The insertion proceeds in two phases:
-    //        1) the objects are inserted with empty data, to have their IDs assigned if missing;
-    //        2) the objects are updated with actual data, with all references (incl. bidirectional) correctly replaced with IDs.
-    //        This method can also be used to insert a single object that contains a self-reference.
-    //      */
-    //     let empty_data = new Catalog({__status: 'DRAFT'}).dump()            // empty data
-    //
-    //     // 1st phase: insert stubs
-    //     for (let item of items)
-    //         item.__meta.provisional_id = (await this.insert(empty_data)).id     // TODO: await all in parallel (here and below)
-    //
-    //     // 2nd phase: update records with actual data
-    //     for (let item of items) {
-    //         item.__data = item.__data || await Catalog.from_object(item)        // if item has no __data, create it from the object's properties
-    //         item.__id = item.__meta.provisional_id
-    //         // TODO: check if the line below is needed or not? ultimately need to be removed...
-    //         // schemat._register(item)      // during the update (below), the item may already be referenced by other items (during change propagation!), hence it needs to be registered to avoid creating incomplete duplicates
-    //         await this.update_full(item)
-    //     }
-    // }
 
     async delete(obj_or_id) {
         /* Find and delete the top-most occurrence of a web object, or ID.
