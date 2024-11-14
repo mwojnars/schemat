@@ -254,7 +254,7 @@ export class DataBlock extends Block {
         let obj = await WebObject.from_data(id, data)
 
         obj._apply_edits(...edits)                  // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
-        await obj._initialize(false)                // re-initialize the dependencies (category, class, ...), they may have been altered by the edits; NO deps sealing!
+        await obj._initialize(false)                // reinitialize the dependencies (category, class, ...) which may have been altered by the edits; NO deps sealing!
 
         obj._bump_version()                         // increment __ver
         obj._seal_dependencies()                    // recompute __seal
