@@ -711,11 +711,12 @@ export class WebObject {
 
             if (!type)                                      // the property `prop` is not present in the schema? skip or raise an error
                 if (this.__category.allow_custom_fields) continue
-                else throw new ValidationError(`unknown property: ${prop}`)
+                else throw new ValidationError(`unknown property: ${prop} in object [${this.id}]`)
 
             if (!type.options.repeated) {                   // check that a single-valued property has no repetitions
+                // print(`prop=${prop}:`, type)
                 let count = data.getAll(prop).length
-                if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop})`)
+                if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop}) in object [${this.id}]`)
             }
 
             let newval = type.validate(entry[1])         // may raise an exception
