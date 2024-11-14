@@ -253,8 +253,8 @@ export class DataBlock extends Block {
 
         let obj = await WebObject.from_data(id, data)
 
-        // apply edits & validate the object's data and the values of individual properties
-        obj._apply_edits(...edits)                  // TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
+        obj._apply_edits(...edits)                  // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
+        await obj._initialize(false)                // re-initialize the dependencies (category, class, ...), they may have been altered by the edits; NO deps sealing!
 
         obj._bump_version()                         // increment __ver
         obj._seal_dependencies()                    // recompute __seal
@@ -262,7 +262,7 @@ export class DataBlock extends Block {
         if (obj.__base.save_revisions)
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
-        obj.validate(true)                          // may raise validation exceptions
+        obj.validate(true)                          // validate object properties: each one individually and all of them together; may raise exceptions
 
         let new_data = obj.__json
 
