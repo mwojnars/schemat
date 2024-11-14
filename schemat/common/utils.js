@@ -354,8 +354,7 @@ export class Types {
     // getClass(null) returns null, getClass(3) returns Number, etc.
 
     static getOwnProperty = (obj, prop) => obj.hasOwnProperty(prop) ? obj[prop] : undefined
-    static get            = (obj, prop) => obj.hasOwnProperty(prop) ? obj[prop] : undefined      // alias for getOwnProperty()
-    static pop            = (obj, prop) => {                         // pop() = get() own property of `obj`, delete, return value
+    static pop            = (obj, prop) => {        // getOwnProperty(obj) + delete prop + return value
         if (!obj.hasOwnProperty(prop)) return
         const val = obj[prop]
         delete obj[prop]
@@ -380,7 +379,7 @@ export class Types {
     static isFunction     = (f) => (f instanceof Function)                                    // true if f is a function; accepts class constructors, too (!)
     static isClass        = (C) => (typeof C === "function" && C.prototype !== undefined)     // true if C is a class (a constructor function with .prototype); false for arrays
     static isSubclass     = (C, B) => (C === B || C.prototype instanceof B)                   // true if C is subclass of B, including C===B
-    static isNullish      = (obj) => (obj === null || obj === undefined)                      // true if obj is null or undefined (two cases of "missingness")
+    static isNullish      = (obj) => (obj === null || obj === undefined)                      // true if obj is null or undefined
     static isEmpty        = (obj) => (!obj || Object.keys(obj).length === 0)
     static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
     static isPromise      = (obj) => (obj instanceof Promise)
