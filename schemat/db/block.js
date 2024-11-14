@@ -167,11 +167,23 @@ export class DataBlock extends Block {
         }
 
         id ??= this._reserve_id(data.length)            // assign IDs to all new objects
+        // data = this._transform_provisional(id, data)
 
         let pairs = zip(id, data)
         let records = await amap(pairs, pair => this._insert_one(...pair))
 
         return records[0]
+    }
+
+    _transform_provisional(id, data) {
+        /* Transform `data` of every object so that provisional IDs (-1, -2, ...) are replaced with the actual IDs. */
+        
+        let f = (obj) => {
+            let prov = obj?.__meta?.provisional_id
+            if (prov && obj instanceof WebObject)
+                return
+        }
+        return data.map(d => Struct.transform(d, f))
     }
 
     async _insert_one(id, data) {
@@ -188,7 +200,7 @@ export class DataBlock extends Block {
         data = obj.__json
 
         let key = this.sequence.encode_key(id)
-        await this._put(key, data)                      // save the object here and perform change propagation
+        await this._put(key, data)                      // save the object and perform change propagation; TODO: save all objects at once, atomically
 
         return schemat.register_record({id, data})
     }
