@@ -88,6 +88,27 @@ export function normalizePath(path) {
     return lead + parts.join('/')
 }
 
+export const delay = async ms => new Promise(resolve => setTimeout(resolve, ms))
+export const sleep = delay
+
+export function timeout(ms, error = new Error('Timeout')) {
+    /* Return a promise that rejects with `error` after `ms` milliseconds. */
+    return new Promise((_, reject) => setTimeout(() => reject(error), ms))
+}
+
+
+/*************************************************************************************************
+ **
+ **  ARRAY functions
+ **
+ */
+
+export function zip(...arrays) {
+    /* Create an array of tuples, [(a1,b1), (a2,b2), ...], from multiple arrays. */
+    const length = Math.min(...arrays.map(arr => arr.length))
+    return Array.from({length}, (_, i) => arrays.map(arr => arr[i]))
+}
+
 export function concat(arrays) {
     /* Concatenate multiple arrays into a new array. */
     return [].concat(...arrays)
@@ -96,14 +117,6 @@ export function concat(arrays) {
 export function unique(array) {
     /* Filter out duplicates from `array` and return as a new array, order preserved. */
     return array.filter((x, i, a) => a.indexOf(x) === i)
-}
-
-export const delay = async ms => new Promise(resolve => setTimeout(resolve, ms))
-export const sleep = delay
-
-export function timeout(ms, error = new Error('Timeout')) {
-    /* Return a promise that rejects with `error` after `ms` milliseconds. */
-    return new Promise((_, reject) => setTimeout(() => reject(error), ms))
 }
 
 
