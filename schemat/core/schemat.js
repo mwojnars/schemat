@@ -219,7 +219,7 @@ export class Schemat {
     }
 
     get_provisional(id) {
-        /* Create a stub of a newly-created (infant) object before its insertion to DB; it only has __provisional_id, not __id. */
+        /* Create a stub for a newly-created (infant) object before its insertion to DB; it only has __provisional_id, not __id. */
         let obj = WebObject.stub()
         obj.__provisional_id = id
         return obj

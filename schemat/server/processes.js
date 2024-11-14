@@ -197,12 +197,12 @@ export class AdminProcess extends BackendProcess {
     }
 
     async _update_references(old_id, new_id) {
-        /* Scan all items in the DB and replace references to `old_id` with references to `item`. */
+        /* Scan all items in the DB and replace references to `old_id` with references to `new_id`. */
         if (old_id === new_id) return
-        let item = WebObject.stub(new_id)
+        let target = WebObject.stub(new_id)
 
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
-        let transform = (it => it?.__id === old_id ? item : it)
+        let transform = (obj => obj?.__id === old_id ? target : obj)
 
         for (let ring of schemat.db.rings) {
             for await (const record of ring.scan_all()) {               // search for references to `old_id` in all records
