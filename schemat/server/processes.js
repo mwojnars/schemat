@@ -188,8 +188,9 @@ export class AdminProcess extends BackendProcess {
             }
 
             new_id = (await ring.insert(new_id, obj.__json)).id
-            await db.delete(id)
+            await ring.flush()
             await this._update_references(id, new_id)
+            await db.delete(id)
 
             print(`...reinserted object [${id}] as [${new_id}]`)
             new_id = undefined
@@ -203,7 +204,7 @@ export class AdminProcess extends BackendProcess {
         let target = WebObject.stub(new_id)
 
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
-        let transform = (obj => obj?.__id === old_id ? target : obj)
+        let transform = (obj => obj?.__id === old_id ? target : undefined)
 
         for (let ring of schemat.db.rings)
             for await (let record of ring.scan_all()) {                 // search for references to `old_id` in all records

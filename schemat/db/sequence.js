@@ -102,7 +102,8 @@ export class Sequence extends WebObject {    // Series?
 
     async erase(req)   { return Promise.all(this.blocks.map(b => b.erase(req.make_step(this)))) }
     // async erase(req)   { return Promise.all(this.blocks.map(async b => (await b.load()).erase(req.make_step(this)))) }
-    // async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
+
+    async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
 }
 
 

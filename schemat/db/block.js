@@ -103,6 +103,8 @@ export class Block extends WebObject {
         return this._flush()
     }
 
+    async flush() { return this._flush(false) }
+
     _flush(with_delay = true) {
         /* Flush all unsaved modifications to disk. If with_delay=true, the operation is delayed by `flush_delay`
            seconds (configured in the parent sequence) to combine multiple consecutive updates in one write
