@@ -147,7 +147,7 @@ export class Struct {
             target[step] = modified
             return target
         }
-        else if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+        else if (target && typeof target === 'object' && !(target instanceof schemat.WebObject)) {
             let state = getstate(target)
             modified = Struct.set(state[step], rest, ...values)
             state[step] = modified
@@ -171,7 +171,7 @@ export class Struct {
             target[key] = values[0]
             return target
         }
-        if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+        if (target && typeof target === 'object' && !(target instanceof schemat.WebObject)) {
             let state = getstate(target)
             state[key] = values[0]
             return state === target ? target : setstate(target.constructor, state)
@@ -286,7 +286,7 @@ export class Struct {
            otherwise it steps into children. Typically, `fun` collects some information and saves it in an external structure.
            The `path` is an array of keys or indices leading to the `target` node; inside a Catalog, multiple nodes may share the same path.
          */
-        if (target === undefined) return
+        if (target == null) return
         let skip = fun(target, path)
         if (skip) return
 
@@ -314,7 +314,7 @@ export class Struct {
            otherwise, the object is replaced with the returned (modified) object and the processing moves on to sibling nodes.
            Returning an unchanged `obj` from fun() is a way to skip the processing of its children.
          */
-        if (target === undefined) return
+        if (target == null) return
         let swap = fun(target, path)
         if (swap !== undefined) return swap
 
