@@ -1,5 +1,5 @@
 import {ValidationError} from "../common/errors.js";
-import {T, assert, trycatch, concat} from "../common/utils.js";
+import {T, assert, trycatch, concat, mapEntries} from "../common/utils.js";
 import {Catalog, Path} from '../core/catalog.js'
 import {FIELD, GENERIC, STRING, Type, generic_string, generic_type, is_valid_field_name} from "./type.js";
 
@@ -461,7 +461,7 @@ export class CatalogTable extends Component {
             let color   = getColor(pos)
 
             // insert `pos` as the 1st arg in all actions of `run`
-            let ops     = T.mapEntries(run, (name, fun) => [name, (...args) => fun(pos, ...args)])
+            let ops     = mapEntries(run, (name, fun) => [name, (...args) => fun(pos, ...args)])
 
             // some actions in `ops` must be defined separately
             ops.moveup   = pos > 0   ? () => run.move(pos,-1) : null        // moveup() is only present if there is a position available above

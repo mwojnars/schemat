@@ -1,4 +1,4 @@
-import {assert, print, T, zip} from '../common/utils.js'
+import {assert, print, T, zip, amap} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {BinaryMap, compare_uint8} from "../common/binary.js";
 import {ChangeRequest, data_schema} from "./records.js";
@@ -162,7 +162,7 @@ export class DataBlock extends Block {
         if (!(datas instanceof Array)) { ids = [ids]; datas = [datas] }
 
         let pairs = zip(ids, datas)
-        let records = await T.amap(pairs, ([id, data]) => this._insert_one(id, data))
+        let records = await amap(pairs, ([id, data]) => this._insert_one(id, data))
 
         return records[0]
     }

@@ -1,6 +1,6 @@
 /* Serialization of objects of arbitrary classes. */
 
-import {assert, print, T} from './utils.js'
+import {assert, print, T, mapEntries} from './utils.js'
 import {bin_to_hex, hex_to_bin} from "./binary.js"
 
 
@@ -218,10 +218,10 @@ export class JSONx {
                 out[key] = this.encode(value)
 
         return out
-        // return T.mapEntries(obj, (k, v) => [k, this.encode(v)])
+        // return mapEntries(obj, (k, v) => [k, this.encode(v)])
     }
     decode_object(state) {
         /* Decode recursively all non-primitive objects inside `state` dictionary. */
-        return T.mapEntries(state, (k, v) => [k, this.decode(v)])
+        return mapEntries(state, (k, v) => [k, this.decode(v)])
     }
 }

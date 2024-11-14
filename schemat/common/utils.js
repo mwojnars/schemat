@@ -126,6 +126,30 @@ export function deleteFirst(arr, x) {
     return (i > -1)
 }
 
+export function mapEntries(obj, fun) {
+    /* Map entries of the object `obj` through the function, fun(key, value), and return as a new object.
+       NO detection of collisions if two entries are mapped to the same key (!). */
+    return Object.fromEntries(Object.entries(obj).map(([k, v]) => fun(k, v)))
+}
+
+export async function amapEntries(obj, fun) {
+    /* Like mapEntries, but for asynchronous fun(key, value). */
+    return Object.fromEntries(await Promise.all(Object.entries(obj).map(([k, v]) => fun(k, v))))
+}
+
+export async function amap(arr, fun) {
+    /* Async version of .map() for arrays. Awaits all individual promises returned by fun(). */
+    return await Promise.all(arr.map(fun))
+}
+
+export async function arrayFromAsync(iterator) {
+    /* Convert an async iterator into an array. */
+    let arr = []
+    if (isPromise(iterator)) iterator = await iterator
+    for await (const v of iterator) arr.push(v)
+    return arr
+}
+
 
 /*************************************************************************************************
  **
@@ -318,25 +342,6 @@ export class Types {
     static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
     static isPromise      = (obj) => (obj instanceof Promise)
 
-    // create a new plain object by mapping items of `obj` to new [key,value] pairs;
-    // does NOT detect if two entries are mapped to the same key (!)
-    static mapEntries = (obj, fun) => Object.fromEntries(Object.entries(obj).map(([k, v]) => fun(k, v)))
-
-    // like mapEntries, but for asynchronous `fun`
-    static amapEntries = async (obj, fun) =>
-        Object.fromEntries(await Promise.all(Object.entries(obj).map(([k, v]) => fun(k, v))))
-        // Object.fromEntries(await Promise.all(Object.entries(obj).map(async ([k, v]) => await fun(k, v))))
-
-    // async version of .map() for arrays that awaits all individual promises returned by `fun`
-    static amap = async (arr, fun) => await Promise.all(arr.map(fun))
-
-    static async arrayFromAsync(iterator) {
-        let arr = []
-        if (isPromise(iterator)) iterator = await iterator
-        for await (const v of iterator) arr.push(v)
-        return arr
-    }
-
     // prototype chain & inheritance...
 
     static getAllPropertyNames(obj) {
@@ -454,7 +459,7 @@ export async function *merge(order, ...streams) {
     if (!order) order = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
 
     // heads[i] is the next available element from the i'th stream; `undefined` if the stream is empty
-    let heads = await T.amap(streams, async s => (await s.next()).value)
+    let heads = await amap(streams, async s => (await s.next()).value)
     let last, relation
 
     // drop empty streams
