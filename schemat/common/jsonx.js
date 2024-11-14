@@ -166,7 +166,7 @@ export class JSONx {
                     throw new Error(`Invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`)
                 state = state_attr
             }
-            if (T.isNumber(classname))                      // `classname` can be an item ID instead of a class
+            if (T.isNumber(classname))                      // `classname` can be a web object ID, not a class name
                 return schemat.get_object(classname)        // all web objects must be loaded through the global Schemat instance
             cls = schemat.get_builtin(classname)
         }

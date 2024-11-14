@@ -535,6 +535,7 @@ export class REF extends Type {
 
     _validate(obj) {
         obj = super._validate(obj)
+        // if (!(value instanceof Date)) throw new ValueError(`expected a Date, got ${value} instead`)
         // TODO: check that options.category.__id is present in the list of object's ancestors, obj.__ancestor_ids
         return obj
     }
