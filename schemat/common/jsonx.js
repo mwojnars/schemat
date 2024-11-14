@@ -1,6 +1,6 @@
 /* Serialization of objects of arbitrary classes. */
 
-import {assert, print, T, mapEntries} from './utils.js'
+import {assert, print, T, mapEntries, getstate, setstate} from './utils.js'
 import {bin_to_hex, hex_to_bin} from "./binary.js"
 
 
@@ -112,7 +112,7 @@ export class JSONx {
         if (obj instanceof Map)
             state = this.encode_object(Object.fromEntries(obj.entries()))
         else {
-            state = T.getstate(obj)
+            state = getstate(obj)
             state = (obj !== state) ? this.encode(state) : this.encode_object(state)
         }
 
@@ -189,7 +189,7 @@ export class JSONx {
 
         state = this.decode(state)
 
-        return T.setstate(cls, state)
+        return setstate(cls, state)
     }
 
     // static encdec(obj)   { return this.decode(this.encode(obj))   }       // for testing purposes

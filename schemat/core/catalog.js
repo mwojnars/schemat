@@ -1,4 +1,4 @@
-import {T, print, assert, splitFirst} from '../common/utils.js'
+import {T, print, assert, splitFirst, getstate, setstate} from '../common/utils.js'
 import {JSONx} from "../common/jsonx.js"
 
 
@@ -113,7 +113,7 @@ export class Struct {
         // walking into an object is only allowed for non-WebObjects, and uses the *state* of the object rather than the object itself
         // (this is compatible with JSONx encoding, except that unknown object classes are still walked into without raising errors)
         else if (_objects && typeof target === 'object' && !(target instanceof schemat.WebObject)) {
-            let state = T.getstate(target)
+            let state = getstate(target)
             if (state?.hasOwnProperty?.(step))
                 yield* Struct.yieldAll(state[step], rest, _objects)
         }
@@ -121,8 +121,8 @@ export class Struct {
 
     static set(target, path, ...values) {
         /* Find the first occurrence of path[:-1] where the value(s) for key=path[-1] can be assigned to.
-           When walking into custom-class objects, the *state* (from T.getstate()) of these objects is modified,
-           and then the object is recreated with T.setstate(), which creates a new instance that must be reassigned
+           When walking into custom-class objects, the *state* (from getstate()) of these objects is modified,
+           and then the object is recreated with setstate(), which creates a new instance that must be reassigned
            in its parent collection - that is why this function is recursive and returns the (original or recreated) `target`.
          */
         let [step, ...rest] = path
@@ -148,10 +148,10 @@ export class Struct {
             return target
         }
         else if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
-            let state = T.getstate(target)
+            let state = getstate(target)
             modified = Struct.set(state[step], rest, ...values)
             state[step] = modified
-            return state === target ? target : T.setstate(target.constructor, state)
+            return state === target ? target : setstate(target.constructor, state)
         }
         throw new FieldPathNotFound()
     }
@@ -172,9 +172,9 @@ export class Struct {
             return target
         }
         if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
-            let state = T.getstate(target)
+            let state = getstate(target)
             state[key] = values[0]
-            return state === target ? target : T.setstate(target.constructor, state)
+            return state === target ? target : setstate(target.constructor, state)
         }
         throw new FieldPathNotFound(`not a collection nor an object: ${target}`)
     }
@@ -301,7 +301,7 @@ export class Struct {
         // walking into an object is only allowed for non-WebObjects, and uses the *state* of the object rather than the object itself
         // (this is compatible with JSONx encoding, except that unknown object classes are still walked into without raising errors)
         else if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
-            let state = T.getstate(target)
+            let state = getstate(target)
             if (typeof state === 'object')
                 for (let key of Object.keys(state))
                     Struct.collect(state[key], fun, [...path, key])
@@ -332,11 +332,11 @@ export class Struct {
                 target[i] = Struct.transform(target[i], fun, [...path, i])
 
         else if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
-            let state = T.getstate(target)
+            let state = getstate(target)
             if (typeof state === 'object') {
                 for (let key of Object.keys(state))
                     state[key] = Struct.transform(state[key], fun, [...path, key])
-                return state === target ? target : T.setstate(target.constructor, state)
+                return state === target ? target : setstate(target.constructor, state)
             }
         }
         return target

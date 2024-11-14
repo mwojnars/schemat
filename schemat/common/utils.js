@@ -59,35 +59,6 @@ export async function tryimport(path, property = null) {
     } catch(ex) {}
 }
 
-export function nullObject() {
-    return Object.create(null)
-}
-
-
-export function fileBaseName(filepath) {
-    /* Extract the file name from the file path: drop the directory path and extension.
-       Similar (although not identical) to: path.basename(filepath, path.extname(filepath))
-       without importing the 'path' module.
-     */
-    return filepath.replace(/^.*\/|\.[^.]*$/g, '')
-}
-
-export function normalizePath(path) {
-    /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
-    while (path.includes('/./')) path = path.replaceAll('/./', '/')
-    let lead = path[0] === '/' ? path[0] : ''
-    if (lead) path = path.slice(1)
-
-    let parts = []
-    for (const part of path.split('/'))
-        if (part === '..')
-            if (!parts.length) throw new Error(`incorrect path: '${path}'`)
-            else parts.pop()
-        else parts.push(part)
-
-    return lead + parts.join('/')
-}
-
 export const delay = async ms => new Promise(resolve => setTimeout(resolve, ms))
 export const sleep = delay
 
@@ -99,7 +70,7 @@ export function timeout(ms, error = new Error('Timeout')) {
 
 /*************************************************************************************************
  **
- **  ARRAY functions
+ **  ARRAYS
  **
  */
 
@@ -153,7 +124,52 @@ export async function arrayFromAsync(iterator) {
 
 /*************************************************************************************************
  **
- **  STRING functions
+ **  OBJECTS
+ **
+ */
+
+export function nullObject()    { return Object.create(null) }
+
+
+// state management...
+
+export function getstate(obj) {
+    /* obj's class may define __getstate__() method to have full control over state generation;
+       or __transient__ property to list attribute names to be excluded from an auto-generated state. */
+    if (obj.__getstate__) return obj.__getstate__()
+    if (obj.constructor?.__transient__) {
+        let collect = []                            // combine __transient__ arrays from the prototype chain
+        for (const trans of T.getInherited(obj.constructor, '__transient__'))
+            if (trans instanceof Array && trans !== collect[collect.length-1]) collect.push(trans)
+        let transient = [].concat(...collect)
+        if (transient.length) {
+            let state = {...obj}
+            transient.forEach(attr => {delete state[attr]})
+            return state
+        }
+    }
+    return obj
+}
+
+export function setstate(cls, state) {
+    /* Create an object of class `cls` by calling cls.__setstate__(state); or create a plain object with cls's prototype
+       and assign `state` to it directly. If cls.__setstate__() is async, setstate() returns a promise.
+     */
+    if (cls?.__setstate__) return cls.__setstate__(state)
+    let obj = Object.create(cls?.prototype)
+    // if (obj.__setstate__) return obj.__setstate__(state)     // __setstate__() must end with "return this" (!)
+    return Object.assign(obj, state)
+}
+
+export function clone(obj) {
+    /* Create a shallow copy of `obj`. */
+    return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj)
+}
+
+
+/*************************************************************************************************
+ **
+ **  STRINGS
  **
  */
 
@@ -270,6 +286,42 @@ export function truncate(s, length = 255, {end = '...', killwords = false, maxdr
     return result + end
 }
 
+export function comma(items, sep = ', ') {
+    /* Return a comma-separated (`sep`-separated) array of `items` without concatenating them as strings.
+       Useful for React components that expect an array of children. */
+    const list = []
+    for (let i = 0; i < items.length; i++) {
+        if (i > 0) list.push(sep)
+        list.push(items[i])
+    }
+    return list
+}
+
+
+export function fileBaseName(filepath) {
+    /* Extract the file name from the file path: drop the directory path and extension.
+       Similar (although not identical) to: path.basename(filepath, path.extname(filepath))
+       without importing the 'path' module.
+     */
+    return filepath.replace(/^.*\/|\.[^.]*$/g, '')
+}
+
+export function normalizePath(path) {
+    /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
+    while (path.includes('/./')) path = path.replaceAll('/./', '/')
+    let lead = path[0] === '/' ? path[0] : ''
+    if (lead) path = path.slice(1)
+
+    let parts = []
+    for (const part of path.split('/'))
+        if (part === '..')
+            if (!parts.length) throw new Error(`incorrect path: '${path}'`)
+            else parts.pop()
+        else parts.push(part)
+
+    return lead + parts.join('/')
+}
+
 
 const htmlEscapes = {
     '&': '&amp',
@@ -285,20 +337,11 @@ export function escape_html(string) {
     return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
 }
 
-
-export function comma(items, sep = ', ') {
-    /* Return a comma-separated (`sep`-separated) array of `items` without concatenating them as strings.
-       Useful for React components that expect an array of children. */
-    const list = []
-    for (let i = 0; i < items.length; i++) {
-        if (i > 0) list.push(sep)
-        list.push(items[i])
-    }
-    return list
-}
-
-
-/*************************************************************************************************/
+/*************************************************************************************************
+ **
+ **  TYPES
+ **
+ */
 
 export class Types {
     /*
@@ -373,38 +416,6 @@ export class Types {
            The array starts with the oldest value (from the top base class) and ends with the newest value (from `obj`). */
         return T.getPrototypes(obj).map(p => T.getOwnProperty(p, prop)).filter(v => v !== undefined).reverse()
     }
-
-    // state management...
-
-    static getstate = (obj) => {
-        /* obj's class may define __getstate__() method to have full control over state generation;
-           or __transient__ property to list attribute names to be excluded from an auto-generated state. */
-        if (obj.__getstate__) return obj.__getstate__()
-        if (obj.constructor?.__transient__) {
-            let collect = []                            // combine __transient__ arrays from the prototype chain
-            for (const trans of T.getInherited(obj.constructor, '__transient__'))
-                if (trans instanceof Array && trans !== collect[collect.length-1]) collect.push(trans)
-            let transient = [].concat(...collect)
-            if (transient.length) {
-                let state = {...obj}
-                transient.forEach(attr => {delete state[attr]})
-                return state
-            }
-        }
-        return obj
-    }
-
-    static setstate = (cls, state) => {
-        /* Create an object of class `cls` by calling cls.__setstate__(state); or create a plain object with cls's prototype
-           and assign `state` to it directly. If cls.__setstate__() is async, setstate() returns a promise.
-         */
-        if (cls?.__setstate__) return cls.__setstate__(state)
-        let obj = Object.create(cls?.prototype)
-        // if (obj.__setstate__) return obj.__setstate__(state)     // __setstate__() must end with "return this" (!)
-        return Object.assign(obj, state)
-    }
-
-    static clone = (obj) => Object.assign(Object.create(Object.getPrototypeOf(obj)), obj)
 }
 
 export const isPromise = Types.isPromise
