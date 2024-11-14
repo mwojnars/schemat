@@ -1,6 +1,5 @@
-import {assert, print, T} from '../common/utils.js'
+import {assert, print, T, zip} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, NotImplemented} from '../common/errors.js'
-import {JSONx} from "../common/jsonx.js";
 import {BinaryMap, compare_uint8} from "../common/binary.js";
 import {ChangeRequest, data_schema} from "./records.js";
 import {WebObject} from '../core/object.js'
@@ -157,11 +156,18 @@ export class DataBlock extends Block {
         assert(ring?.is_loaded())
 
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
-        let {id, data} = req.args
+        let {id: ids, data: datas} = req.args
 
         // if (typeof data === 'string') data = JSONx.parse(data)
-        // if (!(data instanceof Array)) data = [data]
+        if (!(datas instanceof Array)) { ids = [ids]; datas = [datas] }
 
+        let pairs = zip(ids, datas)
+        let records = await T.amap(pairs, ([id, data]) => this._insert_one(id, data))
+
+        return records[0]
+    }
+
+    async _insert_one(id, data) {
         if (id) await this.assert_unique(id)            // fixed ID provided by the caller? check for uniqueness
         id ??= this._assign_id()                        // assign a new ID if not provided, update _autoincrement
 
