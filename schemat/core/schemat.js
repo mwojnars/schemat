@@ -345,13 +345,18 @@ export class Schemat {
                 if (ref.is_infant() && !unique.has(ref)) {unique.add(ref); queue.push(ref); objects.push(ref)}
             })
         }
+        // set provisional IDs so that references to infant objects can be properly resolved in the DB when creating data records
+        objects.forEach((obj, i) => obj.__provisional_id = i+1)     // 1, 2, 3, ...
 
         let {reload, ...opts} = opts_
         let data = objects.map(obj => obj.__data.__getstate__())
         let records = await this.site.POST.insert({data, opts})
-        records.map(({id}, i) => objects[i].__id = id)
+        records.map(({id}, i) => {
+            delete objects[i].__provisional_id  // replace provisional IDs with final IDs
+            objects[i].__id = id
+        })
 
-        objects = objects.slice(0, size)        // return only the original objects (possibly reloaded), not the whole array of references
+        objects = objects.slice(0, size)        // return only the original objects (possibly reloaded below), not the whole array of references
 
         return reload ? Promise.all(objects.map(obj => obj.reload())) : objects
     }

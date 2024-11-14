@@ -175,14 +175,11 @@ export class DataBlock extends Block {
         return records[0]
     }
 
-    _transform_provisional(id, data) {
+    _transform_provisional(ids, data) {
         /* Transform `data` of every object so that provisional IDs (-1, -2, ...) are replaced with the actual IDs. */
-        
-        let f = (obj) => {
-            let prov = obj?.__meta?.provisional_id
-            if (prov && obj instanceof WebObject)
-                return
-        }
+        let stubs = ids.map(id => WebObject.stub(id))
+        let prov
+        let f = (obj) => (obj instanceof WebObject && (prov = obj.__provisional_id) ? stubs[prov-1] : undefined)
         return data.map(d => Struct.transform(d, f))
     }
 
