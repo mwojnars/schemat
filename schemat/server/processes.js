@@ -213,11 +213,6 @@ export class AdminProcess extends BackendProcess {
                 let json = data.dump()
                 if (json === record.data_json) continue                 // no changes? don't update the record
 
-                // let id = record.id
-                // let json = record.data_json
-                // let data = JSONx.transform(json, transform)             // new json data
-                // if (data === json) continue                             // no changes? don't update the record
-
                 if (ring.readonly)
                     print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
                 else {
