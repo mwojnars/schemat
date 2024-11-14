@@ -461,7 +461,7 @@ export class CatalogTable extends Component {
             let color   = getColor(pos)
 
             // insert `pos` as the 1st arg in all actions of `run`
-            let ops     = T.mapDict(run, (name, fun) => [name, (...args) => fun(pos, ...args)])
+            let ops     = T.mapEntries(run, (name, fun) => [name, (...args) => fun(pos, ...args)])
 
             // some actions in `ops` must be defined separately
             ops.moveup   = pos > 0   ? () => run.move(pos,-1) : null        // moveup() is only present if there is a position available above

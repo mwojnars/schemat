@@ -119,6 +119,13 @@ export function unique(array) {
     return array.filter((x, i, a) => a.indexOf(x) === i)
 }
 
+export function deleteFirst(arr, x) {
+    /* Find and delete the 1st occur. of `x` in the array. */
+    let i = arr.indexOf(x);
+    if (i > -1) arr.splice(i, 1);
+    return (i > -1)
+}
+
 
 /*************************************************************************************************
  **
@@ -311,18 +318,12 @@ export class Types {
     static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
     static isPromise      = (obj) => (obj instanceof Promise)
 
-    static deleteFirst = (arr, x) => {
-        let i = arr.indexOf(x);
-        if (i > -1) arr.splice(i, 1);
-        return (i > -1)
-    }  // find and delete the 1st occur. of x in array
-
     // create a new plain object by mapping items of `obj` to new [key,value] pairs;
     // does NOT detect if two entries are mapped to the same key (!)
-    static mapDict = (obj, fun) => Object.fromEntries(Object.entries(obj).map(([k, v]) => fun(k, v)))
+    static mapEntries = (obj, fun) => Object.fromEntries(Object.entries(obj).map(([k, v]) => fun(k, v)))
 
-    // like mapDict, but for asynchronous `fun`
-    static amapDict = async (obj, fun) =>
+    // like mapEntries, but for asynchronous `fun`
+    static amapEntries = async (obj, fun) =>
         Object.fromEntries(await Promise.all(Object.entries(obj).map(([k, v]) => fun(k, v))))
         // Object.fromEntries(await Promise.all(Object.entries(obj).map(async ([k, v]) => await fun(k, v))))
 
