@@ -161,11 +161,12 @@ export class DataBlock extends Block {
         // if (typeof data === 'string') data = JSONx.parse(data)
         if (data instanceof Array) assert(!id)
         else {
+            if (id) await this.assert_unique(id)        // fixed ID provided by the caller? check for uniqueness
             id = id ? [id] : null
             data = [data]
         }
 
-        id ??= this._reserve_id(data.length)
+        id ??= this._reserve_id(data.length)            // assign IDs to all new objects
 
         let pairs = zip(id, data)
         let records = await amap(pairs, pair => this._insert_one(...pair))
@@ -174,9 +175,6 @@ export class DataBlock extends Block {
     }
 
     async _insert_one(id, data) {
-        if (id) await this.assert_unique(id)            // fixed ID provided by the caller? check for uniqueness
-        id ??= this._assign_id()                        // assign a new ID if not provided, update _autoincrement
-
         let obj = await WebObject.from_data(null, data) // the object must be instantiated for validation
         obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
         obj.validate(false)                             // 1st validation (pre-setup), to give __setup__() confidence in input data
