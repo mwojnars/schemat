@@ -473,20 +473,14 @@ export class WebObject {
             let seal = this.__data.get('__seal')            // if seal is present, replace refs to prototypes/categories with proper versions of these dependency objects
             if (seal && sealed) await this._load_dependencies(seal)
 
-            await this._activate()
+            await this._initialize()
 
             // if (this.is_linked())
             //     this.__meta.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
             // if (await_url && schemat.site && this.__meta.pending_url)
             //     await this.__meta.pending_url
 
-            let now = Date.now()
-            let ttl = (this.__ttl || this.__base?.ttl || 0) * 1000
-            this.__meta.loaded_at = now
-            this.__meta.expire_at = now + ttl
-
-            if (this.__ver && !this.__meta.mutable) schemat.register_version(this)
-
+            this._activate()
             return this
 
         } catch (ex) {
@@ -499,9 +493,9 @@ export class WebObject {
         }
     }
 
-    async _activate() {
+    async _initialize() {
         /* Make sure that dependencies are loaded. Set the JS class of this object. Init internals, call __init__().
-           Can be called for both newborn or deserialized (loaded from DB) object.
+           Can be called both for newly-created and deserialized (loaded from DB) objects.
          */
         let proto = this._load_prototypes()             // load prototypes
         if (proto instanceof Promise) await proto
@@ -523,12 +517,23 @@ export class WebObject {
 
         let init = this.__init__()                      // custom initialization after the data is loaded (optional)
         if (init instanceof Promise) await init
+    }
 
+    _activate() {
+        /* Make the object fully operational by initializing edit operations and network services.
+           Configure expiration time and put the object in the Registry.
+         */
         this._init_edit_triggers()
         this._init_services()
 
+        let now = Date.now()
+        let ttl = (this.__ttl || this.__base?.ttl || 0) * 1000
+
+        this.__meta.loaded_at = now
+        this.__meta.expire_at = now + ttl
         this.__meta.active = true
-        return this
+
+        if (this.__ver && !this.__meta.mutable) schemat.register_version(this)
     }
 
     async _load_dependencies(seal) {
