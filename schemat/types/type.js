@@ -232,7 +232,7 @@ export class Type {
 
 export class GENERIC extends Type {
     /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
-
+    static options = {repeated: true}
     static Widget = widgets.GENERIC_Widget
 }
 
