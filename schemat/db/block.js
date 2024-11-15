@@ -159,6 +159,7 @@ export class DataBlock extends Block {
 
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
         let {id, data} = req.args
+        let multi = (data instanceof Array)
 
         // if (typeof data === 'string') data = JSONx.parse(data)
         if (data instanceof Array) assert(!id)
@@ -172,9 +173,9 @@ export class DataBlock extends Block {
         // data = this._transform_provisional(id, data)
 
         let pairs = zip(id, data)
-        let records = await amap(pairs, pair => this._insert_one(...pair))
+        let records = amap(pairs, pair => this._insert_one(...pair))
 
-        return records[0]
+        return multi ? records : (await records)[0]
     }
 
     _transform_provisional(ids, data) {
