@@ -89,10 +89,10 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
         }
 
-        if (obj instanceof schemat.WebObject) {         //obj?.__id !== undefined || obj instanceof schemat.WebObject ||
-            let id = obj._get_write_id()
-            if (id !== undefined) return {[JSONx.ATTR_CLASS]: id}
-            else throw new Error(`can't encode a reference to a newly-created object (no ID): ${obj}`)
+        if (obj instanceof schemat.WebObject) {
+            if (obj.id || obj.__provisional_id)
+                return {[JSONx.ATTR_CLASS]: obj.id || -obj.__provisional_id}    // ref to newly-created object encoded by negated __provisional_id
+            throw new Error(`can't encode a reference to a newly-created object (no ID): ${obj}`)
         }
 
         if (obj instanceof Uint8Array) {

@@ -433,11 +433,6 @@ export class WebObject {
         return obj.load({sealed})
     }
 
-    _get_write_id() {
-        /* Either __id, or negated __provisional_id, or undefined. */
-        return this.__id || (this.__provisional_id ? -this.__provisional_id : undefined)
-    }
-
 
     /***  Loading & initialization  ***/
 
