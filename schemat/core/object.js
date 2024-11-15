@@ -919,7 +919,7 @@ export class WebObject {
 
     _bump_version() {
         /* Set or increment __ver number, if already present or category's `set_version` is true. */
-        if (this.__ver || this.__base.set_version) {
+        if (this.__ver || this.__base?.set_version) {
             //return this.__data.delete('__ver')
             let ver = this.__ver || 0
             this.__data.set('__ver', ver + 1)
@@ -940,7 +940,7 @@ export class WebObject {
     _seal_dependencies() {
         /* Recalculate the __seal property as a string "v1.v2.v3..." of concatenated version numbers of all dependencies: prototypes + categories. */
         let data = this.__data
-        if (!this.__base.seal_dependencies) return data.delete('__seal')
+        if (!this.__base?.seal_dependencies) return data.delete('__seal')
         if (!this.__ver) throw new Error(`cannot seal dependencies of [${this.id}], __ver of the object is missing`)
 
         // inherited categories are excluded from `deps`: they are already included in the seals of prototypes where they were originally declared

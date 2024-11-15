@@ -260,7 +260,7 @@ export class DataBlock extends Block {
         obj._bump_version()                         // increment __ver
         obj._seal_dependencies()                    // recompute __seal
 
-        if (obj.__base.save_revisions)
+        if (obj.__base?.save_revisions)
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
         obj.validate(true)                          // validate object properties: each one individually and all of them together; may raise exceptions
