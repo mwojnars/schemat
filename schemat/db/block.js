@@ -3,6 +3,7 @@ import {DataAccessError, DataConsistencyError, NotImplemented} from '../common/e
 import {BinaryMap, compare_uint8} from "../common/binary.js";
 import {ChangeRequest, data_schema} from "./records.js";
 import {WebObject} from '../core/object.js'
+import {Struct} from "../core/catalog.js";
 
 // import { Kafka } from 'kafkajs'
 
@@ -170,7 +171,7 @@ export class DataBlock extends Block {
         }
 
         id ??= this._reserve_id(data.length)            // assign IDs to all new objects
-        // data = this._transform_provisional(id, data)
+        data = this._transform_provisional(id, data)
 
         let pairs = zip(id, data)
         let records = amap(pairs, pair => this._insert_one(...pair))
