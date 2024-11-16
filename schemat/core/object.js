@@ -1051,15 +1051,10 @@ export class WebObject {
            In the former case, the object itself is returned. Some of the available options: {ring, ring_name, reload}.
          */
         this.assert_active()
-        let edits = this.__meta.edits
+        if (this.is_infant()) return schemat.insert(this, opts)         // save a newly-created object
 
-        if (this.is_infant()) {         // save a newly-created object...
-            // return schemat.insert([this], opts).then(([obj]) => obj)
-            let data = this.__data.__getstate__()
-            return schemat.site.POST.create_object({data, opts}).then(({id}) => (this.__id = id) && this)
-        }
-
-        if (edits?.length) {            // save updates of an existing object...
+        let edits = this.__meta.edits           // otherwise, save updates of an existing object...
+        if (edits?.length) {
             let submit = schemat.site.POST.submit_edits(this.id, ...edits) //.then(() => this)
             edits.length = 0
             return submit
