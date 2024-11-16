@@ -960,48 +960,6 @@ export class WebObject {
         data.set('__seal', seal)
     }
 
-    // async insert_self() {
-    //     /* Insert this (newborn) object and, recursively, all the newborn objects referenced by this one, to the database. */
-    //
-    //     assert(this.is_infant(), 'trying to insert an object that is already stored in the database')
-    //
-    //     // find recursively all the objects referenced (directly or indirectly) by this one that are still
-    //     // not persisted in the database; the graph of such objects may contain circular references -
-    //     // including a reference of this object to itself (!)
-    //     let refs = await this._find_unlinked_references()
-    //
-    //     // if no references need to be inserted together with this object, use the regular 1-phase insertion
-    //     if (refs.length === 0) return schemat.db.insert(this)
-    //
-    //     // otherwise, perform a 2-phase insertion of 1+ of cross/self-referencing objects
-    //     let objects = new Set([this, ...refs])
-    //     return schemat.db.insert_many(...objects)
-    // }
-    //
-    // async _find_unlinked_references(visited = new Set()) {
-    //     /* Find recursively all newborn (non-persisted) objects that are referenced - directly or indirectly -
-    //        by this one. If `this` is unsealed yet (properties are stored in POJO attributes not in __data),
-    //        create __data from the object's regular attributes.
-    //      */
-    //     let data = await this.seal_data()
-    //     let refs = data.find_references()
-    //     let unlinked_refs = refs.filter(obj => obj.is_infant() && !visited.has(obj))
-    //
-    //     unlinked_refs.forEach(ref => visited.add(ref))
-    //
-    //     for (let ref of unlinked_refs)
-    //         await ref._find_unlinked_references(visited)
-    //
-    //     return visited
-    // }
-    //
-    // async seal_data() {
-    //     /* In an infant object, create __data if not present yet, by copying property values from regular POJO attributes of the object. */
-    //     if (this.__data) return this.__data
-    //     if (this.is_linked()) throw new Error('cannot seal properties of a linked object')
-    //     return this.__data = await Catalog.from_object(this)
-    // }
-
     async move_to(directory) {
         return this.POST.move_to(directory)
     }
