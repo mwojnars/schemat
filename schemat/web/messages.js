@@ -107,30 +107,9 @@ export class mDataString extends mData {
 }
 
 
-export class mDataRecord extends MessageEncoder {
-    /* Input:  record of the form {id, data}, where `data` is a Catalog or its stringified representation.
-       Output: {id, data}, where `data` is JSONx-encoded, but no longer stringified.
-       After decoding, the record is automatically added to the Registry as the newest representation of this ID.
-     */
-    encode(rec) {
-        // if (rec instanceof DataRecord) return JSON.stringify(rec.encoded())
-        let {id, data} = rec
-        if (typeof data === 'string') return JSON.stringify({id, data: JSON.parse(data)})
-        return JSONx.stringify({id, data: data.__getstate__()})
-    }
-    decode(message) {
-        let rec = JSON.parse(message)
-        schemat.register_record(rec)
-        return rec
-        // let {id, data} = JSONx.parse(message)
-        // if (!(data instanceof Catalog)) data = Catalog.__setstate__(data)
-        // return {id, data}
-    }
-}
-
 export class mDataRecords extends MessageEncoder {
-    /* Input:  array of records of the form {id, data}, where each `data` is a Catalog or its stringified representation.
-       Output: array of {id, data} records, where each `data` is JSONx-encoded, but no longer stringified.
+    /* Input:  record or array of records of the form {id, data}, where `data` is a Catalog or its stringified representation.
+       Output: record or array of {id, data} records, where each `data` is JSONx-encoded, but no longer stringified.
        After decoding, all records are automatically added to the Registry as the newest representations of their IDs.
      */
     encode(recs) {
