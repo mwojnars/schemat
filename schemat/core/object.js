@@ -228,8 +228,10 @@ export class WebObject {
     __url                   (virtual) absolute URL path of this object, calculated via type imputation in _impute_url()
 
     __assets                cached web Assets of this object's __schema
-    __record                JSONx-encoded representation of this object as {id, data}
+
     __json                  stringified representation of this object's __data; when passed to Catalog.load() the original __data structure is recreated
+    __plain                 plain-object representation of __data; for repeated fields, only the first value is included; may still contain nested Catalogs
+    __record                JSONx-encoded representation of this object as {id, data}
 
     */
 
@@ -267,16 +269,15 @@ export class WebObject {
         return assets
     }
 
+    get __json()   { return this.__data.dump() }
+    get __plain()  { return this.__data.object() }
+
     get __record() {
         /* JSONx-encoded {id, data} representation of this object. NOT stringified.
            Stringification can be done through plain JSON in the next step. */
         if (!this.id) throw new Error(`cannot create a record for a newly created object (no ID)`)
         if (!this.__data) throw new Error(`cannot create a record for a stub object (no __data)`)
         return {id: this.id, data: this.__data.encode()}
-    }
-
-    get __json() {
-        return this.__data.dump()
     }
 
     get __references() {       // find_references()
