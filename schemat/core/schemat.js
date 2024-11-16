@@ -331,12 +331,17 @@ export class Schemat {
     /***  Object modifications (CRUD)  ***/
 
     async insert(objects, opts_ = {}) {
-        /* Insert multiple (related) objects all at once to the same DB block. The objects may reference each other, and
-           the links will be properly replaced in the DB with newly assigned object IDs even if the references are cyclic.
+        /* Insert 1+ related objects all at once to the same DB block. The objects may reference each other.
+           The links will be properly replaced in the DB with newly assigned object IDs even if the references are cyclic.
            All the `objects` must be infants (no ID assigned yet). After this call completes, the objects & references
            get their __id values assigned. The returned array either contains the original `objects`,
            or their new instances in the same order (reloaded objects), depending on the `reload` flag.
+           `objects` can be either an Array of web objects, or a single web object. In the latter case, this single
+           object (original or reloaded) is returned, not an array.
          */
+        let batch = (objects instanceof Array)
+        if (!batch) objects = [objects]
+
         objects.forEach(obj => {if (!obj.is_infant()) throw new Error(`object ${obj} already has an ID, cannot be inserted to DB again`)})
 
         let size = objects.length
@@ -362,9 +367,12 @@ export class Schemat {
             delete objects[i].__self.__provisional_id   // replace provisional IDs with final IDs
             objects[i].__id = id
         })
-        objects = objects.slice(0, size)                // return only the original objects (possibly reloaded below), not the whole array of references
-
-        return reload ? Promise.all(objects.map(obj => obj.reload())) : objects
+        objects = objects.slice(0, size)                // return only the original list of objects, not the whole array of references
+        if (reload) {
+            objects = objects.map(obj => obj.reload())
+            if (batch) return Promise.all(objects)
+        }
+        return batch ? objects : objects[0]
     }
 
     async save(objects, opts_ = {}) {

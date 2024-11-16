@@ -160,7 +160,7 @@ export class DataBlock extends Block {
 
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
         let {id, data} = req.args
-        let multi = (data instanceof Array)
+        let batch = (data instanceof Array)
 
         // if (typeof data === 'string') data = JSONx.parse(data)
         if (data instanceof Array) assert(!id)
@@ -176,7 +176,7 @@ export class DataBlock extends Block {
         let pairs = zip(id, data)
         let records = amap(pairs, pair => this._insert_one(...pair))
 
-        return multi ? records : (await records)[0]
+        return batch ? records : (await records)[0]
     }
 
     _transform_provisional(ids, data) {
