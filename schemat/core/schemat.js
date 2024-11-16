@@ -221,7 +221,7 @@ export class Schemat {
     get_provisional(id) {
         /* Create a stub for a newly-created (infant) object before its insertion to DB; it only has __provisional_id, not __id. */
         let obj = WebObject.stub()
-        obj.__provisional_id = id
+        obj.__self.__provisional_id = id
         return obj
     }
 
@@ -341,7 +341,7 @@ export class Schemat {
 
         let size = objects.length
         let unique = new Set(objects)
-        if (size !== unique.size) throw new Error(`duplicate objects passed to insert()`)
+        if (size !== unique.size) throw new Error(`same object passed twice to insert()`)
 
         let queue = [...objects]
 
