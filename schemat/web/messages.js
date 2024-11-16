@@ -134,16 +134,19 @@ export class mDataRecords extends MessageEncoder {
        After decoding, all records are automatically added to the Registry as the newest representations of their IDs.
      */
     encode(recs) {
+        let batch = (recs instanceof Array)
+        if (!batch) recs = [recs]
         recs = recs.map(rec => {
             let {id, data} = rec
             if (typeof data === 'string') return JSON.stringify({id, data: JSON.parse(data)})
             return JSONx.stringify({id, data: data.__getstate__()})
         })
-        return `[${recs.join(',')}]`
+        return batch ? `[${recs.join(',')}]` : recs[0]
     }
     decode(message) {
         let recs = JSON.parse(message)
-        recs.forEach(rec => schemat.register_record(rec))
+        if (recs instanceof Array) recs.forEach(rec => schemat.register_record(rec))
+        else schemat.register_record(recs)
         return recs
     }
 }
