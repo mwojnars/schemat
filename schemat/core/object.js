@@ -765,7 +765,7 @@ export class WebObject {
         /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema. */
 
     __edited__(prev, curr) {}
-        /* Post-processing after the __data was edited on the server while updating the record in DB. */
+        /* Post-processing after the __data was edited on the server during update of the record in DB. */
 
 
     /***  Networking  ***/
