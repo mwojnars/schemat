@@ -77,6 +77,13 @@ export class WebServer extends Server {
         // print(`handle() worker ${process.pid} started: ${req.path}`)
         // await session.start()
 
+        // // redirection of HTTP to HTTPS
+        // httpServer.on('request', (req, res) => {
+        //     let httpsUrl = `https://${req.headers.host.replace(HTTP_PORT, HTTPS_PORT)}${req.url}`
+        //     res.writeHead(301, { Location: httpsUrl })
+        //     res.end()
+        // })
+
         try {
             // await sleep(3000)
             let deadline = timeout(this.REQUEST_TIMEOUT * 1000, new ServerTimeoutError())
