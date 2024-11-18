@@ -924,10 +924,10 @@ export class WebObject {
     _bump_version() {
         /* Set or increment __ver number, if already present or category's `set_version` is true. */
         if (this.__ver || this.__base?.set_version) {
-            //return this.__data.delete('__ver')
             let ver = this.__ver || 0
             this.__data.set('__ver', ver + 1)
         }
+        //else if (this.__ver) this.__data.delete('__ver')
     }
 
     async _create_revision(data) {

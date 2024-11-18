@@ -95,7 +95,9 @@
         the exact same behaviour of the object unless influenced by external
         factors. During update, the seal is recomputed to reflect the latest
         version numbers of each dependency. Typically used to seal dependencies
-        of category objects.
+        of category objects. Requires that the object has a __ver number and all its
+        dependencies have a __seal. When the object has no dependencies, its seal is '.',
+        otherwise it's a dot-concatenated string of version numbers of the dependencies.
       "@": schemat/types/type.js:BOOLEAN
     immutable:
       default: false

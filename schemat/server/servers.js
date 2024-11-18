@@ -1,3 +1,5 @@
+import cluster from 'node:cluster'
+
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {thread_local_variable} from "./thread.js";
@@ -60,8 +62,6 @@ export class WebServer extends Server {
 
         // schemat.registry.objects.clear()
         // await schemat._init_site()
-
-        const cluster = await import('node:cluster')
 
         if (this.workers && this.workers > 1 && cluster.isMaster) {
             print(`primary ${process.pid} is starting ${this.workers} workers...`)
