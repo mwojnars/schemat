@@ -3,7 +3,6 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 import {print, assert, T} from "../common/utils.js";
 import {ItemNotFound} from "../common/errors.js";
 import {DataServer, WebServer} from "./servers.js";
-import {JSONx} from "../common/jsonx.js";
 import {WebObject} from "../core/object.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
@@ -67,8 +66,8 @@ export class WorkerProcess extends BackendProcess {
         // let {WebServer} = await schemat.import('/$/local/schemat/server/servers.js')
 
         print('Starting the server...')
-        let web = new WebServer({host, port, workers})
-        this._server = await web.start()
+        let web_workers = new WebServer({host, port, workers})
+        this._server = await web_workers.start()
 
         process.on('SIGTERM', () => this.shutdown())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.shutdown())         // listen for INT signal, e.g. Ctrl+C
@@ -81,7 +80,7 @@ export class WorkerProcess extends BackendProcess {
     async shutdown() {
         if (this._server) {
             print('\nReceived kill signal, shutting down gracefully...')
-            this._server.close(() => { print('Server closed') })
+            this._server.close(() => print('Server closed'))
         }
         schemat.is_closing = true
         setTimeout(() => process.exit(0), 10)
