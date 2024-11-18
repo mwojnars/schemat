@@ -1,7 +1,7 @@
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
-import {WorkerProcess} from "./processes.js"
+import {MainProcess} from "./processes.js"
 
 
 const HOST    = '127.0.0.1'
@@ -25,5 +25,5 @@ await (async function run() {
     // TODO: this line must be uncommented if dynamic code loading is needed (!!!); however, currently the dynamic loading causes errors for unknown reasons
     // let {WorkerProcess} = await loader.import('/$/local/schemat/server/processes.js')
 
-    return new WorkerProcess().start('run', opts)
+    return new MainProcess().start('run', opts)
 })()

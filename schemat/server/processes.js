@@ -51,14 +51,17 @@ export class BackendProcess {
     }
 }
 
-export class WorkerProcess extends BackendProcess {
-
+export class MainProcess extends BackendProcess {
+    /* Top-level Schemat process running on a given machine. Spawns and manages worker processes:
+       web server(s), data server(s), load balancer etc.
+     */
+    workers         // array of Worker instances spawned
     _server         // the express server to be closed upon shutdown
 
     async CLI_run({host, port, workers}) {
 
         // node = schemat.get_loaded(this_node_ID)
-        // return node.activate()     // start the lifeloop and all worker processes (servers)
+        // return node.activate()     // start the life-loop and all worker processes (servers)
 
         // let m = await schemat.import('/$/local/schemat/test/temp1.js')
         // print('loaded:', m)
