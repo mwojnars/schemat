@@ -66,10 +66,12 @@ export class WebServer extends Server {
         if (this.workers && this.workers > 1 && cluster.isMaster) {
             print(`primary ${process.pid} is starting ${this.workers} workers...`)
             for (let i = 0; i < this.workers; i++) cluster.fork()
-            cluster.on('exit', (worker) => print(`Worker ${worker.process.pid} terminated`))
-            return
+            cluster.on('exit', (worker) => {
+                print(`worker ${worker.process.pid} exited`)
+                cluster.fork()      // restart the process
+            })
         }
-        return this.serve_express()
+        else return this.serve_express()
     }
 
     async handle(req, res) {
