@@ -1,5 +1,3 @@
-import cluster from 'node:cluster'
-
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {thread_local_variable} from "./thread.js";
@@ -35,6 +33,7 @@ export class Server {
     async stop()  {}
 }
 
+
 /**********************************************************************************************************************
  **
  **  WEB SERVER
@@ -57,17 +56,45 @@ export class WebServer extends Server {
     }
 
     async start() {
-        /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
-
-        return this.serve_express()
-
-        // print('start() test:', obj instanceof Set)
-
         // let {ServerSchemat} = await import('/$/local/schemat/core/schemat_srv.js')
         // await schemat._reset_class(ServerSchemat)
 
         // schemat.registry.objects.clear()
         // await schemat._init_site()
+
+        let express = (await import('express')).default
+        let bodyParser = (await import('body-parser')).default
+
+        let app = express()
+
+        // for official middleware see: https://expressjs.com/en/resources/middleware.html
+        // for receiving files:
+        //  - multer:      https://www.npmjs.com/package/multer and https://expressjs.com/en/5x/api.html#req.body
+        //  - fileupload:  https://www.npmjs.com/package/express-fileupload & https://stackoverflow.com/a/50243907/1202674 (newer one, possibly easier)
+
+        // // set CORS headers in all responses to allow cross-origin requests
+        // app.use((req, res, next) => {
+        //     res.header('Access-Control-Allow-Origin', '*')      // or the specific origin of your client app
+        //     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+        //     next()
+        // })
+
+        // app.use(express.json())                                 // for parsing application/json to req.body object
+        app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
+        app.use(bodyParser.text({type: '*/*', limit: '10MB'}))  // for setting req.body string from plain-text body (if not json MIME-type)
+
+        app.all('*', (req, res) => this.handle(req, res))
+
+        // web.get('*', async (req, res) => {
+        //     res.send(`URL path: ${req.path}`)
+        //     res.send('Hello World!')
+        // })
+
+        this._http_server = app.listen(this.port, this.host, () => print(`worker ${process.pid} listening at http://${this.host}:${this.port}`))
+    }
+
+    stop() {
+        this._http_server?.close(() => print(`WebServer closed (worker #${this.worker_id})`))
     }
 
     async handle(req, res) {
@@ -113,42 +140,6 @@ export class WebServer extends Server {
         // await sleep(200)                 // for testing
         // session.printCounts()
         // await session.stop()
-    }
-
-    async serve_express() {
-        let express = (await import('express')).default
-        let bodyParser = (await import('body-parser')).default
-
-        let app = express()
-
-        // for official middleware see: https://expressjs.com/en/resources/middleware.html
-        // for receiving files:
-        //  - multer:      https://www.npmjs.com/package/multer and https://expressjs.com/en/5x/api.html#req.body
-        //  - fileupload:  https://www.npmjs.com/package/express-fileupload & https://stackoverflow.com/a/50243907/1202674 (newer one, possibly easier)
-
-        // // set CORS headers in all responses to allow cross-origin requests
-        // app.use((req, res, next) => {
-        //     res.header('Access-Control-Allow-Origin', '*')      // or the specific origin of your client app
-        //     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
-        //     next()
-        // })
-
-        // app.use(express.json())                                 // for parsing application/json to req.body object
-        app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
-        app.use(bodyParser.text({type: '*/*', limit: '10MB'}))  // for setting req.body string from plain-text body (if not json MIME-type)
-
-        app.all('*', (req, res) => this.handle(req, res))
-
-        // web.get('*', async (req, res) => {
-        //     res.send(`URL path: ${req.path}`)
-        //     res.send('Hello World!')
-        // })
-
-        this._http_server = app.listen(this.port, this.host, () => print(`worker ${process.pid} listening at http://${this.host}:${this.port}`))
-    }
-
-    stop() {
-        this._http_server?.close(() => print(`WebServer closed (worker #${this.worker_id})`))
     }
 }
 
