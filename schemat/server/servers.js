@@ -64,7 +64,7 @@ export class WebServer extends Server {
         // schemat.registry.objects.clear()
         // await schemat._init_site()
 
-        if (this.workers && this.workers > 1 && cluster.isMaster) {
+        if (this.workers && this.workers > 1 && cluster.isPrimary) {
             print(`primary ${process.pid} is starting ${this.workers} workers...`)
             for (let i = 0; i < this.workers; i++) cluster.fork()
             cluster.on('exit', (worker) => {

@@ -208,6 +208,7 @@ export class WebObject {
                             in a batch of interconnected objects that are being inserted to DB altogether
 
     __data                  own properties of this object in their raw form (before imputation etc.), as a Catalog object created during .load()
+    __object                JS object representation of __data, NOT encoded; for repeated fields, only the first value is included; may still contain nested Catalogs
 
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
                             that inherits (like from prototypes) from all __category$ listed in this object or inherited
@@ -229,9 +230,9 @@ export class WebObject {
 
     __assets                cached web Assets of this object's __schema
 
-    __json                  stringified representation of this object's __data; when passed to Catalog.load() the original __data structure is recreated
-    __plain                 plain-object representation of __data; for repeated fields, only the first value is included; may still contain nested Catalogs
-    __record                JSONx-encoded representation of this object as {id, data}
+    __record                JSONx-encoded representation of this object as {id, data}, where `data` is this.__flat
+    __flat                  JSONx-encoded representation of this object's __data, where custom classes are replaced using {@:...} notation; suitable for JSON.stringify()
+    __json                  stringified representation of this object's __data; can be passed to Catalog.load() to recreate the original __data structure
 
     */
 
@@ -269,16 +270,18 @@ export class WebObject {
         return assets
     }
 
-    get __json()   { return this.__data.dump() }
-    get __plain()  { return this.__data.object() }
+    get __object() { return this.__data.object() }
 
     get __record() {
         /* JSONx-encoded {id, data} representation of this object. NOT stringified.
            Stringification can be done through plain JSON in the next step. */
         if (!this.id) throw new Error(`cannot create a record for a newly created object (no ID)`)
         if (!this.__data) throw new Error(`cannot create a record for a stub object (no __data)`)
-        return {id: this.id, data: this.__data.encode()}
+        return {id: this.id, data: this.__flat}
     }
+
+    get __flat()   { return this.__data.encode() }
+    get __json()   { return JSON.stringify(this.__flat) }
 
     get __references() {       // find_references()
         /* Array of all WebObjects referenced from this one. */
