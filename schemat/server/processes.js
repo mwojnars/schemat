@@ -56,7 +56,6 @@ export class MainProcess extends BackendProcess {
        web server(s), data server(s), load balancer etc.
      */
     servers         // array of Server instances, each server is a child process
-    _server         // the express server to be closed upon shutdown
 
     async CLI_main(opts) { return this.start(opts) }
 
@@ -68,18 +67,15 @@ export class MainProcess extends BackendProcess {
         // print('loaded:', m)
         // let {WebServer} = await schemat.import('/$/local/schemat/server/servers.js')
 
-        print('Starting the server...')
-        let web_server = new WebServer({host, port, workers})
-        this._server = await web_server.start()
-
-        this.servers = [web_server]
-
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
-        // let web = new WebServer(this.cluster, {host, port, workers}).start()
-        // let data = new DataServer(this.cluster).start()
-        // return Promise.all([web, data])
+        print('Starting the server...')
+        let web_server = new WebServer({host, port, workers})
+        // let data_server = new DataServer(this.cluster)
+
+        this.servers = [web_server]
+        return Promise.all(this.servers.map(srv => srv.start()))
     }
 
     async stop() {

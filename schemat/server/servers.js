@@ -149,7 +149,7 @@ export class WebServer extends Server {
         //     res.send('Hello World!')
         // })
 
-        return this._http_server = app.listen(this.port, this.host, () => print(`worker ${process.pid} listening at http://${this.host}:${this.port}`))
+        this._http_server = app.listen(this.port, this.host, () => print(`worker ${process.pid} listening at http://${this.host}:${this.port}`))
     }
 
     stop() {
