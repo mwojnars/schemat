@@ -109,11 +109,14 @@ export class MainProcess extends BackendProcess {
     }
 
     async stop() {
-        print(`Received kill signal, shutting down gracefully (PID=${process.pid})...`)
+        if (schemat.is_closing) return
+        if (cluster.isPrimary) print(`\nReceived kill signal, shutting down gracefully...`)
+
         schemat.is_closing = true
         setTimeout(() => process.exit(0), 10)
-        return this.current_server?.stop()
-        // return Promise.all(this.servers.map(srv => srv.stop()))
+        
+        if (cluster.isPrimary) this.servers.forEach(srv => srv.worker.kill())
+        else return this.current_server.stop()
     }
 }
 
