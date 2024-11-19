@@ -57,9 +57,12 @@ export class MainProcess extends BackendProcess {
      */
     servers         // array of Server instances, each server is a child process
 
-    async CLI_main(opts) { return this.start(opts) }
+    async CLI_main(opts) {
+        this.opts = opts
+        return this.start()
+    }
 
-    async start({host, port, workers}) {
+    async start() {
         // node = schemat.get_loaded(this_node_ID)
         // return node.activate()     // start the life-loop and all worker processes (servers)
 
@@ -69,13 +72,19 @@ export class MainProcess extends BackendProcess {
 
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
-
         print('Starting the server...')
-        let web_server = new WebServer({host, port, workers})
-        // let data_server = new DataServer(this.cluster)
 
-        this.servers = [web_server]
+        // // let data_server = new DataServer(this.cluster)
+        // let web_server = new WebServer(this.opts)
+        // this.servers = [web_server]
+
+        this.servers = this._create_servers()
+
         return Promise.all(this.servers.map(srv => srv.start()))
+    }
+
+    _create_servers() {
+        return [new WebServer(this.opts)]
     }
 
     async stop() {
