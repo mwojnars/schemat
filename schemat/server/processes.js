@@ -96,12 +96,13 @@ export class MainProcess extends BackendProcess {
         print(`starting the main process (PID=${process.pid}) with ${N} worker(s)...`)
 
         for (let i = 0; i < N; i++)
-            cluster.fork({WORKER_ID: i + 1})
+            this.servers[i].worker = cluster.fork({WORKER_ID: i + 1})
 
         cluster.on('exit', (worker) => {
             let id = worker.process.env.WORKER_ID
             print(`worker #${id} (PID=${worker.process.pid}) exited`)
-            cluster.fork({WORKER_ID: id})      // restart the process
+            this.servers[id-1].worker = worker = cluster.fork({WORKER_ID: id})      // restart the process
+            print(`worker #${id} (PID=${worker.process.pid}) restarted`)
         })
     }
 
