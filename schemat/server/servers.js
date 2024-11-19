@@ -14,8 +14,8 @@ import {Request} from "../web/request.js";
 // RES.error = function(...args) {
 //     /* `args` contain a text message and/or a numeric status code. */
 //     let msg, code = 500
-//     for (const arg of args) {
-//         const t = typeof arg
+//     for (let arg of args) {
+//         let t = typeof arg
 //         if (t === 'string') msg = arg
 //         else if (t === 'number') code = arg
 //     }
@@ -27,7 +27,8 @@ import {Request} from "../web/request.js";
 /**********************************************************************************************************************/
 
 export class Server {
-
+    async start() { assert(false) }
+    async stop()  {}
 }
 
 /**********************************************************************************************************************
@@ -120,10 +121,10 @@ export class WebServer extends Server {
     }
 
     async serve_express() {
-        const express = (await import('express')).default
-        const bodyParser = (await import('body-parser')).default
+        let express = (await import('express')).default
+        let bodyParser = (await import('body-parser')).default
 
-        const app = express()
+        let app = express()
 
         // for official middleware see: https://expressjs.com/en/resources/middleware.html
         // for receiving files:
@@ -160,12 +161,12 @@ export class WebServer extends Server {
  */
 
 // function serve_http() {
-//     // const http = require('http');
+//     // let http = require('http');
 //
 //     // limiting the no. of concurrent connections:
 //     //   http.globalAgent.maxTotalSockets = XXX
 //
-//     const server = http.createServer((req, res) => {
+//     let server = http.createServer((req, res) => {
 //         res.statusCode = 200;
 //         res.setHeader('Content-Type', 'text/plain');
 //         res.end('Hello World');
@@ -177,8 +178,8 @@ export class WebServer extends Server {
 // }
 
 // async function serve_express() {
-//     const app = express()
-//     const server = new Server()
+//     let app = express()
+//     let server = new Server()
 //     await server.boot()
 //
 //     // for official middleware see: https://expressjs.com/en/resources/middleware.html
