@@ -85,6 +85,8 @@ export class MainProcess extends BackendProcess {
     }
 
     async _start_workers() {
+
+        // in the worker process, start this worker's server life-loop
         if (cluster.isWorker) {
             let id = process.env.WORKER_ID
             let server = this.current_server = this.servers[id - 1]

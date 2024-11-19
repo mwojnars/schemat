@@ -50,11 +50,10 @@ export class WebServer extends Server {
 
     REQUEST_TIMEOUT = 60                // [sec] 60 seconds
 
-    constructor({host, port, workers}) {
+    constructor({host, port}) {
         super()
         this.host = host
         this.port = port
-        this.workers = workers          // no. of worker processes to spawn
     }
 
     async start() {
@@ -69,16 +68,6 @@ export class WebServer extends Server {
 
         // schemat.registry.objects.clear()
         // await schemat._init_site()
-
-        // if (this.workers && this.workers > 1 && cluster.isPrimary) {
-        //     print(`primary ${process.pid} is starting ${this.workers} workers...`)
-        //     for (let i = 0; i < this.workers; i++) cluster.fork()
-        //     cluster.on('exit', (worker) => {
-        //         print(`worker ${worker.process.pid} exited`)
-        //         cluster.fork()      // restart the process
-        //     })
-        // }
-        // else return this.serve_express()
     }
 
     async handle(req, res) {
@@ -207,17 +196,6 @@ export class WebServer extends Server {
 //     // })
 //
 //     app.listen(PORT, HOSTNAME, () => print(`worker ${process.pid} listening at http://${HOSTNAME}:${PORT}`))
-// }
-//
-// async function serve_cluster(workers) {
-//     /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
-//     if (workers && workers > 1 && cluster.isMaster) {
-//         print(`primary ${process.pid} is starting ${workers} workers...`)
-//         for (let i = 0; i < workers; i++) cluster.fork()
-//         cluster.on('exit', (worker) => print(`Worker ${worker.process.pid} terminated`))
-//         return
-//     }
-//     await serve_express()
 // }
 
 
