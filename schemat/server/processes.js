@@ -57,7 +57,8 @@ export class MainProcess extends BackendProcess {
     /* Top-level Schemat process running on a given machine. Spawns and manages worker processes:
        web server(s), data server(s), load balancer etc.
      */
-    servers         // array of Server instances, each server is a child process
+    servers             // array of Server instances, each server is a child process
+    current_server      // in subprocess, the current Server instance; its worker ID is in current_server.worker_id
 
     async CLI_main(opts) {
         this.opts = opts
@@ -86,9 +87,10 @@ export class MainProcess extends BackendProcess {
     async _start_workers() {
         if (cluster.isWorker) {
             let id = process.env.WORKER_ID
-            let server = this.servers[id - 1]
+            let server = this.current_server = this.servers[id - 1]
+            server.worker_id = id
             print(`starting worker #${id} (PID=${process.pid})...`)
-            return server.start(id)
+            return server.start()
         }
         
         // in the primary process, start the workers...
@@ -107,10 +109,11 @@ export class MainProcess extends BackendProcess {
     }
 
     async stop() {
-        print('\nReceived kill signal, shutting down gracefully...')
+        print(`Received kill signal, shutting down gracefully (PID=${process.pid})...`)
         schemat.is_closing = true
         setTimeout(() => process.exit(0), 10)
-        return Promise.all(this.servers.map(srv => srv.stop()))
+        return this.current_server?.stop()
+        // return Promise.all(this.servers.map(srv => srv.stop()))
     }
 }
 

@@ -28,8 +28,8 @@ import {Request} from "../web/request.js";
 
 export class Server {
 
-    worker      // cluster.Worker instance that executes this server's process (only present in the main process)
-    worker_id   // numeric ID (1, 2, 3, ...) of this server's worker process (present in both the main process and worker processes)
+    worker      // cluster.Worker instance that executes this server's process, present in the main process only
+    worker_id   // numeric ID (1, 2, 3, ...) of this server's worker process, present in both the main process and worker processes
 
     async start() { assert(false) }
     async stop()  {}
@@ -57,10 +57,9 @@ export class WebServer extends Server {
         this.workers = workers          // no. of worker processes to spawn
     }
 
-    async start(id) {
+    async start() {
         /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
 
-        this.worker_id = id
         return this.serve_express()
 
         // print('start() test:', obj instanceof Set)
@@ -160,7 +159,7 @@ export class WebServer extends Server {
     }
 
     stop() {
-        this._http_server?.close(() => print('WebServer closed'))
+        this._http_server?.close(() => print(`WebServer closed (worker #${this.worker_id})`))
     }
 }
 
