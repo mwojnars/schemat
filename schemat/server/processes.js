@@ -19,7 +19,8 @@ import {Struct} from "../core/catalog.js";
 export class BackendProcess {
     CLI_PREFIX = 'CLI_'
 
-    async start(cmd, opts = {}) {
+    async run(cmd, opts = {}) {
+        /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
 
         opts.config ??= './schemat/config.yaml'
         let config = await this.load_config(opts.config)
@@ -28,7 +29,6 @@ export class BackendProcess {
         // await schemat.db.insert_self()
 
         if (!cmd) return
-
         let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
         assert(this[method], `unknown command: ${cmd}`)
 
@@ -58,10 +58,9 @@ export class MainProcess extends BackendProcess {
     servers         // array of Server instances, each server is a child process
     _server         // the express server to be closed upon shutdown
 
-    // async CLI_run(opts) { return this.start(opts) }
+    async CLI_main(opts) { return this.start(opts) }
 
-    async CLI_run({host, port, workers}) {
-
+    async start({host, port, workers}) {
         // node = schemat.get_loaded(this_node_ID)
         // return node.activate()     // start the life-loop and all worker processes (servers)
 
