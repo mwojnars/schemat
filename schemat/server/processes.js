@@ -1,3 +1,5 @@
+import cluster from 'node:cluster'
+
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {print, assert, T} from "../common/utils.js";
@@ -72,19 +74,41 @@ export class MainProcess extends BackendProcess {
 
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
-        print('Starting the server...')
 
         // // let data_server = new DataServer(this.cluster)
         // let web_server = new WebServer(this.opts)
         // this.servers = [web_server]
 
-        this.servers = this._create_servers()
+        this.servers = this._create_workers()
+        await this._start_workers()
 
-        return Promise.all(this.servers.map(srv => srv.start()))
+        // return Promise.all(this.servers.map(srv => srv.start()))
     }
 
-    _create_servers() {
+    _create_workers() {
         return [new WebServer(this.opts)]
+    }
+
+    _start_workers() {
+        if (cluster.isWorker) {
+            let id = process.env.WORKER_ID
+            let server = this.servers[id - 1]
+            print(`starting worker #${id} (PID=${process.pid})...`)
+            return server.start(id)
+        }
+        
+        // in the primary process, start the workers...
+        let N = this.servers.length
+        print(`starting the main process (PID=${process.pid}) with ${N} worker(s)...`)
+
+        for (let i = 0; i < N; i++)
+            cluster.fork({WORKER_ID: i + 1})
+
+        cluster.on('exit', (worker) => {
+            let id = worker.process.env.WORKER_ID
+            print(`worker #${id} (PID=${worker.process.pid}) exited`)
+            cluster.fork({WORKER_ID: id})      // restart the process
+        })
     }
 
     async stop() {

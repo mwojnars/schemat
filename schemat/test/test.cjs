@@ -115,7 +115,7 @@ function server_setup(port, args = '') {
         })
 
         // console.log('Server started:', server.pid)
-        await delay(500)                                       // wait for server to start
+        await delay(1000)                                      // wait for server to start
         browser = await puppeteer.launch({headless: "new"})
         page = await browser.newPage()
 
@@ -130,7 +130,7 @@ function server_setup(port, args = '') {
 
         page.on('console', msg => { messages.push(msg) })
         page.on('pageerror', error => { messages.push({type: () => 'error', text: () => error}) })
-        await delay(300)
+        await delay(500)
     })
 
     beforeEach(() => { messages = [] })

@@ -53,8 +53,10 @@ export class WebServer extends Server {
         this.workers = workers          // no. of worker processes to spawn
     }
 
-    async start() {
+    async start(id) {
         /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
+
+        this.worker_id = id
 
         // print('start() test:', obj instanceof Set)
 
