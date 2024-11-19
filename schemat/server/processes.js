@@ -83,14 +83,10 @@ export class MainProcess extends BackendProcess {
     }
 
     async stop() {
-        await Promise.all(this.servers.map(srv => srv.stop()))
-
-        if (this._server) {
-            print('\nReceived kill signal, shutting down gracefully...')
-            this._server.close(() => print('Server closed'))
-        }
+        print('\nReceived kill signal, shutting down gracefully...')
         schemat.is_closing = true
         setTimeout(() => process.exit(0), 10)
+        return Promise.all(this.servers.map(srv => srv.stop()))
     }
 }
 
