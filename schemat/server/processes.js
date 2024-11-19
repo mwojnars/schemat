@@ -75,21 +75,15 @@ export class MainProcess extends BackendProcess {
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
-        // // let data_server = new DataServer(this.cluster)
-        // let web_server = new WebServer(this.opts)
-        // this.servers = [web_server]
-
         this.servers = this._create_workers()
-        await this._start_workers()
-
-        // return Promise.all(this.servers.map(srv => srv.start()))
+        return this._start_workers()
     }
 
     _create_workers() {
         return [new WebServer(this.opts)]
     }
 
-    _start_workers() {
+    async _start_workers() {
         if (cluster.isWorker) {
             let id = process.env.WORKER_ID
             let server = this.servers[id - 1]
