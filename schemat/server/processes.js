@@ -55,8 +55,10 @@ export class MainProcess extends BackendProcess {
     /* Top-level Schemat process running on a given machine. Spawns and manages worker processes:
        web server(s), data server(s), load balancer etc.
      */
-    workers         // array of Worker instances spawned
+    servers         // array of Server instances, each server is a child process
     _server         // the express server to be closed upon shutdown
+
+    // async CLI_run(opts) { return this.start(opts) }
 
     async CLI_run({host, port, workers}) {
 
@@ -65,22 +67,25 @@ export class MainProcess extends BackendProcess {
 
         // let m = await schemat.import('/$/local/schemat/test/temp1.js')
         // print('loaded:', m)
-
         // let {WebServer} = await schemat.import('/$/local/schemat/server/servers.js')
 
         print('Starting the server...')
-        let web_workers = new WebServer({host, port, workers})
-        this._server = await web_workers.start()
+        let web_server = new WebServer({host, port, workers})
+        this._server = await web_server.start()
 
-        process.on('SIGTERM', () => this.shutdown())        // listen for TERM signal, e.g. kill
-        process.on('SIGINT', () => this.shutdown())         // listen for INT signal, e.g. Ctrl+C
+        this.servers = [web_server]
+
+        process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
+        process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
         // let web = new WebServer(this.cluster, {host, port, workers}).start()
         // let data = new DataServer(this.cluster).start()
         // return Promise.all([web, data])
     }
 
-    async shutdown() {
+    async stop() {
+        await Promise.all(this.servers.map(srv => srv.stop()))
+
         if (this._server) {
             print('\nReceived kill signal, shutting down gracefully...')
             this._server.close(() => print('Server closed'))
