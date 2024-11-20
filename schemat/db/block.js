@@ -37,7 +37,7 @@ export class Block extends WebObject {
     _pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
 
-    __create__(sequence, filename) {
+    __new__(sequence, filename) {
         sequence.assert_active()
         this.sequence = sequence
         this.filename = filename

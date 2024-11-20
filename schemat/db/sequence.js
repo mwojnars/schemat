@@ -29,7 +29,7 @@ export class Sequence extends WebObject {    // Series?
     // derived = []        // array of derived sequences (indexes) that must be updated when this sequence changes
 
 
-    __create__(ring) {
+    __new__(ring) {
         ring.assert_active()
         this.ring = ring
     }
@@ -113,8 +113,8 @@ export class IndexSequence extends Sequence {
     /* A Sequence composed of IndexBlock type of blocks. */
     static __category = 22
 
-    __create__(ring, filename) {
-        super.__create__(ring)
+    __new__(ring, filename) {
+        super.__new__(ring)
         assert(filename.endsWith('.jl'))
         this.blocks = [IndexBlock.new(this, filename)]
     }
@@ -191,8 +191,8 @@ export class DataSequence extends Sequence {
     static role       = 'data'          // for use in ProcessingStep and DataRequest
     static COMMANDS   = ['get', 'put', 'select', 'insert', 'update', 'delete']
 
-    __create__(ring, filename) {
-        super.__create__(ring)
+    __new__(ring, filename) {
+        super.__new__(ring)
         this.blocks = [DataBlock.new(this, filename)]
     }
 

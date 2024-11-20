@@ -54,12 +54,12 @@ export class Category extends WebObject {
     }
 
     create(...args) {
-        /* Create a new object in this category and execute its __create__(...args). Return the object. The object has no ID yet. */
+        /* Create a new object in this category and execute its __new__(...args). Return the object. The object has no ID yet. */
         return this.__child_class._create([this], ...args)
     }
 
     async insert(...args) {
-        /* Create a new object in this category, execute its __create__(...args) and save it to DB.
+        /* Create a new object in this category, execute its __new__(...args) and save it to DB.
            Return the reloaded object in the exact form as written to the DB (after validation, imputation etc.).
          */
         let obj = await this.create(...args).save()

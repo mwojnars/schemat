@@ -415,7 +415,7 @@ export class WebObject {
         let obj = this.stub(null, {mutable: true})          // newly-created objects are always mutable
         categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat)
         obj.__data = new Catalog(...categories.map(cat => ['__category', cat]))
-        obj.__create__(...args)
+        obj.__new__(...args)
         return obj
     }
 
@@ -739,7 +739,7 @@ export class WebObject {
 
     /***  Hooks  ***/
 
-    __create__(data) {   // __new__()
+    __new__(data) {
         /* Initialize own properties (__data) of this newborn object before its insertion to DB or transfer to the server.
            The JS class and `__category` property are already configured; this.__data is created.
            The default implementation just updates the entire __data using the first argument.
