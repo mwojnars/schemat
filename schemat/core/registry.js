@@ -41,8 +41,8 @@ class ObjectsCache extends Map {
             // else print(`custom eviction done for: [${id}]`)
             count++
 
-            let done = obj.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
-            if (T.isPromise(done)) pending.push(done)
+            // let done = obj.__done__()          // TODO: cleanup must be called with a larger delay, after the item is no longer in use (or never?)
+            // if (T.isPromise(done)) pending.push(done)
         }
 
         print(`evicted from registry: ${count}`)

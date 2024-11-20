@@ -739,7 +739,7 @@ export class WebObject {
 
     /***  Hooks  ***/
 
-    __create__(data) {
+    __create__(data) {   // __new__()
         /* Initialize own properties (__data) of this newborn object before its insertion to DB or transfer to the server.
            The JS class and `__category` property are already configured; this.__data is created.
            The default implementation just updates the entire __data using the first argument.
@@ -761,14 +761,14 @@ export class WebObject {
     __destroy__() {}
         /* Custom tear down that is executed once before this object is permanently deleted from the database. */
 
-    __done__() {}
-        /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
-
     __validate__(post_setup = true) {}
         /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema. */
 
     __edited__(prev, curr) {}
         /* Post-processing after the __data was edited on the server during update of the record in DB. */
+
+    // __done__() {}
+    //     /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 
 
     /***  Networking  ***/
