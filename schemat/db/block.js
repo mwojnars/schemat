@@ -192,8 +192,8 @@ export class DataBlock extends Block {
         obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
         obj.validate(false)                             // 1st validation (pre-setup), to give __setup__() confidence in input data
 
-        let setup = obj.__setup__(id)                   // here, the object may perform intensive operations, like inserting related objects to DB
-        if (setup instanceof Promise) await setup
+        // let setup = obj.__setup__(id)                   // here, the object may perform intensive operations, like inserting related objects to DB
+        // if (setup instanceof Promise) await setup
 
         obj._bump_version()                             // set __ver=1 if needed
         obj._seal_dependencies()                        // set __seal

@@ -415,8 +415,8 @@ export class WebObject {
         let obj = this.stub(null, {mutable: true})          // newly-created objects are always mutable
         categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat)
         obj.__data = new Catalog(...categories.map(cat => ['__category', cat]))
-        obj.__new__(...args)
-        return obj
+        let ret = obj.__new__(...args)
+        return ret instanceof Promise ? ret.then(() => obj) : obj
     }
 
     static new(...args) {
@@ -744,19 +744,13 @@ export class WebObject {
            The JS class and `__category` property are already configured; this.__data is created.
            The default implementation just updates the entire __data using the first argument.
            Subclasses may override this method to change this behavior and accept a different list of arguments.
-           This method must be synchronous. Any async code should be placed in __init__() or __setup__().
+           Can be asynchronous in subclasses, in such case the call to ._create() or category.create() returns a Promise.
          */
         if (T.isPOJO(data) || data instanceof Catalog) this.__data.updateAll(data)
     }
 
     __init__() {}
         /* Optional item-specific initialization after this.__data is created (in a newborn object), or loaded from DB. Can be async in subclasses. */
-
-    __setup__(id) {}
-        /* One-time global setup after this object was created (on client or server) AND is pending insertion to DB (on server),
-           BUT already has a provisional ID assigned (`id`). Typically, this method may insert related sub-objects.
-           Can be declared async in subclasses or return a Promise.
-         */
 
     __destroy__() {}
         /* Custom tear down that is executed once before this object is permanently deleted from the database. */
@@ -767,6 +761,12 @@ export class WebObject {
     __edited__(prev, curr) {}
         /* Post-processing after the __data was edited on the server during update of the record in DB. */
 
+    // __setup__(id) {}
+    //     /* One-time global setup after this object was created (on client or server) AND is pending insertion to DB (on server),
+    //        BUT already has a provisional ID assigned (`id`). Typically, this method may insert related sub-objects.
+    //        Can be declared async in subclasses or return a Promise.
+    //      */
+    //
     // __done__() {}
     //     /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 

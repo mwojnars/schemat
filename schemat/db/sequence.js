@@ -117,14 +117,19 @@ export class IndexSequence extends Sequence {
         super.__new__(ring)
         assert(filename.endsWith('.jl'))
         this.blocks = [IndexBlock.new(this, filename)]
-    }
 
-    async __setup__(id) {
         // let {IndexBlock} = this.__category.preloaded
         // let IndexBlock = await this.__category.import('./IndexBlock')
-        let IndexBlock = await schemat.import('/$/sys/IndexBlock')
-        this.blocks = [await IndexBlock.insert(id, this.filename)]
+        // let IndexBlock = await schemat.import('/$/sys/IndexBlock')
+        // this.blocks = [await IndexBlock.new(this, filename)]
     }
+
+    // async __setup__(id) {
+    //     // let {IndexBlock} = this.__category.preloaded
+    //     // let IndexBlock = await this.__category.import('./IndexBlock')
+    //     let IndexBlock = await schemat.import('/$/sys/IndexBlock')
+    //     this.blocks = [await IndexBlock.insert(id, this.filename)]
+    // }
 }
 
 export class Subsequence {
