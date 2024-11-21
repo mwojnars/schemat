@@ -29,6 +29,12 @@ export class Server {
     worker      // cluster.Worker instance that executes this server's process, present in the main process only
     worker_id   // numeric ID (1, 2, 3, ...) of this server's worker process, present in both the main process and worker processes
 
+    node        // parent Node (web object) of this process; periodically reloaded
+
+    constructor(node) {
+        this.node = node
+    }
+
     async start() { assert(false) }
     async stop()  {}
 }
@@ -49,8 +55,8 @@ export class WebServer extends Server {
 
     REQUEST_TIMEOUT = 60                // [sec] 60 seconds
 
-    constructor({host, port}) {
-        super()
+    constructor(node, {host, port}) {
+        super(node)
         this.host = host
         this.port = port
     }
@@ -94,7 +100,8 @@ export class WebServer extends Server {
     }
 
     stop() {
-        this._http_server?.close(() => print(`WebServer closed (worker #${this.worker_id})`))
+        this._http_server?.close()
+        print(`WebServer closed (worker #${this.worker_id})`)
     }
 
     async handle(req, res) {
@@ -198,10 +205,23 @@ export class WebServer extends Server {
 
 export class DataServer extends Server {
 
-    constructor(node, opts = {}) {
-        super()
+    // constructor(node, opts = {}) {
+    //     super()
+    // }
+
+    async start() {
+        /* loop:
+           - retrieve a list of new objects that should be placed in this worker process (node+process)
+           - for each do:  obj.load() + obj.__deploy__() __install__()
+           - retrieve a list of objects deployed in this worker that should be removed
+           - for each do:  obj.reload() + obj.__destroy__() __uninstall__()
+           - maintain a list of objects currently deployed in this worker process
+           - for each do:  obj.reload() + obj.__run__()
+        */
     }
 
-    async start() {}
+    stop() {
+        print(`DataServer closed (worker #${this.worker_id})`)
+    }
 }
 

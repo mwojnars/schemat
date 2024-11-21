@@ -81,7 +81,7 @@ export class MainProcess extends BackendProcess {
     }
 
     _create_workers() {
-        return [new WebServer(this.opts)]
+        return [new WebServer(null, this.opts), new DataServer(null, this.opts)]
     }
 
     async _start_workers() {
