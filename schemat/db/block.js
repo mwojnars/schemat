@@ -190,14 +190,14 @@ export class DataBlock extends Block {
     async _insert_one(id, data) {
         let obj = await WebObject.from_data(null, data) // the object must be instantiated for validation
         obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
-        obj.validate(false)                             // 1st validation (pre-setup), to give __setup__() confidence in input data
 
         // let setup = obj.__setup__(id)                   // here, the object may perform intensive operations, like inserting related objects to DB
         // if (setup instanceof Promise) await setup
 
+        obj.validate()                                  // data validation
         obj._bump_version()                             // set __ver=1 if needed
         obj._seal_dependencies()                        // set __seal
-        obj.validate(true)                              // 2nd validation (post-setup), to ensure consistency in DB
+
         data = obj.__json
 
         let key = this.sequence.encode_key(id)
@@ -258,13 +258,12 @@ export class DataBlock extends Block {
         obj._apply_edits(...edits)                  // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
         await obj._initialize(false)                // reinitialize the dependencies (category, class, ...) which may have been altered by the edits; NO deps sealing!
 
+        obj.validate()                              // validate object properties: each one individually and all of them together; may raise exceptions
         obj._bump_version()                         // increment __ver
         obj._seal_dependencies()                    // recompute __seal
 
         if (obj.__base?.save_revisions)
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
-
-        obj.validate(true)                          // validate object properties: each one individually and all of them together; may raise exceptions
 
         let new_data = obj.__json
 

@@ -704,7 +704,7 @@ export class WebObject {
         return false
     }
 
-    validate(post_setup = true) {
+    validate() {
         // TODO SECURITY: make sure that __data does NOT contain special props: __meta, __self, __proxy, __id etc!
 
         let data = this.__data
@@ -726,14 +726,15 @@ export class WebObject {
                 if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop}) in object [${this.id}]`)
             }
 
-            let newval = type.validate(entry[1])         // may raise an exception
-            if (post_setup) entry[1] = newval
+            entry[1] = type.validate(entry[1])              // may raise an exception
+            // let newval = type.validate(entry[1])
+            // if (post_setup) entry[1] = newval
         }
 
         // check multi-field constraints ...
 
         // run category-specific validation
-        this.__validate__(post_setup)
+        this.__validate__()
     }
 
 
@@ -755,7 +756,7 @@ export class WebObject {
     __destroy__() {}
         /* Custom tear down that is executed once before this object is permanently deleted from the database. */
 
-    __validate__(post_setup = true) {}
+    __validate__() {}
         /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema. */
 
     __edited__(prev, curr) {}
