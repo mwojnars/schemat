@@ -168,12 +168,12 @@ export class PrimeIndexSequence extends Index {
 export class IndexByCategory extends PrimeIndexSequence {
     /* An index that maps category IDs to item IDs: the key is [category ID, item ID], empty value. */
 
-    static __category = 17
+    static __category = 17;
 
-    record_schema = new RecordSchema(new Map([
-        ['cid', new INTEGER({blank: true})],
-        ['id',  new INTEGER()],
-    ]));
+    // record_schema = new RecordSchema(new Map([
+    //     ['cid', new INTEGER({blank: true})],
+    //     ['id',  new INTEGER()],
+    // ]));
 
     *generate_keys(item_record) {
         let category_id = item_record.data.get('__category')?.__id      // can be undefined, such records are also included in the index

@@ -583,6 +583,14 @@
     source:
       info: source Sequence that feeds data to this index
       "@": schemat/types/type.js:REF
+    key:
+      info: Names and types of object properties to be included as fields 
+        of the index key.
+      "@": schemat/types/catalog_type.js:CATALOG
+    payload:
+      info: Names of object properties to be included as a payload in each 
+        index record.
+      "@": schemat/types/type.js:ARRAY
     record_schema:
       info: Schema of records produced by this operator, as an instance of
         RecordSchema
