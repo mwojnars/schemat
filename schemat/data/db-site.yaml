@@ -29,7 +29,7 @@
   index_sequence:
     "@": 1013
   indexes:
-    idx_category_item:
+    idx_objects_category:
       "@": 23
     "@": schemat:Catalog
   readonly: false
@@ -44,7 +44,7 @@
   index_sequence:
     "@": 1028
   indexes:
-    idx_category_item:
+    idx_objects_category:
       "@": 23
     "@": schemat:Catalog
   readonly: false
@@ -157,7 +157,7 @@
   index_sequence:
     "@": 1018
   indexes:
-    idx_category_item:
+    idx_objects_category:
       "@": 23
     "@": schemat:Catalog
   readonly: false
