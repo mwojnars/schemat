@@ -444,7 +444,9 @@
       "@": schemat/types/type.js:REF
     indexes:
       info: Map of Indexes and their names
-      "@": schemat/types/type.js:GENERIC
+      type_values:
+        "@": schemat/types/type.js:REF
+      "@": schemat/types/catalog_type.js:CATALOG
     "@": schemat:Catalog
   class: schemat/db/db.js:Ring
   __category:
