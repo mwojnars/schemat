@@ -583,8 +583,7 @@
       info: source Sequence that feeds data to this index
       "@": schemat/types/type.js:REF
     key:
-      info: Names and types of object properties to be included as fields of the index
-        key.
+      info: Names and types of object properties to be included in the index key.
       "@": schemat/types/catalog_type.js:CATALOG
     payload:
       info: Names of object properties to be included as payload in each index record.
