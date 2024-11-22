@@ -1,4 +1,4 @@
-import {Record, data_schema} from "./records.js";
+import {Record, data_schema, RecordSchema} from "./records.js";
 import {assert, print} from "../common/utils.js";
 import {DataBlock, IndexBlock} from "./block.js";
 import {WebObject} from "../core/object.js";
@@ -239,7 +239,12 @@ export class DataSequence extends Sequence {
 
 export class Operator extends WebObject {
 
-    record_schema       // RecordSchema that defines keys and values of records produced by this operator
+    // record_schema       // RecordSchema that defines keys and values of records produced by this operator
+
+    get record_schema() {
+        /* RecordSchema that defines the key and the payload of the records produced by this operator. */
+        return new RecordSchema(this.key, this.payload)
+    }
 
     async* scan(sequence, opts = {}) {
         /* Scan this operator's output in the [`start`, `stop`) range and yield BinaryRecords. See Sequence.scan() for details. */
