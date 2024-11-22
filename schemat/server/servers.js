@@ -47,7 +47,7 @@ export class Server {
  */
 
 export class WebServer extends Server {
-    /* Edge HTTP server based on express. Can spawn multiple worker processes.
+    /* Edge HTTP server based on express.
        For sending & receiving multipart data (HTML+JSON) in http response, see:
        - https://stackoverflow.com/a/50883981/1202674
        - https://stackoverflow.com/a/47067787/1202674
@@ -203,7 +203,8 @@ export class WebServer extends Server {
  **
  */
 
-export class DataServer extends Server {
+export class MicroServer extends Server {
+    /* Worker that executes message loops of multiple Agents (Actors): web objects that expose their own microservices. */
 
     // constructor(node, opts = {}) {
     //     super()
@@ -211,17 +212,17 @@ export class DataServer extends Server {
 
     async start() {
         /* loop:
-           - retrieve a list of new objects that should be placed in this worker process (node+process)
-           - for each do:  obj.load() + obj.__deploy__() __install__()
+           - retrieve a list of new agents that should be placed in this worker (node+process)
+           - for each do:  agent.load() + agent.__deploy__() __install__()
            - retrieve a list of objects deployed in this worker that should be removed
-           - for each do:  obj.reload() + obj.__destroy__() __uninstall__()
+           - for each do:  agent.reload() + agent.__destroy__() __uninstall__()
            - maintain a list of objects currently deployed in this worker process
-           - for each do:  obj.reload() + obj.__run__()
+           - for each do:  agent.reload() + agent.__run__()
         */
     }
 
     stop() {
-        print(`DataServer closed (worker #${this.worker_id})`)
+        print(`MicroServer closed (worker #${this.worker_id})`)
     }
 }
 

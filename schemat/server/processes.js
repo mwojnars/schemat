@@ -4,7 +4,7 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {print, assert, T} from "../common/utils.js";
 import {ItemNotFound} from "../common/errors.js";
-import {DataServer, WebServer} from "./servers.js";
+import {MicroServer, WebServer} from "./servers.js";
 import {WebObject} from "../core/object.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {DataRequest} from "../db/data_request.js";
@@ -81,7 +81,7 @@ export class MainProcess extends BackendProcess {
     }
 
     _create_workers() {
-        return [new WebServer(null, this.opts), new DataServer(null, this.opts)]
+        return [new WebServer(null, this.opts), new MicroServer(null, this.opts)]
     }
 
     async _start_workers() {
