@@ -272,10 +272,12 @@ export class NUMBER extends Primitive {
         max:            undefined,         // maximum value allowed (<=)
         min_decimals:   0,
         max_decimals:   undefined,
+        accept_string:  true,
     }
     _validate(value) {
         value = super._validate(value)
-        let {min, max} = this.options
+        let {accept_string, min, max} = this.options
+        if (accept_string && typeof value === 'string') value = Number(value)
         if (min !== undefined && value < min) throw new ValueError(`the number (${value}) is out of bounds, should be >= ${min}`)
         if (max !== undefined && value > max) throw new ValueError(`the number (${value}) is out of bounds, should be <= ${max}`)
         return value
