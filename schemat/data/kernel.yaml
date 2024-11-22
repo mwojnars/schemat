@@ -95,9 +95,10 @@
         the exact same behaviour of the object unless influenced by external
         factors. During update, the seal is recomputed to reflect the latest
         version numbers of each dependency. Typically used to seal dependencies
-        of category objects. Requires that the object has a __ver number and all its
-        dependencies have a __seal. When the object has no dependencies, its seal is '.',
-        otherwise it's a dot-concatenated string of version numbers of the dependencies.
+        of category objects. Requires that the object has a __ver number and all
+        its dependencies have a __seal. When the object has no dependencies, its
+        seal is '.', otherwise it's a dot-concatenated string of version numbers
+        of the dependencies.
       "@": schemat/types/type.js:BOOLEAN
     immutable:
       default: false
@@ -565,6 +566,14 @@
 - __id: 23
   name: idx_objects_category
   info: Index of all objects by their category.
+  key:
+    cid:
+      blank: true
+      "@": schemat/types/type.js:INTEGER
+    id:
+      "@": schemat/types/type.js:INTEGER
+    "@": schemat:Catalog
+  payload: []
   record_schema:
     fields:
       cid:
@@ -584,12 +593,11 @@
       info: source Sequence that feeds data to this index
       "@": schemat/types/type.js:REF
     key:
-      info: Names and types of object properties to be included as fields 
-        of the index key.
+      info: Names and types of object properties to be included as fields of the index
+        key.
       "@": schemat/types/catalog_type.js:CATALOG
     payload:
-      info: Names of object properties to be included as a payload in each 
-        index record.
+      info: Names of object properties to be included as payload in each index record.
       "@": schemat/types/type.js:ARRAY
     record_schema:
       info: Schema of records produced by this operator, as an instance of
