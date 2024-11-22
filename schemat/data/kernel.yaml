@@ -574,16 +574,6 @@
       "@": schemat/types/type.js:INTEGER
     "@": schemat:Catalog
   payload: []
-  record_schema:
-    fields:
-      cid:
-        blank: true
-        "@": schemat/types/type.js:INTEGER
-      id:
-        "@": schemat/types/type.js:INTEGER
-      "@": :Map
-    properties: []
-    "@": schemat/db/records.js:RecordSchema
   __category:
     "@": 17
 - __id: 24
@@ -599,10 +589,6 @@
     payload:
       info: Names of object properties to be included as payload in each index record.
       "@": schemat/types/type.js:ARRAY
-    record_schema:
-      info: Schema of records produced by this operator, as an instance of
-        RecordSchema
-      "@": schemat/types/type.js:GENERIC
     "@": schemat:Catalog
   __category:
     "@": 1

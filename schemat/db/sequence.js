@@ -239,8 +239,6 @@ export class DataSequence extends Sequence {
 
 export class Operator extends WebObject {
 
-    // record_schema       // RecordSchema that defines keys and values of records produced by this operator
-
     get record_schema() {
         /* RecordSchema that defines the key and the payload of the records produced by this operator. */
         return new RecordSchema(this.key, this.payload)

@@ -169,11 +169,6 @@ export class IndexByCategory extends PrimeIndexSequence {
 
     static __category = 17;
 
-    // record_schema = new RecordSchema(new Map([
-    //     ['cid', new INTEGER({blank: true})],
-    //     ['id',  new INTEGER()],
-    // ]));
-
     *generate_keys(item_record) {
         let category_id = item_record.data.get('__category')?.__id      // can be undefined, such records are also included in the index
         yield [category_id, item_record.id]
