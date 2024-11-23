@@ -429,18 +429,18 @@ export class WebObject {
         // return this.create([this.__category], ...args)
     }
 
-    static async from_data(id, data, {mutable = false, sealed = true} = {}) {
+    static async from_data(id, data, {mutable = false, sealed = true, activate = true} = {}) {
         /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSON string). */
         // assert(typeof data === 'string' || data instanceof Catalog)
         let obj = WebObject.stub(id, {mutable})
         obj.__data = (typeof data === 'string') ? Catalog.load(data) : data instanceof Catalog ? data : Catalog.__setstate__(data)
-        return obj.load({sealed})
+        return obj.load({sealed, activate})
     }
 
 
     /***  Loading & initialization  ***/
 
-    async load({sealed = true} = {}) {
+    async load(opts = {}) {
         /* Load full __data of this object from DB, if not loaded yet. Return this object.
            For a newborn object (__data already present), only perform its *activation* (initialization), no data loading.
            If sealed=true and __seal is present in the object, the exact versions of dependencies (prototypes, categories)
@@ -453,10 +453,10 @@ export class WebObject {
         if (active || loading) return loading || this
 
         // keep and return a Promise that will eventually load the data; this is needed to avoid race conditions
-        return this.__meta.loading = this._load(sealed)
+        return this.__meta.loading = this._load(opts)
     }
 
-    async _load(sealed) {
+    async _load({sealed = true, activate = true} = {}) {
         /* Load this.__data from DB if missing. Initialize this object: set up the class and prototypes, run __init__() etc. */
 
         schemat.before_data_loading(this)
@@ -470,11 +470,7 @@ export class WebObject {
             }
 
             await this._initialize(sealed)
-
-            // if (this.is_linked())
-            //     this.__meta.pending_url = this._init_url()  // set the URL path of this item; intentionally un-awaited to avoid blocking the load process of dependent objects
-            // if (await_url && schemat.site && this.__meta.pending_url)
-            //     await this.__meta.pending_url
+            if (!activate) return this                      // activation involves both __init__() and _activate(); none of these is executed when activate=false
 
             let init = this.__init__()                      // custom initialization after the data is loaded (optional)
             if (init instanceof Promise) await init
@@ -757,7 +753,9 @@ export class WebObject {
         /* Custom tear down that is executed once before this object is permanently deleted from the database. */
 
     __validate__() {}
-        /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema. */
+        /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema.
+           Called on NON-activated object; should NOT require that __init__() or _activate() was called beforehand!
+         */
 
     __edited__(prev, curr) {}
         /* Post-processing after the __data was edited on the server during update of the record in DB. */
