@@ -188,12 +188,10 @@ export class DataBlock extends Block {
     }
 
     async _insert_one(id, data) {
-        let obj = await WebObject.from_data(null, data) // the object must be instantiated for validation
+        // the object must be instantiated for validation, but is not activated (to save time) and __init__() is NOT executed
+        let obj = await WebObject.from_data(null, data, {mutable: true, activate: false})
+
         obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
-
-        // let setup = obj.__setup__(id)                   // here, the object may perform intensive operations, like inserting related objects to DB
-        // if (setup instanceof Promise) await setup
-
         obj.validate()                                  // data validation
         obj._bump_version()                             // set __ver=1 if needed
         obj._seal_dependencies()                        // set __seal
@@ -253,10 +251,11 @@ export class DataBlock extends Block {
         let data = await this._storage.get(key)
         if (data === undefined) return req.forward_down()
 
-        let obj = await WebObject.from_data(id, data)
+        let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
+        let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})
 
         obj._apply_edits(...edits)                  // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
-        await obj._initialize(false)                // reinitialize the dependencies (category, class, ...) which may have been altered by the edits; NO deps sealing!
+        await obj._initialize(false)                // reinitialize the dependencies (category, class, ...) WITHOUT sealing! they may have been altered by the edits
 
         obj.validate()                              // validate object properties: each one individually and all of them together; may raise exceptions
         obj._bump_version()                         // increment __ver

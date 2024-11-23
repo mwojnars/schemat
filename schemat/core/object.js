@@ -429,7 +429,7 @@ export class WebObject {
         // return this.create([this.__category], ...args)
     }
 
-    static async from_data(id, data, {mutable = true, sealed = false} = {}) {
+    static async from_data(id, data, {mutable = false, sealed = true} = {}) {
         /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSON string). */
         // assert(typeof data === 'string' || data instanceof Catalog)
         let obj = WebObject.stub(id, {mutable})
