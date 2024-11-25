@@ -48,7 +48,7 @@ export class Container extends WebObject {
         /* Return an access path to `member` that starts at the domain root.
            The access path is like a URL path, but with explicit blank segments: /*BLANK
          */
-        assert(this.__path, `__path of container [${this.__id}] is not initialized (${this.name})`)
+        assert(this.__path, `__path of container [${this.__id}] is not initialized (${this.name}) when initializing object [${member.__id}]`)
         assert(this.__path[0] === '/', `container's __path must start with '/'`)
 
         let ident = this.identify(member)
