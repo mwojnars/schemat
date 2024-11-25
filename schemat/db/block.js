@@ -271,7 +271,7 @@ export class DataBlock extends Block {
         let new_data = obj.__json
 
         if (this.sequence.ring.readonly) {          // can't write the update here in this ring? forward to a higher ring
-            req = req.make_step(this, 'save', {id, key, value: new_data})
+            req = req.make_step(this, 'save', {id, key, data: new_data})
             return req.forward_save()
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
@@ -285,9 +285,9 @@ export class DataBlock extends Block {
     }
 
     async cmd_save(req) {
-        await this.cmd_put(req)
-        let {id, value} = req.args
-        return schemat.register_record({id, data: value})
+        let {id, key, data} = req.args
+        await this._put(key, data)
+        return schemat.register_record({id, data})
     }
 
     async cmd_delete(req) {
