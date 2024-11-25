@@ -162,7 +162,7 @@ export function setstate(cls, state) {
 }
 
 export function clone(obj) {
-    /* Create a shallow copy of `obj`. */
+    /* Create a shallow copy of an object. */
     return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj)
 }
 

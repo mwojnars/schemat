@@ -437,6 +437,16 @@ export class WebObject {
         return obj.load({sealed, activate})
     }
 
+    clone({mutable = this.__meta.mutable}) {
+        /* Create a new web object with __data and JS class copied from `this` in a *synchronous* way.
+           If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
+           By default, the resulting object is NOT activated!
+         */
+        let obj = WebObject.stub(this.id, {mutable})
+        obj.__data = this.__data.clone()    // FIXME: cloning must preserve references to web objects, but deep-copy all structures on the way
+        T.setClass(obj, T.getClass(this))
+        return obj
+    }
 
     /***  Loading & initialization  ***/
 
