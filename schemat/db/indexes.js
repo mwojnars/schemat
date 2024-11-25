@@ -1,6 +1,6 @@
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../common/binary.js"
-import {DataRecord, Record, data_schema} from "./records.js";
+import {DataRecord, Record, data_schema, ChangeRequest} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
 
@@ -34,8 +34,10 @@ export class Index extends Operator {
         // TODO: request object, only used when another propagation step is to be done
         let req = new DataRequest(this, 'change')
 
+        let change = new ChangeRequest(key, obj_old.__json, obj_new.__json)
+
         // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
-        const [del_records, put_records] = this._make_plan(change)
+        let [del_records, put_records] = this._make_plan(change)
 
         // delete old records
         for (let [key, value] of del_records || [])     // TODO: `key` may be duplicated (repeated values), remove duplicates beforehand
@@ -59,7 +61,7 @@ export class Index extends Operator {
         let req = new DataRequest(this, 'apply', {change})
 
         // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
-        const [del_records, put_records] = this._make_plan(change)
+        let [del_records, put_records] = this._make_plan(change)
 
         // delete old records
         for (let [key, value] of del_records || [])     // TODO: `key` may be duplicated (repeated values), remove duplicates beforehand

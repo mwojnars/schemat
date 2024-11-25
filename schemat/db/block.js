@@ -174,7 +174,7 @@ export class DataBlock extends Block {
         data = this._transform_provisional(id, data)
 
         let pairs = zip(id, data)
-        let records = amap(pairs, pair => this._insert_one(...pair))
+        let records = amap(pairs, pair => this._insert_one(...pair))    // TODO: save all objects at once, atomically
 
         return batch ? records : (await records)[0]
     }
@@ -199,7 +199,8 @@ export class DataBlock extends Block {
         data = obj.__json
 
         let key = this.sequence.encode_key(id)
-        await this._put(key, data)                      // save the object and perform change propagation; TODO: save all objects at once, atomically
+        await this._put(key, data)                      // save the object and perform change propagation
+        // await this.propagate_change(key, null, obj)
 
         return schemat.register_record({id, data})
     }
@@ -252,7 +253,7 @@ export class DataBlock extends Block {
         if (data === undefined) return req.forward_down()
 
         let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
-        let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})
+        let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev.clone() to avoid repeated *async* initialization
 
         obj._apply_edits(...edits)                  // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
         await obj._initialize(false)                // reinitialize the dependencies (category, class, ...) WITHOUT sealing! they may have been altered by the edits
@@ -316,7 +317,7 @@ export class DataBlock extends Block {
 
     async propagate(key, value_old = null, value_new = null) {
         /* Push a change from this data block to derived indexes. */
-        const change = new ChangeRequest(key, value_old, value_new)
+        let change = new ChangeRequest(key, value_old, value_new)
 
         if (!this.sequence.ring?.is_loaded()) {
             await this.sequence.load()

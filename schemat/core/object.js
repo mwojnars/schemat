@@ -443,7 +443,7 @@ export class WebObject {
            By default, the resulting object is NOT activated!
          */
         let obj = WebObject.stub(this.id, {mutable})
-        obj.__data = this.__data.clone()    // FIXME: cloning must preserve references to web objects, but deep-copy all structures on the way
+        obj.__data = this.__data.clone()
         T.setClass(obj, T.getClass(this))
         return obj
     }
