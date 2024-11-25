@@ -275,6 +275,8 @@ export class DataBlock extends Block {
         }
 
         await this._put(key, new_data)              // save changes here and perform change propagation
+        // await this.propagate_change(key, prev, obj)
+
         return schemat.register_record({id, data: new_data})
     }
 
@@ -297,6 +299,19 @@ export class DataBlock extends Block {
         /* Remove all records from this sequence; open() should be called first. */
         this._autoincrement = 1
         return super.erase(req)
+    }
+
+    async propagate_change(key, obj_old = null, obj_new = null) {
+        /* Push a change from this data block to derived indexes. */
+        if (!this.sequence.ring?.is_loaded()) {
+            await this.sequence.load()
+            await this.sequence.ring.load()
+        }
+        let ring = this.sequence.ring
+        for (let index of ring.indexes.values()) {
+            let seq = ring._subsequences.get(index.id)
+            index.change(key, obj_old, obj_new, seq)        // no need to await, the result is not used by the caller
+        }
     }
 
     async propagate(key, value_old = null, value_new = null) {
