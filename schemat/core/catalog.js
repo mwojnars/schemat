@@ -341,6 +341,40 @@ export class Struct {
         }
         return target
     }
+
+    static clone(target) {
+        /* Deep-copy nested data structure composed of Catalog/Map/Array/POJO (sub)collections. */
+        if (target == null) return target
+
+        if (target instanceof Catalog) {
+            let entries = target._entries.map(([key, value]) => [key, Struct.clone(value)])
+            return new Catalog().init(entries)
+        }
+
+        if (target instanceof Map) {
+            let cloned = new Map()
+            for (let [key, value] of target.entries())
+                cloned.set(key, Struct.clone(value))
+            return cloned
+        }
+
+        if (target instanceof Array)
+            return target.map(value => Struct.clone(value))
+
+        // for plain objects, clone their state AND class
+        if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+            let state = getstate(target)
+            if (typeof state === 'object') {
+                let cloned = {}
+                for (let key of Object.keys(state))
+                    cloned[key] = Struct.clone(state[key])
+                return state === target ? cloned : setstate(target.constructor, cloned)
+            }
+        }
+
+        // For primitive values or unhandled types, return as-is
+        return target
+    }
 }
 
 /**********************************************************************************************************************
