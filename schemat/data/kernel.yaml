@@ -213,8 +213,6 @@
   seal_dependencies: false
   ttl: 60
   class: schemat:Category
-  __container:
-    "@": 1009
 - __id: 2
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
@@ -267,8 +265,6 @@
       default: true
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
-  __container:
-    "@": 1009
 - __id: 4
   name: File
   info: File with a text content.
@@ -309,8 +305,6 @@
     "@": 3
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - __id: 6
   name: LocalDirectory
   info: A Directory whose content is located on a local disk, in the folder

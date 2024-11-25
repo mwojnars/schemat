@@ -505,7 +505,8 @@ export class WebObject {
 
         let container = this.__container
         if (container && !(container.is_loaded() || container.__meta.loading))
-            if (this.__id !== 3) container.load(); else await container.load()   // __container of [Container] must not be awaited
+            await container.load()          // [Category], [Container], [Directory] have no __container set up despite being placed in /$/sys just to avoid deadlocks here!
+            // if (this.__id <= 5) container.load(); else await container.load()   // __container of [Container] must not be awaited
 
         if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
 
