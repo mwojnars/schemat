@@ -1,4 +1,4 @@
-import {assert, T, clone} from "../common/utils.js";
+import {assert, T, cloneObject} from "../common/utils.js";
 import {DataAccessError, ItemNotFound} from "../common/errors.js";
 
 
@@ -72,7 +72,7 @@ export class DataRequest {
     }
 
     clone() {
-        let dup = clone(this)
+        let dup = cloneObject(this)
         dup.trace = [...this.trace]             // individual steps are NOT cloned!
         return dup
     }

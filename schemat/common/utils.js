@@ -161,8 +161,8 @@ export function setstate(cls, state) {
     return Object.assign(obj, state)
 }
 
-export function clone(obj) {
-    /* Create a shallow copy of an object. */
+export function cloneObject(obj) {
+    /* Create a shallow copy of an object while preserving its class (prototype). */
     return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj)
 }
 
