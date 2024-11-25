@@ -194,13 +194,12 @@ export class DataBlock extends Block {
         // the object must be instantiated for validation, but is not activated (for performance): neither __init__() nor _activate() is executed
         let obj = await WebObject.from_data(id, data, {mutable: true, activate: false})
 
-        obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
-        obj.validate()                                  // data validation
-        obj._bump_version()                             // set __ver=1 if needed
-        obj._seal_dependencies()                        // set __seal
+        obj.__data.delete('__ver')          // just in case, it's forbidden to pass __ver from the outside
+        obj.validate()                      // data validation
+        obj._bump_version()                 // set __ver=1 if needed
+        obj._seal_dependencies()            // set __seal
 
-        let key = this.sequence.encode_key(id)
-        return this._save(key, obj)                     // save the object and perform change propagation
+        return this._save(obj)              // save the object and perform change propagation
     }
 
     _reserve_id(count) {
@@ -270,7 +269,7 @@ export class DataBlock extends Block {
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
         }
-        return this._save(key, obj, prev)           // save changes and perform change propagation
+        return this._save(obj, prev)                // save changes and perform change propagation
     }
 
     async cmd_save(req) {
@@ -282,12 +281,14 @@ export class DataBlock extends Block {
         if (await this._storage.get(key)) return this.cmd_update(req)
 
         let obj = await WebObject.from_data(id, data, {activate: false})
-        return this._save(key, obj)
+        return this._save(obj)
     }
 
-    async _save(key, obj, prev = null) {
+    async _save(obj, prev = null) {
         let id = obj.id
         let data = obj.__json
+        let key = this.sequence.encode_key(id)
+
         await this._put(key, data)
         await this.propagate_change(key, prev, obj)
         return schemat.register_record({id, data})
