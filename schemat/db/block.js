@@ -192,20 +192,15 @@ export class DataBlock extends Block {
 
     async _insert_one(id, data) {
         // the object must be instantiated for validation, but is not activated (for performance): neither __init__() nor _activate() is executed
-        let obj = await WebObject.from_data(null, data, {mutable: true, activate: false})
+        let obj = await WebObject.from_data(id, data, {mutable: true, activate: false})
 
         obj.__data.delete('__ver')                      // just in case, it's forbidden to pass __ver from the outside
         obj.validate()                                  // data validation
         obj._bump_version()                             // set __ver=1 if needed
         obj._seal_dependencies()                        // set __seal
 
-        data = obj.__json
-
         let key = this.sequence.encode_key(id)
-        await this._put(key, data)                      // save the object and perform change propagation
-        // await this.propagate_change(key, null, obj)
-
-        return schemat.register_record({id, data})
+        return this._save(key, obj)                     // save the object and perform change propagation
     }
 
     _reserve_id(count) {
