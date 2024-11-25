@@ -299,10 +299,8 @@ export class DataBlock extends Block {
     async _save(key, obj, prev = null) {
         let id = obj.id
         let data = obj.__json
-
         await this._put(key, data)
-        await this.propagate(key, prev?.__json, data)
-        // await this.propagate_change(key, prev, obj)
+        await this.propagate_change(key, prev, obj)
         return schemat.register_record({id, data})
     }
 

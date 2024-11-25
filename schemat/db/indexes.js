@@ -34,7 +34,7 @@ export class Index extends Operator {
         // TODO: request object, only used when another propagation step is to be done
         let req = new DataRequest(this, 'change')
 
-        let change = new ChangeRequest(key, obj_old.__json, obj_new.__json)
+        let change = new ChangeRequest(key, obj_old?.__json, obj_new?.__json)
 
         // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
         let [del_records, put_records] = this._make_plan(change)
