@@ -256,7 +256,7 @@ export class DataBlock extends Block {
         if (data === undefined) return req.forward_down()
 
         let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
-        let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev.clone() to avoid repeated *async* initialization
+        let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev.clone() to avoid repeated async initialization
 
         obj._apply_edits(...edits)                  // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
         await obj._initialize(false)                // reinitialize the dependencies (category, class, ...) WITHOUT sealing! they may have been altered by the edits
@@ -268,16 +268,14 @@ export class DataBlock extends Block {
         if (obj.__base?.save_revisions)
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
-        let new_data = obj.__json
-
         if (this.sequence.ring.readonly) {          // can't write the update here in this ring? forward to a higher ring
-            req = req.make_step(this, 'save', {id, key, data: new_data})
+            req = req.make_step(this, 'save', {id, key, data: obj.__json})
             return req.forward_save()
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
         }
-        return this._save(key, obj)                 // save changes and perform change propagation
+        return this._save(key, obj, prev)           // save changes and perform change propagation
     }
 
     async cmd_save(req) {
