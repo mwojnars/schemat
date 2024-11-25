@@ -418,6 +418,11 @@ export class Catalog {
         return this
     }
 
+    clone() {
+        /* Deep copy of this catalog and nested structures. WebObject-aware (preserves references). */
+        return Struct.clone(this)
+    }
+
 
     /***  Map & Array interface  ***/
 
