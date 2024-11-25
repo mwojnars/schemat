@@ -504,8 +504,8 @@ export class WebObject {
         if (cats.length) await (cats.length === 1 ? cats[0].load() : Promise.all(cats.map(c => c.load())))
 
         let container = this.__container
-        if (container && !container.is_loaded())
-            if (this.__id <= 5) container.load(); else await container.load()   // __container of [Category] and [Container] must not be awaited
+        if (container && !(container.is_loaded() || container.__meta.loading))
+            if (this.__id !== 3) container.load(); else await container.load()   // __container of [Container] must not be awaited
 
         if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
 
