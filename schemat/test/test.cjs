@@ -3,6 +3,10 @@
 
     $ npm run test          -- for one-time execution of all tests
     $ npm run test:watch    -- for running the tests in watch mode (auto re-run on file changes)
+
+    Also, for counting the number of lines of codes (LOC, KLOC), after `npm install -g cloc`:
+
+    $ cloc schemat/
  */
 
 const https = require('https')
