@@ -285,8 +285,24 @@ export class DataBlock extends Block {
     }
 
     async cmd_save(req) {
+        /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
         let {id, key, data} = req.args
+
+        // if `id` is already present in this ring, redo the update (apply `edits` again) instead of overwriting
+        // the object with the `data` calculated in a previous ring
+        if (await this._storage.get(key)) return this.cmd_update(req)
+
+        let obj = await WebObject.from_data(id, data, {activate: false})
+        return this._save(key, obj)
+    }
+
+    async _save(key, obj, prev = null) {
+        let id = obj.id
+        let data = obj.__json
+
         await this._put(key, data)
+        await this.propagate(key, prev?.__json, data)
+        // await this.propagate_change(key, prev, obj)
         return schemat.register_record({id, data})
     }
 
