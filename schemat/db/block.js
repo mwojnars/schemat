@@ -36,6 +36,7 @@ export class Block extends WebObject {
     _storage                // Storage for this block's records
     _pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
+    get ring() { return this.sequence.ring }
 
     __new__(sequence, filename) {
         sequence.assert_active()
@@ -158,7 +159,7 @@ export class DataBlock extends Block {
     }
 
     async cmd_insert(req) {
-        let ring = this.sequence.ring
+        let ring = this.ring
         assert(ring?.is_loaded())
 
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
@@ -213,7 +214,7 @@ export class DataBlock extends Block {
         /* Calculate a new `id` to be assigned to the record being inserted. */
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
-        let ring = this.sequence.ring
+        let ring = this.ring
         let id = (this.insert_mode === 'compact') ? this._assign_id_compact() : Math.max(this._autoincrement + 1, ring.start_id)
         if (!ring.valid_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
         this._autoincrement = Math.max(id, this._autoincrement)
@@ -262,7 +263,7 @@ export class DataBlock extends Block {
         if (obj.__base?.save_revisions)
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
-        if (this.sequence.ring.readonly) {          // can't write the update here in this ring? forward to a higher ring
+        if (this.ring.readonly) {                   // can't write the update here in this ring? forward to a higher ring
             req = req.make_step(this, 'save', {id, key, data: obj.__json})
             return req.forward_save()
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
@@ -302,8 +303,7 @@ export class DataBlock extends Block {
         let data = await this._storage.get(key)
         if (data === undefined) return req.forward_down()
 
-        if (this.sequence.ring.readonly)
-            return req.error_access("cannot remove the item, the ring is read-only")
+        if (this.ring.readonly) return req.error_access("cannot remove the item, the ring is read-only")
 
         req = req.make_step(this, null, {key, value: data})
         return this.cmd_del(req)                    // perform the delete
@@ -317,11 +317,11 @@ export class DataBlock extends Block {
 
     async propagate_change(key, obj_old = null, obj_new = null) {
         /* Push a change from this data block to derived indexes. */
-        if (!this.sequence.ring?.is_loaded()) {
+        if (!this.ring?.is_loaded()) {
             await this.sequence.load()
-            await this.sequence.ring.load()
+            await this.ring.load()
         }
-        let ring = this.sequence.ring
+        let ring = this.ring
         for (let index of ring.indexes.values()) {
             let seq = ring._subsequences.get(index.id)
             index.change(key, obj_old, obj_new, seq)        // no need to await, the result is not used by the caller
@@ -332,12 +332,12 @@ export class DataBlock extends Block {
         /* Push a change from this data block to derived indexes. */
         let change = new ChangeRequest(key, value_old, value_new)
 
-        if (!this.sequence.ring?.is_loaded()) {
+        if (!this.ring?.is_loaded()) {
             await this.sequence.load()
-            await this.sequence.ring.load()
+            await this.ring.load()
         }
 
-        let ring = this.sequence.ring
+        let ring = this.ring
         for (let index of ring.indexes.values()) {
             let seq = ring._subsequences.get(index.id)
             index.apply(change, seq)                    // no need to await, the result is not used by the caller
