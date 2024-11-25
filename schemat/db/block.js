@@ -83,6 +83,10 @@ export class Block extends WebObject {
         await this.propagate(key, value_old, value)
     }
 
+    async cmd_save(req) {
+        return this.cmd_put(req)
+    }
+
     async cmd_del(req) {
         let {key, value} = req.args                     // `value` is needed for change calculation & propagation
 
@@ -126,6 +130,9 @@ export class Block extends WebObject {
         /* For now, there's NO propagation from index blocks, only from data blocks (see below). */
     }
 }
+
+
+/**********************************************************************************************************************/
 
 export class DataBlock extends Block {
     /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */

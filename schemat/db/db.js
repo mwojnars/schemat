@@ -214,11 +214,11 @@ export class Database extends WebObject {
         /* Return the top-most ring that has a given object `id` in DB, or a given `name`.
            Return undefined if not found. Can be called to check if an item ID or a ring name exists.
          */
-        let req = new DataRequest(this, 'find_ring', {id})
+        let req = new DataRequest(this, 'get', {id})
         for (const ring of this.rings_reversed) {
             if (name && ring.name === name) return ring
             if (id) {
-                let data = await ring.handle(req.clone(), 'get')
+                let data = await ring.handle(req.clone())
                 if (data !== undefined) return ring
             }
         }
@@ -344,7 +344,8 @@ export class Database extends WebObject {
          */
         let ring = req.current_ring || this.bottom_ring
         while (ring?.readonly) ring = this._next(ring)              // go upwards to find the first writable ring
-        return ring ? ring.handle(req, 'put')
+        // return ring ? ring.handle(req, 'update')
+        return ring ? ring.handle(req)
             : req.error_access(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
     }
 }
