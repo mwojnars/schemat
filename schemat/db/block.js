@@ -83,10 +83,6 @@ export class Block extends WebObject {
         await this.propagate(key, value_old, value)
     }
 
-    async cmd_save(req) {
-        return this.cmd_put(req)
-    }
-
     async cmd_del(req) {
         let {key, value} = req.args                     // `value` is needed for change calculation & propagation
 
@@ -253,7 +249,7 @@ export class DataBlock extends Block {
     async cmd_update(req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
-           in this block (if the ring permits), or forward the write request back to a higher ring.
+           in this block (if the ring permits), or forward the write request back to a higher ring. Return {id, data}.
          */
         let {id, key, edits} = req.args
         let data = await this._storage.get(key)
@@ -286,6 +282,12 @@ export class DataBlock extends Block {
         // await this.propagate_change(key, prev, obj)
 
         return schemat.register_record({id, data: new_data})
+    }
+
+    async cmd_save(req) {
+        await this.cmd_put(req)
+        let {id, value} = req.args
+        return schemat.register_record({id, data: value})
     }
 
     async cmd_delete(req) {

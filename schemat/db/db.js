@@ -344,7 +344,6 @@ export class Database extends WebObject {
          */
         let ring = req.current_ring || this.bottom_ring
         while (ring?.readonly) ring = this._next(ring)              // go upwards to find the first writable ring
-        // return ring ? ring.handle(req, 'update')
         return ring ? ring.handle(req)
             : req.error_access(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
     }
