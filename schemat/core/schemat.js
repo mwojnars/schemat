@@ -246,7 +246,7 @@ export class Schemat {
         return obj.load().then(() => this.registry.set_object(obj))
     }
 
-    async load_record(id, fast = true) {
+    load_record(id, fast = true) {
         /* Read object's raw data (JSON string) from DB, or from the registry (if present there and fast=true).
            In the former case, the newly retrieved data is saved in the registry for future use.
          */
@@ -256,10 +256,10 @@ export class Schemat {
         let data = this.registry.get_record(id)
         if (data) return data
 
-        data = await this._select(id)
-
-        this.register_record({id, data}, false)
-        return data
+        return this._select(id).then(data => {
+            this.register_record({id, data}, false)
+            return data
+        })
     }
 
     _select(id)     { throw new Error(`not implemented`) }
