@@ -277,11 +277,7 @@ export class DataBlock extends Block {
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
         }
-
-        await this._put(key, new_data)              // save changes here and perform change propagation
-        // await this.propagate_change(key, prev, obj)
-
-        return schemat.register_record({id, data: new_data})
+        return this._save(key, obj)                 // save changes and perform change propagation
     }
 
     async cmd_save(req) {
