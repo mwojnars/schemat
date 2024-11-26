@@ -56,15 +56,16 @@ export class DataRequest {
     // they are updated automatically when a new step is added to the trace; these properties include:
     current_db
     current_ring
-    current_data
-    current_index
-    current_block
-    // etc... (whatever roles are defined for actors on the trace)
 
-    get current_sequence() {
-        /* most recent data or index Sequence */
-        return this.current_data || this.current_index
-    }
+    // current_data
+    // current_index
+    // current_block
+    // // etc... (whatever roles are defined for actors on the trace)
+    //
+    // get current_sequence() {
+    //     /* most recent data or index Sequence */
+    //     return this.current_data || this.current_index
+    // }
 
 
     constructor(actor = null, command = null, args = null) {
