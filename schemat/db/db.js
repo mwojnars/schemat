@@ -193,8 +193,6 @@ export class Database extends WebObject {
 
         assert(this.is_infant())                // open() is a mutable operation, so it can only be called on an infant object (not in DB)
         print(`creating database...`)
-
-        this.rings = []
         let top
 
         for (const spec of ring_specs) {
@@ -205,14 +203,13 @@ export class Database extends WebObject {
 
             // await delay()       // strangely enough, without this delay, Ring.new() above is NOT fully awaited when using the custom module Loader (!?)
 
-            ring.lower_ring = top //this.rings.at(-1)
+            ring.lower_ring = top
             top = ring
 
-            this.rings.push(ring)
+            // this.rings.push(ring)
             print(`... ring created [${ring.__id || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
         }
         this._top_ring = top
-        // print('this._top_ring:', this._top_ring)
     }
 
     async __init__() {
@@ -225,9 +222,7 @@ export class Database extends WebObject {
         for (let ring = top_ring; ring; ring = ring.lower_ring)
             rings.push(await ring.load())
 
-        this._rings = rings.reverse()
-        // print('rings:', rings.map(r => r.id))
-
+        this.rings = rings.reverse()
         // return Promise.all(this._rings.map(ring => ring.load()))             // load all rings
     }
 
