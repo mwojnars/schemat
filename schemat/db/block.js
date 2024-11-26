@@ -318,11 +318,9 @@ export class DataBlock extends Block {
 
     async propagate_change(key, obj_old = null, obj_new = null) {
         /* Push a change from this data block to derived indexes. */
-        if (!this.ring?.is_loaded()) {
-            await this.sequence.load()
-            await this.ring.load()
-        }
         let ring = this.ring
+        assert(ring?.is_loaded())
+
         for (let index of ring.indexes.values()) {
             let seq = ring._subsequences.get(index.id)
             index.change(key, obj_old, obj_new, seq)        // no need to await, the result is not used by the caller
