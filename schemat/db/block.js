@@ -46,8 +46,9 @@ export class Block extends WebObject {
 
     async __init__() {
         if (CLIENT) return                                          // don't initialize internals when on client
-        if (!this.sequence.is_loaded()) this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block;
-                                                                    // it's assumed that .sequence gets fully loaded before any CRUD operation (ins/upd/del) is executed
+        if (!this.sequence.is_loaded()) //this.sequence.load()      // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block;
+            assert(this.sequence.__meta.loading)                    // it's assumed that .sequence gets fully loaded before any CRUD operation (ins/upd/del) is executed
+
         let format = this.format
         let storage_class
 
