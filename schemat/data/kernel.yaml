@@ -404,8 +404,19 @@
     "@": schemat:Catalog
 - __id: 11
   name: Database
-  info: Internal database. An array of data Rings stacked on top of each other.
+  info: Internal database. An array of data Rings stacked on top of each other,
+    represented by a reference to the top ring.
   schema:
+    top_ring:
+      info: Reference to the top-most Ring of this database. Other rings are found by
+        following the `lower_ring` property.
+      category:
+        "@": 12
+      "@": schemat/types/type.js:REF
+    top_ring_writable:
+      default: true
+      info: If true, write access to the database is allowed, otherwise it is not.
+      "@": schemat/types/type.js:BOOLEAN
     rings:
       info: Array of Ring objects
       "@": schemat/types/type.js:GENERIC
