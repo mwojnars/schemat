@@ -18,10 +18,6 @@
   name: database
   top_ring:
     "@": 1016
-  rings:
-    - "@": 1003
-    - "@": 1004
-    - "@": 1016
   __category:
     "@": 11
 - __id: 1003

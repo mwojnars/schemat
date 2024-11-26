@@ -417,9 +417,6 @@
       default: true
       info: If true, write access to the database is allowed, otherwise it is not.
       "@": schemat/types/type.js:BOOLEAN
-    rings:
-      info: Array of Ring objects
-      "@": schemat/types/type.js:GENERIC
     "@": schemat:Catalog
   class: schemat/db/db.js:Database
   __category:
