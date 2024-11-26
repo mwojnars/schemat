@@ -187,7 +187,6 @@ export class Database extends WebObject {
 
     /***  Rings manipulation  ***/
 
-    // get top_ring()          { return this.rings.at(-1) }
     get bottom_ring()       { return this.rings[0] }
     get rings_reversed()    { return this.rings.toReversed() }
 
@@ -216,10 +215,9 @@ export class Database extends WebObject {
         if (CLIENT) return
         print(`initializing database [${this.__id}] ...`)
 
-        let top_ring = this.top_ring
         let rings = []
 
-        for (let ring = top_ring; ring; ring = ring.lower_ring)
+        for (let ring = this.top_ring; ring; ring = ring.lower_ring)
             rings.push(await ring.load())
 
         this.rings = rings.reverse()
