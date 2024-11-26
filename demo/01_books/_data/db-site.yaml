@@ -43,6 +43,9 @@
     "@": 12
 - __id: 1004
   name: db-site
+  lower_ring:
+    "@": 1003
+  lower_ring_writable: true
   data_sequence:
     "@": 1027
   index_sequence:
@@ -107,13 +110,37 @@
   info: Core system objects and categories, for dynamic imports by path instead of
     ID.
   entries:
+    Category:
+      "@": 1
+    Container:
+      "@": 3
+    Site:
+      "@": 2
+    Directory:
+      "@": 5
+    File:
+      "@": 4
+    LocalDirectory:
+      "@": 6
+    LocalFile:
+      "@": 27
+    Namespace:
+      "@": 7
     Revision:
       "@": 26
+    ObjectSpace:
+      "@": 8
     "@": schemat:Catalog
   __container:
     "@": 1019
   __category:
     "@": 5
+- __id: 1010
+  __category:
+    "@": 19
+  sequence:
+    "@": 1017
+  filename: ./demo/01_books/_data/db-app_02.yaml
 - __id: 1012
   ring:
     "@": 1003
@@ -138,6 +165,9 @@
     "@": 19
 - __id: 1016
   name: db-app
+  lower_ring:
+    "@": 1004
+  lower_ring_writable: true
   data_sequence:
     "@": 1017
   index_sequence:
@@ -156,6 +186,7 @@
     "@": 1016
   blocks:
     - "@": 1029
+    - "@": 1010
   __category:
     "@": 14
 - __id: 1018
@@ -228,7 +259,6 @@
   sequence:
     "@": 1017
   filename: ./demo/01_books/_data/db-app.yaml
-  format: data-yaml
   __category:
     "@": 19
 - __id: 1030
