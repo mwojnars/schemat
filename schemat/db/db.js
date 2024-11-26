@@ -27,6 +27,9 @@ export class Ring extends WebObject {
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
+    lower_ring              // reference to the lower Ring object
+    lower_ring_writable     // if true, the requests going down through this ring are allowed to save their updates in lower ring(s)
+
     // validity range [start, stop) for IDs of NEWLY-INSERTED objects in this ring;
     // UPDATED objects (re-inserted here from lower rings) can still have IDs from outside this range (!)
     start_id = 0
@@ -199,6 +202,7 @@ export class Database extends WebObject {
 
             // await delay()       // strangely enough, without this delay, Ring.new() above is NOT fully awaited when using the custom module Loader (!?)
 
+            ring.lower_ring = this.rings.at(-1)
             this.rings.push(ring)
             print(`... ring created [${ring.__id || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
         }
@@ -224,15 +228,15 @@ export class Database extends WebObject {
         }
     }
 
-    _prev(ring) {
-        /* Find a ring that directly precedes `ring` in this.rings. Return the top ring if `ring` if undefined,
-           or undefined if `ring` has no predecessor, or throw RingUnknown if `ring` cannot be found.
-         */
-        if (!ring) return this.top_ring
-        let pos = this.rings.indexOf(ring)
-        if (pos < 0) throw new DatabaseError(`reference ring not found in the database`)
-        if (pos > 0) return this.rings[pos-1]
-    }
+    // _prev(ring) {
+    //     /* Find a ring that directly precedes `ring` in this.rings. Return the top ring if `ring` if undefined,
+    //        or undefined if `ring` has no predecessor, or throw RingUnknown if `ring` cannot be found.
+    //      */
+    //     if (!ring) return this.top_ring
+    //     let pos = this.rings.indexOf(ring)
+    //     if (pos < 0) throw new DatabaseError(`reference ring not found in the database`)
+    //     if (pos > 0) return this.rings[pos-1]
+    // }
 
     _next(ring) {
         /* Find a ring that directly succeeds `ring` in this.rings. Return the bottom ring if `ring` is undefined,
@@ -332,9 +336,10 @@ export class Database extends WebObject {
            select/update/delete operations. It is assumed that args[0] is the item ID.
          */
         // print(`forward_down(${req.command}, ${req.args})`)
-        let ring = this._prev(req.current_ring)
-        if (ring) return ring.handle(req)
-        return req.error_id_not_found()
+        // let ring = this._prev(req.current_ring)
+        let current = req.current_ring
+        let ring = current ? current.lower_ring : this.top_ring
+        return ring ? ring.handle(req) : req.error_id_not_found()
     }
 
     save_update(req) {
