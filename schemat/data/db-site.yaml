@@ -39,6 +39,9 @@
     "@": 12
 - __id: 1004
   name: db-site
+  lower_ring:
+    "@": 1003
+  lower_ring_writable: true
   data_sequence:
     "@": 1027
   index_sequence:
@@ -152,6 +155,9 @@
     "@": 19
 - __id: 1016
   name: db-app
+  lower_ring:
+    "@": 1004
+  lower_ring_writable: true
   data_sequence:
     "@": 1017
   index_sequence:
