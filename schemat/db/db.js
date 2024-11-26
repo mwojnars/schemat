@@ -179,7 +179,7 @@ export class Database extends WebObject {
     static __category = 11  // ID of Database category
     static role = 'db'      // for use in ProcessingStep and DataRequest
 
-    // rings = []              // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
+    // rings                // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
 
 
     /***  Rings manipulation  ***/
@@ -201,12 +201,9 @@ export class Database extends WebObject {
                 spec.item            ? await schemat.get_loaded(spec.item) :
                                        await Ring.new(spec).load()
 
-            // await delay()       // strangely enough, without this delay, Ring.new() above is NOT fully awaited when using the custom module Loader (!?)
-
             ring.lower_ring = top
             top = ring
 
-            // this.rings.push(ring)
             print(`... ring created [${ring.__id || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
         }
         this._top_ring = top
@@ -223,7 +220,6 @@ export class Database extends WebObject {
             rings.push(await ring.load())
 
         this.rings = rings.reverse()
-        // return Promise.all(this._rings.map(ring => ring.load()))             // load all rings
     }
 
     async find_ring({id, name}) {
