@@ -179,20 +179,23 @@ export class Database extends WebObject {
     static __category = 11  // ID of Database category
     static role = 'db'      // for use in ProcessingStep and DataRequest
 
-    rings = []              // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
+    // rings = []              // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
 
 
     /***  Rings manipulation  ***/
 
     get top_ring()          { return this.rings.at(-1) }
     get bottom_ring()       { return this.rings[0] }
-    get rings_reversed()    { return this.rings.slice().reverse() }
+    get rings_reversed()    { return this.rings.toReversed() }
 
     async open(ring_specs) {
         /* After create(), create all rings according to `ring_specs` specification. */
 
         assert(this.is_infant())                // open() is a mutable operation, so it can only be called on an infant object (not in DB)
         print(`creating database...`)
+
+        this.rings = []
+        let top
 
         for (const spec of ring_specs) {
             let ring =
@@ -202,15 +205,29 @@ export class Database extends WebObject {
 
             // await delay()       // strangely enough, without this delay, Ring.new() above is NOT fully awaited when using the custom module Loader (!?)
 
-            ring.lower_ring = this.rings.at(-1)
+            ring.lower_ring = top //this.rings.at(-1)
+            top = ring
+
             this.rings.push(ring)
             print(`... ring created [${ring.__id || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
         }
+        this._top_ring = top
+        // print('this._top_ring:', this._top_ring)
     }
 
     async __init__() {
         if (CLIENT) return
         print(`initializing database [${this.__id}] ...`)
+
+        // this._top_ring ??= this.rings.at(-1)
+        // let rings = []
+        //
+        // for (let ring = this._top_ring; ring; ring = ring.lower_ring)
+        //     rings.push(ring)
+        //
+        // this._rings = rings.reverse()
+        // // print('rings:', rings.map(r => r.id))
+
         return Promise.all(this.rings.map(ring => ring.load()))             // load all rings
     }
 
@@ -227,16 +244,6 @@ export class Database extends WebObject {
             }
         }
     }
-
-    // _prev(ring) {
-    //     /* Find a ring that directly precedes `ring` in this.rings. Return the top ring if `ring` if undefined,
-    //        or undefined if `ring` has no predecessor, or throw RingUnknown if `ring` cannot be found.
-    //      */
-    //     if (!ring) return this.top_ring
-    //     let pos = this.rings.indexOf(ring)
-    //     if (pos < 0) throw new DatabaseError(`reference ring not found in the database`)
-    //     if (pos > 0) return this.rings[pos-1]
-    // }
 
     _next(ring) {
         /* Find a ring that directly succeeds `ring` in this.rings. Return the bottom ring if `ring` is undefined,
@@ -336,7 +343,6 @@ export class Database extends WebObject {
            select/update/delete operations. It is assumed that args[0] is the item ID.
          */
         // print(`forward_down(${req.command}, ${req.args})`)
-        // let ring = this._prev(req.current_ring)
         let current = req.current_ring
         let ring = current ? current.lower_ring : this.top_ring
         return ring ? ring.handle(req) : req.error_id_not_found()
