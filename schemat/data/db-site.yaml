@@ -16,6 +16,8 @@
     "@": 2
 - __id: 1002
   name: database
+  top_ring:
+    "@": 1016
   rings:
     - "@": 1003
     - "@": 1004
