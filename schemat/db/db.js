@@ -219,16 +219,16 @@ export class Database extends WebObject {
         if (CLIENT) return
         print(`initializing database [${this.__id}] ...`)
 
-        // this._top_ring ??= this.rings.at(-1)
-        // let rings = []
-        //
-        // for (let ring = this._top_ring; ring; ring = ring.lower_ring)
-        //     rings.push(ring)
-        //
-        // this._rings = rings.reverse()
-        // // print('rings:', rings.map(r => r.id))
+        let top_ring = this._top_ring || this.rings.at(-1)
+        let rings = []
 
-        return Promise.all(this.rings.map(ring => ring.load()))             // load all rings
+        for (let ring = top_ring; ring; ring = ring.lower_ring)
+            rings.push(await ring.load())
+
+        this._rings = rings.reverse()
+        // print('rings:', rings.map(r => r.id))
+
+        // return Promise.all(this._rings.map(ring => ring.load()))             // load all rings
     }
 
     async find_ring({id, name}) {
