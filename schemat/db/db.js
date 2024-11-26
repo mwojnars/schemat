@@ -179,12 +179,15 @@ export class Database extends WebObject {
     static __category = 11  // ID of Database category
     static role = 'db'      // for use in ProcessingStep and DataRequest
 
+    // properties:
+    top_ring
+
     // rings                // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
 
 
     /***  Rings manipulation  ***/
 
-    get top_ring()          { return this.rings.at(-1) }
+    // get top_ring()          { return this.rings.at(-1) }
     get bottom_ring()       { return this.rings[0] }
     get rings_reversed()    { return this.rings.toReversed() }
 
@@ -206,14 +209,14 @@ export class Database extends WebObject {
 
             print(`... ring created [${ring.__id || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
         }
-        this._top_ring = top
+        this.top_ring = top
     }
 
     async __init__() {
         if (CLIENT) return
         print(`initializing database [${this.__id}] ...`)
 
-        let top_ring = this._top_ring || this.rings.at(-1)
+        let top_ring = this.top_ring
         let rings = []
 
         for (let ring = top_ring; ring; ring = ring.lower_ring)
