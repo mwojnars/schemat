@@ -335,6 +335,7 @@ export class Database extends WebObject {
          */
         // print(`forward_down(${req.command}, ${req.args})`)
         let current = req.current_ring
+        if (current) req.add_ring(current)
         let ring = current ? current.lower_ring : this.top_ring
         return ring ? ring.handle(req) : req.error_id_not_found()
     }

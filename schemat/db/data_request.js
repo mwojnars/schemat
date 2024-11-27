@@ -1,4 +1,4 @@
-import {assert, T, cloneObject} from "../common/utils.js";
+import {assert, print, cloneObject} from "../common/utils.js";
 import {DataAccessError, ItemNotFound} from "../common/errors.js";
 
 
@@ -48,7 +48,8 @@ export class DataRequest {
     // hops                // number of hops the request has gone through so far (for debugging and performance monitoring); after too many hops the request should be dropped to avoid infinite loops
 
     trace = []             // array of ProcessingStep(s) that the request has gone through so far
-    rings = []             // Rings that have been encountered during "read" part of the request when forwarding it down from the top ring
+    rings = []             // Rings that have been encountered during "read" part of the request when forwarding it down from the top ring;
+                           // ordered from top ring to bottom, *excluding* the current (bottom-most) ring
 
     command                // the most recent not-null `command` in the trace
     args                   // the most recent non-empty array of arguments for a command, possibly from a different step than `command` (!)
@@ -78,6 +79,11 @@ export class DataRequest {
         dup.trace = [...this.trace]             // individual steps are NOT cloned!
         dup.rings = [...this.rings]
         return dup
+    }
+
+    add_ring(ring) {
+        this.rings.push(ring)
+        // print('request-forward rings:', this.rings.map(r => r.name))
     }
 
     make_step(actor, command = null, args = null) {
