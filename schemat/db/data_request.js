@@ -48,8 +48,8 @@ export class DataRequest {
     // hops                // number of hops the request has gone through so far (for debugging and performance monitoring); after too many hops the request should be dropped to avoid infinite loops
 
     trace = []             // array of ProcessingStep(s) that the request has gone through so far
-    rings = []             // Rings that have been encountered during "read" part of the request when forwarding it down from the top ring;
-                           // ordered from top ring to bottom, *excluding* the current (bottom-most) ring
+    rings = []             // higher Rings that have been encountered during "read" part of the request when forwarding it down from the top ring;
+                           // ordered from top to bottom, *excluding* the current (bottom-most) ring
 
     command                // the most recent not-null `command` in the trace
     args                   // the most recent non-empty array of arguments for a command, possibly from a different step than `command` (!)
@@ -84,6 +84,9 @@ export class DataRequest {
     add_ring(ring) {
         this.rings.push(ring)
         // print('request-forward rings:', this.rings.map(r => r.name))
+    }
+    pop_ring(ring) {
+        return this.rings.pop()
     }
 
     make_step(actor, command = null, args = null) {
