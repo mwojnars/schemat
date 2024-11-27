@@ -186,8 +186,8 @@ export class Database extends WebObject {
     /***  Rings manipulation  ***/
 
     get rings()             { return this._rings }      // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
-    get bottom_ring()       { return this.rings[0] }
     get rings_reversed()    { return this.rings.toReversed() }
+    // get bottom_ring()    { return this.rings[0] }
 
     async open(ring_specs) {
         /* After create(), create all rings according to `ring_specs` specification. */
@@ -239,7 +239,8 @@ export class Database extends WebObject {
         /* Find a ring that directly succeeds `ring` in this.rings. Return the bottom ring if `ring` is undefined,
            or undefined if `ring` has no successor, or throw RingUnknown if `ring` cannot be found.
          */
-        if (!ring) return this.bottom_ring
+        // if (!ring) return this.bottom_ring
+        assert(ring)
         let pos = this.rings.indexOf(ring)
         if (pos < 0) throw new DatabaseError(`reference ring not found in the database`)
         if (pos < this.rings.length-1) return this.rings[pos+1]
@@ -343,7 +344,8 @@ export class Database extends WebObject {
            Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
            No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
          */
-        let ring = req.current_ring || this.bottom_ring
+        let ring = req.current_ring // || this.bottom_ring
+        assert(ring)
         while (ring?.readonly) ring = this._next(ring)              // go upwards to find the first writable ring
         return ring ? ring.handle(req)
             : req.error_access(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)

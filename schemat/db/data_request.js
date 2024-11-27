@@ -48,6 +48,7 @@ export class DataRequest {
     // hops                // number of hops the request has gone through so far (for debugging and performance monitoring); after too many hops the request should be dropped to avoid infinite loops
 
     trace = []             // array of ProcessingStep(s) that the request has gone through so far
+    rings = []             // Rings that have been encountered during "read" part of the request when forwarding it down from the top ring
 
     command                // the most recent not-null `command` in the trace
     args                   // the most recent non-empty array of arguments for a command, possibly from a different step than `command` (!)
@@ -75,6 +76,7 @@ export class DataRequest {
     clone() {
         let dup = cloneObject(this)
         dup.trace = [...this.trace]             // individual steps are NOT cloned!
+        dup.rings = [...this.rings]
         return dup
     }
 
