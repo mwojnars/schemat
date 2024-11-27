@@ -250,7 +250,7 @@ export class Database extends WebObject {
 
     async select(req) {
         // returns a json string (`data`) or undefined
-        return this.forward_down(req.make_step(this, 'select'))
+        return req.make_step(this, 'select').forward_down()
     }
 
     async update(id, ...edits) {
@@ -260,7 +260,7 @@ export class Database extends WebObject {
                    even without changing the record's data.
          */
         assert(edits.length, 'missing edits')
-        return this.forward_down(new DataRequest(this, 'update', {id, edits}))
+        return new DataRequest(this, 'update', {id, edits}).forward_down()
     }
 
     async insert(data, {ring, ring_name} = {}) {
@@ -293,7 +293,7 @@ export class Database extends WebObject {
            Return true on success, or false if the ID was not found (no modifications are done in such case).
          */
         let id = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id
-        return this.forward_down(new DataRequest(this, 'delete', {id}))
+        return new DataRequest(this, 'delete', {id}).forward_down()
     }
 
     async *scan_index(name, {offset, limit, ...opts} = {}) {
@@ -325,30 +325,30 @@ export class Database extends WebObject {
     //     yield* merge(WebObject.compare, ...streams)
     // }
 
-
-    /***  Forwarding to other rings  ***/
-
-    forward_down(req) {
-        /* Forward the request to a lower ring if the current ring doesn't contain the requested item ID - during
-           select/update/delete operations. It is assumed that args[0] is the item ID.
-         */
-        // print(`forward_down(${req.command}, ${req.args})`)
-        let current = req.current_ring
-        if (current) req.add_ring(current)
-        let ring = current ? current.lower_ring : this.top_ring
-        return ring ? ring.handle(req) : req.error_id_not_found()
-    }
-
-    save_update(req) {
-        /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
-           Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
-           No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
-         */
-        let ring = req.current_ring
-        assert(ring)
-        while (ring?.readonly) ring = req.pop_ring()        // go upwards to find the first writable ring
-        return ring ? ring.handle(req)
-            : req.error_access(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
-    }
+    //
+    // /***  Forwarding to other rings  ***/
+    //
+    // forward_down(req) {
+    //     /* Forward the request to a lower ring if the current ring doesn't contain the requested item ID - during
+    //        select/update/delete operations. It is assumed that args[0] is the item ID.
+    //      */
+    //     // print(`forward_down(${req.command}, ${req.args})`)
+    //     let current = req.current_ring
+    //     if (current) req.add_ring(current)
+    //     let ring = current ? current.lower_ring : this.top_ring
+    //     return ring ? ring.handle(req) : req.error_id_not_found()
+    // }
+    //
+    // save_update(req) {
+    //     /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
+    //        Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
+    //        No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
+    //      */
+    //     let ring = req.current_ring
+    //     assert(ring)
+    //     while (ring?.readonly) ring = req.pop_ring()        // go upwards to find the first writable ring
+    //     return ring ? ring.handle(req)
+    //         : req.error_access(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
+    // }
 }
 

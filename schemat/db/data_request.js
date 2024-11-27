@@ -106,12 +106,38 @@ export class DataRequest {
         return this.clone().make_step(actor, command, args)
     }
 
-    forward_down()              { return this.current_db.forward_down(this) }
-    forward_save()              { return this.current_db.save_update(this) }
-
     // assert_valid_id(msg)        { return this.current_ring.assert_valid_id(this.args?.id, msg || `item ID is outside of the valid range for the ring`) }
 
     error_access(msg)           { throw new DataAccessError(msg, {id: this.args?.id}) }
     error_id_not_found(msg)     { throw new ItemNotFound(msg, {id: this.args?.id}) }
+
+
+    /***  request forwarding to lower/higher ring  ***/
+
+    forward_down() {
+        /* Forward the request to a lower ring if the current ring doesn't contain the requested item ID - during
+           select/update/delete operations. It is assumed that args[0] is the item ID.
+         */
+        // print(`forward_down(${this.command}, ${this.args})`)
+        let current = this.current_ring
+        if (current) this.add_ring(current)
+        let ring = current ? current.lower_ring : this.current_db.top_ring
+        return ring ? ring.handle(this) : this.error_id_not_found()
+    }
+
+    forward_save() {
+        /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
+           Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
+           No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
+         */
+        let ring = this.current_ring
+        assert(ring)
+        while (ring?.readonly) ring = this.pop_ring()        // go upwards to find the first writable ring
+        return ring ? ring.handle(this)
+            : this.error_access(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
+    }
+
+    // forward_down()              { return this.current_db.forward_down(this) }
+    // forward_save()              { return this.current_db.save_update(this) }
 }
 
