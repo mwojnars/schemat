@@ -112,7 +112,7 @@ export class DataRequest {
     error_id_not_found(msg)     { throw new ItemNotFound(msg, {id: this.args?.id}) }
 
 
-    /***  request forwarding to lower/higher ring  ***/
+    /***  forward request to lower/higher rings  ***/
 
     forward_down() {
         /* Forward the request to a lower ring if the current ring doesn't contain the requested item ID - during
@@ -136,8 +136,5 @@ export class DataRequest {
         return ring ? ring.handle(this)
             : this.error_access(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
     }
-
-    // forward_down()              { return this.current_db.forward_down(this) }
-    // forward_save()              { return this.current_db.save_update(this) }
 }
 
