@@ -52,7 +52,7 @@ export class Index extends Operator {
     _make_records(key, entity) {
         /* Map a source-sequence entity (typically, a web object) to a list of destination-sequence (index) records. */
         entity = entity?.__json
-        let src_record = (entity != null) && Record.binary(this._source_schema(), key, entity)
+        let src_record = (entity != null) && Record.binary(this.source_schema, key, entity)
         let dst_records = src_record && [...this.map_record(src_record)]
         return dst_records && new BinaryMap(dst_records.map(rec => [rec.binary_key, rec.string_value]))
     }
@@ -117,7 +117,7 @@ export class Index extends Operator {
             }
     }
 
-    _source_schema() {
+    get source_schema() {
         throw new Error('not implemented')
         // return this.source.record_schema
     }
@@ -139,9 +139,7 @@ export class ObjectIndex extends Index {
 
     category            // category of items allowed in this index
 
-    _source_schema() {
-        return data_schema
-    }
+    get source_schema() { return data_schema }
 
     *map_record(input_record /*Record*/) {
         /* Generate a stream of records, each one being a {key, value} pair, NOT encoded.
