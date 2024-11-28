@@ -306,8 +306,20 @@ export class DataBlock extends Block {
 
         if (this.ring.readonly) return req.error_access("cannot remove the item, the ring is read-only")
 
-        req = req.make_step(this, null, {key, value: data})
-        return this.cmd_del(req)                    // perform the delete
+        let id = this.sequence.decode_key(key)
+        let obj = await WebObject.from_data(id, data, {activate: false})
+
+        let deleted = this._storage.del(key)
+        if (!deleted) return 0
+
+        this._flush()
+        await this.propagate_change(key, obj)
+
+        assert(Number(deleted) === 1)
+        return Number(deleted)
+
+        // req = req.make_step(this, null, {key, value: data})
+        // return this.cmd_del(req)                    // perform the delete
     }
 
     async erase(req) {
