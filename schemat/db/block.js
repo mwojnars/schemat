@@ -79,10 +79,10 @@ export class Block extends WebObject {
     }
 
     async _put(key, value) {
-        let value_old = await this._storage.get(key) || null
+        // let value_old = await this._storage.get(key) || null
         await this._storage.put(key, value)
         this._flush()
-        await this.propagate(key, value_old, value)
+        // await this.propagate(key, value_old, value)
     }
 
     async cmd_del(req) {

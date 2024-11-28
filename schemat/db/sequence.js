@@ -12,7 +12,7 @@ import {INTEGER} from "../types/type.js";
  **
  */
 
-export class Sequence extends WebObject {    // Series?
+export class Sequence extends WebObject {
     /* Ordered binary sequence of key-value records, possibly distributed and/or replicated (TODO).
        Keys and values (payload) can be composite.
        May consist of multiple - possibly overlapping (replicated) - Blocks. TODO
