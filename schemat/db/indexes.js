@@ -36,6 +36,8 @@ export class Index extends Operator {
         // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
         let [del_records, put_records] = this._make_plan(key, prev, next)
 
+        this._prune_plan(del_records, put_records)
+
         // TODO: request object, only used when another propagation step is to be done
         let req = new DataRequest(this, 'change')
 
@@ -67,8 +69,6 @@ export class Index extends Operator {
         // del/put plan: records to be deleted from, or written to, the index
         let del_records = out_records_old && new BinaryMap(out_records_old.map(rec => [rec.binary_key, rec.string_value]))
         let put_records = out_records_new && new BinaryMap(out_records_new.map(rec => [rec.binary_key, rec.string_value]))
-
-        this._prune_plan(del_records, put_records)
 
         return [del_records, put_records]
     }
