@@ -2,7 +2,7 @@ import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
 import {DatabaseError} from "../common/errors.js"
 import {WebObject} from "../core/object.js"
 import {DataOperator} from "./sequence.js";
-import {Record} from "./records.js";
+import {data_schema, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence, IndexSequence, Subsequence} from "./sequence.js";
 import {Catalog} from "../core/catalog.js";
@@ -73,19 +73,6 @@ export class Ring extends WebObject {
             this._subsequences.set(index.id, subsequence)
         }
     }
-
-    // async rebuild_indexes() {
-    //     // rebuild all indexes from the data sequence
-    //     await this.index_sequence.erase()
-    //     for await (let record /*DataRecord*/ of this.scan_all()) {
-    //         // TODO: use this._subsequences here...
-    //         for (let index of this.indexes.values()) {
-    //             const binary_key = data_schema.encode_key([record.id])
-    //             const change = new ChangeRequest(binary_key, null, record.data_json)
-    //             await index.apply(change)
-    //         }
-    //     }
-    // }
 
     async erase(req) {
         /* Remove all records from this ring; open() should be called first. */
@@ -160,6 +147,18 @@ export class Ring extends WebObject {
         for await (let record of data.scan(this.data_sequence))
             yield record.decode_object()
     }
+
+    // async rebuild_indexes() {
+    //     // rebuild all indexes from the data sequence
+    //     await this.index_sequence.erase()
+    //     for await (let {id, data} of this.scan_all()) {
+    //         // TODO: use this._subsequences here...
+    //         for (let index of this.indexes.values()) {
+    //             let key = data_schema.encode_key([id])
+    //             await index.change(key, null, data)
+    //         }
+    //     }
+    // }
 }
 
 
