@@ -62,9 +62,7 @@ export class Index extends Operator {
     }
 
     *map_record(key, entity) {
-        /* Perform transformation of the input Record, as defined by this index, and yield any number (0+)
-           of output Records to be stored in the index.
-         */
+        /* Perform transformation of the source entity and yield any number (0+) of output Records to be stored in the index. */
         throw new Error('not implemented')
     }
 
