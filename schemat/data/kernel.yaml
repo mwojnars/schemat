@@ -582,7 +582,7 @@
   name: idx_objects_category
   info: Index of all objects by their category.
   key:
-    cid:
+    __cid:
       blank: true
       "@": schemat/types/type.js:INTEGER
     id:

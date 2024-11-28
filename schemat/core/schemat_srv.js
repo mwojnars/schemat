@@ -79,8 +79,8 @@ export class ServerSchemat extends Schemat {
         let records = this.db.scan_index('idx_objects_category', {start, stop, ...opts})   // stream of plain Records
 
         for await (const record of records) {
-            let {cid, id} = record.object_key
-            assert(full_scan || target === cid)
+            let {__cid, id} = record.object_key
+            assert(full_scan || target === __cid)
             yield load ? this.get_loaded(id) : this.get_object(id)
         }
     }

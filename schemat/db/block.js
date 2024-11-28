@@ -331,10 +331,6 @@ export class DataBlock extends Block {
         /* Push a change from this data block to derived indexes. */
         let ring = this.ring
         assert(ring?.is_loaded())
-        // if (!ring?.is_loaded()) {
-        //     await this.sequence.load()
-        //     await this.ring.load()
-        // }
 
         let change = new ChangeRequest(key, value_old, value_new)
         for (let index of ring.indexes.values()) {
