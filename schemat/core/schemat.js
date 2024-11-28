@@ -3,8 +3,6 @@ import {DependenciesStack} from '../common/structs.js'
 import {WebObject} from './object.js'
 import {Category} from './category.js'
 import {Registry} from "./registry.js";
-import {DataRequest} from "../db/data_request.js";
-import {DataRecord} from "../db/records.js";
 // import Resources from "../web/resources.js";
 
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";

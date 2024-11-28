@@ -1,7 +1,5 @@
 /*
     Low-level representation of items and index records, for storage and transmission from/to the database.
-    Instances of Record, DataRecord, ChangeRequest - should be used as IMMUTABLE objects, i.e., once created,
-    they should not be modified (except for lazy internal calculation of missing derived fields).
  */
 
 import {assert, print, T} from "../common/utils.js";
@@ -101,7 +99,9 @@ export class Record {
     static plain(schema, key, value)    { return new Record(schema, {key, value}, null) }
 
     decode_object() {
-        /* Create a DataRecord from this binary Record, where key = [id] and value is a JSONx-serialized __data of a WebObject. */
+        /* Create an {id, data} object from this binary record, where [id]=key and `data` is decoded from the record's value.
+           It is assumed that this record actually represents a web-object record, with key=[id] and value=__data.
+         */
         let key = this.key                      // array of key fields, decoded
         assert(key.length === 1)                // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
         let id = key[0]
@@ -117,49 +117,49 @@ export class Record {
 
 /**********************************************************************************************************************/
 
-export class DataRecord {
-    /* Pair of {id, data} of a particular web object or index record, with the data initialized from a JSONx string.
-       It is assumed that, if `data` or `data_plain` are read from this record, they are NOT modified by the caller!
-     */
-
-    id                          // item ID; can be undefined (new item, not yet inserted into DB)
-    _data_object                // item data as a Catalog object decoded from _data_plain
-    data_json                   // item data as a JSONx-encoded and JSON-stringified string
-    //_data_plain               // item data as a plain JS object parsed from _data_json or encoded from _data_object
-
-
-    get data_copy() {
-        let data = JSONx.parse(this.data_json)
-        return data instanceof Catalog ? data : Catalog.__setstate__(data)
-    }
-
-    get data_plain() {
-        return JSON.parse(this.data_json)
-        // return this._data_plain || (this._data_json && this._parse_data())   //|| (this._data_object && this._encode_data())
-    }
-
-    get data() {
-        return this._data_object || this._decode_data()
-    }
-
-    _decode_data() {
-        return this._data_object = this.data_copy
-        // let data = this._data_object = JSONx.decode(this.data_plain)
-        // if (!(data instanceof Catalog)) this._data_object = Catalog.__setstate__(data)
-        // return this._data_object
-    }
-
-    constructor(id, data) {
-        /* `id` is a Number; `data` is either a JSONx string, or a Catalog object. */
-        if (id !== undefined && id !== null) this.id = id
-        assert(data, `missing 'data' for DataRecord, id=${this.id}`)
-
-        if (typeof data === 'string') this.data_json = data
-        else throw new Error(`invalid type of 'data'`)
-        // else if (data instanceof Catalog) this._data_object = data
-        // else assert(false, `plain data objects not accepted for DataRecord, id=${this.id}: ${data}`)
-    }
-}
+// export class DataRecord {
+//     /* Pair of {id, data} of a particular web object or index record, with the data initialized from a JSONx string.
+//        It is assumed that, if `data` or `data_plain` are read from this record, they are NOT modified by the caller!
+//      */
+//
+//     id                          // item ID; can be undefined (new item, not yet inserted into DB)
+//     _data_object                // item data as a Catalog object decoded from _data_plain
+//     data_json                   // item data as a JSONx-encoded and JSON-stringified string
+//     //_data_plain               // item data as a plain JS object parsed from _data_json or encoded from _data_object
+//
+//
+//     get data_copy() {
+//         let data = JSONx.parse(this.data_json)
+//         return data instanceof Catalog ? data : Catalog.__setstate__(data)
+//     }
+//
+//     get data_plain() {
+//         return JSON.parse(this.data_json)
+//         // return this._data_plain || (this._data_json && this._parse_data())   //|| (this._data_object && this._encode_data())
+//     }
+//
+//     get data() {
+//         return this._data_object || this._decode_data()
+//     }
+//
+//     _decode_data() {
+//         return this._data_object = this.data_copy
+//         // let data = this._data_object = JSONx.decode(this.data_plain)
+//         // if (!(data instanceof Catalog)) this._data_object = Catalog.__setstate__(data)
+//         // return this._data_object
+//     }
+//
+//     constructor(id, data) {
+//         /* `id` is a Number; `data` is either a JSONx string, or a Catalog object. */
+//         if (id !== undefined && id !== null) this.id = id
+//         assert(data, `missing 'data' for DataRecord, id=${this.id}`)
+//
+//         if (typeof data === 'string') this.data_json = data
+//         else throw new Error(`invalid type of 'data'`)
+//         // else if (data instanceof Catalog) this._data_object = data
+//         // else assert(false, `plain data objects not accepted for DataRecord, id=${this.id}: ${data}`)
+//     }
+// }
 
 /**********************************************************************************************************************/
 

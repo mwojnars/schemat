@@ -78,7 +78,8 @@ export class Registry {
         this.on_evict = on_evict
     }
 
-    get_record(id)          { return this.records.get(id) } //let json = this.records.get(id); if (json) return new DataRecord(id, json) }
+    get_record(id) { return this.records.get(id) }
+
     set_record(id, data) {
         assert(id !== undefined && data)
         if (typeof data === 'object') {
