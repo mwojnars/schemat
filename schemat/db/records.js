@@ -102,11 +102,16 @@ export class Record {
 
     decode_object() {
         /* Create a DataRecord from this binary Record, where key = [id] and value is a JSONx-serialized __data of a WebObject. */
-        let json = this.string_value            // JSONx-serialized content of an object
         let key = this.key                      // array of key fields, decoded
         assert(key.length === 1)                // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
         let id = key[0]
-        return new DataRecord(id, json)
+
+        let json = this.string_value            // JSONx-serialized content of an object
+        let data = JSONx.parse(json)
+        if (!(data instanceof Catalog)) data = Catalog.__setstate__(data)
+
+        return {id, data}
+        // return new DataRecord(id, json)
     }
 }
 

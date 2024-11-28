@@ -155,7 +155,7 @@ export class Ring extends WebObject {
     }
 
     async* scan_all() {
-        /* Yield all objects in this ring as DataRecord instances. For rebuilding indexes from scratch. */
+        /* Yield all objects in this ring as {id, data} records. For rebuilding indexes from scratch. */
         let data = DataOperator.new()
         for await (let record of data.scan(this.data_sequence))
             yield record.decode_object()

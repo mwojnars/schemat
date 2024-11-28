@@ -1,5 +1,4 @@
 import {T, assert, print} from "../common/utils.js";
-import {DataRecord} from "../db/records.js";
 import {Catalog} from "./catalog.js";
 import {CustomMap} from "../common/structs.js";
 // import BTree from 'sorted-btree'
@@ -84,7 +83,6 @@ export class Registry {
         assert(id !== undefined && data)
         if (typeof data === 'object') {
             assert(!(data instanceof Catalog))
-            assert(!(data instanceof DataRecord))
             data = JSON.stringify(data)
         }
         this.records.set(id, data)
