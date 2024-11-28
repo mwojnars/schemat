@@ -114,6 +114,15 @@ export class Record {
     }
 }
 
+export class ObjectRecord extends Record {
+    /* A binary Record that represents a WebObject, with its `id` and `__data` encoded into key-value of the record. */
+
+    static decode(key, value) {
+        /* Convert binary (key, value) to {id, data}, where `data` is a Catalog instance. */
+        return Record.binary(data_schema, key, value).decode_object()
+    }
+}
+
 
 /**********************************************************************************************************************/
 

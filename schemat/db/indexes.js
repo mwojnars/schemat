@@ -1,6 +1,6 @@
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../common/binary.js"
-import {Record, data_schema} from "./records.js";
+import {Record, data_schema, ObjectRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
 
@@ -99,8 +99,9 @@ export class ObjectIndex extends Index {
            - 0, if the input record is not allowed in this index or doesn't contain the required fields,
            - 2+, if some of the fields to be used in the key contain repeated values.
          */
-        let src_record = Record.binary(this.source_schema, key, obj.__json)
-        let {id, data} = src_record.decode_object()
+        // let src_record = Record.binary(this.source_schema, key, obj.__json)
+        // let {id, data} = src_record.decode_object()
+        let {id, data} = ObjectRecord.decode(key, obj.__json)
         if (!this.accept({id, data})) return undefined
 
         let value = this.generate_value({id, data})
