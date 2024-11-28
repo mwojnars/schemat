@@ -108,10 +108,9 @@ export class Record {
 
         let json = this.string_value            // JSONx-serialized content of an object
         let data = JSONx.parse(json)
-        if (!(data instanceof Catalog)) data = Catalog.__setstate__(data)
+        if (T.isPOJO(data)) data = Catalog.__setstate__(data)
 
         return {id, data}
-        // return new DataRecord(id, json)
     }
 }
 

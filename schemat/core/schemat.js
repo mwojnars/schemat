@@ -285,17 +285,13 @@ export class Schemat {
 
     /***  Registry management  ***/
 
-    register_record(record /*DataRecord or {id,data}*/, invalidate = true) {
-        /* Keep `record` as the most up-to-date (raw) representation of the corresponding object that will be used on the next object (re)load.
+    register_record({id, data}, invalidate = true) {
+        /* Keep {id, data} record as the most up-to-date (raw) representation of the corresponding object that will be used on the next object (re)load.
            `data` is either a JSON string, or an encoded (plain) representation of a Catalog instance.
          */
-        let id, data
-        if (record instanceof DataRecord) ({id, data_json: data} = record)
-        else ({id, data} = record)
-
         this.registry.set_record(id, data)
         if (invalidate) this.invalidate_object(id)
-        return record
+        return {id, data}
     }
 
     invalidate_object(id) {
