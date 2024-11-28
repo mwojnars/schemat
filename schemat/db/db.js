@@ -21,7 +21,7 @@ export class Ring extends WebObject {
 
     data_sequence           // DataSequence containing all primary data of this ring
     index_sequence          // IndexSequence containing all indexes of this ring ordered by index ID and concatenated; each record key is prefixed with its index's ID
-    indexes = new Catalog() // {name: Index} map of all derived indexes of this ring
+    indexes = new Catalog() // {name: Index} definitions of all indexes in this ring
 
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
@@ -33,6 +33,16 @@ export class Ring extends WebObject {
     // UPDATED objects (re-inserted here from lower rings) can still have IDs from outside this range (!)
     start_id = 0
     stop_id
+
+    get subsequences() {
+        /* {id: Subsequence} map of logical sequences for each index. */
+        let subseq = new Map()
+        for (let index of this.indexes.values()) {
+            let sub = new Subsequence(index.id, this.index_sequence)
+            subseq.set(index.id, sub)
+        }
+        return subseq
+    }
 
 
     __new__({name, ...opts}) {
@@ -65,13 +75,8 @@ export class Ring extends WebObject {
         await this.index_sequence.load()
         // await this.rebuild_indexes()
 
-        this._subsequences = new Map()          // (temporary) a map {id: Subsequence} of logical sequences for each index
-
-        for (let index of this.indexes.values()) {
+        for (let index of this.indexes.values())
             await index.load()
-            let subsequence = new Subsequence(index.id, this.index_sequence)
-            this._subsequences.set(index.id, subsequence)
-        }
     }
 
     async erase(req) {
@@ -137,7 +142,7 @@ export class Ring extends WebObject {
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
         let index = this.indexes.get(name)              // Index object
-        let seq = this._subsequences.get(index.id)
+        let seq = this.subsequences.get(index.id)
         yield* index.scan(seq, {start, stop, limit, reverse, batch_size})
     }
 

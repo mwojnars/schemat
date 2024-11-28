@@ -334,7 +334,7 @@ export class DataBlock extends Block {
         assert(ring?.is_loaded())
 
         for (let index of ring.indexes.values()) {
-            let seq = ring._subsequences.get(index.id)
+            let seq = ring.subsequences.get(index.id)
             index.change(key, obj_old, obj_new, seq)        // no need to await, the result is not used by the caller
         }
     }
