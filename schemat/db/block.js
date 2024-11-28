@@ -1,7 +1,7 @@
 import {assert, print, T, zip, amap} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, NotImplemented} from '../common/errors.js'
 import {BinaryMap, compare_uint8} from "../common/binary.js";
-import {ChangeRequest, data_schema} from "./records.js";
+import {data_schema} from "./records.js";
 import {WebObject} from '../core/object.js'
 import {Struct} from "../core/catalog.js";
 

@@ -1,6 +1,6 @@
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../common/binary.js"
-import {DataRecord, Record, data_schema, ChangeRequest} from "./records.js";
+import {DataRecord, Record, data_schema} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
 
@@ -24,20 +24,20 @@ export class Index extends Operator {
     //     source.add_derived(this)                // make connection: data > index, for change propagation
     // }
 
-    change(key, obj_old, obj_new, sequence /*Sequence or Subsequence*/) {
-        /* Update the target `sequence` of this operator+ring combination to apply a change that originated
-           in the source sequence of this operator. */
+    change(key, prev, next, sequence /*Sequence or Subsequence*/) {
+        /* Update this index on the target `sequence` to apply a [prev > next] change that originated
+           in the source sequence of this index. */
 
         // print(`change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
         // let sequence = ring.get_sequence('index', this.id)
 
-        // TODO: request object, only used when another propagation step is to be done
-        let req = new DataRequest(this, 'change')
-
-        let change = new ChangeRequest(key, obj_old?.__json, obj_new?.__json)
+        // let change = new ChangeRequest(key, prev?.__json, next?.__json)
 
         // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
-        let [del_records, put_records] = this._make_plan(change)
+        let [del_records, put_records] = this._make_plan(key, prev, next)
+
+        // TODO: request object, only used when another propagation step is to be done
+        let req = new DataRequest(this, 'change')
 
         // delete old records
         for (let [key, value] of del_records || [])     // TODO: `key` may be duplicated (repeated values), remove duplicates beforehand
@@ -46,6 +46,33 @@ export class Index extends Operator {
         // (over)write new records
         for (let [key, value] of put_records || [])     // TODO: `key` may be duplicated, keep the *first* one only
             sequence.put(req.safe_step(this, 'put', {key, value})) //|| print(`put [${key}]`)
+    }
+
+    _make_plan(key, prev, next) {
+        /* Make an update execution plan in response to a `change` in the source sequence.
+           The plan is a pair of BinaryMaps, {key: value}, one for records to be deleted, and one for records
+           to be written to the index sequence.
+         */
+        prev = prev?.__json
+        next = next?.__json
+
+        let source_schema = this._source_schema()
+        let in_record_old = (prev != null) && Record.binary(source_schema, key, prev)
+        let in_record_new = (next != null) && Record.binary(source_schema, key, next)
+        // let in_record_old = change.record_old(source_schema)
+        // let in_record_new = change.record_new(source_schema)
+
+        // map each source record (old & new) to an array of 0+ output records to be saved/removed in the index
+        let out_records_old = in_record_old && [...this.map_record(in_record_old)]
+        let out_records_new = in_record_new && [...this.map_record(in_record_new)]
+
+        // del/put plan: records to be deleted from, or written to, the index
+        let del_records = out_records_old && new BinaryMap(out_records_old.map(rec => [rec.binary_key, rec.string_value]))
+        let put_records = out_records_new && new BinaryMap(out_records_new.map(rec => [rec.binary_key, rec.string_value]))
+
+        this._prune_plan(del_records, put_records)
+
+        return [del_records, put_records]
     }
 
     // apply(change, sequence /*Sequence or Subsequence*/, ring) {
@@ -71,28 +98,28 @@ export class Index extends Operator {
     //     for (let [key, value] of put_records || [])     // TODO: `key` may be duplicated, keep the *first* one only
     //         sequence.put(req.safe_step(this, 'put', {key, value})) //|| print(`put [${key}]`)
     // }
-
-    _make_plan(change) {
-        /* Make an update execution plan in response to a `change` in the source sequence.
-           The plan is a pair of BinaryMaps, {key: value}, one for records to be deleted, and one for records
-           to be written to the index sequence.
-         */
-        const source_schema = this._source_schema()
-        let in_record_old = change.record_old(source_schema)
-        let in_record_new = change.record_new(source_schema)
-
-        // map each source record (old & new) to an array of 0+ output records to be saved/removed in the index
-        let out_records_old = in_record_old && [...this.map_record(in_record_old)]
-        let out_records_new = in_record_new && [...this.map_record(in_record_new)]
-
-        // del/put plan: records to be deleted from, or written to, the index
-        let del_records = out_records_old && new BinaryMap(out_records_old.map(rec => [rec.binary_key, rec.string_value]))
-        let put_records = out_records_new && new BinaryMap(out_records_new.map(rec => [rec.binary_key, rec.string_value]))
-
-        this._prune_plan(del_records, put_records)
-
-        return [del_records, put_records]
-    }
+    //
+    // _make_plan(change) {
+    //     /* Make an update execution plan in response to a `change` in the source sequence.
+    //        The plan is a pair of BinaryMaps, {key: value}, one for records to be deleted, and one for records
+    //        to be written to the index sequence.
+    //      */
+    //     const source_schema = this._source_schema()
+    //     let in_record_old = change.record_old(source_schema)
+    //     let in_record_new = change.record_new(source_schema)
+    //
+    //     // map each source record (old & new) to an array of 0+ output records to be saved/removed in the index
+    //     let out_records_old = in_record_old && [...this.map_record(in_record_old)]
+    //     let out_records_new = in_record_new && [...this.map_record(in_record_new)]
+    //
+    //     // del/put plan: records to be deleted from, or written to, the index
+    //     let del_records = out_records_old && new BinaryMap(out_records_old.map(rec => [rec.binary_key, rec.string_value]))
+    //     let put_records = out_records_new && new BinaryMap(out_records_new.map(rec => [rec.binary_key, rec.string_value]))
+    //
+    //     this._prune_plan(del_records, put_records)
+    //
+    //     return [del_records, put_records]
+    // }
 
     _prune_plan(del_records, put_records) {
         /* Prune the del/put index update plan:
