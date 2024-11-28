@@ -48,29 +48,29 @@ export class Index extends Operator {
             sequence.put(req.safe_step(this, 'put', {key, value})) //|| print(`put [${key}]`)
     }
 
-    apply(change, sequence /*Sequence or Subsequence*/, ring) {
-        /* Update the target `sequence` of this operator+ring combination to apply a change that originated
-           in the source sequence of this operator. */
-
-        // const {key, value_old, value_new} = change
-        // print(`apply(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
-
-        // let sequence = ring.get_sequence('index', this.id)
-
-        // TODO: request object, only used when another propagation step is to be done
-        let req = new DataRequest(this, 'apply', {change})
-
-        // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
-        let [del_records, put_records] = this._make_plan(change)
-
-        // delete old records
-        for (let [key, value] of del_records || [])     // TODO: `key` may be duplicated (repeated values), remove duplicates beforehand
-            sequence.del(req.safe_step(this, 'del', {key})) //|| print(`deleted [${key}]`)
-
-        // (over)write new records
-        for (let [key, value] of put_records || [])     // TODO: `key` may be duplicated, keep the *first* one only
-            sequence.put(req.safe_step(this, 'put', {key, value})) //|| print(`put [${key}]`)
-    }
+    // apply(change, sequence /*Sequence or Subsequence*/, ring) {
+    //     /* Update the target `sequence` of this operator+ring combination to apply a change that originated
+    //        in the source sequence of this operator. */
+    //
+    //     // const {key, value_old, value_new} = change
+    //     // print(`apply(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
+    //
+    //     // let sequence = ring.get_sequence('index', this.id)
+    //
+    //     // TODO: request object, only used when another propagation step is to be done
+    //     let req = new DataRequest(this, 'apply', {change})
+    //
+    //     // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
+    //     let [del_records, put_records] = this._make_plan(change)
+    //
+    //     // delete old records
+    //     for (let [key, value] of del_records || [])     // TODO: `key` may be duplicated (repeated values), remove duplicates beforehand
+    //         sequence.del(req.safe_step(this, 'del', {key})) //|| print(`deleted [${key}]`)
+    //
+    //     // (over)write new records
+    //     for (let [key, value] of put_records || [])     // TODO: `key` may be duplicated, keep the *first* one only
+    //         sequence.put(req.safe_step(this, 'put', {key, value})) //|| print(`put [${key}]`)
+    // }
 
     _make_plan(change) {
         /* Make an update execution plan in response to a `change` in the source sequence.
