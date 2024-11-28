@@ -100,16 +100,16 @@ export class ObjectIndex extends Index {
            - 2+, if some of the fields to be used in the key contain repeated values.
          */
         let src_record = Record.binary(this.source_schema, key, obj.__json)
-        let item_record = src_record.decode_object()
-        if (!this.accept(item_record)) return undefined
+        let {id, data} = src_record.decode_object()
+        if (!this.accept({id, data})) return undefined
 
-        const value = this.generate_value(item_record)
-        for (const key of this.generate_keys(item_record))
+        let value = this.generate_value({id, data})
+        for (let key of this.generate_keys({id, data}))
             yield Record.plain(this.record_schema, key, value)
     }
 
-    accept(record) {
-        return !this.category || this.category.is(record.data.get('__category'))
+    accept({id, data}) {
+        return !this.category || this.category.is(data.get('__category'))
     }
 
     generate_value({id, data}) {
@@ -128,8 +128,8 @@ export class ObjectIndex extends Index {
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
 
-        for (const field of this.record_schema.field_names) {
-            const values = data.getAll(field)
+        for (let field of this.record_schema.field_names) {
+            let values = data.getAll(field)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && field_values.length)
                 throw new Error(`key field ${field} has multiple values, which is allowed only for the first field in the index`)
@@ -137,10 +137,10 @@ export class ObjectIndex extends Index {
         }
 
         // flat array of encoded values of all fields except the first one
-        const tail = field_values.slice(1).map(values => values[0])
+        let tail = field_values.slice(1).map(values => values[0])
 
         // iterate over the first field's values to produce all key combinations
-        for (const head of field_values[0])
+        for (let head of field_values[0])
             yield [head, ...tail]
     }
 }
