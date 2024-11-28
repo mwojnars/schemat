@@ -56,15 +56,12 @@ export class Index extends Operator {
 
     _make_records(key, entity) {
         /* Map a source-sequence entity (typically, a web object) to a list of destination-sequence (index) records. */
-        entity = entity?.__json
-        if (entity == null) return
-
-        let src_record = Record.binary(this.source_schema, key, entity)
-        let dst_records = [...this.map_record(src_record)]
-        return new BinaryMap(dst_records.map(rec => [rec.binary_key, rec.string_value]))
+        if (!entity) return
+        let records = [...this.map_record(key, entity)]
+        return new BinaryMap(records.map(rec => [rec.binary_key, rec.string_value]))
     }
 
-    *map_record(input_record) {
+    *map_record(key, entity) {
         /* Perform transformation of the input Record, as defined by this index, and yield any number (0+)
            of output Records to be stored in the index.
          */
@@ -97,14 +94,15 @@ export class ObjectIndex extends Index {
 
     get source_schema() { return data_schema }
 
-    *map_record(input_record /*Record*/) {
+    *map_record(key, obj) {
         /* Generate a stream of records, each one being a {key, value} pair, NOT encoded.
            The key is an array of field values; the value is a plain JS object that can be stringified through JSON.
            The result stream can be of any size, including:
-           - 0, if the input_record is not allowed in this index or doesn't contain the required fields,
+           - 0, if the input record is not allowed in this index or doesn't contain the required fields,
            - 2+, if some of the fields to be used in the key contain repeated values.
          */
-        let item_record = DataRecord.from_binary(input_record)
+        let src_record = Record.binary(this.source_schema, key, obj.__json)
+        let item_record = DataRecord.from_binary(src_record)
         if (!this.accept(item_record)) return undefined
 
         const value = this.generate_value(item_record)
