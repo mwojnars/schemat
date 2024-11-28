@@ -1,6 +1,6 @@
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../common/binary.js"
-import {DataRecord, Record, data_schema} from "./records.js";
+import {Record, data_schema} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
 
