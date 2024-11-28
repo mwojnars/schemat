@@ -1,6 +1,6 @@
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../common/binary.js"
-import {Record, data_schema, ObjectRecord} from "./records.js";
+import {Record, ObjectRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
 
@@ -23,11 +23,11 @@ export class Index extends Operator {
     //     assert(source instanceof Operator)
     //     source.add_derived(this)                // make connection: data > index, for change propagation
     // }
-
-    get source_schema() {
-        throw new Error('not implemented')
-        // return this.source.record_schema
-    }
+    //
+    // get source_schema() {
+    //     throw new Error('not implemented')
+    //     // return this.source.record_schema
+    // }
 
     change(key, prev, next, sequence /*Sequence or Subsequence*/) {
         /* Update this index on the target `sequence` to apply a [prev > next] change that originated
@@ -90,8 +90,6 @@ export class ObjectIndex extends Index {
 
     category            // category of items allowed in this index
 
-    get source_schema() { return data_schema }
-
     *map_record(key, obj) {
         /* Generate a stream of records, each one being a {key, value} pair, NOT encoded.
            The key is an array of field values; the value is a plain JS object that can be stringified through JSON.
@@ -99,8 +97,6 @@ export class ObjectIndex extends Index {
            - 0, if the input record is not allowed in this index or doesn't contain the required fields,
            - 2+, if some of the fields to be used in the key contain repeated values.
          */
-        // let src_record = Record.binary(this.source_schema, key, obj.__json)
-        // let {id, data} = src_record.decode_object()
         let {id, data} = ObjectRecord.decode(key, obj.__json)
         if (!this.accept({id, data})) return undefined
 
