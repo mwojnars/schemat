@@ -338,18 +338,6 @@ export class DataBlock extends Block {
             index.change(key, obj_old, obj_new, seq)        // no need to await, the result is not used by the caller
         }
     }
-
-    // async propagate(key, value_old = null, value_new = null) {
-    //     /* Push a change from this data block to derived indexes. */
-    //     let ring = this.ring
-    //     assert(ring?.is_loaded())
-    //
-    //     let change = new ChangeRequest(key, value_old, value_new)
-    //     for (let index of ring.indexes.values()) {
-    //         let seq = ring._subsequences.get(index.id)
-    //         index.apply(change, seq)                    // no need to await, the result is not used by the caller
-    //     }
-    // }
 }
 
 export class IndexBlock extends Block {
