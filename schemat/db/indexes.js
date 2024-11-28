@@ -97,38 +97,35 @@ export class ObjectIndex extends Index {
            - 0, if the input record is not allowed in this index or doesn't contain the required fields,
            - 2+, if some of the fields to be used in the key contain repeated values.
          */
-        let id = obj.id
-        let data = obj.__data
+        if (!this.accept(obj)) return undefined
 
-        if (!this.accept({id, data})) return undefined
-
-        let value = this.generate_value({id, data})
-        for (let key of this.generate_keys({id, data}))
+        let value = this.generate_value(obj)
+        for (let key of this.generate_keys(obj))
             yield Record.plain(this.record_schema, key, value)
     }
 
-    accept({id, data}) {
-        return !this.category || this.category.is(data.get('__category'))
+    accept(obj) {
+        return !this.category || this.category.is(obj.__data.get('__category'))
     }
 
-    generate_value({id, data}) {
+    generate_value(obj) {
         /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
            If undefined is returned, the record will consist of a key only.
          */
         let rschema = this.record_schema
         if (rschema.no_value()) return undefined
-        let entries = rschema.properties.map(prop => [prop, data.get(prop)])        // only the first value of a repeated field is included (!)
+        let entries = rschema.properties.map(prop => [prop, obj.__data.get(prop)])        // only the first value of a repeated field is included (!)
         return Object.fromEntries(entries)
     }
 
-    *generate_keys({id, data}) {
+    *generate_keys(obj) {
         /* Generate a stream of keys, each being an array of field values (not encoded). */
 
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
 
         for (let field of this.record_schema.field_names) {
-            let values = data.getAll(field)
+            let values = obj.__data.getAll(field)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && field_values.length)
                 throw new Error(`key field ${field} has multiple values, which is allowed only for the first field in the index`)
@@ -149,9 +146,9 @@ export class IndexByCategory extends ObjectIndex {
 
     static __category = 17;
 
-    *generate_keys({id, data}) {
-        let category_id = data.get('__category')?.__id      // can be undefined, such records are also included in the index
-        yield [category_id, id]
+    *generate_keys(obj) {
+        let category_id = obj.__data.get('__category')?.__id      // can be undefined, such records are also included in the index
+        yield [category_id, obj.id]
     }
 }
 
