@@ -145,30 +145,6 @@ export class DataRecord {
         // return this._data_object
     }
 
-    // get data_json() {
-    //     return this._data_json   //|| this._stringify_data()
-    // }
-    //
-    // _parse_data() {
-    //     return this._data_plain = JSON.parse(this._data_json)
-    //     // if(!(JSONx.decode(this._data_plain) instanceof Catalog)) assert(false)
-    //     // return this._data_plain
-    // }
-    //
-    // _stringify_data() {
-    //     return this._data_json = JSON.stringify(this.data_plain)
-    // }
-    //
-    // _encode_data() {
-    //     return this._data_plain = JSONx.encode(this._data_object.__getstate__())
-    //     // if(!(JSONx.decode(this._data_plain) instanceof Catalog)) assert(false)
-    //     // return this._data_plain
-    // }
-    //
-    // stringified() {
-    //     return {id: this.id, data: this.data_json}
-    // }
-
     constructor(id, data) {
         /* `id` is a Number; `data` is either a JSONx string, or a Catalog object. */
         if (id !== undefined && id !== null) this.id = id
@@ -179,26 +155,6 @@ export class DataRecord {
         // else if (data instanceof Catalog) this._data_object = data
         // else assert(false, `plain data objects not accepted for DataRecord, id=${this.id}: ${data}`)
     }
-
-    static from_binary(bin_record /*Record*/) {
-        /* Create a DataRecord from a binary Record, where key = [id] and value is a JSONx-serialized Catalog object. */
-        assert(bin_record instanceof Record, `invalid binary record: ${bin_record}, should be a Record`)
-        let json = bin_record.string_value          // plain object, JSONx-encoded __data of an item
-        let key = bin_record.key                    // array of key fields, decoded
-        assert(key.length === 1)                    // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
-        let id = key[0]
-        return new DataRecord(id, json)
-    }
-
-    // encoded() {
-    //     assert(this.id !== undefined, `missing 'id' in DataRecord.encoded()`)
-    //     return {id: this.id, data: this.data_plain}
-    // }
-    //
-    // static decode({id, data}) {
-    //     /* Recreate a DataRecord from the plain-object result of .encoded(). */
-    //     return new DataRecord(id, JSON.stringify(data))
-    // }
 }
 
 /**********************************************************************************************************************/

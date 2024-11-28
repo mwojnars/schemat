@@ -160,7 +160,6 @@ export class Ring extends WebObject {
         let data = DataOperator.new()
         for await (let record of data.scan(this.data_sequence))
             yield record.decode_object()
-            // yield DataRecord.from_binary(record)
     }
 }
 

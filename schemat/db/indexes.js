@@ -100,7 +100,7 @@ export class ObjectIndex extends Index {
            - 2+, if some of the fields to be used in the key contain repeated values.
          */
         let src_record = Record.binary(this.source_schema, key, obj.__json)
-        let item_record = src_record.decode_object() //DataRecord.from_binary(src_record)
+        let item_record = src_record.decode_object()
         if (!this.accept(item_record)) return undefined
 
         const value = this.generate_value(item_record)
