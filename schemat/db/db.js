@@ -159,7 +159,8 @@ export class Ring extends WebObject {
         /* Yield all objects in this ring as DataRecord instances. For rebuilding indexes from scratch. */
         let data = DataOperator.new()
         for await (let record of data.scan(this.data_sequence))
-            yield DataRecord.from_binary(record)
+            yield record.decode_object()
+            // yield DataRecord.from_binary(record)
     }
 }
 
