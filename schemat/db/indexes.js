@@ -112,22 +112,21 @@ export class ObjectIndex extends Index {
         return !this.category || this.category.is(record.data.get('__category'))
     }
 
-    generate_value(item_record) {
+    generate_value({id, data}) {
         /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
            If undefined is returned, the record will consist of a key only.
          */
         let rschema = this.record_schema
         if (rschema.no_value()) return undefined
-        let entries = rschema.properties.map(prop => [prop, item_record.data.get(prop)])     // only the first value of a repeated field is included (!)
+        let entries = rschema.properties.map(prop => [prop, data.get(prop)])        // only the first value of a repeated field is included (!)
         return Object.fromEntries(entries)
     }
 
-    *generate_keys(item_record) {
+    *generate_keys({id, data}) {
         /* Generate a stream of keys, each being an array of field values (not encoded). */
 
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
-        let data = item_record.data
 
         for (const field of this.record_schema.field_names) {
             const values = data.getAll(field)
@@ -151,9 +150,9 @@ export class IndexByCategory extends ObjectIndex {
 
     static __category = 17;
 
-    *generate_keys(item_record) {
-        let category_id = item_record.data.get('__category')?.__id      // can be undefined, such records are also included in the index
-        yield [category_id, item_record.id]
+    *generate_keys({id, data}) {
+        let category_id = data.get('__category')?.__id      // can be undefined, such records are also included in the index
+        yield [category_id, id]
     }
 }
 

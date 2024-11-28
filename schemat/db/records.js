@@ -100,7 +100,7 @@ export class Record {
 
     decode_object() {
         /* Create an {id, data} object from this binary record, where [id]=key and `data` is decoded from the record's value.
-           It is assumed that this record actually represents a web-object record, with key=[id] and value=__data.
+           It is assumed that this record actually represents a web object, with key=[id] and value=json_data.
          */
         let key = this.key                      // array of key fields, decoded
         assert(key.length === 1)                // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
