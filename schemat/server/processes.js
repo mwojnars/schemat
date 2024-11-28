@@ -242,17 +242,15 @@ export class AdminProcess extends BackendProcess {
         let transform = (obj => obj?.__id === old_id ? target : undefined)
 
         for (let ring of schemat.db.rings)
-            for await (let record of ring.scan_all()) {                 // search for references to `old_id` in all records
-                let {id, data} = record
-                data = Struct.transform(data, transform)
-                let json = data.dump()
-                if (json === record.data_json) continue                 // no changes? don't update the record
+            for await (let {id, data} of ring.scan_all()) {         // search for references to `old_id` in all records
+                let new_data = Struct.transform(data, transform)
+                if (new_data.dump() === data.dump()) continue       // no changes? don't update the record
 
                 if (ring.readonly)
                     print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
                 else {
                     print(`...updating reference(s) in object [${id}]`)
-                    await ring.update_full(id, data)
+                    await ring.update_full(id, new_data)
                     // await ring.flush()
                 }
             }
