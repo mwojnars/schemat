@@ -31,7 +31,7 @@ export class Index extends Operator {
 
     change(key, prev, next, sequence /*Sequence or Subsequence*/) {
         /* Update this index on the target `sequence` to apply a [prev > next] change that originated
-           in the source sequence of this index. */
+           in the source sequence of this index. `prev` and `next` are source-sequence entities: objects or records. */
 
         // print(`change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
         // let sequence = ring.get_sequence('index', this.id)
@@ -57,9 +57,11 @@ export class Index extends Operator {
     _make_records(key, entity) {
         /* Map a source-sequence entity (typically, a web object) to a list of destination-sequence (index) records. */
         entity = entity?.__json
-        let src_record = (entity != null) && Record.binary(this.source_schema, key, entity)
-        let dst_records = src_record && [...this.map_record(src_record)]
-        return dst_records && new BinaryMap(dst_records.map(rec => [rec.binary_key, rec.string_value]))
+        if (entity == null) return
+
+        let src_record = Record.binary(this.source_schema, key, entity)
+        let dst_records = [...this.map_record(src_record)]
+        return new BinaryMap(dst_records.map(rec => [rec.binary_key, rec.string_value]))
     }
 
     *map_record(input_record) {
