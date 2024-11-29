@@ -329,14 +329,10 @@ export class DataBlock extends Block {
     }
 
     async propagate_change(key, obj_old = null, obj_new = null) {
-        /* Push a change from this data block to derived indexes. */
-        let ring = this.ring
-        assert(ring?.is_loaded())
-
-        for (let index of ring.indexes.values()) {
-            let seq = ring.subsequences.get(index.id)
-            index.change(key, obj_old, obj_new, seq)        // no need to await, the result is not used by the caller
-        }
+        /* Push a change from this data block to all indexes in the ring. */
+        assert(this.ring?.is_loaded())
+        for (let index of this.ring.index_instances.values())
+            index.change(key, obj_old, obj_new)             // no need to await, the result is not used by the caller
     }
 }
 
