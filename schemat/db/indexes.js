@@ -128,10 +128,10 @@ export class ObjectIndex extends Index {
 
         for (let field of this.record_schema.key_fields) {
             let plural = field.endsWith(PLURAL)
-            let values = obj[field]  //.__data.getAll(field)
+            let values = obj[field]
 
             if (!plural) values = (values !== undefined) ? [values] : undefined
-            if (!values?.length) return             // no values (missing field), skip this item
+            if (!values?.length) return             // no values (missing field) or not an array, skip this object
 
             if (values.length >= 2 && field_values.length)
                 throw new Error(`key field ${field} has multiple values, which is allowed only for the first field in the index`)
