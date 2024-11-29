@@ -100,7 +100,7 @@ export class Block extends WebObject {
 
     async *scan(opts = {}) { yield* this._storage.scan(opts) }
 
-    async erase(req) {
+    async erase() {
         /* Remove all records from this block. */
         await this._storage.erase()
         return this._flush()
