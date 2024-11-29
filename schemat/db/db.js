@@ -154,17 +154,17 @@ export class Ring extends WebObject {
             yield record.decode_object()
     }
 
-    // async rebuild_indexes() {
-    //     // rebuild all indexes from the data sequence
-    //     await this.index_sequence.erase()
-    //     for await (let {id, data} of this.scan_all()) {
-    //         // TODO: use this._subsequences here...
-    //         for (let index of this.indexes.values()) {
-    //             let key = data_schema.encode_key([id])
-    //             await index.change(key, null, data)
-    //         }
-    //     }
-    // }
+    async rebuild_indexes() {
+        /* Rebuild all indexes by making a full scan of the data sequence. */
+        await this.index_sequence.erase()
+        for await (let {id, data} of this.scan_all()) {
+            for (let index of this.index_instances.values()) {
+                let key = data_schema.encode_key([id])
+                let obj = await WebObject.from_data(id, data, {activate: false})
+                await index.change(key, null, obj)
+            }
+        }
+    }
 }
 
 
