@@ -113,7 +113,7 @@ export class ObjectIndex extends Index {
            If undefined is returned, the record will consist of a key only.
          */
         let rschema = this.record_schema
-        if (rschema.no_payload()) return undefined
+        if (!rschema.has_payload()) return undefined
         let entries = rschema.payload.map(prop => [prop, obj.__data.get(prop)])        // only the first value of a repeated field is included (!)
         return Object.fromEntries(entries)
     }
