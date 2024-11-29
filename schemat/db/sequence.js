@@ -194,12 +194,8 @@ export class IndexInstance {
         this.index = index
         this.sequence = sequence
     }
-    change(key, prev, next) {
-        return this.index.change(key, prev, next, this.sequence)
-    }
-    async* scan(opts) {
-        yield* this.index.scan(this.sequence, opts)
-    }
+    change(key, prev, next) { return this.index.change(this.sequence, key, prev, next) }
+    async* scan(opts)       { yield* this.index.scan(this.sequence, opts) }
 }
 
 

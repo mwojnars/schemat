@@ -29,7 +29,7 @@ export class Index extends Operator {
     //     // return this.source.record_schema
     // }
 
-    change(key, prev, next, sequence /*Sequence or Subsequence*/) {
+    change(sequence /*Sequence or Subsequence*/, key, prev, next) {
         /* Update this index on the target `sequence` to apply a [prev > next] change that originated
            in the source sequence of this index. `prev` and `next` are source-sequence entities: objects or records. */
 
