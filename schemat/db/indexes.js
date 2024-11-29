@@ -3,6 +3,7 @@ import {BinaryMap} from "../common/binary.js"
 import {Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
+import {WebObject} from "../core/object.js";
 
 
 // Section, Block, Partition ... Aggregate
@@ -123,12 +124,18 @@ export class ObjectIndex extends Index {
 
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
+        let PLURAL = WebObject.PLURAL
 
         for (let field of this.record_schema.key_fields) {
-            let values = obj.__data.getAll(field)
-            if (!values.length) return              // no values (missing field), skip this item
+            let plural = field.endsWith(PLURAL)
+            let values = obj[field]  //.__data.getAll(field)
+
+            if (!plural) values = (values !== undefined) ? [values] : undefined
+            if (!values?.length) return             // no values (missing field), skip this item
+
             if (values.length >= 2 && field_values.length)
                 throw new Error(`key field ${field} has multiple values, which is allowed only for the first field in the index`)
+
             field_values.push(values)
         }
 
@@ -146,10 +153,10 @@ export class IndexByCategory extends ObjectIndex {
 
     static __category = 17;
 
-    *generate_keys(obj) {
-        // let category_id = obj.__data.get('__category')?.__id      // can be undefined, such records are also included in the index
-        yield [obj.__cid, obj.id]
-    }
+    // *generate_keys(obj) {
+    //     // let category_id = obj.__data.get('__category')?.__id      // can be undefined, such records are also included in the index
+    //     yield [obj.__cid, obj.id]
+    // }
 }
 
 /**********************************************************************************************************************/
