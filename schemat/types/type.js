@@ -46,9 +46,9 @@ export class Type {
                                     // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
                                     // the function must be *synchronous* and cannot return a Promise
 
-        getter   : undefined,       // if true, the value of the object's corresponding property is imputed from the same-named getter method of this object;
+        getter   : undefined,       // if true, the value of the object's corresponding property is imputed from the same-named getter method of the object;
                                     // similar to impute=true, but does not require explicit function designation, and the function is implemented as a getter which is more intuitive sometimes;
-                                    // having a getter alone, without it being explicitly declared with a type, in many cases is good enough, but prevents the property from being used in indexes (missing type definition)
+                                    // having a getter alone, without it being explicitly declared as a property with a type, in many cases is good enough, but prevents the property from being used in indexes (missing type definition)
 
         virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
                                     // when virtual=true, inheritance is skipped during property calculation like if inherit=false
