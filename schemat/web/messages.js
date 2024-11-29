@@ -33,7 +33,7 @@ export class MessageEncoder {
 export class mString extends MessageEncoder {
     /* No encoding. A plain string (or any object) is passed along unchanged. */
     encode(arg)     { return arg }
-    decode(message) { return message }
+    decode(msg)     { return msg }
 }
 
 export class mQueryString extends MessageEncoder {
@@ -50,39 +50,39 @@ export class mJsonBase extends MessageEncoder {
 
 export class mJsonError extends mJsonBase {
     encode_error(error)     { let {name, message} = error; return [JSON.stringify({error: {name, message}}), error.code || 500] }
-    decode_error(msg, code) { throw new RequestFailed({...JSON.parse(msg).error, code}) }
+    decode_error(msg, code) { throw msg ? new RequestFailed({...JSON.parse(msg).error, code}) : new Error(`Unexpected error`) }
 }
 
 export class mJsonxError extends mJsonBase {
     encode_error(error)     { return [JSONx.stringify({error}), error.code || 500] }
-    decode_error(msg, code) { throw JSONx.parse(msg).error }
+    decode_error(msg, code) { throw msg ? JSONx.parse(msg).error : new Error(`Unexpected error`) }
 }
 
 
 export class mJson extends mJsonError {
     /* Encode one, but arbitrary, object through JSON.stringify(). */
     encode(obj)     { return JSON.stringify(obj) }
-    decode(message) { return JSON.parse(message) }
+    decode(msg)     { return msg ? JSON.parse(msg) : undefined }
 }
 
 export class mJsonArray extends mJsonError {
     /* Encode an array of values (arguments) through JSON.stringify(). */
     array = true
     encode(...objs) { return JSON.stringify(objs) }
-    decode(message) { return JSON.parse(message) }
+    decode(msg)     { return msg ? JSON.parse(msg) : undefined }
 }
 
 export class mJsonx extends mJsonxError {
     /* Encode one, but arbitrary, object through JSONx.stringify(). */
     encode(obj)     { return JSONx.stringify(obj) }
-    decode(message) { return JSONx.parse(message) }
+    decode(msg)     { return msg ? JSONx.parse(msg) : undefined }
 }
 
 export class mJsonxArray extends mJsonxError {
     /* Encode an array of objects through JSONx.stringify(). */
     array = true
     encode(...objs) { return JSONx.stringify(objs) }
-    decode(message) { return JSONx.parse(message) }
+    decode(msg)     { return msg ? JSONx.parse(msg) : undefined }
 }
 
 /**********************************************************************************************************************/
@@ -95,15 +95,15 @@ export class mData extends MessageEncoder {
         if (typeof data === 'string') return data       // already encoded
         return JSONx.stringify(data instanceof Catalog ? data.__getstate__() : data)
     }
-    decode(message) {
-        let data = JSONx.parse(message)
+    decode(msg) {
+        let data = JSONx.parse(msg)
         return data instanceof Catalog ? data : Catalog.__setstate__(data)
     }
 }
 
 export class mDataString extends mData {
     /* Like mData, but no decoding: decode() returns a JSONx string representing the Catalog instance. */
-    decode(message) { return message }
+    decode(msg) { return msg }
 }
 
 
@@ -122,8 +122,8 @@ export class mDataRecords extends MessageEncoder {
         })
         return batch ? `[${recs.join(',')}]` : recs[0]
     }
-    decode(message) {
-        let recs = JSON.parse(message)
+    decode(msg) {
+        let recs = JSON.parse(msg)
         if (recs instanceof Array) recs.forEach(rec => schemat.register_record(rec))
         else schemat.register_record(recs)
         return recs
