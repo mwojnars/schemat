@@ -317,5 +317,10 @@ export class Database extends WebObject {
     //     let streams = this.rings.map(r => r.scan_all())
     //     yield* merge(WebObject.compare, ...streams)
     // }
+
+    async rebuild_indexes() {
+        for (let ring of this.rings)
+            await ring.rebuild_indexes()
+    }
 }
 
