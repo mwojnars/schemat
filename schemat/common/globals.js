@@ -21,6 +21,6 @@ globalThis.CLIENT = !globalThis.SERVER
 // (i.e., an array of ALL values of a repeated field, not the first value only)
 export const PLURAL = '$'
 
-// separator of path segments
-export const SPLIT = '.'
+// separator of subfields in a deep property path
+export const SUBFIELD = '.'
 

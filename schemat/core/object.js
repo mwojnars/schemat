@@ -6,7 +6,7 @@
  *
  */
 
-import {PLURAL, SPLIT} from '../common/globals.js'
+import {PLURAL, SUBFIELD} from '../common/globals.js'
 import {print, assert, T, escape_html, concat, unique, delay} from '../common/utils.js'
 import {NotLoaded, ValidationError} from '../common/errors.js'
 
@@ -46,7 +46,7 @@ class Intercept {
      */
 
     static PLURAL = PLURAL
-    static SPLIT = SPLIT
+    static SUBFIELD = SUBFIELD
 
     // these special props are always read from regular POJO attributes and NEVER from object's __data;
     // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
@@ -67,7 +67,7 @@ class Intercept {
     static proxy_get(target, prop, receiver, deep = true)
     {
         // special handling for multi-segment paths (a.b.c...)
-        if (deep && prop?.includes?.(Intercept.SPLIT))
+        if (deep && prop?.includes?.(Intercept.SUBFIELD))
             return Intercept._get_deep(target, prop, receiver)
 
         let val, {cache} = target.__meta
@@ -116,7 +116,7 @@ class Intercept {
         /* Get a *deep* property value from `target` object; `prop` is a multi-segment path (a.b.c...),
            optionally terminated with $ (plural path). */
         let [base, plural] = Intercept._check_plural(prop)
-        let [step, ...path] = base.split(Intercept.SPLIT)
+        let [step, ...path] = base.split(Intercept.SUBFIELD)
         if (plural) {
             let roots = Intercept.proxy_get(target, step + Intercept.PLURAL, receiver, false) || []
             return roots.flatMap(root => [...Struct.yieldAll(root, path)])
@@ -146,7 +146,7 @@ class Intercept {
         ) return Reflect.set(target, prop, value, receiver)
 
         let [base, plural] = Intercept._check_plural(prop)      // property name without the $ suffix
-        let [step] = base.split(Intercept.SPLIT)                // first segment of a deep path
+        let [step] = base.split(Intercept.SUBFIELD)                // first segment of a deep path
 
         // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
         // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
