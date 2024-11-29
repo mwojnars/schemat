@@ -378,6 +378,10 @@ export class Schemat {
         }))
     }
 
+    async eval(code) {
+        /* Run eval(code) on the server and return the result; `code` is a string. Can be called on the client or the server. */
+        return this.site.POST.eval(code)
+    }
 
     /***  Events & Debugging  ***/
 
