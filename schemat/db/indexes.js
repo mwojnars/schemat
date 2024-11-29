@@ -112,9 +112,9 @@ export class ObjectIndex extends Index {
         /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
            If undefined is returned, the record will consist of a key only.
          */
-        let rschema = this.record_schema
-        if (!rschema.has_payload()) return undefined
-        let entries = rschema.payload.map(prop => [prop, obj.__data.get(prop)])        // only the first value of a repeated field is included (!)
+        let schema = this.record_schema
+        if (!schema.has_payload()) return undefined
+        let entries = schema.payload.map(prop => [prop, obj.__data.get(prop)])      // only the first value of a repeated field is included (!)
         return Object.fromEntries(entries)
     }
 
