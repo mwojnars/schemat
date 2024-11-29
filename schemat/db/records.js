@@ -10,8 +10,8 @@ import {Catalog} from "../core/catalog.js";
 import {INTEGER} from "../types/type.js";
 
 
-// EMPTY token marks an empty value in a record
-export const EMPTY = Symbol.for('empty')
+// EMPTY token marks missing payload in a record
+const EMPTY = Symbol.for('empty')
 
 
 /**********************************************************************************************************************/
@@ -121,85 +121,6 @@ export class Record {
     }
 }
 
-// export class ObjectRecord extends Record {
-//     /* A binary Record that represents a WebObject, with its `id` and `__data` encoded into key-value of the record. */
-//
-//     static decode(key, value) {
-//         /* Convert binary (key, value) to {id, data}, where `data` is a Catalog instance. */
-//         return Record.binary(data_schema, key, value).decode_object()
-//     }
-// }
-
-
-/**********************************************************************************************************************/
-
-// export class DataRecord {
-//     /* Pair of {id, data} of a particular web object or index record, with the data initialized from a JSONx string.
-//        It is assumed that, if `data` or `data_plain` are read from this record, they are NOT modified by the caller!
-//      */
-//
-//     id                          // item ID; can be undefined (new item, not yet inserted into DB)
-//     _data_object                // item data as a Catalog object decoded from _data_plain
-//     data_json                   // item data as a JSONx-encoded and JSON-stringified string
-//     //_data_plain               // item data as a plain JS object parsed from _data_json or encoded from _data_object
-//
-//
-//     get data_copy() {
-//         let data = JSONx.parse(this.data_json)
-//         return data instanceof Catalog ? data : Catalog.__setstate__(data)
-//     }
-//
-//     get data_plain() {
-//         return JSON.parse(this.data_json)
-//         // return this._data_plain || (this._data_json && this._parse_data())   //|| (this._data_object && this._encode_data())
-//     }
-//
-//     get data() {
-//         return this._data_object || this._decode_data()
-//     }
-//
-//     _decode_data() {
-//         return this._data_object = this.data_copy
-//         // let data = this._data_object = JSONx.decode(this.data_plain)
-//         // if (!(data instanceof Catalog)) this._data_object = Catalog.__setstate__(data)
-//         // return this._data_object
-//     }
-//
-//     constructor(id, data) {
-//         /* `id` is a Number; `data` is either a JSONx string, or a Catalog object. */
-//         if (id !== undefined && id !== null) this.id = id
-//         assert(data, `missing 'data' for DataRecord, id=${this.id}`)
-//
-//         if (typeof data === 'string') this.data_json = data
-//         else throw new Error(`invalid type of 'data'`)
-//         // else if (data instanceof Catalog) this._data_object = data
-//         // else assert(false, `plain data objects not accepted for DataRecord, id=${this.id}: ${data}`)
-//     }
-// }
-
-/**********************************************************************************************************************/
-
-// export class ChangeRequest {
-//     /* Data change in a binary record of a Sequence, to be propagated to derived sequences.
-//        `key` should be a Uint8Array; `value_*` should be json strings.
-//        For value_old and value_new, null means the corresponding old/new record is missing  (which represents
-//        insertion or deletion), and empty string (or undefined) means the record exists, but its value is empty.
-//      */
-//
-//     // origin           // the sequence that changed, represented by its Operator's ID
-//     key                 // binary key (Uint8Array)
-//     value_old           // null if missing record (insertion); undefined if empty value, but record exists (update)
-//     value_new           // null if missing record (deletion); undefined if empty value, but record exists (update)
-//
-//     record_old(schema)  { return this.value_old !== null && Record.binary(schema, this.key, this.value_old) }
-//     record_new(schema)  { return this.value_new !== null && Record.binary(schema, this.key, this.value_new) }
-//
-//     constructor(key, value_old = null, value_new = null) {
-//         this.key = key
-//         this.value_old = value_old
-//         this.value_new = value_new
-//     }
-// }
 
 /**********************************************************************************************************************/
 
@@ -263,7 +184,4 @@ export class RecordSchema {
 
 // schema of the data sequence in every DB ring; value encoding is handled outside schema, through method overloading
 export const data_schema = new RecordSchema(new Map([['id', new INTEGER()]]))
-
-
-
 
