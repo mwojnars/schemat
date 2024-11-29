@@ -518,8 +518,6 @@
   info: An index that receives record updates from the main data sequence, so
     input records represent objects.
   class: schemat/db/indexes.js:ObjectIndex
-  schema:
-    "@": schemat:Catalog
   __prototype:
     "@": 15
   __category:
