@@ -202,12 +202,11 @@ describe('Schemat Tests', function () {
 
         it('Varia: load/insert/delete', async function () {
             // navigate to the Varia category page
-            // await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main')
-            let Varia = await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main',
+            await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main',
                 ['Category:5000', 'Varia', 'name', '__category', 'schema', 'Varia:5001', 'Create'])
 
             // these strings are only available after client-side rendering, not in HTML source:
-            expect_include_all(await extract_content(Varia), 'check', 'Varia.code')
+            expect_include_all(await extract_content(page), 'check', 'Varia.code')
 
             // type the name of the new item
             const input = 'input[name="name"]'
@@ -242,6 +241,13 @@ describe('Schemat Tests', function () {
             // check that the new item disappeared from the list
             let updated_content = await extract_content(page)
             expect(updated_content).to.not.include(name)
+        })
+
+        it('rebuild_indexes', async function () {
+            await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main')
+            await delay(100)
+            let done = await page.evaluate(() => schemat.eval('schemat.db.rebuild_indexes()'))
+            expect(done).to.be.true
         })
 
         it('Directory', async function () {
