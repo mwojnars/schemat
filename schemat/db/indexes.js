@@ -147,8 +147,8 @@ export class IndexByCategory extends ObjectIndex {
     static __category = 17;
 
     *generate_keys(obj) {
-        let category_id = obj.__data.get('__category')?.__id      // can be undefined, such records are also included in the index
-        yield [category_id, obj.id]
+        // let category_id = obj.__data.get('__category')?.__id      // can be undefined, such records are also included in the index
+        yield [obj.__cid, obj.id]
     }
 }
 
