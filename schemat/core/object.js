@@ -181,7 +181,6 @@ export class WebObject {
     /* Web object. Persisted in the database; has a unique ID; can be exposed on the web at a particular URL. */
     // net object? internet object? active object? live object?
 
-    static PLURAL   = PLURAL
     static SEAL_SEP = '.'
 
     /***  Common properties ***/

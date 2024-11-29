@@ -1,9 +1,9 @@
+import {PLURAL} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../common/binary.js"
 import {Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
-import {WebObject} from "../core/object.js";
 
 
 // Section, Block, Partition ... Aggregate
@@ -126,7 +126,6 @@ export class ObjectIndex extends Index {
 
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
-        let PLURAL = WebObject.PLURAL
 
         for (let field of this.record_schema.key_fields) {
             let plural = field.endsWith(PLURAL)

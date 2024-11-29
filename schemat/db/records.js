@@ -2,12 +2,12 @@
     Low-level representation of items and index records, for storage and transmission from/to the database.
  */
 
+import {PLURAL} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {BinaryInput, BinaryOutput, compare_uint8, fnv1aHash} from "../common/binary.js";
 import {Catalog} from "../core/catalog.js";
 import {INTEGER} from "../types/type.js";
-import {WebObject} from "../core/object.js";
 
 
 // EMPTY token marks an empty value in a record
@@ -37,7 +37,6 @@ export class Record {
     get hash()              { return this._hash || this._compute_hash() }
 
     _key_to_object() {
-        let PLURAL = WebObject.PLURAL
         let fields = this.schema.key_fields
         let key = this.key
         let obj = {}
