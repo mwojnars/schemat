@@ -82,6 +82,8 @@ export class Index extends Operator {
     }
 }
 
+/**********************************************************************************************************************/
+
 export class ObjectIndex extends Index {
     /* An index that receives record updates from the base data sequence, so input records represent web objects.
        Output records are created by selecting 1+ object properties as fields in a sort key; the record is cloned
@@ -131,7 +133,7 @@ export class ObjectIndex extends Index {
             let values = obj[field]
 
             if (!plural) values = (values !== undefined) ? [values] : undefined
-            if (!values?.length) return             // no values (missing field) or not an array, skip this object
+            if (!values?.length) return             // no value (missing field), or not an array? skip this object
 
             if (values.length >= 2 && field_values.length)
                 throw new Error(`key field ${field} has multiple values, which is allowed only for the first field in the index`)
