@@ -148,17 +148,6 @@ export class ObjectIndex extends Index {
     }
 }
 
-export class IndexByCategory extends ObjectIndex {
-    /* An index that maps category IDs to item IDs: the key is [category ID, item ID], empty value. */
-
-    static __category = 17;
-
-    // *generate_keys(obj) {
-    //     // let category_id = obj.__data.get('__category')?.__id      // can be undefined, such records are also included in the index
-    //     yield [obj.__cid, obj.id]
-    // }
-}
-
 /**********************************************************************************************************************/
 
 // class AggregateSequence extends Sequence {}     // or Cube like in OLAP databases e.g. Apache Druid ?

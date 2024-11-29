@@ -524,15 +524,6 @@
     "@": 15
   __category:
     "@": 1
-- __id: 17
-  name: IndexByCategory
-  info: "Index that maps categories to member objects: the key is [category ID,
-    item ID]."
-  class: schemat/db/indexes.js:IndexByCategory
-  __prototype:
-    "@": 16
-  __category:
-    "@": 1
 - __id: 18
   name: Block
   info: A continuous subrange of records of a data/index sequence, physically
@@ -586,7 +577,8 @@
     "@": 1
 - __id: 23
   name: idx_objects_category
-  info: Index of all objects by their category.
+  info: "Index of all objects by their category: the key is [category ID, item
+    ID], no payload."
   key:
     __cid:
       blank: true
