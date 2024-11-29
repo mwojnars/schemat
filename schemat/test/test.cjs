@@ -200,22 +200,14 @@ describe('Schemat Tests', function () {
                 ['Category:1', 'Category of objects', 'name', '__ttl', 'defaults', 'schema', 'Ring', 'Varia'])
         })
 
-        it('Directory', async function () {
-            await test_page(page, `${DOMAIN}/$/id/5`, '#page-main',
-                ['Directory', 'nested containers', 'file system', 'containers.js:Directory'])
-        })
-
-        it('Varia', async function () {
+        it('Varia: load/insert/delete', async function () {
+            // navigate to the Varia category page
+            // await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main')
             let Varia = await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main',
                 ['Category:5000', 'Varia', 'name', '__category', 'schema', 'Varia:5001', 'Create'])
 
             // these strings are only available after client-side rendering, not in HTML source:
             expect_include_all(await extract_content(Varia), 'check', 'Varia.code')
-        })
-
-        it('insert & delete', async function () {
-            // navigate to the Varia category page
-            await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main')
 
             // type the name of the new item
             const input = 'input[name="name"]'
@@ -250,6 +242,11 @@ describe('Schemat Tests', function () {
             // check that the new item disappeared from the list
             let updated_content = await extract_content(page)
             expect(updated_content).to.not.include(name)
+        })
+
+        it('Directory', async function () {
+            await test_page(page, `${DOMAIN}/$/id/5`, '#page-main',
+                ['Directory', 'nested containers', 'file system', 'containers.js:Directory'])
         })
 
         it('Varia object', async function () {
