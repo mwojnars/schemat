@@ -127,24 +127,6 @@ export class AdminProcess extends BackendProcess {
     /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from the command line. */
     static role = 'admin_process'
 
-    // async CLI_build({path_db_boot}) {
-    //     /* Generate the core system items anew and save. */
-    //
-    //     let file = path_db_boot || (DB_ROOT + '/db-boot.yaml')
-    //
-    //     // remove `file` if it exists
-    //     try { fs.unlinkSync(file) } catch(ex) {}
-    //
-    //     await this.cluster.startup([{file}])
-    //     let db = this.cluster.db
-    //
-    //     print(`Starting full RESET of DB, core items will be created anew in: ${file}`)
-    //
-    //     let {bootstrap} = await import('../boot/bootstrap.js')
-    //     await bootstrap(db)
-    //     schemat.is_closing = true
-    // }
-
     // async CLI_move({id, newid, bottom, ring: ring_name}) {
     //     /* Move an item to a different ring, or change its ID. */
     //     // TODO: REMOVE. This function is no longer used; all the same things can be done with CLI_reinsert (!)
