@@ -198,7 +198,7 @@ export class JsonPOST extends HttpService {
        encoded through JSONx and sent to the server in POST request body; the result is sent back as JSONx string
        - this can be changed by passing a different `input` or `output` class in the constructor.
      */
-    static input  = mJsonxArray     // client submits an array of JSONx-encoded elements
+    static input  = mJsonxArray     // client submits an ...args array of JSONx-encoded arguments
     static output = mJsonx          // server responds with a single JSONx-encoded object
 
     async submit(url, message) {

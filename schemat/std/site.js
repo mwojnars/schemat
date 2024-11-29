@@ -4,7 +4,7 @@ import {Request} from '../web/request.js'
 import {WebObject} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonPOST} from "../web/services.js";
-import {mDataRecords, mJsonx} from "../web/messages.js";
+import {mDataRecords, mJsonx, mString} from "../web/messages.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -37,6 +37,7 @@ export class Site extends WebObject {
     database
     default_path
     cache_purge_interval
+    eval_allowed
 
 
     async __init__()  {
@@ -195,9 +196,10 @@ export class Site extends WebObject {
     }
 
     'POST.eval'() {
-        /* Run eval(code) on the server and return the result. */
+        /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string. */
         return new JsonPOST({
-            server: (code) => this.eval_allowed ? eval(code) : undefined
+            server: (code) => this.eval_allowed ? eval(code) : undefined,
+            input:  mString
         })
     }
 
