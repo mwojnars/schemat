@@ -578,7 +578,7 @@
   info: "Index of all objects by their category: the key is [category ID, item
     ID], no payload."
   key:
-    __cid:
+    __cid$:
       blank: true
       "@": schemat/types/type.js:INTEGER
     id:
