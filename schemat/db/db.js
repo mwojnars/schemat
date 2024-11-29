@@ -49,7 +49,7 @@ export class Ring extends WebObject {
         for (let index of this.indexes.values()) {
             let seq = new Subsequence(index.id, this.index_sequence)
             let idx = new IndexInstance(index, seq)
-            instances.set(index.id, seq)
+            instances.set(index.id, idx)
         }
         return instances
     }
@@ -151,9 +151,11 @@ export class Ring extends WebObject {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
-        let index = this.indexes.get(name)              // Index object
-        let seq = this.subsequences.get(index.id)
-        yield* index.scan(seq, {start, stop, limit, reverse, batch_size})
+        let index = this.indexes.get(name)                  // Index
+        let insta = this.index_instances.get(index.id)      // IndexInstance
+        yield* insta.scan({start, stop, limit, reverse, batch_size})
+        // let seq = this.subsequences.get(index.id)
+        // yield* index.scan(seq, {start, stop, limit, reverse, batch_size})
     }
 
     async* scan_all() {
