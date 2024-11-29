@@ -7,6 +7,7 @@ import {JSONx} from "../common/jsonx.js";
 import {BinaryInput, BinaryOutput, compare_uint8, fnv1aHash} from "../common/binary.js";
 import {Catalog} from "../core/catalog.js";
 import {INTEGER} from "../types/type.js";
+import {WebObject} from "../core/object.js";
 
 
 // EMPTY token marks an empty value in a record
@@ -36,10 +37,17 @@ export class Record {
     get hash()              { return this._hash || this._compute_hash() }
 
     _key_to_object() {
-        let names = this.schema.key_fields
+        let PLURAL = WebObject.PLURAL
+        let fields = this.schema.key_fields
         let key = this.key
         let obj = {}
-        for (let i = 0; i < names.length; i++) obj[names[i]] = key[i]
+
+        for (let i = 0; i < fields.length; i++) {
+            let field = fields[i]
+            if (field.endsWith(PLURAL)) field = field.slice(0, -PLURAL.length)
+            obj[field] = key[i]
+        }
+
         return this._object_key = obj
     }
 
