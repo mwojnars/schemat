@@ -321,6 +321,7 @@ export class Database extends WebObject {
     async rebuild_indexes() {
         for (let ring of this.rings)
             await ring.rebuild_indexes()
+        return true
     }
 }
 

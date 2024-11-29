@@ -18,7 +18,6 @@ import {Request} from "../web/request.js"
 import {ReactPage, ItemInspectView} from "../web/pages.js"
 import {JsonPOST, Service} from "../web/services.js";
 import {mWebObjects} from "../web/messages.js";
-import {JSONx} from "../common/jsonx.js";
 
 const ROOT_ID = 1
 let RootCategory
