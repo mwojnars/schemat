@@ -1,7 +1,7 @@
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
 import {DatabaseError} from "../common/errors.js"
 import {WebObject} from "../core/object.js"
-import {DataOperator} from "./sequence.js";
+import {DataOperator, IndexInstance} from "./sequence.js";
 import {data_schema, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence, IndexSequence, Subsequence} from "./sequence.js";
@@ -42,6 +42,16 @@ export class Ring extends WebObject {
             subseq.set(index.id, sub)
         }
         return subseq
+    }
+
+    get index_instances() {
+        let instances = new Map()
+        for (let index of this.indexes.values()) {
+            let seq = new Subsequence(index.id, this.index_sequence)
+            let idx = new IndexInstance(index, seq)
+            instances.set(index.id, seq)
+        }
+        return instances
     }
 
 

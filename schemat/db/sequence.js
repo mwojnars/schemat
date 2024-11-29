@@ -187,6 +187,23 @@ export class Subsequence {
     }
 }
 
+export class IndexInstance {
+    /* Thin wrapper around an (abstract) index that is attached to an index sequence of a particular ring. Local JS object. */
+
+    constructor(index, sequence) {
+        this.index = index
+        this.sequence = sequence
+        // this.subsequence = new Subsequence(index.id, sequence)
+    }
+    change(key, prev, next) {
+        return this.index.change(key, prev, next, this.sequence)
+    }
+    *scan({start, stop, limit, reverse, batch_size}) {
+        yield* this.index.scan(this.sequence, {start, stop, limit, reverse, batch_size})
+    }
+}
+
+
 /**********************************************************************************************************************/
 
 export class DataSequence extends Sequence {
