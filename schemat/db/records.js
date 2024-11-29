@@ -36,7 +36,7 @@ export class Record {
     get hash()              { return this._hash || this._compute_hash() }
 
     _key_to_object() {
-        let names = this.schema.field_names
+        let names = this.schema.key_fields
         let key = this.key
         let obj = {}
         for (let i = 0; i < names.length; i++) obj[names[i]] = key[i]
@@ -199,18 +199,14 @@ export class Record {
 export class RecordSchema {
     /* Schema of records in a Sequence. Defines the key and value to be stored in records. */
 
-    // key_types
-    // key_names
-    // value_names
-
     key                 // {name: type}, a Map of names and Types of fields to be included in the sequence's key
     payload             // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
 
-    _field_names        // array of names of consecutive fields in the key
-    _field_types        // array of Types of consecutive fields in the key
+    _key_fields         // array of names of consecutive fields in the key
+    _key_types          // array of Types of consecutive fields in the key
 
-    get field_names()   { return this._field_names || (this._field_names = [...this.key.keys()]) }
-    get field_types()   { return this._field_types || (this._field_types = [...this.key.values()]) }
+    get key_fields()    { return this._key_fields || (this._key_fields = [...this.key.keys()]) }
+    get key_types()     { return this._key_types || (this._key_types = [...this.key.values()]) }
 
     constructor(key, payload = []) {
         this.key = key
@@ -220,10 +216,10 @@ export class RecordSchema {
     has_payload() { return !!this.payload?.length }     // true if payload part is present in records
 
     encode_key(key) {
-        /* `key` is an array of field values. The array can be shorter than this.field_types ("partial key")
+        /* `key` is an array of field values. The array can be shorter than this.key_types ("partial key")
            - this may happen when a key is used for a partial match as a lower/upper bound in a scan() operation.
          */
-        let types  = this.field_types
+        let types  = this.key_types
         let output = new BinaryOutput()
         let length = Math.min(types.length, key.length)
 
@@ -240,7 +236,7 @@ export class RecordSchema {
 
     decode_key(binary_key) {
         /* Decode a `binary_key` (Uint8Array) back into an array of field values. Partial keys are NOT supported here. */
-        let types  = this.field_types
+        let types  = this.key_types
         let input  = new BinaryInput(binary_key)
         let length = types.length
         let key = []

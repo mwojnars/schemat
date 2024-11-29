@@ -124,7 +124,7 @@ export class ObjectIndex extends Index {
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
 
-        for (let field of this.record_schema.field_names) {
+        for (let field of this.record_schema.key_fields) {
             let values = obj.__data.getAll(field)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && field_values.length)
