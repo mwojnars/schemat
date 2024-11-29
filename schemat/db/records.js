@@ -204,7 +204,7 @@ export class RecordSchema {
     // value_names
 
     fields              // {name: type}, a Map of names and Types of fields to be included in the sequence's key
-    properties          // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
+    payload             // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
 
     _field_names        // array of names of consecutive fields in the key
     _field_types        // array of Types of consecutive fields in the key
@@ -212,12 +212,12 @@ export class RecordSchema {
     get field_names()   { return this._field_names || (this._field_names = [...this.fields.keys()]) }
     get field_types()   { return this._field_types || (this._field_types = [...this.fields.values()]) }
 
-    constructor(fields, properties = []) {
-        this.fields = fields
-        this.properties = properties
+    constructor(key, payload = []) {
+        this.fields = key
+        this.payload = payload
     }
 
-    no_value()          { return !this.properties?.length }     // true if no value part is stored in records
+    no_payload() { return !this.payload?.length }       // true if no payload part is stored in records
 
     encode_key(key) {
         /* `key` is an array of field values. The array can be shorter than this.field_types ("partial key")
