@@ -45,9 +45,6 @@ class Intercept {
        Since a Proxy class can't be subclassed, all methods and properties of Intercept are static.
      */
 
-    static PLURAL = PLURAL
-    static SUBFIELD = SUBFIELD
-
     // these special props are always read from regular POJO attributes and NEVER from object's __data;
     // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
     // defining a custom `then` prop is unsafe, hence we disallow it
@@ -67,7 +64,7 @@ class Intercept {
     static proxy_get(target, prop, receiver, deep = true)
     {
         // special handling for multi-segment paths (a.b.c...)
-        if (deep && prop?.includes?.(Intercept.SUBFIELD))
+        if (deep && prop?.includes?.(SUBFIELD))
             return Intercept._get_deep(target, prop, receiver)
 
         let val, {cache} = target.__meta
@@ -101,13 +98,13 @@ class Intercept {
 
         if (cache) {
             Intercept._cache_value(cache, base, values.length ? values[0] : Intercept.UNDEFINED)
-            Intercept._cache_values(cache, base + Intercept.PLURAL, values)
+            Intercept._cache_values(cache, base + PLURAL, values)
         }
         return plural ? values : values[0]
     }
 
     static _check_plural(prop) {
-        let plural = prop.endsWith(Intercept.PLURAL)
+        let plural = prop.endsWith(PLURAL)
         let base = plural ? prop.slice(0, -1) : prop    // property name without the $ suffix
         return [base, plural]
     }
@@ -116,9 +113,9 @@ class Intercept {
         /* Get a *deep* property value from `target` object; `prop` is a multi-segment path (a.b.c...),
            optionally terminated with $ (plural path). */
         let [base, plural] = Intercept._check_plural(prop)
-        let [step, ...path] = base.split(Intercept.SUBFIELD)
+        let [step, ...path] = base.split(SUBFIELD)
         if (plural) {
-            let roots = Intercept.proxy_get(target, step + Intercept.PLURAL, receiver, false) || []
+            let roots = Intercept.proxy_get(target, step + PLURAL, receiver, false) || []
             return roots.flatMap(root => [...Struct.yieldAll(root, path)])
         }
         let root = Intercept.proxy_get(target, step, receiver, false)
@@ -146,7 +143,7 @@ class Intercept {
         ) return Reflect.set(target, prop, value, receiver)
 
         let [base, plural] = Intercept._check_plural(prop)      // property name without the $ suffix
-        let [step] = base.split(Intercept.SUBFIELD)                // first segment of a deep path
+        let [step] = base.split(SUBFIELD)                       // first segment of a deep path
 
         // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
         // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
@@ -184,7 +181,7 @@ export class WebObject {
     /* Web object. Persisted in the database; has a unique ID; can be exposed on the web at a particular URL. */
     // net object? internet object? active object? live object?
 
-    static PLURAL   = Intercept.PLURAL
+    static PLURAL   = PLURAL
     static SEAL_SEP = '.'
 
     /***  Common properties ***/
