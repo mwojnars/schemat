@@ -514,7 +514,7 @@
   __category:
     "@": 1
 - __id: 16
-  name: PrimeIndexSequence
+  name: ObjectIndex
   info: An index that receives record updates from the main data sequence, so
     input records represent objects.
   class: schemat/db/indexes.js:ObjectIndex
