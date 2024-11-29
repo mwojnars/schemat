@@ -14,3 +14,13 @@ globalThis.CLIENT = !globalThis.SERVER
 //     process.versions != null &&                     // process.versions contains Node.js-specific version information
 //     process.versions.node != null                   // process.versions.node is the Node.js version string
 
+
+/**********************************************************************************************************************/
+
+// the suffix appended to the property name when a *plural* form of this property is requested
+// (i.e., an array of ALL values of a repeated field, not the first value only)
+export const PLURAL = '$'
+
+// separator of path segments
+export const SPLIT = '.'
+

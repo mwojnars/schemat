@@ -6,6 +6,7 @@
  *
  */
 
+import {PLURAL, SPLIT} from '../common/globals.js'
 import {print, assert, T, escape_html, concat, unique, delay} from '../common/utils.js'
 import {NotLoaded, ValidationError} from '../common/errors.js'
 
@@ -44,12 +45,8 @@ class Intercept {
        Since a Proxy class can't be subclassed, all methods and properties of Intercept are static.
      */
 
-    // the suffix appended to the property name when a *plural* form of this property is requested
-    // (i.e., an array of ALL values of a repeated field, not the first value only)
-    static PLURAL = '$'
-
-    // separator of path segments
-    static SPLIT = '.'
+    static PLURAL = PLURAL
+    static SPLIT = SPLIT
 
     // these special props are always read from regular POJO attributes and NEVER from object's __data;
     // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
