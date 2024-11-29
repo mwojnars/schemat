@@ -244,7 +244,8 @@ export class WebObject {
 
     get id() { return this.__id }           // alias for __id
 
-    get __cid() { return this.__category?.id }
+    get __cid()  { return this.__category?.id }
+    get __cid$() { return this.__category$.map(c => c.id) }
 
     get __base() {
         let cats = this.__category$
