@@ -504,7 +504,7 @@ export class JsonIndexStorage extends MemoryStorage {
 
     async flush() {
         /* Save the entire database (this.records) to a file. */
-        print(`YamlIndexStorage flushing ${this._records.size} records to ${this.filename}...`)
+        // print(`YamlIndexStorage flushing ${this._records.size} records to ${this.filename}...`)
 
         let lines = [...this.scan()].map(([binary_key, json_value]) => {
             let key = JSON.stringify(Array.from(binary_key))
