@@ -26,7 +26,7 @@ export class Ring extends WebObject {
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
-    lower_ring              // reference to the lower Ring object
+    lower_ring              // reference to the base Ring (lower ring) of this one
     lower_ring_writable     // if true, the requests going down through this ring are allowed to save their updates in lower ring(s)
 
     // validity range [start, stop) for IDs of NEWLY-INSERTED objects in this ring;
@@ -34,17 +34,8 @@ export class Ring extends WebObject {
     start_id = 0
     stop_id
 
-    get subsequences() {
-        /* {id: Subsequence} map of logical sequences for each index. */
-        let subseq = new Map()
-        for (let index of this.indexes.values()) {
-            let sub = new Subsequence(index.id, this.index_sequence)
-            subseq.set(index.id, sub)
-        }
-        return subseq
-    }
-
     get index_instances() {
+        /* {id: IndexInstance} map of index instances within this particular ring, one for each abstract index in `indexes`. */
         let instances = new Map()
         for (let index of this.indexes.values()) {
             let seq = new Subsequence(index.id, this.index_sequence)
@@ -154,8 +145,6 @@ export class Ring extends WebObject {
         let index = this.indexes.get(name)                  // Index
         let insta = this.index_instances.get(index.id)      // IndexInstance
         yield* insta.scan({start, stop, limit, reverse, batch_size})
-        // let seq = this.subsequences.get(index.id)
-        // yield* index.scan(seq, {start, stop, limit, reverse, batch_size})
     }
 
     async* scan_all() {
