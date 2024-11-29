@@ -12,6 +12,7 @@
     "@": 1002
   cluster:
     "@": 1025
+  eval_allowed: true
   __category:
     "@": 2
 - __id: 1002

@@ -194,6 +194,13 @@ export class Site extends WebObject {
         })
     }
 
+    'POST.eval'() {
+        /* Run eval(code) on the server and return the result. */
+        return new JsonPOST({
+            server: (code) => this.eval_allowed ? eval(code) : undefined
+        })
+    }
+
 
     /***  Dynamic imports  ***/
 
