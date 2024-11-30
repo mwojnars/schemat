@@ -588,7 +588,7 @@ export class WebObject {
         return schemat.site.default_path_of(this)
     }
 
-    _impute__path() {
+    get __path() {
         /* Calculation of __path if missing. */
         return this.__container?.get_access_path(this) || this.system_url
     }

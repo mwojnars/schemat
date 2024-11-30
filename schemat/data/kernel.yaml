@@ -173,7 +173,7 @@
         virtual: true
         "@": schemat/types/type.js:STRING
       __path:
-        impute: _impute__path
+        getter: true
         virtual: true
         "@": schemat/types/type.js:STRING
       __url:
