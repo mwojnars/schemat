@@ -154,7 +154,7 @@ class Intercept {
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
         if (schema?.has(step) || (!schema?.options.strict && regular)) {
             // if (!target.is_infant()) print('proxy_set updating:', prop)
-            if (type?.options.virtual) throw new Error(`cannot modify a virtual property (${prop})`)
+            if (type?.options.getter) throw new Error(`cannot modify a getter property (${prop})`)
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
                 target._make_edit('set', base, ...value)
@@ -669,9 +669,9 @@ export class WebObject {
             return [values[0]]
         }
 
-        let {inherit, virtual} = type.options
-        let ancestors = inherit && !virtual ? proxy.__ancestors : [proxy]               // `this` included as the first ancestor
-        let streams = virtual ? [] : ancestors.map(proto => proto._own_values(prop))    // for virtual property, __data[prop] is not used even if present
+        let {inherit, getter} = type.options
+        let ancestors = inherit && !getter ? proxy.__ancestors : [proxy]                // `this` included as the first ancestor
+        let streams = getter ? [] : ancestors.map(proto => proto._own_values(prop))     // for virtual property, __data[prop] is not used even if present
 
         // read `defaults` from the category and combine them with the `streams`
         if (prop !== '__prototype' && prop !== '__category')            // avoid circular dependency for these special props

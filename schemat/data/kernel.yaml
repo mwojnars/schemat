@@ -170,15 +170,12 @@
         "@": schemat/types/type.js:REF
       __ident:
         getter: true
-        virtual: true
         "@": schemat/types/type.js:STRING
       __path:
         getter: true
-        virtual: true
         "@": schemat/types/type.js:STRING
       __url:
         getter: true
-        virtual: true
         "@": schemat/types/type.js:STRING
       __status:
         info: Set to "DRAFT" if the object's record is not yet fully initialized in the

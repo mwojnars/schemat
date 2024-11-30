@@ -49,10 +49,10 @@ export class Type {
         getter   : undefined,       // if true, the value of the object's corresponding property is imputed from the same-named getter method of the object;
                                     // similar to impute=true, but does not require explicit function designation, and the function is implemented as a getter which is more intuitive sometimes;
                                     // having a getter alone, without it being explicitly declared as a property with a type, in many cases is good enough, but prevents the property from being used in indexes (missing type definition);
-                                    // getter=true makes the property virtual (never stored in DB nor inherited), because even if a value was stored, it couldn't be accessed in the presence of getter (reads shadowed by the getter)
+                                    // getter=true makes the property virtual (never stored in DB nor inherited), because even if a value was stored, it couldn't be accessed in the presence of a getter (reads are shadowed by the getter)
 
-        virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
-                                    // when virtual=true, inheritance is skipped during property calculation like if inherit=false
+        // virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
+        //                             // when virtual=true, inheritance is skipped during property calculation like if inherit=false
 
         // explicit / persistent: false  // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
         // required : undefined,   // if true, the field described by this type must be present in the record or object's data during insert/update
@@ -116,7 +116,7 @@ export class Type {
         /* Validate an object/value to be encoded, clean it up and convert to a canonical form if needed.
            Return the processed value, or raise an exception if the value is invalid.
          */
-        if (this.options.virtual) return undefined      // value of a virtual property shall not be stored
+        if (this.options.getter) return undefined       // value of a virtual property shall not be stored
 
         if (value === null || value === undefined)
             if (this.options.blank) return null
