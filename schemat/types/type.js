@@ -169,20 +169,21 @@ export class Type {
         return this._impute(obj)                        // if no values were found, use `default` or impute()
     }
 
-    _impute(obj = null) {
+    _impute(obj = null, prop) {
         /* Impute a value for an object`s field described by this type. This may return the default value (if present),
            or run the options.impute() function, or run the obj[options.impute] method on the target object.
          */
-        let {default: value, impute} = this.options
-        if (value !== undefined) return value
-        if (!impute || !obj) return undefined
+        let {default: default_, impute, getter} = this.options
+        if (!obj) return default_
 
-        if (typeof impute === 'function')
-            return impute.call(obj, obj)                // impute() function may take `obj` via `this` or via regular argument
-        if (typeof impute === 'string')
-            return obj[impute]?.call(obj)
-
-        throw new Error(`incorrect type of 'impute' property`)
+        if (impute) {
+            if (typeof impute === 'function')
+                return impute.call(obj, obj)                // impute() function may take `obj` via `this` or via regular argument
+            if (typeof impute === 'string')
+                return obj[impute]?.call(obj)
+            throw new Error(`incorrect value of 'impute' property (${impute})`)
+        }
+        return default_
     }
 
     /*** binary encoding for indexing ***/
