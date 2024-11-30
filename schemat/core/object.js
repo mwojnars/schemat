@@ -109,17 +109,17 @@ class Intercept {
         return [base, plural]
     }
 
-    static _get_deep(target, prop, receiver) {
-        /* Get a *deep* property value from `target` object; `prop` is a multi-segment path (a.b.c...),
+    static _get_deep(target, path, receiver) {
+        /* Get a *deep* property value from `target` object; `path` is a multi-segment path (a.b.c...),
            optionally terminated with $ (plural path). */
-        let [base, plural] = Intercept._check_plural(prop)
-        let [step, ...path] = base.split(SUBFIELD)
+        let [base, plural] = Intercept._check_plural(path)
+        let [step, ...rest] = base.split(SUBFIELD)
         if (plural) {
             let roots = Intercept.proxy_get(target, step + PLURAL, receiver, false) || []
-            return roots.flatMap(root => [...Struct.yieldAll(root, path)])
+            return roots.flatMap(root => [...Struct.yieldAll(root, rest)])
         }
         let root = Intercept.proxy_get(target, step, receiver, false)
-        return Struct.get(root, path)
+        return Struct.get(root, rest)
     }
 
     static _cache_value(cache, prop, val) {
