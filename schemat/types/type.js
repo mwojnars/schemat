@@ -140,18 +140,18 @@ export class Type {
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
 
-    combine_inherited(arrays, obj = null) {
+    combine_inherited(arrays, obj, prop) {
         /* Combine arrays of inherited values that match this type. Return an array of values.
            The arrays are either concatenated, or the values are merged into one, depending on `prop.repeated`.
            In the latter case, the default value (if present) is also included in the merge.
            `obj` is an argument to downstream impute().
          */
         if (this.isRepeated()) return concat(arrays)
-        let value = this.merge_inherited(arrays, obj)
+        let value = this.merge_inherited(arrays, obj, prop)
         return value !== undefined ? [value] : []
     }
 
-    merge_inherited(arrays, obj = null) {
+    merge_inherited(arrays, obj, prop) {
         /* Only used for single-valued schemas (when prop.repeated == false).
            Merge multiple inherited arrays of values matching this type (TODO: check against incompatible inheritance).
            Return the merged value, or undefined if it cannot be determined.
@@ -166,10 +166,10 @@ export class Type {
             // if (values.length > 1) throw new Error("multiple values present for a key in a single-valued type")
             return values[0]
         }
-        return this._impute(obj)                        // if no values were found, use `default` or impute()
+        return this._impute(obj, prop)                      // if no value found, use impute/getter/default to impute one
     }
 
-    _impute(obj = null, prop = null) {
+    _impute(obj, prop) {
         /* Calculate and return the imputed value for an object's property `prop` described by this type.
            This may run the options.impute() function, or the obj[options.impute] method on the target object,
            or use obj[prop] if options.getter=true, or return the options.default value.

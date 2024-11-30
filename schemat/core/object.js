@@ -674,10 +674,10 @@ export class WebObject {
         let streams = virtual ? [] : ancestors.map(proto => proto._own_values(prop))    // for virtual property, __data[prop] is not used even if present
 
         // read `defaults` from the category and combine them with the `streams`
-        if (prop !== '__prototype' && prop !== '__category')                // avoid circular dependency for these special props
+        if (prop !== '__prototype' && prop !== '__category')            // avoid circular dependency for these special props
         {
             let category = proxy.__category
-            if (this === category?.__self && prop === 'defaults')           // avoid circular dependency for RootCategory
+            if (this === category?.__self && prop === 'defaults')       // avoid circular dependency for RootCategory
                 category = undefined
 
             let defaults = category?.defaults?.getAll(prop)
@@ -686,7 +686,7 @@ export class WebObject {
         // else if (prop === '__category')
         //     streams.push([schemat.Uncategorized])
 
-        return type.combine_inherited(streams, proxy)                       // `default` and `impute` of the `type` are applied here
+        return type.combine_inherited(streams, proxy, prop)             // impute/getter/default of the `type` are applied here
     }
 
     _own_values(prop)  { return this.__data.getAll(prop) }
