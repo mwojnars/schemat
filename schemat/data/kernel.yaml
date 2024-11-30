@@ -515,6 +515,10 @@
   info: An index that receives record updates from the main data sequence, so
     input records represent objects.
   schema:
+    category:
+      info: Optional reference to a category object. If present, only the objects
+        belonging to this category are included in the index.
+      "@": schemat/types/type.js:REF
     key_fields:
       info: Names of object properties to be included in the (compound) key of this
         index. Plural names (xyz$), as well as deep paths (x.y.z, x.y.z$) are
