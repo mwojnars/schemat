@@ -37,32 +37,32 @@ export class CATALOG extends Type {
 
     static options = {
         class:          Catalog,
-        type_keys:      new FIELD({blank: true}),       // type of all keys in the catalog; must be an instance of STRING or its subclass
-        type_values:    new GENERIC(),                  // type of all values in the catalog
+        key_type:       new FIELD({blank: true}),       // type of all keys in the catalog; must be an instance of STRING or its subclass
+        value_type:     new GENERIC(),                  // type of all values in the catalog
         initial:        () => new Catalog(),
         repeated:       false,                          // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)
     }
 
-    subtype(key)  { return this.options.type_values }   // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
+    subtype(key)  { return this.options.value_type }    // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     getValidKeys()  { return undefined }
 
     constructor(options = {}) {
         super(options)
-        let {type_keys} = options
-        if (type_keys && !(type_keys.instanceof(STRING)))
-            throw new ValidationError(`data type of keys must be an instance of STRING or its subclass, not ${type_keys}`)
+        let {key_type} = options
+        if (key_type && !(key_type.instanceof(STRING)))
+            throw new ValidationError(`data type of keys must be an instance of STRING or its subclass, not ${key_type}`)
     }
 
     collect(assets) {
-        this.options.type_keys.collect(assets)
-        this.options.type_values.collect(assets)
+        this.options.key_type.collect(assets)
+        this.options.value_type.collect(assets)
         CatalogTable.collect(assets)            // CatalogTable is the widget used to display catalogs in the UI
     }
 
     toString() {
         let name = this.constructor.name
-        let {type_keys, type_values} = this.options
-        return T.ofType(type_keys, FIELD) ? `${name}(${type_values})` : `${name}(${type_keys} > ${type_values})`
+        let {key_type, value_type} = this.options
+        return T.ofType(key_type, FIELD) ? `${name}(${value_type})` : `${name}(${key_type} > ${value_type})`
     }
 
     find(path = null) {
@@ -87,17 +87,17 @@ export class CATALOG extends Type {
         return Catalog.merge(catalogs, !this.isRepeated())          // merge all values (catalogs) into a single catalog
 
         // TODO: inside Catalog.merge(), if repeated=false, overlapping values should be merged recursively
-        //       through combine() of options.type_values type
+        //       through combine() of options.value_type type
     }
 
     _validate(obj) {
         obj = super._validate(obj)
 
-        let {type_keys, type_values} = this.options
-        for (let key of obj.keys()) type_keys.validate(key)
-        for (let val of obj.values()) type_values.validate(val)
+        let {key_type, value_type} = this.options
+        for (let key of obj.keys()) key_type.validate(key)
+        for (let val of obj.values()) value_type.validate(val)
 
-        if (!type_keys.options.repeated) {
+        if (!key_type.options.repeated) {
             let dups = new Set()
             for (let key of obj.keys()) {
                 if (key === undefined || key === null) continue
@@ -133,7 +133,7 @@ export class SCHEMA extends CATALOG {
         let {fields} = this.options
         if (!fields.hasOwnProperty(key) && this.options.strict)
             throw new ValidationError(`Unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
-        return fields[key] || this.options.type_values
+        return fields[key] || this.options.value_type
     }
     collect(assets) {
         for (let type of this._all_subtypes())

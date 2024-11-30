@@ -43,7 +43,7 @@
       "@": schemat/types/type.js:GENERIC
     tables:
       info: Mapping of categories (their paths) to names of sql tables.
-      type_values:
+      value_type:
         "@": schemat/types/type.js:STRING
       "@": schemat/types/catalog_type.js:CATALOG
     offset:
