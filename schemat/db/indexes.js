@@ -1,5 +1,6 @@
 import {PLURAL} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
+import {Catalog} from "../core/catalog.js";
 import {BinaryMap} from "../common/binary.js"
 import {Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
@@ -91,12 +92,16 @@ export class ObjectIndex extends Index {
        a subset of object properties.
      */
 
-    category            // category of items allowed in this index
+    category            // category of objects allowed in this index; obligatory if `key_fields` are present instead of `key`
     key_fields
 
-    get key() {
-        /* A catalog of {field: type} form generated from `key_fields` list of field names. */
-        return this.__data.get('key')
+    impute_key() {
+        /* A catalog of {field: type} pairs generated from `key_fields` list of field names. */
+        // return this.__data.get('key')
+        let category = this.category
+        if (!category) throw new Error('`category` is required for type inference in ObjectIndex when `key_fields` are defined instead of a `key`')
+        let entries = this.key_fields.map(field => [field, category.schema.get(field)])
+        return new Catalog(entries)
     }
 
     *map_record(key, obj) {
