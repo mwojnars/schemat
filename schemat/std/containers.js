@@ -22,7 +22,7 @@ export class Container extends WebObject {
     // properties:
     _is_container
 
-    _impute__url() {
+    get __url() {
         /* All containers are exposed on internal URLs to avoid conflicts with URLs of member objects (on blank routes). */
         return this.system_url
     }

@@ -169,7 +169,7 @@
           path is used for the object (/$/id/<id>).
         "@": schemat/types/type.js:REF
       __ident:
-        impute: _impute__ident
+        getter: true
         virtual: true
         "@": schemat/types/type.js:STRING
       __path:
@@ -177,7 +177,7 @@
         virtual: true
         "@": schemat/types/type.js:STRING
       __url:
-        impute: _impute__url
+        getter: true
         virtual: true
         "@": schemat/types/type.js:STRING
       __status:

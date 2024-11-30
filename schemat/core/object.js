@@ -593,7 +593,7 @@ export class WebObject {
         return this.__container?.get_access_path(this) || this.system_url
     }
 
-    _impute__url() {
+    get __url() {
         /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
         return this.__path.replace(/\/\*[^/]*/g, '')
         // let [url, on_blank_route] = WebObject._decode_access_path(this.__path)
@@ -603,7 +603,7 @@ export class WebObject {
         // return url
     }
 
-    _impute__ident() {
+    get __ident() {
         return this.__container?.identify(this)
     }
 
