@@ -52,6 +52,8 @@ export class Type {
                                     // getter=true makes the property virtual (never stored in DB nor inherited), because even if a value was stored, it couldn't be accessed in the presence of a getter (reads are shadowed by the getter);
                                     // this option only has an effect for top-level properties of web objects
 
+        alias    : undefined,       // name of a property that this one is an alias for; all reads and writes are redirected to the aliased property; only for top-level properties of web objects
+
         // virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
         //                             // when virtual=true, inheritance is skipped during property calculation like if inherit=false
 
