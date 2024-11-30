@@ -133,43 +133,43 @@ class Intercept {
         cache.set(prop$, vals.some(v => v instanceof Promise) ? Promise.all(vals).then(vs => cache.set(prop$, vs)) : vals)
     }
 
-    static proxy_set(target, prop, value, receiver)
+    static proxy_set(target, path, value, receiver)
     {
         // special attributes are written directly to __self (outside __data, not sent to DB);
         // also, when the __data is not loaded yet, *every* write goes to __self
         if (!(target.is_infant() || target.is_loaded())
-            || typeof prop !== 'string'             // `prop` can be a symbol like [Symbol.toPrimitive]
-            || Intercept.SPECIAL.includes(prop)
-        ) return Reflect.set(target, prop, value, receiver)
+            || typeof path !== 'string'             // `path` can be a symbol like [Symbol.toPrimitive]
+            || Intercept.SPECIAL.includes(path)
+        ) return Reflect.set(target, path, value, receiver)
 
-        let [base, plural] = Intercept._check_plural(prop)      // property name without the $ suffix
+        let [base, plural] = Intercept._check_plural(path)      // property name without the $ suffix
         let [step] = base.split(SUBFIELD)                       // first segment of a deep path
 
         // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
         // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
-        let regular = (prop[0] !== '_' || prop.startsWith('__'))
+        let regular = (path[0] !== '_' || path.startsWith('__'))
         let schema = receiver.__schema          // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
         let type = schema?.get(step)            // can be a GENERIC type of a field that's NOT declared explicitly in schema
 
-        // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
+        // write value in __data only IF the `path` is in schema, or the schema is missing (or non-strict) AND the path name is regular
         if (schema?.has(step) || (!schema?.options.strict && regular)) {
-            // if (!target.is_infant()) print('proxy_set updating:', prop)
+            // if (!target.is_infant()) print('proxy_set updating:', path)
             let {alias, getter} = type.options
 
             if (alias) return receiver[alias] = value
             if (getter) throw new Error(`cannot modify a getter property (${step})`)
 
             if (plural) {
-                if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
+                if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${path})`)
                 target._make_edit('set', base, ...value)
             }
-            else target._make_edit('set', prop, value)
+            else target._make_edit('set', path, value)
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${step})`)
 
-        // print('proxy_set() internal:', prop, '/', mutable)
-        return Reflect.set(target, prop, value, receiver)
+        // print('proxy_set() internal:', path, '/', mutable)
+        return Reflect.set(target, path, value, receiver)
     }
 
     static proxy_delete(target, prop) {
