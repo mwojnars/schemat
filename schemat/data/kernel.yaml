@@ -526,6 +526,13 @@
       type:
         "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
+    key:
+      info: The `key` property defined in Operator is redefined here to allow the use
+        of a getter method for its calculation.
+      getter: true
+      value_type:
+        "@": schemat/types/type.js:TYPE
+      "@": schemat/types/catalog_type.js:CATALOG
     "@": schemat:Catalog
   class: schemat/db/indexes.js:ObjectIndex
   __prototype:

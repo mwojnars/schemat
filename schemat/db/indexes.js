@@ -94,6 +94,11 @@ export class ObjectIndex extends Index {
     category            // category of items allowed in this index
     key_fields
 
+    get key() {
+        /* A catalog of {field: type} form generated from `key_fields` list of field names. */
+        return this.__data.get('key')
+    }
+
     *map_record(key, obj) {
         /* Generate a stream of records, each one being a {key, value} pair, NOT encoded.
            The key is an array of field values; the value is a plain JS object that can be stringified through JSON.
