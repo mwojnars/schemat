@@ -595,6 +595,8 @@
       "@": schemat/types/catalog_type.js:CATALOG
     payload:
       info: Names of object properties to be included as payload in each index record.
+      type:
+        "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
     "@": schemat:Catalog
   __category:
