@@ -62,7 +62,7 @@ export class CATALOG extends Type {
     toString() {
         let name = this.constructor.name
         let {type_keys, type_values} = this.options
-        return T.ofType(type_keys, STRING) ? `${name}(${type_values})` : `${name}(${type_values}, ${type_keys})`
+        return T.ofType(type_keys, FIELD) ? `${name}(${type_values})` : `${name}(${type_keys} > ${type_values})`
     }
 
     find(path = null) {

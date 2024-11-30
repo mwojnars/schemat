@@ -155,7 +155,7 @@ class Intercept {
         if (schema?.has(step) || (!schema?.options.strict && regular)) {
             // if (!target.is_infant()) print('proxy_set updating:', path)
             let {alias, getter} = type.options
-            
+
             if (alias) return receiver[path.replace(step, alias)] = value
             if (getter) throw new Error(`cannot modify a getter property (${step})`)
 
