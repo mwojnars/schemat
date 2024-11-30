@@ -292,7 +292,7 @@ export class TYPE_Widget extends GENERIC_Widget {
         //     type = type.real_type
         // }
         let dflt = `${type.options.default}`
-        return SPAN(`${type}`,
+        return SPAN(type.label(),
                 type.options.default !== undefined &&
                     SPAN(cl('default'), {title: `default value: ${truncate(dflt,1000)}`}, ` (${truncate(dflt,100)})`),
                 type.options.info &&

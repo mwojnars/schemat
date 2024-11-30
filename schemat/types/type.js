@@ -142,8 +142,6 @@ export class Type {
         return value
     }
 
-    toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
-
     combine_inherited(arrays, obj, prop) {
         /* Combine arrays of inherited values that match this type. Return an array of values.
            The arrays are either concatenated, or the values are merged into one, depending on `prop.repeated`.
@@ -229,6 +227,13 @@ export class Type {
            and store them in the provided Assets instance (`assets`). Override in subclasses.
          */
         this.Widget.collect(assets)
+    }
+
+    toString() { return this.constructor.name }         //JSON.stringify(this._fields).slice(0, 60)
+
+    label() {
+        /* May return a string or a React component for display on admin page. */
+        return `${this}`
     }
 
     get Widget() {
@@ -561,6 +566,13 @@ export class REF extends Type {
         if (obj.id < 0) throw new ValueError(`found a reference to an object with provisional ID=${obj.id} (${obj})`)
         // TODO: check that options.category.__id is present in the list of object's ancestors, obj.__ancestor_ids
         return obj
+    }
+}
+
+export class REF_CATEGORY extends REF {
+    _init_options() {
+        super._init_options()
+        this.options.category ??= schemat.WebObject.stub(1)
     }
 }
 
