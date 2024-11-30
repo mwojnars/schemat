@@ -514,6 +514,15 @@
   name: ObjectIndex
   info: An index that receives record updates from the main data sequence, so
     input records represent objects.
+  schema:
+    key_fields:
+      info: Names of object properties to be included in the (compound) key of this
+        index. Plural names (xyz$), as well as deep paths (x.y.z, x.y.z$) are
+        allowed.
+      type:
+        "@": schemat/types/type.js:STRING
+      "@": schemat/types/type.js:ARRAY
+    "@": schemat:Catalog
   class: schemat/db/indexes.js:ObjectIndex
   __prototype:
     "@": 15

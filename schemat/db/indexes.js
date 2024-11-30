@@ -92,6 +92,7 @@ export class ObjectIndex extends Index {
      */
 
     category            // category of items allowed in this index
+    key_fields
 
     *map_record(key, obj) {
         /* Generate a stream of records, each one being a {key, value} pair, NOT encoded.
