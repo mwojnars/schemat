@@ -138,7 +138,7 @@ class Intercept {
         // special attributes are written directly to __self (outside __data, not sent to DB);
         // also, when the __data is not loaded yet, *every* write goes to __self
         if (!(target.is_infant() || target.is_loaded())
-            || typeof path !== 'string'             // `path` can be a symbol like [Symbol.toPrimitive]
+            || typeof path !== 'string'                         // `path` can be a symbol like [Symbol.toPrimitive]
             || Intercept.SPECIAL.includes(path)
         ) return Reflect.set(target, path, value, receiver)
 
@@ -148,8 +148,8 @@ class Intercept {
         // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
         // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
         let regular = (path[0] !== '_' || path.startsWith('__'))
-        let schema = receiver.__schema          // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
-        let type = schema?.get(step)            // can be a GENERIC type of a field that's NOT declared explicitly in schema
+        let schema = receiver.__schema              // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
+        let type = schema?.get(step)                // can be GENERIC for a field that's NOT explicitly declared in schema
 
         // write value in __data only IF the `path` is in schema, or the schema is missing (or non-strict) AND the path name is regular
         if (schema?.has(step) || (!schema?.options.strict && regular)) {
