@@ -669,7 +669,9 @@ export class WebObject {
             return [values[0]]
         }
 
-        let {inherit, getter} = type.options
+        let {alias, getter, inherit} = type.options
+        if (alias) return this[alias]
+
         let ancestors = inherit && !getter ? proxy.__ancestors : [proxy]                // `this` included as the first ancestor
         let streams = getter ? [] : ancestors.map(proto => proto._own_values(prop))     // for virtual property, __data[prop] is not used even if present
 
