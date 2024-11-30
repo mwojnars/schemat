@@ -148,13 +148,17 @@ class Intercept {
         // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
         // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
         let regular = (prop[0] !== '_' || prop.startsWith('__'))
-        let schema = receiver.__schema              // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
-        let type = schema?.get(step)
+        let schema = receiver.__schema          // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
+        let type = schema?.get(step)            // can be a GENERIC type of a field that's NOT declared explicitly in schema
 
         // write value in __data only IF the `prop` is in schema, or the schema is missing (or non-strict) AND the prop name is regular
         if (schema?.has(step) || (!schema?.options.strict && regular)) {
             // if (!target.is_infant()) print('proxy_set updating:', prop)
-            if (type?.options.getter) throw new Error(`cannot modify a getter property (${prop})`)
+            let {alias, getter} = type.options
+
+            if (alias) return receiver[alias] = value
+            if (getter) throw new Error(`cannot modify a getter property (${step})`)
+
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${prop})`)
                 target._make_edit('set', base, ...value)
@@ -162,7 +166,7 @@ class Intercept {
             else target._make_edit('set', prop, value)
             return true
         }
-        else if (regular) throw new Error(`property not in object schema (${prop})`)
+        else if (regular) throw new Error(`property not in object schema (${step})`)
 
         // print('proxy_set() internal:', prop, '/', mutable)
         return Reflect.set(target, prop, value, receiver)
