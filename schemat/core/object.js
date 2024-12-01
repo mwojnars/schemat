@@ -6,7 +6,7 @@
  *
  */
 
-import {PLURAL, SUBFIELD} from '../common/globals.js'
+import {ROOT_ID, PLURAL, SUBFIELD} from '../common/globals.js'
 import {print, assert, T, escape_html, concat, unique, delay} from '../common/utils.js'
 import {NotLoaded, ValidationError} from '../common/errors.js'
 
@@ -20,7 +20,6 @@ import {ReactPage, ItemInspectView} from "../web/pages.js"
 import {JsonPOST, Service} from "../web/services.js";
 import {mWebObjects} from "../web/messages.js";
 
-const ROOT_ID = 1
 let RootCategory
 
 // due to circular dependency between object.js and category.js, RootCategory must be imported with dynamic import() and NOT awaited:

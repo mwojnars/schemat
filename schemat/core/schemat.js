@@ -1,3 +1,4 @@
+import {ROOT_ID} from "../common/globals.js";
 import {T, print, assert, normalizePath} from '../common/utils.js'
 import {DependenciesStack} from '../common/structs.js'
 import {WebObject} from './object.js'
@@ -86,7 +87,8 @@ export class Schemat {
     is_closing = false          // true if the Schemat node is in the process of shutting down
 
 
-    get site()      { return this.registry.get_object(this.site_id) }
+    get root_category() { return this.registry.get(ROOT_ID) }
+    get site()          { return this.registry.get_object(this.site_id) }
 
 
     // web objects currently being loaded/initialized with a call to .load()
@@ -313,10 +315,10 @@ export class Schemat {
         }
     }
 
-    _on_evict(obj) {
+    _on_evict({id}) {
         /* Special handling for system objects during registry purge. */
-        if (obj.__id === this.site_id) {
-            this.reload(this.site_id)           // scheduling an async reload *instead* of eviction so that the site object is *always* present in registry
+        if (id === ROOT_ID || id === this.site_id) {
+            this.reload(id)         // scheduling an async reload *instead* of eviction so that the object is *always* present in registry
             return true
         }
     }

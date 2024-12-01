@@ -17,6 +17,9 @@ globalThis.CLIENT = !globalThis.SERVER
 
 /**********************************************************************************************************************/
 
+// database ID of the root category object (schemat.root_category, class RootCategory)
+export const ROOT_ID = 1
+
 // the suffix appended to the property name when a *plural* form of this property is requested
 // (i.e., an array of ALL values of a repeated field, not the first value only)
 export const PLURAL = '$'
