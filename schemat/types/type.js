@@ -572,7 +572,7 @@ export class REF extends Type {
 export class REF_CATEGORY extends REF {
     _init_options() {
         super._init_options()
-        this.options.category ??= schemat.get_object(1)
+        this.options.category ??= schemat.root_category
     }
 }
 
