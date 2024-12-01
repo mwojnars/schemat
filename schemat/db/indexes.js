@@ -96,11 +96,11 @@ export class ObjectIndex extends Index {
     key_fields
 
     impute_key() {
-        /* A catalog of {field: type} pairs generated from `key_fields` list of field names. */
+        /* A catalog of {field: type} pairs generated from `key_fields` field names. */
         // return this.__data.get('key')
-        let category = this.category
-        if (!category) throw new Error('`category` is required for type inference in ObjectIndex when `key_fields` are defined instead of a `key`')
-        let entries = this.key_fields.map(field => [field, category.schema.get(field)])
+        let schema = this.category?.schema || schemat.root_category['defaults.schema']
+        let entries = this.key_fields.map(field => [field, schema.get(field)])
+        print('impute_key():', entries)
         return new Catalog(entries)
     }
 
