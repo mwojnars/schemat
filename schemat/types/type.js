@@ -405,6 +405,13 @@ export class INTEGER extends NUMBER {
     }
 }
 
+export class ID extends NUMBER {
+    /* Database ID of an object. */
+    static options = {
+        min: 1,
+    }
+}
+
 
 /**********************************************************************************************************************
  **
