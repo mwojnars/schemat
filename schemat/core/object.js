@@ -722,7 +722,7 @@ export class WebObject {
 
         for (let loc = 0; loc < data.length; loc++) {
             let entry = data._entries[loc]
-            let prop = entry[0]
+            let [prop, value] = entry
             let type = this.__schema.get(prop)
 
             if (!type)                                      // the property `prop` is not present in the schema? skip or raise an error
@@ -735,9 +735,11 @@ export class WebObject {
                 if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop}) in object [${this.id}]`)
             }
 
+            if (type.options.getter) value = undefined      // value of a virtual property shall not be stored
+
             try {
-                entry[1] = type.validate(entry[1])              // may raise an exception
-                // let newval = type.validate(entry[1])
+                entry[1] = type.validate(value)             // may raise an exception
+                // let newval = type.validate(value)
                 // if (post_setup) entry[1] = newval
             }
             catch (ex) {

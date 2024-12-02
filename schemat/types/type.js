@@ -119,8 +119,6 @@ export class Type {
         /* Validate an object/value to be encoded, clean it up and convert to a canonical form if needed.
            Return the processed value, or raise an exception if the value is invalid.
          */
-        if (this.options.getter) return undefined       // value of a virtual property shall not be stored
-
         if (value === null || value === undefined)
             if (this.options.blank) return null
             else throw new ValueError(`expected a non-blank (non-missing) value, got '${value}' instead`)
@@ -405,10 +403,11 @@ export class INTEGER extends NUMBER {
     }
 }
 
-export class ID extends NUMBER {
+export class ID extends INTEGER {
     /* Database ID of an object. */
     static options = {
         min: 1,
+        blank: true,
     }
 }
 
