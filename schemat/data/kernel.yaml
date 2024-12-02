@@ -139,20 +139,22 @@
         "@": schemat/types/type.js:TEXT
       id:
         getter: true
-        info: Type definition for the special property `obj.id` (database record ID) of 
-          every web object. In the database, this property is stored as a record key,
-          separately from regular properties which are stored in a record value.
+        info: Type definition for the special property `obj.id` (database record ID) of
+          every web object. In the database, this property is stored as a record
+          key, separately from regular properties which are stored in a record
+          value.
         "@": schemat/types/type.js:ID
       __cid:
         getter: true
         repeated: true
-        info: Type definition for special properties, `obj.__cid` and `obj.__cid$`,
-          of every web object. These properties (getters) return ID(s) of the first 
+        info: Type definition for special properties, `obj.__cid` and `obj.__cid$`, of
+          every web object. These properties (getters) return ID(s) of the first
           __category, or all __category$, or the web object.
         "@": schemat/types/type.js:ID
       __category:
         info: Category of this object. Determines its behavior and the schema of its
-          properties. Each category itself is an object of the Root Category (ID=1).
+          properties. Each category itself is an object of the Root Category
+          (ID=1).
         repeated: true
         "@": schemat/types/type.js:REF
       __class:
@@ -602,13 +604,6 @@
   key_fields:
     - __cid$
     - id
-  key:
-    __cid$:
-      blank: true
-      "@": schemat/types/type.js:INTEGER
-    id:
-      "@": schemat/types/type.js:INTEGER
-    "@": schemat:Catalog
   payload: []
   __category:
     "@": 16
