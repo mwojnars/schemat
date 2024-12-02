@@ -87,7 +87,7 @@ export class Schemat {
     is_closing = false          // true if the Schemat node is in the process of shutting down
 
 
-    get root_category() { return this.registry.get(ROOT_ID) }
+    get root_category() { return this.get_object(ROOT_ID) }
     get site()          { return this.registry.get_object(this.site_id) }
 
 
