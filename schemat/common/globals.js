@@ -27,3 +27,8 @@ export const PLURAL = '$'
 // separator of subfields in a deep property path
 export const SUBFIELD = '.'
 
+
+/**********************************************************************************************************************/
+
+export function is_plural(path) { return path.endsWith(PLURAL) }
+export function truncate_plural(path) { return path.endsWith(PLURAL) ? path.slice(0, -PLURAL.length) : path }
