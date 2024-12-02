@@ -1,4 +1,4 @@
-import {PLURAL} from "../common/globals.js";
+import {is_plural, truncate_plural} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
 import {Catalog} from "../core/catalog.js";
 import {BinaryMap} from "../common/binary.js"
@@ -99,7 +99,15 @@ export class ObjectIndex extends Index {
         /* A catalog of {field: type} pairs generated from `key_fields` field names. */
         // return this.__data.get('key')
         let schema = this.category?.schema || schemat.root_category['defaults.schema']
-        let entries = this.key_fields.map(field => [field, schema.get(field)])
+        // print('schema:', schema)
+
+        let entries = []
+        for (let field of this.key_fields) {
+            field = truncate_plural(field)
+            let type = schema.get(field)
+            if (!type) throw new Error(`unknown field in key_fields: ${field}`)
+        }
+
         print('impute_key():', entries)
         return new Catalog(entries)
     }
@@ -139,7 +147,7 @@ export class ObjectIndex extends Index {
         let field_values = []
 
         for (let field of this.record_schema.key_fields) {
-            let plural = field.endsWith(PLURAL)
+            let plural = is_plural(field)
             let values = obj[field]
 
             if (!plural) values = (values !== undefined) ? [values] : undefined
