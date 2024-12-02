@@ -106,6 +106,7 @@ export class ObjectIndex extends Index {
             field = truncate_plural(field)
             let type = schema.get(field)
             if (!type) throw new Error(`unknown field in key_fields: ${field}`)
+            entries.push([field, type])
         }
 
         print('impute_key():', entries)

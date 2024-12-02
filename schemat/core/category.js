@@ -201,7 +201,7 @@ export class RootCategory extends Category {
         /* In RootCategory, this == this.__category, and to avoid infinite recursion we must perform schema inheritance manually. */
         let root_fields = this.__data.get('schema')
         let default_fields = this.__data.get('defaults').get('schema')
-        let fields = new Catalog(root_fields, default_fields)
+        let fields = new Catalog([...root_fields, ...default_fields])
         let custom = this.__data.get('allow_custom_fields')
         return new SCHEMA({fields: fields.object(), strict: custom !== true})
     }
