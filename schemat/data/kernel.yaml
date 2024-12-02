@@ -587,6 +587,9 @@
   name: idx_objects_category
   info: "Index of all objects by their category: the key is [category ID, item
     ID], no payload."
+  key_fields:
+    - __cid$
+    - id
   key:
     __cid$:
       blank: true
@@ -608,6 +611,8 @@
         output records. If missing, this property is computed dynamically with
         impute_key() method of the Operator subclass.
       impute: impute_key
+      key_type:
+        "@": schemat/types/type.js:STRING
       value_type:
         "@": schemat/types/type.js:TYPE
       "@": schemat/types/catalog_type.js:CATALOG
