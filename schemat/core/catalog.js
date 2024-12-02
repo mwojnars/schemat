@@ -391,33 +391,13 @@ export class Catalog {
     _keys    = new Map()        // for each not-null key, an array of positions in _entries where this key occurs, sorted (!)
 
 
-    // constructor(...entries) {
-    //     /* Each argument can be a Catalog, or an object whose attributes will be used as entries,
-    //        or a [key, value] pair, or an array of [key, value] pairs.
-    //      */
-    //     entries = entries.map(ent =>
-    //                     (ent instanceof Catalog) ? ent._entries
-    //                     : T.isPOJO(ent) ? Object.entries(ent)
-    //                     : T.isArray(ent) ? [ent.slice(0,2)]
-    //                     : ent
-    //                 )
-    //     this.init(entries.flat(), true)
-    // }
-
     constructor(entries) {
         /* Constructor takes a single optional argument that is iterable and yields [key, value] pairs,
            matching the Map constructor interface.
          */
         if (entries == null) return this.init()
-        
         if (entries instanceof Catalog) return this.init(entries._entries)
         if (T.isPOJO(entries)) entries = Object.entries(entries)
-        
-        // ensure entries is iterable and convert to array of [key, value] pairs
-        entries = Array.from(entries || [], entry => 
-            Array.isArray(entry) ? entry.slice(0, 2) : entry
-        )
-        
         return this.init(entries, true)
     }
 
