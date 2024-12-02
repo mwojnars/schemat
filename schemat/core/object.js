@@ -735,9 +735,16 @@ export class WebObject {
                 if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop}) in object [${this.id}]`)
             }
 
-            entry[1] = type.validate(entry[1])              // may raise an exception
-            // let newval = type.validate(entry[1])
-            // if (post_setup) entry[1] = newval
+            try {
+                entry[1] = type.validate(entry[1])              // may raise an exception
+                // let newval = type.validate(entry[1])
+                // if (post_setup) entry[1] = newval
+            }
+            catch (ex) {
+                // add name of the property to the exception message
+                ex.message = `invalid value for property ${prop} in object [${this.id}]: ${ex.message}`
+                throw ex
+            }
         }
 
         // check multi-field constraints ...
