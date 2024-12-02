@@ -736,9 +736,8 @@ export class WebObject {
                 if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop}) in object [${this.id}]`)
             }
 
-            if (type.options.getter) value = undefined      // value of a virtual property shall not be stored
-
             try {
+                if (type.options.getter) throw new ValueError(`"getter" property cannot be stored explicitly`)
                 entry[1] = type.validate(value)             // may raise an exception
                 // let newval = type.validate(value)
                 // if (post_setup) entry[1] = newval
