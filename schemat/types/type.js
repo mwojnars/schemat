@@ -407,7 +407,6 @@ export class ID extends INTEGER {
     /* Database ID of an object. */
     static options = {
         min: 1,
-        blank: true,
     }
 }
 
