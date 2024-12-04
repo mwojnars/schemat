@@ -133,7 +133,7 @@ export class Block extends WebObject {
 /**********************************************************************************************************************/
 
 export class DataBlock extends Block {
-    /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
+    /* A Block that stores objects and provides the "insert" operation. */
 
     static __category = 19
 
