@@ -191,6 +191,7 @@ export class Database extends WebObject {
 
     get rings()             { return this._rings }      // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
     get rings_reversed()    { return this._rings.toReversed() }
+    get bottom_ring()       { return this.rings[0] }
 
     async open(ring_specs) {
         /* After create(), create all rings according to `ring_specs` specification. */
@@ -289,6 +290,9 @@ export class Database extends WebObject {
         return new DataRequest(this, 'delete', {id}).forward_down()
     }
 
+
+    /***  Indexes  ***/
+
     async *scan_index(name, {offset, limit, ...opts} = {}) {
         /* Yield a stream of plain Records from the index, merge-sorted from all the rings. */
         let streams = this.rings.map(r => r.scan_index(name, opts))
@@ -317,6 +321,16 @@ export class Database extends WebObject {
     //     let streams = this.rings.map(r => r.scan_all())
     //     yield* merge(WebObject.compare, ...streams)
     // }
+
+    async create_index(name, key, payload = null, {ring}) {
+        // create an abstract index specification
+        let ObjectIndex = await schemat.import('/$/sys/ObjectIndex')
+        let index = ObjectIndex.create()
+
+        // insert `index` to `ring`
+        ring ??= this.bottom_ring
+
+    }
 
     async rebuild_indexes() {
         for (let ring of this.rings)
