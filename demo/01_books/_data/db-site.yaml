@@ -16,16 +16,13 @@
     "@": 1002
   cluster:
     "@": 1025
+  eval_allowed: true
   __category:
     "@": 2
 - __id: 1002
   name: database
   top_ring:
     "@": 1016
-  rings:
-    - "@": 1003
-    - "@": 1004
-    - "@": 1016
   __category:
     "@": 11
 - __id: 1003
@@ -242,7 +239,7 @@
   filename: ./schemat/data/kernel.index.jl
   format: index-jl
   __category:
-    "@": 20
+    "@": 19
 - __id: 1027
   ring:
     "@": 1004
@@ -269,7 +266,7 @@
   filename: ./demo/01_books/_data/db-app.index.jl
   format: index-jl
   __category:
-    "@": 20
+    "@": 19
 - __id: 1032
   sequence:
     "@": 1027
@@ -284,4 +281,4 @@
   filename: ./demo/01_books/_data/db-site.index.jl
   format: index-jl
   __category:
-    "@": 20
+    "@": 19
