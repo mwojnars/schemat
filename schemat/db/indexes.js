@@ -92,11 +92,11 @@ export class ObjectIndex extends Index {
        a subset of object properties.
      */
 
-    category            // category of objects allowed in this index; obligatory if `key_fields` are present instead of `key`
+    category            // category of objects allowed in this index; obligatory if `key_fields` is present instead of `key_spec`
     key_fields
 
-    impute_key() {
-        /* A catalog of {field: type} pairs generated from `key_fields` field names. */
+    impute_key_spec() {
+        /* A catalog of {field: type} pairs generated from `key_fields` array of field names. */
         let schema = this.category?.schema || schemat.root_category['defaults.schema']
         // print('schema:', schema)
 
@@ -104,11 +104,9 @@ export class ObjectIndex extends Index {
         for (let field of this.key_fields) {
             field = truncate_plural(field)
             let type = schema.get(field)
-            if (!type) throw new Error(`unknown field in key_fields: ${field}`)
+            if (!type) throw new Error(`unknown field in 'key_fields': ${field}`)
             entries.push([field, type])
         }
-
-        print('impute_key():', entries)
         return new Catalog(entries)
     }
 
