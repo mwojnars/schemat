@@ -21,7 +21,7 @@ export class Ring extends WebObject {
 
     data_sequence           // DataSequence containing all primary data of this ring
     index_sequence          // IndexSequence containing all indexes of this ring ordered by index ID and concatenated; each record key is prefixed with its index's ID
-    indexes = new Catalog() // {name: Index} definitions of all indexes in this ring
+    indexes                 // {name: Index} definitions of all indexes in this ring
 
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
@@ -36,9 +36,10 @@ export class Ring extends WebObject {
 
     get all_indexes() {
         /* A catalog of all indexes in the entire ring stack (lower rings + this one). */
-        if (!this.lower_ring) return this.indexes
+        if (!this.lower_ring) return this.indexes || new Catalog()
+        assert(this.lower_ring.is_loaded())
         let lower = this.lower_ring.all_indexes || []
-        return this.indexes ? new Catalog([...lower, ...this.indexes]) : lower
+        return new Catalog([...lower, ...(this.indexes || [])])
     }
 
     get index_instances() {
@@ -79,6 +80,8 @@ export class Ring extends WebObject {
         /* Initialize the ring after it's been loaded from DB. */
         if (CLIENT) return
         print(`... ring loaded [${this.__id}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
+
+        await this.lower_ring?.load()
         await this.data_sequence.load()
         await this.index_sequence.load()
         // await this.rebuild_indexes()
