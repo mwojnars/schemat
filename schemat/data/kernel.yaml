@@ -533,10 +533,10 @@
       info: Optional reference to a category object. If present, only the objects
         belonging to this category are included in the index.
       "@": schemat/types/type.js:REF_CATEGORY
-    key_fields:
-      info: Names of object properties to be included in the (compound) key of this
-        index. Plural names (xyz$), as well as deep paths (x.y.z, x.y.z$) are
-        allowed.
+    key:
+      info: Array of names of object properties to be included in the (compound) key
+        of this index. Plural names (xyz$), as well as deep paths (x.y.z,
+        x.y.z$) are allowed.
       type:
         "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
@@ -601,7 +601,7 @@
   name: idx_objects_category
   info: "Index of all objects by their category: the key is [category ID, item
     ID], no payload."
-  key_fields:
+  key:
     - __cid$
     - id
   payload: []
