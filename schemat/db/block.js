@@ -65,7 +65,7 @@ export class Block extends WebObject {
             throw new Error(`[${this.__id}] unsupported storage type, '${format}', for ${this.filename}`)
 
         this._storage = new storage_class(this.filename, this)
-        this._autoincrement = await this._storage.open() || 1
+        return this._storage.open()
     }
 
     async cmd_get(req)      { return this._storage.get(req.args.key) }
@@ -102,7 +102,6 @@ export class Block extends WebObject {
 
     async erase() {
         /* Remove all records from this block. */
-        this._autoincrement = 1
         await this._storage.erase()
         return this._flush()
     }
@@ -125,6 +124,18 @@ export class Block extends WebObject {
         return this._storage.flush()
     }
 
+    // propagate() {
+    //     /* For now, there's NO propagation from index blocks, only from data blocks (see below). */
+    // }
+}
+
+
+/**********************************************************************************************************************/
+
+export class DataBlock extends Block {
+    /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
+
+    static __category = 19
 
     _autoincrement = 1      // current maximum ID of records in this block; a new record is assigned id=_autoincrement+1 unless insert_mode='compact';
                             // transient field: NOT saved in the block's configuration in DB but re-initialized during block instantiation
@@ -133,9 +144,9 @@ export class Block extends WebObject {
     insert_mode             // if `compact`, new objects are inserted at the lowest possible ID in the block, possibly below _autoincrement; requires MemoryStorage
 
 
-    // async __init__() {
-    //     this._autoincrement = await super.__init__() || 1
-    // }
+    async __init__() {
+        this._autoincrement = await super.__init__() || 1
+    }
 
     async assert_unique(id, msg) {
         let key = this.sequence.encode_key(id)
@@ -311,11 +322,11 @@ export class Block extends WebObject {
         // return this.cmd_del(req)                    // perform the delete
     }
 
-    // async erase(req) {
-    //     /* Remove all records from this sequence; open() should be called first. */
-    //     this._autoincrement = 1
-    //     return super.erase(req)
-    // }
+    async erase(req) {
+        /* Remove all records from this sequence; open() should be called first. */
+        this._autoincrement = 1
+        return super.erase(req)
+    }
 
     async propagate_change(key, obj_old = null, obj_new = null) {
         /* Push a change from this data block to all indexes in the ring. */
@@ -323,10 +334,6 @@ export class Block extends WebObject {
         for (let index of this.ring.index_instances.values())
             index.change(key, obj_old, obj_new)             // no need to await, the result is not used by the caller
     }
-}
-
-
-export class DataBlock extends Block {
 }
 
 
