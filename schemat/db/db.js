@@ -332,10 +332,10 @@ export class Database extends WebObject {
     //     yield* merge(WebObject.compare, ...streams)
     // }
 
-    async create_index(name, key, payload = null, {ring}) {
+    async create_index(name, key, payload = undefined, {ring}) {
         // create an abstract index specification
         let DataIndex = await schemat.import('/$/sys/DataIndex')
-        let index = DataIndex.create()
+        let index = DataIndex.create(name, key, payload)
 
         // insert `index` to `ring`
         ring ??= this.bottom_ring

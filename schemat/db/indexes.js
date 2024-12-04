@@ -5,6 +5,7 @@ import {BinaryMap} from "../common/binary.js"
 import {Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
+import {DataBlock} from "./block.js";
 
 
 // Section, Block, Partition ... Aggregate
@@ -101,6 +102,12 @@ export class DataIndex extends Index {
 
     category            // category of objects allowed in this index; obligatory if `key` is present instead of `key_spec`
     key
+
+    __new__(name, key, payload) {
+        this.name = name
+        this.key = key
+        this.payload = payload
+    }
 
     impute_key_spec() {
         /* A catalog of {field: type} pairs generated from `key` array of field names. */
