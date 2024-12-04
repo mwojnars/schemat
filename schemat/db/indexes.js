@@ -97,7 +97,6 @@ export class ObjectIndex extends Index {
 
     impute_key() {
         /* A catalog of {field: type} pairs generated from `key_fields` field names. */
-        // return this.__data.get('key')
         let schema = this.category?.schema || schemat.root_category['defaults.schema']
         // print('schema:', schema)
 

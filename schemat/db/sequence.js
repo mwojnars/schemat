@@ -252,7 +252,7 @@ export class Operator extends WebObject {
 
     get record_schema() {
         /* RecordSchema that defines the schema (key and payload) of output records produced by this operator. */
-        return new RecordSchema(this.key, this.payload)
+        return new RecordSchema(this.key_spec, this.payload)
     }
 
     async* scan(sequence, opts = {}) {
