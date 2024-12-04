@@ -14,7 +14,7 @@ import {Operator} from "./sequence.js";
 
 export class Derived extends Operator {
     /* Base class for specifications of derived data streams: indexes, aggregations, joins.
-       A given specification can be applied to multiple different physical source sequences residing in different rings.
+       A Derived specification can be applied to multiple different physical source sequences residing in different rings.
      */
 }
 
@@ -22,7 +22,6 @@ export class Index extends Derived {
     /* Sequence of records consisting of a binary `key` and a json `value`. The sequence is sorted by the key and
        allows to retrieve the value for a given key or range of keys.
      */
-    static role = 'index'       // for use in ProcessingStep and DataRequest
 
     // source                      // Sequence that this index is derived from
     //

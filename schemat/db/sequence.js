@@ -248,7 +248,7 @@ export class DataSequence extends Sequence {
 /**********************************************************************************************************************/
 
 export class Operator extends WebObject {
-    /* Abstract specification of a data operator and the schema of its output records. */
+    /* Abstract specification of a data operator: the schema of its output records, and its basic methods (scan/min/max). */
 
     get record_schema() {
         /* RecordSchema that defines the schema (key and payload) of output records produced by this operator. */
@@ -266,6 +266,9 @@ export class Operator extends WebObject {
         for await (let [key, value] of sequence.scan_binary({...opts, start, stop}))
             yield Record.binary(rschema, key, value)
     }
+
+    // async min(seq)
+    // async max(seq)
 }
 
 export class DataOperator extends Operator {
