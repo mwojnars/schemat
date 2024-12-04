@@ -115,6 +115,10 @@
       "@": 26
     ObjectSpace:
       "@": 8
+    Index:
+      "@": 15
+    DataIndex:
+      "@": 16
     "@": schemat:Catalog
   __container:
     "@": 1019
