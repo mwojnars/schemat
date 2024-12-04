@@ -235,6 +235,12 @@ export class Database extends WebObject {
         this._rings = rings.reverse()
     }
 
+    async locate_ring(ring_or_id) {
+        /* Return the position [0,1,...] in `rings` of the top-most ring with a given ID. */
+        let id = Number.isInteger(ring_or_id) ? ring_or_id : ring_or_id.id
+        return this.rings.findLastIndex(ring => ring.id === id)
+    }
+
     async find_ring_name(name) {
         /* Return the top-most ring with a given `name`, or undefined if not found. Can be called to check if a ring name exists. */
         return this.rings_reversed.find(ring => ring.name === name)
