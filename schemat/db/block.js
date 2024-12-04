@@ -22,8 +22,8 @@ function createFileIfNotExists(filename, fs) {
  */
 
 export class Block extends WebObject {
-    /* A continuous subrange of records of a data/index sequence, physically located on a single machine.
-       Records are arranged by key using byte order. Unit of data replication and distribution (TODO).
+    /* A continuous subrange of key-value records of a data/index sequence, physically located on a single machine.
+       A unit of data replication, distribution and concurrency. Records are arranged by key using byte order.
      */
     static role = 'block'   // for use in ProcessingStep and DataRequest
 
@@ -123,10 +123,6 @@ export class Block extends WebObject {
         this._pending_flush = false
         return this._storage.flush()
     }
-
-    // propagate() {
-    //     /* For now, there's NO propagation from index blocks, only from data blocks (see below). */
-    // }
 }
 
 
