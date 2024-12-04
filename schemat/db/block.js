@@ -336,10 +336,6 @@ export class DataBlock extends Block {
     }
 }
 
-export class IndexBlock extends Block {
-    static __category = 20
-}
-
 
 /**********************************************************************************************************************
  **

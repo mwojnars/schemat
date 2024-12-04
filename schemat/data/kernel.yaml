@@ -575,16 +575,6 @@
     "@": 18
   __category:
     "@": 1
-- __id: 20
-  name: IndexBlock
-  info: Block of an Index sequence.
-  class: schemat/db/block.js:IndexBlock
-  schema:
-    "@": schemat:Catalog
-  __prototype:
-    "@": 18
-  __category:
-    "@": 1
 - __id: 21
   name: Node
   __category:
