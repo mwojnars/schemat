@@ -249,7 +249,7 @@ export class DataSequence extends Sequence {
 /**********************************************************************************************************************/
 
 export class Operator extends WebObject {
-    /* Abstract specification of a data operator (stream) and the schema of its records. */
+    /* Abstract specification of a data operator and the schema of its output records. */
 
     get record_schema() {
         /* RecordSchema that defines the schema (key and payload) of output records produced by this operator. */
@@ -270,7 +270,7 @@ export class Operator extends WebObject {
 }
 
 export class DataOperator extends Operator {
-    /* Operator that scans the main data sequence. */
+    /* Special type of Operator that has no source and represents the main data sequence. */
 
     record_schema = data_schema
 }
