@@ -1,6 +1,6 @@
 import {Record, data_schema, RecordSchema} from "./records.js";
 import {assert, print} from "../common/utils.js";
-import {DataBlock, IndexBlock} from "./block.js";
+import {DataBlock} from "./block.js";
 import {WebObject} from "../core/object.js";
 import {BinaryInput} from "../common/binary.js";
 import {INTEGER} from "../types/type.js";
@@ -109,13 +109,12 @@ export class Sequence extends WebObject {
 /**********************************************************************************************************************/
 
 export class IndexSequence extends Sequence {
-    /* A Sequence composed of IndexBlock type of blocks. */
     static __category = 22
 
     __new__(ring, filename) {
         super.__new__(ring)
         assert(filename.endsWith('.jl'))
-        this.blocks = [IndexBlock.new(this, filename)]
+        this.blocks = [DataBlock.new(this, filename)]
 
         // let {IndexBlock} = this.__category.preloaded
         // let IndexBlock = await this.__category.import('./IndexBlock')

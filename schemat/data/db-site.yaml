@@ -229,7 +229,7 @@
   filename: ./schemat/data/kernel.index.jl
   format: index-jl
   __category:
-    "@": 20
+    "@": 19
 - __id: 1027
   ring:
     "@": 1004
@@ -256,7 +256,7 @@
   filename: ./schemat/data/db-app.index.jl
   format: index-jl
   __category:
-    "@": 20
+    "@": 19
 - __id: 1032
   sequence:
     "@": 1027
@@ -271,4 +271,4 @@
   filename: ./schemat/data/db-site.index.jl
   format: index-jl
   __category:
-    "@": 20
+    "@": 19
