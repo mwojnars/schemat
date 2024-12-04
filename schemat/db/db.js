@@ -334,8 +334,8 @@ export class Database extends WebObject {
 
     async create_index(name, key, payload = null, {ring}) {
         // create an abstract index specification
-        let ObjectIndex = await schemat.import('/$/sys/ObjectIndex')
-        let index = ObjectIndex.create()
+        let DataIndex = await schemat.import('/$/sys/DataIndex')
+        let index = DataIndex.create()
 
         // insert `index` to `ring`
         ring ??= this.bottom_ring

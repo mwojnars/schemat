@@ -525,7 +525,7 @@
   __category:
     "@": 1
 - __id: 16
-  name: ObjectIndex
+  name: DataIndex
   info: An index that receives record updates from the main data sequence, so
     input records represent objects.
   schema:
@@ -541,7 +541,7 @@
         "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
     "@": schemat:Catalog
-  class: schemat/db/indexes.js:ObjectIndex
+  class: schemat/db/indexes.js:DataIndex
   __prototype:
     "@": 15
   __category:
