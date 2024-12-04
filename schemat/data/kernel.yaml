@@ -598,7 +598,6 @@
   key:
     - __cid$
     - id
-  payload: []
   __category:
     "@": 16
 - __id: 24

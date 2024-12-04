@@ -235,18 +235,16 @@ export class Database extends WebObject {
         this._rings = rings.reverse()
     }
 
-    async find_ring({id, name}) {
-        /* Return the top-most ring that has a given object `id` in DB, or a given `name`.
-           Return undefined if not found. Can be called to check if an item ID or a ring name exists.
-         */
+    async find_ring_name(name) {
+        /* Return the top-most ring with a given `name`, or undefined if not found. Can be called to check if a ring name exists. */
+        return this.rings_reversed.find(ring => ring.name === name)
+    }
+
+    async find_ring_containing(id) {
+        /* Return the top-most ring that contains a given object `id`, or undefined if not found. */
         let req = new DataRequest(this, 'get', {id})
-        for (const ring of this.rings_reversed) {
-            if (name && ring.name === name) return ring
-            if (id) {
-                let data = await ring.handle(req.clone())
-                if (data !== undefined) return ring
-            }
-        }
+        for (let ring of this.rings_reversed)
+            if (await ring.handle(req.clone()) !== undefined) return ring
     }
 
 
@@ -275,7 +273,7 @@ export class Database extends WebObject {
         let req = new DataRequest(this, 'insert', {data})
 
         if (ring_name) {                                            // find the ring by name
-            ring = await this.find_ring({name: ring_name})
+            ring = await this.find_ring_name(ring_name)
             if (!ring) return req.error_access(`target ring not found: '${ring_name}'`)
         }
         else if (!ring) {
@@ -333,13 +331,18 @@ export class Database extends WebObject {
     // }
 
     async create_index(name, key, payload = undefined, {ring}) {
-        // create an abstract index specification
-        let DataIndex = await schemat.import('/$/sys/DataIndex')
-        let index = DataIndex.create(name, key, payload)
-
-        // insert `index` to `ring`
+        if (ring && !this.rings.includes(ring)) throw new Error(`ring not found in the database: ${ring}`)
         ring ??= this.bottom_ring
+        
+        let DataIndex = await schemat.import('/$/sys/DataIndex')
+        let index = DataIndex.create(name, key, payload)            // create index specification
 
+        index = await index.save({ring, reload: true})              // insert `index` to `ring`
+        await ring.add_index(index)
+
+        // spawn the rebuild process of `index` in `ring` and all the higher rings
+        let pos = this.rings.indexOf(ring)
+        await ring.rebuild(index)
     }
 
     async rebuild_indexes() {
