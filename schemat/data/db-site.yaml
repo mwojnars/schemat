@@ -45,10 +45,6 @@
     "@": 1027
   index_sequence:
     "@": 1028
-  indexes:
-    idx_objects_category:
-      "@": 23
-    "@": schemat:Catalog
   readonly: false
   start_id: 1001
   stop_id: 5000
@@ -161,10 +157,6 @@
     "@": 1017
   index_sequence:
     "@": 1018
-  indexes:
-    idx_objects_category:
-      "@": 23
-    "@": schemat:Catalog
   readonly: false
   start_id: 5000
   stop_id: null
