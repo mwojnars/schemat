@@ -12,7 +12,13 @@ import {Operator} from "./sequence.js";
 
 /**********************************************************************************************************************/
 
-export class Index extends Operator {
+export class Derived extends Operator {
+    /* Base class for specifications of derived data streams: indexes, aggregations, joins.
+       A given specification can be applied to multiple different physical source sequences residing in different rings.
+     */
+}
+
+export class Index extends Derived {
     /* Sequence of records consisting of a binary `key` and a json `value`. The sequence is sorted by the key and
        allows to retrieve the value for a given key or range of keys.
      */
@@ -33,7 +39,9 @@ export class Index extends Operator {
 
     change(sequence /*Sequence or Subsequence*/, key, prev, next) {
         /* Update this index on the target `sequence` to apply a [prev > next] change that originated
-           in the source sequence of this index. `prev` and `next` are source-sequence entities: objects or records. */
+           in the source sequence of this index. `prev` and `next` are source-sequence entities: objects or records.
+           Missing 'prev' represents insertion; missing `next` represents deletion.
+         */
 
         // print(`change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
         // let sequence = ring.get_sequence('index', this.id)

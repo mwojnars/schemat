@@ -249,6 +249,7 @@ export class DataSequence extends Sequence {
 /**********************************************************************************************************************/
 
 export class Operator extends WebObject {
+    /* Abstract specification of a data operator (stream) and the schema of its records. */
 
     get record_schema() {
         /* RecordSchema that defines the schema (key and payload) of output records produced by this operator. */
