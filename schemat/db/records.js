@@ -137,8 +137,9 @@ export class RecordSchema {
     get key_types()     { return this._key_types || (this._key_types = [...this.key.values()]) }
 
     constructor(key, payload = []) {
+        assert(key?.size > 0, `key is empty`)
         this.key = key
-        this.payload = payload
+        this.payload = payload || []
     }
 
     has_payload() { return !!this.payload?.length }     // true if payload part is present in records
