@@ -5,7 +5,6 @@ import {BinaryMap} from "../common/binary.js"
 import {Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
-import {DataBlock} from "./block.js";
 
 
 // Section, Block, Partition ... Aggregate
