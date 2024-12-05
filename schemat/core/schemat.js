@@ -356,7 +356,7 @@ export class Schemat {
         // set provisional IDs so that cross-references to these objects are properly resolved in the DB when creating data records
         objects.forEach((obj, i) => obj.__self.__provisional_id = i+1)      // 1, 2, 3, ...
 
-        let {reload, ...opts} = opts_
+        let {reload = true, ...opts} = opts_
         let data = objects.map(obj => obj.__data.__getstate__())
         let records = await this.site.POST.insert({data, opts})
         records.map(({id}, i) => {
@@ -373,7 +373,7 @@ export class Schemat {
 
     async save(objects, opts_ = {}) {
         /* Save changes in multiple objects all at once (concurrently). */
-        let {reload, ...opts} = opts_
+        let {reload = true, ...opts} = opts_
         return Promise.all(objects.map(obj => {
             let save = obj?.save(opts)
             return reload ? save?.then(() => obj.reload()) : save
