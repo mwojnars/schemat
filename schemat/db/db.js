@@ -35,18 +35,18 @@ export class Ring extends WebObject {
     start_id = 0
     stop_id
 
-    get all_indexes() {
-        /* A catalog of all indexes in the entire ring stack (lower rings + this one). */
+    get all_index_specs() {
+        /* A catalog of all index specifications in the entire ring stack (lower rings + this one). */
         if (!this.lower_ring) return this.index_specs || new Catalog()
         assert(this.lower_ring.is_loaded())
-        let lower = this.lower_ring.all_indexes || []
+        let lower = this.lower_ring.all_index_specs || []
         return new Catalog([...lower, ...(this.index_specs || [])])
     }
 
     get index_instances() {
-        /* {id: IndexInstance} map of index instances within this particular ring, one for each abstract index in `index_specs`. */
+        /* {id: IndexInstance} map of indexes within this particular ring, one for each index definition in `index_specs`. */
         let instances = new Map()
-        for (let index of this.all_indexes.values()) {
+        for (let index of this.all_index_specs.values()) {
             let seq = new Subsequence(index.id, this.index_sequence)
             let idx = new IndexInstance(index, seq)
             instances.set(index.id, idx)
@@ -87,7 +87,7 @@ export class Ring extends WebObject {
         await this.index_sequence.load()
         // await this.rebuild_indexes()
 
-        for (let index of this.all_indexes.values())
+        for (let index of this.all_index_specs.values())
             await index.load()
     }
 
@@ -153,7 +153,7 @@ export class Ring extends WebObject {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
-        let index = this.all_indexes.get(name)              // Index
+        let index = this.all_index_specs.get(name)          // Index
         let insta = this.index_instances.get(index.id)      // IndexInstance
         yield* insta.scan({start, stop, limit, reverse, batch_size})
     }
