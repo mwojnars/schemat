@@ -43,8 +43,8 @@ export class Ring extends WebObject {
         return new Catalog([...lower, ...(this.index_specs || [])])
     }
 
-    get index_instances() {
-        /* {id: IndexInstance} map of indexes within this particular ring, one for each index definition in `index_specs`. */
+    get indexes() {
+        /* {id: IndexInstance} map of indexes within this particular ring, one for each definition in `index_specs`. */
         let instances = new Map()
         for (let index of this.all_index_specs.values()) {
             let seq = new Subsequence(index.id, this.index_sequence)
@@ -153,9 +153,9 @@ export class Ring extends WebObject {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
-        let index = this.all_index_specs.get(name)          // Index
-        let insta = this.index_instances.get(index.id)      // IndexInstance
-        yield* insta.scan({start, stop, limit, reverse, batch_size})
+        let spec  = this.all_index_specs.get(name)          // Index
+        let index = this.indexes.get(spec.id)               // IndexInstance
+        yield* index.scan({start, stop, limit, reverse, batch_size})
     }
 
     async* scan_all() {
@@ -169,7 +169,7 @@ export class Ring extends WebObject {
         /* Rebuild all indexes by making a full scan of the data sequence. */
         await this.index_sequence.erase()
         for await (let {id, data} of this.scan_all()) {
-            for (let index of this.index_instances.values()) {
+            for (let index of this.indexes.values()) {
                 let key = data_schema.encode_key([id])
                 let obj = await WebObject.from_data(id, data, {activate: false})
                 await index.change(key, null, obj)
