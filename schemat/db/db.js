@@ -21,7 +21,8 @@ export class Ring extends WebObject {
 
     data_sequence           // DataSequence containing all primary data of this ring
     index_sequence          // IndexSequence containing all indexes of this ring ordered by index ID and concatenated; each record key is prefixed with its index's ID
-    indexes                 // {name: Index} definitions of all indexes in this ring
+
+    index_specs             // specification of all indexes in this ring, as {name: Index}
 
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
@@ -36,14 +37,14 @@ export class Ring extends WebObject {
 
     get all_indexes() {
         /* A catalog of all indexes in the entire ring stack (lower rings + this one). */
-        if (!this.lower_ring) return this.indexes || new Catalog()
+        if (!this.lower_ring) return this.index_specs || new Catalog()
         assert(this.lower_ring.is_loaded())
         let lower = this.lower_ring.all_indexes || []
-        return new Catalog([...lower, ...(this.indexes || [])])
+        return new Catalog([...lower, ...(this.index_specs || [])])
     }
 
     get index_instances() {
-        /* {id: IndexInstance} map of index instances within this particular ring, one for each abstract index in `indexes`. */
+        /* {id: IndexInstance} map of index instances within this particular ring, one for each abstract index in `index_specs`. */
         let instances = new Map()
         for (let index of this.all_indexes.values()) {
             let seq = new Subsequence(index.id, this.index_sequence)
@@ -346,9 +347,10 @@ export class Database extends WebObject {
         index = await index.save({ring, reload: true})              // insert `index` to `ring`
         await ring.add_index(index)
 
-        // spawn the rebuild process of `index` in `ring` and all the higher rings
-        let pos = this.rings.indexOf(ring)
-        await ring.rebuild(index)
+        // spawn the rebuild process of `index` in `ring` and all higher rings
+        let pos = this.locate_ring(ring)
+        for (let i = pos; i < this.rings.length; i++)
+            this.rings[i].rebuild(index)
     }
 
     async rebuild_indexes() {

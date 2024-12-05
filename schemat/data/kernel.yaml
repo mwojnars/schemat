@@ -474,8 +474,8 @@
       category:
         "@": 22
       "@": schemat/types/type.js:REF
-    indexes:
-      info: Map of Indexes and their names
+    index_specs:
+      info: Specification of Indexes available in this ring and the rings above.
       value_type:
         "@": schemat/types/type.js:REF
       "@": schemat/types/catalog_type.js:CATALOG

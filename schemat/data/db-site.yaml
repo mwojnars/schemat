@@ -27,7 +27,7 @@
     "@": 1012
   index_sequence:
     "@": 1013
-  indexes:
+  index_specs:
     idx_objects_category:
       "@": 23
     "@": schemat:Catalog
