@@ -185,7 +185,7 @@ export class Subsequence {
 }
 
 export class IndexInstance {
-    /* Thin wrapper around an (abstract) Index that attaches it to a sequence in a particular ring. Local JS object. */
+    /* Thin wrapper around an (abstract) Index definition deployed in a particular ring's sequence. Local JS object. */
 
     constructor(index, sequence) {
         this.index = index

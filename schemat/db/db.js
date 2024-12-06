@@ -22,7 +22,12 @@ export class Ring extends WebObject {
     data_sequence           // DataSequence containing all primary data of this ring
     index_sequence          // IndexSequence containing all indexes of this ring ordered by index ID and concatenated; each record key is prefixed with its index's ID
 
-    index_specs             // specification of all indexes in this ring, as {name: Index}
+    index_specs             // specification of all indexes in this ring, as {name: Index} catalog
+
+    // operators            // data operators introduced in this ring on top of the operators from the lower ring, as {name: Operator} catalog
+    // streams              // logical sequences of structured data records as produced by a particular operator in this ring, named the same as operators
+    // storage              // distributed key-value stores of different types and characteristics ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping streams outputs
+    // all_operators
 
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
@@ -163,6 +168,22 @@ export class Ring extends WebObject {
         let data = DataOperator.new()
         for await (let record of data.scan(this.data_sequence))
             yield record.decode_object()
+    }
+
+    async add_index(name, index_operator) {
+        // TODO SEC: check permissions
+        if (this.readonly) throw new Error("the ring is read-only")
+        this[`index_specs.${name}`] = index_operator
+        return this.save({broadcast: true})
+    }
+
+    async rebuild_index(index) {
+        // await index.erase()
+        for await (let {id, data} of this.scan_all()) {
+            let key = data_schema.encode_key([id])
+            let obj = await WebObject.from_data(id, data, {activate: false})
+            await index.change(key, null, obj)
+        }
     }
 
     async rebuild_indexes() {
@@ -350,7 +371,7 @@ export class Database extends WebObject {
         // spawn the rebuild process of `index` in `ring` and all higher rings
         let pos = this.locate_ring(ring)
         for (let i = pos; i < this.rings.length; i++)
-            this.rings[i].rebuild(index)
+            this.rings[i].rebuild_index(index)
     }
 
     async rebuild_indexes() {

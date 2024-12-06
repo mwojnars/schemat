@@ -910,7 +910,7 @@ export class WebObject {
         if (html) {
             cat = escape_html(cat)
             let url = this.__category?.url()
-            if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
+            if (url) cat = `<a href="${url}">${cat}</a>`          // TODO SEC: {url} should be URL-encoded or injected in a different way
         }
         let stamp = cat ? `${cat}:${this.__id}` : `${this.__id}`
         return brackets ? `[${stamp}]` : stamp
