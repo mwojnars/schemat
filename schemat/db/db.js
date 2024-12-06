@@ -51,10 +51,10 @@ export class Ring extends WebObject {
     get indexes() {
         /* {id: IndexInstance} map of indexes within this particular ring, one for each definition in `index_specs`. */
         let instances = new Map()
-        for (let index of this.all_index_specs.values()) {
+        for (let [name, index] of this.all_index_specs) {
             let seq = new Subsequence(index.id, this.index_sequence)
             let idx = new IndexInstance(index, seq)
-            instances.set(index.id, idx)
+            instances.set(name, idx)
         }
         return instances
     }
@@ -158,8 +158,7 @@ export class Ring extends WebObject {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
-        let spec  = this.all_index_specs.get(name)          // Index
-        let index = this.indexes.get(spec.id)               // IndexInstance
+        let index = this.indexes.get(name)      // IndexInstance
         yield* index.scan({start, stop, limit, reverse, batch_size})
     }
 
