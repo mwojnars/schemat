@@ -269,9 +269,7 @@ export class DataOperator extends Operator {
 /**********************************************************************************************************************/
 
 export class Stream extends WebObject {
-    /* Logical sequence of records as produced by a particular operator in a given ring.
-       Every ring is a collection of (named) streams.
-     */
+    /* Logical sequence of records produced by a particular operator and stored in a particular ring. */
     __new__(operator, sequence) {
         this.operator = operator
         this.sequence = sequence
@@ -281,7 +279,7 @@ export class Stream extends WebObject {
 }
 
 export class ObjectsStream extends Stream {
-    /* The "objects" data stream: primary stream containing web objects. */
+    /* The "objects" stream: primary data stream containing web objects. */
 }
 
 export class IndexStream extends Stream {

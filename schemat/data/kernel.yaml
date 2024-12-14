@@ -525,7 +525,7 @@
   __category:
     "@": 1
 - __id: 15
-  name: Index
+  name: IndexOperator
   info: Base category for indexes over the data sequence.
   __prototype:
     "@": 24

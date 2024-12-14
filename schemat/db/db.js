@@ -25,7 +25,7 @@ export class Ring extends WebObject {
     data_sequence           // DataSequence containing all primary data of this ring
     index_sequence          // IndexSequence containing all indexes of this ring ordered by index ID and concatenated; each record key is prefixed with its index's ID
 
-    index_specs             // specification of all indexes in this ring, as {name: Index} catalog
+    index_specs             // specification of all indexes in this ring, as {name: IndexOperator} catalog
 
     // operators            // data operators introduced in this ring on top of the operators from the lower ring, as {name: Operator} catalog
     // streams              // logical sequences of structured data records as produced by a particular operator in this ring, named the same as operators
