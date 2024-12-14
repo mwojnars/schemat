@@ -27,10 +27,8 @@ export class Ring extends WebObject {
 
     index_specs             // specification of all indexes in this ring, as {name: IndexOperator} catalog
 
-    // operators            // data operators introduced in this ring on top of the operators from the lower ring, as {name: Operator} catalog
     // streams              // logical sequences of structured data records as produced by a particular operator in this ring, named the same as operators
     // storage              // distributed key-value stores of different type and characteristic ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping stream outputs
-    // all_operators
 
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes

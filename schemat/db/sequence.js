@@ -236,8 +236,9 @@ export class DataSequence extends Sequence {
 /**********************************************************************************************************************/
 
 export class Operator extends WebObject {
-    /* Abstract specification of a data operator: the schema of its output records, and its basic methods (scan/min/max). */
-
+    /* Abstract specification of a data operator: names of its source stream(s), if any;
+       the schema of its output records; and basic read access methods (scan/min/max).
+     */
     get record_schema() {
         /* RecordSchema that defines the schema (key and payload) of output records produced by this operator. */
         return new RecordSchema(this.key_spec, this.payload)
