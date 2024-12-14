@@ -1,7 +1,7 @@
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
 import {DatabaseError} from "../common/errors.js"
 import {WebObject} from "../core/object.js"
-import {DataOperator, IndexInstance} from "./sequence.js";
+import {DataOperator, IndexStream} from "./sequence.js";
 import {data_schema, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence, IndexSequence, Subsequence} from "./sequence.js";
@@ -26,7 +26,7 @@ export class Ring extends WebObject {
 
     // operators            // data operators introduced in this ring on top of the operators from the lower ring, as {name: Operator} catalog
     // streams              // logical sequences of structured data records as produced by a particular operator in this ring, named the same as operators
-    // storage              // distributed key-value stores of different types and characteristics ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping streams outputs
+    // storage              // distributed key-value stores of different type and characteristic ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping stream outputs
     // all_operators
 
     name                    // human-readable name of this ring for find_ring()
@@ -49,11 +49,11 @@ export class Ring extends WebObject {
     }
 
     get indexes() {
-        /* {id: IndexInstance} map of indexes within this particular ring, one for each definition in `index_specs`. */
+        /* {id: IndexStream} map of indexes within this particular ring, one for each definition in `index_specs`. */
         let instances = new Map()
         for (let [name, index] of this.all_index_specs) {
             let seq = new Subsequence(index.id, this.index_sequence)
-            let idx = new IndexInstance(index, seq)
+            let idx = new IndexStream(index, seq)
             instances.set(name, idx)
         }
         return instances
@@ -158,7 +158,7 @@ export class Ring extends WebObject {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
-        let index = this.indexes.get(name)      // IndexInstance
+        let index = this.indexes.get(name)      // IndexStream
         yield* index.scan({start, stop, limit, reverse, batch_size})
     }
 

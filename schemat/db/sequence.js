@@ -184,18 +184,6 @@ export class Subsequence {
     }
 }
 
-export class IndexInstance {
-    /* Thin wrapper around an (abstract) Index definition deployed in a particular ring's sequence. Local JS object. */
-
-    constructor(index, sequence) {
-        this.index = index
-        this.sequence = sequence
-    }
-    change(key, prev, next) { return this.index.change(this.sequence, key, prev, next) }
-    async* scan(opts)       { yield* this.index.scan(this.sequence, opts) }
-}
-
-
 /**********************************************************************************************************************/
 
 export class DataSequence extends Sequence {
@@ -275,6 +263,25 @@ export class DataOperator extends Operator {
     /* Special type of Operator that has no source and represents the main data sequence. */
 
     record_schema = data_schema
+}
+
+
+/**********************************************************************************************************************/
+
+export class Stream {
+    /* Logical sequence of records as produced by a particular operator in a given ring. */
+}
+
+export class IndexStream extends Stream {
+    /* Index deployed in a particular ring's sequence. */
+
+    constructor(index, sequence) {
+        super()
+        this.index = index
+        this.sequence = sequence
+    }
+    change(key, prev, next) { return this.index.change(this.sequence, key, prev, next) }
+    async* scan(opts)       { yield* this.index.scan(this.sequence, opts) }
 }
 
 
