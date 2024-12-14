@@ -4,7 +4,7 @@ import {WebObject} from "../core/object.js"
 import {DataOperator, IndexStream} from "./sequence.js";
 import {data_schema, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
-import {DataSequence, IndexSequence, Subsequence} from "./sequence.js";
+import {DataSequence, IndexSequence} from "./sequence.js";
 import {Catalog} from "../core/catalog.js";
 
 
@@ -55,9 +55,7 @@ export class Ring extends WebObject {
         /* {id: IndexStream} map of indexes within this particular ring, one for each definition in `index_specs`. */
         let instances = new Map()
         for (let [name, index] of this.all_index_specs) {
-            // let seq = new Subsequence(index.id, this.index_sequence)
-            // let idx = IndexStream.new(index, seq)
-            let idx = IndexStream.new(index, this.index_sequence)
+            let idx = IndexStream.new(this, index)
             instances.set(name, idx)
             // print(`\n[${this.name}]/${name}:`)
             // print(idx.__json)
