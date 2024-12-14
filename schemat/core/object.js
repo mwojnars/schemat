@@ -407,14 +407,28 @@ export class WebObject {
             return RootCategory.stub(id, opts)
 
         let obj = new this(false, id, opts)
+
+        if (opts.data || opts.categories) {
+            let categories = opts.categories?.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat) || []
+            obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
+        }
         return obj.__proxy = Intercept.wrap(obj)
     }
 
-    static _create(categories = [], ...args) {
+    static _create(categories = [], data) {
         /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
-        let obj = this.stub(null, {mutable: true})          // newly-created objects are always mutable
-        categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat)
-        obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
+        let obj = this.stub(null, {mutable: true, categories})          // newly-created objects are always mutable
+        // categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat)
+        // obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
+        if (T.isPOJO(data) || data instanceof Catalog) obj.__data.updateAll(data)
+        return obj
+    }
+
+    static _new(categories = [], ...args) {
+        /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
+        let obj = this.stub(null, {mutable: true, categories})          // newly-created objects are always mutable
+        // categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat)
+        // obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
         let ret = obj.__new__(...args)
         return ret instanceof Promise ? ret.then(() => obj) : obj
     }
@@ -425,7 +439,7 @@ export class WebObject {
            This method should be used instead of the constructor.
          */
         // if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
-        return this._create([], ...args)
+        return this._new([], ...args)
         // return this.create([this.__category], ...args)
     }
 

@@ -53,9 +53,15 @@ export class Category extends WebObject {
         if (calls.length) return Promise.all(calls)
     }
 
+    // create(data) {
+    //     /* Create a new object in this category and execute the default WebObject.__new__(...args) to set.
+    //        Return the object. The object has no ID yet. */
+    //     return this.__child_class._create([this], data)
+    // }
+
     create(...args) {
         /* Create a new object in this category and execute its __new__(...args). Return the object. The object has no ID yet. */
-        return this.__child_class._create([this], ...args)
+        return this.__child_class._new([this], ...args)
     }
 
     async insert(...args) {
