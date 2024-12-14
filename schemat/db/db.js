@@ -190,7 +190,7 @@ export class Ring extends WebObject {
     }
 
     async rebuild_indexes() {
-        /* Rebuild all indexes by making a full scan of the data sequence. */
+        /* Rebuild all derived streams by making a full scan of the data sequence. */
         await this.index_sequence.erase()
         for await (let {id, data} of this.scan_all()) {
             for (let index of this.indexes.values()) {
