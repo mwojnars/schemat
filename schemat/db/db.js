@@ -15,8 +15,8 @@ import {Catalog} from "../core/catalog.js";
  */
 
 export class Ring extends WebObject {
-    /* Collection of (named) data streams. The primary stream is the "objects" stream containing web objects.
-       Other streams may contain derived data (indexes, aggregations etc.), or data of special types (e.g., "blobs").
+    /* Collection of (named) data streams. The primary one is the "objects" stream that contains web objects and supplies
+       input data to other (derived) streams: indexes, aggregations etc. Some streams may have special type (e.g., "blobs").
      */
 
     static __category = 12  // ID of Ring category in the kernel
@@ -57,8 +57,9 @@ export class Ring extends WebObject {
         for (let [name, index] of this.all_index_specs) {
             let seq = new Subsequence(index.id, this.index_sequence)
             let idx = IndexStream.new(index, seq)
-            // let idx = new IndexStream(index, seq)
             instances.set(name, idx)
+            // print(`\n[${this.name}]/${name}:`)
+            // print(idx.__json)
         }
         return instances
     }

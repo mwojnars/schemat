@@ -277,12 +277,12 @@ export class Stream extends WebObject {
 export class IndexStream extends Stream {
     /* Index deployed in a particular ring's sequence. */
 
-    __new__(index, sequence) {
-        this.index = index
+    __new__(operator, sequence) {
+        this.operator = operator
         this.sequence = sequence
     }
-    change(key, prev, next) { return this.index.change(this.sequence, key, prev, next) }
-    async* scan(opts)       { yield* this.index.scan(this.sequence, opts) }
+    change(key, prev, next) { return this.operator.change(this.sequence, key, prev, next) }
+    async* scan(opts)       { yield* this.operator.scan(this.sequence, opts) }
 }
 
 
