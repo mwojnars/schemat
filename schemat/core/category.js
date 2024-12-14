@@ -57,7 +57,7 @@ export class Category extends WebObject {
         /* Create a new object with __category=this and update its __data with `data`. Return the object (no ID yet). */
         data = Struct.clone(data)
         Struct.set(data, ['__category'], this)
-        return this.__child_class._create(data)
+        return this.__child_class.infant(data)
     }
 
     new(...args) {

@@ -418,17 +418,18 @@ export class WebObject {
         return obj.__proxy = Intercept.wrap(obj)
     }
 
-    static infant(data, opts = {}) {
-        let obj = this.stub(null, {mutable: true, data: true, ...opts})          // newly-created objects are always mutable
-        if (T.isPOJO(data) || data instanceof Catalog) obj.__data.updateAll(data)
+    static infant(data = null, opts = {}) {
+        /* Create an infant object (not yet in DB): a mutable object with no ID. Optionally, initialize its __data with `data`. */
+        let obj = this.stub(null, {mutable: true, ...opts})
+        if (data) obj.__data = new Catalog(data)
         return obj
     }
 
-    static _create(data) {
-        let obj = this.stub(null, {mutable: true, data: true})          // newly-created objects are always mutable
-        if (T.isPOJO(data) || data instanceof Catalog) obj.__data.updateAll(data)
-        return obj
-    }
+    // static _create(data) {
+    //     let obj = this.stub(null, {mutable: true, data: true})          // newly-created objects are always mutable
+    //     if (T.isPOJO(data) || data instanceof Catalog) obj.__data.updateAll(data)
+    //     return obj
+    // }
 
     static _new(categories = [], ...args) {
         /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
