@@ -15,6 +15,9 @@ import {Catalog} from "../core/catalog.js";
  */
 
 export class Ring extends WebObject {
+    /* Collection of (named) data streams. The primary stream is the "objects" stream containing web objects.
+       Other streams may contain derived data (indexes, aggregations etc.), or data of special types (e.g., "blobs").
+     */
 
     static __category = 12  // ID of Ring category in the kernel
     static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)

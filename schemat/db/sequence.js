@@ -269,7 +269,9 @@ export class DataOperator extends Operator {
 /**********************************************************************************************************************/
 
 export class Stream {
-    /* Logical sequence of records as produced by a particular operator in a given ring. */
+    /* Logical sequence of records as produced by a particular operator in a given ring.
+       Every ring is a collection of (named) streams.
+     */
 }
 
 export class IndexStream extends Stream {
