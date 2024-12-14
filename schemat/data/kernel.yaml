@@ -534,7 +534,7 @@
   __container:
     "@": 1009
 - __id: 16
-  name: DataIndex
+  name: ObjectIndexOperator
   info: An index that receives record updates from the main data sequence, so
     input records represent objects.
   schema:
@@ -550,7 +550,7 @@
         "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
     "@": schemat:Catalog
-  class: schemat/db/indexes.js:DataIndex
+  class: schemat/db/indexes.js:ObjectIndexOperator
   __prototype:
     "@": 15
   __category:

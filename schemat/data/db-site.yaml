@@ -115,9 +115,9 @@
       "@": 26
     ObjectSpace:
       "@": 8
-    Index:
+    IndexOperator:
       "@": 15
-    DataIndex:
+    ObjectIndexOperator:
       "@": 16
     "@": schemat:Catalog
   __container:

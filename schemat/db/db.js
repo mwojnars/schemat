@@ -366,8 +366,8 @@ export class Database extends WebObject {
         if (ring && !this.rings.includes(ring)) throw new Error(`ring not found in the database: ${ring}`)
         ring ??= this.bottom_ring
         
-        let DataIndex = await schemat.import('/$/sys/DataIndex')
-        let index = DataIndex.create(name, key, payload)            // create index specification
+        let ObjectIndexOperator = await schemat.import('/$/sys/ObjectIndexOperator')
+        let index = ObjectIndexOperator.create(name, key, payload)            // create index specification
 
         index = await index.save({ring, reload: true})              // insert `index` to `ring`
         await ring.add_index(index)
