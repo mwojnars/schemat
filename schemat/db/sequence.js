@@ -283,7 +283,7 @@ export class IndexStream extends Stream {
     base_sequence
 
     get sequence() {
-        return new Subsequence(this.id, this.base_sequence)
+        return new Subsequence(this.operator.id, this.base_sequence)
     }
 
     __new__(operator, base_sequence) {
