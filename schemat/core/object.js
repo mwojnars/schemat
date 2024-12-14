@@ -400,7 +400,10 @@ export class WebObject {
     }
 
     static stub(id = null, opts = {}) {
-        /* Create a stub: an empty object with `id` assigned. To load data, load() must be called afterwards. */
+        /* Create a stub: an empty object with `id` assigned. To load data, load() must be called afterwards.
+           Only if opts.data or opts.categories is given, __data is created.
+           `opts.categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs.
+         */
 
         // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
         if (id === ROOT_ID && !this.__is_root_category)
@@ -415,11 +418,14 @@ export class WebObject {
         return obj.__proxy = Intercept.wrap(obj)
     }
 
-    static _create(categories = [], data) {
-        /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
-        let obj = this.stub(null, {mutable: true, categories})          // newly-created objects are always mutable
-        // categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat)
-        // obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
+    static infant(data, opts = {}) {
+        let obj = this.stub(null, {mutable: true, data: true, ...opts})          // newly-created objects are always mutable
+        if (T.isPOJO(data) || data instanceof Catalog) obj.__data.updateAll(data)
+        return obj
+    }
+
+    static _create(data) {
+        let obj = this.stub(null, {mutable: true, data: true})          // newly-created objects are always mutable
         if (T.isPOJO(data) || data instanceof Catalog) obj.__data.updateAll(data)
         return obj
     }
@@ -427,8 +433,6 @@ export class WebObject {
     static _new(categories = [], ...args) {
         /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
         let obj = this.stub(null, {mutable: true, categories})          // newly-created objects are always mutable
-        // categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat)
-        // obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
         let ret = obj.__new__(...args)
         return ret instanceof Promise ? ret.then(() => obj) : obj
     }

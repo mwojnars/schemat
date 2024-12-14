@@ -161,7 +161,7 @@
     "@": 1017
   index_sequence:
     "@": 1018
-  readonly: true
+  readonly: false
   start_id: 5000
   stop_id: null
   __category:

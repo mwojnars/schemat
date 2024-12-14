@@ -75,7 +75,9 @@ export class Path {
 /**********************************************************************************************************************/
 
 export class Struct {
-    /* Static methods for working with collections: Catalog, Map, Array. */
+    /* Static methods for working with collections: Catalog, Map, Array.
+       In methods, the `path` argument is always an array, not a string!
+     */
 
     static isCollection(obj) {
         return obj instanceof Catalog || obj instanceof Map || obj instanceof Array

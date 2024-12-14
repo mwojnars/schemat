@@ -7,7 +7,7 @@
  */
 
 import {assert, print, T} from "../common/utils.js";
-import {Catalog} from "./catalog.js";
+import {Catalog, Struct} from "./catalog.js";
 
 import {WebObject} from "./object.js";
 import {SCHEMA} from "../types/catalog_type.js";
@@ -53,13 +53,16 @@ export class Category extends WebObject {
         if (calls.length) return Promise.all(calls)
     }
 
-    // create(data) {
-    //     /* Create a new object in this category and execute the default WebObject.__new__(...args) to set.
-    //        Return the object. The object has no ID yet. */
-    //     return this.__child_class._create([this], data)
-    // }
+    create(data = {}) {
+        /* Create a new object in this category and execute the default WebObject.__new__(...args) to set.
+           Return the object. The object has no ID yet. */
+        print('data:', data)
+        data = Struct.clone(data)
+        Struct.set(data, ['__category'], this)
+        return this.__child_class._create(data)
+    }
 
-    create(...args) {
+    new(...args) {
         /* Create a new object in this category and execute its __new__(...args). Return the object. The object has no ID yet. */
         return this.__child_class._new([this], ...args)
     }
@@ -68,7 +71,7 @@ export class Category extends WebObject {
         /* Create a new object in this category, execute its __new__(...args) and save it to DB.
            Return the reloaded object in the exact form as written to the DB (after validation, imputation etc.).
          */
-        let obj = await this.create(...args).save()
+        let obj = await this.new(...args).save()
         return obj.reload()
     }
 
