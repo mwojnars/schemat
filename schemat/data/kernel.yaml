@@ -591,7 +591,8 @@
   __category:
     "@": 1
 - __id: 20
-  name: IndexStream
+  name: ObjectsStream
+  class: schemat/db/sequence.js:ObjectsStream
   __prototype:
     "@": 17
   __category:
