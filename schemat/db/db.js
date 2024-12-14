@@ -56,7 +56,8 @@ export class Ring extends WebObject {
         let instances = new Map()
         for (let [name, index] of this.all_index_specs) {
             let seq = new Subsequence(index.id, this.index_sequence)
-            let idx = new IndexStream(index, seq)
+            let idx = IndexStream.new(index, seq)
+            // let idx = new IndexStream(index, seq)
             instances.set(name, idx)
         }
         return instances

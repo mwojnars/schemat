@@ -268,7 +268,7 @@ export class DataOperator extends Operator {
 
 /**********************************************************************************************************************/
 
-export class Stream {
+export class Stream extends WebObject {
     /* Logical sequence of records as produced by a particular operator in a given ring.
        Every ring is a collection of (named) streams.
      */
@@ -277,8 +277,7 @@ export class Stream {
 export class IndexStream extends Stream {
     /* Index deployed in a particular ring's sequence. */
 
-    constructor(index, sequence) {
-        super()
+    __new__(index, sequence) {
         this.index = index
         this.sequence = sequence
     }
