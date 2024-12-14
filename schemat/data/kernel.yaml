@@ -550,6 +550,10 @@
     "@": 1
   __container:
     "@": 1009
+- __id: 17
+  name: Stream
+  __category:
+    "@": 1
 - __id: 18
   name: Block
   info: A continuous subrange of records of a data/index sequence, physically
@@ -577,6 +581,12 @@
   class: schemat/db/block.js:DataBlock
   __prototype:
     "@": 18
+  __category:
+    "@": 1
+- __id: 20
+  name: IndexStream
+  __prototype:
+    "@": 17
   __category:
     "@": 1
 - __id: 21
