@@ -269,13 +269,7 @@ export class DataOperator extends Operator {
 /**********************************************************************************************************************/
 
 export class Stream extends WebObject {
-    /* Logical sequence of records produced by a particular operator and stored in a particular ring. */
-    __new__(operator, sequence) {
-        this.operator = operator
-        this.sequence = sequence
-    }
-    change(key, prev, next) { return this.operator.change(this.sequence, key, prev, next) }
-    async* scan(opts)       { yield* this.operator.scan(this.sequence, opts) }
+    /* Logical sequence of records produced by a particular operator and stored in a ring. */
 }
 
 export class ObjectsStream extends Stream {
@@ -285,6 +279,19 @@ export class ObjectsStream extends Stream {
 export class IndexStream extends Stream {
     /* Index deployed in a particular ring's sequence. */
 
+    operator
+    base_sequence
+
+    get sequence() {
+        return new Subsequence(this.id, this.base_sequence)
+    }
+
+    __new__(operator, base_sequence) {
+        this.operator = operator
+        this.base_sequence = base_sequence
+    }
+    change(key, prev, next) { return this.operator.change(this.sequence, key, prev, next) }
+    async* scan(opts)       { yield* this.operator.scan(this.sequence, opts) }
 }
 
 
