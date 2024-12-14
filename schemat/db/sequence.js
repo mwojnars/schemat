@@ -272,17 +272,21 @@ export class Stream extends WebObject {
     /* Logical sequence of records as produced by a particular operator in a given ring.
        Every ring is a collection of (named) streams.
      */
-}
-
-export class IndexStream extends Stream {
-    /* Index deployed in a particular ring's sequence. */
-
     __new__(operator, sequence) {
         this.operator = operator
         this.sequence = sequence
     }
     change(key, prev, next) { return this.operator.change(this.sequence, key, prev, next) }
     async* scan(opts)       { yield* this.operator.scan(this.sequence, opts) }
+}
+
+export class ObjectsStream extends Stream {
+    /* The "objects" data stream: primary stream containing web objects. */
+}
+
+export class IndexStream extends Stream {
+    /* Index deployed in a particular ring's sequence. */
+
 }
 
 
