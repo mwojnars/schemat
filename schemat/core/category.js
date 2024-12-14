@@ -54,16 +54,14 @@ export class Category extends WebObject {
     }
 
     create(data = {}) {
-        /* Create a new object in this category and execute the default WebObject.__new__(...args) to set.
-           Return the object. The object has no ID yet. */
-        print('data:', data)
+        /* Create a new object with __category=this and update its __data with `data`. Return the object (no ID yet). */
         data = Struct.clone(data)
         Struct.set(data, ['__category'], this)
         return this.__child_class._create(data)
     }
 
     new(...args) {
-        /* Create a new object in this category and execute its __new__(...args). Return the object. The object has no ID yet. */
+        /* Create a new object in this category and execute its __new__(...args). Return the object (no ID yet). */
         return this.__child_class._new([this], ...args)
     }
 
