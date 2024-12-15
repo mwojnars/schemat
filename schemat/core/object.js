@@ -400,52 +400,39 @@ export class WebObject {
     }
 
     static stub(id = null, opts = {}) {
-        /* Create a stub: an empty object with `id` assigned. To load data, load() must be called afterwards.
-           Only if opts.data or opts.categories is given, __data is created.
-           `opts.categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs.
-         */
+        /* Create a stub: an empty object with `id` assigned. To load data, load() must be called afterwards. */
 
         // special case: the root category must have its proper class (RootCategory) assigned right from the beginning for correct initialization
         if (id === ROOT_ID && !this.__is_root_category)
             return RootCategory.stub(id, opts)
 
         let obj = new this(false, id, opts)
-
-        if (opts.data || opts.categories) {
-            let categories = opts.categories?.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat) || []
-            obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
-        }
         return obj.__proxy = Intercept.wrap(obj)
     }
 
     static infant(data = null, opts = {}) {
-        /* Create an infant object (not yet in DB): a mutable object with no ID. Optionally, initialize its __data with `data`. */
+        /* Create an infant object (not yet in DB): a mutable object with no ID. Optionally, initialize its __data with `data`,
+           but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
         if (data) obj.__data = new Catalog(data)
         return obj
     }
 
-    // static _create(data) {
-    //     let obj = this.stub(null, {mutable: true, data: true})          // newly-created objects are always mutable
-    //     if (T.isPOJO(data) || data instanceof Catalog) obj.__data.updateAll(data)
-    //     return obj
-    // }
-
     static _new(categories = [], ...args) {
         /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
-        let obj = this.stub(null, {mutable: true, categories})          // newly-created objects are always mutable
+        let obj = this.infant()
+        categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat) || []
+        obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
         let ret = obj.__new__(...args)
         return ret instanceof Promise ? ret.then(() => obj) : obj
     }
 
     static new(...args) {
         /* Create an empty newborn object, no ID, and execute its __new__(...args). Return the object.
-           If __new__() returns a Promise, this method returns a Promise too.
-           This method should be used instead of the constructor.
+           If __new__() returns a Promise, this method returns a Promise too. Used instead of the constructor.
          */
         // if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
         return this._new([], ...args)
-        // return this.create([this.__category], ...args)
     }
 
     static async from_data(id, data, {mutable = false, sealed = true, activate = true} = {}) {
