@@ -344,6 +344,7 @@ export class CategoryInspectView extends ItemInspectView {
             setFormDisabled(true)               // this must not precede FormData(), otherwise fdata is empty
 
             let data = Object.fromEntries([...fdata])
+            if (!data.name) delete data.name
             let obj = await this.create(data).save()
 
             form.current.reset()                            // clear input fields
