@@ -35,6 +35,10 @@
     idx_category:
       "@": 23
     "@": schemat:Catalog
+  streams:
+    idx_category:
+      "@": 1011
+    "@": schemat:Catalog
   readonly: false
   start_id: 1
   stop_id: 1000
@@ -49,9 +53,9 @@
     "@": 1027
   index_sequence:
     "@": 1028
-  index_specs:
+  streams:
     idx_category:
-      "@": 23
+      "@": 1014
     "@": schemat:Catalog
   readonly: false
   start_id: 1001
@@ -129,6 +133,10 @@
       "@": 26
     ObjectSpace:
       "@": 8
+    IndexOperator:
+      "@": 15
+    ObjectIndexOperator:
+      "@": 16
     "@": schemat:Catalog
   __container:
     "@": 1019
@@ -140,6 +148,13 @@
   sequence:
     "@": 1017
   filename: ./demo/01_books/_data/db-app_02.yaml
+- __id: 1011
+  operator:
+    "@": 23
+  ring:
+    "@": 1003
+  __category:
+    "@": 28
 - __id: 1012
   ring:
     "@": 1003
@@ -154,6 +169,13 @@
     - "@": 1026
   __category:
     "@": 22
+- __id: 1014
+  operator:
+    "@": 23
+  ring:
+    "@": 1004
+  __category:
+    "@": 28
 - __id: 1015
   sequence:
     "@": 1012
@@ -171,9 +193,9 @@
     "@": 1017
   index_sequence:
     "@": 1018
-  index_specs:
+  streams:
     idx_category:
-      "@": 23
+      "@": 1022
     "@": schemat:Catalog
   readonly: false
   start_id: 5000
@@ -229,6 +251,13 @@
     "@": 1019
   __category:
     "@": 8
+- __id: 1022
+  operator:
+    "@": 23
+  ring:
+    "@": 1016
+  __category:
+    "@": 28
 - __id: 1025
   name: cluster
   __category:
