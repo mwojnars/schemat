@@ -54,7 +54,9 @@ export class Category extends WebObject {
     }
 
     create(data = {}) {
-        /* Create a new object with __category=this and update its __data with `data`. Return the object (no ID yet). */
+        /* Create a new object with __category=this and update its __data with `data`. Return the object (no ID yet).
+           A web-object analogue of Object.create() and Object.assign().
+         */
         data = Struct.clone(data)
         Struct.set(data, ['__category'], this)
         return this.__child_class.infant(data)
