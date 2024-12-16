@@ -698,6 +698,18 @@
 - __id: 28
   name: IndexStream
   class: schemat/db/sequence.js:IndexStream
+  schema:
+    ring:
+      info: The parent Ring of this data stream.
+      category:
+        "@": 12
+      "@": schemat/types/type.js:REF
+    operator:
+      info: The Operator that implements data processing logic of this stream.
+      category:
+        "@": 24
+      "@": schemat/types/type.js:REF
+    "@": schemat:Catalog
   __prototype:
     "@": 17
   __category:
