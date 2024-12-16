@@ -27,7 +27,7 @@ export class Ring extends WebObject {
 
     index_specs             // specification of all indexes in this ring, as {name: IndexOperator} catalog
 
-    // streams              // logical sequences of structured data records as produced by a particular operator in this ring, named the same as operators
+    streams                 // logical sequences of structured data records as produced by a particular operator in this ring, named the same as operators
     // storage              // distributed key-value stores of different type and characteristic ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping stream outputs
 
     name                    // human-readable name of this ring for find_ring()
@@ -96,6 +96,9 @@ export class Ring extends WebObject {
 
         for (let index of this.all_index_specs.values())
             await index.load()
+
+        for (let stream of this.streams?.values() || [])
+            await stream.load()
     }
 
     async erase(req) {
@@ -160,7 +163,8 @@ export class Ring extends WebObject {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
-        let index = this.indexes.get(name)      // IndexStream
+        // let index = this.indexes.get(name)      // IndexStream
+        let index = this.streams.get(name)      // Stream
         yield* index.scan({start, stop, limit, reverse, batch_size})
     }
 
