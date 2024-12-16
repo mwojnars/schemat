@@ -194,10 +194,10 @@ export class Ring extends WebObject {
         /* Rebuild all derived streams by making a full scan of the data sequence. */
         await this.index_sequence.erase()
         for await (let {id, data} of this.scan_all()) {
-            for (let index of this.indexes.values()) {
+            for (let stream of this.streams.values()) {
                 let key = data_schema.encode_key([id])
                 let obj = await WebObject.from_data(id, data, {activate: false})
-                await index.change(key, null, obj)
+                await stream.change(key, null, obj)
             }
         }
     }
