@@ -163,9 +163,8 @@ export class Ring extends WebObject {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
-        // let index = this.indexes.get(name)      // IndexStream
-        let index = this.streams.get(name)      // Stream
-        yield* index.scan({start, stop, limit, reverse, batch_size})
+        let stream = this.streams.get(name)
+        yield* stream.scan({start, stop, limit, reverse, batch_size})
     }
 
     async* scan_all() {

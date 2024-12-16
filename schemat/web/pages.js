@@ -292,7 +292,7 @@ export class CategoryInspectView extends ItemInspectView {
     }
 
     Page({items: preloaded}) {
-        const scan = () => this.list_objects()
+        const list = () => this.list_objects()
         const [items, setItems] = useState(preloaded)           // existing child items; state prevents re-scan after every itemAdded()
                                                                 // TODO: use materialized list of items to explicitly control re-scanning
                                                                 //    ...and avoid React's incorrect refresh when Items (below) are called in a different way
@@ -303,7 +303,7 @@ export class CategoryInspectView extends ItemInspectView {
 
         return super.Page({extra: FRAGMENT(
             H2('Members'),
-            e(this.Items, {items: items, itemRemoved: async () => setItems(await scan()), key: 'items'}),
+            e(this.Items, {items: items, itemRemoved: async () => setItems(await list()), key: 'items'}),
             H3('Create New'),
             e(this.Items, {items: newItems, itemRemoved}),
             e(this.NewItem, {itemAdded}),
