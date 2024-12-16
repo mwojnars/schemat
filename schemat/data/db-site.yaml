@@ -28,11 +28,11 @@
   index_sequence:
     "@": 1013
   index_specs:
-    idx_objects_category:
+    idx_category:
       "@": 23
     "@": schemat:Catalog
   streams:
-    idx_objects_category:
+    idx_category:
       "@": 1011
     "@": schemat:Catalog
   readonly: false
@@ -50,7 +50,7 @@
   index_sequence:
     "@": 1028
   streams:
-    idx_objects_category:
+    idx_category:
       "@": 1014
     "@": schemat:Catalog
   readonly: false
@@ -184,7 +184,7 @@
   index_sequence:
     "@": 1018
   streams:
-    idx_objects_category:
+    idx_category:
       "@": 1022
     "@": schemat:Catalog
   readonly: false

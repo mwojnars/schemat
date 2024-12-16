@@ -622,7 +622,7 @@
   __category:
     "@": 1
 - __id: 23
-  name: idx_objects_category
+  name: idx_category
   info: "Index of all objects by their category: the key is [category ID, item
     ID], no payload."
   key:

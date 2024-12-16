@@ -32,7 +32,7 @@
   index_sequence:
     "@": 1013
   index_specs:
-    idx_objects_category:
+    idx_category:
       "@": 23
     "@": schemat:Catalog
   readonly: false
@@ -50,7 +50,7 @@
   index_sequence:
     "@": 1028
   index_specs:
-    idx_objects_category:
+    idx_category:
       "@": 23
     "@": schemat:Catalog
   readonly: false
@@ -172,7 +172,7 @@
   index_sequence:
     "@": 1018
   index_specs:
-    idx_objects_category:
+    idx_category:
       "@": 23
     "@": schemat:Catalog
   readonly: false
