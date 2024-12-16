@@ -31,6 +31,10 @@
     idx_objects_category:
       "@": 23
     "@": schemat:Catalog
+  streams:
+    idx_objects_category:
+      "@": 1011
+    "@": schemat:Catalog
   readonly: false
   start_id: 1
   stop_id: 1000
@@ -45,6 +49,10 @@
     "@": 1027
   index_sequence:
     "@": 1028
+  streams:
+    idx_objects_category:
+      "@": 1014
+    "@": schemat:Catalog
   readonly: false
   start_id: 1001
   stop_id: 5000
@@ -175,6 +183,10 @@
     "@": 1017
   index_sequence:
     "@": 1018
+  streams:
+    idx_objects_category:
+      "@": 1022
+    "@": schemat:Catalog
   readonly: false
   start_id: 5000
   stop_id: null
