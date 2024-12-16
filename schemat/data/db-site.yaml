@@ -130,6 +130,13 @@
   sequence:
     "@": 1017
   filename: ./schemat/data/db-app_02.yaml
+- __id: 1011
+  operator:
+    "@": 23
+  ring:
+    "@": 1003
+  __category:
+    "@": 28
 - __id: 1012
   ring:
     "@": 1003
@@ -144,6 +151,13 @@
     - "@": 1026
   __category:
     "@": 22
+- __id: 1014
+  operator:
+    "@": 23
+  ring:
+    "@": 1004
+  __category:
+    "@": 28
 - __id: 1015
   sequence:
     "@": 1012
@@ -215,6 +229,13 @@
     "@": 1019
   __category:
     "@": 8
+- __id: 1022
+  operator:
+    "@": 23
+  ring:
+    "@": 1016
+  __category:
+    "@": 28
 - __id: 1025
   name: cluster
   __category:
