@@ -39,6 +39,12 @@ export class Ring extends WebObject {
     start_id = 0
     stop_id
 
+    get stack() {
+        /* Array of all rings in the stack, starting from the innermost ring (bottom of the stack) up to this one, included. */
+        let stack = this.lower_ring?.stack || []
+        return [...stack, this]
+    }
+
     // get all_index_specs() {
     //     /* A catalog of all index specifications in the entire ring stack (lower rings + this one). */
     //     if (!this.lower_ring) return this.index_specs || new Catalog()
@@ -246,14 +252,8 @@ export class Database extends WebObject {
     async __init__() {
         if (CLIENT) return
         print(`initializing database [${this.__id}] ...`)
-
         await this.top_ring.load()
-
-        let rings = []
-        for (let ring = this.top_ring; ring; ring = ring.lower_ring)
-            rings.push(ring) //await ring.load())
-
-        this._rings = rings.reverse()
+        this._rings = this.top_ring.stack
     }
 
     async locate_ring(ring_or_id) {
