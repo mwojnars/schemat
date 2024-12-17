@@ -224,8 +224,8 @@ export class Database extends WebObject {
 
     /***  Rings manipulation  ***/
 
-    get rings()             { return this._rings }      // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
-    get rings_reversed()    { return this._rings.toReversed() }
+    get rings()             { return this.top_ring.stack }      // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
+    get rings_reversed()    { return this.rings.toReversed() }
     get bottom_ring()       { return this.rings[0] }
 
     async open(ring_specs) {
@@ -253,7 +253,6 @@ export class Database extends WebObject {
         if (CLIENT) return
         print(`initializing database [${this.__id}] ...`)
         await this.top_ring.load()
-        this._rings = this.top_ring.stack
     }
 
     async locate_ring(ring_or_id) {
