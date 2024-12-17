@@ -278,6 +278,11 @@ export class Stream extends WebObject {
         this.ring = ring
         this.operator = operator
     }
+
+    async __init__() {
+        await this.operator.load()
+    }
+
     change(key, prev, next) { return this.operator.change(this.sequence, key, prev, next) }
     async* scan(opts)       { yield* this.operator.scan(this.sequence, opts) }
 }

@@ -25,8 +25,6 @@ export class Ring extends WebObject {
     data_sequence           // DataSequence containing all primary data of this ring
     index_sequence          // IndexSequence containing all indexes of this ring ordered by index ID and concatenated; each record key is prefixed with its index's ID
 
-    index_specs             // specification of all indexes in this ring, as {name: IndexOperator} catalog
-
     streams                 // logical sequences of structured data records as produced by a particular operator in this ring, named the same as operators
     // storage              // distributed key-value stores of different type and characteristic ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping stream outputs
 
@@ -91,9 +89,6 @@ export class Ring extends WebObject {
         await this.data_sequence.load()
         await this.index_sequence.load()
         // await this.rebuild_indexes()
-
-        for (let index of this.index_specs?.values() || [])
-            await index.load()
 
         for (let stream of this.streams?.values() || [])
             await stream.load()
@@ -175,7 +170,7 @@ export class Ring extends WebObject {
     async add_index(name, index_operator) {
         // TODO SEC: check permissions
         if (this.readonly) throw new Error("the ring is read-only")
-        this[`index_specs.${name}`] = index_operator
+        //this[`index_specs.${name}`] = index_operator
         return this.save({broadcast: true})
     }
 
