@@ -31,10 +31,6 @@
     "@": 1012
   index_sequence:
     "@": 1013
-  index_specs:
-    idx_category:
-      "@": 23
-    "@": schemat:Catalog
   streams:
     idx_category:
       "@": 1011
