@@ -18,8 +18,8 @@ import {Struct} from "../core/catalog.js";
 
 /**********************************************************************************************************************/
 
-export class BackendProcess {
-    CLI_PREFIX = 'CLI_'
+export class ServerProcess {
+    CLI_PREFIX = 'CLI_'     // command-line interface (CLI) on the server
 
     async run(cmd, opts = {}) {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
@@ -54,7 +54,7 @@ export class BackendProcess {
     }
 }
 
-export class MainProcess extends BackendProcess {
+export class MainProcess extends ServerProcess {
     /* Top-level Schemat process running on a given machine. Spawns and manages worker processes:
        web server(s), data server(s), load balancer etc.
      */
@@ -123,7 +123,7 @@ export class MainProcess extends BackendProcess {
     }
 }
 
-export class AdminProcess extends BackendProcess {
+export class AdminProcess extends ServerProcess {
     /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from the command line. */
     static role = 'admin_process'
 
