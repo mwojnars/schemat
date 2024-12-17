@@ -25,7 +25,7 @@ export class Ring extends WebObject {
     data_sequence           // DataSequence containing all primary data of this ring
     index_sequence          // IndexSequence containing all indexes of this ring ordered by index ID and concatenated; each record key is prefixed with its index's ID
 
-    streams                 // logical sequences of structured data records as produced by a particular operator in this ring, named the same as operators
+    streams                 // logical sequences of structured data records produced by particular data operators in this ring
     // storage              // distributed key-value stores of different type and characteristic ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping stream outputs
 
     name                    // human-readable name of this ring for find_ring()

@@ -45,7 +45,7 @@ export class Site extends WebObject {
         if (SERVER) {
             await this.root.load()
             await this.database?.load()
-            this._vm = await import('node:vm')
+            // this._vm = await import('node:vm')
             this._check_default_container()                 // no await to avoid blocking the site's startup
         }
     }
