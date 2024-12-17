@@ -49,17 +49,15 @@ export class Ring extends WebObject {
         return new Catalog([...lower, ...(this.index_specs || [])])
     }
 
-    get indexes() {
-        /* {id: IndexStream} map of indexes within this particular ring, one for each definition in `index_specs`. */
-        let instances = new Map()
-        for (let [name, index] of this.all_index_specs) {
-            let idx = IndexStream.new(this, index)
-            instances.set(name, idx)
-            // print(`\n[${this.name}]/${name}:`)
-            // print(idx.__json)
-        }
-        return instances
-    }
+    // get indexes() {
+    //     /* {id: IndexStream} map of indexes within this particular ring, one for each definition in `index_specs`. */
+    //     let instances = new Map()
+    //     for (let [name, index] of this.all_index_specs) {
+    //         let idx = IndexStream.new(this, index)
+    //         instances.set(name, idx)
+    //     }
+    //     return instances
+    // }
 
 
     __new__({name, ...opts}) {
