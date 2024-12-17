@@ -41,14 +41,14 @@ export class Ring extends WebObject {
     start_id = 0
     stop_id
 
-    get all_index_specs() {
-        /* A catalog of all index specifications in the entire ring stack (lower rings + this one). */
-        if (!this.lower_ring) return this.index_specs || new Catalog()
-        assert(this.lower_ring.is_loaded())
-        let lower = this.lower_ring.all_index_specs || []
-        return new Catalog([...lower, ...(this.index_specs || [])])
-    }
-
+    // get all_index_specs() {
+    //     /* A catalog of all index specifications in the entire ring stack (lower rings + this one). */
+    //     if (!this.lower_ring) return this.index_specs || new Catalog()
+    //     assert(this.lower_ring.is_loaded())
+    //     let lower = this.lower_ring.all_index_specs || []
+    //     return new Catalog([...lower, ...(this.index_specs || [])])
+    // }
+    //
     // get indexes() {
     //     /* {id: IndexStream} map of indexes within this particular ring, one for each definition in `index_specs`. */
     //     let instances = new Map()
@@ -92,7 +92,7 @@ export class Ring extends WebObject {
         await this.index_sequence.load()
         // await this.rebuild_indexes()
 
-        for (let index of this.all_index_specs.values())
+        for (let index of this.index_specs?.values() || [])
             await index.load()
 
         for (let stream of this.streams?.values() || [])
