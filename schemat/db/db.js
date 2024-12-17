@@ -223,7 +223,7 @@ export class Database extends WebObject {
     get bottom_ring()       { return this.rings[0] }
 
     async open(ring_specs) {
-        /* After create(), create all rings according to `ring_specs` specification. */
+        /* In a newly-created Database, create all rings according to `ring_specs` specification. */
 
         assert(this.is_infant())                // open() is a mutable operation, so it can only be called on an infant object (not in DB)
         print(`creating database...`)
@@ -247,9 +247,11 @@ export class Database extends WebObject {
         if (CLIENT) return
         print(`initializing database [${this.__id}] ...`)
 
+        await this.top_ring.load()
+
         let rings = []
         for (let ring = this.top_ring; ring; ring = ring.lower_ring)
-            rings.push(await ring.load())
+            rings.push(ring) //await ring.load())
 
         this._rings = rings.reverse()
     }
