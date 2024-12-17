@@ -46,7 +46,7 @@ export class ServerProcess {
 
     async _open_bootstrap_db(config) {
         let db = Database.new()
-        let rings = config.bootstrap_database.rings
+        let rings = config.bootstrap_rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
         await db.open(rings)
         await db.load()             // run __init__() and activate the database object
