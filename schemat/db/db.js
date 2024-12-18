@@ -23,7 +23,6 @@ export class Ring extends WebObject {
     static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
 
     data_sequence           // DataSequence containing all primary data of this ring
-    // index_sequence          // IndexSequence containing all indexes of this ring ordered by index ID and concatenated; each record key is prefixed with its index's ID
 
     streams                 // logical sequences of structured data records produced by particular data operators in this ring
     // storage              // distributed key-value stores of different type and characteristic ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping stream outputs
@@ -45,24 +44,6 @@ export class Ring extends WebObject {
         return [...stack, this]
     }
 
-    // get all_index_specs() {
-    //     /* A catalog of all index specifications in the entire ring stack (lower rings + this one). */
-    //     if (!this.lower_ring) return this.index_specs || new Catalog()
-    //     assert(this.lower_ring.is_loaded())
-    //     let lower = this.lower_ring.all_index_specs || []
-    //     return new Catalog([...lower, ...(this.index_specs || [])])
-    // }
-    //
-    // get indexes() {
-    //     /* {id: IndexStream} map of indexes within this particular ring, one for each definition in `index_specs`. */
-    //     let instances = new Map()
-    //     for (let [name, index] of this.all_index_specs) {
-    //         let idx = IndexStream.new(this, index)
-    //         instances.set(name, idx)
-    //     }
-    //     return instances
-    // }
-
 
     __new__({name, ...opts}) {
         let {file} = opts
@@ -80,11 +61,7 @@ export class Ring extends WebObject {
         this.stop_id = stop_id
 
         // create sequences: data and indexes...
-
         this.data_sequence = DataSequence.new(this, this._file)
-
-        // let index_file = this._file.replace(/\.yaml$/, '.index.jl')
-        // this.index_sequence = IndexSequence.new(this, index_file)
     }
 
     async __init__() {
@@ -94,7 +71,6 @@ export class Ring extends WebObject {
 
         await this.lower_ring?.load()
         await this.data_sequence.load()
-        // await this.index_sequence.load()
 
         for (let stream of this.streams?.values() || [])
             await stream.load()
@@ -191,7 +167,6 @@ export class Ring extends WebObject {
 
     async rebuild_indexes() {
         /* Rebuild all derived streams by making a full scan of the data sequence. */
-        // await this.index_sequence.erase()
         for (let stream of this.streams.values()) {
             await stream.sequence.erase()
             for await (let {id, data} of this.scan_all()) {
