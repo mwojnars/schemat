@@ -36,7 +36,8 @@ export class Block extends WebObject {
     _storage                // Storage for this block's records
     _pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
-    get ring() { return this.sequence.ring }
+    get ring()      { return this.sequence.ring }
+    get stream()    { return this.sequence.stream }
 
     __new__(sequence, filename) {
         sequence.assert_active()
@@ -331,8 +332,8 @@ export class DataBlock extends Block {
     async propagate_change(key, obj_old = null, obj_new = null) {
         /* Push a change from this data block to all derived streams in the ring. */
         assert(this.ring?.is_loaded())
-        for (let index of this.ring.streams.values())
-            index.change(key, obj_old, obj_new)             // no need to await, the result is not used by the caller
+        for (let stream of this.ring.streams.values())  // of this.stream.derived
+            stream.change(key, obj_old, obj_new)            // no need to await, the result is not used by the caller
     }
 }
 

@@ -23,10 +23,10 @@ export class Sequence extends WebObject {
      */
 
     ring                // parent Ring of this sequence
+    stream              // parent Stream of this sequence
     splits              // array of split points between blocks
     blocks              // array of Blocks that make up this sequence
     flush_delay         // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
-    // derived = []        // array of derived sequences (indexes) that must be updated when this sequence changes
 
 
     __new__(ring) {
@@ -182,9 +182,10 @@ export class DataSequence extends Sequence {
 /**********************************************************************************************************************/
 
 export class Operator extends WebObject {
-    /* Abstract specification of a data operator: names of its source stream(s), if any;
-       the schema of its output records; and basic read access methods (scan/min/max).
+    /* Specification of a data operator: source operator(s) + schema of output records + access methods (scan/min/max).
+       The same operator can be applied to multiple rings, producing another stream in each ring.
      */
+
     get record_schema() {
         /* RecordSchema that defines the schema (key and payload) of output records produced by this operator. */
         return new RecordSchema(this.key_spec, this.payload)
@@ -219,6 +220,7 @@ export class Stream extends WebObject {
     /* Logical sequence of records produced by a particular operator and stored in a particular ring. */
     ring
     operator
+    // derived          // derived streams that must be updated upon changes in this stream
 
     __new__(ring, operator) {
         this.ring = ring
