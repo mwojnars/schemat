@@ -23,7 +23,7 @@ export class Ring extends WebObject {
     static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
 
     data_sequence           // DataSequence containing all primary data of this ring
-    index_sequence          // IndexSequence containing all indexes of this ring ordered by index ID and concatenated; each record key is prefixed with its index's ID
+    // index_sequence          // IndexSequence containing all indexes of this ring ordered by index ID and concatenated; each record key is prefixed with its index's ID
 
     streams                 // logical sequences of structured data records produced by particular data operators in this ring
     // storage              // distributed key-value stores of different type and characteristic ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping stream outputs
@@ -95,7 +95,6 @@ export class Ring extends WebObject {
         await this.lower_ring?.load()
         await this.data_sequence.load()
         // await this.index_sequence.load()
-        // await this.rebuild_indexes()
 
         for (let stream of this.streams?.values() || [])
             await stream.load()
@@ -192,9 +191,10 @@ export class Ring extends WebObject {
 
     async rebuild_indexes() {
         /* Rebuild all derived streams by making a full scan of the data sequence. */
-        await this.index_sequence.erase()
-        for await (let {id, data} of this.scan_all()) {
-            for (let stream of this.streams.values()) {
+        // await this.index_sequence.erase()
+        for (let stream of this.streams.values()) {
+            await stream.sequence.erase()
+            for await (let {id, data} of this.scan_all()) {
                 let key = data_schema.encode_key([id])
                 let obj = await WebObject.from_data(id, data, {activate: false})
                 await stream.change(key, null, obj)
