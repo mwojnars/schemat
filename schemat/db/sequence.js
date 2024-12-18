@@ -295,7 +295,8 @@ export class IndexStream extends Stream {
     /* Index deployed in a particular ring's sequence. */
 
     get sequence() {
-        return new Subsequence(this.operator.id, this.ring.index_sequence)
+        return this.ring.index_sequence
+        // return new Subsequence(this.operator.id, this.ring.index_sequence)
     }
 }
 
