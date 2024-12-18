@@ -93,7 +93,7 @@ export class Ring extends WebObject {
 
         await this.lower_ring?.load()
         await this.data_sequence.load()
-        await this.index_sequence.load()
+        // await this.index_sequence.load()
         // await this.rebuild_indexes()
 
         for (let stream of this.streams?.values() || [])

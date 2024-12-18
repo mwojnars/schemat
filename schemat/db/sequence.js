@@ -229,6 +229,7 @@ export class Stream extends WebObject {
     }
 
     async __init__() {
+        await this.sequence.load()
         await this.operator.load()
     }
 
@@ -242,11 +243,6 @@ export class ObjectsStream extends Stream {
 
 export class IndexStream extends Stream {
     /* Index deployed in a particular ring's sequence. */
-
-    get sequence() {
-        return this.ring.index_sequence
-        // return new Subsequence(this.operator.id, this.ring.index_sequence)
-    }
 }
 
 
