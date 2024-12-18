@@ -226,6 +226,8 @@ export class Stream extends WebObject {
     __new__(ring, operator) {
         this.ring = ring
         this.operator = operator
+        // let index_file = ring._file.replace(/\.yaml$/, '.index.jl')
+        // this.sequence = IndexSequence.new(ring, index_file)
     }
 
     async __init__() {

@@ -81,9 +81,10 @@ export class Ring extends WebObject {
 
         // create sequences: data and indexes...
 
-        let index_file = this._file.replace(/\.yaml$/, '.index.jl')
         this.data_sequence = DataSequence.new(this, this._file)
-        this.index_sequence = IndexSequence.new(this, index_file)
+
+        // let index_file = this._file.replace(/\.yaml$/, '.index.jl')
+        // this.index_sequence = IndexSequence.new(this, index_file)
     }
 
     async __init__() {
