@@ -565,6 +565,11 @@
       category:
         "@": 24
       "@": schemat/types/type.js:REF
+    sequence:
+      info: The underlying Sequence where the records of this stream are stored.
+      category:
+        "@": 13
+      "@": schemat/types/type.js:REF
     "@": schemat:Catalog
   __category:
     "@": 1

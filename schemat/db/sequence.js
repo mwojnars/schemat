@@ -220,6 +220,7 @@ export class Stream extends WebObject {
     /* Logical sequence of records produced by a particular operator and stored in a particular ring. */
     ring
     operator
+    sequence            // Sequence where the records of this stream are stored
     // derived          // derived streams that must be updated upon changes in this stream
 
     __new__(ring, operator) {
