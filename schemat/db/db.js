@@ -1,7 +1,7 @@
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
 import {DatabaseError} from "../common/errors.js"
 import {WebObject} from "../core/object.js"
-import {DataOperator, IndexStream} from "./sequence.js";
+import {DataOperator, IndexStream, Stream} from "./sequence.js";
 import {data_schema, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence, IndexSequence} from "./sequence.js";
@@ -149,26 +149,22 @@ export class Ring extends WebObject {
             yield record.decode_object()
     }
 
-    async add_index(name, index_operator) {
+    async create_stream(operator) {
         // TODO SEC: check permissions
+        let name = operator.name
+        if (this.streams[name]) throw new Error(`this stream name already exists: ${name}`)
         if (this.readonly) throw new Error("the ring is read-only")
-        //this[`index_specs.${name}`] = index_operator
-        return this.save({broadcast: true})
-    }
-
-    async rebuild_index(index) {
-        // await index.erase()
-        for await (let {id, data} of this.scan_all()) {
-            let key = data_schema.encode_key([id])
-            let obj = await WebObject.from_data(id, data, {activate: false})
-            await index.change(key, null, obj)
-        }
+        let stream = this[`streams.${name}`] = Stream.new(this, operator)
+        await this.save({broadcast: true})
+        await stream.build()
     }
 
     async rebuild_indexes() {
         /* Rebuild all derived streams by making a full scan of the data sequence. */
-        for (let stream of this.streams.values())
-            await stream.rebuild()
+        for (let stream of this.streams.values()) {
+            await stream.sequence.erase()
+            await stream.build()
+        }
     }
 }
 
@@ -334,12 +330,11 @@ export class Database extends WebObject {
         let index = ObjectIndexOperator.create(name, key, payload)            // create index specification
 
         index = await index.save({ring, reload: true})              // insert `index` to `ring`
-        await ring.add_index(index)
 
         // spawn the rebuild process of `index` in `ring` and all higher rings
         let pos = this.locate_ring(ring)
         for (let i = pos; i < this.rings.length; i++)
-            this.rings[i].rebuild_index(index)
+            await this.rings[i].create_stream(index)
     }
 
     async rebuild_indexes() {
