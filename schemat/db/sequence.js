@@ -237,6 +237,15 @@ export class Stream extends WebObject {
 
     change(key, prev, next) { return this.operator.change(this.sequence, key, prev, next) }
     async* scan(opts)       { yield* this.operator.scan(this.sequence, opts) }
+
+    async rebuild() {
+        await this.sequence.erase()
+        for await (let {id, data} of this.ring.scan_all()) {
+            let key = data_schema.encode_key([id])
+            let obj = await WebObject.from_data(id, data, {activate: false})
+            await this.change(key, null, obj)
+        }
+    }
 }
 
 export class ObjectsStream extends Stream {
