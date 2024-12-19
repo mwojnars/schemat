@@ -469,11 +469,6 @@
       category:
         "@": 14
       "@": schemat/types/type.js:REF
-    index_sequence:
-      info: IndexSequence that keeps all indexes of this ring
-      category:
-        "@": 22
-      "@": schemat/types/type.js:REF
     streams:
       info: List of (named) data streams present in this ring. The 'objects' stream is
         obligatory, as the primary stream containing web objects and providing

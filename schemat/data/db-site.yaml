@@ -25,8 +25,6 @@
   name: kernel
   data_sequence:
     "@": 1012
-  index_sequence:
-    "@": 1013
   streams:
     idx_category:
       "@": 1011
@@ -43,8 +41,6 @@
   lower_ring_writable: true
   data_sequence:
     "@": 1027
-  index_sequence:
-    "@": 1028
   streams:
     idx_category:
       "@": 1014
@@ -181,8 +177,6 @@
   lower_ring_writable: true
   data_sequence:
     "@": 1017
-  index_sequence:
-    "@": 1018
   streams:
     idx_category:
       "@": 1022
