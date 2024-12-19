@@ -245,6 +245,8 @@ export class Stream extends WebObject {
             let obj = await WebObject.from_data(id, data, {activate: false})
             await this.change(key, null, obj)
         }
+        // for await (let record of this.source.scan())
+        //     await this.change(record.key, null, record)
     }
 }
 

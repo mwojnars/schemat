@@ -167,15 +167,8 @@ export class Ring extends WebObject {
 
     async rebuild_indexes() {
         /* Rebuild all derived streams by making a full scan of the data sequence. */
-        for (let stream of this.streams.values()) {
+        for (let stream of this.streams.values())
             await stream.rebuild()
-            // await stream.sequence.erase()
-            // for await (let {id, data} of this.scan_all()) {
-            //     let key = data_schema.encode_key([id])
-            //     let obj = await WebObject.from_data(id, data, {activate: false})
-            //     await stream.change(key, null, obj)
-            // }
-        }
     }
 }
 
