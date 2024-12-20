@@ -1,10 +1,10 @@
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
 import {DatabaseError} from "../common/errors.js"
 import {WebObject} from "../core/object.js"
-import {DataOperator, IndexStream, Stream} from "./sequence.js";
+import {DataOperator, Stream} from "./sequence.js";
 import {data_schema, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
-import {DataSequence, IndexSequence} from "./sequence.js";
+import {DataSequence} from "./sequence.js";
 import {Catalog} from "../core/catalog.js";
 
 
