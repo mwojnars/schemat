@@ -149,12 +149,17 @@ export class Ring extends WebObject {
             yield record.decode_object()
     }
 
+    async 'action.create_stream'(operator) {
+    }
+
     async create_stream(operator) {
         // TODO SEC: check permissions
         let name = operator.name
         if (this.streams[name]) throw new Error(`this stream name already exists: ${name}`)
         if (this.readonly) throw new Error("the ring is read-only")
-        let stream = this[`streams.${name}`] = Stream.new(this, operator)
+        let stream = Stream.new(this, operator)
+        this.edit.add_stream(stream)
+        // this[`streams.${name}`] = stream
         await this.save({broadcast: true})
         await stream.build()
     }
@@ -335,8 +340,12 @@ export class Database extends WebObject {
         // create streams for `index` in `ring` and all higher rings
         let pos = this.locate_ring(ring)
         for (let i = pos; i < this.rings.length; i++) {
-            print(`creating a stream in ring:`, ring)
-            await this.rings[i].create_stream(index)
+            ring = this.rings[i]
+            await ring.create_stream(index)
+            // this.rings[i] = await ring.refresh()
+            // this.rings[i] = await ring.action.create_stream(index)
+            // this.rings[i].refresh()         // in-place refresh of PRIVATE sub-object (rings[i])
+            // this[`rings/${i}`] = ...
         }
     }
 
