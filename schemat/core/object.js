@@ -605,7 +605,7 @@ export class WebObject {
 
     get __url() {
         /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
-        return this.__path.replace(/\/\*[^/]*/g, '')
+        return this.__path?.replace(/\/\*[^/]*/g, '') || this.system_url
         // let [url, on_blank_route] = WebObject._decode_access_path(this.__path)
         // if (on_blank_route)                                         // if any of the ancestor containers has the same URL, use the system URL instead for this object
         //     for (let parent = this.__container; parent; parent = parent.__container)
