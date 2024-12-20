@@ -219,13 +219,13 @@ export class Database extends WebObject {
         await this.top_ring.load()
     }
 
-    async locate_ring(ring_or_id) {
+    locate_ring(ring_or_id) {
         /* Return the position [0,1,...] in `rings` of the top-most ring with a given ID. */
         let id = Number.isInteger(ring_or_id) ? ring_or_id : ring_or_id.id
         return this.rings.findLastIndex(ring => ring.id === id)
     }
 
-    async find_ring_name(name) {
+    find_ring_name(name) {
         /* Return the top-most ring with a given `name`, or undefined if not found. Can be called to check if a ring name exists. */
         return this.rings_reversed.find(ring => ring.name === name)
     }
@@ -263,7 +263,7 @@ export class Database extends WebObject {
         let req = new DataRequest(this, 'insert', {data})
 
         if (ring_name) {                                            // find the ring by name
-            ring = await this.find_ring_name(ring_name)
+            ring = this.find_ring_name(ring_name)
             if (!ring) return req.error_access(`target ring not found: '${ring_name}'`)
         }
         else if (!ring) {
@@ -334,8 +334,10 @@ export class Database extends WebObject {
 
         // create streams for `index` in `ring` and all higher rings
         let pos = this.locate_ring(ring)
-        for (let i = pos; i < this.rings.length; i++)
+        for (let i = pos; i < this.rings.length; i++) {
+            print(`creating a stream in ring:`, ring)
             await this.rings[i].create_stream(index)
+        }
     }
 
     async rebuild_indexes() {

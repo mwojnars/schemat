@@ -179,7 +179,7 @@ export class AdminProcess extends ServerProcess {
 
         let id_list = []
         let db = schemat.db
-        let ring = ring_name ? await db.find_ring_name(ring_name) : db.top_ring
+        let ring = ring_name ? db.find_ring_name(ring_name) : db.top_ring
         let obj
 
         // parse the list of `ids`, which is a comma-separated list of integers or "X-Y" value ranges
