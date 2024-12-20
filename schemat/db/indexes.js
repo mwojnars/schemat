@@ -99,8 +99,8 @@ export class ObjectIndexOperator extends IndexOperator {
        a subset of object properties.
      */
 
-    category            // category of objects allowed in this index; obligatory if `key` is present instead of `key_spec`
-    key
+    category        // category of objects allowed in this index; obligatory if `key` is present instead of `key_spec`
+    key             // array of names of object properties to be included in the (compound) key of this index; plural names (xyz$) and deep paths (x.y.z) allowed
 
     __new__(name, key, payload) {
         this.name = name
