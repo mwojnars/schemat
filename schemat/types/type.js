@@ -42,9 +42,10 @@ export class Type {
                                     // repeated fields of type CATALOG provide special behavior: they get merged altogether during the property's value computation
 
         inherit  : true,            // if false, inheritance is disabled for this field; used especially for some system fields
-        impute   : undefined,       // a function to be used for imputation of missing values; `this` references the item;
+        impute   : undefined,       // name of function to be used for imputation of missing values; `this` references the item;
                                     // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
-                                    // the function must be *synchronous* and cannot return a Promise
+                                    // the function must be *synchronous* and cannot return a Promise; if the property value is present in DB, no imputation is done (!),
+                                    // unlike with a getter method (getter=true) which overshadows all in-DB values simply because the getter uses the same JS attribute name
 
         getter   : undefined,       // if true, the value of the object's corresponding property is imputed from the same-named getter method of the object;
                                     // similar to impute=true, but does not require explicit function designation, and the function is implemented as a getter which is more intuitive sometimes;
@@ -162,9 +163,8 @@ export class Type {
          */
         assert(!this.isRepeated())
         for (let values of arrays) {
-            if (!values.length) continue
+            if (values.length) return values[0]
             // if (values.length > 1) throw new Error("multiple values present for a key in a single-valued type")
-            return values[0]
         }
         return this._impute(obj, prop)                      // if no value found, use impute/getter/default to impute one
     }

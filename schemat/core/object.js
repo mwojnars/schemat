@@ -222,7 +222,7 @@ export class WebObject {
 
     __ident                 (virtual) string identifier of this object inside its __container
     __path                  (virtual) URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
-    __url                   (virtual) absolute URL path of this object, calculated via type imputation in _impute_url()
+    __url                   (virtual) absolute URL path of this object, calculated via __url() getter
 
     __assets                cached web Assets of this object's __schema
 
@@ -598,8 +598,8 @@ export class WebObject {
         return schemat.site.default_path_of(this)
     }
 
-    get __path() {
-        /* Calculation of __path if missing. */
+    _impute__path() {
+        /* Calculation of __path if missing. Root container must have its path='/' configured in DB, this is the reason why this method cannot be a getter. */
         return this.__container?.get_access_path(this) || this.system_url
     }
 

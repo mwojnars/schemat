@@ -186,7 +186,7 @@
         getter: true
         "@": schemat/types/type.js:STRING
       __path:
-        getter: true
+        impute: _impute__path
         "@": schemat/types/type.js:STRING
       __url:
         getter: true
