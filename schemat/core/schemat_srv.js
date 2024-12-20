@@ -22,8 +22,8 @@ export class ServerSchemat extends Schemat {
     _db                         // bootstrap DB; regular server-side DB is taken from site.database
 
     get db() {
-        /* The site's database instance, either a Database (on server) or a ClientDB (on client) */
-        return (SERVER && this.site?.database) || this._db
+        /* The site's database instance. Should only be used on the server. */
+        return this.site?.database || this._db
     }
 
 
