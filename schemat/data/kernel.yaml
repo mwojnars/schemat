@@ -534,8 +534,8 @@
       "@": schemat/types/type.js:REF_CATEGORY
     key:
       info: Array of names of object properties to be included in the (compound) key
-        of this index. Plural names (xyz$), as well as deep paths (x.y.z,
-        x.y.z$) are allowed.
+        of this index. Plural names (xyz$) and deep paths (x.y.z; x.y.z$) are
+        allowed.
       type:
         "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY

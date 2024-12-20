@@ -320,7 +320,7 @@ export class Database extends WebObject {
     //     yield* merge(WebObject.compare, ...streams)
     // }
 
-    async create_index(name, key, payload = undefined, {ring}) {
+    async create_index(name, key, payload = undefined, {ring} = {}) {
         if (ring && !this.rings.includes(ring)) throw new Error(`ring not found in the database: ${ring}`)
         ring ??= this.bottom_ring
 
