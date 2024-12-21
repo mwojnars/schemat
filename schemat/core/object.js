@@ -37,10 +37,9 @@ import("./category.js").then(module => {RootCategory = module.RootCategory})
  */
 
 class Intercept {
-    /* A Proxy wrapper for all kinds of web objects: stubs, newborn, or loaded from DB.
-       Combines plain object attributes with loaded properties and makes them all accessible with the `obj.prop` syntax.
-       Performs caching of computed properties in plain attributes of the `target` object.
-       Ensures immutability of regular properties.
+    /* A Proxy wrapper for all kinds of web objects: stubs, infant, or loaded from DB.
+       Makes loaded properties accessible with the `obj.prop` syntax, on top of plain JS attributes.
+       Performs caching of computed properties in target.__meta.cache. Ensures immutability of regular properties.
        Since a Proxy class can't be subclassed, all methods and properties of Intercept are static.
      */
 
@@ -1002,7 +1001,11 @@ export class WebObject {
     /***  Object editing  ***/
 
     get_private(opts = {}) {
-        /* Create a fully-loaded, immutable, private copy of this web object. The content  */
+        /* Create a fully-loaded, immutable, private copy of this web object (excluded from registry cache) whose content can be updated in place using .refresh() -
+           so the object is not strictly immutable, but the edit operations are disallowed. The object is wrapped up in a proxy with AsyncLocalStorage,
+           so each async thread receives its own copy that can be refreshed independently, i.e., without interference when one thread
+           refreshes the copy while another one is still relying on a previous version.
+         */
     }
 
     get_mutable(opts = {}) {
