@@ -443,7 +443,7 @@ export class WebObject {
         return obj.load({sealed, activate})
     }
 
-    clone({mutable = this.__meta.mutable}) {
+    clone({mutable = this.__meta.mutable, activate = this.__meta.active} = {}) {
         /* Create a new web object with __data and JS class copied from `this` in a *synchronous* way.
            If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
            By default, the resulting object is NOT activated!
@@ -451,6 +451,7 @@ export class WebObject {
         let obj = WebObject.stub(this.id, {mutable})
         obj.__data = this.__data.clone()
         T.setClass(obj, T.getClass(this))
+        if (activate) obj._activate()
         return obj
     }
 
@@ -1001,9 +1002,10 @@ export class WebObject {
     /***  Object editing  ***/
 
     async get_mutable() {
-        /* Create a fully-loaded, but mutable, instance of this web object. The object is recreated from scratch,
+        /* Create a fully-loaded, mutable instance of this web object. The object is recreated from scratch,
            so it may have different (newer) content than `this`. */
         return schemat.get_mutable(this)
+        // return WebObject.stub(this.id, {mutable: true}).load()
     }
 
     _make_mutable() {

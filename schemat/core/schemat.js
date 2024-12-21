@@ -226,7 +226,7 @@ export class Schemat {
     }
 
     async get_mutable(...objects_or_ids) {
-        /* Create fully-loaded, but mutable, instances of given object(s). Return an array (if multiple args), or a single result object. */
+        /* Create fully-loaded, mutable instances of given objects. Return an array (if multiple args), or a single result object. */
         let objs = objects_or_ids.map(obj => {
             if (!obj) return obj
             let id = typeof obj === 'number' ? obj : obj.__id
