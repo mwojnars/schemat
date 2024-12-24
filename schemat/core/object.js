@@ -590,6 +590,13 @@ export class WebObject {
         return schemat.reload(this.id)
     }
 
+    refresh() {
+        /* Synchronously return the newest version of this object as present in the Registry; or self if this object was already evicted.
+           In either case, the Registry is notified that this object is (still) needed, which may spawn reload/refresh in a background thread.
+         */
+        return schemat.request_loaded(this.id)
+    }
+
 
     /***  URLs and URL paths  ***/
 
@@ -1000,13 +1007,13 @@ export class WebObject {
 
     /***  Object editing  ***/
 
-    get_private(opts = {}) {
-        /* Create a fully-loaded, immutable, private copy of this web object (excluded from registry cache) whose content can be updated in place using .refresh() -
-           so the object is not strictly immutable, but the edit operations are disallowed. The object is wrapped up in a proxy with AsyncLocalStorage,
-           so each async thread receives its own copy that can be refreshed independently, i.e., without interference when one thread
-           refreshes the copy while another one is still relying on a previous version.
-         */
-    }
+    // get_private(opts = {}) {
+    //     /* Create a fully-loaded, immutable, private copy of this web object (excluded from registry cache) whose content can be updated in place using .refresh() -
+    //        so the object is not strictly immutable, but the edit operations are disallowed. The object is wrapped up in a proxy with AsyncLocalStorage,
+    //        so each async thread receives its own copy that can be refreshed independently, i.e., without interference when one thread
+    //        refreshes the copy while another one is still relying on a previous version.
+    //      */
+    // }
 
     get_mutable(opts = {}) {
         /* Create a fully-loaded, mutable instance of this web object. The object is either a duplicate of `this` (if opts.reload=false),

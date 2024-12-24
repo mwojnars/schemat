@@ -235,8 +235,15 @@ export class Schemat {
         return objs.length > 1 ? Promise.all(objs) : objs[0]
     }
 
-    async get_loaded(id)    { return this.get_object(id).load() }
-    async load(id)          { return this.get_loaded(id) }      // alias
+    async get_loaded(id) {
+        // TODO: update the timestamp `last_requested`
+        return this.get_object(id).load()
+    }
+
+    async load(id) {
+        /* Alias for get_loaded(). */
+        return this.get_loaded(id)
+    }
 
     async reload(id) {
         /* Create a new instance of the object using the most recent data for this ID as available in the record registry,

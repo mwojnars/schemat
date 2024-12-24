@@ -211,13 +211,18 @@ export class MicroServer extends Server {
     // }
 
     async start() {
-        /* loop:
-           - retrieve a list of new agents that should be placed in this worker (node+process)
+        /* deployment loop:
+           - retrieve a list of new agents (stewards) that should be placed in this worker (node+process)
            - for each do:  agent.load() + agent.__deploy__() __install__()
            - retrieve a list of objects deployed in this worker that should be removed
            - for each do:  agent.reload() + agent.__destroy__() __uninstall__()
            - maintain a list of objects currently deployed in this worker process
            - for each do:  agent.reload() + agent.__run__()
+
+           microservice loop:
+           - agent = agent.refresh()
+           - await agent.serve()
+           - delay(remaining-time-till-epoch)
         */
     }
 
