@@ -107,8 +107,8 @@
     cache_timeout:
       default: 10
       info: Time To Live (TTL) of objects in this category, in seconds. Only used when
-        an instance-level `__ttl` is missing. Determines for how long the object
-        is kept in a server-side cache and reused after being loaded from DB. If
+        an instance-level `__ttl` is missing. Determines for how long a fully-loaded object
+        is kept in the local cache (Registry) and reused after being loaded from DB. If
         zero, the object is evicted on the nearest cache purge. A real number.
         Recommended values are between 1.0 and 600. DO NOT set this too high,
         because TTL is the *only* mechanism that drives server-side object cache
