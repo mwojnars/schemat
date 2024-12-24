@@ -560,7 +560,7 @@ export class WebObject {
         this._init_services()
 
         let now = Date.now()
-        let ttl = (this.__ttl || this.__base?.ttl || 0) * 1000
+        let ttl = (this.__ttl || this.__base?.cache_timeout || 0) * 1000
 
         this.__meta.loaded_at = now
         this.__meta.expire_at = now + ttl

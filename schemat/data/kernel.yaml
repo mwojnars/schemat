@@ -104,7 +104,7 @@
       default: false
       info: If true, objects of this category cannot be modified after creation.
       "@": schemat/types/type.js:BOOLEAN
-    ttl:
+    cache_timeout:
       default: 10
       info: Time To Live (TTL) of objects in this category, in seconds. Only used when
         an instance-level `__ttl` is missing. Determines for how long the object
@@ -222,7 +222,7 @@
   set_version: false
   save_revisions: false
   seal_dependencies: false
-  ttl: 60
+  cache_timeout: 60
   class: schemat:Category
 - __id: 2
   name: Site
