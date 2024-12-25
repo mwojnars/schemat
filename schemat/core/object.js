@@ -1057,16 +1057,19 @@ export class WebObject {
 
     async save(opts = {}) {
         /* Send __data (for a newly created object) or __meta.edits (for an existing object) to DB.
-           In the former case, the object itself is returned. Some of the available options: {ring, ring_name, reload}.
+           Some of the available options: {ring, ring_name, reload}.
+           If reload=true (default), a new instance of this object is created with new content and returned.
          */
         this.assert_active()
-        if (this.is_infant()) return schemat.insert(this, opts)         // save a newly-created object
+        let {reload = true} = opts
+
+        if (this.is_infant()) return schemat.insert(this, opts)     // save a newly-created object
 
         let edits = this.__meta.edits           // otherwise, save updates of an existing object...
         if (edits?.length) {
-            let submit = schemat.site.POST.submit_edits(this.id, ...edits) //.then(() => this)
+            let submit = schemat.site.POST.submit_edits(this.id, ...edits)
             edits.length = 0
-            return submit
+            return reload ? submit.then(() => this.reload()) : submit
         }
         // throw new Error(`no edits to be submitted for ${this.id}`)
     }
@@ -1177,7 +1180,7 @@ export class WebObject {
                 if (src?.has_entry(this.__ident, obj))
                     src.edit.del_entry(this.__ident)
 
-                return schemat.save([dir, obj, src], {reload: true})
+                return schemat.save([dir, obj, src])
             },
             output: mWebObjects,
         })

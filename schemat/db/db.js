@@ -252,6 +252,7 @@ export class Database extends WebObject {
 
     async update(id, ...edits) {
         /* Apply `edits` to an item's data and store under the `id` in top-most ring that allows writing this particular `id`.
+           Return an {id, data} record as written to the data block.
            FUTURE: `edits` may perform tests or create side effects, for example, to check for a specific item version
                    to apply the edits to; or to perform a sensitive operation inside the record-level exclusive lock,
                    even without changing the record's data.
@@ -335,7 +336,7 @@ export class Database extends WebObject {
 
         let ObjectIndexOperator = await schemat.import('/$/sys/ObjectIndexOperator')
         let index = ObjectIndexOperator.new(name, key, payload)     // create index specification
-        index = await index.save({ring, reload: true})
+        index = await index.save({ring})
 
         // create streams for `index` in `ring` and all higher rings
         let pos = this.locate_ring(ring)

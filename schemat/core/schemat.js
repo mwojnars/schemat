@@ -378,13 +378,14 @@ export class Schemat {
         return batch ? objects : objects[0]
     }
 
-    async save(objects, opts_ = {}) {
+    async save(objects, opts = {}) {
         /* Save changes in multiple objects all at once (concurrently). */
-        let {reload = true, ...opts} = opts_
-        return Promise.all(objects.map(obj => {
-            let save = obj?.save(opts)
-            return reload ? save?.then(() => obj.reload()) : save
-        }))
+        return Promise.all(objects.map(obj => obj?.save(opts)))
+        // let {reload = true, ...opts} = opts_
+        // return Promise.all(objects.map(obj => {
+        //     let save = obj?.save(opts)
+        //     return reload ? save?.then(() => obj.reload()) : save
+        // }))
     }
 
     async eval(code) {
