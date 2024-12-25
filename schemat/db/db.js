@@ -157,11 +157,11 @@ export class Ring extends WebObject {
         let name = operator.name
         if (this.streams[name]) throw new Error(`this stream name already exists: ${name}`)
         if (this.readonly) throw new Error("the ring is read-only")
-        let stream = Stream.new(this, operator)
-        this.edit.add_stream(stream)
-        // this[`streams.${name}`] = stream
+
+        let stream = this[`streams.${name}`] = Stream.new(this, operator)
+        await stream.save({broadcast: true})
         await this.save({broadcast: true})
-        await stream.build()
+        // await stream.build()
     }
 
     async rebuild_indexes() {
@@ -342,6 +342,7 @@ export class Database extends WebObject {
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
             await ring.create_stream(index)
+            // await ring.action.create_stream(index)
             // this.rings[i] = await ring.refresh()
             // this.rings[i] = await ring.action.create_stream(index)
             // this.rings[i].refresh()         // in-place refresh of PRIVATE sub-object (rings[i])

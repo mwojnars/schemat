@@ -336,7 +336,7 @@ export class Schemat {
     async insert(objects, opts_ = {}) {
         /* Insert 1+ related objects all at once to the same DB block. The objects may reference each other.
            The links will be properly replaced in the DB with newly assigned object IDs even if the references are cyclic.
-           All the `objects` must be infants (no ID assigned yet). After this call completes, the objects & references
+           All the `objects` must be newborns (no ID assigned yet). After this call completes, the objects & references
            get their __id values assigned. The returned array either contains the original `objects`,
            or their new instances in the same order (reloaded objects), depending on the `reload` flag.
            `objects` can be either an Array of web objects, or a single web object. In the latter case, this single
