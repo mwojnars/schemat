@@ -158,9 +158,9 @@ export class Ring extends WebObject {
         if (this.streams[name]) throw new Error(`this stream name already exists: ${name}`)
         if (this.readonly) throw new Error("the ring is read-only")
 
-        let stream = this[`streams.${name}`] = Stream.new(this, operator)
-        await stream.save({broadcast: true})
-        await this.save({broadcast: true})
+        let opts = {broadcast: true}
+        this[`streams.${name}`] = await Stream.new(this, operator).save(opts)
+        await this.save(opts)
         // await stream.build()
     }
 
