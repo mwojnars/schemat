@@ -71,8 +71,7 @@ export class Category extends WebObject {
         /* Create a new object in this category, execute its __new__(...args) and save it to DB.
            Return the reloaded object in the exact form as written to the DB (after validation, imputation etc.).
          */
-        let obj = await this.new(...args).save()
-        return obj.reload()
+        return this.new(...args).save()
     }
 
     async list_objects(opts = {}) {
