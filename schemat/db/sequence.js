@@ -126,7 +126,7 @@ export class IndexSequence extends Sequence {
     //     // let {IndexBlock} = this.__category.preloaded
     //     // let IndexBlock = await this.__category.import('./IndexBlock')
     //     let IndexBlock = await schemat.import('/$/sys/IndexBlock')
-    //     this.blocks = [await IndexBlock.insert(id, this.filename)]
+    //     this.blocks = [await IndexBlock.new(id, this.filename).save()]
     // }
 }
 
