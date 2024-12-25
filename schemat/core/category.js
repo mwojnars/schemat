@@ -59,7 +59,7 @@ export class Category extends WebObject {
          */
         data = Struct.clone(data)
         Struct.set(data, ['__category'], this)
-        return this.__child_class.infant(data)
+        return this.__child_class.newborn(data)
     }
 
     new(...args) {

@@ -37,7 +37,7 @@ import("./category.js").then(module => {RootCategory = module.RootCategory})
  */
 
 class Intercept {
-    /* A Proxy wrapper for all kinds of web objects: stubs, infant, or loaded from DB.
+    /* A Proxy wrapper for all kinds of web objects: stubs, newborns, or loaded from DB.
        Makes loaded properties accessible with the `obj.prop` syntax, on top of plain JS attributes.
        Performs caching of computed properties in target.__meta.cache. Ensures immutability of regular properties.
        Since a Proxy class can't be subclassed, all methods and properties of Intercept are static.
@@ -291,7 +291,7 @@ export class WebObject {
     }
 
     // get __infant_references() {
-    //     /* Array of all newly-created (infant) WebObjects referenced from this one. */
+    //     /* Array of all newborn WebObjects referenced from this one. */
     //     let refs = []
     //     Struct.collect(this.__data, obj => {if (obj instanceof WebObject && obj.is_infant()) refs.push(obj)})
     //     return refs
@@ -359,7 +359,7 @@ export class WebObject {
 
     /***  Object status  ***/
 
-    is_infant()     { return !this.__id }       // object is an "infant" when it hasn't been saved to DB yet, so it has no ID assigned
+    is_infant()     { return !this.__id }       // object is a "newborn" when it hasn't been saved to DB yet, so it has no ID assigned
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     is_category()   { return false }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
@@ -409,8 +409,8 @@ export class WebObject {
         return obj.__proxy = Intercept.wrap(obj)
     }
 
-    static infant(data = null, opts = {}) {
-        /* Create an infant object (not yet in DB): a mutable object with no ID. Optionally, initialize its __data with `data`,
+    static newborn(data = null, opts = {}) {
+        /* Create a newborn object (not yet in DB): a mutable object with no ID. Optionally, initialize its __data with `data`,
            but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
         if (data) obj.__data = new Catalog(data)
@@ -419,7 +419,7 @@ export class WebObject {
 
     static _new(categories = [], ...args) {
         /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
-        let obj = this.infant()
+        let obj = this.newborn()
         categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat) || []
         obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
         let ret = obj.__new__(...args)
@@ -1040,7 +1040,7 @@ export class WebObject {
 
         let edit = [op, ...args]
         this._apply_edits(edit)
-        this.__meta.edits?.push(edit)       // `edits` does not exist in infant objects, so `edit` is not recorded then, but is still applied to __data
+        this.__meta.edits?.push(edit)       // `edits` does not exist in newborn objects, so `edit` is not recorded then, but is still applied to __data
         return this
     }
 

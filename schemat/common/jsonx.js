@@ -169,7 +169,7 @@ export class JSONx {
                 let id = classname
                 return (id > 0) ?
                     schemat.get_object(id) :            // all web objects must be loaded through the global Schemat instance;
-                    schemat.get_provisional(-id)        // special handling for references to infant objects - represented by negative ID
+                    schemat.get_provisional(-id)        // special handling for references to newborn objects - represented by negative ID
             }
             cls = schemat.get_builtin(classname)
         }

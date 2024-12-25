@@ -567,7 +567,7 @@ export class REF extends Type {
     _validate(obj) {
         obj = super._validate(obj)
         if (!(obj instanceof schemat.WebObject)) throw new ValueError(`expected a WebObject, got ${obj} instead`)
-        if (!obj.id) throw new ValueError(`found a reference to an infant object (no ID): ${obj}`)
+        if (!obj.id) throw new ValueError(`found a reference to a newborn object (no ID): ${obj}`)
         if (obj.id < 0) throw new ValueError(`found a reference to an object with provisional ID=${obj.id} (${obj})`)
         // TODO: check that options.category.__id is present in the list of object's ancestors, obj.__ancestor_ids
         return obj
