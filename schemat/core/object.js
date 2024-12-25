@@ -135,7 +135,7 @@ class Intercept {
     {
         // special attributes are written directly to __self (outside __data, not sent to DB);
         // also, when the __data is not loaded yet, *every* write goes to __self
-        if (!(target.is_infant() || target.is_loaded())
+        if (!(target.is_newborn() || target.is_loaded())
             || typeof path !== 'string'                         // `path` can be a symbol like [Symbol.toPrimitive]
             || Intercept.SPECIAL.includes(path)
         ) return Reflect.set(target, path, value, receiver)
@@ -151,7 +151,7 @@ class Intercept {
 
         // write value in __data only IF the `path` is in schema, or the schema is missing (or non-strict) AND the path name is regular
         if (schema?.has(step) || (!schema?.options.strict && regular)) {
-            // if (!target.is_infant()) print('proxy_set updating:', path)
+            // if (!target.is_newborn()) print('proxy_set updating:', path)
             let {alias, getter} = type.options
 
             if (alias) return receiver[path.replace(step, alias)] = value
@@ -293,7 +293,7 @@ export class WebObject {
     // get __infant_references() {
     //     /* Array of all newborn WebObjects referenced from this one. */
     //     let refs = []
-    //     Struct.collect(this.__data, obj => {if (obj instanceof WebObject && obj.is_infant()) refs.push(obj)})
+    //     Struct.collect(this.__data, obj => {if (obj instanceof WebObject && obj.is_newborn()) refs.push(obj)})
     //     return refs
     // }
 
@@ -359,13 +359,13 @@ export class WebObject {
 
     /***  Object status  ***/
 
-    is_infant()     { return !this.__id }       // object is a "newborn" when it hasn't been saved to DB yet, so it has no ID assigned
+    is_newborn()    { return !this.__id }       // object is a "newborn" when it hasn't been saved to DB yet, so it has no ID assigned
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     is_category()   { return false }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
-    assert_active() { if (!this.is_loaded() && !this.is_infant()) throw new NotLoaded(this) }
+    assert_active() { if (!this.is_loaded() && !this.is_newborn()) throw new NotLoaded(this) }
 
     is(other) {
         /* True if `this` and `other` object have the same ID; they still can be two different instances
@@ -395,7 +395,7 @@ export class WebObject {
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
 
         if (!mutable) this.__meta.cache = new Map()
-        if (mutable && !this.is_infant()) this.__meta.edits = []
+        if (mutable && !this.is_newborn()) this.__meta.edits = []
     }
 
     static stub(id = null, opts = {}) {
@@ -1063,7 +1063,7 @@ export class WebObject {
         this.assert_active()
         let {reload = true} = opts
 
-        if (this.is_infant()) return schemat.insert(this, opts)     // save a newly-created object
+        if (this.is_newborn()) return schemat.insert(this, opts)    // save a newly-created object
 
         let edits = this.__meta.edits           // otherwise, save updates of an existing object...
         if (edits?.length) {

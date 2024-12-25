@@ -345,7 +345,7 @@ export class Schemat {
         let batch = (objects instanceof Array)
         if (!batch) objects = [objects]
 
-        objects.forEach(obj => {if (!obj.is_infant()) throw new Error(`object ${obj} already has an ID, cannot be inserted to DB again`)})
+        objects.forEach(obj => {if (!obj.is_newborn()) throw new Error(`object ${obj} already has an ID, cannot be inserted to DB again`)})
 
         let size = objects.length
         let unique = new Set(objects)
@@ -357,7 +357,7 @@ export class Schemat {
         while (queue.length) {
             let obj = queue.pop()
             obj.__references.forEach(ref => {
-                if (ref.is_infant() && !unique.has(ref)) {unique.add(ref); queue.push(ref); objects.push(ref)}
+                if (ref.is_newborn() && !unique.has(ref)) {unique.add(ref); queue.push(ref); objects.push(ref)}
             })
         }
         // set provisional IDs so that cross-references to these objects are properly resolved in the DB when creating data records

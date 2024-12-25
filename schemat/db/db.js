@@ -200,7 +200,7 @@ export class Database extends WebObject {
     async open(ring_specs) {
         /* In a newly-created Database, create all rings according to `ring_specs` specification. */
 
-        assert(this.is_infant())                // open() is a mutable operation, so it can only be called on a newborn object (not in DB)
+        assert(this.is_newborn())           // open() is a mutable operation, so it can only be called on a newborn object (not in DB)
         print(`creating database...`)
         let top
 
