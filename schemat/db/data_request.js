@@ -81,7 +81,7 @@ export class DataRequest {
         return dup
     }
 
-    add_ring(ring) {
+    push_ring(ring) {
         this.rings.push(ring)
         // print('request-forward rings:', this.rings.map(r => r.name))
     }
@@ -106,7 +106,7 @@ export class DataRequest {
         return this.clone().make_step(actor, command, args)
     }
 
-    // assert_valid_id(msg)        { return this.current_ring.assert_valid_id(this.args?.id, msg || `item ID is outside of the valid range for the ring`) }
+    // assert_valid_id(msg)        { return this.current_ring.assert_valid_id(this.args?.id, msg || `object ID is outside of the valid range for the ring`) }
 
     error_access(msg)           { throw new DataAccessError(msg, {id: this.args?.id}) }
     error_id_not_found(msg)     { throw new ItemNotFound(msg, {id: this.args?.id}) }
@@ -115,12 +115,12 @@ export class DataRequest {
     /***  forward request to lower/higher rings  ***/
 
     forward_down() {
-        /* Forward the request to a lower ring if the current ring doesn't contain the requested item ID - during
-           select/update/delete operations. It is assumed that args[0] is the item ID.
+        /* Forward the request to a lower ring if the current ring doesn't contain the requested object ID - during
+           select/update/delete operations. It is assumed that args[0] is the object ID.
          */
         // print(`forward_down(${this.command}, ${this.args})`)
         let current = this.current_ring
-        if (current) this.add_ring(current)
+        if (current) this.push_ring(current)
         let ring = current ? current.lower_ring : this.current_db.top_ring
         return ring ? ring.handle(this) : this.error_id_not_found()
     }
@@ -134,7 +134,7 @@ export class DataRequest {
         assert(ring)
         while (ring?.readonly) ring = this.pop_ring()        // go upwards to find the first writable ring
         return ring ? ring.handle(this)
-            : this.error_access(`can't save an updated item, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
+            : this.error_access(`can't save an updated object, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
     }
 }
 
