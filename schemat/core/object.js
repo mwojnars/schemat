@@ -508,9 +508,11 @@ export class WebObject {
     }
 
     _parse_data(data_json) {
-        /* Parse object properties (data) from a JSON string. Handle the special data.__meta field. */
+        /* Parse object properties (data) from a JSON string. Handle the temporary data.__meta field. */
         let self = this.__self
         let data = Catalog.load(data_json)
+        // print(`[${this.id}] data.__meta:`, data.get('__meta'))
+
         let {ring, block} = data.get('__meta') || {}
         if (ring) self.__ring = schemat.get_object(ring)
         if (block) self.__block = schemat.get_object(block)

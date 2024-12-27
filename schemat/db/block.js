@@ -156,7 +156,7 @@ export class DataBlock extends Block {
     }
 
     _annotate(json) {
-        /* Append metadata to the JSON content of an object retrieved during select/update. */
+        /* Append metadata (ring & block ID) to the JSON content of an object retrieved during select/update. */
         let plain = JSON.parse(json)
         plain.__meta = {ring: this.ring.id, block: this.id}
         return JSON.stringify(plain)

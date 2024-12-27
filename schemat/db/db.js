@@ -156,6 +156,8 @@ export class Ring extends WebObject {
         if (this.streams[name]) throw new Error(`this stream name already exists: ${name}`)
         if (this.readonly) throw new Error("the ring is read-only")
 
+        // print('this.__ring:', this.__ring)
+
         let opts = {ring: this, broadcast: true}
         let Stream = await schemat.import('/$/sys/Stream')
         this[`streams.${name}`] = await Stream.new(this, operator).save(opts)
