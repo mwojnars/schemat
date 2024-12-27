@@ -202,6 +202,9 @@ export class WebObject {
     __provisional_id        temporary ID (1,2,3...) of a newly-created object not yet saved to DB; only used to differentiate the object
                             in a batch of interconnected objects that are being inserted to DB altogether
 
+    __ring                  Ring instance that represents the ring where this object was retrieved from; stub or loaded
+    __block                 Block instance that represents the physical data block where this object was retrieved from; stub or loaded
+
     __data                  own properties of this object in their raw form (before imputation etc.), as a Catalog object created during .load()
     __object                JS object representation of __data, NOT encoded; for repeated fields, only the first value is included; may still contain nested Catalogs
 
@@ -315,7 +318,6 @@ export class WebObject {
         loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         loaded_at:      undefined,  // timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
         expire_at:      undefined,  // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
-        //pending_url:  undefined,  // promise created at the start of _init_url() and removed at the end; indicates that the object is still computing its URL (after or during load())
 
         cache:          undefined,  // Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
         edits:          undefined,  // array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
