@@ -1016,7 +1016,7 @@ export class WebObject {
     // }
 
     get_mutable(opts = {}) {
-        /* Create a fully-loaded, mutable instance of this web object. The object is either a duplicate of `this` (if opts.reload=false),
+        /* Create a fully-loaded, mutable instance of this web object. The object is either a duplicate of `this` (if opts.reload=false, default),
            created in synchronous way; or recreated from scratch (reload=true) in async way, in which case it may have a different
            (newer) content than `this`. In the latter case (reload=true), a promise is returned.
          */

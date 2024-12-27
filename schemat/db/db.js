@@ -343,7 +343,7 @@ export class Database extends WebObject {
         let pos = this.locate_ring(ring)
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
-            await ring.create_stream(index)
+            await ring.get_mutable().create_stream(index)
             // await ring.action.create_stream(index)
             // this.rings[i] = await ring.refresh()
             // this.rings[i] = await ring.action.create_stream(index)
