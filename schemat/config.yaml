@@ -15,5 +15,7 @@ site: 1001
 # this reason, the bootstrap database typically consists of just the kernel ring and the cluster/site configuration ring.
 
 bootstrap_rings:
-  - file: ./schemat/data/kernel.yaml                    # core categories; practically immutable (very rarely changed)
-  - file: ./schemat/data/db-site.yaml
+  - name: boot_kernel
+    file: ./schemat/data/kernel.yaml                    # core categories; practically immutable (very rarely changed)
+  - name: boot_site
+    file: ./schemat/data/db-site.yaml

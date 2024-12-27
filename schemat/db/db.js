@@ -65,7 +65,7 @@ export class Ring extends WebObject {
     async __init__() {
         /* Initialize the ring after it's been loaded from DB. */
         if (CLIENT) return
-        print(`... ring loaded [${this.__id}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
+        print(`... ring [${this.__id || '---'}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
 
         await this.lower_ring?.load()
         await this.data_sequence.load()
@@ -204,15 +204,14 @@ export class Database extends WebObject {
         let top
 
         for (const spec of ring_specs) {
-            let ring =
-                spec instanceof Ring ? spec :
-                spec.item            ? await schemat.get_loaded(spec.item) :
-                                       await Ring.new(spec).load()
+            let ring = spec instanceof Ring ? spec : await Ring.new(spec).load()
+            // let ring =
+            //     spec instanceof Ring ? spec :
+            //     spec.item            ? await schemat.get_loaded(spec.item) :
+            //                            await Ring.new(spec).load()
 
             ring.lower_ring = top
             top = ring
-
-            print(`... ring created [${ring.__id || '---'}] ${ring.name} (${ring.readonly ? 'readonly' : 'writable'})`)
         }
         this.top_ring = top
     }
