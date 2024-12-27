@@ -204,6 +204,7 @@ export class WebObject {
 
     __ring                  Ring instance that represents the ring where this object was retrieved from; stub or loaded
     __block                 Block instance that represents the physical data block where this object was retrieved from; stub or loaded
+    __json_source           if __data was parsed from a JSON string, __json_source holds this string for future reference
 
     __data                  own properties of this object in their raw form (before imputation etc.), as a Catalog object created during .load()
     __object                JS object representation of __data, NOT encoded; for repeated fields, only the first value is included; may still contain nested Catalogs
@@ -513,7 +514,7 @@ export class WebObject {
          */
         let self = this.__self
         let json, meta
-        
+
         if (typeof data === 'string') {
             json = data
             data = Catalog.load(json)
