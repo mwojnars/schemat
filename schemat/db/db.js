@@ -45,8 +45,7 @@ export class Ring extends WebObject {
     }
 
 
-    __new__({name, ...opts}) {
-        let {file} = opts
+    __new__({name, file, start_id = 0, stop_id, readonly = false} = {}) {
         this._file = file
         this.name = name || fileBaseName(file)
 
@@ -55,7 +54,6 @@ export class Ring extends WebObject {
         //     // this.name = file.substring(file.lastIndexOf('/') + 1, file.lastIndexOf('.') >= 0 ? file.lastIndexOf('.') : undefined)
         //     // this.name = path.basename(file, path.extname(file))
 
-        let {readonly = false, start_id = 0, stop_id} = opts
         this.readonly = readonly
         this.start_id = start_id
         this.stop_id = stop_id
