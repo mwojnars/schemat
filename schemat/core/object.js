@@ -508,7 +508,7 @@ export class WebObject {
     }
 
     _parse_data(data_json) {
-        /* Parse object properties (data) from a JSON string. Handle the temporary data.__meta field. */
+        /* Parse object properties (data) from a JSON string. Extract and drop the temporary data.__meta field. */
         let self = this.__self
         let data = Catalog.load(data_json)
         // print(`[${this.id}] data.__meta:`, data.get('__meta'))
