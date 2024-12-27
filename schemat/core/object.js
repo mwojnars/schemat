@@ -482,7 +482,7 @@ export class WebObject {
             if (!this.__data) {
                 let data_json = schemat.load_record(this.id)
                 if (data_json instanceof Promise) data_json = await data_json
-                this.__data = Catalog.load(data_json)
+                this.__data = this._parse_data(data_json)
                 data_loaded = true
             }
 
@@ -503,6 +503,17 @@ export class WebObject {
             this.__meta.loading = false                     // cleanup to allow another load attempt, even after an error
             schemat.after_data_loading(this)
         }
+    }
+
+    _parse_data(data_json) {
+        /* Parse object properties (data) from a JSON string. Handle the special data.__meta field. */
+        let self = this.__self
+        let data = Catalog.load(data_json)
+        let {ring, block} = data.get('__meta') || {}
+        if (ring) self.__ring = schemat.get_object(ring)
+        if (block) self.__block = schemat.get_object(block)
+        data.delete('__meta')
+        return data
     }
 
     async _initialize(sealed) {

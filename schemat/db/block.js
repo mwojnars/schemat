@@ -155,9 +155,17 @@ export class DataBlock extends Block {
             throw new DataConsistencyError(msg || "item with this ID already exists", {id})
     }
 
+    _annotate(json) {
+        /* Append metadata to the JSON content of an object retrieved during select/update. */
+        let plain = JSON.parse(json)
+        plain.__meta = {ring: this.ring.id, block: this.id}
+        return JSON.stringify(plain)
+    }
+
     async cmd_select(req) {
-        let data = await this._storage.get(req.args.key)
-        return data !== undefined ? data : req.forward_down()
+        let data = await this._storage.get(req.args.key)    // JSON string
+        if (!data) return req.forward_down()
+        return this._annotate(data)
     }
 
     async cmd_insert(req) {
