@@ -338,7 +338,7 @@ export class Database extends WebObject {
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
             print(`[${this.id}] ring.__ring:`, ring.__ring?.id)
-            await ring.get_mutable().create_stream(index)
+            await ring.get_mutable().create_stream(index)   //{reload: true}
             // await ring.action.create_stream(index)
             // this.rings[i] = await ring.refresh()
             // this.rings[i] = await ring.action.create_stream(index)
