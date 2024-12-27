@@ -511,9 +511,12 @@ export class WebObject {
         /* Parse object properties (data) from a JSON string. Extract and drop the temporary data.__meta field. */
         let self = this.__self
         let data = Catalog.load(data_json)
+        let meta = data.get('__meta')
+        if (!meta) return data
+
         // print(`[${this.id}] data.__meta:`, data.get('__meta'))
 
-        let {ring, block} = data.get('__meta') || {}
+        let {ring, block} = meta
         if (ring) self.__ring = schemat.get_object(ring)
         if (block) self.__block = schemat.get_object(block)
         data.delete('__meta')
@@ -576,6 +579,7 @@ export class WebObject {
 
         let now = Date.now()
         let ttl = (this.__ttl || this.__base?.cache_timeout || 0) * 1000
+        if (!this.__ring) ttl = 0       // if this object was loaded from a bootstrap ring, schedule it for immediate reload
 
         this.__meta.loaded_at = now
         this.__meta.expire_at = now + ttl
