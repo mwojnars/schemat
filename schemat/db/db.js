@@ -1,7 +1,7 @@
 import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
 import {DatabaseError} from "../common/errors.js"
 import {WebObject} from "../core/object.js"
-import {DataOperator, Stream} from "./sequence.js";
+import {DataOperator} from "./sequence.js";
 import {data_schema, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
@@ -159,6 +159,7 @@ export class Ring extends WebObject {
         if (this.readonly) throw new Error("the ring is read-only")
 
         let opts = {broadcast: true}
+        let Stream = await schemat.import('/$/sys/Stream')
         this[`streams.${name}`] = await Stream.new(this, operator).save(opts)
         await this.save(opts)
         // await stream.build()

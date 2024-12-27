@@ -119,6 +119,8 @@
       "@": 15
     ObjectIndexOperator:
       "@": 16
+    Stream:
+      "@": 17
     "@": schemat:Catalog
   __container:
     "@": 1019
