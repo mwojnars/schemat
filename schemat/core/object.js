@@ -507,13 +507,23 @@ export class WebObject {
         }
     }
 
-    _set_data(data_json) {
-        /* Parse object properties (data) from a JSON string. Extract and drop the temporary data.__meta field. */
+    _set_data(data) {
+        /* Create this.__data catalog with the content pulled from `data` and set related special fields.
+           Extract and drop the temporary data.__meta field. `data` can be a JSON string, or a Catalog, or a Catalog's state object.
+         */
         let self = this.__self
-        let data = Catalog.load(data_json)
-        let meta = data.get('__meta')
+        let json, meta
+        
+        if (typeof data === 'string') {
+            json = data
+            data = Catalog.load(json)
+        }
+        else if (!(data instanceof Catalog))
+            data = Catalog.__setstate__(data)
 
-        if (meta) {
+        if (json) self.__json_source = json
+
+        if ((meta = data.get('__meta'))) {
             // print(`[${this.id}] data.__meta:`, data.get('__meta'))
             let {ring, block} = meta
             if (ring) self.__ring = schemat.get_object(ring)
