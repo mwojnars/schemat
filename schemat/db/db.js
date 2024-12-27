@@ -199,17 +199,12 @@ export class Database extends WebObject {
     async open(ring_specs) {
         /* In a newly-created Database, create all rings according to `ring_specs` specification. */
 
-        assert(this.is_newborn())           // open() is a mutable operation, so it can only be called on a newborn object (not in DB)
+        assert(this.is_newborn())           // open() is a mutating operation, it can only be called on a newborn object (not in DB)
         print(`creating database...`)
         let top
 
         for (const spec of ring_specs) {
-            let ring = spec instanceof Ring ? spec : await Ring.new(spec).load()
-            // let ring =
-            //     spec instanceof Ring ? spec :
-            //     spec.item            ? await schemat.get_loaded(spec.item) :
-            //                            await Ring.new(spec).load()
-
+            let ring = await Ring.new(spec).load()
             ring.lower_ring = top
             top = ring
         }
