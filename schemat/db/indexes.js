@@ -105,7 +105,7 @@ export class ObjectIndexOperator extends IndexOperator {
     __new__(name, key, payload) {
         this.name = name
         this.key = key
-        this.payload = payload
+        if (payload?.length) this.payload = payload
     }
 
     impute_key_spec() {
