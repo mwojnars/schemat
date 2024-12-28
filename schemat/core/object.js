@@ -509,8 +509,8 @@ export class WebObject {
     }
 
     _set_data(data) {
-        /* Create this.__data catalog with the content pulled from `data` and set related special fields.
-           Extract and drop the temporary data.__meta field. `data` can be a JSON string, or a Catalog, or a Catalog's state object.
+        /* Create this.__data using the content pulled from `data`. Set related special fields. Extract and drop the temporary data.__meta.
+           `data` can be a JSON string, or a Catalog, or a Catalog's state object.
          */
         let self = this.__self
         let json, meta
