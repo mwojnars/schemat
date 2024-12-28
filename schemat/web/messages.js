@@ -88,8 +88,8 @@ export class mJsonxArray extends mJsonxError {
 /**********************************************************************************************************************/
 
 export class mData extends MessageEncoder {
-    /* Encode: a Catalog, either in its original form, or after __getstate__(), but NOT yet JSONx-encoded.
-       Decode: fully parsed and decoded Catalog instance.
+    /* Input:  a Catalog, either in its original form, or after __getstate__(), but NOT yet JSONx-encoded.
+       Output: fully parsed and decoded Catalog instance.
      */
     encode(data) {
         if (typeof data === 'string') return data       // already encoded
