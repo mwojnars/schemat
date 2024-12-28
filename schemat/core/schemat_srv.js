@@ -6,6 +6,7 @@ import {assert, print, T} from '../common/utils.js'
 import {Schemat} from './schemat.js'
 import {RequestContext} from "../web/request.js";
 import {DataRequest} from "../db/data_request.js";
+import {thread_local_variable} from "../server/thread.js";
 
 
 /**********************************************************************************************************************
@@ -33,6 +34,7 @@ export class ServerSchemat extends Schemat {
         // check that it points to the installation's root folder and contains `schemat` subfolder with `config.yaml` file in it
         assert(fs.existsSync(this.ROOT_DIRECTORY + '/schemat/config.yaml'), 'The current working directory does not contain ./schemat/config.yaml file')
 
+        this.transaction = thread_local_variable()
         // this.loader = new Loader(import.meta.url)
     }
 

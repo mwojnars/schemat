@@ -81,10 +81,11 @@ export class Schemat {
        loading and caching of web objects, dynamic module import, classpath management, session management etc.
      */
 
-    site_id                     // ID of the active Site object
-    registry                    // cache of web objects, records and indexes loaded from DB
-    builtin                     // a Classpath containing built-in classes and their paths
-    is_closing = false          // true if the Schemat node is in the process of shutting down
+    site_id                 // ID of the active Site object
+    registry                // cache of web objects, records and indexes loaded from DB
+    builtin                 // a Classpath containing built-in classes and their paths
+    transaction             // async-thread-local Transaction object with info about the currently executed action; server-side only
+    is_closing = false      // true if the Schemat node is in the process of shutting down
 
 
     get root_category() { return this.get_object(ROOT_ID) }

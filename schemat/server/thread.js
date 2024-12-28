@@ -15,6 +15,7 @@ export async function thread_local_variable() {
 
     let handler = {
         get(target, prop, receiver) {
+            if (prop === 'then') return undefined
             if (prop === 'run_with')
                 return (store, callback) => local.run(store, callback)
 
