@@ -123,6 +123,7 @@ export class mDataRecords extends MessageEncoder {
         return batch ? `[${recs.join(',')}]` : recs[0]
     }
     decode(msg) {
+        if (!msg) return
         let recs = JSON.parse(msg)
         if (recs instanceof Array) recs.forEach(rec => schemat.register_record(rec))
         else schemat.register_record(recs)

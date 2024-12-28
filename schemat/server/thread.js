@@ -10,20 +10,20 @@ export async function thread_local_variable() {
        set to `value` within the current async thread; the `value` is typically a Map or an object.
      */
 
-    const async_hooks = await import('node:async_hooks')
-    const local = new async_hooks.AsyncLocalStorage()
+    let async_hooks = await import('node:async_hooks')
+    let local = new async_hooks.AsyncLocalStorage()
 
-    const handler = {
+    let handler = {
         get(target, prop, receiver) {
             if (prop === 'run_with')
                 return (store, callback) => local.run(store, callback)
 
             // if (prop === 'local') return local
 
-            const store = local.getStore()
+            let store = local.getStore()
             return Reflect.get(store, prop, receiver)
 
-            // const value = store[prop]
+            // let value = store[prop]
             // return typeof value === 'function' ? value.bind(store) : value
         },
         set(target, prop, value, receiver) {
@@ -31,7 +31,7 @@ export async function thread_local_variable() {
             if (prop === 'run_with')
                 throw new Error(`${prop} is not writable`)
 
-            const store = local.getStore()
+            let store = local.getStore()
             return Reflect.set(store, prop, value)
 
             // store[prop] = value
