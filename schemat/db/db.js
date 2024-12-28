@@ -156,7 +156,7 @@ export class Ring extends WebObject {
         if (this.streams[name]) throw new Error(`this stream name already exists: ${name}`)
         if (this.readonly) throw new Error("the ring is read-only")
 
-        // print(`[${this.id}] this.__ring:`, this.__ring, this.__meta.expire_at - this.__meta.loaded_at)
+        // print(`[${this.id}] this.__ring:`, this.__ring?.id)
 
         let opts = {ring: this, broadcast: true}
         let Stream = await schemat.import('/$/sys/Stream')
@@ -337,7 +337,6 @@ export class Database extends WebObject {
         let pos = this.locate_ring(ring)
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
-            print(`[${this.id}] ring.__ring:`, ring.__ring?.id)
             await ring.get_mutable().create_stream(index)   //{reload: true}
             // await ring.action.create_stream(index)
             // this.rings[i] = await ring.refresh()
