@@ -316,11 +316,13 @@ export class Database extends WebObject {
     //     yield* merge(WebObject.compare, ...streams)
     // }
 
-    async create_index(name, key, payload = undefined, {ring} = {}) {
-        if (ring && !this.rings.includes(ring)) throw new Error(`ring not found in the database: ${ring}`)
-        ring ??= this.bottom_ring
+    async 'action.create_index'(name, key, payload = undefined, {ring = this.bottom_ring} = {}) {
+        /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (the kernel).
+           Schema of the new index is defined by `key` and `payload` (arrays of property names).
+         */
+        if (!this.rings.includes(ring)) throw new Error(`ring not found in the database: ${ring}`)
+        // ring ??= this.bottom_ring
 
-        // check that `key` is an array with 1+ elements
         if (!Array.isArray(key) || key.length === 0) throw new Error(`index key must be an array with at least one element: ${key}`)
         if (payload && !Array.isArray(payload)) throw new Error(`index payload must be an array: ${payload}`)
 
@@ -333,12 +335,7 @@ export class Database extends WebObject {
         let pos = this.locate_ring(ring)
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
-            // await ring.get_mutable().create_stream(index)
             await ring.action.create_stream(index)
-            // this.rings[i] = await ring.refresh()
-            // this.rings[i] = await ring.action.create_stream(index)
-            // this.rings[i].refresh()         // in-place refresh of PRIVATE sub-object (rings[i])
-            // this[`rings/${i}`] = ...
         }
     }
 
