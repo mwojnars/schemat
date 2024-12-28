@@ -364,6 +364,7 @@ export class WebObject {
 
     is_newborn()    { return !this.__id }       // object is a "newborn" when it hasn't been saved to DB yet, so it has no ID assigned
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
+    is_mutable()    { return this.__meta.mutable }
     is_category()   { return false }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
@@ -1034,14 +1035,13 @@ export class WebObject {
     //      */
     // }
 
-    get_mutable({reload = false, activate = true, ...opts} = {}) {
-        /* Create a fully-loaded, mutable instance of this web object. The object is either created synchronously
-           by parsing this.__json_source or cloning this.__data (if reload=false, default);
-           or recreated from scratch (reload=true) in async way, then it may have a different
-           (newer) content than `this`. In the latter case (reload=true), a promise is returned.
-           If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
+    get_mutable({activate = true, ...opts} = {}) {
+        /* Create a fully-loaded, mutable instance of this (loaded) web object. The object is created synchronously
+           by parsing this.__json_source or cloning this.__data. If dependencies of `this` were initialized (this._initialize()),
+           they are still initialized for the clone.
          */
-        if (reload) return schemat.get_mutable(this)
+        assert(this.is_loaded() && !this.is_mutable(), 'a mutable copy can only be created for a fully-loaded immutable object')
+        // if (reload) return schemat.get_mutable(this)
         let obj = WebObject.stub(this.id, {...opts, mutable: true})
         obj._set_data(this.__json_source || this.__data.clone())
         T.setClass(obj, T.getClass(this))
@@ -1162,6 +1162,7 @@ export class WebObject {
     /***  Actions  ***/
 
     _execute_action(name, ...args) {
+        assert(this.is_mutable())
         let func = this.__self[`action.${name}`]
         if (!func) throw new Error(`action method not found: '${op}'`)
         return func.call(this, ...args)
