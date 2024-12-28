@@ -148,9 +148,6 @@ export class Ring extends WebObject {
     }
 
     async 'action.create_stream'(operator) {
-    }
-
-    async create_stream(operator) {
         // TODO SEC: check permissions
         let name = operator.name
         if (this.streams[name]) throw new Error(`this stream name already exists: ${name}`)
@@ -336,8 +333,8 @@ export class Database extends WebObject {
         let pos = this.locate_ring(ring)
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
-            await ring.get_mutable().create_stream(index)
-            // await ring.action.create_stream(index)
+            // await ring.get_mutable().create_stream(index)
+            await ring.action.create_stream(index)
             // this.rings[i] = await ring.refresh()
             // this.rings[i] = await ring.action.create_stream(index)
             // this.rings[i].refresh()         // in-place refresh of PRIVATE sub-object (rings[i])

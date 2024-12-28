@@ -880,7 +880,7 @@ export class WebObject {
         if (__actions.length) {
             let action = this.__self.action = {}
             for (let name of __actions)
-                action[name] = (...args) => schemat.site.POST.submit_actions(this.id, name, ...args)
+                action[name] = (...args) => schemat.site.POST.submit_action(this.id, name, ...args)
         }
     }
 
