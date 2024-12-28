@@ -1,12 +1,12 @@
 // import { Mutex } from 'async-mutex'
 
 import fs from 'node:fs'
+import {AsyncLocalStorage} from 'node:async_hooks'
 
 import {assert, print, T} from '../common/utils.js'
 import {Schemat} from './schemat.js'
 import {RequestContext} from "../web/request.js";
 import {DataRequest} from "../db/data_request.js";
-import {thread_local_variable} from "../server/thread.js";
 
 
 /**********************************************************************************************************************
@@ -20,7 +20,8 @@ export class ServerSchemat extends Schemat {
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
-    _db         // bootstrap DB; regular server-side DB is taken from site.database
+    _db             // bootstrap DB; regular server-side DB is taken from site.database
+    transaction     // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
     get db()    { return this.site?.database || this._db }
 
@@ -34,7 +35,7 @@ export class ServerSchemat extends Schemat {
         // check that it points to the installation's root folder and contains `schemat` subfolder with `config.yaml` file in it
         assert(fs.existsSync(this.ROOT_DIRECTORY + '/schemat/config.yaml'), 'The current working directory does not contain ./schemat/config.yaml file')
 
-        this.transaction = thread_local_variable()
+        this.transaction = new AsyncLocalStorage()
         // this.loader = new Loader(import.meta.url)
     }
 

@@ -202,6 +202,12 @@ export class Site extends WebObject {
             server: async (id, action, ...args) => {
                 let obj = await schemat.get_loaded(id)
                 return obj.get_mutable()._execute_action(action, ...args)
+
+                // let tx = schemat.transaction.getStore() || new Transaction()
+                // return schemat.transaction.run(tx, async () => {
+                //     let result = await obj.get_mutable()._execute_action(action, ...args)
+                //     return result
+                // })
             },
             output: mDataRecords,
         })
