@@ -227,13 +227,16 @@ export class Schemat {
     }
 
     async get_mutable(...objects_or_ids) {
-        /* Create fully-loaded, mutable instances of given objects. Return an array (if multiple args), or a single result object. */
-        let objs = objects_or_ids.map(obj => {
+        /* Return an array of mutable, fully-loaded instances of given objects. Like WebObject.get_mutable(),
+           but executed for multiple objects (IDs) at once, and preceded by object loading when needed.
+           Some objects/IDs on the args list can be missing (null, undefined).
+         */
+        let objs = objects_or_ids.map(async obj => {
             if (!obj) return obj
-            let id = typeof obj === 'number' ? obj : obj.__id
-            return WebObject.stub(id, {mutable: true}).load()
+            if (Number.isInteger(obj)) obj = await this.get_loaded(obj)
+            return obj.get_mutable()
         })
-        return objs.length > 1 ? Promise.all(objs) : objs[0]
+        return Promise.all(objs)
     }
 
     async get_loaded(id) {
