@@ -316,7 +316,7 @@ export class Database extends WebObject {
     //     yield* merge(WebObject.compare, ...streams)
     // }
 
-    async 'action.create_index'(name, key, payload = undefined, {ring = this.bottom_ring} = {}) {
+    async 'action.create_index'(/*tx,*/ name, key, payload = undefined, {ring = this.bottom_ring} = {}) {
         /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (the kernel).
            Schema of the new index is defined by `key` and `payload` (arrays of property names).
          */
@@ -332,6 +332,7 @@ export class Database extends WebObject {
         let ObjectIndexOperator = await schemat.import('/$/sys/ObjectIndexOperator')
         let index = ObjectIndexOperator.new(name, key, payload)
         index = await index.save({ring})
+        // tx.record(index)
 
         // create streams for `index`, in `ring` and all higher rings
         for (let i = pos; i < this.rings.length; i++) {
