@@ -201,7 +201,7 @@ export class Site extends WebObject {
         return new JsonPOST({
             server: async (id, action, ...args) => {
                 let obj = await schemat.get_loaded(id)
-                return obj._execute_action(action, ...args)
+                return obj.get_mutable()._execute_action(action, ...args)
             },
             output: mDataRecords,
         })

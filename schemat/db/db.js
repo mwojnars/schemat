@@ -327,11 +327,12 @@ export class Database extends WebObject {
         if (!Array.isArray(key) || key.length === 0) throw new Error(`index key must be an array with at least one element: ${key}`)
         if (payload && !Array.isArray(payload)) throw new Error(`index payload must be an array: ${payload}`)
 
+        // create index specification
         let ObjectIndexOperator = await schemat.import('/$/sys/ObjectIndexOperator')
-        let index = ObjectIndexOperator.new(name, key, payload)     // create index specification
+        let index = ObjectIndexOperator.new(name, key, payload)
         index = await index.save({ring})
 
-        // create streams for `index` in `ring` and all higher rings
+        // create streams for `index`, in `ring` and all higher rings
         let pos = this.locate_ring(ring)
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
