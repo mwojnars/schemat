@@ -195,6 +195,18 @@ export class Site extends WebObject {
         })
     }
 
+    'POST.submit_action'() {
+        /* Submit a server-side action specification to be executed at the physical location of the target object.
+         */
+        return new JsonPOST({
+            server: async (id, action, ...args) => {
+                let obj = await schemat.get_loaded(id)
+                return obj._execute_action(action, ...args)
+            },
+            output: mDataRecords,
+        })
+    }
+
     'POST.eval'() {
         /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string. */
         return new JsonPOST({

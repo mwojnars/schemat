@@ -1074,7 +1074,7 @@ export class WebObject {
         for (const edit of edits) {
             let [op, ...args] = edit
             let func = this.__self[`edit.${op}`]
-            if (!func) throw new Error(`object does not support edit operation: '${op}'`)
+            if (!func) throw new Error(`edit method not found: '${op}'`)
             func.call(this, ...args)
             // this[method](JSONx.deepcopy(args))      // `args` are deep-copied for safety, in case they get modified during the edit
         }
@@ -1156,6 +1156,15 @@ export class WebObject {
          */
         assert(this.__ver, 'missing version number in the object')
         this.edit.if_version(this.__ver)
+    }
+
+
+    /***  Actions  ***/
+
+    _execute_action(name, ...args) {
+        let func = this.__self[`action.${name}`]
+        if (!func) throw new Error(`action method not found: '${op}'`)
+        return func.call(this, ...args)
     }
 
 
