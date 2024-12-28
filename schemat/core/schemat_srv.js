@@ -19,12 +19,9 @@ export class ServerSchemat extends Schemat {
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
-    _db                         // bootstrap DB; regular server-side DB is taken from site.database
+    _db         // bootstrap DB; regular server-side DB is taken from site.database
 
-    get db() {
-        /* The site's database instance. Should only be used on the server. */
-        return this.site?.database || this._db
-    }
+    get db()    { return this.site?.database || this._db }
 
 
     constructor() {
