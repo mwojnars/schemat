@@ -145,7 +145,7 @@ export class Schemat {
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         this.site_id = site_id
 
-        await this.reload(this.site_id)
+        await this.reload(site_id)
         assert(this.site)
 
         await this.site.load_globals()
