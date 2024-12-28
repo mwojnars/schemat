@@ -166,7 +166,7 @@ export class Site extends WebObject {
 
     /***  Endpoints  ***/
 
-    'POST.insert'() {
+    'POST.insert_objects'() {
         /* Insert new object(s) to DB with __data initialized from the provided JSONx-stringified representation(s).
            `data` is either an array of content objects, one for each web object to be created; or a single content object.
            Every content object is a Catalog instance or an internal *state* of such instance (the result of .__getstate__()).
@@ -179,6 +179,12 @@ export class Site extends WebObject {
         })
     }
 
+    'POST.delete_object'() {
+        return new JsonPOST({
+            server: (id) => this.database.delete(id)
+        })
+    }
+
     'POST.submit_edits'() {
         /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
            of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
@@ -186,12 +192,6 @@ export class Site extends WebObject {
         return new JsonPOST({
             server: (id, ...edits) => this.database.update(id, ...edits),
             output: mDataRecords,
-        })
-    }
-
-    'POST.delete_object'() {
-        return new JsonPOST({
-            server: (id) => this.database.delete(id)
         })
     }
 

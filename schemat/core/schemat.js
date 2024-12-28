@@ -365,7 +365,7 @@ export class Schemat {
 
         let {reload = true, ...opts} = opts_
         let data = objects.map(obj => obj.__data.__getstate__())
-        let records = await this.site.POST.insert({data, opts})
+        let records = await this.site.POST.insert_objects({data, opts})
         records.map(({id}, i) => {
             delete objects[i].__self.__provisional_id   // replace provisional IDs with final IDs
             objects[i].__id = id
