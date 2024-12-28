@@ -483,9 +483,9 @@ export class WebObject {
 
         try {
             if (!this.__data) {
-                let data_json = schemat.load_record(this.id)
-                if (data_json instanceof Promise) data_json = await data_json
-                this._set_data(data_json)
+                let json = schemat.load_record(this.id)
+                if (json instanceof Promise) json = await json
+                this._set_data(json)
                 data_loaded = true
             }
 
