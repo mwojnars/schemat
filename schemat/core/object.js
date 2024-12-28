@@ -327,7 +327,8 @@ export class WebObject {
         // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
     }
 
-    edit = {}       // triggers of edit operations: obj.edit.xxx(...args) invokes obj._make_edit('edit.xxx', ...args)
+    edit            // triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', ...args)
+    action          // triggers of server-side actions: obj.action.X(...args) invokes POST.submit_action(id, 'edit.xxx', ...args)
 
     // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network endpoints, initialized in _init_services().
     // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
@@ -339,7 +340,8 @@ export class WebObject {
     LOCAL           // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
                     // ... Other trigger groups are created automatically for other protocol names.
 
-    static __edits                  // array of edit names ('xyz') for which an edit operator, 'edit.xyz'(), is defined in this class or parent classes; computed in _collect_methods()
+    static __edits                  // array of names of all edit operators, 'edit.X'(), present in this class or parent classes; this.edit.X() triggers are generated for each object during activation, see _collect_methods()
+    static __actions                // array of names of all actions, 'action.X'(), present in this class or parent classes; this.action.X() triggers are generated for each object during activation, see _collect_methods()
     static __handlers               // Map of network handlers defined by this class or parent classes; computed in _collect_methods()
     static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in Intercept
 
@@ -575,7 +577,7 @@ export class WebObject {
         /* Make the object fully operational by initializing edit operations and network services.
            Configure expiration time and put the object in the Registry.
          */
-        this._init_edit_triggers()
+        this._init_triggers()
         this._init_services()
 
         let now = Date.now()
@@ -828,9 +830,10 @@ export class WebObject {
     /***  Networking  ***/
 
     static _collect_methods(protocols = ['GET', 'POST', 'LOCAL'], SEP = '.') {
-        /* Collect all special methods of this class: web handlers + edit operators. */
+        /* Collect all special methods of this class: web handlers + actions + edit operators. */
         let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
         let is_editfunc = prop => prop.startsWith('edit' + SEP)
+        let is_action   = prop => prop.startsWith('action' + SEP)
 
         let proto = this.prototype
         let props = T.getAllPropertyNames(proto)
@@ -839,6 +842,7 @@ export class WebObject {
         this.__handlers = new Map(handlers)
 
         this.__edits = props.filter(is_editfunc).filter(name => proto[name]).map(name => name.slice(5))
+        this.__actions = props.filter(is_action).filter(name => proto[name]).map(name => name.slice(7))
     }
 
     _init_services(SEP = '.') {
@@ -862,13 +866,22 @@ export class WebObject {
         }
     }
 
-    _init_edit_triggers(SEP = '.') {
-        /* Create this.edit.*() edit triggers. Done once per object during activation. */
+    _init_triggers(SEP = '.') {
+        /* Create this.edit.*() and this.action.*() triggers. Done once per object during activation. */
         if (!this.constructor.prototype.hasOwnProperty('__edits')) this.constructor._collect_methods()
-        let edit = this.__self.edit = {}
+        let {__edits, __actions} = this.constructor
 
-        for (let name of this.constructor.__edits)
-            edit[name] = (...args) => this._make_edit(name, ...args)
+        if (__edits.length) {
+            let edit = this.__self.edit = {}
+            for (let name of __edits)
+                edit[name] = (...args) => this._make_edit(name, ...args)
+        }
+
+        if (__actions.length) {
+            let action = this.__self.action = {}
+            for (let name of __actions)
+                action[name] = (...args) => schemat.site.POST.submit_actions(this.id, name, ...args)
+        }
     }
 
     async __handle__(request, SEP = '.') {
