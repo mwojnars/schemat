@@ -246,6 +246,10 @@ describe('Schemat Tests', function () {
         it('rebuild_indexes', async function () {
             await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main')
             await delay(100)
+            // let done = await page.evaluate(async () => {
+            //     let db = await schemat.db.load()
+            //     return db.action.rebuild_indexes()
+            // })
             let done = await page.evaluate(() => schemat.eval('schemat.db.rebuild_indexes()'))
             expect(done).to.be.true
         })
