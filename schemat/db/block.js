@@ -156,7 +156,7 @@ export class DataBlock extends Block {
     }
 
     _annotate(json) {
-        /* Append metadata (ring & block ID) to the JSON content of an object retrieved during select/update. */
+        /* Append metadata (__meta) with ring & block ID to the JSON content of an object retrieved during select/update. */
         let plain = JSON.parse(json)
         plain.__meta = {ring: this.ring.id, block: this.id}
         return JSON.stringify(plain)
@@ -302,6 +302,8 @@ export class DataBlock extends Block {
 
         await this._put(key, data)
         await this.propagate_change(key, prev, obj)
+
+        data = this._annotate(data)
         return schemat.register_record({id, data})
     }
 
