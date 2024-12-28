@@ -147,7 +147,7 @@ export class AdminProcess extends ServerProcess {
     //     if (source.readonly) throw new Error(`the ring '${source.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
     //
     //     // identify the target ring
-    //     let target = ring_name ? await db.find_ring_name(ring_name) : bottom ? db.bottom_ring : source
+    //     let target = ring_name ? await db.find_ring(ring_name) : bottom ? db.bottom_ring : source
     //
     //     if (sameID && source === target)
     //         throw new Error(`trying to move a record [${id}] to the same ring (${source.name}) without change of ID`)
@@ -179,7 +179,7 @@ export class AdminProcess extends ServerProcess {
 
         let id_list = []
         let db = schemat.db
-        let ring = ring_name ? db.find_ring_name(ring_name) : db.top_ring
+        let ring = ring_name ? db.find_ring(ring_name) : db.top_ring
         let obj
 
         // parse the list of `ids`, which is a comma-separated list of integers or "X-Y" value ranges

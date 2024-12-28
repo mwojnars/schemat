@@ -220,17 +220,17 @@ export class Database extends WebObject {
         return this.rings.findLastIndex(ring => ring.id === id)
     }
 
-    find_ring_name(name) {
+    find_ring(name) {
         /* Return the top-most ring with a given `name`, or undefined if not found. Can be called to check if a ring name exists. */
         return this.rings_reversed.find(ring => ring.name === name)
     }
 
-    async find_ring_containing(id) {
-        /* Return the top-most ring that contains a given object `id`, or undefined if not found. */
-        let req = new DataRequest(this, 'get', {id})
-        for (let ring of this.rings_reversed)
-            if (await ring.handle(req.clone()) !== undefined) return ring
-    }
+    // async find_ring_containing(id) {
+    //     /* Return the top-most ring that contains a given object `id`, or undefined if not found. */
+    //     let req = new DataRequest(this, 'get', {id})
+    //     for (let ring of this.rings_reversed)
+    //         if (await ring.handle(req.clone()) !== undefined) return ring
+    // }
 
 
     /***  Data access & modification (CRUD operations)  ***/
@@ -259,7 +259,7 @@ export class Database extends WebObject {
         let req = new DataRequest(this, 'insert', {data})
 
         if (ring_name) {                                            // find the ring by name
-            ring = this.find_ring_name(ring_name)
+            ring = this.find_ring(ring_name)
             if (!ring) return req.error_access(`target ring not found: '${ring_name}'`)
         }
         else if (!ring) {
@@ -320,11 +320,13 @@ export class Database extends WebObject {
         /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (the kernel).
            Schema of the new index is defined by `key` and `payload` (arrays of property names).
          */
-        if (!this.rings.includes(ring)) throw new Error(`ring not found in the database: ${ring}`)
-        // ring ??= this.bottom_ring
-
         if (!Array.isArray(key) || key.length === 0) throw new Error(`index key must be an array with at least one element: ${key}`)
         if (payload && !Array.isArray(payload)) throw new Error(`index payload must be an array: ${payload}`)
+
+        if (typeof ring === 'string') ring = this.find_ring(ring)
+
+        let pos = this.locate_ring(ring)
+        if (pos < 0) throw new Error(`ring not found in the database: ${ring}`)
 
         // create index specification
         let ObjectIndexOperator = await schemat.import('/$/sys/ObjectIndexOperator')
@@ -332,7 +334,6 @@ export class Database extends WebObject {
         index = await index.save({ring})
 
         // create streams for `index`, in `ring` and all higher rings
-        let pos = this.locate_ring(ring)
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
             await ring.action.create_stream(index)
