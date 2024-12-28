@@ -603,17 +603,17 @@ export class WebObject {
         if (path) return schemat.import(path)                   // the path can be missing, for no-category objects
     }
 
-    async reload() {
-        /* Create a new instance of this object using the most recent version of this object's content
-           as available in the registry or downloaded from the DB. */
-        return schemat.reload(this.id)
-    }
-
     refresh() {
         /* Synchronously return the newest version of this object as present in the Registry; or self if this object was already evicted.
            In either case, the Registry is notified that this object is (still) needed, which may spawn reload/refresh in a background thread.
          */
-        return schemat.request_loaded(this.id)
+        return schemat.refresh(this.id)
+    }
+
+    async reload() {
+        /* Create a new instance of this object using the most recent version of this object's content
+           as available in the registry or downloaded from the DB. */
+        return schemat.reload(this.id)
     }
 
 
