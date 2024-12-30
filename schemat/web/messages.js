@@ -108,8 +108,8 @@ export class mDataString extends mData {
 
 
 export class mDataRecords extends MessageEncoder {
-    /* Input:  record or array of records of the form {id, data}, where `data` is a Catalog or its stringified representation.
-       Output: record or array of {id, data} records, where each `data` is JSONx-encoded, but no longer stringified.
+    /* Input:  record, or array of records, of the form {id, data}, where `data` is a Catalog or its stringified representation.
+       Output: record, or array of {id, data} records, where each `data` is JSONx-encoded, but no longer stringified.
        After decoding, all records are automatically added to the Registry as the newest representations of their IDs.
      */
     encode(recs) {
@@ -125,10 +125,16 @@ export class mDataRecords extends MessageEncoder {
     decode(msg) {
         if (!msg) return
         let recs = JSON.parse(msg)
-        if (recs instanceof Array) recs.forEach(rec => schemat.register_record(rec))
+        if (recs instanceof Array) schemat.register_records(recs)
         else schemat.register_record(recs)
         return recs
     }
+}
+
+export class mActionResult {
+    /* After an action was executed, this encoder transmits a pair: [result, records_altered], encoded via JSONx.
+       After decoding, the records_altered are automatically put in the caller's registry.
+     */
 }
 
 /**********************************************************************************************************************/

@@ -296,6 +296,10 @@ export class Schemat {
 
     /***  Registry management  ***/
 
+    register_records(recs, invalidate = true) {
+        return recs.map(rec => schemat.register_record(rec, invalidate))
+    }
+
     register_record({id, data}, invalidate = true) {
         /* Keep {id, data} record as the most up-to-date (raw) representation of the corresponding object that will be used on the next object (re)load.
            `data` is either a JSON string, or an encoded (plain) representation of a Catalog instance.
