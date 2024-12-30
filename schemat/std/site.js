@@ -203,12 +203,12 @@ export class Site extends WebObject {
                 let obj = await schemat.get_loaded(id)
                 return obj.get_mutable()._execute_action(action, ...args)
 
-                // let tx = schemat.transaction.getStore()
+                // let tx = schemat._transaction.getStore()
                 // let act = () => obj.get_mutable()._execute_action(action, ...args)
                 //
                 // if (!tx) {
                 //     tx = new Transaction()
-                //     act = () => schemat.transaction.run(tx, act)
+                //     act = () => schemat._transaction.run(tx, act)
                 // }
                 // let result = await act()
                 // return [result, tx.objects_altered]

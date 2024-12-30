@@ -21,7 +21,7 @@ export class ServerSchemat extends Schemat {
     //                             // new requests wait until the current session completes, see Session.start()
 
     _db             // bootstrap DB; regular server-side DB is taken from site.database
-    transaction     // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
+    _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
     get db()    { return this.site?.database || this._db }
 
@@ -35,7 +35,7 @@ export class ServerSchemat extends Schemat {
         // check that it points to the installation's root folder and contains `schemat` subfolder with `config.yaml` file in it
         assert(fs.existsSync(this.ROOT_DIRECTORY + '/schemat/config.yaml'), 'The current working directory does not contain ./schemat/config.yaml file')
 
-        this.transaction = new AsyncLocalStorage()
+        this._transaction = new AsyncLocalStorage()
         // this.loader = new Loader(import.meta.url)
     }
 
