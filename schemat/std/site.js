@@ -195,7 +195,7 @@ export class Site extends WebObject {
         })
     }
 
-    'POST.submit_action'() {
+    'POST.execute_action'() {
         /* Submit a server-side action specification to be executed at the physical location of the target object.
          */
         return new JsonPOST({
@@ -203,11 +203,15 @@ export class Site extends WebObject {
                 let obj = await schemat.get_loaded(id)
                 return obj.get_mutable()._execute_action(action, ...args)
 
-                // let tx = schemat.transaction.getStore() || new Transaction()
-                // return schemat.transaction.run(tx, async () => {
-                //     let result = await obj.get_mutable()._execute_action(action, ...args)
-                //     return result
-                // })
+                // let tx = schemat.transaction.getStore()
+                // let act = () => obj.get_mutable()._execute_action(action, ...args)
+                //
+                // if (!tx) {
+                //     tx = new Transaction()
+                //     act = () => schemat.transaction.run(tx, act)
+                // }
+                // let result = await act()
+                // return [result, tx.objects_altered]
             },
             output: mDataRecords,
         })
