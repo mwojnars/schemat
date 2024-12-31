@@ -131,9 +131,12 @@ export class mDataRecords extends MessageEncoder {
     }
 }
 
-export class mActionResult {
-    /* After an action was executed, this encoder transmits a pair: [result, records_altered], encoded via JSONx.
-       After decoding, the records_altered are automatically put in the caller's registry.
+export class mActionResult extends MessageEncoder {
+    /* After an action was executed, this encoder transmits {status, result, error, records}, encoded with JSONx,
+       where `status` is "success" or "error"; `result` is the returned value of the action;
+       `error` is the error message if exception was caught; and `records` is an array of all updated records
+       that have been altered (inserted, updated, deleted) during the action.
+       After decoding, the `records` are automatically put in the caller's registry.
      */
 }
 
