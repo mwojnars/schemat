@@ -304,15 +304,16 @@ export class Schemat {
         /* Keep {id, data} record as the most up-to-date (raw) representation of the corresponding object that will be used on the next object (re)load.
            `data` is either a JSON string, or an encoded (plain) representation of a Catalog instance.
          */
-        this.registry.set_record(id, data)
-        if (invalidate) this.invalidate_object(id)
+        let json = this.registry.set_record(id, data)
+        if (invalidate) this.invalidate_object(id, json)
         return {id, data}
     }
 
-    invalidate_object(id) {
-        /* Remove an (outdated) object from the registry. If a stub (no __data yet), the object is kept. */
+    invalidate_object(id, json = null) {
+        /* Remove an (outdated) object from the registry. If a stub (no __data yet), or __json_source === json, the object is kept. */
         let obj = this.registry.get_object(id)
-        if (obj?.__data) this._on_evict(obj) || this.registry.delete_object(id)
+        if (obj?.__data && !(json && json === obj.__json_source))
+            this._on_evict(obj) || this.registry.delete_object(id)
     }
 
     register_version(obj) {

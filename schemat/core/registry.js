@@ -87,6 +87,7 @@ export class Registry {
             data = JSON.stringify(data)
         }
         this.records.set(id, data)
+        return data
     }
 
     get_object(id)  { return this.objects.get(id) }
