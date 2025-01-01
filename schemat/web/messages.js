@@ -107,7 +107,7 @@ export class mDataString extends mData {
 }
 
 
-export class mUpdateResult extends MessageEncoder {
+export class mActionResult extends MessageEncoder {
     /* Result of an insert/update operation, as {id, data} record(s) that were written to DB.
        During decoding, all records are automatically added to the local Registry as the newest representations of their IDs.
        Also, if there is a Transaction object present on the caller, the records are registered with this transaction.
@@ -135,14 +135,14 @@ export class mUpdateResult extends MessageEncoder {
     }
 }
 
-export class mActionResult extends MessageEncoder {
-    /* After an action (or transaction) was executed, this encoder transmits {status, result, error, records} encoded with JSONx,
-       where `status` is "success" or "error"; `result` is the returned value of the action (missing if undefined);
-       `error` is the error message if exception was caught; and `records` is an array of all updated records
-       that have been altered (inserted, updated, deleted) during the action. After decoding, the `records` are
-       automatically put in the caller's registry and registered with the Transaction object, if present.
-     */
-}
+// export class mActionResult extends MessageEncoder {
+//     /* After an action (or transaction) was executed, this encoder transmits {status, result, error, records} encoded with JSONx,
+//        where `status` is "success" or "error"; `result` is the returned value of the action (missing if undefined);
+//        `error` is the error message if exception was caught; and `records` is an array of all updated records
+//        that have been altered (inserted, updated, deleted) during the action. After decoding, the `records` are
+//        automatically put in the caller's registry and registered with the Transaction object, if present.
+//      */
+// }
 
 /**********************************************************************************************************************/
 
