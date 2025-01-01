@@ -296,6 +296,11 @@ export class Schemat {
 
     /***  Registry management  ***/
 
+    register_modification(rec) {
+        this.tx?.register_modification(rec)
+        return this.register_record(rec)
+    }
+
     register_records(recs, invalidate = true) {
         return recs.map(rec => schemat.register_record(rec, invalidate))
     }

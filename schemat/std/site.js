@@ -4,7 +4,7 @@ import {Request} from '../web/request.js'
 import {WebObject} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonPOST} from "../web/services.js";
-import {mDataRecords, mJsonx, mString} from "../web/messages.js";
+import {mUpdateResult, mJsonx, mString} from "../web/messages.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -175,7 +175,7 @@ export class Site extends WebObject {
         return new JsonPOST({
             server: ({data, opts}) => this.database.insert(data, opts),
             input:  mJsonx,
-            output: mDataRecords,
+            output: mUpdateResult,
         })
     }
 
@@ -191,7 +191,7 @@ export class Site extends WebObject {
          */
         return new JsonPOST({
             server: (id, ...edits) => this.database.update(id, ...edits),
-            output: mDataRecords,
+            output: mUpdateResult,
         })
     }
 
@@ -213,7 +213,8 @@ export class Site extends WebObject {
                 // let result = await act()
                 // return [result, tx.objects_altered]
             },
-            output: mDataRecords,
+            output: mUpdateResult,
+            // output: mActionResult,
         })
     }
 

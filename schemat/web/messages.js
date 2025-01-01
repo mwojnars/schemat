@@ -107,10 +107,13 @@ export class mDataString extends mData {
 }
 
 
-export class mDataRecords extends MessageEncoder {
-    /* Input:  record, or array of records, of the form {id, data}, where `data` is a Catalog or its stringified representation.
+export class mUpdateResult extends MessageEncoder {
+    /* Result of an insert/update operation, as {id, data} record(s) that were written to DB.
+       During decoding, all records are automatically added to the local Registry as the newest representations of their IDs.
+       Also, if there is a Transaction object present on the caller, the records are registered with this transaction.
+
+       Input:  record, or array of records, of the form {id, data}, where `data` is a Catalog or its stringified representation.
        Output: record, or array of {id, data} records, where each `data` is JSONx-encoded, but no longer stringified.
-       After decoding, all records are automatically added to the Registry as the newest representations of their IDs.
      */
     encode(recs) {
         let batch = (recs instanceof Array)
@@ -127,16 +130,17 @@ export class mDataRecords extends MessageEncoder {
         let recs = JSON.parse(msg)
         if (recs instanceof Array) schemat.register_records(recs)
         else schemat.register_record(recs)
+        // schemat.register_modification(recs)
         return recs
     }
 }
 
 export class mActionResult extends MessageEncoder {
-    /* After an action was executed, this encoder transmits {status, result, error, records}, encoded with JSONx,
-       where `status` is "success" or "error"; `result` is the returned value of the action;
+    /* After an action (or transaction) was executed, this encoder transmits {status, result, error, records} encoded with JSONx,
+       where `status` is "success" or "error"; `result` is the returned value of the action (missing if undefined);
        `error` is the error message if exception was caught; and `records` is an array of all updated records
-       that have been altered (inserted, updated, deleted) during the action.
-       After decoding, the `records` are automatically put in the caller's registry.
+       that have been altered (inserted, updated, deleted) during the action. After decoding, the `records` are
+       automatically put in the caller's registry and registered with the Transaction object, if present.
      */
 }
 

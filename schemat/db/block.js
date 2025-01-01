@@ -305,6 +305,7 @@ export class DataBlock extends Block {
 
         data = this._annotate(data)
         return schemat.register_record({id, data})
+        // return schemat.register_modification({id, data})
     }
 
     async cmd_delete(req) {
