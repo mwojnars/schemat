@@ -9,6 +9,15 @@ import {RequestContext} from "../web/request.js";
 import {DataRequest} from "../db/data_request.js";
 
 
+/**********************************************************************************************************************/
+
+export class Transaction {
+    /* Metadata about an action being executed against multiple objects in the database.
+       IMPORTANT: at the moment, actions (transactions) are NOT atomic!
+     */
+}
+
+
 /**********************************************************************************************************************
  **
  **  Server-side REGISTRY
