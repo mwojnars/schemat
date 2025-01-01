@@ -268,7 +268,7 @@ export class Schemat {
         if (data) return data
 
         return this._select(id).then(data => {
-            this.register_record({id, data}, false)
+            this.register_record({id, data})
             return data
         })
     }
@@ -301,23 +301,24 @@ export class Schemat {
         return this.register_record(rec)
     }
 
-    register_records(recs, invalidate = true) {
-        return recs.map(rec => schemat.register_record(rec, invalidate))
+    register_records(recs) {
+        return recs.map(rec => schemat.register_record(rec))
     }
 
-    register_record({id, data}, invalidate = true) {
+    register_record({id, data}, /*invalidate = true*/) {
         /* Keep {id, data} record as the most up-to-date (raw) representation of the corresponding object that will be used on the next object (re)load.
+           Removed the existing object from cache, if loaded from a different JSON source.
            `data` is either a JSON string, or an encoded (plain) representation of a Catalog instance.
          */
         let json = this.registry.set_record(id, data)
-        if (invalidate) this.invalidate_object(id, json)
+        this.invalidate_object(id, json)
         return {id, data}
     }
 
     invalidate_object(id, json = null) {
         /* Remove an (outdated) object from the registry. If a stub (no __data yet), or __json_source === json, the object is kept. */
         let obj = this.registry.get_object(id)
-        if (obj?.__data && !(json && json === obj.__json_source))
+        if (obj?.__data && (!json || json !== obj.__json_source))
             this._on_evict(obj) || this.registry.delete_object(id)
     }
 
