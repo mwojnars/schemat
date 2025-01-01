@@ -24,6 +24,7 @@ export class ServerSchemat extends Schemat {
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
     get db()    { return this.site?.database || this._db }
+    get tx()    { return this._transaction.getStore() }
 
 
     constructor() {
@@ -108,6 +109,21 @@ export class ServerSchemat extends Schemat {
     //     }
     // }
 
+
+    /***  Actions / Transactions  ***/
+
+    tx_run(action) {
+        /* Execute the action() function in the context of a Transaction object: this.tx (if present) or a newly-created one.
+           Return a pair: [transaction-object, result-of-action], where the latter can be a Promise if action() is async.
+           After the action() is executed (awaited), the transaction object contains info about the execution, like a list of objects modified.
+         */
+        let tx = this.tx
+        if (!tx) {
+            tx = new Transaction()
+            action = () => this._transaction.run(tx, action)
+        }
+        return [tx, action()]
+    }
 
 
     // async _reset_class(ServerSchemat) {

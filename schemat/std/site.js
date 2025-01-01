@@ -203,14 +203,9 @@ export class Site extends WebObject {
                 let obj = await schemat.get_loaded(id)
                 return obj.get_mutable()._execute_action(action, ...args)
 
-                // let tx = schemat._transaction.getStore()
-                // let act = () => obj.get_mutable()._execute_action(action, ...args)
-                //
-                // if (!tx) {
-                //     tx = new Transaction()
-                //     act = () => schemat._transaction.run(tx, act)
-                // }
-                // let result = await act()
+                // let exec_action = () => obj.get_mutable()._execute_action(action, ...args)
+                // let [tx, result] = schemat.tx_run(exec_action)
+                // if (result instanceof Promise) result = await result
                 // return [result, tx.objects_altered]
             },
             output: mUpdateResult,
