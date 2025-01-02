@@ -128,7 +128,7 @@ export class mActionResult extends MessageEncoder {
     decode(msg) {
         if (!msg) return
         let recs = JSON.parse(msg)
-        if (recs instanceof Array) schemat.register_records(recs)
+        if (recs instanceof Array) recs.map(rec => schemat.register_record(rec))
         else schemat.register_record(recs)
         // schemat.register_modification(recs)
         return recs

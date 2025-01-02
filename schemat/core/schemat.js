@@ -302,10 +302,6 @@ export class Schemat {
         return this.register_record(rec)
     }
 
-    register_records(recs) {
-        return recs.map(rec => schemat.register_record(rec))
-    }
-
     register_record({id, data}, /*invalidate = true*/) {
         /* Keep {id, data} record as the most up-to-date (raw) representation of the corresponding object that will be used on the next object (re)load.
            Removed the existing object from cache, if loaded from a different JSON source.
