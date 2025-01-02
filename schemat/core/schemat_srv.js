@@ -15,6 +15,13 @@ export class Transaction {
     /* Metadata about an action being executed against multiple objects in the database.
        IMPORTANT: at the moment, actions (transactions) are NOT atomic!
      */
+
+    records         // array of {id, data} records of modified objects
+
+    register_modification(rec) {
+        this.records.push(rec)
+        // TODO: detect duplicates, restrict the size of `records`
+    }
 }
 
 

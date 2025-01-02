@@ -150,7 +150,7 @@ export class mActionResult__ extends MessageEncoder {
     }
     decode(msg) {
         let {status, result, records} = JSON.parse(msg)
-        schemat.register_modification(records)
+        records.forEach(rec => schemat.register_modification(rec))
         return result
     }
 }
