@@ -135,14 +135,25 @@ export class mActionResult extends MessageEncoder {
     }
 }
 
-// export class mActionResult extends MessageEncoder {
-//     /* After an action (or transaction) was executed, this encoder transmits {status, result, error, records} encoded with JSONx,
-//        where `status` is "success" or "error"; `result` is the returned value of the action (missing if undefined);
-//        `error` is the error message if exception was caught; and `records` is an array of all updated records
-//        that have been altered (inserted, updated, deleted) during the action. After decoding, the `records` are
-//        automatically put in the caller's registry and registered with the Transaction object, if present.
-//      */
-// }
+export class mActionResult__ extends MessageEncoder {
+    /* After an action (or transaction) was executed, this encoder transmits {status, result, error, records} encoded with JSONx,
+       where `status` is "success" or "error"; `result` is the returned value of the action (missing if undefined);
+       `error` is the error message if exception was caught; and `records` is an array of all updated records
+       that have been altered (inserted, updated, deleted) during the action. After decoding, the `records` are
+       automatically put in the caller's registry and registered with the Transaction object, if present.
+     */
+    encode(result = undefined) {
+        let records = schemat.tx.records
+        assert(records?.length)
+        records = records.map(({id, data}) => ({id, data: (typeof data === 'string') ? JSON.parse(data) : data.encode()}))
+        return JSON.stringify({status: 'success', result, records})
+    }
+    decode(msg) {
+        let {status, result, records} = JSON.parse(msg)
+        schemat.register_modification(records)
+        return result
+    }
+}
 
 /**********************************************************************************************************************/
 

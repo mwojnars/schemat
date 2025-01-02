@@ -209,7 +209,6 @@ export class Site extends WebObject {
                 // return [result, tx.objects_altered]
             },
             output: mActionResult,
-            // output: mActionResult,
         })
     }
 
