@@ -16,7 +16,7 @@ export class Transaction {
        IMPORTANT: at the moment, actions (transactions) are NOT atomic!
      */
 
-    records         // array of {id, data} records of modified objects
+    records = []        // array of {id, data} records of modified objects
 
     register_modification(rec) {
         this.records.push(rec)
@@ -134,11 +134,10 @@ export class ServerSchemat extends Schemat {
            After the action() is executed (awaited), the transaction object contains info about the execution, like a list of objects modified.
          */
         let tx = this.tx
-        if (!tx) {
-            tx = new Transaction()
-            action = () => this._transaction.run(tx, action)
-        }
-        return [tx, action()]
+        if (tx) return [tx, action()]
+
+        tx = new Transaction()
+        return [tx, this._transaction.run(tx, action)]
     }
 
 
