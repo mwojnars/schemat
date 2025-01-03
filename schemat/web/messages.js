@@ -10,8 +10,9 @@ export class MessageEncoder {
     /* Encoder for an input/output message transmitted between client & server of a service. */
 
     type                // optional HTTP response type (mime)
-    array = false       // if true, the result of decode() must be an Array of arguments for subsequent client/server function;
-                        // otherwise, the result of decode(), even if an Array, is treated as a single argument
+    array = false       // if true, the message is an array of multiple arguments that should be unwrapped into an argument list
+                        // for the corresponding function (.server(...args) in case of input message; .encode(...args) if output message),
+                        // rather than being passed as a single argument
 
     encode(...args) {
         /* Convert argument(s) of client-side call to a message (typically, a string) that will be passed to the recipient. */
@@ -144,7 +145,6 @@ export class mActionResult__ extends MessageEncoder {
      */
     array = true
     encode([tx, result]) {
-        // print('tx:', tx)
         let records = tx.records
         assert(records?.length)
         records = records.map(({id, data}) => ({id, data: (typeof data === 'string') ? JSON.parse(data) : data.encode()}))
@@ -166,8 +166,6 @@ export class mWebObjects extends MessageEncoder {
        was actually built from `rec.data` received in this particular request (!) - this is because a newer record might
        have arrived in the registry in the meantime while the asynchronous .get_loaded() was running!
      */
-    array = true
-
     encode(objects) { return objects.map(obj => obj?.__record) }
     decode(message) {
         let records = JSON.parse(message)
