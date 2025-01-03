@@ -89,6 +89,7 @@ export class Registry {
         this.records.set(id, data)
         return data
     }
+    delete_record(id) { return this.records.delete(id) }
 
     get_object(id)  { return this.objects.get(id) }
 

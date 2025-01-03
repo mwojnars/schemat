@@ -299,7 +299,11 @@ export class Schemat {
 
     register_modification(rec) {
         this.tx?.register_modification(rec)
-        return this.register_record(rec)
+        if (rec.data.__status === 'DELETED') {
+            this.registry.delete_record(rec.id)
+            this.registry.delete_object(rec.id)
+        }
+        else return this.register_record(rec)
     }
 
     register_record({id, data}, /*invalidate = true*/) {
