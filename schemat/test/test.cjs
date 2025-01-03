@@ -195,6 +195,12 @@ describe('Schemat Tests', function () {
 
         before(async function () {({server, browser, page, messages} = setup())})
 
+        it('/$/sys', async function () {
+            /* Test of React rendering around system-level bootstrap objects. Must be run first, otherwise the error doesn't show up. */
+            await test_page(page, `${DOMAIN}/$/id/1009`, '#page-main',
+                ['/$/sys', 'system objects', 'Container', 'Site', 'Revision'])
+        })
+
         it('Category', async function () {
             await test_page(page, `${DOMAIN}/$/id/1`, '#page-main',
                 ['Category:1', 'Category of objects', 'name', '__ttl', 'defaults', 'schema', 'Ring', 'Varia'])
@@ -252,11 +258,6 @@ describe('Schemat Tests', function () {
             // })
             let done = await page.evaluate(() => schemat.eval('schemat.db.rebuild_indexes()'))
             expect(done).to.be.true
-        })
-
-        it('/$/sys', async function () {
-            await test_page(page, `${DOMAIN}/$/id/1009`, '#page-main',
-                ['/$/sys', 'system objects', 'Container', 'Site', 'Revision'])
         })
 
         it('Directory', async function () {
