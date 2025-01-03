@@ -151,9 +151,10 @@ export class Schemat {
 
         await this.site.load_globals()
 
-        // schedule periodical cache eviction; the interval is taken from site.cache_purge_interval and may change over time
-        if (SERVER) setTimeout(() => this._purge_registry(), 1000)
-
+        if (SERVER) {
+            await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
+            await this.reload(site_id)          // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
+        }
         // await this._reset_class()
     }
 
@@ -328,12 +329,15 @@ export class Schemat {
     }
 
     async _purge_registry() {
+        /* Purge the objects cache in the registry. Schedule periodical re-run: the interval is configured
+           in site.cache_purge_interval and may change over time.
+         */
         if (this.is_closing) return
         try {
             return this.registry.purge()
         }
         finally {
-            const interval = (this.site?.cache_purge_interval || 1) * 1000      // [ms]
+            let interval = (this.site?.cache_purge_interval || 1) * 1000        // [ms]
             setTimeout(() => this._purge_registry(), interval)
         }
     }
