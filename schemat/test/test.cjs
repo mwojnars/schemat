@@ -254,8 +254,13 @@ describe('Schemat Tests', function () {
             expect(done).to.be.true
         })
 
+        it('/$/sys', async function () {
+            await test_page(page, `${DOMAIN}/$/id/1009`, '#page-main',
+                ['/$/sys', 'system objects', 'Container', 'Site', 'Revision'])
+        })
+
         it('Directory', async function () {
-            await test_page(page, `${DOMAIN}/$/id/5`, '#page-main',
+            await test_page(page, `${DOMAIN}/$/sys/Directory`, '#page-main',
                 ['Directory', 'nested containers', 'file system', 'containers.js:Directory'])
         })
 
