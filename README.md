@@ -1,30 +1,20 @@
 # Schemat
 
-[WORK IN PROGRESS...]
+[... WORK IN PROGRESS ...]
 
 **Schemat** is an object-oriented web platform for building scalable 
-internet applications fully composed of isomorphic **web objects** that can be seamlessly 
-transmitted over the network and executed in the same way on any machine (client, server, database).
+internet applications composed of isomorphic **web objects** that are seamlessly 
+transferred over the network and executed on any machine (client, server, database node).
 
-<!-- The web is the native environment for web objects,  -->
-<!-- In Schemat, everything is a web object. -->
-<!-- network-native, network-first -->
+Schemat comes with a built-in, distributed, schema-aware, NoSQL **database engine** that supports index creation, live schema evolution, object & schema versioning, and more. Web objects are grouped into categories and may utilize multiple prototypical inheritance.
 
-Schemat comes with a built-in, distributed, NoSQL, schema-aware **database engine**
-that supports index creation, live schema evolution, schema versioning, and more. Web objects can be grouped into categories and interconnected through multiple prototypical inheritance.
-
-Schemat unifies the client and server environments and allows (web) objects to fully encapsulate any particular functionality -- the _data model_, the server-side _behavior_, and the client-side _appearance_ -- altogether.
-This makes Schemat the first web platform that genuinely brings the full expression of OOP paradigm to the web.
-
-<!-- contrary to traditional approaches like MVC, where these three aspects are implemented separately and remain dispersed throughout the codebase, which prevents the network-level OOP to emerge.
-By creating an **extended object model** that spans the entire application stack -- from the database to the client -- Schemat is the first application platform that genuinely brings the full expression of OOP paradigm to the web. -->
+With its concept of isomorphic web objects, Schemat introduces the extended object model that spans the entire distributed application stack -- from the database to the client node -- and unifies the client and server environments. Web objects are designed to fully encapsulate a given web functionality, with its _data model_, server-side _logic_, and client-side _appearance_ - all combined in a single, network-native object.
+As such, Schemat is the first software platform that brings the full expression of OOP paradigm to the web.
 
 Schemat is written in Node.js and Javascript.
 
 
 ### Features
-
-[//]: # (Existing and planned features include:)
 
 Schemat already provides, or _will_ provide in the future:
 
@@ -73,9 +63,6 @@ Schemat already provides, or _will_ provide in the future:
   between the platform and application code.
 
 <!---
-
-- caching of application objects and their properties including the derived ones
-  (very fine-grained caching, down to individual properties and their values)
 
 Front-end features:
 - Server-Side Rendering (SSR)
