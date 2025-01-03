@@ -4,7 +4,7 @@ import {Request} from '../web/request.js'
 import {WebObject} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonPOST} from "../web/services.js";
-import {mActionResult__, mString} from "../web/messages.js";
+import {mActionResult, mString} from "../web/messages.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -190,7 +190,7 @@ export class Site extends WebObject {
     /***  Endpoints  ***/
 
     'POST.execute_action'() {
-        /* Submit a server-side action specification to be executed at the physical location of the target object.
+        /* Submit a server-side action to be executed at the physical location of the target object.
          */
         return new JsonPOST({
             server: async (id, action, ...args) => {
@@ -200,7 +200,7 @@ export class Site extends WebObject {
                 if (result instanceof Promise) result = await result
                 return [tx, result]
             },
-            output: mActionResult__,
+            output: mActionResult,
         })
     }
 

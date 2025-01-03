@@ -108,7 +108,7 @@ export class mDataString extends mData {
 }
 
 
-export class mActionResult__ extends MessageEncoder {
+export class mActionResult extends MessageEncoder {
     /* After an action (or transaction) was executed, this encoder transmits {status, result, error, records} encoded with JSONx,
        where `status` is "success" or "error"; `result` is the returned value of the action (missing if undefined);
        `error` is the error message if exception was caught; and `records` is an array of all the modified records
