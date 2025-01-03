@@ -179,10 +179,11 @@ export class HttpService extends Service {
         return args
     }
 
-    send_result(target, {res}, result, ...args) {           // on the server, encode the result and send it to the client
+    send_result(target, {res}, result, input_args) {        // on the server, encode the result and send it to the client
         if (this.output.type) res.type(this.output.type)
         if (result === undefined) return res.end()          // missing result --> empty response body
-        res.send(this.output.encode(result))
+        if (!this.output.array) result = [result]
+        res.send(this.output.encode(...result))
     }
 }
 
