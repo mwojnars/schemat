@@ -172,15 +172,14 @@ export class Site extends WebObject {
            Every content object is a Catalog instance or an internal *state* of such instance (the result of .__getstate__()).
            The respond is an array of {id, data} records, one for each object created, in the same order as in the request.
          */
-        // return this.database.insert(data, opts)
-        return this.database.load().then(db => db.insert(data, opts))
+        return this.database.insert(data, opts)
     }
 
     async 'action.submit_edits'(id, ...edits) {
         /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
            of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
          */
-        return this.database.load().then(db => db.update(id, ...edits))
+        return this.database.update(id, ...edits)
     }
 
 

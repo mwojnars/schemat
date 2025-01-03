@@ -804,7 +804,11 @@ export class WebObject {
     }
 
     __init__() {}
-        /* Optional item-specific initialization after this.__data is created (in a newborn object), or loaded from DB. Can be async in subclasses. */
+        /* Custom initialization after this.__data was created (in a newborn object), or loaded from DB.
+           Typically, this method loads selected related objects, so that other methods can use them directly with synchronous calls.
+           Any other form of initialization that stores temporary data in local attributes (this.x = ...) is FORBIDDEN
+           and incompatible with object cloning as done by get_mutable(). This method can be async in subclasses.
+         */
 
     __destroy__() {}
         /* Custom tear down that is executed once before this object is permanently deleted from the database. */
