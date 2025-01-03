@@ -1049,14 +1049,12 @@ export class WebObject {
     // }
 
     get_mutable({activate = true, ...opts} = {}) {
-        /* Create a fully-loaded, mutable instance of this (loaded) web object. The object is created synchronously
-           by parsing this.__json_source or cloning this.__data. If dependencies of `this` were initialized (this._initialize()),
-           they are still initialized for the clone.
+        /* Create a fully-loaded, mutable instance of this (loaded) web object. The object is created synchronously by cloning this.__data.
+           If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
          */
-        assert(this.is_loaded() && !this.is_mutable(), 'a mutable copy can only be created for a fully-loaded immutable object')
-        // if (reload) return schemat.get_mutable(this)
+        assert(this.is_loaded() && !this.is_mutable(), 'a mutable copy can only be created from a fully-loaded immutable object')
         let obj = WebObject.stub(this.id, {...opts, mutable: true})
-        obj._set_data(this.__json_source || this.__data.clone())
+        obj._set_data(this.__data.clone())
         T.setClass(obj, T.getClass(this))
         if (activate) obj._activate()
         return obj
