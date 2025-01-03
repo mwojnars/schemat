@@ -189,9 +189,8 @@ export class Site extends WebObject {
 
     /***  Endpoints  ***/
 
-    'POST.execute_action'() {
-        /* Submit a server-side action to be executed at the physical location of the target object.
-         */
+    'POST.action'() {
+        /* Submit a server-side action to be executed at the physical location of the target object. */
         return new JsonPOST({
             server: async (id, action, ...args) => {
                 let obj = await schemat.get_loaded(id)

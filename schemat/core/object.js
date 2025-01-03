@@ -324,7 +324,7 @@ export class WebObject {
     }
 
     edit            // triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', ...args)
-    action          // triggers of server-side actions: obj.action.X(...args) invokes POST.execute_action(id, 'X', ...args)
+    action          // triggers of server-side actions: obj.action.X(...args) invokes POST.action(id, 'X', ...args)
 
     // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network endpoints, initialized in _init_services().
     // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
@@ -880,7 +880,7 @@ export class WebObject {
         if (__actions.length) {
             let action = this.__self.action = {}
             for (let name of __actions)
-                action[name] = (...args) => schemat.site.POST.execute_action(this.id, name, ...args)
+                action[name] = (...args) => schemat.site.POST.action(this.id, name, ...args)
         }
     }
 
