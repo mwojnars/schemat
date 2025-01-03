@@ -188,11 +188,9 @@ export class DataBlock extends Block {
         data = this._transform_provisional(id, data)
 
         let pairs = zip(id, data)
-        let records = amap(pairs, pair => this._insert_one(...pair))    // TODO: save all objects at once, atomically
+        await amap(pairs, pair => this._insert_one(...pair))    // TODO: save all objects at once, atomically
 
-        await records
         return batch ? id : id[0]
-        // return batch ? records : (await records)[0]
     }
 
     _transform_provisional(ids, data) {
