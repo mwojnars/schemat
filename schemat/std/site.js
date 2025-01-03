@@ -189,11 +189,11 @@ export class Site extends WebObject {
 
     /***  Endpoints  ***/
 
-    'POST.delete_object'() {
-        return new JsonPOST({
-            server: (id) => this.database.delete(id)
-        })
-    }
+    // 'POST.delete_object'() {
+    //     return new JsonPOST({
+    //         server: (id) => this.database.delete(id)
+    //     })
+    // }
 
     'POST.execute_action'() {
         /* Submit a server-side action specification to be executed at the physical location of the target object.

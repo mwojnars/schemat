@@ -988,7 +988,7 @@ export class WebObject {
 
     delete() {
         /* Delete this object from the database. */
-        return schemat.site.POST.delete_object(this.__id)
+        return schemat.site.action.delete_object(this.__id)
     }
 
     _bump_version() {
