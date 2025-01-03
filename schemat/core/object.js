@@ -189,7 +189,6 @@ export class WebObject {
 
     name
     info
-    __status
 
     /***  Special properties:
 
@@ -220,7 +219,7 @@ export class WebObject {
     __class                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
     __category              category of this item, as a Category object; there can be multiple __category$; they can be inherited from __prototype$
     __container             Container of this item, for canonical URL generation
-    __status                a string describing the current state of this object in the DB, e.g., "DRAFT"; undefined means normal state
+    __status                a string describing the current state of this object in the DB, e.g., "DELETED"; undefined means normal state
     __ttl                   time-to-live of this object in the registry [seconds]; 0 = immediate eviction on the next cache purge
 
     __ident                 (virtual) string identifier of this object inside its __container
@@ -322,9 +321,6 @@ export class WebObject {
 
         cache:          undefined,  // Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
         edits:          undefined,  // array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
-
-        // db         // the origin database of this item; undefined in newborn items
-        // ring       // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
     }
 
     edit            // triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', ...args)

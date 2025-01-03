@@ -192,8 +192,9 @@
         getter: true
         "@": schemat/types/type.js:STRING
       __status:
-        info: Set to "DRAFT" if the object's record is not yet fully initialized in the
-          database.
+        info: Contains "DELETED" if the corresponding record was deleted from the database
+          (a "tombstone" record; not saved in the data block, but used elsewhere to 
+          propagate the information about the object removal).
         inherit: false
         "@": schemat/types/type.js:STRING
       __ttl:

@@ -175,11 +175,15 @@ export class Site extends WebObject {
         return this.database.insert(data, opts)
     }
 
-    async 'action.submit_edits'(id, ...edits) {
+    'action.submit_edits'(id, ...edits) {
         /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
            of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
          */
         return this.database.update(id, ...edits)
+    }
+
+    'action.delete_object'(id) {
+        return this.database.delete(id)
     }
 
 
