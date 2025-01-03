@@ -190,7 +190,9 @@ export class DataBlock extends Block {
         let pairs = zip(id, data)
         let records = amap(pairs, pair => this._insert_one(...pair))    // TODO: save all objects at once, atomically
 
-        return batch ? records : (await records)[0]
+        await records
+        return batch ? id : id[0]
+        // return batch ? records : (await records)[0]
     }
 
     _transform_provisional(ids, data) {
@@ -304,7 +306,7 @@ export class DataBlock extends Block {
         await this.propagate_change(key, prev, obj)
 
         data = this._annotate(data)
-        return schemat.register_modification({id, data})
+        schemat.register_modification({id, data})
     }
 
     async cmd_delete(req) {
