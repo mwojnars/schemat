@@ -1,4 +1,4 @@
-import {assert, T} from "../common/utils.js";
+import {assert, print, T} from "../common/utils.js";
 import {RequestFailed} from "../common/errors.js";
 import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../core/catalog.js";
@@ -142,8 +142,10 @@ export class mActionResult__ extends MessageEncoder {
        that have been altered (inserted, updated, deleted) during the action. After decoding, the `records` are
        automatically put in the caller's registry and registered with the Transaction object, if present.
      */
-    encode(result = undefined) {
-        let records = schemat.tx.records
+    array = true
+    encode([tx, result]) {
+        // print('tx:', tx)
+        let records = tx.records
         assert(records?.length)
         records = records.map(({id, data}) => ({id, data: (typeof data === 'string') ? JSON.parse(data) : data.encode()}))
         return JSON.stringify({status: 'success', result, records})

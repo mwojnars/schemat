@@ -4,7 +4,7 @@ import {Request} from '../web/request.js'
 import {WebObject} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonPOST} from "../web/services.js";
-import {mActionResult, mJsonx, mString} from "../web/messages.js";
+import {mActionResult, mActionResult__, mJsonx, mString} from "../web/messages.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -195,20 +195,27 @@ export class Site extends WebObject {
         })
     }
 
+    // 'action.submit_edits'(id, ...edits) {
+    //     /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
+    //        of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
+    //      */
+    //     this.database.update(id, ...edits)
+    // }
+
     'POST.execute_action'() {
         /* Submit a server-side action specification to be executed at the physical location of the target object.
          */
         return new JsonPOST({
             server: async (id, action, ...args) => {
                 let obj = await schemat.get_loaded(id)
-                return obj.get_mutable()._execute_action(action, ...args)
-
-                // let exec_action = () => obj.get_mutable()._execute_action(action, ...args)
-                // let [tx, result] = schemat.tx_run(exec_action)
-                // if (result instanceof Promise) result = await result
-                // return [result, tx.objects_altered]
+                // return obj.get_mutable()._execute_action(action, ...args)
+                let exec_action = () => obj.get_mutable()._execute_action(action, ...args)
+                let [tx, result] = schemat.tx_run(exec_action)
+                if (result instanceof Promise) result = await result
+                // print('tx:', tx)
+                return [tx, result]
             },
-            output: mActionResult,
+            output: mActionResult__,
         })
     }
 
