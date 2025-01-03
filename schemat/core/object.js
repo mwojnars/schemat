@@ -1105,7 +1105,7 @@ export class WebObject {
 
         let edits = this.__meta.edits           // otherwise, save updates of an existing object...
         if (edits?.length) {
-            let submit = schemat.site.POST.submit_edits(this.id, ...edits)
+            let submit = schemat.site.action.submit_edits(this.id, ...edits)
             edits.length = 0
             return reload ? submit.then(() => this.reload()) : submit
         }

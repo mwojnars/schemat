@@ -164,6 +164,16 @@ export class Site extends WebObject {
     async resolve(path) { return this.root.resolve(path) }
 
 
+    /***  Actions  ***/
+
+    async 'action.submit_edits'(id, ...edits) {
+        /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
+           of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
+         */
+        return this.database.load().then(db => db.update(id, ...edits))
+    }
+
+
     /***  Endpoints  ***/
 
     'POST.insert_objects'() {
@@ -185,21 +195,14 @@ export class Site extends WebObject {
         })
     }
 
-    'POST.submit_edits'() {
-        /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
-           of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
-         */
-        return new JsonPOST({
-            server: (id, ...edits) => this.database.update(id, ...edits),
-            output: mActionResult,
-        })
-    }
-
-    // 'action.submit_edits'(id, ...edits) {
+    // 'POST.submit_edits'() {
     //     /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
     //        of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
     //      */
-    //     this.database.update(id, ...edits)
+    //     return new JsonPOST({
+    //         server: (id, ...edits) => this.database.update(id, ...edits),
+    //         output: mActionResult,
+    //     })
     // }
 
     'POST.execute_action'() {
