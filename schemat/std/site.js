@@ -195,25 +195,14 @@ export class Site extends WebObject {
         })
     }
 
-    // 'POST.submit_edits'() {
-    //     /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
-    //        of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
-    //      */
-    //     return new JsonPOST({
-    //         server: (id, ...edits) => this.database.update(id, ...edits),
-    //         output: mActionResult,
-    //     })
-    // }
-
     'POST.execute_action'() {
         /* Submit a server-side action specification to be executed at the physical location of the target object.
          */
         return new JsonPOST({
             server: async (id, action, ...args) => {
                 let obj = await schemat.get_loaded(id)
-                // return obj.get_mutable()._execute_action(action, ...args)
-                let exec_action = () => obj.get_mutable()._execute_action(action, ...args)
-                let [tx, result] = schemat.tx_run(exec_action)
+                let exec = () => obj.get_mutable()._execute_action(action, ...args)
+                let [tx, result] = schemat.tx_run(exec)
                 if (result instanceof Promise) result = await result
                 return [tx, result]
             },
