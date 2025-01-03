@@ -1034,7 +1034,7 @@ export class WebObject {
     }
 
     async move_to(directory) {
-        return this.POST.move_to(directory)
+        return this.action.move_to(directory)
     }
 
 
@@ -1179,6 +1179,28 @@ export class WebObject {
         return func.call(this, ...args)
     }
 
+    async 'action.move_to'(directory, overwrite = false) {
+        /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL.
+           Returns an array of objects affected: the current object, the target directory, and the previous container.
+         */
+        if (typeof directory === 'number') directory = await schemat.get_loaded(directory)
+        else if (typeof directory === 'string') directory = await schemat.import(directory)
+        // TODO: check that `directory` is a Directory
+
+        let [src, dir] = await schemat.get_mutable(this.__container, directory)
+        let ident = this.__ident || this.name || `${this.id}`
+
+        if (!overwrite && dir.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dir})`)
+
+        this.__container = dir
+        dir.edit.set_entry(ident, this)
+
+        if (src?.has_entry(this.__ident, this))
+            src.edit.del_entry(this.__ident)
+
+        await schemat.save([dir, this, src])
+    }
+
 
     /***  Endpoints  ***/
 
@@ -1204,33 +1226,33 @@ export class WebObject {
     // inspect()         { return ItemInspectView.page(this) }
     // inspect()         { return ItemInspectView.page }
 
-    'POST.move_to'() {
-        /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL.
-           Returns an array of objects affected: the current object, the target directory, and the previous container.
-         */
-        return new JsonPOST({
-            async server(directory, overwrite = false)
-            {
-                if (typeof directory === 'number') directory = await schemat.get_loaded(directory)
-                else if (typeof directory === 'string') directory = await schemat.import(directory)
-                // TODO: check that `directory` is a Directory
-
-                let [obj, src, dir] = await schemat.get_mutable(this, this.__container, directory)
-                let ident = this.__ident || this.name || `${this.id}`
-
-                if (!overwrite && dir.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dir})`)
-
-                obj.__container = dir
-                dir.edit.set_entry(ident, this)
-
-                if (src?.has_entry(this.__ident, obj))
-                    src.edit.del_entry(this.__ident)
-
-                return schemat.save([dir, obj, src])
-            },
-            output: mWebObjects,
-        })
-    }
+    // 'POST.move_to'() {
+    //     /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL.
+    //        Returns an array of objects affected: the current object, the target directory, and the previous container.
+    //      */
+    //     return new JsonPOST({
+    //         async server(directory, overwrite = false)
+    //         {
+    //             if (typeof directory === 'number') directory = await schemat.get_loaded(directory)
+    //             else if (typeof directory === 'string') directory = await schemat.import(directory)
+    //             // TODO: check that `directory` is a Directory
+    //
+    //             let [obj, src, dir] = await schemat.get_mutable(this, this.__container, directory)
+    //             let ident = this.__ident || this.name || `${this.id}`
+    //
+    //             if (!overwrite && dir.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dir})`)
+    //
+    //             obj.__container = dir
+    //             dir.edit.set_entry(ident, this)
+    //
+    //             if (src?.has_entry(this.__ident, obj))
+    //                 src.edit.del_entry(this.__ident)
+    //
+    //             return schemat.save([dir, obj, src])
+    //         },
+    //         output: mWebObjects,
+    //     })
+    // }
 
 
     /***  Dynamic loading of source code  ***/
