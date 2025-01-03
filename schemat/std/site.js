@@ -4,7 +4,7 @@ import {Request} from '../web/request.js'
 import {WebObject} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonPOST} from "../web/services.js";
-import {mActionResult, mActionResult__, mJsonx, mString} from "../web/messages.js";
+import {mActionResult__, mString} from "../web/messages.js";
 
 
 // Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -188,12 +188,6 @@ export class Site extends WebObject {
 
 
     /***  Endpoints  ***/
-
-    // 'POST.delete_object'() {
-    //     return new JsonPOST({
-    //         server: (id) => this.database.delete(id)
-    //     })
-    // }
 
     'POST.execute_action'() {
         /* Submit a server-side action specification to be executed at the physical location of the target object.
