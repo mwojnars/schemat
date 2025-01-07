@@ -39,6 +39,7 @@ export class Server {
     async stop()  {}
 }
 
+/**********************************************************************************************************************/
 
 export class MicroServer extends Server {
     /* Worker that executes message loops of multiple Agents (Actors): web objects that expose their own microservices. */
@@ -117,7 +118,7 @@ export class WebServer extends Server {
         app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
         app.use(bodyParser.text({type: '*/*', limit: '10MB'}))  // for setting req.body string from plain-text body (if not json MIME-type)
 
-        app.all('*', (req, res) => this.handle(req, res))
+        app.all('*', (req, res) => this._handle(req, res))
 
         // web.get('*', async (req, res) => {
         //     res.send(`URL path: ${req.path}`)
@@ -132,7 +133,7 @@ export class WebServer extends Server {
         print(`WebServer closed (worker #${this.worker_id})`)
     }
 
-    async handle(req, res) {
+    async _handle(req, res) {
         if (!['GET','POST'].includes(req.method)) return res.sendStatus(405)    // 405 Method Not Allowed
         // print(`handle() worker ${process.pid} started: ${req.path}`)
         // await session.start()
