@@ -25,29 +25,16 @@ import {WebObject} from "../core/object.js";
 
 /**********************************************************************************************************************/
 
-export class Server extends WebObject {
-
-    worker      // cluster.Worker instance that executes this server's process, present in the main process only
-    worker_id   // numeric ID (1, 2, 3, ...) of this server's worker process, present in both the main process and worker processes
-
-    node        // parent Node (web object) of this process; periodically reloaded
-
-    __new__(node) {
-        this.node = node
-    }
-
-    async start() { assert(false) }
-    async stop()  {}
-}
-
-/**********************************************************************************************************************/
-
-export class MicroServer extends Server {
+export class MicroServer {
     /* Worker that executes message loops of multiple Agents (Actors): web objects that expose their own microservices. */
 
-    // constructor(node, opts = {}) {
-    //     super()
-    // }
+    node        // parent Node (web object) of this process; periodically reloaded
+    worker      // (assigned by caller) cluster.Worker instance that executes this server's process, present in the main process only
+    worker_id   // (assigned by caller) numeric ID (1, 2, 3, ...) of this server's worker process, present in both the main process and worker processes
+
+    constructor(node, opts) {
+        this.node = node
+    }
 
     async start() {
         /* deployment loop:
@@ -76,6 +63,14 @@ export class MicroServer extends Server {
  **
  */
 
+export class Server extends WebObject {
+
+    async start() { assert(false) }
+    async stop()  {}
+}
+
+/**********************************************************************************************************************/
+
 export class WebServer extends Server {
     /* Edge HTTP server based on express.
        For sending & receiving multipart data (HTML+JSON) in http response, see:
@@ -85,8 +80,7 @@ export class WebServer extends Server {
 
     REQUEST_TIMEOUT = 60                // [sec] 60 seconds
 
-    __new__(node, {host, port}) {
-        super.__new__(node)
+    __new__({host, port}) {
         this.host = host
         this.port = port
     }

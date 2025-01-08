@@ -82,7 +82,7 @@ export class MainProcess extends ServerProcess {
     }
 
     _create_workers() {
-        return [WebServer.new(null, this.opts), MicroServer.new(null, this.opts)]
+        return [WebServer.new(this.opts), new MicroServer(null, this.opts)]
     }
 
     async _start_workers() {
