@@ -2,6 +2,7 @@ import {assert, print, timeout, sleep} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {thread_local_variable} from "./thread.js";
 import {Request} from "../web/request.js";
+import {WebObject} from "../core/object.js";
 
 
 /**********************************************************************************************************************/
@@ -24,14 +25,14 @@ import {Request} from "../web/request.js";
 
 /**********************************************************************************************************************/
 
-export class Server {
+export class Server extends WebObject {
 
     worker      // cluster.Worker instance that executes this server's process, present in the main process only
     worker_id   // numeric ID (1, 2, 3, ...) of this server's worker process, present in both the main process and worker processes
 
     node        // parent Node (web object) of this process; periodically reloaded
 
-    constructor(node) {
+    __new__(node) {
         this.node = node
     }
 
@@ -84,8 +85,8 @@ export class WebServer extends Server {
 
     REQUEST_TIMEOUT = 60                // [sec] 60 seconds
 
-    constructor(node, {host, port}) {
-        super(node)
+    __new__(node, {host, port}) {
+        super.__new__(node)
         this.host = host
         this.port = port
     }
