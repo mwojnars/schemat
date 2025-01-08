@@ -85,7 +85,7 @@ export class WebServer extends Server {
         this.port = port
     }
 
-    async start() {
+    async start(host, port) {
         // let {ServerSchemat} = await import('/$/local/schemat/core/schemat_srv.js')
         // await schemat._reset_class(ServerSchemat)
 
@@ -120,11 +120,14 @@ export class WebServer extends Server {
         //     res.send('Hello World!')
         // })
 
-        this._http_server = app.listen(this.port, this.host, () => print(`worker ${process.pid} listening at http://${this.host}:${this.port}`))
+        host ??= this.host
+        port ??= this.port
+
+        return this._http_server = app.listen(port, host, () => print(`worker ${process.pid} listening at http://${host}:${port}`))
     }
 
-    stop() {
-        this._http_server?.close()
+    stop(http) {
+        (http || this._http_server)?.close()
         print(`WebServer closed (worker #${this.worker_id})`)
     }
 
