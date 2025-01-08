@@ -986,8 +986,8 @@ export class WebObject {
 
     /***  Database operations on self  ***/
 
-    delete() {
-        /* Delete this object from the database. */
+    async delete() {
+        /* Delete this object from the database. No need to use save(). */
         return schemat.site.action.delete_object(this.__id)
     }
 
