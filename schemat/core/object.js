@@ -1089,7 +1089,7 @@ export class WebObject {
 
     async save(opts = {}) {
         /* Send __data (for a newly created object) or __meta.edits (for an existing object) to DB.
-           Some of the available options: {ring, ring_name, reload}.
+           Some of the available options: {ring, reload}.
            If reload=true (default), a new instance of this object is created with new content and returned.
          */
         this.assert_active()
