@@ -63,15 +63,7 @@ export class MicroServer {
  **
  */
 
-export class Server extends WebObject {
-
-    async start() { assert(false) }
-    async stop()  {}
-}
-
-/**********************************************************************************************************************/
-
-export class WebServer extends Server {
+export class WebServer extends WebObject {
     /* Edge HTTP server based on express.
        For sending & receiving multipart data (HTML+JSON) in http response, see:
        - https://stackoverflow.com/a/50883981/1202674
