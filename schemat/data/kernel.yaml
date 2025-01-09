@@ -107,13 +107,14 @@
     cache_timeout:
       default: 10
       info: Time To Live (TTL) of objects in this category, in seconds. Only used when
-        an instance-level `__ttl` is missing. Determines for how long a fully-loaded object
-        is kept in the local cache (Registry) and reused after being loaded from DB. If
-        zero, the object is evicted on the nearest cache purge. A real number.
-        Recommended values are between 1.0 and 600. DO NOT set this too high,
-        because TTL is the *only* mechanism that drives server-side object cache
-        eviction and setting a high TTL for multiple objects may fill out the
-        cache, even if these objects are no longer used.
+        an instance-level `__ttl` is missing. Determines for how long a
+        fully-loaded object is kept in the local cache (Registry) and reused
+        after being loaded from DB. If zero, the object is evicted on the
+        nearest cache purge. A real number. Recommended values are between 1.0
+        and 600. DO NOT set this too high, because TTL is the *only* mechanism
+        that drives server-side object cache eviction and setting a high TTL for
+        multiple objects may fill out the cache, even if these objects are no
+        longer used.
       "@": schemat/types/type.js:NUMBER
     garbage_collect:
       default: false
@@ -192,9 +193,9 @@
         getter: true
         "@": schemat/types/type.js:STRING
       __status:
-        info: Contains "DELETED" if the corresponding record was deleted from the database
-          (a "tombstone" record; not saved in the data block, but used elsewhere to 
-          propagate the information about the object removal).
+        info: Contains "DELETED" if the corresponding record was deleted from the
+          database (a "tombstone" record; not saved in the data block, but used
+          elsewhere to propagate the information about the object removal).
         inherit: false
         "@": schemat/types/type.js:STRING
       __ttl:
@@ -708,5 +709,9 @@
   class: schemat/db/sequence.js:IndexStream
   __prototype:
     "@": 17
+  __category:
+    "@": 1
+- __id: 29
+  name: Agent
   __category:
     "@": 1
