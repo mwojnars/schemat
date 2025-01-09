@@ -93,7 +93,7 @@ export class MainProcess extends ServerProcess {
             let server = this.current_server = this.servers[id - 1]
             server.worker_id = id
             print(`starting worker #${id} (PID=${process.pid})...`)
-            return server.start()
+            return server.start(this.opts)
         }
         
         // in the primary process, start the workers...

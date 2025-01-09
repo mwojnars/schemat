@@ -72,12 +72,7 @@ export class WebServer extends WebObject {
 
     REQUEST_TIMEOUT = 60                // [sec] 60 seconds
 
-    __new__({host, port}) {
-        this.host = host
-        this.port = port
-    }
-
-    async start(host, port) {
+    async start({host, port}) {
         // let {ServerSchemat} = await import('/$/local/schemat/core/schemat_srv.js')
         // await schemat._reset_class(ServerSchemat)
 
@@ -106,14 +101,6 @@ export class WebServer extends WebObject {
         app.use(bodyParser.text({type: '*/*', limit: '10MB'}))  // for setting req.body string from plain-text body (if not json MIME-type)
 
         app.all('*', (req, res) => this._handle(req, res))
-
-        // web.get('*', async (req, res) => {
-        //     res.send(`URL path: ${req.path}`)
-        //     res.send('Hello World!')
-        // })
-
-        host ??= this.host
-        port ??= this.port
 
         return this._http_server = app.listen(port, host, () => print(`worker ${process.pid} listening at http://${host}:${port}`))
     }
