@@ -34,6 +34,7 @@ export class MicroServer {
 
     constructor(node, opts) {
         this.node = node
+        this.opts = opts
     }
 
     async start() {
