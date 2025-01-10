@@ -412,10 +412,10 @@ export class WebObject {
     }
 
     static newborn(data = null, opts = {}) {
-        /* Create a newborn object (not yet in DB): a mutable object with no ID. Optionally, initialize its __data with `data`,
-           but NO other initialization is done. */
+        /* Create a newborn object (not yet in DB): a mutable object with __data but no ID.
+           Optionally, initialize its __data with `data`, but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
-        if (data) obj.__data = new Catalog(data)
+        obj.__data = new Catalog(data)
         return obj
     }
 
@@ -423,6 +423,8 @@ export class WebObject {
         /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
         let obj = this.newborn()
         categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat) || []
+        // obj.__data = new Catalog()
+
         obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
         let ret = obj.__new__(...args)
         return ret instanceof Promise ? ret.then(() => obj) : obj
