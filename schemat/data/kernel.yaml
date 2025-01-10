@@ -713,5 +713,19 @@
     "@": 1
 - __id: 29
   name: Agent
+  info: "Base category for web objects that are deployed permanently on a
+    particular machine in the cluster and perform a perpetual event loop
+    (microservice) on this machine: receiving messages/requests from clients,
+    generating responses, utilizing local resources. Clients can be located in
+    the cluster or outside of it, depending on the type of agent."
+  __category:
+    "@": 1
+- __id: 30
+  name: WebServer
+  info: "An agent that implements a web server: a perpetual event loop
+    (microservice) that receives web requests from external clients, processes
+    them and returns responses over the web."
+  __prototype:
+    "@": 29
   __category:
     "@": 1
