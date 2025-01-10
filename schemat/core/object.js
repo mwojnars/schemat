@@ -423,11 +423,17 @@ export class WebObject {
         /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
         let obj = this.newborn()
         categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat) || []
-        // obj.__data = new Catalog()
-
-        obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
+        
+        let set_categories = () => {
+            categories.forEach(cat => obj.__data.append('__category', cat))
+            return obj
+        }
         let ret = obj.__new__(...args)
-        return ret instanceof Promise ? ret.then(() => obj) : obj
+        return ret instanceof Promise ? ret.then(set_categories) : set_categories()
+
+        // obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
+        // let ret = obj.__new__(...args)
+        // return ret instanceof Promise ? ret.then(() => obj) : obj
     }
 
     static new(...args) {
