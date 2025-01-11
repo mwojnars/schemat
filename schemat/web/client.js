@@ -23,9 +23,6 @@ export class Client extends Schemat {
     }
 
     async boot() {
-        // let ctx = RequestContext.from_element(context_path)
-        // print('request context:', ctx)
-        
         let ctx = this.config
 
         ctx.objects.map(rec => schemat.register_record(rec))    // register {id,data} records of bootstrap objects
