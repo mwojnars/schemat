@@ -12,10 +12,12 @@
       "@": 5000
     "@": schemat:Catalog
   default_path: /$/id
-  database:
-    "@": 1002
+  server:
+    "@": 1023
   cluster:
     "@": 1025
+  database:
+    "@": 1002
   eval_allowed: true
   __category:
     "@": 2
@@ -256,6 +258,11 @@
     "@": 1018
   __category:
     "@": 28
+- __id: 1023
+  name: webserver
+  port: 3000
+  __category:
+    "@": 30
 - __id: 1025
   name: cluster
   __category:
