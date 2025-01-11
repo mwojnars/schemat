@@ -16,13 +16,21 @@ export class Client extends Schemat {
         endpoint: null,         // target's endpoint that was called
     }
 
-    async boot_from(context_path) {
+    constructor(context_path) {
         let ctx = RequestContext.from_element(context_path)
         print('request context:', ctx)
+        super(ctx)
+    }
+
+    async boot() {
+        // let ctx = RequestContext.from_element(context_path)
+        // print('request context:', ctx)
+        
+        let ctx = this.config
 
         ctx.objects.map(rec => schemat.register_record(rec))    // register {id,data} records of bootstrap objects
 
-        await super.boot(ctx)
+        await super.boot()
 
         for (let rec of ctx.objects)                            // preload bootstrap objects
             await this.get_loaded(rec.id)

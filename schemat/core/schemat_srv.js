@@ -43,8 +43,8 @@ export class ServerSchemat extends Schemat {
     get tx()    { return this._transaction.getStore() }
 
 
-    constructor() {
-        super()
+    constructor(config) {
+        super(config)
 
         this.ROOT_DIRECTORY = process.cwd()                 // initialize ROOT_DIRECTORY from the current working dir
         // this.SCHEMAT_DIRECTORY = this.ROOT_DIRECTORY + '/schemat'
@@ -74,7 +74,7 @@ export class ServerSchemat extends Schemat {
     }
 
     init_client(id_context) {
-        return `import {Client} from "/$/local/schemat/web/client.js"; await new Client().boot_from("#${id_context}");`
+        return `import {Client} from "/$/local/schemat/web/client.js"; await new Client("#${id_context}").boot();`
     }
 
     _select(id) {

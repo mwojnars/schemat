@@ -27,7 +27,7 @@ export class ServerProcess {
         opts.config ??= './schemat/config.yaml'
         let config = await this._load_config(opts.config)
 
-        await new ServerSchemat().boot(config, () => this._open_bootstrap_db(config))
+        await new ServerSchemat(config).boot(() => this._open_bootstrap_db())
         // await schemat.db.insert_self()
 
         if (!cmd) return
@@ -44,9 +44,9 @@ export class ServerProcess {
         return yaml.parse(content)
     }
 
-    async _open_bootstrap_db(config) {
+    async _open_bootstrap_db() {
         let db = Database.new()
-        let rings = config.bootstrap_rings
+        let rings = schemat.config.bootstrap_rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
         await db.open(rings)
         await db.load()             // run __init__() and activate the database object

@@ -81,6 +81,7 @@ export class Schemat {
        loading and caching of web objects, dynamic module import, classpath management, session management etc.
      */
 
+    config                  // boot configuration (on server) or RequestContext (on client)
     site_id                 // ID of the active Site object
     registry                // cache of web objects, records and indexes loaded from DB
     builtin                 // a Classpath containing built-in classes and their paths
@@ -120,20 +121,21 @@ export class Schemat {
 
     /***  Initialization  ***/
 
-    constructor() {
+    constructor(config) {
         /* Create a new Schemat instance as a global object. */
         assert(!globalThis.schemat, `global Schemat instance already exists`)
         globalThis.schemat = this
+
+        this.config = config
         this.WebObject = WebObject          // schemat.WebObject is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
         this.registry = new Registry(this._on_evict.bind(this))
     }
 
-    async boot(config, boot_db = null) {
+    async boot(boot_db = null) {
         /* Initialize built-in objects, site_id, site, bootstrap DB. `config` is either the contents
            of a config file (on server), or a RequestContext (on client) -- both should contain the `site` attribute.
          */
-        this.config = config
         await this._init_classpath()
 
         this._db = await boot_db?.()        // bootstrap DB; the ultimate DB is opened later: on the first access to this.db
@@ -145,7 +147,7 @@ export class Schemat {
         //     print(`Cluster ${cluster_id} loaded, site ID: ${site_id}`)
         // }
 
-        let site_id = config.site
+        let site_id = this.config.site
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         this.site_id = site_id
 
