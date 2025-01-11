@@ -740,6 +740,14 @@
       info: Local port number for incoming HTTP connections where the server should be
         deployed.
       "@": schemat/types/type.js:INTEGER
+    request_timeout:
+      default: 60
+      info: Maximum duration of web request processing, in seconds. After this time,
+        the server responds with an error, however, the request processing still
+        CONTINUES (!) in the background and may consume resources, simply
+        because there is no way in Node.js to terminate an async thread by
+        force!
+      "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
   __prototype:
     "@": 29
