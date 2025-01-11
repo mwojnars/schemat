@@ -22,11 +22,12 @@ export class Client extends Schemat {
 
         ctx.items.map(rec => schemat.register_record(rec))      // register {id,data} records of bootstrap objects
 
-        await super.boot(ctx.site_id)
+        await super.boot(ctx)
 
         for (let rec of ctx.items)                              // preload bootstrap objects
             await this.get_loaded(rec.id)
 
+        delete ctx.items                                        // save memory if `ctx` was remembered in `schemat` as a global
         let object = this.get_object(ctx.target_id)
         object.assert_loaded()
 

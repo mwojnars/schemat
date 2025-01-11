@@ -25,9 +25,9 @@ export class ServerProcess {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
 
         opts.config ??= './schemat/config.yaml'
-        let config = await this.load_config(opts.config)
+        let config = await this._load_config(opts.config)
 
-        await new ServerSchemat().boot(config.site, () => this._open_bootstrap_db(config))
+        await new ServerSchemat().boot(config, () => this._open_bootstrap_db(config))
         // await schemat.db.insert_self()
 
         if (!cmd) return
@@ -37,7 +37,7 @@ export class ServerProcess {
         await this[method](opts)
     }
 
-    async load_config(filename) {
+    async _load_config(filename) {
         let fs = await import('node:fs')
         let yaml = (await import('yaml')).default
         let content = fs.readFileSync(filename, 'utf8')

@@ -129,9 +129,11 @@ export class Schemat {
         this.registry = new Registry(this._on_evict.bind(this))
     }
 
-    async boot(site_id, boot_db = null) {
-        /* Initialize built-in objects, site_id, site, bootstrap DB. */
-
+    async boot(config, boot_db = null) {
+        /* Initialize built-in objects, site_id, site, bootstrap DB. `config` is either the contents
+           of a config file (on server), or a RequestContext (on client) -- both should contain the `site` attribute.
+         */
+        this.config = config
         await this._init_classpath()
 
         this._db = await boot_db?.()        // bootstrap DB; the ultimate DB is opened later: on the first access to this.db
@@ -143,6 +145,7 @@ export class Schemat {
         //     print(`Cluster ${cluster_id} loaded, site ID: ${site_id}`)
         // }
 
+        let site_id = config.site || config.site_id
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         this.site_id = site_id
 
