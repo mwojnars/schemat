@@ -80,7 +80,7 @@ export class WebServer extends Agent {
        - https://stackoverflow.com/a/47067787/1202674
      */
 
-    static REQUEST_TIMEOUT = 60             // [sec] 60 seconds
+    request_timeout
 
     async start() {
         // let {ServerSchemat} = await import('/$/local/schemat/core/schemat_srv.js')
@@ -137,10 +137,14 @@ export class WebServer extends Agent {
 
         try {
             // await sleep(3000)
-            let deadline = timeout(WebServer.REQUEST_TIMEOUT * 1000, new ServerTimeoutError())
             let request = new Request({req, res})
             let handler = schemat.site.route(request)
-            let result = await Promise.race([handler, deadline])    // the request is abandoned if it takes longer than REQUEST_TIMEOUT to process
+
+            if (this.request_timeout) {
+                let deadline = timeout(this.request_timeout * 1000, new ServerTimeoutError())
+                handler = Promise.race([handler, deadline])         // the request is abandoned if it takes too long to process
+            }
+            let result = await handler
             if (typeof result === 'string') res.send(result)
         }
         catch (ex) {
