@@ -67,8 +67,8 @@ export class RequestContext {
     /* Seed web objects and request-related context information to be embedded in HTML response and then unpacked on the client
        to enable boot up of a client-side Schemat. The objects are flattened (state-encoded), but not yet stringified.
      */
-    site_id
-    target_id
+    site            // ID of the site object
+    target          // ID of the requested object (target of the web request)
     items           // objects in focus
     endpoint
 
@@ -98,8 +98,8 @@ export class RequestContext {
         items = [...items]
 
         ctx.items = items.map(obj => obj.__record)
-        ctx.site_id = site.__id
-        ctx.target_id = target.__id
+        ctx.site = site.__id
+        ctx.target = target.__id
         ctx.endpoint = request.endpoint
         return ctx
     }

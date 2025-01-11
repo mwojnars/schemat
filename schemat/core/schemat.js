@@ -145,7 +145,7 @@ export class Schemat {
         //     print(`Cluster ${cluster_id} loaded, site ID: ${site_id}`)
         // }
 
-        let site_id = config.site || config.site_id
+        let site_id = config.site
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
         this.site_id = site_id
 

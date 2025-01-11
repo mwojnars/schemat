@@ -28,7 +28,7 @@ export class Client extends Schemat {
             await this.get_loaded(rec.id)
 
         delete ctx.items                                        // save memory if `ctx` was remembered in `schemat` as a global
-        let object = this.get_object(ctx.target_id)
+        let object = this.get_object(ctx.target)
         object.assert_loaded()
 
         this.web = {object, endpoint: ctx.endpoint}
