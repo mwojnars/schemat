@@ -54,11 +54,11 @@ export class MicroServer {
         */
         print('starting agent:', this.id)
         this.agent = await schemat.load(this.id)
-        return this.agent.start()
+        this.state = await this.agent.start()
     }
 
-    stop(state) {
-        this.agent.stop(state)
+    async stop() {
+        await this.agent.stop(this.state)
         print(`MicroServer closed (worker #${this.worker_id})`)
     }
 }
@@ -113,8 +113,6 @@ export class WebServer extends Agent {
 
         app.all('*', (req, res) => this._handle(req, res))
 
-        // host ??= this.host
-        // port ??= this.port
         let host = schemat.config.host || this.host
         let port = schemat.config.port || this.port
 
