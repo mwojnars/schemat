@@ -32,7 +32,7 @@ export class Client extends Schemat {
         for (let rec of ctx.objects)                            // preload bootstrap objects
             await this.get_loaded(rec.id)
 
-        delete ctx.objects                                      // save memory if `ctx` was remembered in `schemat` as a global
+        delete ctx.objects                                      // save memory (`ctx` is remembered in `schemat` as a global)
         let object = this.get_object(ctx.target)
         object.assert_loaded()
 
