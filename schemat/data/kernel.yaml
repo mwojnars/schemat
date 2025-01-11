@@ -728,6 +728,18 @@
   info: "An agent that implements a web server: a perpetual event loop
     (microservice) that receives web requests from external clients, processes
     them and returns responses over the web."
+  schema:
+    host:
+      default: 127.0.0.1
+      info: IP number of the local network interface where the server should be
+        deployed to accept incoming web requests.
+      "@": schemat/types/type.js:STRING
+    port:
+      default: 80
+      info: Local port number for incoming HTTP connections where the server should be
+        deployed.
+      "@": schemat/types/type.js:INTEGER
+    "@": schemat:Catalog
   __prototype:
     "@": 29
   __category:
