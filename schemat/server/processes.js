@@ -58,7 +58,7 @@ export class MainProcess extends ServerProcess {
     /* Top-level Schemat process running on a given machine. Spawns and manages worker processes:
        web server(s), data server(s), load balancer etc.
      */
-    servers             // array of Server instances, each server is a child process
+    workers             // array of Server instances, each server is a child process
     current_server      // in subprocess, the current Server instance; its worker ID is in current_server.worker_id
 
     async CLI_main(opts) {
@@ -77,12 +77,14 @@ export class MainProcess extends ServerProcess {
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
-        this.servers = this._create_workers()
+        this.workers = await this._create_workers()
         return this._start_workers()
     }
 
-    _create_workers() {
-        return [new MicroServer(null, this.opts), WebServer.new()]
+    async _create_workers() {
+        let webserver = WebServer.new()
+        // let webserver = await schemat.site.server.load()
+        return [new MicroServer(null, this.opts), webserver]
     }
 
     async _start_workers() {
@@ -90,23 +92,23 @@ export class MainProcess extends ServerProcess {
         // in the worker process, start this worker's server life-loop
         if (cluster.isWorker) {
             let id = process.env.WORKER_ID
-            let server = this.current_server = this.servers[id - 1]
+            let server = this.current_server = this.workers[id - 1]
             server.worker_id = id
             print(`starting worker #${id} (PID=${process.pid})...`)
             return server.start(this.opts)
         }
         
         // in the primary process, start the workers...
-        let N = this.servers.length
+        let N = this.workers.length
         print(`starting the main process (PID=${process.pid}) with ${N} worker(s)...`)
 
         for (let i = 0; i < N; i++)
-            this.servers[i].worker = cluster.fork({WORKER_ID: i + 1})
+            this.workers[i].worker = cluster.fork({WORKER_ID: i + 1})
 
         cluster.on('exit', (worker) => {
             let id = worker.process.env.WORKER_ID
             print(`worker #${id} (PID=${worker.process.pid}) exited`)
-            this.servers[id-1].worker = worker = cluster.fork({WORKER_ID: id})      // restart the process
+            this.workers[id-1].worker = worker = cluster.fork({WORKER_ID: id})      // restart the process
             print(`worker #${id} (PID=${worker.process.pid}) restarted`)
         })
     }
@@ -118,7 +120,7 @@ export class MainProcess extends ServerProcess {
         schemat.is_closing = true
         setTimeout(() => process.exit(0), 10)
         
-        if (cluster.isPrimary) this.servers.forEach(srv => srv.worker.kill())
+        if (cluster.isPrimary) this.workers.forEach(srv => srv.worker.kill())
         else return this.current_server.stop()
     }
 }
