@@ -10,11 +10,7 @@ import {RequestContext} from "./request.js"
 export class Client extends Schemat {
     /* Client-side global Schemat object. Used in .init_client() and .client_block() of the server-side Schemat. */
 
-    // attributes of the web request that invoked generation of this page by the server
-    web = {
-        object: null,           // target web object that was addressed by the request, already loaded
-        endpoint: null,         // target's endpoint that was called
-    }
+    target          // target web object that was addressed by the request, already loaded
 
     constructor(context_path) {
         let ctx = RequestContext.from_element(context_path)
@@ -33,10 +29,9 @@ export class Client extends Schemat {
             await this.get_loaded(rec.id)
 
         delete ctx.objects                                      // save memory (`ctx` is remembered in `schemat` as a global)
-        let object = this.get_object(ctx.target)
-        object.assert_loaded()
+        this.target = this.get_object(ctx.target)
+        this.target.assert_loaded()
 
-        this.web = {object, endpoint: ctx.endpoint}
         // check()
     }
 

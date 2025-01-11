@@ -70,7 +70,7 @@ export class RequestContext {
     site            // ID of the site object
     target          // ID of the requested object (target of the web request)
     objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
-    endpoint
+    endpoint        // name of the target's endpoint method that was called, like "GET.admin"
 
     static from_request(request, ...objects) {
         /* For use on the server. Optional `objects` are included in the context as seed objects together

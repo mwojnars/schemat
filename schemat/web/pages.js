@@ -152,8 +152,8 @@ export class RenderedPage extends HtmlPage {
         page_script(props) {
             return schemat.init_client('page-data') +
                 `
-                    let {object, endpoint} = schemat.web;
-                    object.__self[endpoint]().render_client(object);
+                    let {target} = schemat, {endpoint} = schemat.config;
+                    target.__self[endpoint]().render_client(target);
                 `
         }
 
