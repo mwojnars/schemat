@@ -25,6 +25,8 @@ let RootCategory
 // due to circular dependency between object.js and category.js, RootCategory must be imported with dynamic import() and NOT awaited:
 import("./category.js").then(module => {RootCategory = module.RootCategory})
 
+// shared immutable array, used in WebObject's property cache to avoid keeping separate arrays of dozens of empty .xyz$ plural attributes across multiple objects
+const _EMPTY_ARRAY = Object.freeze([])
 
 // // AsyncFunction class is needed for parsing from-DB source code
 // const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
@@ -731,7 +733,8 @@ export class WebObject {
         // else if (prop === '__category')
         //     streams.push([schemat.Uncategorized])
 
-        return type.combine_inherited(streams, proxy, prop)             // impute/getter/default of the `type` are applied here
+        let values = type.combine_inherited(streams, proxy, prop)       // impute/getter/default of the `type` are applied here
+        return values?.length === 0 ? _EMPTY_ARRAY : values
     }
 
     _own_values(prop)  { return this.__data.getAll(prop) }
