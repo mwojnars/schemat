@@ -52,7 +52,6 @@ export class MicroServer {
            - await agent.serve()
            - delay(remaining-time-till-epoch)
         */
-        print('starting agent:', this.id)
         this.agent = await schemat.load(this.id)
         this.state = await this.agent.start()
     }

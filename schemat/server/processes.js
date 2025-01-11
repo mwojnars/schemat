@@ -84,10 +84,9 @@ export class MainProcess extends ServerProcess {
     }
 
     async _create_workers() {
-        let webserver = WebServer.new()
-        // let webserver = await schemat.site.server.load()
+        // let webserver = WebServer.new()
         let id = schemat.site.server.id
-        return [new MicroServer(null, id, this.opts), webserver]
+        return [new MicroServer(null, id, this.opts)]
     }
 
     async _start_workers() {
