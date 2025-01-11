@@ -4,10 +4,9 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {print, assert, T} from "../common/utils.js";
 import {ItemNotFound} from "../common/errors.js";
-import {MicroServer, WebServer} from "./servers.js";
+import {MicroServer} from "./servers.js";
 import {WebObject} from "../core/object.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
-import {DataRequest} from "../db/data_request.js";
 import {Database} from "../db/db.js";
 import {Struct} from "../core/catalog.js";
 
@@ -23,6 +22,8 @@ export class ServerProcess {
 
     async run(cmd, opts = {}) {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
+
+        print('run() WORKER_ID:', process.env.WORKER_ID)
 
         opts.config ??= './schemat/config.yaml'
         let config = await this._load_config(opts.config)
@@ -84,9 +85,9 @@ export class MainProcess extends ServerProcess {
     }
 
     async _create_workers() {
-        // let webserver = WebServer.new()
+        let num_workers = 2
         let id = schemat.site.server.id
-        return [new MicroServer(null, id, this.opts)]
+        return Array.from({length: num_workers}, () => new MicroServer(null, id, this.opts))
     }
 
     async _start_workers() {
