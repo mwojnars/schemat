@@ -232,6 +232,9 @@
     startup.
   class: schemat/std/site.js:Site
   schema:
+    server:
+      info: A WebServer that handles all web requests.
+      "@": schemat/types/type.js:REF
     cluster:
       info: A Cluster of compute & storage nodes that host this site and database.
       "@": schemat/types/type.js:REF
