@@ -32,7 +32,8 @@ export class MicroServer {
     worker      // (assigned by caller) cluster.Worker instance that executes this server's process, present in the main process only
     worker_id   // (assigned by caller) numeric ID (1, 2, 3, ...) of this server's worker process, present in both the main process and worker processes
 
-    constructor(node, opts) {
+    constructor(node, id, opts) {
+        this.id = id
         this.node = node
         this.opts = opts
     }
@@ -51,9 +52,13 @@ export class MicroServer {
            - await agent.serve()
            - delay(remaining-time-till-epoch)
         */
+        print('starting agent:', this.id)
+        this.agent = await schemat.load(this.id)
+        return this.agent.start()
     }
 
-    stop() {
+    stop(state) {
+        this.agent.stop(state)
         print(`MicroServer closed (worker #${this.worker_id})`)
     }
 }
@@ -76,9 +81,9 @@ export class WebServer extends Agent {
        - https://stackoverflow.com/a/47067787/1202674
      */
 
-    REQUEST_TIMEOUT = 60                // [sec] 60 seconds
+    static REQUEST_TIMEOUT = 60             // [sec] 60 seconds
 
-    async start({host, port}) {
+    async start() {
         // let {ServerSchemat} = await import('/$/local/schemat/core/schemat_srv.js')
         // await schemat._reset_class(ServerSchemat)
 
@@ -108,6 +113,11 @@ export class WebServer extends Agent {
 
         app.all('*', (req, res) => this._handle(req, res))
 
+        // host ??= this.host
+        // port ??= this.port
+        let host = schemat.config.host || this.host
+        let port = schemat.config.port || this.port
+
         return this._http_server = app.listen(port, host, () => print(`worker ${process.pid} listening at http://${host}:${port}`))
     }
 
@@ -130,7 +140,7 @@ export class WebServer extends Agent {
 
         try {
             // await sleep(3000)
-            let deadline = timeout(this.REQUEST_TIMEOUT * 1000, new ServerTimeoutError())
+            let deadline = timeout(WebServer.REQUEST_TIMEOUT * 1000, new ServerTimeoutError())
             let request = new Request({req, res})
             let handler = schemat.site.route(request)
             let result = await Promise.race([handler, deadline])    // the request is abandoned if it takes longer than REQUEST_TIMEOUT to process

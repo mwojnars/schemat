@@ -26,6 +26,8 @@ export class ServerProcess {
 
         opts.config ??= './schemat/config.yaml'
         let config = await this._load_config(opts.config)
+        config = {...config, ...opts}
+        // print('config:', config)
 
         await new ServerSchemat(config).boot(() => this._open_bootstrap_db())
         // await schemat.db.insert_self()
@@ -84,7 +86,8 @@ export class MainProcess extends ServerProcess {
     async _create_workers() {
         let webserver = WebServer.new()
         // let webserver = await schemat.site.server.load()
-        return [new MicroServer(null, this.opts), webserver]
+        let id = schemat.site.server.id
+        return [new MicroServer(null, id, this.opts), webserver]
     }
 
     async _start_workers() {
