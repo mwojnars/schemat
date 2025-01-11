@@ -23,8 +23,6 @@ export class ServerProcess {
     async run(cmd, opts = {}) {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
 
-        print('run() WORKER_ID:', process.env.WORKER_ID)
-
         opts.config ??= './schemat/config.yaml'
         let config = await this._load_config(opts.config)
         config = {...config, ...opts}
@@ -77,6 +75,8 @@ export class MainProcess extends ServerProcess {
         // print('loaded:', m)
         // let {WebServer} = await schemat.import('/$/local/schemat/server/servers.js')
 
+        print('MainProcess.start() WORKER_ID:', process.env.WORKER_ID)
+
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
@@ -92,22 +92,22 @@ export class MainProcess extends ServerProcess {
 
     async _start_workers() {
 
-        let N = this.workers.length
-        print(`starting the main process (PID=${process.pid}) with ${N} worker(s)...`)
+        if (cluster.isPrimary) {                // in the primary process, start the workers...
+            let N = this.workers.length
+            print(`starting the main process (PID=${process.pid}) with ${N} worker(s)...`)
 
-        if (cluster.isPrimary)                  // in the primary process, start the workers...
             for (let i = 0; i < N; i++)
                 this.workers[i].worker = cluster.fork({WORKER_ID: i + 1})
+                // fork() in Node.js works differently than in Linux: it restarts the entire script instead of making a memory copy
 
-        if (cluster.isPrimary)
             cluster.on('exit', (worker) => {
                 let id = worker.process.env.WORKER_ID
                 print(`worker #${id} (PID=${worker.process.pid}) exited`)
                 this.workers[id-1].worker = worker = cluster.fork({WORKER_ID: id})      // restart the process
                 print(`worker #${id} (PID=${worker.process.pid}) restarted`)
             })
-
-        if (cluster.isWorker) {                 // in the worker process, start this worker's server life-loop
+        }
+        else {                                  // in the worker process, start this worker's server life-loop
             let id = process.env.WORKER_ID
             let server = this.current_server = this.workers[id - 1]
             server.worker_id = id
