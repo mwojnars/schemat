@@ -69,8 +69,8 @@ export class MicroServer {
  */
 
 export class Agent extends WebObject {
-    start(opts) {}
-    stop(state) {}
+    async start()     {}
+    async stop(state) {}
 }
 
 export class WebServer extends Agent {
@@ -115,12 +115,12 @@ export class WebServer extends Agent {
         let host = schemat.config.host || this.host
         let port = schemat.config.port || this.port
 
-        return this._http_server = app.listen(port, host, () => print(`worker ${process.pid} listening at http://${host}:${port}`))
+        return app.listen(port, host, () => print(`worker ${process.pid} listening at http://${host}:${port}`))
     }
 
-    stop(http) {
-        (http || this._http_server)?.close()
-        print(`WebServer closed (worker #${this.worker_id})`)
+    async stop(http_server) {
+        await new Promise(resolve => http_server?.close(resolve))
+        print(`WebServer closed (worker #${process.env.WORKER_ID})`)
     }
 
     async _handle(req, res) {
