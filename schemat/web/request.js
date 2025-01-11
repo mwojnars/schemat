@@ -69,7 +69,7 @@ export class RequestContext {
      */
     site            // ID of the site object
     target          // ID of the requested object (target of the web request)
-    items           // objects in focus
+    objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
     endpoint
 
     static from_request(request, ...objects) {
@@ -97,7 +97,7 @@ export class RequestContext {
         }
         items = [...items]
 
-        ctx.items = items.map(obj => obj.__record)
+        ctx.objects = items.map(obj => obj.__record)
         ctx.site = site.__id
         ctx.target = target.__id
         ctx.endpoint = request.endpoint

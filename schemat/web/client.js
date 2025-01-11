@@ -20,14 +20,14 @@ export class Client extends Schemat {
         let ctx = RequestContext.from_element(context_path)
         print('request context:', ctx)
 
-        ctx.items.map(rec => schemat.register_record(rec))      // register {id,data} records of bootstrap objects
+        ctx.objects.map(rec => schemat.register_record(rec))    // register {id,data} records of bootstrap objects
 
         await super.boot(ctx)
 
-        for (let rec of ctx.items)                              // preload bootstrap objects
+        for (let rec of ctx.objects)                            // preload bootstrap objects
             await this.get_loaded(rec.id)
 
-        delete ctx.items                                        // save memory if `ctx` was remembered in `schemat` as a global
+        delete ctx.objects                                      // save memory if `ctx` was remembered in `schemat` as a global
         let object = this.get_object(ctx.target)
         object.assert_loaded()
 
