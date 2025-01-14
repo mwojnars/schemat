@@ -371,6 +371,11 @@ export class Struct {
         }
         return target       // primitive values or unhandled types returned as-is
     }
+
+    static equal(obj1, obj2) {
+        /* Return true if the two objects (structures) are deep-equal when compared by their JSONx stringification. */
+        return JSONx.stringify(obj1) === JSONx.stringify(obj2)
+    }
 }
 
 /**********************************************************************************************************************
