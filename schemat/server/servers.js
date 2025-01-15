@@ -11,13 +11,16 @@ export class Server {
     /* Worker that executes message loops of multiple Agents (Actors): web objects that implement an event loop and expose their own microservice. */
 
     node        // parent Node (web object) of this process; periodically reloaded
-    worker      // (assigned by caller) cluster.Worker instance that executes this server's process, present in the main process only
-    worker_id   // (assigned by caller) numeric ID (1, 2, 3, ...) of this server's worker process, present in both the main process and worker processes
 
     constructor(node, id, opts) {
         this.id = id
         this.node = node
         this.opts = opts
+    }
+
+    get worker_id() {
+        /* Numeric ID (1, 2, 3, ...) of the worker process, as spawned by MainProcess. */
+        return process.env.WORKER_ID
     }
 
     async start() {

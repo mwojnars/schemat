@@ -59,8 +59,8 @@ export class MainProcess extends ServerProcess {
     /* Top-level Schemat process running on a given machine. Spawns and manages worker processes:
        web server(s), data server(s), load balancer etc.
      */
-    workers             // array of Server instances, each server is a child process
-    current_server      // in subprocess, the current Server instance; its worker ID is in current_server.worker_id
+    workers             // array of Server instances, each server is a child process; only defined in primary process
+    current_server      // in subprocess, the current Server instance
 
     async CLI_main(opts) {
         this.opts = opts
@@ -80,10 +80,6 @@ export class MainProcess extends ServerProcess {
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
-        return this._start_workers()
-    }
-
-    async _start_workers() {
         if (cluster.isPrimary) {                // in the primary process, start the workers...
             const num_workers = 2
             this.workers = []
@@ -103,7 +99,6 @@ export class MainProcess extends ServerProcess {
         else {                                  // in the worker process, start this worker's server life-loop
             let id = process.env.WORKER_ID
             this.current_server = new Server(null, schemat.site.server.id, this.opts)
-            this.current_server.worker_id = id
             print(`starting worker #${id} (PID=${process.pid})...`)
             return this.current_server.start(this.opts)
         }
