@@ -59,8 +59,8 @@ export class MainProcess extends ServerProcess {
     /* Top-level Schemat process running on a given machine. Spawns and manages worker processes:
        web server(s), data server(s), load balancer etc.
      */
-    workers             // array of Server instances, each server is a child process; only defined in primary process
-    current_server      // in subprocess, the current Server instance
+    workers         // array of Node's Worker instances (child processes); only present in the primary process
+    server          // in a subprocess, the Server instance started inside the worker
 
     async CLI_main(opts) {
         this.opts = opts
@@ -85,9 +85,8 @@ export class MainProcess extends ServerProcess {
             this.workers = []
             print(`starting the main process (PID=${process.pid}) with ${num_workers} worker(s)...`)
 
-            for (let i = 0; i < num_workers; i++) {
+            for (let i = 0; i < num_workers; i++)
                 this.workers[i] = cluster.fork({WORKER_ID: i + 1})
-            }
 
             cluster.on('exit', (worker) => {
                 let id = worker.process.env.WORKER_ID
@@ -98,9 +97,9 @@ export class MainProcess extends ServerProcess {
         }
         else {                                  // in the worker process, start this worker's server life-loop
             let id = process.env.WORKER_ID
-            this.current_server = new Server(null, schemat.site.server.id, this.opts)
+            this.server = new Server(null, schemat.site.server.id, this.opts)
             print(`starting worker #${id} (PID=${process.pid})...`)
-            return this.current_server.start(this.opts)
+            return this.server.start(this.opts)
         }
     }
 
@@ -112,7 +111,7 @@ export class MainProcess extends ServerProcess {
         setTimeout(() => process.exit(0), 10)
         
         if (cluster.isPrimary) this.workers.forEach(worker => worker.kill())
-        else return this.current_server.stop()
+        else return this.server.stop()
     }
 }
 
