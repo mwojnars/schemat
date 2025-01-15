@@ -4,7 +4,7 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {print, assert, T} from "../common/utils.js";
 import {ItemNotFound} from "../common/errors.js";
-import {MicroServer} from "./servers.js";
+import {Server} from "./servers.js";
 import {WebObject} from "../core/object.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {Database} from "../db/db.js";
@@ -87,7 +87,7 @@ export class MainProcess extends ServerProcess {
     async _create_workers() {
         let num_workers = 2
         let id = schemat.site.server.id
-        return Array.from({length: num_workers}, () => new MicroServer(null, id, this.opts))
+        return Array.from({length: num_workers}, () => new Server(null, id, this.opts))
     }
 
     async _start_workers() {

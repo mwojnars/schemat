@@ -25,8 +25,8 @@ import {WebObject} from "../core/object.js";
 
 /**********************************************************************************************************************/
 
-export class MicroServer {
-    /* Worker that executes message loops of multiple Agents (Actors): web objects that expose their own microservices. */
+export class Server {
+    /* Worker that executes message loops of multiple Agents (Actors): web objects that implement an event loop and expose their own microservice. */
 
     node        // parent Node (web object) of this process; periodically reloaded
     worker      // (assigned by caller) cluster.Worker instance that executes this server's process, present in the main process only
@@ -58,7 +58,7 @@ export class MicroServer {
 
     async stop() {
         await this.agent.stop(this.state)
-        print(`MicroServer closed (worker #${this.worker_id})`)
+        print(`Server closed (worker #${this.worker_id})`)
     }
 }
 
