@@ -7,24 +7,6 @@ import {WebObject} from "../core/object.js";
 
 /**********************************************************************************************************************/
 
-// let RES = express.response          // standard Express' prototype of all response objects;
-//                                     // we're extending it with higher-level methods for handling items
-//
-// RES.error = function(...args) {
-//     /* `args` contain a text message and/or a numeric status code. */
-//     let msg, code = 500
-//     for (let arg of args) {
-//         let t = typeof arg
-//         if (t === 'string') msg = arg
-//         else if (t === 'number') code = arg
-//     }
-//     if (msg) this.status(code).send(msg)
-//     else this.sendStatus(code)
-// }
-
-
-/**********************************************************************************************************************/
-
 export class Server {
     /* Worker that executes message loops of multiple Agents (Actors): web objects that implement an event loop and expose their own microservice. */
 
