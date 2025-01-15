@@ -80,39 +80,32 @@ export class MainProcess extends ServerProcess {
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
-        this.workers = await this._create_workers()
         return this._start_workers()
     }
 
-    async _create_workers() {
-        let num_workers = 2
-        let id = schemat.site.server.id
-        return Array.from({length: num_workers}, () => new Server(null, id, this.opts))
-    }
-
     async _start_workers() {
-
         if (cluster.isPrimary) {                // in the primary process, start the workers...
-            let N = this.workers.length
-            print(`starting the main process (PID=${process.pid}) with ${N} worker(s)...`)
+            const num_workers = 2
+            this.workers = []
+            print(`starting the main process (PID=${process.pid}) with ${num_workers} worker(s)...`)
 
-            for (let i = 0; i < N; i++)
-                this.workers[i].worker = cluster.fork({WORKER_ID: i + 1})
-                // fork() in Node.js works differently than in Linux: it restarts the entire script instead of making a memory copy
+            for (let i = 0; i < num_workers; i++) {
+                this.workers[i] = cluster.fork({WORKER_ID: i + 1})
+            }
 
             cluster.on('exit', (worker) => {
                 let id = worker.process.env.WORKER_ID
                 print(`worker #${id} (PID=${worker.process.pid}) exited`)
-                this.workers[id-1].worker = worker = cluster.fork({WORKER_ID: id})      // restart the process
+                this.workers[id-1] = worker = cluster.fork({WORKER_ID: id})      // restart the process
                 print(`worker #${id} (PID=${worker.process.pid}) restarted`)
             })
         }
         else {                                  // in the worker process, start this worker's server life-loop
             let id = process.env.WORKER_ID
-            let server = this.current_server = this.workers[id - 1]
-            server.worker_id = id
+            this.current_server = new Server(null, schemat.site.server.id, this.opts)
+            this.current_server.worker_id = id
             print(`starting worker #${id} (PID=${process.pid})...`)
-            return server.start(this.opts)
+            return this.current_server.start(this.opts)
         }
     }
 
@@ -123,7 +116,7 @@ export class MainProcess extends ServerProcess {
         schemat.is_closing = true
         setTimeout(() => process.exit(0), 10)
         
-        if (cluster.isPrimary) this.workers.forEach(srv => srv.worker.kill())
+        if (cluster.isPrimary) this.workers.forEach(worker => worker.kill())
         else return this.current_server.stop()
     }
 }
