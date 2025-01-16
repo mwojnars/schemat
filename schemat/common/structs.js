@@ -94,14 +94,14 @@ export class DependenciesStack extends Stack {
 
 /**********************************************************************************************************************/
 
-export class ObjectSet {
-    /* A Set of objects deduplicated by object.id. When an existing ID is to be overwritten,
-       the `__meta.loaded_at` property is compared and the most recent object is kept.
+export class Objects {
+    /* A Set of objects deduplicated by object.id, serialized as a sorted array of IDs (todo).
+       When an existing ID is to be overwritten, the `__meta.loaded_at` property is compared and the most recent object is kept.
      */
     objects = new Map()
 
     add(obj) {
-        if (obj.id === undefined) throw new Error("missing 'id' for the object to be added to the ObjectSet")
+        if (obj.id === undefined) throw new Error("missing 'id' for the object to be added to the Objects")
         if (!this.hasNewer(obj))
             this.objects.set(obj.id, obj)
         return this

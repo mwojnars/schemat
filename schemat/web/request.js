@@ -1,6 +1,6 @@
 import {UrlPathNotFound} from "../common/errors.js";
 import {print, assert, splitLast} from "../common/utils.js";
-import {ObjectSet} from "../common/structs.js";
+import {Objects} from "../common/structs.js";
 
 
 export class Request {   // Connection ?
@@ -80,7 +80,7 @@ export class RequestContext {
         let site = schemat.site
         let target = request.target
 
-        let items = new ObjectSet()
+        let items = new Objects()
         let queue = [target, site, ...site.global?.values() || [], ...objects].filter(Boolean)
         
         // extend the `items` set with all objects that are referenced from the `target` and `site` via __category, __extend or __container
