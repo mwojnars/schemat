@@ -1,4 +1,4 @@
-import {assert, print, timeout, sleep} from '../common/utils.js'
+import {assert, print, timeout, delay} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {thread_local_variable} from "./thread.js";
 import {Request} from "../web/request.js";
@@ -10,7 +10,7 @@ import {WebObject} from "../core/object.js";
 export class Server {
     /* Worker that executes message loops of multiple Agents (Actors): web objects that implement an event loop and expose their own microservice. */
 
-    node        // parent Node (web object) of this process; periodically reloaded
+    node        // host Machine (web object) of this process; periodically reloaded
 
     constructor(node, id, opts) {
         this.id = id
@@ -34,11 +34,58 @@ export class Server {
 
            microservice loop:
            - agent = agent.refresh()
-           - await agent.serve()
+           - await agent.serve() ... agent.start()
            - delay(remaining-time-till-epoch)
         */
         this.agent = await schemat.load(this.id)
         this.state = await this.agent.start()
+    }
+
+    async loop() {
+        let agents = []         // list of [old_agent, new_agent] pairs
+
+        while (true) {
+            this.machine = this.machine.refresh()
+            agents = this.machine.refresh_agents(this, agents)
+            // let agents = this.agents     // getter (worker must be a web object)
+
+            for (let [prev, agent] of agents) {
+                if (schemat.is_closing) return
+                if (prev === agent) continue            // no action if the agent instance hasn't changed
+
+                let state = prev?.__meta.state
+
+                if (!agent) {                           // stop old agents...
+                    await prev.__stop__(state)
+
+                    // tear down all deployable (reactive, auxiliary, exterior, foreign, alien, extrinsic, exogenous) properties
+                    // "exogenous property" represents/reflects the (desired) state of the environment; every modification (edit) performed on such a property
+                    // requires a corresponding update in the environment, on every machine where this object is deployed
+                    for (let prop of prev._exogenous_props) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
+                    continue
+                }
+
+                if (!prev) {                            // deploy new agents...
+                    for (let prop of agent._exogenous_props) if (agent[prop] !== undefined) agent._call_setup[prop](undefined, undefined, agent, agent[prop])
+                    agent.__meta.state = await agent.__start__()
+                    continue
+                }
+
+                // build a list of modifications of exogenous properties
+                let changes = agent._exogenous_props
+
+                if (changes.length) {
+                    // frozen_state = await prev.__stop__(state, freeze = true)
+                    let frozen_state = await prev.__suspend__(state)
+                    await agent.__start__(frozen_state)
+                }
+
+                // refresh existing agents; invoke setup.* triggers for modified properties...
+                agent.__meta.state = await agent.__restart__(state, prev)
+
+                await delay(this.machine.refresh_delay)
+            }
+        }
     }
 
     async stop() {

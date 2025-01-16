@@ -97,6 +97,8 @@ export class MainProcess extends ServerProcess {
         }
         else {                                  // in the worker process, start this worker's server life-loop
             let id = process.env.WORKER_ID
+            await schemat.site.server.load()
+
             this.server = new Server(null, schemat.site.server.id, this.opts)
             print(`starting worker #${id} (PID=${process.pid})...`)
             return this.server.start(this.opts)
