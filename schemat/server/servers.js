@@ -43,6 +43,7 @@ export class Server {
 
     async loop() {
         let agents = []         // list of [old_agent, new_agent] pairs
+        let migrations = []     // pending or uncommitted migrations from this host to another one
 
         while (true) {
             this.machine = this.machine.refresh()
@@ -54,34 +55,37 @@ export class Server {
                 if (prev === agent) continue            // no action if the agent instance hasn't changed
 
                 let state = prev?.__meta.state
+                let external = (agent || prev)._external_props
 
                 if (!agent) {                           // stop old agents...
                     await prev.__stop__(state)
+                    // let dump = await prev.__migrate__(new_host)
+                    // if (dump !== undefined) send(dump, new_host) & wait for confirmation
+                    await prev.__uninstall__()
 
-                    // tear down all deployable (reactive, auxiliary, exterior, foreign, alien, extrinsic, exogenous) properties
-                    // "exogenous property" represents/reflects the (desired) state of the environment; every modification (edit) performed on such a property
-                    // requires a corresponding update in the environment, on every machine where this object is deployed
-                    for (let prop of prev._exogenous_props) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
+                    // tear down all external properties that represent/reflect the (desired) state (property) of the environment; every modification (edit)
+                    // on such a property requires a corresponding update in the environment, on every machine where this object is deployed
+                    for (let prop of external) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
                     continue
                 }
 
                 if (!prev) {                            // deploy new agents...
-                    for (let prop of agent._exogenous_props) if (agent[prop] !== undefined) agent._call_setup[prop](undefined, undefined, agent, agent[prop])
+                    for (let prop of external) if (agent[prop] !== undefined) agent._call_setup[prop](undefined, undefined, agent, agent[prop])
+                    await agent.__install__()
                     agent.__meta.state = await agent.__start__()
                     continue
                 }
 
-                // build a list of modifications of exogenous properties
-                let changes = agent._exogenous_props
-
-                if (changes.length) {
-                    // frozen_state = await prev.__stop__(state, freeze = true)
-                    let frozen_state = await prev.__suspend__(state)
-                    await agent.__start__(frozen_state)
-                }
+                // build a list of modifications of external properties
+                let changes = agent._external_props
 
                 // refresh existing agents; invoke setup.* triggers for modified properties...
-                agent.__meta.state = await agent.__restart__(state, prev)
+                if (changes.length) {
+                    await prev.__stop__(state)
+                    // launch triggers...
+                    agent.__meta.state = await agent.__start__()
+                }
+                else agent.__meta.state = await agent.__restart__(state, prev)
 
                 await delay(this.machine.refresh_delay)
             }
