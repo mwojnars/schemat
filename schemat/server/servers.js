@@ -66,17 +66,9 @@ export class Server {
                 else {
                     // build a list of modifications of external properties
                     let changes = agent.get_external_changes(prev)   //_external_props
-
-                    // refresh existing agents; invoke setup.* triggers for modified properties...
-                    if (changes.length) {
-                        await prev.__stop__(state)
-
-                        // launch triggers to adapt the environment to changes in external props
-                        // ...
-
-                        agent.__meta.state = await agent.__start__()
-                    }
-                    else agent.__meta.state = await agent.__restart__(state, prev)
+                    await prev.__stop__(state)
+                    // launch triggers to adapt the environment to changes in external props...
+                    agent.__meta.state = await agent.__start__()
                 }
             }
 
@@ -171,6 +163,11 @@ export class Server {
         await this.agent.stop(this.state)
         print(`Server closed (worker #${this.worker_id})`)
     }
+}
+
+/**********************************************************************************************************************/
+
+export class Machine extends WebObject {
 }
 
 /**********************************************************************************************************************
