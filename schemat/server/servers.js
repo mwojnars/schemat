@@ -10,11 +10,11 @@ import {WebObject} from "../core/object.js";
 export class Server {
     /* Worker that executes message loops of multiple Agents (Actors): web objects that implement an event loop and expose their own microservice. */
 
-    node        // host Machine (web object) of this process; periodically reloaded
+    machine         // host Machine (web object) of this process; periodically reloaded
 
-    constructor(node, id, opts) {
+    constructor(machine, id, opts) {
         this.id = id
-        this.node = node
+        this.machine = machine
         this.opts = opts
     }
 

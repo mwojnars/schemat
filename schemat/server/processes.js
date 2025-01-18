@@ -59,7 +59,7 @@ export class MainProcess extends ServerProcess {
     /* Top-level Schemat process running on a given machine. Spawns and manages worker processes:
        web server(s), data server(s), load balancer etc.
      */
-    workers         // array of Node's Worker instances (child processes); only present in the primary process
+    workers         // array of Node.js Worker instances (child processes); only present in the primary process
     server          // in a subprocess, the Server instance started inside the worker
 
     async CLI_main(opts) {
