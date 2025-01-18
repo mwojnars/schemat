@@ -41,16 +41,89 @@ export class Server {
         this.state = await this.agent.start()
     }
 
-    async loop() {
-        let agents = []         // list of [old_agent, new_agent] pairs
-        let migrations = []     // pending or uncommitted migrations from this host to another one
+    async loop_() {
+        /* Execution & refresh loop of active agents. */
+        let current = []        // list of agents currently running on this worker, each of them has __meta.state
 
         while (true) {
             this.machine = this.machine.refresh()
-            agents = this.machine.refresh_agents(this, agents)
-            // let agents = this.agents     // getter (worker must be a web object)
+            let agents = this.machine.active_agents     // list of installed agents that should be running now on this worker; when an agent needs to be stopped, it's first removed from this list
+            // this.machine.migrations                  // list of stopped agents that undergo migration to another machine
+            // this.machine.pending_uninstall
 
-            for (let [prev, agent] of agents) {
+            if (schemat.is_closing) agents = []
+
+            for (let [prev, agent] of this._pair_agents(current, agents)) {
+                if (prev === agent) continue            // no action if the agent instance hasn't changed
+
+                let state = prev?.__meta.state
+                let external = (agent || prev)._external_props
+
+                if (!agent) await prev.__stop__(state)                  // stop old agents
+                else if (!prev)                                         // deploy new agents
+                    agent.__meta.state = await agent.__start__()
+
+                else {
+                    // build a list of modifications of external properties
+                    let changes = agent.get_external_changes(prev)   //_external_props
+
+                    // refresh existing agents; invoke setup.* triggers for modified properties...
+                    if (changes.length) {
+                        await prev.__stop__(state)
+
+                        // launch triggers to adapt the environment to changes in external props
+                        // ...
+
+                        agent.__meta.state = await agent.__start__()
+                    }
+                    else agent.__meta.state = await agent.__restart__(state, prev)
+                }
+            }
+
+            if (schemat.is_closing) break
+        }
+    }
+
+    async loop() {
+        // let agents = []         // list of [old_agent, new_agent] pairs
+        // let migrations = []     // pending or uncommitted migrations from this host to another one
+        let current = []        // list of agents currently being installed
+
+        while (true) {
+            this.machine = this.machine.refresh()
+
+            // all agents relevant for this worker (agent.host.machine == current_machine, proper `worker` setting, any status)
+            let agents = this.machine.get_agents(this.worker_id, current)
+            let actions = this._make_plan(agents, current)          // list of structs of the form {prev, agent, oper}
+
+            // `oper` is one of: undefined, 'install', 'uninstall', 'dump'
+            // `migrate` is a callback that sends the dump data to a new host
+
+            for (let {prev, agent, oper, migrate} of actions) {
+                if (schemat.is_closing) return
+                if (!oper) continue                     // no action if the agent instance hasn't changed
+
+                let state = prev?.__meta.state
+                let external = (agent || prev)._external_props
+
+                // cases:
+                // 1) install new agent (from scratch):     status == pending_install_fresh   >   installed
+                // 2) install new agent (from migration):   status == pending_install_clone   >   installed
+                // 3) migrate agent to another machine:     status == pending_migration & destination   >   installed
+                // 3) uninstall agent:   status == 'pending_uninstall'
+                // 4)
+
+                if (oper === 'uninstall') {
+                    if (prev.__meta.started) await prev.__stop__(state)
+                    await prev.__uninstall__()
+
+                    // tear down all external properties that represent/reflect the (desired) state (property) of the environment; every modification (edit)
+                    // on such a property requires a corresponding update in the environment, on every machine where this object is deployed
+                    for (let prop of external) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
+                }
+            }
+
+            for (let {prev, agent, oper, migrate} of actions) {
                 if (schemat.is_closing) return
                 if (prev === agent) continue            // no action if the agent instance hasn't changed
 
@@ -59,9 +132,9 @@ export class Server {
 
                 if (!agent) {                           // stop old agents...
                     await prev.__stop__(state)
-                    // let dump = await prev.__migrate__(new_host)
-                    // if (dump !== undefined) send(dump, new_host) & wait for confirmation
-                    await prev.__uninstall__()
+                    let dump = await prev.__migrate__()
+                    if (dump !== undefined) await migrate(dump)     // & wait for confirmation?
+                    // await prev.__uninstall__()
 
                     // tear down all external properties that represent/reflect the (desired) state (property) of the environment; every modification (edit)
                     // on such a property requires a corresponding update in the environment, on every machine where this object is deployed
@@ -87,8 +160,10 @@ export class Server {
                 }
                 else agent.__meta.state = await agent.__restart__(state, prev)
 
-                await delay(this.machine.refresh_delay)
             }
+
+            current = agents
+            await delay(this.machine.refresh_delay)
         }
     }
 
