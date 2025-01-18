@@ -12,8 +12,8 @@ export class Server {
 
     machine         // host Machine (web object) of this process; periodically reloaded
 
-    constructor(machine, id, opts) {
-        this.id = id
+    constructor(machine, agent, opts) {
+        this.agent = agent
         this.machine = machine
         this.opts = opts
     }
@@ -37,9 +37,15 @@ export class Server {
            - await agent.serve() ... agent.start()
            - delay(remaining-time-till-epoch)
         */
-        this.agent = await schemat.load(this.id)
+        await this.agent.load()
         this.state = await this.agent.start()
     }
+
+    async stop() {
+        await this.agent.stop(this.state)
+        print(`Server closed (worker #${this.worker_id})`)
+    }
+
 
     async loop_() {
         /* Execution & refresh loop of active agents. */
@@ -157,11 +163,6 @@ export class Server {
             current = agents
             await delay(this.machine.refresh_delay)
         }
-    }
-
-    async stop() {
-        await this.agent.stop(this.state)
-        print(`Server closed (worker #${this.worker_id})`)
     }
 }
 
