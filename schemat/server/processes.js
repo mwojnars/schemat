@@ -1,4 +1,5 @@
 import cluster from 'node:cluster'
+import fs from 'node:fs'
 
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
@@ -80,6 +81,9 @@ export class MainProcess extends ServerProcess {
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
+        let machine_id = this._read_machine_id()
+        print('machine_id:', machine_id)
+
         if (cluster.isPrimary) {                // in the primary process, start the workers...
             const num_workers = 2
             this.workers = []
@@ -102,6 +106,11 @@ export class MainProcess extends ServerProcess {
             print(`starting worker #${id} (PID=${process.pid})...`)
             return this.server.start(this.opts)
         }
+    }
+
+    _read_machine_id() {
+        try { return Number(fs.readFileSync('./schemat/machine.id', 'utf8').trim()) }
+        catch (ex) { print('machine ID not found') }
     }
 
     async stop() {
