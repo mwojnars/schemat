@@ -102,12 +102,15 @@ export class Service {
     }
 
     async local(target, ...args) {
+        /* Call this.server() locally; perform encoding+decoding of the output as would be done during remote execution. */
         let result = this.server(target, undefined, ...args)
         if (isPromise(result)) result = await result
 
         if (result === undefined) return
         if (!this.output.array) result = [result]
+
         let msg = this.output.encode(...result)
+        return this.output.decode(msg)
     }
 
     client(target, ...args) {
