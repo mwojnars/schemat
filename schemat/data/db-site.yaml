@@ -123,6 +123,8 @@
       "@": 16
     Stream:
       "@": 17
+    Machine:
+      "@": 21
     "@": schemat:Catalog
   __container:
     "@": 1019
