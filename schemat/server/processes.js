@@ -85,8 +85,8 @@ export class MainProcess extends ServerProcess {
         let Machine = await schemat.load(21)
 
         if (!machine_id) {
-            machine_id = await Machine.new().save({ring: 'db-site'})
-            fs.writeFileSync('./schemat/machine.id', machine_id)
+            let machine = await Machine.new().save({ring: 'db-site'})
+            fs.writeFileSync('./schemat/machine.id', machine.id)
         }
 
         if (cluster.isPrimary) {                // in the primary process, start the workers...
