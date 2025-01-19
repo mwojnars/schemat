@@ -82,7 +82,12 @@ export class MainProcess extends ServerProcess {
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
         let machine_id = this._read_machine_id()
-        print('machine_id:', machine_id)
+        let Machine = await schemat.load(21)
+
+        if (!machine_id) {
+            machine_id = await Machine.new().save({ring: 'db-site'})
+            fs.writeFileSync('./schemat/machine.id', machine_id)
+        }
 
         if (cluster.isPrimary) {                // in the primary process, start the workers...
             const num_workers = 2
@@ -100,8 +105,9 @@ export class MainProcess extends ServerProcess {
             })
         }
         else {                                  // in the worker process, start this worker's server life-loop
-            let machine = null
+            assert(machine_id)
             let id = process.env.WORKER_ID
+            let machine = await schemat.load(machine_id)
             this.server = new Server(machine, schemat.site.server, this.opts)
             print(`starting worker #${id} (PID=${process.pid})...`)
             return this.server.start(this.opts)
