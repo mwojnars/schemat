@@ -611,6 +611,23 @@
     "@": 1
 - __id: 21
   name: Machine
+  schema:
+    agents_installed:
+      info: list of Agent objects installed on this machine
+      type:
+        category:
+          "@": 29
+        "@": schemat/types/type.js:REF
+      "@": schemat/types/type.js:ARRAY
+    agents_running:
+      info: list of Agent objects that are installed and currently should be running
+        on this machine
+      type:
+        category:
+          "@": 29
+        "@": schemat/types/type.js:REF
+      "@": schemat/types/type.js:ARRAY
+    "@": schemat:Catalog
   __category:
     "@": 1
 - __id: 22
