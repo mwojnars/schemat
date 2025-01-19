@@ -47,8 +47,8 @@ export class Service {
         server: null,   // a function, f(request, ...args), to be called on the server when the protocol is invoked;
                         // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                         // like a method of the "target"; `request` is a Request, or {} if called directly on the server
-        accept: null,   // client-side postprocessing function, f(result), called after the result is decoded from web response
         error:  null,
+        // accept: null,   // client-side postprocessing function, f(result), called after the result is decoded from web response
         // answer
         // reject
         // regret
@@ -101,6 +101,15 @@ export class Service {
             : this.client(target, ...args)
     }
 
+    async local(target, ...args) {
+        let result = this.server(target, undefined, ...args)
+        if (isPromise(result)) result = await result
+
+        if (result === undefined) return
+        if (!this.output.array) result = [result]
+        let msg = this.output.encode(...result)
+    }
+
     client(target, ...args) {
         /* Client-side remote invocation (RPC) of the service through a network request
            to be handled on the server by the handle() method (see below).
@@ -139,8 +148,9 @@ export class HttpService extends Service {
         let result   = await response.text()
         if (!response.ok) return this.error.decode_error(result, response.status)
 
-        result = this.output.decode(result)
-        return this.opts.accept ? this.opts.accept(result) : result
+        return this.output.decode(result)
+        // result = this.output.decode(result)
+        // return this.opts.accept ? this.opts.accept(result) : result
     }
 
     async submit(url, message) {
@@ -161,7 +171,7 @@ export class HttpService extends Service {
             return this.send_result(target, request, result, ...args)
         }
         catch (ex) {
-            print('ERROR in HttpService.serve():', ex)
+            print('ERROR in HttpService.handle():', ex)
             let [msg, code] = this.error.encode_error(ex)
             request.res.status(code).send(msg)
             throw ex
