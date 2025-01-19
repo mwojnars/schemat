@@ -97,7 +97,8 @@ export class Service {
          */
         this.endpoint = endpoint
         return SERVER
-            ? this.server(target, undefined, ...args)
+            // ? this.server(target, undefined, ...args)
+            ? this.local(target, ...args)
             : this.client(target, ...args)
     }
 

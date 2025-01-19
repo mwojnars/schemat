@@ -169,7 +169,7 @@ export class mWebObjects extends MessageEncoder {
        was actually built from `rec.data` received in this particular request (!) - this is because a newer record might
        have arrived in the registry in the meantime while the asynchronous .get_loaded() was running!
      */
-    encode(objects) { return objects.map(obj => obj?.__record) }
+    encode(objects) { return JSON.stringify(objects.map(obj => obj?.__record)) }
     decode(message) {
         let records = JSON.parse(message)
         return Promise.all(records.map(rec => rec && schemat.register_record(rec) && schemat.get_loaded(rec.id)))
