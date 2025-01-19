@@ -82,7 +82,7 @@ export class MainProcess extends ServerProcess {
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
         let machine_id = this._read_machine_id()
-        let Machine = await schemat.load(21)
+        let Machine = await schemat.import('/$/sys/Machine')
 
         if (!machine_id) {
             let machine = await Machine.new().save({ring: 'db-site'})
