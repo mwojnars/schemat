@@ -38,11 +38,11 @@ export class Server {
            - delay(remaining-time-till-epoch)
         */
         await this.agent.load()
-        this.state = await this.agent.__start__()
+        this.agent.__meta.state = await this.agent.__start__()
     }
 
     async stop() {
-        await this.agent.__stop__(this.state)
+        await this.agent.__stop__(this.agent.__meta.state)
         print(`Server closed (worker #${this.worker_id})`)
     }
 
