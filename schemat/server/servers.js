@@ -53,124 +53,137 @@ export class Server {
         print(`Server closed (worker #${this.worker_id})`)
     }
 
-
-    async loop_() {
-        /* Execution & refresh loop of active agents. */
+    async run() {
+        /* Run & refresh loop of active agents. */
         let current = []        // list of agents currently running on this worker, each of them has __meta.state
 
         while (true) {
-            this.machine = this.machine.refresh()
-            let agents = this.machine.active_agents     // list of installed agents that should be running now on this worker; when an agent needs to be stopped, it's first removed from this list
-            // this.machine.migrations                  // list of stopped agents that undergo migration to another machine
-            // this.machine.pending_uninstall
+            let beginning = Date.now()
+            let next = []                               // agents started in this loop iteration, or already running
+            let promises = []
+
+            this.machine = await this.machine.reload()  //.refresh()
+            let agents = this.machine.agents_running    // list of installed agents that should be running now on this worker; when an agent needs to be stopped, it's first removed from this list
 
             if (schemat.is_closing) agents = []
 
-            for (let [prev, agent] of this._pair_agents(current, agents)) {
-                if (prev === agent) continue            // no action if the agent instance hasn't changed
+            let agent_ids = agents.map(agent => agent.id)
+            let current_ids = current.map(agent => agent.id)
 
-                let state = prev?.__meta.state
-                let external = (agent || prev)._external_props
+            let to_stop = current.filter(agent => !agent_ids.includes(agent.id))
+            let to_start = agents.filter(agent => !current_ids.includes(agent.id))
+            let to_refresh = current.filter(agent => agent_ids.includes(agent.id))
 
-                if (!agent) await prev.__stop__(state)                  // stop old agents
-                else if (!prev)                                         // deploy new agents
-                    agent.__meta.state = await agent.__start__()
+            // find agents in `current` that are not in `agents` and need to be stopped
+            for (let agent of to_stop)
+                promises.push(agent.__stop__(agent.__meta.state))
 
-                else {
-                    // build a list of modifications of external properties
-                    let changes = agent.get_external_changes(prev)   //_external_props
-                    await prev.__stop__(state)
-                    // launch triggers to adapt the environment to changes in external props...
-                    agent.__meta.state = await agent.__start__()
-                }
+            // find agents in `agents` that are not in `current` and need to be started
+            for (let agent of to_start) {
+                next.push(agent)
+                promises.push(agent.load().then(agent => agent.__meta.state = agent.__start__()))
             }
 
-            if (schemat.is_closing) break
+            // find agents in `current` that are still in `agents` and need to be refreshed
+            for (let prev of to_refresh) {
+                let agent = await prev.reload()  //.refresh()
+                next.push(agent)
+                if (agent === prev) continue
+                promises.push(prev.__stop__(prev.__meta.state).then(() => agent.__meta.state = agent.__start__()))
+                // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
+            }
+
+            current = next
+            await Promise.all(promises)
+            if (schemat.is_closing && !agents.length) break
+
+            let remaining = this.machine.agents_refresh_delay - (Date.now() - beginning)
+            if (remaining > 0) await delay(remaining)
         }
     }
 
-    async loop() {
-        // let agents = []         // list of [old_agent, new_agent] pairs
-        // let migrations = []     // pending or uncommitted migrations from this host to another one
-        let current = []        // list of agents currently being installed
-
-        while (true) {
-            this.machine = this.machine.refresh()
-
-            // all agents relevant for this worker (agent.host.machine == current_machine, proper `worker` setting, any status)
-            let agents = this.machine.get_agents(this.worker_id, current)
-            let actions = this._make_plan(agents, current)          // list of structs of the form {prev, agent, oper}
-
-            // `oper` is one of: undefined, 'install', 'uninstall', 'dump'
-            // `migrate` is a callback that sends the dump data to a new host
-
-            for (let {prev, agent, oper, migrate} of actions) {
-                if (schemat.is_closing) return
-                if (!oper) continue                     // no action if the agent instance hasn't changed
-
-                let state = prev?.__meta.state
-                let external = (agent || prev)._external_props
-
-                // cases:
-                // 1) install new agent (from scratch):     status == pending_install_fresh   >   installed
-                // 2) install new agent (from migration):   status == pending_install_clone   >   installed
-                // 3) migrate agent to another machine:     status == pending_migration & destination   >   installed
-                // 3) uninstall agent:   status == 'pending_uninstall'
-                // 4)
-
-                if (oper === 'uninstall') {
-                    if (prev.__meta.started) await prev.__stop__(state)
-                    await prev.__uninstall__()
-
-                    // tear down all external properties that represent/reflect the (desired) state (property) of the environment; every modification (edit)
-                    // on such a property requires a corresponding update in the environment, on every machine where this object is deployed
-                    for (let prop of external) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
-                }
-            }
-
-            for (let {prev, agent, oper, migrate} of actions) {
-                if (schemat.is_closing) return
-                if (prev === agent) continue            // no action if the agent instance hasn't changed
-
-                let state = prev?.__meta.state
-                let external = (agent || prev)._external_props
-
-                if (!agent) {                           // stop old agents...
-                    await prev.__stop__(state)
-                    let dump = await prev.__migrate__()
-                    if (dump !== undefined) await migrate(dump)     // & wait for confirmation?
-                    // await prev.__uninstall__()
-
-                    // tear down all external properties that represent/reflect the (desired) state (property) of the environment; every modification (edit)
-                    // on such a property requires a corresponding update in the environment, on every machine where this object is deployed
-                    for (let prop of external) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
-                    continue
-                }
-
-                if (!prev) {                            // deploy new agents...
-                    for (let prop of external) if (agent[prop] !== undefined) agent._call_setup[prop](undefined, undefined, agent, agent[prop])
-                    await agent.__install__()
-                    agent.__meta.state = await agent.__start__()
-                    continue
-                }
-
-                // build a list of modifications of external properties
-                let changes = agent._external_props
-
-                // refresh existing agents; invoke setup.* triggers for modified properties...
-                if (changes.length) {
-                    await prev.__stop__(state)
-                    // launch triggers...
-                    agent.__meta.state = await agent.__start__()
-                }
-                else agent.__meta.state = await agent.__restart__(state, prev)
-
-            }
-
-            current = agents
-            await delay(this.machine.refresh_delay)
-        }
-    }
+    // async loop() {
+    //     // let agents = []         // list of [old_agent, new_agent] pairs
+    //     // let migrations = []     // pending or uncommitted migrations from this host to another one
+    //     let current = []        // list of agents currently being installed
+    //
+    //     while (true) {
+    //         this.machine = this.machine.refresh()
+    //
+    //         // all agents relevant for this worker (agent.host.machine == current_machine, proper `worker` setting, any status)
+    //         let agents = this.machine.get_agents(this.worker_id, current)
+    //         let actions = this._make_plan(agents, current)          // list of structs of the form {prev, agent, oper}
+    //
+    //         // `oper` is one of: undefined, 'install', 'uninstall', 'dump'
+    //         // `migrate` is a callback that sends the dump data to a new host
+    //
+    //         for (let {prev, agent, oper, migrate} of actions) {
+    //             if (schemat.is_closing) return
+    //             if (!oper) continue                     // no action if the agent instance hasn't changed
+    //
+    //             let state = prev?.__meta.state
+    //             let external = (agent || prev)._external_props
+    //
+    //             // cases:
+    //             // 1) install new agent (from scratch):     status == pending_install_fresh   >   installed
+    //             // 2) install new agent (from migration):   status == pending_install_clone   >   installed
+    //             // 3) migrate agent to another machine:     status == pending_migration & destination   >   installed
+    //             // 3) uninstall agent:   status == 'pending_uninstall'
+    //             // 4)
+    //
+    //             if (oper === 'uninstall') {
+    //                 if (prev.__meta.started) await prev.__stop__(state)
+    //                 await prev.__uninstall__()
+    //
+    //                 // tear down all external properties that represent/reflect the (desired) state (property) of the environment; every modification (edit)
+    //                 // on such a property requires a corresponding update in the environment, on every machine where this object is deployed
+    //                 for (let prop of external) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
+    //             }
+    //         }
+    //
+    //         for (let {prev, agent, oper, migrate} of actions) {
+    //             if (schemat.is_closing) return
+    //             if (prev === agent) continue            // no action if the agent instance hasn't changed
+    //
+    //             let state = prev?.__meta.state
+    //             let external = (agent || prev)._external_props
+    //
+    //             if (!agent) {                           // stop old agents...
+    //                 await prev.__stop__(state)
+    //                 let dump = await prev.__migrate__()
+    //                 if (dump !== undefined) await migrate(dump)     // & wait for confirmation?
+    //                 // await prev.__uninstall__()
+    //
+    //                 // tear down all external properties that represent/reflect the (desired) state (property) of the environment; every modification (edit)
+    //                 // on such a property requires a corresponding update in the environment, on every machine where this object is deployed
+    //                 for (let prop of external) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
+    //                 continue
+    //             }
+    //
+    //             if (!prev) {                            // deploy new agents...
+    //                 for (let prop of external) if (agent[prop] !== undefined) agent._call_setup[prop](undefined, undefined, agent, agent[prop])
+    //                 await agent.__install__()
+    //                 agent.__meta.state = await agent.__start__()
+    //                 continue
+    //             }
+    //
+    //             // build a list of modifications of external properties
+    //             let changes = agent._external_props
+    //
+    //             // refresh existing agents; invoke setup.* triggers for modified properties...
+    //             if (changes.length) {
+    //                 await prev.__stop__(state)
+    //                 // launch triggers...
+    //                 agent.__meta.state = await agent.__start__()
+    //             }
+    //             else agent.__meta.state = await agent.__restart__(state, prev)
+    //
+    //         }
+    //
+    //         current = agents
+    //         await delay(this.machine.refresh_delay)
+    //     }
+    // }
 }
 
 /**********************************************************************************************************************/
