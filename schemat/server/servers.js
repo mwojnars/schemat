@@ -38,11 +38,11 @@ export class Server {
            - delay(remaining-time-till-epoch)
         */
         await this.agent.load()
-        this.state = await this.agent.start()
+        this.state = await this.agent.__start__()
     }
 
     async stop() {
-        await this.agent.stop(this.state)
+        await this.agent.__stop__(this.state)
         print(`Server closed (worker #${this.worker_id})`)
     }
 
@@ -191,7 +191,7 @@ export class WebServer extends Agent {
 
     request_timeout
 
-    async start() {
+    async __start__() {
         // let {ServerSchemat} = await import('/$/local/schemat/core/schemat_srv.js')
         // await schemat._reset_class(ServerSchemat)
 
@@ -227,7 +227,7 @@ export class WebServer extends Agent {
         return app.listen(port, host, () => print(`worker ${process.pid} listening at http://${host}:${port}`))
     }
 
-    async stop(http_server) {
+    async __stop__(http_server) {
         await new Promise(resolve => http_server?.close(resolve))
         print(`WebServer closed (worker #${process.env.WORKER_ID})`)
     }
