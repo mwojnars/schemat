@@ -12,7 +12,7 @@
       "@": 5000
     "@": schemat:Catalog
   default_path: /$/id
-  server:
+  webserver:
     "@": 1023
   cluster:
     "@": 1025
