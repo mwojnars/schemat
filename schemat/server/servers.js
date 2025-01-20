@@ -37,12 +37,24 @@ export class Server {
            - await agent.serve() ... agent.start()
            - delay(remaining-time-till-epoch)
         */
-        await this.agent.load()
-        this.agent.__meta.state = await this.agent.__start__()
+        await this.machine.load()
+        this.current = []
+
+        for (let agent of this.machine.agents_running) {
+            await agent.load()
+            agent.__meta.state = await agent.__start__()
+            this.current.push(agent)
+        }
+
+        // await this.agent.load()
+        // this.agent.__meta.state = await this.agent.__start__()
     }
 
     async stop() {
-        await this.agent.__stop__(this.agent.__meta.state)
+        for (let agent of this.current)
+            await agent.__stop__(agent.__meta.state)
+
+        // await this.agent.__stop__(this.agent.__meta.state)
         print(`Server closed (worker #${this.worker_id})`)
     }
 
@@ -169,6 +181,8 @@ export class Server {
 /**********************************************************************************************************************/
 
 export class Machine extends WebObject {
+    agents_installed
+    agents_running
 }
 
 /**********************************************************************************************************************
