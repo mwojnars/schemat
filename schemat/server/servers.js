@@ -3,6 +3,7 @@ import {ServerTimeoutError} from "../common/errors.js";
 import {thread_local_variable} from "./thread.js";
 import {Request} from "../web/request.js";
 import {WebObject} from "../core/object.js";
+import {Agent} from "./agent.js";
 
 
 /**********************************************************************************************************************/
@@ -184,11 +185,6 @@ export class Machine extends WebObject {
  **  WEB SERVER
  **
  */
-
-export class Agent extends WebObject {
-    async start()     {}
-    async stop(state) {}
-}
 
 export class WebServer extends Agent {
     /* Edge HTTP server based on express.
