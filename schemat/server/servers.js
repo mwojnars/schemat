@@ -99,8 +99,9 @@ export class Server {
             if (schemat.is_closing)
                 if (current.length) continue; else break
 
-            let remaining = this.machine.agents_refresh_delay - (Date.now() - beginning)
+            let remaining = this.machine.refresh_delay * 1000 - (Date.now() - beginning)
             if (remaining > 0) await delay(remaining)
+            print('Server.run(): refresh completed')
         }
     }
 
@@ -193,6 +194,7 @@ export class Server {
 export class Machine extends WebObject {
     agents_installed
     agents_running
+    refresh_delay
 }
 
 /**********************************************************************************************************************
