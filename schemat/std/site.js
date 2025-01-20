@@ -34,9 +34,9 @@ export class Site extends WebObject {
     // properties:
     root
     global
-    server
     cluster
     database
+    webserver
     default_path
     cache_purge_interval
     eval_allowed

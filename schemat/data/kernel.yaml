@@ -232,14 +232,14 @@
     startup.
   class: schemat/std/site.js:Site
   schema:
-    server:
-      info: A WebServer that handles all web requests.
-      "@": schemat/types/type.js:REF
     cluster:
       info: A Cluster of compute & storage nodes that host this site and database.
       "@": schemat/types/type.js:REF
     database:
       info: Database instance that contains all data of this site
+      "@": schemat/types/type.js:REF
+    webserver:
+      info: A WebServer that handles all web requests.
       "@": schemat/types/type.js:REF
     default_path:
       info: URL path of a default container that can be used to access any object via
@@ -620,8 +620,8 @@
         "@": schemat/types/type.js:REF
       "@": schemat/types/type.js:ARRAY
     agents_running:
-      info: list of Agent objects that are installed and currently should be running
-        on this machine
+      info: list of installed Agent objects that should be currently running on this
+        machine
       type:
         category:
           "@": 29
