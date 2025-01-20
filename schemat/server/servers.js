@@ -12,8 +12,7 @@ export class Server {
 
     machine         // host Machine (web object) of this process; periodically reloaded
 
-    constructor(machine, agent, opts) {
-        this.agent = agent
+    constructor(machine, opts) {
         this.machine = machine
         this.opts = opts
     }
@@ -45,16 +44,11 @@ export class Server {
             agent.__meta.state = await agent.__start__()
             this.current.push(agent)
         }
-
-        // await this.agent.load()
-        // this.agent.__meta.state = await this.agent.__start__()
     }
 
     async stop() {
         for (let agent of this.current)
             await agent.__stop__(agent.__meta.state)
-
-        // await this.agent.__stop__(this.agent.__meta.state)
         print(`Server closed (worker #${this.worker_id})`)
     }
 

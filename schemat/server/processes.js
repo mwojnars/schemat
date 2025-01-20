@@ -109,7 +109,7 @@ export class MainProcess extends ServerProcess {
             assert(machine_id)
             let id = process.env.WORKER_ID
             let machine = await schemat.load(machine_id)
-            this.server = new Server(machine, schemat.site.webserver, this.opts)
+            this.server = new Server(machine, this.opts)
             print(`starting worker #${id} (PID=${process.pid})...`)
             return this.server.start(this.opts)
         }
