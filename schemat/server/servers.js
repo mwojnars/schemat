@@ -65,7 +65,7 @@ export class Server {
             this.machine = await this.machine.reload()  //.refresh()
             let agents = this.machine.agents_running    // list of installed agents that should be running now on this worker; when an agent needs to be stopped, it's first removed from this list
 
-            if (schemat.is_closing) agents = []
+            if (schemat.is_closing) agents = []         // enforce a clean shutdown by stopping all agents
 
             let agent_ids = agents.map(agent => agent.id)
             let current_ids = current.map(agent => agent.id)
@@ -95,7 +95,9 @@ export class Server {
 
             current = next
             await Promise.all(promises)
-            if (schemat.is_closing && !agents.length) break
+
+            if (schemat.is_closing)
+                if (current.length) continue; else break
 
             let remaining = this.machine.agents_refresh_delay - (Date.now() - beginning)
             if (remaining > 0) await delay(remaining)
