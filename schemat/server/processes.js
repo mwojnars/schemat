@@ -60,6 +60,7 @@ export class MainProcess extends ServerProcess {
     /* Top-level Schemat process running on a given machine. Spawns and manages worker processes:
        web server(s), data server(s), load balancer etc.
      */
+    machine         // the Machine web object that represents the physical machine this process is running on
     workers         // array of Node.js Worker instances (child processes); only present in the primary process
     server          // in a subprocess, the Server instance started inside the worker
 
@@ -84,11 +85,13 @@ export class MainProcess extends ServerProcess {
         let machine_id = this._read_machine_id()
         let Machine = await schemat.import('/$/sys/Machine')
 
-        if (!machine_id) {
-            let machine = await Machine.new().save({ring: 'db-site'})
-            assert(machine.id)
-            fs.writeFileSync('./schemat/machine.id', machine.id.toString())
+        if (machine_id)
+            this.machine = await schemat.load(machine_id)
+        else {
+            this.machine = await Machine.new().save({ring: 'db-site'})
+            fs.writeFileSync('./schemat/machine.id', this.machine.id.toString())
         }
+        assert(this.machine)
 
         if (cluster.isPrimary) {                // in the primary process, start the workers...
             const num_workers = 2
@@ -107,10 +110,8 @@ export class MainProcess extends ServerProcess {
             })
         }
         else {                                  // in the worker process, start this worker's server life-loop
-            assert(machine_id)
             let id = process.env.WORKER_ID
-            let machine = await schemat.load(machine_id)
-            this.server = new Server(machine, this.opts)
+            this.server = new Server(this.machine, this.opts)
             print(`starting worker #${id} (PID=${process.pid})...`)
             return this.running = this.server.run()
         }
@@ -123,10 +124,14 @@ export class MainProcess extends ServerProcess {
 
     async stop() {
         if (schemat.is_closing) return
-        if (cluster.isPrimary) print(`\nReceived kill signal, shutting down gracefully...`)
+
+        let machine = await this.machine.reload()
+        let delay = machine.refresh_delay
+
+        if (cluster.isPrimary) print(`\nReceived kill signal, shutting down gracefully in approx. ${delay} seconds...`)
 
         schemat.is_closing = true
-        setTimeout(() => process.exit(1), 10000)
+        setTimeout(() => process.exit(1), 2 * delay * 1000)
 
         if (cluster.isPrimary)
             await Promise.all(this.workers.map(worker => new Promise(resolve => {
