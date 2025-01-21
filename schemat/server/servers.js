@@ -23,35 +23,35 @@ export class Server {
         return process.env.WORKER_ID
     }
 
-    async start() {
-        /* deployment loop:
-           - retrieve a list of new agents (stewards) that should be placed in this worker (node+process)
-           - for each do:  agent.load() + agent.__deploy__() __install__()
-           - retrieve a list of objects deployed in this worker that should be removed
-           - for each do:  agent.reload() + agent.__destroy__() __uninstall__()
-           - maintain a list of objects currently deployed in this worker process
-           - for each do:  agent.reload() + agent.__run__()
-
-           microservice loop:
-           - agent = agent.refresh()
-           - await agent.serve() ... agent.start()
-           - delay(remaining-time-till-epoch)
-        */
-        await this.machine.load()
-        this.current = []
-
-        for (let agent of this.machine.agents_running) {
-            await agent.load()
-            agent.__meta.state = await agent.__start__()
-            this.current.push(agent)
-        }
-    }
-
-    async stop() {
-        for (let agent of this.current)
-            await agent.__stop__(agent.__meta.state)
-        print(`Server closed (worker #${this.worker_id})`)
-    }
+    // async start() {
+    //     /* deployment loop:
+    //        - retrieve a list of new agents (stewards) that should be placed in this worker (node+process)
+    //        - for each do:  agent.load() + agent.__deploy__() __install__()
+    //        - retrieve a list of objects deployed in this worker that should be removed
+    //        - for each do:  agent.reload() + agent.__destroy__() __uninstall__()
+    //        - maintain a list of objects currently deployed in this worker process
+    //        - for each do:  agent.reload() + agent.__run__()
+    //
+    //        microservice loop:
+    //        - agent = agent.refresh()
+    //        - await agent.serve() ... agent.start()
+    //        - delay(remaining-time-till-epoch)
+    //     */
+    //     await this.machine.load()
+    //     this.current = []
+    //
+    //     for (let agent of this.machine.agents_running) {
+    //         await agent.load()
+    //         agent.__meta.state = await agent.__start__()
+    //         this.current.push(agent)
+    //     }
+    // }
+    //
+    // async stop() {
+    //     for (let agent of this.current)
+    //         await agent.__stop__(agent.__meta.state)
+    //     print(`Server closed (worker #${this.worker_id})`)
+    // }
 
     async run() {
         /* Run & refresh loop of active agents. */
