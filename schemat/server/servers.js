@@ -37,20 +37,6 @@ export class Server {
     //        - await agent.serve() ... agent.start()
     //        - delay(remaining-time-till-epoch)
     //     */
-    //     await this.machine.load()
-    //     this.current = []
-    //
-    //     for (let agent of this.machine.agents_running) {
-    //         await agent.load()
-    //         agent.__meta.state = await agent.__start__()
-    //         this.current.push(agent)
-    //     }
-    // }
-    //
-    // async stop() {
-    //     for (let agent of this.current)
-    //         await agent.__stop__(agent.__meta.state)
-    //     print(`Server closed (worker #${this.worker_id})`)
     // }
 
     async run() {
@@ -101,23 +87,14 @@ export class Server {
 
             let remaining = this.machine.refresh_interval * 1000 - (Date.now() - beginning)
             if (remaining > 0) await delay(remaining)
-            // print('Server.run(): refresh completed')
         }
 
         print(`Server closed (worker #${this.worker_id})`)
     }
 
     // async loop() {
-    //     // let agents = []         // list of [old_agent, new_agent] pairs
-    //     // let migrations = []     // pending or uncommitted migrations from this host to another one
-    //     let current = []        // list of agents currently being installed
-    //
     //     while (true) {
     //         this.machine = this.machine.refresh()
-    //
-    //         // all agents relevant for this worker (agent.host.machine == current_machine, proper `worker` setting, any status)
-    //         let agents = this.machine.get_agents(this.worker_id, current)
-    //         let actions = this._make_plan(agents, current)          // list of structs of the form {prev, agent, oper}
     //
     //         // `oper` is one of: undefined, 'install', 'uninstall', 'dump'
     //         // `migrate` is a callback that sends the dump data to a new host
@@ -184,9 +161,6 @@ export class Server {
     //             else agent.__meta.state = await agent.__restart__(state, prev)
     //
     //         }
-    //
-    //         current = agents
-    //         await delay(this.machine.refresh_interval)
     //     }
     // }
 }
