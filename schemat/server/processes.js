@@ -99,6 +99,7 @@ export class MainProcess extends ServerProcess {
                 this.workers[i] = cluster.fork({WORKER_ID: i + 1})
 
             cluster.on('exit', (worker) => {
+                if (schemat.is_closing) return
                 let id = worker.process.env.WORKER_ID
                 print(`worker #${id} (PID=${worker.process.pid}) exited`)
                 this.workers[id-1] = worker = cluster.fork({WORKER_ID: id})      // restart the process
@@ -111,7 +112,7 @@ export class MainProcess extends ServerProcess {
             let machine = await schemat.load(machine_id)
             this.server = new Server(machine, this.opts)
             print(`starting worker #${id} (PID=${process.pid})...`)
-            return this.server.start(this.opts)
+            return this.running = this.server.run()
         }
     }
 
@@ -125,10 +126,15 @@ export class MainProcess extends ServerProcess {
         if (cluster.isPrimary) print(`\nReceived kill signal, shutting down gracefully...`)
 
         schemat.is_closing = true
-        setTimeout(() => process.exit(0), 10)
-        
-        if (cluster.isPrimary) this.workers.forEach(worker => worker.kill())
-        else return this.server.stop()
+        setTimeout(() => process.exit(1), 10000)
+
+        if (cluster.isPrimary)
+            await Promise.all(this.workers.map(worker => new Promise(resolve => {
+                worker.on('exit', resolve)
+                worker.kill()
+            })))
+        else await this.running
+        process.exit(0)
     }
 }
 

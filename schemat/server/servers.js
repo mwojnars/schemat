@@ -101,7 +101,7 @@ export class Server {
 
             let remaining = this.machine.refresh_delay * 1000 - (Date.now() - beginning)
             if (remaining > 0) await delay(remaining)
-            print('Server.run(): refresh completed')
+            // print('Server.run(): refresh completed')
         }
 
         print(`Server closed (worker #${this.worker_id})`)
