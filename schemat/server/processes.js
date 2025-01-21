@@ -126,7 +126,7 @@ export class MainProcess extends ServerProcess {
         if (schemat.is_closing) return
 
         let machine = await this.machine.reload()
-        let delay = machine.refresh_delay
+        let delay = machine.refresh_interval
 
         if (cluster.isPrimary) print(`\nReceived kill signal, shutting down gracefully in approx. ${delay} seconds...`)
 

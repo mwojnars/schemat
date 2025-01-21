@@ -627,10 +627,10 @@
           "@": 29
         "@": schemat/types/type.js:REF
       "@": schemat/types/type.js:ARRAY
-    refresh_delay:
-      default: 5
-      info: Duration [seconds] of a single iteration of the agent execution loop in
-        run().
+    refresh_interval:
+      default: 10
+      info: Duration [in seconds] of a single iteration of the agent execution loop
+        in run().
       "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
   __category:
