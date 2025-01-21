@@ -10,7 +10,7 @@ export class Agent extends WebObject {
 
     // __meta.state     -- the state object returned by __start__(), to be passed to __stop__() when the microservice is to be terminated
 
-    async __start__()     {}
+    async __start__()     {}    // the returned state object is kept in __meta.state and then passed to __stop__()
     async __stop__(state) {}
 }
 
