@@ -1,6 +1,8 @@
 import {WebObject} from "../core/object.js"
 
 
+/**********************************************************************************************************************/
+
 export class Agent extends WebObject {
     /* A web object that can be installed on a particular machine(s) in the cluster to run a perpetual operation there (a microservice).
        Typically, the agent runs a web server, or an intra-cluster microservice of any kind, with a perpetual event loop.
@@ -14,3 +16,12 @@ export class Agent extends WebObject {
     async __stop__(state) {}
 }
 
+
+export class KafkaAgent extends Agent {
+    /* An agent whose event loop processes messages from a Kafka topic. The topic is named after this agent's ID. */
+
+    async __init__() {
+        await super.__init__()
+        this._Kafka = await import('kafkajs')
+    }
+}
