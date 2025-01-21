@@ -81,7 +81,7 @@ export class Server {
             // find agents in `agents` that are not in `current` and need to be started
             for (let agent of to_start) {
                 next.push(agent)
-                promises.push(agent.load().then(agent => agent.__meta.state = agent.__start__()))
+                promises.push(agent.load().then(async agent => agent.__meta.state = await agent.__start__()))
             }
 
             // find agents in `current` that are still in `agents` and need to be refreshed
@@ -89,7 +89,7 @@ export class Server {
                 let agent = await prev.reload()  //.refresh()
                 next.push(agent)
                 if (agent === prev) continue
-                promises.push(prev.__stop__(prev.__meta.state).then(() => agent.__meta.state = agent.__start__()))
+                promises.push(prev.__stop__(prev.__meta.state).then(async () => agent.__meta.state = await agent.__start__()))
                 // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
             }
 
@@ -103,6 +103,8 @@ export class Server {
             if (remaining > 0) await delay(remaining)
             print('Server.run(): refresh completed')
         }
+
+        print(`Server closed (worker #${this.worker_id})`)
     }
 
     // async loop() {
@@ -249,7 +251,7 @@ export class WebServer extends Agent {
     }
 
     async __stop__(http_server) {
-        await new Promise(resolve => http_server?.close(resolve))
+        if (http_server) await new Promise(resolve => http_server.close(resolve))
         print(`WebServer closed (worker #${process.env.WORKER_ID})`)
     }
 
