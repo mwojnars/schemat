@@ -300,6 +300,16 @@ export class Schemat {
         throw new Error(`version ${ver} not found for object [${id}]`)
     }
 
+    refresh(id) {
+        /* */
+        // check for a newer record of this object in Registry and possibly schedule its re-instantiation
+
+        // if TTL is running out, request the download of the most up-to-date record and re-instantiation
+
+        let obj = this.get_object(id)
+        return obj?.is_loaded() ? obj : undefined
+    }
+
 
     /***  Registry management  ***/
 
@@ -314,7 +324,7 @@ export class Schemat {
 
     register_record({id, data}, /*invalidate = true*/) {
         /* Keep {id, data} record as the most up-to-date (raw) representation of the corresponding object that will be used on the next object (re)load.
-           Removed the existing object from cache, if loaded from a different JSON source.
+           Remove the existing object from cache, if loaded from a different JSON source.
            `data` is either a JSON string, or an encoded (plain) representation of a Catalog instance.
          */
         let json = this.registry.set_record(id, data)

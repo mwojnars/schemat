@@ -616,7 +616,7 @@ export class WebObject {
         /* Synchronously return the newest version of this object as present in the Registry; or self if this object was already evicted.
            In either case, the Registry is notified that this object is (still) needed, which may spawn reload/refresh in a background thread.
          */
-        return schemat.refresh(this.id)     // TODO
+        return schemat.refresh(this.id) || this
     }
 
     async reload() {

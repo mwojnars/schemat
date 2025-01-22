@@ -1,3 +1,4 @@
+import {print} from "../common/utils.js"
 import {WebObject} from "../core/object.js"
 
 
