@@ -87,6 +87,8 @@ export class Server {
 
             let remaining = this.machine.refresh_interval * 1000 - (Date.now() - beginning)
             if (remaining > 0) await delay(remaining)
+
+            // await schemat.prepare(this.machine, ...agents)
         }
 
         print(`Server closed (worker #${this.worker_id})`)

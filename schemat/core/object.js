@@ -234,6 +234,7 @@ export class WebObject {
     __flat                  JSONx-encoded representation of this object's __data, where custom classes are replaced using {@:...} notation; suitable for JSON.stringify()
     __json                  stringified representation of this object's __data; can be passed to Catalog.load() to recreate the original __data structure
 
+    __refresh               struct of the form {json, loaded_at} containing a newer version of this object's record, for use in .refresh()
     */
 
     set __id(id) {
@@ -319,7 +320,8 @@ export class WebObject {
         active:         false,      // set to true after full initialization procedure was completed; implies that full __data is present (newborn or loaded)
         loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         loaded_at:      undefined,  // timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
-        expire_at:      undefined,  // timestamp [ms] when this item should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
+        expire_at:      undefined,  // timestamp [ms] when this object should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
+        // accessed_at:    undefined,  // the most recent timestamp [ms] when this object (if fully loaded) was requested from the Registry via schemat.get_object/get_loaded()
 
         cache:          undefined,  // Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
         edits:          undefined,  // array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
