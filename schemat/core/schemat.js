@@ -327,16 +327,19 @@ export class Schemat {
            Remove the existing object from cache, if loaded from a different JSON source.
            `data` is either a JSON string, or an encoded (plain) representation of a Catalog instance.
          */
-        let json = this.registry.set_record(id, data)
-        this.invalidate_object(id, json)
-        return {id, data}
-    }
+        let json = this.registry.set_record(id, data)       // save `data` in the record registry
 
-    invalidate_object(id, json = null) {
-        /* Remove an (outdated) object from the registry. If a stub (no __data yet), or __json_source === json, the object is kept. */
+        // // if a fully-loaded instance of this object exists in the cache, keep `json` in obj.__refresh for easy recreation of an updated instance
+        // let obj = this.registry.get_object(id)
+        // if (obj?.__data) obj.__refresh = {json, loaded_at: Date.now()}
+
+        // remove the cached loaded instance of the object, if present, to allow its reload on the next .get_object().load()
         let obj = this.registry.get_object(id)
         if (obj?.__data && (!json || json !== obj.__json_source))
             this._on_evict(obj) || this.registry.delete_object(id)
+        // this.invalidate_object(id, json)
+
+        return {id, data}
     }
 
     register_version(obj) {
