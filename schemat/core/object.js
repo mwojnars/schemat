@@ -321,7 +321,7 @@ export class WebObject {
         loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         loaded_at:      undefined,  // timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
         expire_at:      undefined,  // timestamp [ms] when this object should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
-        // accessed_at:    undefined,  // the most recent timestamp [ms] when this object (if fully loaded) was requested from the Registry via schemat.get_object/get_loaded()
+        // accessed_at:    undefined,  // the most recent timestamp [ms] when this object (if fully loaded) was requested from the Registry via schemat.get_object/get_loaded() or .refresh()
 
         cache:          undefined,  // Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
         edits:          undefined,  // array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
@@ -615,10 +615,13 @@ export class WebObject {
     }
 
     refresh() {
-        /* Synchronously return the newest version of this object as present in the Registry; or self if this object was already evicted.
+        /* Synchronously return the newest version of this (loaded) object as present in the Registry; or self if this object was already evicted.
            In either case, the Registry is notified that this object is (still) needed, which may spawn reload/refresh in a background thread.
          */
-        return schemat.refresh(this.id) || this
+        // schemat.prepare(obj)     // schedule a reload of this object in the background for another refresh(); not awaited
+        let obj = schemat.get_object(this.id)
+        if (obj?.is_loaded()) return obj
+        return this
     }
 
     async reload() {

@@ -152,7 +152,7 @@ export class Schemat {
         this.site_id = site_id
 
         await this.reload(site_id)
-        assert(this.site)
+        assert(this.site?.is_loaded())
 
         await this.site.load_globals()
 
@@ -205,7 +205,7 @@ export class Schemat {
 
     import(path) {
         /* May return a Promise. */
-        if (path.startsWith('schemat:') || !this.site)
+        if (path.startsWith('schemat:') || !this.site?.is_loaded())
             return this.get_builtin(path)
         if (path[0] === '/') return this.site.import_global(path)
         return this.site.import_local(path)
@@ -260,8 +260,10 @@ export class Schemat {
         /* Create a new instance of the object using the most recent data for this ID as available in the record registry,
            or download it from DB; when the object is fully initialized replace the existing instance in the registry. Return the object.
          */
+        // let prev = this.get_object(id)
         let obj = WebObject.stub(id)
         return obj.load().then(() => this.registry.set_object(obj))
+        // else this.registry.set_object(obj).load()
     }
 
     load_record(id, fast = true) {
