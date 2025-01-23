@@ -260,10 +260,10 @@ export class Schemat {
         /* Create a new instance of the object using the most recent data for this ID as available in the record registry,
            or download it from DB; when the object is fully initialized replace the existing instance in the registry. Return the object.
          */
-        // let prev = this.get_object(id)
-        let obj = WebObject.stub(id)
-        return obj.load().then(() => this.registry.set_object(obj))
-        // else this.registry.set_object(obj).load()
+        let prev = this.get_object(id)
+        let stub = WebObject.stub(id)
+        if (prev) return stub.load().then(() => this.registry.set_object(stub))
+        else return this.registry.set_object(stub).load()
     }
 
     load_record(id, fast = true) {
