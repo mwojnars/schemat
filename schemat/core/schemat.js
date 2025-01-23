@@ -87,6 +87,8 @@ export class Schemat {
     builtin                 // a Classpath containing built-in classes and their paths
     is_closing = false      // true if the Schemat node is in the process of shutting down
 
+    _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
+
 
     get root_category() { return this.get_object(ROOT_ID) }
     get site()          { return this.registry.get_object(this.site_id) }
@@ -257,13 +259,29 @@ export class Schemat {
     }
 
     async reload(id) {
-        /* Create a new instance of the object using the most recent data for this ID as available in the record registry,
-           or download it from DB; when the object is fully initialized replace the existing instance in the registry. Return the object.
+        /* Load contents into an existing stub, or create a new instance of the object using the most recent record from the registry,
+           or download the record from DB. When the object is fully initialized replace the existing instance in the registry. Return the object.
          */
+        assert(id)
         let prev = this.get_object(id)
         let stub = WebObject.stub(id)
         if (prev) return stub.load().then(() => this.registry.set_object(stub))
         else return this.registry.set_object(stub).load()
+
+        // let loading = this._loading.get(id)
+        // if (loading) return loading
+        //
+        // let prev = this.get_object(id)
+        // if (prev?.is_loaded()) {            // don't override the existing (loaded) object until a new instance is loaded
+        //     let stub = WebObject.stub(id)
+        //     loading = stub.load().then(() => {this.registry.set_object(stub); this._loading.delete(id); return stub})
+        //     this._loading.set(id, loading)
+        //     return loading
+        // }
+        // let stub = prev || this.registry.set_object(WebObject.stub(id))
+        // loading = stub.load().then(() => {this._loading.delete(id); return stub})
+        // this._loading.set(id, loading)
+        // return loading
     }
 
     load_record(id, fast = true) {

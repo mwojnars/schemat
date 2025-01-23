@@ -472,7 +472,13 @@ export class WebObject {
         if (active || loading) return loading || this
 
         // keep and return a Promise that will eventually load the data; this is needed to avoid race conditions
-        return this.__meta.loading = this._load(opts)
+        this.__meta.loading = loading = this._load(opts)
+
+        let id = this.id
+        if (id && schemat.get_object(id) === this)
+            schemat._loading.set(id, loading.then(() => {schemat._loading.delete(id); return this}))
+
+        return loading
     }
 
     async _load({sealed = true, activate = true} = {}) {
