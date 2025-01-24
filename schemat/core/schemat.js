@@ -287,13 +287,23 @@ export class Schemat {
         assert(id !== undefined)
         // this.session?.countLoaded(id)
 
-        let data = this.registry.get_record(id)
-        if (data) return data
+        let json = this.registry.get_record(id)
+        if (json) return json
 
         return this._select(id).then(data => {
             this.register_record({id, data})
             return data
         })
+    }
+
+    get_record(id) {
+        let rec = this.registry.get_record(id)
+        if (rec) return rec
+
+        let ttl = 0     // todo
+        let obj = this.get_object(id)
+        let {json, loaded_at} = obj?.__refresh || {}
+        if (json && loaded_at + ttl > Date.now()) return json
     }
 
     _select(id)     { throw new Error(`not implemented`) }
@@ -316,15 +326,15 @@ export class Schemat {
         throw new Error(`version ${ver} not found for object [${id}]`)
     }
 
-    refresh(id) {
-        /* */
-        // check for a newer record of this object in Registry and possibly schedule its re-instantiation
-
-        // if TTL is running out, request the download of the most up-to-date record and re-instantiation
-
-        let obj = this.get_object(id)
-        return obj?.is_loaded() ? obj : undefined
-    }
+    // refresh(id) {
+    //     /* */
+    //     // check for a newer record of this object in Registry and possibly schedule its re-instantiation
+    //
+    //     // if TTL is running out, request the download of the most up-to-date record and re-instantiation
+    //
+    //     let obj = this.get_object(id)
+    //     return obj?.is_loaded() ? obj : undefined
+    // }
 
 
     /***  Registry management  ***/
@@ -338,7 +348,7 @@ export class Schemat {
         else this.register_record(rec)
     }
 
-    register_record({id, data}, /*invalidate = true*/) {
+    register_record({id, data}) {
         /* Keep {id, data} record as the most up-to-date (raw) representation of the corresponding object that will be used on the next object (re)load.
            Remove the existing object from cache, if loaded from a different JSON source.
            `data` is either a JSON string, or an encoded (plain) representation of a Catalog instance.
@@ -347,7 +357,7 @@ export class Schemat {
 
         // if a fully-loaded instance of this object exists in the cache, keep `json` in obj.__refresh for easy recreation of an updated instance
         let obj = this.registry.get_object(id)
-        if (obj?.__data) obj.__self.__refresh = {json, loaded_at: Date.now()}
+        if (obj?.__json_source) obj.__self.__refresh = {json, loaded_at: Date.now()}
 
         // // remove the cached loaded instance of the object, if present, to allow its reload on the next .get_object().load()
         // let obj = this.registry.get_object(id)
