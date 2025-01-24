@@ -304,7 +304,8 @@ export class Schemat {
         let ttl = obj.__ttl || 0
         let {json, loaded_at} = obj?.__refresh || {}
 
-        if (json && loaded_at + ttl > Date.now()) return json
+        // at least 10% of this record's TTL (as measured by the existing object's TTL) must be still available
+        if (json && loaded_at + ttl * 0.9 > Date.now()) return json
     }
 
     _select(id)     { throw new Error(`not implemented`) }
