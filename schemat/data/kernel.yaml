@@ -199,7 +199,7 @@
         inherit: false
         "@": schemat/types/type.js:STRING
       __ttl:
-        info: Time To Live (TTL) of the object, in seconds. Determines for how long the
+        info: Time To Live (TTL) of the object, in milliseconds. Determines for how long the
           object is kept in a server-side cache and reused after being loaded
           from DB. If zero, the object is evicted on the nearest cache purge. A
           real number. Recommended values are between 1.0 and 600. DO NOT set
@@ -207,6 +207,7 @@
           server-side object cache eviction and setting a high TTL for multiple
           objects may fill out the cache, even if these objects are no longer
           used.
+        impute: _impute__ttl
         "@": schemat/types/type.js:NUMBER
       __ver:
         info: Version number of the object's content, automatically incremented on every

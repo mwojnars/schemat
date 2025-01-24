@@ -222,7 +222,7 @@ export class WebObject {
     __category              category of this item, as a Category object; there can be multiple __category$; they can be inherited from __prototype$
     __container             Container of this item, for canonical URL generation
     __status                a string describing the current state of this object in the DB, e.g., "DELETED"; undefined means normal state
-    __ttl                   time-to-live of this object in the registry [seconds]; 0 = immediate eviction on the next cache purge
+    __ttl                   time-to-live of this object in the registry, in milliseconds; 0 = immediate eviction on the next cache purge
 
     __ident                 (virtual) string identifier of this object inside its __container
     __path                  (virtual) URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
@@ -294,6 +294,12 @@ export class WebObject {
         Struct.collect(this.__data, obj => {if (obj instanceof WebObject) refs.push(obj)})
         // JSONx.encode(this.__data, val => {if (val instanceof WebObject) { refs.push(val); return null; }})
         return refs
+    }
+
+    _impute__ttl() {
+        /* Imputation of cache __ttl of this object (TTL in milliseconds), if missing. */
+        if (!this.__ring) return 0      // if loaded from a bootstrap ring, schedule this object for immediate reload
+        return (this.__base?.cache_timeout || 0) * 1000
     }
 
     // get __infant_references() {
@@ -595,12 +601,11 @@ export class WebObject {
         this._init_services()
 
         let now = Date.now()
-        let ttl = (this.__ttl || this.__base?.cache_timeout || 0) * 1000
-        if (!this.__ring) ttl = 0       // if this object was loaded from a bootstrap ring, schedule it for immediate reload
+        let __meta = this.__meta
 
-        this.__meta.loaded_at = now
-        this.__meta.expire_at = now + ttl
-        this.__meta.active = true
+        __meta.loaded_at = now
+        __meta.expire_at = now + this.__ttl
+        __meta.active = true
 
         if (this.__ver && !this.__meta.mutable) schemat.register_version(this)
     }
