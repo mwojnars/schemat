@@ -287,7 +287,7 @@ export class Schemat {
         assert(id !== undefined)
         // this.session?.countLoaded(id)
 
-        let json = this.registry.get_record(id)
+        let json = this.get_record(id)
         if (json) return json
 
         return this._select(id).then(data => {
