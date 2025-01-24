@@ -632,7 +632,7 @@ export class WebObject {
         // schemat.prepare(obj)     // schedule a reload of this object in the background for another refresh(); not awaited
         let id = this.id
         let obj = schemat.get_object(id) || this
-        let json = schemat.get_record(id)
+        let {json} = schemat.get_record(id)
 
         if (json && json !== obj.__json_source)     // a newer record is present in the Registry or __refresh? schedule a reload...
             schemat.reload(id)                      // intentionally un-awaited: the reload is done in the background

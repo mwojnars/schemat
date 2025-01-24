@@ -287,8 +287,8 @@ export class Schemat {
         assert(id !== undefined)
         // this.session?.countLoaded(id)
 
-        let json = this.get_record(id)
-        if (json) return {json, loaded_at: Date.now()}
+        let rec = this.get_record(id)
+        if (rec) return rec
 
         return this._select(id).then(json => {
             this.register_record({id, data: json})
@@ -298,14 +298,14 @@ export class Schemat {
 
     get_record(id) {
         let rec = this.registry.get_record(id)
-        if (rec) return rec
+        if (rec) return {json: rec, loaded_at: Date.now()}      // TODO: better to keep true `loaded_at` in Registry
 
         let obj = this.get_object(id)
         let ttl = obj.__ttl || 0
         let {json, loaded_at} = obj?.__refresh || {}
 
-        // at least 10% of this record's TTL (as measured by the existing object's TTL) must be still available
-        if (json && loaded_at + ttl * 0.9 > Date.now()) return json
+        // at least 20% of this record's TTL (as measured by the existing object's TTL) must be still available
+        if (json && loaded_at + ttl * 0.8 > Date.now()) return {json, loaded_at}
     }
 
     _select(id)     { throw new Error(`not implemented`) }
