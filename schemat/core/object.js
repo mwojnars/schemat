@@ -297,7 +297,7 @@ export class WebObject {
     }
 
     _impute__ttl() {
-        /* Imputation of this object's __ttl (cache TTL in milliseconds), if missing. */
+        /* Impute this object's __ttl (cache TTL in milliseconds), if missing. */
         if (!this.__ring) return 0      // if loaded from a bootstrap ring, schedule this object for immediate reload
         return (this.__base?.cache_timeout || 0) * 1000
     }
