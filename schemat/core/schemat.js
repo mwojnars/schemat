@@ -277,9 +277,7 @@ export class Schemat {
         }
 
         let stub = prev || this.registry.set_object(WebObject.stub(id))
-        loading = stub.load().then(() => {this._loading.delete(id); return stub})
-        this._loading.set(id, loading)
-        return loading
+        return stub.load()      // here, this._loading gets updated
     }
 
     load_record(id, fast = true) {
