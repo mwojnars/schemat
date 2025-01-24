@@ -621,13 +621,18 @@ export class WebObject {
     }
 
     refresh() {
-        /* Synchronously return the newest version of this (loaded) object as present in the Registry; or self if this object was already evicted.
-           In either case, the Registry is notified that this object is (still) needed, which may spawn reload/refresh in a background thread.
+        /* Synchronously return the newest cached version of this (loaded) object from the Registry; or self if this object was evicted from cache.
+           Additionally, if a newer version of this object's record exists in the Registry, schedule a re-instantiation
+           of this object in a background thread for future use.
          */
         // schemat.prepare(obj)     // schedule a reload of this object in the background for another refresh(); not awaited
-        let obj = schemat.get_object(this.id)
-        if (obj?.is_loaded()) return obj
-        return this
+        let obj = schemat.get_object(this.id) || this
+        let json = schemat.registry.get_record(this.id)
+
+        if (json && json !== obj.__json_source)
+            schemat.reload(this.id)             // intentionally un-awaited, the reload runs in the background
+
+        return obj?.is_loaded() ? obj : this
     }
 
     async reload() {
