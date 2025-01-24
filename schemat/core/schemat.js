@@ -300,9 +300,10 @@ export class Schemat {
         let rec = this.registry.get_record(id)
         if (rec) return rec
 
-        let ttl = 0     // todo
         let obj = this.get_object(id)
+        let ttl = obj.__ttl || 0
         let {json, loaded_at} = obj?.__refresh || {}
+
         if (json && loaded_at + ttl > Date.now()) return json
     }
 
