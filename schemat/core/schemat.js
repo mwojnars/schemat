@@ -282,17 +282,17 @@ export class Schemat {
 
     load_record(id, fast = true) {
         /* Read object's raw data (JSON string) from DB, or from the registry (if present there and fast=true).
-           In the former case, the newly retrieved data is saved in the registry for future use.
+           In the former case, the newly retrieved data is saved in the registry for future use. Return {json, loaded_at}.
          */
         assert(id !== undefined)
         // this.session?.countLoaded(id)
 
         let json = this.get_record(id)
-        if (json) return json
+        if (json) return {json, loaded_at: Date.now()}
 
-        return this._select(id).then(data => {
-            this.register_record({id, data})
-            return data
+        return this._select(id).then(json => {
+            this.register_record({id, data: json})
+            return {json, loaded_at: Date.now()}
         })
     }
 

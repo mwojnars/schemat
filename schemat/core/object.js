@@ -495,9 +495,10 @@ export class WebObject {
 
         try {
             if (!this.__data) {
-                let json = schemat.load_record(this.id)
-                if (json instanceof Promise) json = await json
-                this._set_data(json)
+                let rec = schemat.load_record(this.id)
+                if (rec instanceof Promise) rec = await rec
+                let {json, loaded_at} = rec
+                this._set_data(json, loaded_at)
                 data_loaded = true
             }
 
@@ -520,7 +521,7 @@ export class WebObject {
         }
     }
 
-    _set_data(data) {
+    _set_data(data, loaded_at = Date.now()) {
         /* Create this.__data using content from `data`. Set related special fields. Extract & drop the temporary data.__meta.
            `data` can be a JSON string, or a Catalog, or a Catalog's state object.
          */
@@ -544,6 +545,7 @@ export class WebObject {
             data.delete('__meta')
         }
         self.__data = data
+        self.__meta.loaded_at = loaded_at
     }
 
     async _initialize(sealed) {
@@ -600,11 +602,8 @@ export class WebObject {
         this._init_triggers()
         this._init_services()
 
-        let now = Date.now()
         let __meta = this.__meta
-
-        __meta.loaded_at = now
-        __meta.expire_at = now + this.__ttl
+        __meta.expire_at = __meta.loaded_at + this.__ttl
         __meta.active = true
 
         if (this.__ver && !this.__meta.mutable) schemat.register_version(this)
@@ -1087,7 +1086,7 @@ export class WebObject {
          */
         assert(this.is_loaded() && !this.is_mutable(), 'a mutable copy can only be created from a fully-loaded immutable object')
         let obj = WebObject.stub(this.id, {...opts, mutable: true})
-        obj._set_data(this.__data.clone())
+        obj._set_data(this.__data.clone(), this.__meta.loaded_at)
         T.setClass(obj, T.getClass(this))
         if (activate) obj._activate()
         return obj
