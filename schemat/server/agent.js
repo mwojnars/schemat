@@ -41,6 +41,9 @@ export class KafkaAgent extends Agent {
         let running = consumer.run({
             eachMessage: async ({topic, partition, message}) => {
                 print(`${topic}[${partition}]: ${message.value}`)
+
+                // // if autoCommit=false, manually commit the message offset
+                // await consumer.commitOffsets([{topic, partition, offset: (BigInt(message.offset) + 1n).toString()}])
             }
         })
         return {consumer, running}
@@ -49,5 +52,21 @@ export class KafkaAgent extends Agent {
     async __stop__({consumer, running}) {
         await consumer.disconnect()
         await running
+    }
+}
+
+/**********************************************************************************************************************/
+
+export class Driver extends WebObject {
+}
+
+export class KafkaBroker extends Driver {
+    async __install__() {
+        // assumption: kafka is already installed in /opt/kafka
+        let cluster_id = `cluster-${schemat.site.id}`
+        let kafka_root = `./_kafka`
+        // schemat.local_machine.app_root
+
+        // /opt/kafka/bin/kafka-storage.sh format -t "${cluster_id}" -c config/kraft/server.properties
     }
 }
