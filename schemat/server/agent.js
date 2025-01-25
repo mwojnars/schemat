@@ -23,22 +23,26 @@ export class KafkaAgent extends Agent {
 
     async __init__() {
         await super.__init__()
-        let {Kafka} = (await import('kafkajs'))
+        let {Kafka} = await import('kafkajs')
 
         this._kafka = new Kafka({
             clientId: `agent-${this.id}`,
-            brokers: [this.machine.kafka_host]
+            brokers: [`localhost:9092`]
         })
     }
 
     async __start__() {
+        /* Start the agent. Return an object of the form {consumer, running}, where `running` is a Promise returned by consumer.run(). */
         let consumer = this._kafka.consumer({groupId: `group-${this.id}`})
+
         await consumer.connect()
-        await consumer.subscribe({topic: this.id, fromBeginning: true})
-        await consumer.run({
+        await consumer.subscribe({topic: `topic-${this.id}`, fromBeginning: true})
+        
+        let running = consumer.run({
             eachMessage: async ({topic, partition, message}) => {
                 print(`${topic}[${partition}]: ${message.value}`)
             }
         })
+        return {consumer, running}
     }
 }
