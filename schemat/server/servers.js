@@ -48,7 +48,7 @@ export class Server {
             let next = []                               // agents started in this loop iteration, or already running
             let promises = []
 
-            this.machine = await this.machine.reload()  //.refresh()
+            this.machine = this.machine.refresh()
             let agents = this.machine.agents_running    // list of installed agents that should be running now on this worker; when an agent needs to be stopped, it's first removed from this list
 
             if (schemat.is_closing) agents = []         // enforce a clean shutdown by stopping all agents
@@ -72,7 +72,7 @@ export class Server {
 
             // find agents in `current` that are still in `agents` and need to be refreshed
             for (let prev of to_refresh) {
-                let agent = await prev.reload()  //.refresh()
+                let agent = prev.refresh()
                 next.push(agent)
                 if (agent === prev) continue
                 promises.push(prev.__stop__(prev.__meta.state).then(async () => agent.__meta.state = await agent.__start__()))
@@ -85,7 +85,7 @@ export class Server {
             if (schemat.is_closing)
                 if (current.length) continue; else break
 
-            // await schemat.prepare(this.machine, ...agents)       // schedule a reload of relevant objects in the background, for next iteration refresh()
+            [this.machine, ...agents].map(obj => obj.refresh())     // schedule a reload of relevant objects in the background, for next iteration
 
             let remaining = this.machine.refresh_interval * 1000 - (Date.now() - beginning)
             if (remaining > 0) await delay(remaining)
