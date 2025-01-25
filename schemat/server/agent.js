@@ -33,7 +33,7 @@ export class KafkaAgent extends Agent {
 
     async __start__() {
         /* Start the agent. Return an object of the form {consumer, running}, where `running` is a Promise returned by consumer.run(). */
-        let consumer = this._kafka.consumer({groupId: `group-${this.id}`})
+        let consumer = this._kafka.consumer({groupId: `group-${this.id}`, autoCommit: true})
 
         await consumer.connect()
         await consumer.subscribe({topic: `topic-${this.id}`, fromBeginning: true})
@@ -44,5 +44,10 @@ export class KafkaAgent extends Agent {
             }
         })
         return {consumer, running}
+    }
+
+    async __stop__({consumer, running}) {
+        await consumer.disconnect()
+        await running
     }
 }
