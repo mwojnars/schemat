@@ -170,6 +170,7 @@ export class Server {
 /**********************************************************************************************************************/
 
 export class Machine extends WebObject {
+    // drivers
     agents_installed
     agents_running
     refresh_interval
