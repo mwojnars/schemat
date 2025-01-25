@@ -11,10 +11,8 @@ import {Agent} from "./agent.js";
 export class Server {
     /* Worker that executes message loops of multiple Agents (Actors): web objects that implement an event loop and expose their own microservice. */
 
-    machine         // host Machine (web object) of this process; periodically reloaded
-
     constructor(machine, opts) {
-        this.machine = machine
+        schemat.machine = machine
         this.opts = opts
     }
 
@@ -48,8 +46,8 @@ export class Server {
             let next = []                               // agents started in this loop iteration, or already running
             let promises = []
 
-            this.machine = this.machine.refresh()
-            let agents = this.machine.agents_running    // list of installed agents that should be running now on this worker; when an agent needs to be stopped, it's first removed from this list
+            let machine = schemat.machine = schemat.machine.refresh()
+            let agents = machine.agents_running         // list of installed agents that should be running now on this worker; when an agent needs to be stopped, it's first removed from this list
 
             if (schemat.is_closing) agents = []         // enforce a clean shutdown by stopping all agents
 
@@ -85,9 +83,9 @@ export class Server {
             if (schemat.is_closing)
                 if (current.length) continue; else break
 
-            [this.machine, ...agents].map(obj => obj.refresh())     // schedule a reload of relevant objects in the background, for next iteration
+            [machine, ...agents].map(obj => obj.refresh())      // schedule a reload of relevant objects in the background, for next iteration
 
-            let remaining = this.machine.refresh_interval * 1000 - (Date.now() - beginning)
+            let remaining = machine.refresh_interval * 1000 - (Date.now() - beginning)
             if (remaining > 0) await delay(remaining)
         }
 
