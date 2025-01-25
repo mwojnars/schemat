@@ -62,12 +62,19 @@ export class Driver extends WebObject {
 
 export class KafkaBroker extends Driver {
     async __install__() {
-        // assumption: kafka is already installed in /opt/kafka
+        /*
+           Assumptions:
+           - Kafka is already installed in /opt/kafka
+           - local storage and server.properties were created in ./local/kafka, with a fixed cluster id ("CLUSTER"):
+             $ /opt/kafka/bin/kafka-storage.sh format -t CLUSTER -c ./local/kafka/server.properties
+         */
+
         let cluster_id = `cluster-${schemat.site.id}`
-        let kafka_root = `./_kafka`
+        let kafka_root = `./local/kafka`
         // schemat.machine.site_root    -- root directory of the entire Schemat installation; working directory for every install/uninstall/start/stop
         // schemat.machine.app_root     -- root directory of the application (can be a subfolder in site_root)
 
         // /opt/kafka/bin/kafka-storage.sh format -t "${cluster_id}" -c ${kafka_root}/server.properties
+        // /opt/kafka/bin/kafka-server-start.sh ${kafka_root}/server.properties
     }
 }
