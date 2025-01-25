@@ -75,6 +75,6 @@ export class KafkaBroker extends Driver {
         // schemat.machine.app_root     -- root directory of the application (can be a subfolder in site_root)
 
         // /opt/kafka/bin/kafka-storage.sh format -t "${cluster_id}" -c ${kafka_root}/server.properties
-        // /opt/kafka/bin/kafka-server-start.sh ${kafka_root}/server.properties
+        // /opt/kafka/bin/kafka-server-start.sh ${kafka_root}/server.properties --override node.id=${schemat.machine.id}
     }
 }

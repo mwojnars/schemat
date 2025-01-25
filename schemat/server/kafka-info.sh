@@ -23,6 +23,9 @@ sudo apt install kafkacat
 #
 # INIT
 
+# copy the server.properties file from /opt/kafka/config/kraft/server.properties (note the *KRAFT* subfolder!) ... make changes in the file as needed...
+cp /opt/kafka/config/kraft/server.properties ~/.../demo/kafka/
+
 # create a cluster ID & initialize data folder; the cluster ID is copied to the data folder, so the server (below) only
 # needs to know the folder path, and it reads the cluster ID from the folder
 cd ~/.../demo/kafka
