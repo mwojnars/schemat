@@ -65,8 +65,9 @@ export class KafkaBroker extends Driver {
         // assumption: kafka is already installed in /opt/kafka
         let cluster_id = `cluster-${schemat.site.id}`
         let kafka_root = `./_kafka`
-        // schemat.local_machine.app_root
+        // schemat.machine.site_root    -- root directory of the entire Schemat installation; working directory for every install/uninstall/start/stop
+        // schemat.machine.app_root     -- root directory of the application (can be a subfolder in site_root)
 
-        // /opt/kafka/bin/kafka-storage.sh format -t "${cluster_id}" -c config/kraft/server.properties
+        // /opt/kafka/bin/kafka-storage.sh format -t "${cluster_id}" -c ${kafka_root}/server.properties
     }
 }

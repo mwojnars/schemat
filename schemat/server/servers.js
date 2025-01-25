@@ -92,6 +92,11 @@ export class Server {
         print(`Server closed (worker #${this.worker_id})`)
     }
 
+    _install_agents() {
+        // agents installed sequentially (no concurrency), to avoid conflicting temporary changes in the environment (like CWD)
+        process.chdir(schemat.machine.local_root || schemat.site.local_root)
+    }
+
     // async loop() {
     //     while (true) {
     //         this.machine = this.machine.refresh()
