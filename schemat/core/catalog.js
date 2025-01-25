@@ -675,7 +675,7 @@ export class Catalog {
         /* Insert `id` at a proper position in a list of entry indices for a `key`, this._keys[key]. */
         let ids = this._keys.get(key) || []
         ids.push(pos)
-        this._keys.set(key, ids.filter(Number).sort())
+        this._keys.set(key, ids.filter(Number).sort((a, b) => a - b))
     }
 
     _deleteKey(key, pos) {
@@ -685,7 +685,7 @@ export class Catalog {
         let idx = locs.indexOf(pos)
         assert(idx >= 0)
         locs[idx] = undefined
-        locs = locs.filter(Number).sort()
+        locs = locs.filter(Number).sort((a, b) => a - b)
         locs.length ? this._keys.set(key, locs) : this._keys.delete(key)
     }
 
