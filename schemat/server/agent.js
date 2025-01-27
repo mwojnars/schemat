@@ -101,8 +101,23 @@ export class KafkaBroker extends Agent {
     }
 
     async __uninstall__(node) {
-        // /opt/kafka/bin/kafka-server-stop.sh
-        // kafka-remove-broker.sh       -- only then it is safe to remove the data folder of this broker
+        let {exec} = await import('child_process')
+        let {rm} = await import('fs/promises')
+        
+        // get paths
+        let kafka_root = node.kafka_root
+        let kafka_path = `${kafka_root}/node-${node.id}`
+        
+        // first remove the broker from the cluster
+        let command = `/opt/kafka/bin/kafka-remove-broker.sh`
+        let {stdout, stderr} = await exec(command, {cwd: node.site_root})
+        
+        print(`Kafka broker removed: ${stdout}`)
+        if (stderr) print(`Kafka broker removal stderr: ${stderr}`)
+        
+        // then it's safe to remove the data directory
+        await rm(kafka_path, {recursive: true, force: true})
+        print(`Removed Kafka data directory: ${kafka_path}`)
     }
 
     async __start__() {
