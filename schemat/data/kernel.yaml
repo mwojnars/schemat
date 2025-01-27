@@ -199,11 +199,11 @@
         inherit: false
         "@": schemat/types/type.js:STRING
       __ttl:
-        info: Time To Live (TTL) of the object, in milliseconds. Determines for how long the
-          object is kept in a server-side cache and reused after being loaded
-          from DB. If zero, the object is evicted on the nearest cache purge. A
-          real number. Recommended values are between 1.0 and 600. DO NOT set
-          this too high, because TTL is the *only* mechanism that drives
+        info: Time To Live (TTL) of the object, in milliseconds. Determines for how long
+          the object is kept in a server-side cache and reused after being
+          loaded from DB. If zero, the object is evicted on the nearest cache
+          purge. A real number. Recommended values are between 1.0 and 600. DO
+          NOT set this too high, because TTL is the *only* mechanism that drives
           server-side object cache eviction and setting a high TTL for multiple
           objects may fill out the cache, even if these objects are no longer
           used.
@@ -630,8 +630,8 @@
       "@": schemat/types/type.js:ARRAY
     refresh_interval:
       default: 10
-      info: Duration [in seconds] of a single iteration of the agent execution loop
-        in run().
+      info: Duration [in seconds] of a single iteration of the agent execution loop in
+        run().
       "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
   __category:
@@ -774,6 +774,12 @@
         force!
       "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
+  __prototype:
+    "@": 29
+  __category:
+    "@": 1
+- __id: 31
+  name: KafkaBroker
   __prototype:
     "@": 29
   __category:
