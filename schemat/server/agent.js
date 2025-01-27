@@ -5,12 +5,13 @@ import {WebObject} from "../core/object.js"
 /**********************************************************************************************************************/
 
 export class Agent extends WebObject {
-    /* A web object that can be installed on a particular machine(s) in the cluster to run a perpetual operation there (a microservice).
+    /* A web object that can be installed on a particular node(s) in the cluster to run a perpetual operation there (a microservice).
        Typically, the agent runs a web server, or an intra-cluster microservice of any kind, with a perpetual event loop.
-       The agent is allowed to use local resources of the host machine: files, sockets, etc.; with some of them (typically files)
+       The agent is allowed to use local resources of the host node: files, sockets, etc.; with some of them (typically files)
        being allocated/deallocated in __install__/__uninstall__(), while some others (e.g., sockets) in __start__/__stop__().
     */
 
+    // __host / __host$ -- the host node(s) where this agent is installed/running
     // __meta.state     -- the state object returned by __start__(), to be passed to __stop__() when the microservice is to be terminated
 
     async __start__()     {}    // the returned state object is kept in __meta.state and then passed to __stop__()
@@ -57,24 +58,58 @@ export class KafkaAgent extends Agent {
 
 /**********************************************************************************************************************/
 
-export class Driver extends WebObject {
-}
+// export class Driver extends WebObject {}
 
-export class KafkaBroker extends Driver {
-    async __install__() {
+export class KafkaBroker extends Agent {
+    async __install__(node /*machine*/) {
         /*
-           Assumptions:
-           - Kafka is already installed in /opt/kafka
-           - local storage and server.properties were created in ./local/kafka, with a fixed cluster id ("CLUSTER"):
-             $ /opt/kafka/bin/kafka-storage.sh format -t CLUSTER -c ./local/kafka/server.properties
+           Assumption: Kafka must be already installed in /opt/kafka folder.
          */
 
-        let cluster_id = `cluster-${schemat.site.id}`
-        let kafka_root = `./local/kafka`
-        // schemat.machine.site_root    -- root directory of the entire Schemat installation; working directory for every install/uninstall/start/stop
-        // schemat.machine.app_root     -- root directory of the application (can be a subfolder in site_root)
+        // node.site_root    -- root directory of the entire Schemat installation; working directory for every install/uninstall/start/stop
+        // node.app_root     -- root directory of the application (can be a subfolder in site_root)
 
-        // /opt/kafka/bin/kafka-storage.sh format -t "${cluster_id}" -c ${kafka_root}/server.properties
-        // /opt/kafka/bin/kafka-server-start.sh ${kafka_root}/server.properties --override node.id=${schemat.machine.id}
+        let {exec} = await import('child_process')
+
+        let id = node.id
+        let kafka_root = node.kafka_root
+        let kafka_path = `${kafka_root}/node-${id}`
+        let props_path = `./schemat/server/kafka.properties`
+
+        let host = node.kafka_host || node.host || 'localhost'
+        let broker_port = node.kafka_port || 9092
+        let controller_port = node.kafka_controller_port || 9093
+
+        let overrides = [
+            `--override node.id=${id}`,
+            `--override log.dirs="${kafka_path}"`,
+            `--override listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
+            `--override advertised.listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
+            `--override controller.quorum.voters=${id}@${host}:${controller_port}`,
+        ].join(' ')
+
+        // // create directory structure
+        // let fs = await import('fs')
+        // await fs.promises.mkdir(kafka_path, {recursive: true})
+
+        // create local storage in ./local/kafka with a fixed cluster id ("CLUSTER"), but unique node.id:
+        let command = `/opt/kafka/bin/kafka-storage.sh format -t CLUSTER -c ${props_path} ${overrides}`
+        let {stdout, stderr} = await exec(command, {cwd: node.site_root})
+
+        print(`Kafka storage formatted: ${stdout}`)
+        if (stderr) print(`Kafka storage format stderr: ${stderr}`)
+    }
+
+    async __uninstall__(node) {
+        // /opt/kafka/bin/kafka-server-stop.sh
+        // kafka-remove-broker.sh       -- only then it is safe to remove the data folder of this broker
+    }
+
+    async __start__() {
+        // start Kafka broker
+        // /opt/kafka/bin/kafka-server-start.sh ${props_path} ${overrides}
+    }
+    async __stop__() {
+        // /opt/kafka/bin/kafka-server-stop.sh
     }
 }
