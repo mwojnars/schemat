@@ -2,7 +2,7 @@ import {assert, print, T, zip, amap} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError} from '../common/errors.js'
 import {WebObject} from '../core/object.js'
 import {Struct} from "../core/catalog.js";
-import {JsonIndexStorage, YamlDataStorage} from "./storage.js";
+import {MemoryStorage, JsonIndexStorage, YamlDataStorage} from "./storage.js";
 
 // import { Kafka } from 'kafkajs'
 
