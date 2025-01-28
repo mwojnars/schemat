@@ -62,7 +62,7 @@ export class MasterProcess extends Server {
         // print('loaded:', m)
         // let {WebServer} = await schemat.import('/$/local/schemat/server/servers.js')
 
-        print('MasterProcess.start() WORKER_ID:', process.env.WORKER_ID)
+        print('MasterProcess.start() WORKER_ID:', this.worker_id)
         await boot_schemat(opts)
         this.opts = opts
 
@@ -85,9 +85,8 @@ export class MasterProcess extends Server {
             await this.run()
         }
         else {                                  // in the worker process, start this worker's server life-loop
-            let id = process.env.WORKER_ID
+            print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
             this.server = new Server(this.machine, this.opts)
-            print(`starting worker #${id} (PID=${process.pid})...`)
             return this.running = this.server.run()
         }
     }
