@@ -742,10 +742,24 @@
 - __id: 29
   name: Agent
   info: "Base category for web objects that are deployed permanently on a
-    particular machine in the cluster and perform a perpetual event loop
-    (microservice) on this machine: receiving messages/requests from clients,
-    generating responses, utilizing local resources. Clients can be located in
-    the cluster or outside of it, depending on the type of agent."
+    particular node in the cluster and perform a perpetual computation loop
+    (event loop, microservice) over there: receiving messages/requests from
+    clients, generating responses, utilizing local resources. Clients can be
+    located in the cluster or outside of it, depending on the type of agent."
+  schema:
+    __node:
+      info: The node in the cluster where this agent is deployed. Multiple __node
+        values can be present.
+      repeated: true
+      category:
+        "@": 21
+      "@": schemat/types/type.js:REF
+    __num_workers:
+      default: 1
+      info: How many concurrent workers on the __node should execute this agent's loop
+        at the same time. Zero (0) means 'all available'.
+      "@": schemat/types/type.js:INTEGER
+    "@": schemat:Catalog
   __category:
     "@": 1
 - __id: 30
