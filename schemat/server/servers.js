@@ -12,7 +12,7 @@ export class Server {
     /* Worker that executes message loops of multiple Agents (Actors): web objects that implement an event loop and expose their own microservice. */
 
     constructor(machine, opts) {
-        schemat.machine = machine
+        this.machine = machine
         this.opts = opts
     }
 
@@ -46,7 +46,7 @@ export class Server {
             let next = []                               // agents started in this loop iteration, or already running
             let promises = []
 
-            let machine = schemat.machine = schemat.machine.refresh()
+            let machine = this.machine = this.machine.refresh()
             let agents = machine.agents_running         // list of installed agents that should be running now on this worker; when an agent needs to be stopped, it's first removed from this list
 
             if (schemat.is_closing) agents = []         // enforce a clean shutdown by stopping all agents
@@ -90,11 +90,6 @@ export class Server {
         }
 
         print(`Server closed (worker #${this.worker_id})`)
-    }
-
-    _install_agents() {
-        // agents installed sequentially (no concurrency), to avoid conflicting temporary changes in the environment (like CWD)
-        process.chdir(schemat.machine.local_root || schemat.site.local_root)
     }
 
     // async loop() {

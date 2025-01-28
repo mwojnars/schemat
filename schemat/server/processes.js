@@ -46,7 +46,7 @@ export async function boot_schemat(opts) {
 
 /**********************************************************************************************************************/
 
-export class MasterProcess {
+export class MasterProcess extends Server {
     /* Top-level Schemat process running on a given node. Spawns and manages worker processes that execute agents:
        web server(s), data server(s), load balancer etc.
      */
@@ -114,10 +114,6 @@ export class MasterProcess {
         })
     }
 
-    async run() {
-        /* Perpetual loop: process Kafka messages, install/uninstall agents, refresh the node object. */
-    }
-
     async stop() {
         if (schemat.is_closing) return
 
@@ -137,5 +133,14 @@ export class MasterProcess {
         else await this.running
         process.exit(0)
     }
+
+    async run() {
+        /* Perpetual loop: process Kafka messages, install/uninstall agents, refresh the node object. */
+    }
+
+    // _install_agents() {
+    //     // agents installed sequentially (no concurrency), to avoid conflicting temporary changes in the environment (like CWD)
+    //     process.chdir(schemat.machine.local_root || schemat.site.local_root)
+    // }
 }
 
