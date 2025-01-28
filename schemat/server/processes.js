@@ -21,22 +21,19 @@ import {Struct} from "../core/catalog.js";
 export class ServerProcess {
     CLI_PREFIX = 'CLI_'     // command-line interface (CLI) on the server
 
+    opts
+
     async run(opts = {}) {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
 
         opts.config ??= './schemat/config.yaml'
         let config = await this._load_config(opts.config)
         config = {...config, ...opts}
+        this.opts = opts
         // print('config:', config)
 
         await new ServerSchemat(config).boot(() => this._open_bootstrap_db())
         // await schemat.db.insert_self()
-
-        // if (!cmd) return
-        // let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
-        // assert(this[method], `unknown command: ${cmd}`)
-        // 
-        // await this[method](opts)
     }
 
     async _load_config(filename) {
@@ -66,7 +63,6 @@ export class MasterProcess extends ServerProcess {
 
     async run(opts) {
         await super.run(opts)
-        this.opts = opts
         return this.start()
     }
 
