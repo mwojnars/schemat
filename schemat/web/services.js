@@ -114,12 +114,19 @@ export class Service {
         return this.output.decode(msg)
     }
 
-    client(target, ...args) {
+    async client(target, ...args) {
         /* Client-side remote invocation (RPC) of the service through a network request
            to be handled on the server by the handle() method (see below).
            Subclasses should override this method to encode arguments in a service-specific way.
          */
-        throw new Error(`client-side invocation not allowed for this service`)
+        // throw new Error(`client-side invocation not allowed for this service`)
+        let address  = this.address(target, ...args)
+        let message  = this.input.encode(...args)
+        let response = await this.submit(address, message)
+        let result   = await response.text()
+        if (!response.ok) return this.error.decode_error(result, response.status)
+
+        return this.output.decode(result)
     }
 
     handle(target, request) {
@@ -149,12 +156,17 @@ export class HttpService extends Service {
         let base_url = target.url(this.endpoint_name)      // `target` should be a WebObject with .url()
         let message  = this.input.encode(...args)
         let response = await this.submit(base_url, message)
-        let result   = await response.text()
-        if (!response.ok) return this.error.decode_error(result, response.status)
+        let result   = await this.parse_response(response)
+        // let result   = await response.text()
+        // if (!response.ok) return this.error.decode_error(result, response.status)
 
         return this.output.decode(result)
         // result = this.output.decode(result)
         // return this.opts.accept ? this.opts.accept(result) : result
+    }
+
+    address(target) {
+        return target.url(this.endpoint_name)      // `target` should be a WebObject with .url()
     }
 
     async submit(url, message) {
@@ -164,6 +176,11 @@ export class HttpService extends Service {
             url = url_query(url, message)
         }
         return fetch(url, {})
+    }
+    
+    async parse_response(response) {
+        let result = await response.text()
+        return response.ok ? result : this.error.decode_error(result, response.status)
     }
 
     async handle(target, request) {
@@ -228,6 +245,16 @@ export class JsonPOST extends HttpService {
         let body = request.req.body             // `req` is Express's request object
         assert(typeof body === 'string')
         return body
+    }
+}
+
+/**********************************************************************************************************************/
+
+export class KafkaService extends Service {
+    async client(target, ...args) {
+        let topic = target.__kafka_topic || target.__node.__kafka_topic
+
+        // ...
     }
 }
 
