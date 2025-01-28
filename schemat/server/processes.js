@@ -53,6 +53,7 @@ export class MasterProcess extends Server {
     machine         // the Machine web object that represents the physical machine this process is running on
     workers         // array of Node.js Worker instances (child processes); only present in the primary process
     server          // in a subprocess, the Server instance started inside the worker
+    running         // the Promise returned by .run() of the `server`
 
     async start(opts) {
         // node = schemat.get_loaded(this_node_ID)
@@ -82,13 +83,13 @@ export class MasterProcess extends Server {
 
         if (cluster.isPrimary) {                // in the primary process, start the workers...
             this._start_workers()
-            await this.run()
+            this.server = this
         }
         else {                                  // in the worker process, start this worker's server life-loop
             print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
             this.server = new Server(this.machine, this.opts)
-            return this.running = this.server.run()
         }
+        this.running = this.server.run()
     }
 
     _read_machine_id() {

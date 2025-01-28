@@ -47,7 +47,7 @@ export class Server {
             let promises = []
 
             let machine = this.machine = this.machine.refresh()
-            let agents = machine.get_agents_running(this.worker_id)
+            let agents = machine.get_agents_running(this.worker_id)     // agents that *should* be running now on this process (possibly need to be started)
 
             if (schemat.is_closing) agents = []         // enforce a clean shutdown by stopping all agents
 
