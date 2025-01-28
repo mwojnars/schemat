@@ -742,9 +742,9 @@
 - __id: 29
   name: Agent
   info: "Base category for web objects that are deployed permanently on a
-    particular node in the cluster and perform a perpetual computation loop
-    (event loop, microservice) over there: receiving messages/requests from
-    clients, generating responses, utilizing local resources. Clients can be
+    particular node in the cluster and perform there a perpetual computation
+    loop (event loop, microservice): receive messages/requests from clients,
+    generate responses, manage local resources. The agent's clients can be
     located in the cluster or outside of it, depending on the type of agent."
   schema:
     __node:
