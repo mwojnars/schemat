@@ -38,7 +38,7 @@ async function boot_schemat(opts) {
 
     async function _open_bootstrap_db() {
         let db = Database.new()
-        let rings = schemat.config.bootstrap_rings
+        let rings = config.bootstrap_rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
         await db.open(rings)
         await db.load()             // run __init__() and activate the database object
