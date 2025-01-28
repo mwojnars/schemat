@@ -612,6 +612,7 @@
     "@": 1
 - __id: 21
   name: Machine
+  class: schemat/server/servers.js:Machine
   schema:
     agents_installed:
       info: list of Agent objects installed on this machine

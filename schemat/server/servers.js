@@ -17,7 +17,7 @@ export class Server {
     }
 
     get worker_id() {
-        /* Numeric ID (1, 2, 3, ...) of the worker process, as spawned by MasterProcess. */
+        /* Numeric ID (1, 2, 3, ...) of the current worker process, or undefined for the master process. */
         return process.env.WORKER_ID
     }
 
@@ -39,7 +39,7 @@ export class Server {
 
     async run() {
         /* Run & refresh loop of active agents. */
-        let current = []        // list of agents currently running on this worker, each of them has __meta.state
+        let current = []        // list of agents currently running on this process, each of them has __meta.state
 
         while (true) {
             let beginning = Date.now()
@@ -47,7 +47,7 @@ export class Server {
             let promises = []
 
             let machine = this.machine = this.machine.refresh()
-            let agents = machine.agents_running         // list of installed agents that should be running now on this worker; when an agent needs to be stopped, it's first removed from this list
+            let agents = machine.get_agents_running(this.worker_id)
 
             if (schemat.is_closing) agents = []         // enforce a clean shutdown by stopping all agents
 
@@ -89,7 +89,7 @@ export class Server {
             if (remaining > 0) await delay(remaining)
         }
 
-        print(`Server closed (worker #${this.worker_id})`)
+        print(`Server closed (process #${this.worker_id})`)
     }
 
     // async loop() {
@@ -172,6 +172,13 @@ export class Machine extends KafkaAgent {
     agents_installed
     agents_running
     refresh_interval
+
+    get_agents_running(worker_id) {
+        /* List of installed agents that should be running now on a given worker (or master process).
+           When an agent needs to be stopped, it's first removed from this list.
+         */
+        return this.agents_running
+    }
 
     'edit.add_agent'(agent) {
         /* Check that the `agent` is not yet on the list of agents_installed and add it at the end. */
