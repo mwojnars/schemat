@@ -19,7 +19,6 @@ import {Struct} from "../core/catalog.js";
 /**********************************************************************************************************************/
 
 export class ServerProcess {
-    CLI_PREFIX = 'CLI_'     // command-line interface (CLI) on the server
 
     opts
 
@@ -147,7 +146,8 @@ export class MasterProcess extends ServerProcess {
 
 export class AdminProcess extends ServerProcess {
     /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from the command line. */
-    static role = 'admin_process'
+
+    CLI_PREFIX = 'CLI_'     // command-line interface (CLI) on the server
 
     async start(cmd, opts = {}) {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
