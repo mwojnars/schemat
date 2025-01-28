@@ -173,10 +173,33 @@ export class Server {
 /**********************************************************************************************************************/
 
 export class Machine extends WebObject {
-    // drivers
+
     agents_installed
     agents_running
     refresh_interval
+
+    'edit.add_agent'(agent) {
+        /* Check that the `agent` is not yet on the list of agents_installed and add it at the end. */
+        let installed = (this.agents_installed ??= [])
+        if (installed.some(a => a.id === agent.id)) throw new Error('Agent already installed')
+        installed.push(agent)
+    }
+
+    async 'action.install'(agent, run = true) {
+        /* Call agent.__install__() on this node and add the agent to `agents_installed`. If run=true, the agent
+           is added to `agents_running`, as well, and gets started on the next iteration of this node's life loop.
+         */
+        // TODO: this action *must* be executed on the physical node represented by `this` !!
+        await agent.load()
+        await agent.__install__(this)       // modifies the local environment of this node
+
+        this.edit.add_agent(agent)
+        // this['agents_installed[-1]'] = agent
+        await this.save()
+    }
+    async 'action.uninstall'(agent) {}
+    async 'action.start'(agent) {}
+    async 'action.stop'(agent) {}
 }
 
 /**********************************************************************************************************************
