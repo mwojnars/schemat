@@ -1,9 +1,9 @@
 import {assert, print, timeout, delay} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
-import {thread_local_variable} from "./thread.js";
 import {Request} from "../web/request.js";
 import {WebObject} from "../core/object.js";
-import {Agent} from "./agent.js";
+import {Agent, KafkaAgent} from "./agent.js";
+// import {thread_local_variable} from "./thread.js";
 
 
 /**********************************************************************************************************************/
@@ -172,7 +172,7 @@ export class Server {
 
 /**********************************************************************************************************************/
 
-export class Machine extends WebObject {
+export class Machine extends KafkaAgent {
 
     agents_installed
     agents_running

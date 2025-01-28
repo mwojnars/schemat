@@ -88,7 +88,7 @@ export class MasterProcess extends ServerProcess {
 
         if (cluster.isPrimary) {                // in the primary process, start the workers...
             this._start_workers()
-            // await this.run()
+            await this.run()
         }
         else {                                  // in the worker process, start this worker's server life-loop
             let id = process.env.WORKER_ID
@@ -120,9 +120,9 @@ export class MasterProcess extends ServerProcess {
         })
     }
 
-    // async run() {
-    //     /* Perpetual loop. */
-    // }
+    async run() {
+        /* Perpetual loop: process Kafka messages, install/uninstall agents, refresh the node object. */
+    }
 
     async stop() {
         if (schemat.is_closing) return
