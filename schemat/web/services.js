@@ -119,8 +119,8 @@ export class Service {
            to be handled on the server by the handle() method (see below).
            Subclasses should override this method to encode arguments in a service-specific way.
          */
-        let address  = this._address(target, ...args)
         let message  = this.input.encode(...args)
+        let address  = this._address(target, ...args)
         let response = await this._submit(address, message)
         let result   = await this._parse_response(response)
         return this.output.decode(result)
@@ -137,6 +137,10 @@ export class Service {
         if (!server) throw new Error('missing `server()` function in service definition')
         return server.call(target, ...args)
     }
+
+    _address(target, ...args) {}
+    _submit(address, message) {}
+    _parse_response(response) {}
 }
 
 
@@ -235,12 +239,13 @@ export class JsonPOST extends HttpService {
 /**********************************************************************************************************************/
 
 export class KafkaService extends Service {
-    async client(target, ...args) {
-        let topic = target.__kafka_topic || target.__node.__kafka_topic
-
-        // ...
+    async _address(target) {
+        return target.__kafka_topic    // target.__node.__kafka_topic ??
     }
 }
+
+export class JsonKAFKA extends KafkaService {}
+
 
 /**********************************************************************************************************************/
 
