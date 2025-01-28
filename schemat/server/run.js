@@ -25,5 +25,5 @@ await (async function run() {
     // TODO: this line must be uncommented if dynamic code loading is needed (!!!); however, currently the dynamic loading causes errors for unknown reasons
     // let {WorkerProcess} = await loader.import('/$/local/schemat/server/processes.js')
 
-    return new MasterProcess().run(opts)
+    return new MasterProcess().start(opts)
 })()

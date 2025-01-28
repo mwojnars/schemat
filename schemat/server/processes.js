@@ -23,7 +23,7 @@ export class ServerProcess {
 
     opts
 
-    async run(opts = {}) {
+    async start(opts = {}) {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
 
         opts.config ??= './schemat/config.yaml'
@@ -61,12 +61,7 @@ export class MasterProcess extends ServerProcess {
     workers         // array of Node.js Worker instances (child processes); only present in the primary process
     server          // in a subprocess, the Server instance started inside the worker
 
-    async run(opts) {
-        await super.run(opts)
-        return this.start()
-    }
-
-    async start() {
+    async start(opts) {
         // node = schemat.get_loaded(this_node_ID)
         // return node.activate()     // start the life-loop and all worker processes (servers)
 
@@ -75,6 +70,7 @@ export class MasterProcess extends ServerProcess {
         // let {WebServer} = await schemat.import('/$/local/schemat/server/servers.js')
 
         print('MasterProcess.start() WORKER_ID:', process.env.WORKER_ID)
+        await super.start(opts)
 
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
@@ -153,10 +149,10 @@ export class AdminProcess extends ServerProcess {
     /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from the command line. */
     static role = 'admin_process'
 
-    async run(cmd, opts = {}) {
+    async start(cmd, opts = {}) {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
 
-        await super.run(opts)
+        await super.start(opts)
 
         if (!cmd) return
         let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
