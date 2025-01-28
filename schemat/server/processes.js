@@ -48,40 +48,7 @@ async function boot_schemat(opts) {
 
 /**********************************************************************************************************************/
 
-export class ServerProcess {
-
-    opts
-
-    async start(opts = {}) {
-
-        opts.config ??= './schemat/config.yaml'
-        let config = await this._load_config(opts.config)
-        config = {...config, ...opts}
-        this.opts = opts
-        // print('config:', config)
-
-        await new ServerSchemat(config).boot(() => this._open_bootstrap_db())
-        // await schemat.db.insert_self()
-    }
-
-    async _load_config(filename) {
-        let fs = await import('node:fs')
-        let yaml = (await import('yaml')).default
-        let content = fs.readFileSync(filename, 'utf8')
-        return yaml.parse(content)
-    }
-
-    async _open_bootstrap_db() {
-        let db = Database.new()
-        let rings = schemat.config.bootstrap_rings
-        rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
-        await db.open(rings)
-        await db.load()             // run __init__() and activate the database object
-        return db
-    }
-}
-
-export class MasterProcess extends ServerProcess {
+export class MasterProcess {
     /* Top-level Schemat process running on a given node. Spawns and manages worker processes:
        web server(s), data server(s), load balancer etc.
      */
@@ -100,7 +67,6 @@ export class MasterProcess extends ServerProcess {
         print('MasterProcess.start() WORKER_ID:', process.env.WORKER_ID)
         await boot_schemat(opts)
         this.opts = opts
-        // await super.start(opts)
 
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
@@ -175,7 +141,7 @@ export class MasterProcess extends ServerProcess {
     }
 }
 
-export class AdminProcess extends ServerProcess {
+export class AdminProcess {
     /* Boot up Schemat and execute the CLI_cmd() method to perform an administrative task.
        Dashes (-) in `cmd` are replaced with underscores (_).
      */
@@ -186,7 +152,6 @@ export class AdminProcess extends ServerProcess {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
 
         await boot_schemat(opts)
-        // await super.start(opts)
 
         if (!cmd) return
         let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
