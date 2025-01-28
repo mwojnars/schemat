@@ -18,12 +18,41 @@ import {Struct} from "../core/catalog.js";
 
 /**********************************************************************************************************************/
 
+async function boot_schemat(opts) {
+    /* Create the global `schemat` object and initialize its database. */
+
+    opts.config ??= './schemat/config.yaml'
+    let config = await _load_config(opts.config)
+    config = {...config, ...opts}
+    // print('config:', config)
+
+    await new ServerSchemat(config).boot(() => _open_bootstrap_db())
+    // await schemat.db.insert_self()
+
+    async function _load_config(filename) {
+        let fs = await import('node:fs')
+        let yaml = (await import('yaml')).default
+        let content = fs.readFileSync(filename, 'utf8')
+        return yaml.parse(content)
+    }
+
+    async function _open_bootstrap_db() {
+        let db = Database.new()
+        let rings = schemat.config.bootstrap_rings
+        rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
+        await db.open(rings)
+        await db.load()             // run __init__() and activate the database object
+        return db
+    }
+}
+
+/**********************************************************************************************************************/
+
 export class ServerProcess {
 
     opts
 
     async start(opts = {}) {
-        /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
 
         opts.config ??= './schemat/config.yaml'
         let config = await this._load_config(opts.config)
@@ -69,7 +98,9 @@ export class MasterProcess extends ServerProcess {
         // let {WebServer} = await schemat.import('/$/local/schemat/server/servers.js')
 
         print('MasterProcess.start() WORKER_ID:', process.env.WORKER_ID)
-        await super.start(opts)
+        await boot_schemat(opts)
+        this.opts = opts
+        // await super.start(opts)
 
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
@@ -145,14 +176,17 @@ export class MasterProcess extends ServerProcess {
 }
 
 export class AdminProcess extends ServerProcess {
-    /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from the command line. */
+    /* Boot up Schemat and execute the CLI_cmd() method to perform an administrative task.
+       Dashes (-) in `cmd` are replaced with underscores (_).
+     */
 
     CLI_PREFIX = 'CLI_'     // command-line interface (CLI) on the server
 
     async start(cmd, opts = {}) {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
 
-        await super.start(opts)
+        await boot_schemat(opts)
+        // await super.start(opts)
 
         if (!cmd) return
         let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
