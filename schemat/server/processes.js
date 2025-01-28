@@ -21,7 +21,7 @@ import {Struct} from "../core/catalog.js";
 export class ServerProcess {
     CLI_PREFIX = 'CLI_'     // command-line interface (CLI) on the server
 
-    async run(cmd, opts = {}) {
+    async run(opts = {}) {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
 
         opts.config ??= './schemat/config.yaml'
@@ -32,11 +32,11 @@ export class ServerProcess {
         await new ServerSchemat(config).boot(() => this._open_bootstrap_db())
         // await schemat.db.insert_self()
 
-        if (!cmd) return
-        let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
-        assert(this[method], `unknown command: ${cmd}`)
-
-        await this[method](opts)
+        // if (!cmd) return
+        // let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
+        // assert(this[method], `unknown command: ${cmd}`)
+        // 
+        // await this[method](opts)
     }
 
     async _load_config(filename) {
@@ -64,7 +64,8 @@ export class MasterProcess extends ServerProcess {
     workers         // array of Node.js Worker instances (child processes); only present in the primary process
     server          // in a subprocess, the Server instance started inside the worker
 
-    async CLI_main(opts) {
+    async run(opts) {
+        await super.run(opts)
         this.opts = opts
         return this.start()
     }
@@ -155,6 +156,18 @@ export class MasterProcess extends ServerProcess {
 export class AdminProcess extends ServerProcess {
     /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from the command line. */
     static role = 'admin_process'
+
+    async run(cmd, opts = {}) {
+        /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
+
+        await super.run(opts)
+
+        if (!cmd) return
+        let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
+        assert(this[method], `unknown command: ${cmd}`)
+
+        await this[method](opts)
+    }
 
     // async CLI_move({id, newid, bottom, ring: ring_name}) {
     //     /* Move an item to a different ring, or change its ID. */
