@@ -9,7 +9,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {print, T} from '../common/utils.js'
-import {AdminProcess} from "./processes.js"
+import {AdminProcess} from "./admin.js"
 
 
 /**********************************************************************************************************************/
