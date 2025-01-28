@@ -17,7 +17,7 @@ export class Server {
     }
 
     get worker_id() {
-        /* Numeric ID (1, 2, 3, ...) of the worker process, as spawned by MainProcess. */
+        /* Numeric ID (1, 2, 3, ...) of the worker process, as spawned by MasterProcess. */
         return process.env.WORKER_ID
     }
 

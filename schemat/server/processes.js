@@ -56,8 +56,8 @@ export class ServerProcess {
     }
 }
 
-export class MainProcess extends ServerProcess {
-    /* Top-level Schemat process running on a given machine. Spawns and manages worker processes:
+export class MasterProcess extends ServerProcess {
+    /* Top-level Schemat process running on a given node. Spawns and manages worker processes:
        web server(s), data server(s), load balancer etc.
      */
     machine         // the Machine web object that represents the physical machine this process is running on
@@ -77,7 +77,7 @@ export class MainProcess extends ServerProcess {
         // print('loaded:', m)
         // let {WebServer} = await schemat.import('/$/local/schemat/server/servers.js')
 
-        print('MainProcess.start() WORKER_ID:', process.env.WORKER_ID)
+        print('MasterProcess.start() WORKER_ID:', process.env.WORKER_ID)
 
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
@@ -94,20 +94,8 @@ export class MainProcess extends ServerProcess {
         assert(this.machine)
 
         if (cluster.isPrimary) {                // in the primary process, start the workers...
-            const num_workers = 2
-            this.workers = []
-            print(`starting the main process (PID=${process.pid}) with ${num_workers} worker(s)...`)
-
-            for (let i = 0; i < num_workers; i++)
-                this.workers[i] = cluster.fork({WORKER_ID: i + 1})
-
-            cluster.on('exit', (worker) => {
-                if (schemat.is_closing) return
-                let id = worker.process.env.WORKER_ID
-                print(`worker #${id} (PID=${worker.process.pid}) exited`)
-                this.workers[id-1] = worker = cluster.fork({WORKER_ID: id})      // restart the process
-                print(`worker #${id} (PID=${worker.process.pid}) restarted`)
-            })
+            this._start_workers()
+            // await this.run()
         }
         else {                                  // in the worker process, start this worker's server life-loop
             let id = process.env.WORKER_ID
@@ -121,6 +109,27 @@ export class MainProcess extends ServerProcess {
         try { return Number(fs.readFileSync('./schemat/machine.id', 'utf8').trim()) }
         catch (ex) { print('machine ID not found') }
     }
+
+    _start_workers(num_workers = 2) {
+
+        this.workers = []
+        print(`starting the main process (PID=${process.pid}) with ${num_workers} worker(s)...`)
+
+        for (let i = 0; i < num_workers; i++)
+            this.workers[i] = cluster.fork({WORKER_ID: i + 1})
+
+        cluster.on('exit', (worker) => {
+            if (schemat.is_closing) return
+            let id = worker.process.env.WORKER_ID
+            print(`worker #${id} (PID=${worker.process.pid}) exited`)
+            this.workers[id-1] = worker = cluster.fork({WORKER_ID: id})      // restart the process
+            print(`worker #${id} (PID=${worker.process.pid}) restarted`)
+        })
+    }
+
+    // async run() {
+    //     /* Perpetual loop. */
+    // }
 
     async stop() {
         if (schemat.is_closing) return
