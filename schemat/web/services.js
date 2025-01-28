@@ -119,13 +119,10 @@ export class Service {
            to be handled on the server by the handle() method (see below).
            Subclasses should override this method to encode arguments in a service-specific way.
          */
-        // throw new Error(`client-side invocation not allowed for this service`)
         let address  = this.address(target, ...args)
         let message  = this.input.encode(...args)
         let response = await this.submit(address, message)
-        let result   = await response.text()
-        if (!response.ok) return this.error.decode_error(result, response.status)
-
+        let result   = await this.parse_response(response)
         return this.output.decode(result)
     }
 
@@ -152,19 +149,6 @@ export class HttpService extends Service {
     static output = mString
     static error  = mJsonError
 
-    async client(target, ...args) {
-        let base_url = target.url(this.endpoint_name)      // `target` should be a WebObject with .url()
-        let message  = this.input.encode(...args)
-        let response = await this.submit(base_url, message)
-        let result   = await this.parse_response(response)
-        // let result   = await response.text()
-        // if (!response.ok) return this.error.decode_error(result, response.status)
-
-        return this.output.decode(result)
-        // result = this.output.decode(result)
-        // return this.opts.accept ? this.opts.accept(result) : result
-    }
-
     address(target) {
         return target.url(this.endpoint_name)      // `target` should be a WebObject with .url()
     }
@@ -177,7 +161,7 @@ export class HttpService extends Service {
         }
         return fetch(url, {})
     }
-    
+
     async parse_response(response) {
         let result = await response.text()
         return response.ok ? result : this.error.decode_error(result, response.status)
