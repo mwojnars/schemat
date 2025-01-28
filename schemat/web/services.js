@@ -119,10 +119,10 @@ export class Service {
            to be handled on the server by the handle() method (see below).
            Subclasses should override this method to encode arguments in a service-specific way.
          */
-        let address  = this.address(target, ...args)
+        let address  = this._address(target, ...args)
         let message  = this.input.encode(...args)
-        let response = await this.submit(address, message)
-        let result   = await this.parse_response(response)
+        let response = await this._submit(address, message)
+        let result   = await this._parse_response(response)
         return this.output.decode(result)
     }
 
@@ -149,11 +149,11 @@ export class HttpService extends Service {
     static output = mString
     static error  = mJsonError
 
-    address(target) {
+    _address(target) {
         return target.url(this.endpoint_name)      // `target` should be a WebObject with .url()
     }
 
-    async submit(url, message) {
+    async _submit(url, message) {
         /* `message`, if present, should be a plain object to be encoded into GET query string ?k=v&... */
         if (!T.isEmpty(message)) {
             if (!T.isPlain(message)) throw new Error(`cannot encode as a HTTP GET query string (${message})`)
@@ -162,18 +162,18 @@ export class HttpService extends Service {
         return fetch(url, {})
     }
 
-    async parse_response(response) {
+    async _parse_response(response) {
         let result = await response.text()
         return response.ok ? result : this.error.decode_error(result, response.status)
     }
 
     async handle(target, request) {
         try {
-            let msg = this.read_message(request)
-            let args = this.decode_args(msg)
+            let msg = this._parse_request(request)
+            let args = this._decode_args(msg)
             let result = this.server(target, request, ...args)
             if (isPromise(result)) result = await result
-            return this.send_result(target, request, result, ...args)
+            return this._send_result(target, request, result, ...args)
         }
         catch (ex) {
             print('ERROR in HttpService.handle():', ex)
@@ -183,18 +183,18 @@ export class HttpService extends Service {
         }
     }
 
-    read_message(request) {
+    _parse_request(request) {
         return request.req.query                            // plain object carrying all GET query string parameters
     }
 
-    decode_args(msg) {                                      // on the server, decode the arguments from the request
+    _decode_args(msg) {                                     // on the server, decode the arguments from the request
         let args = this.input.decode(msg)
         if (!this.input.array) args = [args]
         if (!T.isArray(args)) throw new Error("incorrect format of arguments in the web request")
         return args
     }
 
-    send_result(target, {res}, result, input_args) {        // on the server, encode the result and send it to the client
+    _send_result(target, {res}, result, input_args) {       // on the server, encode the result and send it to the client
         if (this.output.type) res.type(this.output.type)
         if (result === undefined) return res.end()          // missing result --> empty response body
         if (!this.output.array) result = [result]
@@ -217,14 +217,14 @@ export class JsonPOST extends HttpService {
     static input  = mJsonxArray     // client submits an ...args array of JSONx-encoded arguments
     static output = mJsonx          // server responds with a single JSONx-encoded object
 
-    async submit(url, message) {
+    async _submit(url, message) {
         if (this.endpoint_type !== 'POST') throw new Error(`JsonPOST can only be exposed at HTTP POST endpoint, not ${this.endpoint}`)
         if (message && typeof message !== 'string') message = JSON.stringify(message)
         let params = {method: 'POST', body: message, headers: {}}
         return fetch(url, params)
     }
 
-    read_message(request) {
+    _parse_request(request) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
         let body = request.req.body             // `req` is Express's request object
         assert(typeof body === 'string')
