@@ -134,6 +134,11 @@ export class MasterProcess extends Process {
         process.exit(0)
     }
 
+    _get_agents_running() {
+        /* List of agents that should be running now on this process. When an agent is to be stopped, it should be first removed from this list. */
+        return this.machine.master_agents_running
+    }
+
     async run() {
         /* Perpetual loop: process Kafka messages, install/uninstall agents, refresh the node object. */
     }

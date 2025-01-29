@@ -172,6 +172,10 @@ export class Machine extends KafkaAgent {
 
     agents_installed
     agents_running
+
+    master_agents_installed
+    master_agents_running
+
     refresh_interval
 
     'edit.add_agent'(agent) {
