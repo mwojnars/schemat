@@ -865,7 +865,7 @@ export class WebObject {
 
     /***  Networking  ***/
 
-    static _collect_methods(protocols = ['GET', 'POST', 'LOCAL'], SEP = '.') {
+    static _collect_methods(protocols = ['LOCAL', 'GET', 'POST', 'KAFKA'], SEP = '.') {
         /* Collect all special methods of this class: web handlers + actions + edit operators. */
         let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
         let is_editfunc = prop => prop.startsWith('edit' + SEP)

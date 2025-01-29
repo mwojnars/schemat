@@ -96,8 +96,7 @@ export class Service {
            If called on a server, passes request=null to this.server() method. May return a Promise.
          */
         this.endpoint = endpoint
-        return SERVER
-            // ? this.server(target, undefined, ...args)
+        return this._is_local(target)
             ? this.local(target, ...args)
             : this.client(target, ...args)
     }
@@ -137,6 +136,8 @@ export class Service {
         if (!server) throw new Error('missing `server()` function in service definition')
         return server.call(target, ...args)
     }
+
+    _is_local(target) { return SERVER }         // this works for extra-cluster communication, may need to be changed in subclasses
 
     _address(target, ...args) {}
     _submit(address, message) {}
@@ -239,6 +240,11 @@ export class JsonPOST extends HttpService {
 /**********************************************************************************************************************/
 
 export class KafkaService extends Service {
+
+    _is_local(target) {
+        return true     // TODO
+    }
+
     async _address(target) {
         return target.__kafka_topic    // target.__node.__kafka_topic ??
     }
