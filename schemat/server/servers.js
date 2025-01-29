@@ -41,57 +41,64 @@ export class Process {
 
     async run() {
         /* Run & refresh loop of active agents. */
-        let current = []        // list of agents currently running on this process, each of them has __meta.state
+        let running = []        // list of agents currently running on this process, each of them has __meta.state
 
         while (true) {
             let beginning = Date.now()
-            let next = []                               // agents started in this loop iteration, or already running
-            let promises = []
+            this.machine = this.machine.refresh()
 
-            let machine = this.machine = this.machine.refresh()
-            let agents = machine.get_agents_running(this.worker_id)     // agents that *should* be running now on this process (possibly need to be started)
-
-            if (schemat.is_closing) agents = []         // enforce a clean shutdown by stopping all agents
-
-            let agent_ids = agents.map(agent => agent.id)
-            let current_ids = current.map(agent => agent.id)
-
-            let to_stop = current.filter(agent => !agent_ids.includes(agent.id))
-            let to_start = agents.filter(agent => !current_ids.includes(agent.id))
-            let to_refresh = current.filter(agent => agent_ids.includes(agent.id))
-
-            // find agents in `current` that are not in `agents` and need to be stopped
-            for (let agent of to_stop)
-                promises.push(agent.__stop__(agent.__meta.state))
-
-            // find agents in `agents` that are not in `current` and need to be started
-            for (let agent of to_start) {
-                next.push(agent)
-                promises.push(agent.load().then(async agent => agent.__meta.state = await agent.__start__()))
-            }
-
-            // find agents in `current` that are still in `agents` and need to be refreshed
-            for (let prev of to_refresh) {
-                let agent = prev.refresh()
-                next.push(agent)
-                if (agent === prev) continue
-                promises.push(prev.__stop__(prev.__meta.state).then(async () => agent.__meta.state = await agent.__start__()))
-                // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
-            }
-
-            current = next
-            await Promise.all(promises)
+            running = await this._start_stop(running)
 
             if (schemat.is_closing)
-                if (current.length) continue; else break
+                if (running.length) continue; else break        // let the currently running agents gently stop
 
-            [machine, ...agents].map(obj => obj.refresh())      // schedule a reload of relevant objects in the background, for next iteration
-
-            let remaining = machine.refresh_interval * 1000 - (Date.now() - beginning)
+            let remaining = this.machine.refresh_interval * 1000 - (Date.now() - beginning)
             if (remaining > 0) await delay(remaining)
         }
 
         print(`Server closed (process #${this.worker_id})`)
+    }
+
+    async _start_stop(current) {
+        /* Singe iteration of the main loop: start/stop agents that should (or should not) be running now. */
+
+        let next = []                               // agents started in this loop iteration, or already running
+        let promises = []
+
+        let agents = this.machine.get_agents_running(this.worker_id)     // agents that *should* be running now on this process (possibly need to be started)
+
+        if (schemat.is_closing) agents = []         // enforce a clean shutdown by stopping all agents
+
+        let agent_ids = agents.map(agent => agent.id)
+        let current_ids = current.map(agent => agent.id)
+
+        let to_stop = current.filter(agent => !agent_ids.includes(agent.id))
+        let to_start = agents.filter(agent => !current_ids.includes(agent.id))
+        let to_refresh = current.filter(agent => agent_ids.includes(agent.id))
+
+        // find agents in `current` that are not in `agents` and need to be stopped
+        for (let agent of to_stop)
+            promises.push(agent.__stop__(agent.__meta.state))
+
+        // find agents in `agents` that are not in `current` and need to be started
+        for (let agent of to_start) {
+            next.push(agent)
+            promises.push(agent.load().then(async agent => agent.__meta.state = await agent.__start__()))
+        }
+
+        // find agents in `current` that are still in `agents` and need to be refreshed
+        for (let prev of to_refresh) {
+            let agent = prev.refresh()
+            next.push(agent)
+            if (agent === prev) continue
+            promises.push(prev.__stop__(prev.__meta.state).then(async () => agent.__meta.state = await agent.__start__()))
+            // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
+        }
+
+        [this.machine, ...agents].map(obj => obj.refresh())     // schedule a reload of relevant objects in the background, for next iteration
+
+        await Promise.all(promises)
+        return next
     }
 
     // async loop() {
