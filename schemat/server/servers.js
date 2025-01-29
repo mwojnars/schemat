@@ -92,8 +92,10 @@ export class Process {
             next.push(agent)
             if (agent === prev) continue
             promises.push(agent.__restart__(prev.__meta.state, prev).then(state => agent.__meta.state = state))
-            // promises.push(prev.__stop__(prev.__meta.state).then(async () => agent.__meta.state = await agent.__start__()))
+
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
+            //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
+            // promises.push(prev.__stop__(prev.__meta.state).then(async () => agent.__meta.state = await agent.__start__()))
         }
 
         [this.machine, ...agents].map(obj => obj.refresh())     // schedule a reload of relevant objects in the background, for next iteration
