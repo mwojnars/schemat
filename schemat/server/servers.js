@@ -21,23 +21,7 @@ export class Process {
         return process.env.WORKER_ID || 0
     }
 
-    is_master() { return !this.worker_id}
-
-    // async start() {
-    //     /* deployment loop:
-    //        - retrieve a list of new agents (stewards) that should be placed in this worker (node+process)
-    //        - for each do:  agent.load() + agent.__deploy__() __install__()
-    //        - retrieve a list of objects deployed in this worker that should be removed
-    //        - for each do:  agent.reload() + agent.__destroy__() __uninstall__()
-    //        - maintain a list of objects currently deployed in this worker process
-    //        - for each do:  agent.reload() + agent.__run__()
-    //
-    //        microservice loop:
-    //        - agent = agent.refresh()
-    //        - await agent.serve() ... agent.start()
-    //        - delay(remaining-time-till-epoch)
-    //     */
-    // }
+    // is_master() { return !this.worker_id}
 
     async run() {
         /* Run & refresh loop of active agents. */
@@ -50,7 +34,9 @@ export class Process {
             running = await this._start_stop(running)
 
             if (schemat.is_closing)
-                if (running.length) continue; else break        // let the currently running agents gently stop
+                if (running.length) continue; else break            // let the currently-running agents gently stop
+
+            [this.machine, ...running].map(obj => obj.refresh())    // schedule a reload of relevant objects in the background, for next iteration
 
             let remaining = this.machine.refresh_interval * 1000 - (Date.now() - beginning)
             if (remaining > 0) await delay(remaining)
@@ -60,7 +46,7 @@ export class Process {
     }
 
     async _start_stop(current) {
-        /* Singe iteration of the main loop: start/stop agents that should (or should not) be running now. */
+        /* In each iteration of the main loop, start/stop agents that should (or should not) be running now. */
 
         let next = []                               // agents started in this loop iteration, or already running
         let promises = []
@@ -97,8 +83,6 @@ export class Process {
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
             // promises.push(prev.__stop__(prev.__meta.state).then(async () => agent.__meta.state = await agent.__start__()))
         }
-
-        [this.machine, ...agents].map(obj => obj.refresh())     // schedule a reload of relevant objects in the background, for next iteration
 
         await Promise.all(promises)
         return next
