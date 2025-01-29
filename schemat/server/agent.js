@@ -17,6 +17,9 @@ export class Agent extends WebObject {
 
     quick_restart
 
+    async __install__(node) {}      // ideally, this method should be idempotent in case of failure and subsequent re-launch
+    async __uninstall__(node) {}
+
     async __start__()     {}    // the returned state object is kept in __meta.state and then passed to __stop__()
     async __stop__(state) {}
 

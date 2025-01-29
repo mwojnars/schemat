@@ -36,7 +36,7 @@ export class ServerSchemat extends Schemat {
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
-    machine         // host Machine (web object) of the current process; initialized and periodically reloaded in Server
+    current_node    // host Machine (web object) of the current process; initialized and periodically reloaded in Server
 
     _db             // bootstrap DB; regular server-side DB is taken from site.database
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action

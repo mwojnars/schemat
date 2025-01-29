@@ -25,11 +25,13 @@ export class Process {
 
     async run() {
         /* Run & refresh loop of active agents. */
+        schemat.current_node = this.machine
+
         let running = []        // list of agents currently running on this process, each of them has __meta.state
 
         while (true) {
             let beginning = Date.now()
-            this.machine = this.machine.refresh()
+            schemat.current_node = this.machine = this.machine.refresh()
 
             running = await this._start_stop(running)
 

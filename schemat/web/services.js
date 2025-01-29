@@ -141,7 +141,7 @@ export class Service {
         /* True if `target` is locally accessible and executable on the current machine, which means
            the service invocation should be performed via a local (not remote) call.
          */
-        return SERVER       // this works for extra-cluster communication, like in HTTP between clients and servers; may need to be changed in subclasses
+        return SERVER       // this works for extra-cluster communication, like in HTTP between clients and servers; must be changed for intra-cluster comm
     }
 
     _address(target, ...args) {}
@@ -247,7 +247,9 @@ export class JsonPOST extends HttpService {
 export class KafkaService extends Service {
 
     _is_local(target) {
-        return true     // TODO
+        assert(target.is_loaded())
+        return target.__node.id === schemat.current_node.id
+        // return target.__node$.some(node => node.id === schemat.current_node.id)
     }
 
     async _address(target) {
