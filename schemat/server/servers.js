@@ -48,12 +48,8 @@ export class Process {
     async _start_stop(current) {
         /* In each iteration of the main loop, start/stop agents that should (or should not) be running now. */
 
-        let next = []                               // agents started in this loop iteration, or already running
-        let promises = []
-
-        let agents = this.machine.get_agents_running(this.worker_id)     // agents that *should* be running now on this process (possibly need to be started)
-
-        if (schemat.is_closing) agents = []         // enforce a clean shutdown by stopping all agents
+        let agents = this._get_agents_running()     // agents that *should* be running now on this process (possibly need to be started)
+        if (schemat.is_closing) agents = []         // enforce clean shutdown by stopping all agents
 
         let agent_ids = agents.map(agent => agent.id)
         let current_ids = current.map(agent => agent.id)
@@ -61,6 +57,9 @@ export class Process {
         let to_stop = current.filter(agent => !agent_ids.includes(agent.id))
         let to_start = agents.filter(agent => !current_ids.includes(agent.id))
         let to_refresh = current.filter(agent => agent_ids.includes(agent.id))
+
+        let promises = []
+        let next = []                               // agents started in this loop iteration, or already running
 
         // find agents in `current` that are not in `agents` and need to be stopped
         for (let agent of to_stop)
@@ -87,6 +86,12 @@ export class Process {
         await Promise.all(promises)
         return next
     }
+
+    _get_agents_running() {
+        /* List of agents that should be running now on this process. When an agent is to be stopped, it should be first removed from this list. */
+        return this.machine.agents_running
+    }
+
 
     // async loop() {
     //     while (true) {
@@ -168,13 +173,6 @@ export class Machine extends KafkaAgent {
     agents_installed
     agents_running
     refresh_interval
-
-    get_agents_running(worker_id) {
-        /* List of installed agents that should be running now on a given worker (or master process).
-           When an agent needs to be stopped, it's first removed from this list.
-         */
-        return this.agents_running
-    }
 
     'edit.add_agent'(agent) {
         /* Check that the `agent` is not yet on the list of agents_installed and add it at the end. */
