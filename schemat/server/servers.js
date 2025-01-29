@@ -8,8 +8,8 @@ import {Agent, KafkaAgent} from "./agent.js";
 
 /**********************************************************************************************************************/
 
-export class Server {
-    /* Worker that executes message loops of multiple Agents (Actors): web objects that implement an event loop and expose their own microservice. */
+export class Process {
+    /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
     constructor(machine, opts) {
         this.machine = machine
@@ -17,9 +17,11 @@ export class Server {
     }
 
     get worker_id() {
-        /* Numeric ID (1, 2, 3, ...) of the current worker process, or undefined for the master process. */
-        return process.env.WORKER_ID
+        /* Numeric ID (1, 2, 3, ...) of the current worker process; 0 for the master process. */
+        return process.env.WORKER_ID || 0
     }
+
+    is_master() { return !this.worker_id}
 
     // async start() {
     //     /* deployment loop:

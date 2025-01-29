@@ -4,7 +4,7 @@ import fs from 'node:fs'
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {print, assert, T} from "../common/utils.js";
-import {Server} from "./servers.js";
+import {Process} from "./servers.js";
 import {WebObject} from "../core/object.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {Database} from "../db/db.js";
@@ -46,7 +46,7 @@ export async function boot_schemat(opts) {
 
 /**********************************************************************************************************************/
 
-export class MasterProcess extends Server {
+export class MasterProcess extends Process {
     /* Top-level Schemat process running on a given node. Spawns and manages worker processes that execute agents:
        web server(s), data server(s), load balancer etc.
      */
@@ -87,7 +87,7 @@ export class MasterProcess extends Server {
         }
         else {                                  // in the worker process, start this worker's server life-loop
             print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-            this.server = new Server(this.machine, this.opts)
+            this.server = new Process(this.machine, this.opts)
         }
         this.running = this.server.run()
     }
