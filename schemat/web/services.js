@@ -137,7 +137,12 @@ export class Service {
         return server.call(target, ...args)
     }
 
-    _is_local(target) { return SERVER }         // this works for extra-cluster communication, may need to be changed in subclasses
+    _is_local(target) {
+        /* True if `target` is locally accessible and executable on the current machine, which means
+           the service invocation should be performed via a local (not remote) call.
+         */
+        return SERVER       // this works for extra-cluster communication, like in HTTP between clients and servers; may need to be changed in subclasses
+    }
 
     _address(target, ...args) {}
     _submit(address, message) {}
