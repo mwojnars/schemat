@@ -91,7 +91,8 @@ export class Process {
             let agent = prev.refresh()
             next.push(agent)
             if (agent === prev) continue
-            promises.push(prev.__stop__(prev.__meta.state).then(async () => agent.__meta.state = await agent.__start__()))
+            promises.push(agent.__restart__(prev.__meta.state, prev).then(state => agent.__meta.state = state))
+            // promises.push(prev.__stop__(prev.__meta.state).then(async () => agent.__meta.state = await agent.__start__()))
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
         }
 

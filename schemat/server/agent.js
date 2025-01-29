@@ -15,8 +15,20 @@ export class Agent extends WebObject {
     // __num_workers    -- 0/1/N, the number of concurrent workers per node that should execute this agent's loop at the same time; 0 = "all available"
     // __meta.state     -- the state object returned by __start__(), to be passed to __stop__() when the microservice is to be terminated
 
+    quick_restart
+
     async __start__()     {}    // the returned state object is kept in __meta.state and then passed to __stop__()
     async __stop__(state) {}
+
+    async __restart__(state, prev) {
+        /* In many cases, refreshing an agent in the worker process does NOT require full stop+start, which might have undesired side effects
+           (temporary unavailability of the microservice). For this reason, __restart__() is called upon agent refresh - it can be customized
+           in subclasses, and the default implementation either does nothing (if quick_restart=true), or performs the full stop+start cycle.
+         */
+        if (this.quick_restart) return state
+        await prev.__stop__(state)
+        return this.__start__()
+    }
 }
 
 
