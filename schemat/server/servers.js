@@ -70,7 +70,7 @@ export class Process {
         // find agents in `agents` that are not in `current` and need to be started
         for (let agent of to_start) {
             next.push(agent)
-            promises.push(agent.load().then(async agent => agent.__self.state = await agent.__start__()))
+            promises.push(agent.load().then(async agent => agent.__self.__state = await agent.__start__()))
         }
 
         // find agents in `current` that are still in `agents` and need to be refreshed
@@ -78,11 +78,11 @@ export class Process {
             let agent = prev.refresh()
             next.push(agent)
             if (agent === prev) continue
-            promises.push(agent.__restart__(prev.__state, prev).then(state => agent.__self.state = state))
+            promises.push(agent.__restart__(prev.__state, prev).then(state => agent.__self.__state = state))
 
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
-            // promises.push(prev.__stop__(prev.__state).then(async () => agent.__self.state = await agent.__start__()))
+            // promises.push(prev.__stop__(prev.__state).then(async () => agent.__self.__state = await agent.__start__()))
         }
 
         await Promise.all(promises)
@@ -148,7 +148,7 @@ export class Process {
     //             if (!prev) {                            // deploy new agents...
     //                 for (let prop of external) if (agent[prop] !== undefined) agent._call_setup[prop](undefined, undefined, agent, agent[prop])
     //                 await agent.__install__()
-    //                 agent.__self.state = await agent.__start__()
+    //                 agent.__self.__state = await agent.__start__()
     //                 continue
     //             }
     //
@@ -159,9 +159,9 @@ export class Process {
     //             if (changes.length) {
     //                 await prev.__stop__(state)
     //                 // launch triggers...
-    //                 agent.__self.state = await agent.__start__()
+    //                 agent.__self.__state = await agent.__start__()
     //             }
-    //             else agent.__self.state = await agent.__restart__(state, prev)
+    //             else agent.__self.__state = await agent.__restart__(state, prev)
     //
     //         }
     //     }
