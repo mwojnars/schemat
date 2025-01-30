@@ -193,7 +193,7 @@ export class Machine extends KafkaAgent {
 
     async __start__() {
         let {kafka, ...rest} = await super.__start__()
-        let producer = kafka.producer()     // each node process (worker or master) has a single shared Kafka producer
+        let producer = kafka.producer()     // each node process (master/worker) has a single shared Kafka producer
         await producer.connect()
         return {kafka, producer, ...rest}
     }
