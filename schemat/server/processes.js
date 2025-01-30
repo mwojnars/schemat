@@ -69,11 +69,11 @@ export class MasterProcess extends Process {
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
-        let machine_id = this._read_machine_id()
+        let node_id = this._read_node_id()
         let Machine = await schemat.import('/$/sys/Machine')
 
-        if (machine_id)
-            this.node = await schemat.load(machine_id)
+        if (node_id)
+            this.node = await schemat.load(node_id)
         else {
             this.node = await Machine.new().save({ring: 'db-site'})
             fs.writeFileSync('./schemat/node.id', this.node.id.toString())
@@ -91,7 +91,7 @@ export class MasterProcess extends Process {
         this.running = this.server.run()
     }
 
-    _read_machine_id() {
+    _read_node_id() {
         try { return Number(fs.readFileSync('./schemat/node.id', 'utf8').trim()) }
         catch (ex) { print('node ID not found') }
     }
