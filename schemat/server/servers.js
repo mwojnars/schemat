@@ -229,8 +229,9 @@ export class Node extends KafkaAgent {
                 await agent.load()
                 await agent.__install__(this)       // this can modify the local environment of the host node
 
-                this.edit.add_installed(agent)
-                await this.save()
+                let node = this.get_mutable()
+                node.edit.add_installed(agent)
+                await node.save()
             }
         })
     }
