@@ -185,20 +185,23 @@ export class Machine extends KafkaAgent {
         return process.env.WORKER_ID || 0
     }
 
+    get __kafka_client() { return `node-${this.id}-worker-${this.worker_id}` }
+
     // get kafka() { return this.__state.kafka }
-    // get kafka_producer() { return this.__state.kafka_producer }
+    // get kafka_producer() { return this.__state.producer }
 
 
     async __start__() {
         let {Kafka} = await import('kafkajs')
-        let kafka = new Kafka({clientId: `node-${this.id}-worker-${this.worker_id}`, brokers: [`localhost:9092`]})
-        let kafka_producer = kafka.producer()
-        await kafka_producer.connect()
-        return {kafka, kafka_producer}
+        let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`]})
+
+        let producer = kafka.producer()
+        await producer.connect()
+        return {kafka, producer}
     }
 
-    async __stop__({kafka_producer}) {
-        await kafka_producer.disconnect()
+    async __stop__({producer}) {
+        await producer.disconnect()
     }
 
 

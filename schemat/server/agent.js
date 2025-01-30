@@ -77,19 +77,16 @@ export class Agent extends WebObject {
 export class KafkaAgent extends Agent {
     /* An agent whose event loop processes messages from a Kafka topic. The topic is named after this agent's ID. */
 
-    _kafka      // temporary Kafka instance
+    get __kafka_client() { return `agent-${this.id}` }
+    get __kafka_topic()  { return `topic-${this.id}` }
 
-    get __kafka_topic() { return `topic-${this.id}` }
-
-    async __init__() {
-        await super.__init__()
-        assert(Kafka)
-        this._kafka = new Kafka({clientId: `agent-${this.id}`, brokers: [`localhost:9092`]})
-    }
 
     async __start__() {
         /* Start the agent. Return an object of the form {consumer, running}, where `running` is a Promise returned by consumer.run(). */
-        let consumer = this._kafka.consumer({groupId: `group-${this.id}`, autoCommit: true})
+        assert(Kafka)
+        let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`]})
+
+        let consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true})
 
         await consumer.connect()
         await consumer.subscribe({topic: this.__kafka_topic, fromBeginning: true})
