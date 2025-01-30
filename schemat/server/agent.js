@@ -81,13 +81,15 @@ export class KafkaAgent extends Agent {
     get __kafka_topic()  { return `topic-${this.id}` }
 
 
-    async __start__() {
-        /* Start the agent. Return an object of the form {consumer, running}, where `running` is a Promise returned by consumer.run(). */
+    async __start__(start_consumer = true) {
+        /* Start the agent. Return an object of the form {kafka, consumer, consumer_running},
+           where `consumer_running` is a Promise returned by consumer.run().
+         */
         assert(Kafka)
         let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`]})
+        if (!start_consumer) return {kafka}
 
-        let consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true})
-
+        const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true})
         await consumer.connect()
         await consumer.subscribe({topic: this.__kafka_topic, fromBeginning: true})
         
@@ -103,7 +105,7 @@ export class KafkaAgent extends Agent {
     }
 
     async __stop__({consumer, consumer_running}) {
-        await consumer.disconnect()
+        await consumer?.disconnect()
         await consumer_running
     }
 }

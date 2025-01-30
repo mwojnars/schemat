@@ -21,8 +21,6 @@ export class Process {
         return process.env.WORKER_ID || 0
     }
 
-    // is_master() { return !this.worker_id}
-
     async run() {
         /* Run & refresh loop of active agents. */
         schemat.node = this.node
@@ -48,7 +46,7 @@ export class Process {
     }
 
     async _start_stop(current) {
-        /* In each iteration of the main loop, start/stop agents that should (or should not) be running now. */
+        /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
 
         let agents = this._get_agents_running()     // agents that *should* be running now on this process (possibly need to be started)
         if (schemat.is_closing) agents = []         // enforce clean shutdown by stopping all agents
@@ -193,9 +191,12 @@ export class Node extends KafkaAgent {
     // get kafka() { return this.__state.kafka }
     // get kafka_producer() { return this.__state.producer }
 
+    is_master_process() { return !this.worker_id}
 
     async __start__() {
-        let {kafka, ...rest} = await super.__start__()
+        let start_consumer = this.is_master_process()       // only the master process deploys a node-wise consumer
+        let {kafka, ...rest} = await super.__start__(start_consumer)
+
         let producer = kafka.producer()     // each node process (master/worker) has a single shared Kafka producer
         await producer.connect()
         return {kafka, producer, ...rest}
