@@ -50,7 +50,6 @@ export class MasterProcess extends Process {
     /* Top-level Schemat process running on a given node. Spawns and manages worker processes that execute agents:
        web server(s), data server(s), load balancer etc.
      */
-    machine         // the Machine web object that represents the physical machine this process is running on
     workers         // array of Node.js Worker instances (child processes); only present in the primary process
     server          // in a subprocess, the Server instance started inside the worker
     running         // the Promise returned by .run() of the `server`
@@ -74,12 +73,12 @@ export class MasterProcess extends Process {
         let Machine = await schemat.import('/$/sys/Machine')
 
         if (machine_id)
-            this.machine = await schemat.load(machine_id)
+            this.node = await schemat.load(machine_id)
         else {
-            this.machine = await Machine.new().save({ring: 'db-site'})
-            fs.writeFileSync('./schemat/machine.id', this.machine.id.toString())
+            this.node = await Machine.new().save({ring: 'db-site'})
+            fs.writeFileSync('./schemat/node.id', this.node.id.toString())
         }
-        assert(this.machine)
+        assert(this.node)
 
         if (cluster.isPrimary) {                // in the primary process, start the workers...
             this._start_workers()
@@ -87,14 +86,14 @@ export class MasterProcess extends Process {
         }
         else {                                  // in the worker process, start this worker's server life-loop
             print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-            this.server = new Process(this.machine, this.opts)
+            this.server = new Process(this.node, this.opts)
         }
         this.running = this.server.run()
     }
 
     _read_machine_id() {
-        try { return Number(fs.readFileSync('./schemat/machine.id', 'utf8').trim()) }
-        catch (ex) { print('machine ID not found') }
+        try { return Number(fs.readFileSync('./schemat/node.id', 'utf8').trim()) }
+        catch (ex) { print('node ID not found') }
     }
 
     _start_workers(num_workers = 2) {
@@ -117,8 +116,8 @@ export class MasterProcess extends Process {
     async stop() {
         if (schemat.is_closing) return
 
-        let machine = await this.machine.reload()
-        let delay = machine.refresh_interval
+        let node = await this.node.reload()
+        let delay = node.refresh_interval
 
         if (cluster.isPrimary) print(`\nReceived kill signal, shutting down gracefully in approx. ${delay} seconds...`)
 
@@ -136,12 +135,12 @@ export class MasterProcess extends Process {
 
     _get_agents_running() {
         /* List of agents that should be running now on this process. When an agent is to be stopped, it should be first removed from this list. */
-        return this.machine.master_agents_running || []
+        return this.node.master_agents_running || []
     }
 
     // _install_agents() {
     //     // agents installed sequentially (no concurrency), to avoid conflicting temporary changes in the environment (like CWD)
-    //     process.chdir(schemat.machine.local_root || schemat.site.local_root)
+    //     process.chdir(schemat.node.local_root || schemat.site.local_root)
     // }
 }
 

@@ -11,8 +11,8 @@ import {Agent, JsonKAFKA, KafkaAgent} from "./agent.js";
 export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
-    constructor(machine, opts) {
-        this.machine = machine
+    constructor(node, opts) {
+        this.node = node        // Machine web object that represents the physical node this process is running on
         this.opts = opts
     }
 
@@ -25,22 +25,22 @@ export class Process {
 
     async run() {
         /* Run & refresh loop of active agents. */
-        schemat.node = this.machine
+        schemat.node = this.node
 
         let running = []        // list of agents currently running on this process, each of them has __meta.state
 
         while (true) {
             let beginning = Date.now()
-            schemat.node = this.machine = this.machine.refresh()
+            schemat.node = this.node = this.node.refresh()
 
             running = await this._start_stop(running)
 
             if (schemat.is_closing)
                 if (running.length) continue; else break            // let the currently-running agents gently stop
 
-            [this.machine, ...running].map(obj => obj.refresh())    // schedule a reload of relevant objects in the background, for next iteration
+            [this.node, ...running].map(obj => obj.refresh())       // schedule a reload of relevant objects in the background, for next iteration
 
-            let remaining = this.machine.refresh_interval * 1000 - (Date.now() - beginning)
+            let remaining = this.node.refresh_interval * 1000 - (Date.now() - beginning)
             if (remaining > 0) await delay(remaining)
         }
 
@@ -91,13 +91,13 @@ export class Process {
 
     _get_agents_running() {
         /* List of agents that should be running now on this process. When an agent is to be stopped, it should be first removed from this list. */
-        return this.machine.agents_running || []
+        return this.node.agents_running || []
     }
 
 
     // async loop() {
     //     while (true) {
-    //         this.machine = this.machine.refresh()
+    //         this.node = this.node.refresh()
     //
     //         // `oper` is one of: undefined, 'install', 'uninstall', 'dump'
     //         // `migrate` is a callback that sends the dump data to a new host
