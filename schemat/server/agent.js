@@ -16,20 +16,22 @@ export class KafkaService extends Service {
         // return target.__node$.some(node => node.id === schemat.node.id)
     }
 
-    async _address(target) {
-        return target.__kafka_topic    // target.__node.__kafka_topic ??
-    }
-
     async _submit(target, message) {
         if (this.endpoint_type !== 'KAFKA') throw new Error(`KafkaService can only be exposed at KAFKA endpoint, not ${this.endpoint}`)
         if (message && typeof message !== 'string') message = JSON.stringify(message)
 
-        // create kafka producer and send message
-        const topic = target.__kafka_topic
-        const producer = target._kafka.producer()   // schemat.node.kafka_producer  -- single shared connected producer per worker process
-        await producer.connect()
-        await producer.send({topic, messages: [{value: message}]})
-        await producer.disconnect()
+        // send `message` to the target's topic
+        let topic = target.__kafka_topic
+        return schemat.node.kafka_send({topic, messages: [{value: message}]})   // send via a shared Kafka producer
+
+        // let producer = schemat.node.kafka_producer      // shared producer, already connected
+        // return producer.send({topic, messages: [{value: message}]})
+
+        // const topic = target.__kafka_topic
+        // const producer = target._kafka.producer()
+        // await producer.connect()
+        // await producer.send({topic, messages: [{value: message}]})   // or sendBatch() to write multiple messages to different topics
+        // await producer.disconnect()
     }
 }
 
