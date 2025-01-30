@@ -52,14 +52,14 @@ export class Agent extends WebObject {
 
     // __node / __node$ -- the host node(s) where this agent is installed/running
     // __num_workers    -- 0/1/N, the number of concurrent workers per node that should execute this agent's loop at the same time; 0 = "all available"
-    // __meta.state     -- the state object returned by __start__(), to be passed to __stop__() when the microservice is to be terminated
+    // __state          -- the state object returned by __start__(), to be passed to __stop__() when the microservice is to be terminated
 
     quick_restart
 
     async __install__(node) {}      // ideally, this method should be idempotent in case of failure and subsequent re-launch
     async __uninstall__(node) {}
 
-    async __start__()     {}    // the returned state object is kept in __meta.state and then passed to __stop__()
+    async __start__()     {}        // the returned state object is kept in this.__state and then passed to __stop__()
     async __stop__(state) {}
 
     async __restart__(state, prev) {

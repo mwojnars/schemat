@@ -27,7 +27,7 @@ export class Process {
         /* Run & refresh loop of active agents. */
         schemat.node = this.node
 
-        let running = []        // list of agents currently running on this process, each of them has __meta.state
+        let running = []        // list of agents currently running on this process, each of them has __state
 
         while (true) {
             let beginning = Date.now()
@@ -65,12 +65,12 @@ export class Process {
 
         // find agents in `current` that are not in `agents` and need to be stopped
         for (let agent of to_stop)
-            promises.push(agent.__stop__(agent.__meta.state))
+            promises.push(agent.__stop__(agent.__state))
 
         // find agents in `agents` that are not in `current` and need to be started
         for (let agent of to_start) {
             next.push(agent)
-            promises.push(agent.load().then(async agent => agent.__meta.state = await agent.__start__()))
+            promises.push(agent.load().then(async agent => agent.__self.state = await agent.__start__()))
         }
 
         // find agents in `current` that are still in `agents` and need to be refreshed
@@ -78,11 +78,11 @@ export class Process {
             let agent = prev.refresh()
             next.push(agent)
             if (agent === prev) continue
-            promises.push(agent.__restart__(prev.__meta.state, prev).then(state => agent.__meta.state = state))
+            promises.push(agent.__restart__(prev.__state, prev).then(state => agent.__self.state = state))
 
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
-            // promises.push(prev.__stop__(prev.__meta.state).then(async () => agent.__meta.state = await agent.__start__()))
+            // promises.push(prev.__stop__(prev.__state).then(async () => agent.__self.state = await agent.__start__()))
         }
 
         await Promise.all(promises)
@@ -106,7 +106,7 @@ export class Process {
     //             if (schemat.is_closing) return
     //             if (!oper) continue                     // no action if the agent instance hasn't changed
     //
-    //             let state = prev?.__meta.state
+    //             let state = prev?.__state
     //             let external = (agent || prev)._external_props
     //
     //             // cases:
@@ -130,7 +130,7 @@ export class Process {
     //             if (schemat.is_closing) return
     //             if (prev === agent) continue            // no action if the agent instance hasn't changed
     //
-    //             let state = prev?.__meta.state
+    //             let state = prev?.__state
     //             let external = (agent || prev)._external_props
     //
     //             if (!agent) {                           // stop old agents...
@@ -148,7 +148,7 @@ export class Process {
     //             if (!prev) {                            // deploy new agents...
     //                 for (let prop of external) if (agent[prop] !== undefined) agent._call_setup[prop](undefined, undefined, agent, agent[prop])
     //                 await agent.__install__()
-    //                 agent.__meta.state = await agent.__start__()
+    //                 agent.__self.state = await agent.__start__()
     //                 continue
     //             }
     //
@@ -159,9 +159,9 @@ export class Process {
     //             if (changes.length) {
     //                 await prev.__stop__(state)
     //                 // launch triggers...
-    //                 agent.__meta.state = await agent.__start__()
+    //                 agent.__self.state = await agent.__start__()
     //             }
-    //             else agent.__meta.state = await agent.__restart__(state, prev)
+    //             else agent.__self.state = await agent.__restart__(state, prev)
     //
     //         }
     //     }
