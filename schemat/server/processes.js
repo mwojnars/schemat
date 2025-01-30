@@ -51,7 +51,7 @@ export class MasterProcess extends Process {
        web server(s), data server(s), load balancer etc.
      */
     workers         // array of Node.js Worker instances (child processes); only present in the primary process
-    server          // in a subprocess, the Server instance started inside the worker
+    server          // the Process instance running inside the current process (master/worker)
     running         // the Promise returned by .run() of the `server`
 
     async start(opts) {
@@ -84,7 +84,7 @@ export class MasterProcess extends Process {
             this._start_workers()
             this.server = this
         }
-        else {                                  // in the worker process, start this worker's server life-loop
+        else {                                  // in the worker process, start this worker's Process instance
             print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
             this.server = new Process(this.node, this.opts)
         }
