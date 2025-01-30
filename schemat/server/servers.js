@@ -220,7 +220,7 @@ export class Node extends KafkaAgent {
         this.agents_installed = installed.filter(a => a.id !== agent.id)
     }
 
-    async 'KAFKA.install'() {
+    'KAFKA.install'() {
         /* Call agent.__install__() on this node and add the agent to `agents_installed`. If start=true, the agent
            is also added to `agents_running` and is started on the next iteration of the host process's life loop.
          */

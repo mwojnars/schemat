@@ -12,6 +12,7 @@ export class KafkaService extends Service {
 
     _is_local(target) {
         assert(target.is_loaded())
+        assert(target.__node, 'not an agent or not deployed anywhere')
         return target.__node.id === schemat.node.id
         // return target.__node$.some(node => node.id === schemat.node.id)
     }
