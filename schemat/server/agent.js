@@ -91,7 +91,7 @@ export class KafkaAgent extends Agent {
         await consumer.connect()
         await consumer.subscribe({topic: this.__kafka_topic, fromBeginning: true})
         
-        let running = consumer.run({
+        let consumer_running = consumer.run({
             eachMessage: async ({topic, partition, message}) => {
                 print(`${topic}[${partition}]: ${message.value}`)
 
@@ -99,12 +99,12 @@ export class KafkaAgent extends Agent {
                 // await consumer.commitOffsets([{topic, partition, offset: (BigInt(message.offset) + 1n).toString()}])
             }
         })
-        return {consumer, running}
+        return {kafka, consumer, consumer_running}
     }
 
-    async __stop__({consumer, running}) {
+    async __stop__({consumer, consumer_running}) {
         await consumer.disconnect()
-        await running
+        await consumer_running
     }
 }
 

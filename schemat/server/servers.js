@@ -192,16 +192,15 @@ export class Machine extends KafkaAgent {
 
 
     async __start__() {
-        let {Kafka} = await import('kafkajs')
-        let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`]})
-
-        let producer = kafka.producer()
+        let {kafka, ...rest} = await super.__start__()
+        let producer = kafka.producer()     // each node process (worker or master) has a single shared Kafka producer
         await producer.connect()
-        return {kafka, producer}
+        return {kafka, producer, ...rest}
     }
 
-    async __stop__({producer}) {
+    async __stop__({producer, ...rest}) {
         await producer.disconnect()
+        await super.__stop__(rest)
     }
 
 
