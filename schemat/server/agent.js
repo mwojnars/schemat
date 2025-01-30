@@ -20,20 +20,17 @@ export class KafkaService extends Service {
         return target.__kafka_topic    // target.__node.__kafka_topic ??
     }
 
-    async _submit(topic, message) {
+    async _submit(target, message) {
         if (this.endpoint_type !== 'KAFKA') throw new Error(`KafkaService can only be exposed at KAFKA endpoint, not ${this.endpoint}`)
         if (message && typeof message !== 'string') message = JSON.stringify(message)
-
         assert(Kafka)
 
         // create kafka producer and send message
+        const topic = target.__kafka_topic
         const client = new Kafka(schemat.kafka_config)
         const producer = client.producer()
         await producer.connect()
-        await producer.send({
-            topic,
-            messages: [{value: message}]
-        })
+        await producer.send({topic, messages: [{value: message}]})
         await producer.disconnect()
     }
 }

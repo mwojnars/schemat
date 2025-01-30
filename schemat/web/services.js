@@ -119,8 +119,8 @@ export class Service {
            Subclasses should override this method to encode arguments in a service-specific way.
          */
         let message  = this.input.encode(...args)
-        let address  = this._address(target, ...args)
-        let response = await this._submit(address, message)
+        // let address  = this._address(target, ...args)
+        let response = await this._submit(target, message)
         let result   = await this._parse_response(response)
         return this.output.decode(result)
     }
@@ -144,8 +144,8 @@ export class Service {
         return SERVER       // this works for extra-cluster communication, like in HTTP between clients and servers; must be changed for intra-cluster comm
     }
 
-    _address(target, ...args) {}
-    _submit(address, message) {}
+    // _address(target, ...args) {}
+    _submit(target, message)  {}
     _parse_response(response) {}
 }
 
@@ -159,12 +159,13 @@ export class HttpService extends Service {
     static output = mString
     static error  = mJsonError
 
-    _address(target) {
-        return target.url(this.endpoint_name)      // `target` should be a WebObject with .url()
-    }
+    // _address(target) {
+    //     return target.url(this.endpoint_name)      // `target` should be a WebObject with .url()
+    // }
 
-    async _submit(url, message) {
+    async _submit(target, message) {
         /* `message`, if present, should be a plain object to be encoded into GET query string ?k=v&... */
+        let url = target.url(this.endpoint_name)
         if (!T.isEmpty(message)) {
             if (!T.isPlain(message)) throw new Error(`cannot encode as a HTTP GET query string (${message})`)
             url = url_query(url, message)
@@ -227,7 +228,8 @@ export class JsonPOST extends HttpService {
     static input  = mJsonxArray     // client submits an ...args array of JSONx-encoded arguments
     static output = mJsonx          // server responds with a single JSONx-encoded object
 
-    async _submit(url, message) {
+    async _submit(target, message) {
+        let url = target.url(this.endpoint_name)
         if (this.endpoint_type !== 'POST') throw new Error(`JsonPOST can only be exposed at HTTP POST endpoint, not ${this.endpoint}`)
         if (message && typeof message !== 'string') message = JSON.stringify(message)
         let params = {method: 'POST', body: message, headers: {}}
