@@ -12,7 +12,7 @@ export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
     constructor(node, opts) {
-        this.node = node        // Machine web object that represents the physical node this process is running on
+        this.node = node        // Node web object that represents the physical node this process is running on
         this.opts = opts
     }
 
@@ -170,7 +170,7 @@ export class Process {
 
 /**********************************************************************************************************************/
 
-export class Machine extends KafkaAgent {
+export class Node extends KafkaAgent {
 
     agents_installed
     agents_running

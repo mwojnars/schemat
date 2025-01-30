@@ -611,8 +611,8 @@
   __category:
     "@": 1
 - __id: 21
-  name: Machine
-  class: schemat/server/servers.js:Machine
+  name: Node
+  class: schemat/server/servers.js:Node
   schema:
     agents_installed:
       info: list of Agent objects installed on this machine

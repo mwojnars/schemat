@@ -133,7 +133,7 @@
       "@": 16
     Stream:
       "@": 17
-    Machine:
+    Node:
       "@": 21
     "@": schemat:Catalog
   __container:

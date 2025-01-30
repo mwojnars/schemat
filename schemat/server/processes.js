@@ -70,12 +70,12 @@ export class MasterProcess extends Process {
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
         let node_id = this._read_node_id()
-        let Machine = await schemat.import('/$/sys/Machine')
+        let Node = await schemat.import('/$/sys/Node')
 
         if (node_id)
             this.node = await schemat.load(node_id)
         else {
-            this.node = await Machine.new().save({ring: 'db-site'})
+            this.node = await Node.new().save({ring: 'db-site'})
             fs.writeFileSync('./schemat/node.id', this.node.id.toString())
         }
         assert(this.node)
