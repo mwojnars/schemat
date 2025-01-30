@@ -181,23 +181,28 @@ export class Machine extends KafkaAgent {
 
     refresh_interval
 
-    'edit.install_agent'(agent) {
-        /* Check that the `agent` is not yet on the list of agents_installed and add it at the end. */
+    'edit.add_installed'(agent) {
+        /* Check that the `agent` is not yet on the list of agents_installed and add it at the end. Idempotent. */
         let installed = (this.agents_installed ??= [])
-        if (installed.some(a => a.id === agent.id)) throw new Error('Agent already installed')
-        installed.push(agent)
+        if (installed.every(a => a.id !== agent.id)) installed.push(agent)
+    }
+
+    'edit.remove_installed'(agent) {
+        /* Remove the `agent` from the list of agents_installed. Idempotent. */
+        let installed = this.agents_installed || []
+        this.agents_installed = installed.filter(a => a.id !== agent.id)
     }
 
     async 'KAFKA.install'() {
-        /* Call agent.__install__() on this node and add the agent to `agents_installed`. If run=true, the agent
-           is also added to `agents_running` and is started on the next iteration of this node's life loop.
+        /* Call agent.__install__() on this node and add the agent to `agents_installed`. If start=true, the agent
+           is also added to `agents_running` and is started on the next iteration of the host process's life loop.
          */
         return new JsonKAFKA({
             server: async (agent, start = true) => {
                 await agent.load()
-                await agent.__install__(this)       // can modify the local environment of the host node
+                await agent.__install__(this)       // this can modify the local environment of the host node
 
-                this.edit.install_agent(agent)
+                this.edit.add_installed(agent)
                 await this.save()
             }
         })
