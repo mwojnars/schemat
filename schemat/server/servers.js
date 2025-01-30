@@ -180,11 +180,27 @@ export class Machine extends KafkaAgent {
 
     refresh_interval
 
-    async __start__() {
+    get worker_id() {
+        /* Numeric ID (1, 2, 3, ...) of the current worker process; 0 for the master process. */
+        return process.env.WORKER_ID || 0
     }
 
-    async __stop__(state) {
+    // get kafka() { return this.__state.kafka }
+    // get kafka_producer() { return this.__state.kafka_producer }
+
+
+    async __start__() {
+        let {Kafka} = await import('kafkajs')
+        let kafka = new Kafka({clientId: `node-${this.id}-worker-${this.worker_id}`, brokers: [`localhost:9092`]})
+        let kafka_producer = kafka.producer()
+        await kafka_producer.connect()
+        return {kafka, kafka_producer}
     }
+
+    async __stop__({kafka_producer}) {
+        await kafka_producer.disconnect()
+    }
+
 
     'edit.add_installed'(agent) {
         /* Check that the `agent` is not yet on the list of agents_installed and add it at the end. Idempotent. */
