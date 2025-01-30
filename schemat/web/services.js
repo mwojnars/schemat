@@ -255,9 +255,27 @@ export class KafkaService extends Service {
     async _address(target) {
         return target.__kafka_topic    // target.__node.__kafka_topic ??
     }
+
+    async _submit(topic, message) {
+        if (this.endpoint_type !== 'KAFKA') throw new Error(`KafkaService can only be exposed at KAFKA endpoint, not ${this.endpoint}`)
+        if (message && typeof message !== 'string') message = JSON.stringify(message)
+        
+        // create kafka producer and send message
+        const client = new Kafka(schemat.kafka_config)
+        const producer = client.producer()
+        await producer.connect()
+        await producer.send({
+            topic,
+            messages: [{value: message}]
+        })
+        await producer.disconnect()
+    }
 }
 
-export class JsonKAFKA extends KafkaService {}
+export class JsonKAFKA extends KafkaService {
+    static input  = mJsonxArray
+    static output = mJsonx
+}
 
 
 /**********************************************************************************************************************/
