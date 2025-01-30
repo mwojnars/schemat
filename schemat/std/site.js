@@ -3,7 +3,7 @@ import {UrlPathNotFound} from "../common/errors.js"
 import {Request} from '../web/request.js'
 import {WebObject} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
-import {JsonPOST, JsonKAFKA} from "../web/services.js";
+import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
 
 
@@ -190,12 +190,6 @@ export class Site extends WebObject {
 
 
     /***  Endpoints  ***/
-
-    'KAFKA.action'() {
-        return new JsonKAFKA({
-
-        })
-    }
 
     'POST.action'() {
         /* Submit a server-side action to be executed at the physical location of the target object. */

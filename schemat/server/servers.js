@@ -3,6 +3,7 @@ import {ServerTimeoutError} from "../common/errors.js";
 import {Request} from "../web/request.js";
 import {WebObject} from "../core/object.js";
 import {Agent, KafkaAgent} from "./agent.js";
+import {JsonKAFKA} from "../web/services.js";
 // import {thread_local_variable} from "./thread.js";
 
 
@@ -180,27 +181,36 @@ export class Machine extends KafkaAgent {
 
     refresh_interval
 
-    'edit.add_agent'(agent) {
+    'edit.install_agent'(agent) {
         /* Check that the `agent` is not yet on the list of agents_installed and add it at the end. */
         let installed = (this.agents_installed ??= [])
         if (installed.some(a => a.id === agent.id)) throw new Error('Agent already installed')
         installed.push(agent)
     }
 
-    async 'action.install'(agent, run = true) {
+    async 'KAFKA.install'() {
         /* Call agent.__install__() on this node and add the agent to `agents_installed`. If run=true, the agent
-           is added to `agents_running`, as well, and gets started on the next iteration of this node's life loop.
+           is also added to `agents_running` and is started on the next iteration of this node's life loop.
          */
-        // TODO: this action *must* be executed on the physical node represented by `this` !!
-        await agent.load()
-        await agent.__install__(this)       // modifies the local environment of this node
+        return new JsonKAFKA({
+            server: async (agent, start = true) => {
+                await agent.load()
+                await agent.__install__(this)       // can modify the local environment of the host node
 
-        this.edit.add_agent(agent)
-        // this['agents_installed[-1]'] = agent
+                this.edit.install_agent(agent)
+                await this.save()
+            }
+        })
+    }
+
+    async 'KAFKA.uninstall'(agent) {}
+
+    async 'action.start'(agent) {
+        // confirm that `agent` is installed and stopped...
+
+        this.agents_running.push(agent)
         await this.save()
     }
-    async 'action.uninstall'(agent) {}
-    async 'action.start'(agent) {}
     async 'action.stop'(agent) {}
 }
 
