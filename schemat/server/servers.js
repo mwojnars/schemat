@@ -180,6 +180,12 @@ export class Machine extends KafkaAgent {
 
     refresh_interval
 
+    async __start__() {
+    }
+
+    async __stop__(state) {
+    }
+
     'edit.add_installed'(agent) {
         /* Check that the `agent` is not yet on the list of agents_installed and add it at the end. Idempotent. */
         let installed = (this.agents_installed ??= [])
