@@ -23,12 +23,10 @@ export class KafkaService extends Service {
     async _submit(target, message) {
         if (this.endpoint_type !== 'KAFKA') throw new Error(`KafkaService can only be exposed at KAFKA endpoint, not ${this.endpoint}`)
         if (message && typeof message !== 'string') message = JSON.stringify(message)
-        assert(Kafka)
 
         // create kafka producer and send message
         const topic = target.__kafka_topic
-        const client = new Kafka(schemat.kafka_config)
-        const producer = client.producer()
+        const producer = target._kafka.producer()
         await producer.connect()
         await producer.send({topic, messages: [{value: message}]})
         await producer.disconnect()
@@ -76,6 +74,8 @@ export class Agent extends WebObject {
 
 export class KafkaAgent extends Agent {
     /* An agent whose event loop processes messages from a Kafka topic. The topic is named after this agent's ID. */
+
+    _kafka      // temporary Kafka instance
 
     get __kafka_topic() { return `topic-${this.id}` }
 
