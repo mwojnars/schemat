@@ -244,42 +244,6 @@ export class JsonPOST extends HttpService {
 
 /**********************************************************************************************************************/
 
-export class KafkaService extends Service {
-
-    _is_local(target) {
-        assert(target.is_loaded())
-        return target.__node.id === schemat.current_node.id
-        // return target.__node$.some(node => node.id === schemat.current_node.id)
-    }
-
-    async _address(target) {
-        return target.__kafka_topic    // target.__node.__kafka_topic ??
-    }
-
-    async _submit(topic, message) {
-        if (this.endpoint_type !== 'KAFKA') throw new Error(`KafkaService can only be exposed at KAFKA endpoint, not ${this.endpoint}`)
-        if (message && typeof message !== 'string') message = JSON.stringify(message)
-        
-        // create kafka producer and send message
-        const client = new Kafka(schemat.kafka_config)
-        const producer = client.producer()
-        await producer.connect()
-        await producer.send({
-            topic,
-            messages: [{value: message}]
-        })
-        await producer.disconnect()
-    }
-}
-
-export class JsonKAFKA extends KafkaService {
-    static input  = mJsonxArray
-    static output = mJsonx
-}
-
-
-/**********************************************************************************************************************/
-
 // export class Network {
 //     /*
 //        Network interface of a `target` object. Handles incoming communication through resolve(), and outgoing

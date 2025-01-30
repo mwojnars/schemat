@@ -2,8 +2,7 @@ import {assert, print, timeout, delay} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {Request} from "../web/request.js";
 import {WebObject} from "../core/object.js";
-import {Agent, KafkaAgent} from "./agent.js";
-import {JsonKAFKA} from "../web/services.js";
+import {Agent, JsonKAFKA, KafkaAgent} from "./agent.js";
 // import {thread_local_variable} from "./thread.js";
 
 
