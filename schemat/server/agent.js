@@ -12,8 +12,8 @@ export class KafkaService extends Service {
 
     _is_local(target) {
         assert(target.is_loaded())
-        return target.__node.id === schemat.current_node.id
-        // return target.__node$.some(node => node.id === schemat.current_node.id)
+        return target.__node.id === schemat.node.id
+        // return target.__node$.some(node => node.id === schemat.node.id)
     }
 
     async _address(target) {
@@ -26,7 +26,7 @@ export class KafkaService extends Service {
 
         // create kafka producer and send message
         const topic = target.__kafka_topic
-        const producer = target._kafka.producer()
+        const producer = target._kafka.producer()   // schemat.node.kafka_producer  -- single shared connected producer per worker process
         await producer.connect()
         await producer.send({topic, messages: [{value: message}]})
         await producer.disconnect()
@@ -82,11 +82,7 @@ export class KafkaAgent extends Agent {
     async __init__() {
         await super.__init__()
         assert(Kafka)
-
-        this._kafka = new Kafka({
-            clientId: `agent-${this.id}`,
-            brokers: [`localhost:9092`]
-        })
+        this._kafka = new Kafka({clientId: `agent-${this.id}`, brokers: [`localhost:9092`]})
     }
 
     async __start__() {
