@@ -41,7 +41,6 @@ export class Service {
                         // where PROTOCOL is one of GET/POST/LOCAL/..., and the name is a service name
 
     opts = {
-        type:  'POST',
         input:  null,
         output: null,
         server: null,   // a function, f(request, ...args), to be called on the server when the protocol is invoked;
