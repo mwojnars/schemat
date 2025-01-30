@@ -627,7 +627,7 @@
       "@": schemat/types/type.js:ARRAY
     agents_running:
       info: list of installed Agent objects that should be currently running on this
-        machine
+        node
       type:
         category:
           "@": 29

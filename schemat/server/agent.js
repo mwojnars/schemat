@@ -113,7 +113,7 @@ export class KafkaAgent extends Agent {
 // export class Driver extends WebObject {}
 
 export class KafkaBroker extends Agent {
-    async __install__(node /*machine*/) {
+    async __install__(node) {
         /*
            Assumption: Kafka must be already installed in /opt/kafka folder.
          */
