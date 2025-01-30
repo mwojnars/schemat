@@ -639,6 +639,8 @@
         run().
       "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
+  __prototype:
+    "@": 29
   __category:
     "@": 1
   __container:
