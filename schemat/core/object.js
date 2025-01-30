@@ -898,7 +898,9 @@ export class WebObject {
 
             self[protocol][name] = (...args) => {
                 let result = handler.call(this)
-                return result instanceof Service ? result.invoke(this, endpoint, ...args) : result
+                let invoke = (res) => res instanceof Service ? res.invoke(this, endpoint, ...args) : res
+                if (result instanceof Promise) return result.then(invoke)
+                return invoke(result)
             }
         }
     }
