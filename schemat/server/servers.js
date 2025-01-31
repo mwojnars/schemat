@@ -230,7 +230,7 @@ export class Node extends KafkaAgent {
     }
 
     'edit.delete_running'(agent) {
-        /* Remove the `agent` from the list of agents_running and master_agents_running. Idempotent. */
+        /* Remove the `agent` from the list of agents_running and master_agents_running, if present. Idempotent. */
         this.agents_running = this.agents_running.filter(a => a.id !== agent.id)
         this.master_agents_running = this.master_agents_running.filter(a => a.id !== agent.id)
     }
@@ -261,12 +261,18 @@ export class Node extends KafkaAgent {
             server: async (agent, {stop = true} = {}) => {
                 await agent.load()
                 
+                // let workers know that the agent should be stopped
                 let node = this.get_mutable()
-                if (stop) node.edit.delete_running(agent)
+                node.edit.delete_running(agent)
+                await node.save()
+
+                // TODO: wait for confirmation(s) that the agent is stopped
+                await delay((this.refresh_interval + 1) * 1000)
+
                 node.edit.delete_installed(agent)
+                await node.save()
                 
                 await agent.__uninstall__(this)     // clean up any node-specific resources
-                await node.save()
             }
         })
     }
