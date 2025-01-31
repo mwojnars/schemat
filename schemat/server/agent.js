@@ -124,7 +124,9 @@ export class KafkaBroker extends Agent {
         // node.site_root    -- root directory of the entire Schemat installation; working directory for every install/uninstall/start/stop
         // node.app_root     -- root directory of the application (can be a subfolder in site_root)
 
-        let {exec} = await import('child_process')
+        let {exec} = await import('node:child_process')
+        let {promisify} = await import('node:util')
+        let exec_promise = promisify(exec)
 
         let id = node.id
         let kafka_root = node.kafka_root
@@ -149,7 +151,9 @@ export class KafkaBroker extends Agent {
 
         // create local storage in ./local/kafka with a fixed cluster id ("CLUSTER"), but unique node.id:
         let command = `/opt/kafka/bin/kafka-storage.sh format -t CLUSTER -c ${props_path} ${overrides}`
-        let {stdout, stderr} = await exec(command, {cwd: node.site_root})
+        print('KafkaBroker.__install__():', command)
+        
+        let {stdout, stderr} = await exec_promise(command, {cwd: node.site_root})
 
         print(`Kafka storage formatted: ${stdout}`)
         if (stderr) print(`Kafka storage format stderr: ${stderr}`)
