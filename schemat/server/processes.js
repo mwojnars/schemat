@@ -53,6 +53,7 @@ export class MasterProcess extends Process {
     workers         // array of Node.js Worker instances (child processes); only present in the primary process
     server          // the Process instance running inside the current process (master/worker)
     running         // the Promise returned by .run() of the `server`
+    worker_pids     // PID to WORKER_ID association
 
     async start(opts) {
         // node = schemat.get_loaded(this_node_ID)
@@ -97,18 +98,22 @@ export class MasterProcess extends Process {
     }
 
     _start_workers(num_workers = 2) {
+        print(`starting ${num_workers} worker(s) in the master process (PID=${process.pid})...`)
 
         this.workers = []
-        print(`starting the main process (PID=${process.pid}) with ${num_workers} worker(s)...`)
+        this.worker_pids = new Map()
 
-        for (let i = 0; i < num_workers; i++)
-            this.workers[i] = cluster.fork({WORKER_ID: i + 1})
+        for (let i = 0; i < num_workers; i++) {
+            let worker = this.workers[i] = cluster.fork({WORKER_ID: i + 1})
+            this.worker_pids.set(worker.process.pid, i + 1)
+        }
 
         cluster.on('exit', (worker) => {
             if (schemat.is_closing) return
-            let id = worker.process.env.WORKER_ID
+            let id = this.worker_pids.get(worker.process.pid)               // retrieve WORKER_ID using PID
             print(`worker #${id} (PID=${worker.process.pid}) exited`)
-            this.workers[id-1] = worker = cluster.fork({WORKER_ID: id})      // restart the process
+            this.workers[id-1] = worker = cluster.fork({WORKER_ID: id})     // restart the process
+            this.worker_pids.set(worker.process.pid, id)                    // update the map with new PID
             print(`worker #${id} (PID=${worker.process.pid}) restarted`)
         })
     }
