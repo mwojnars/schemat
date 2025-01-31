@@ -137,6 +137,10 @@ export class KafkaBroker extends Agent {
         let broker_port = node.kafka_port || 9092
         let controller_port = node.kafka_controller_port || 9093
 
+        // // create directory structure
+        // let fs = await import('fs')
+        // await fs.promises.mkdir(kafka_path, {recursive: true})
+
         let overrides = [
             `--override node.id=${id}`,
             `--override log.dirs="${kafka_path}"`,
@@ -145,15 +149,20 @@ export class KafkaBroker extends Agent {
             `--override controller.quorum.voters=${id}@${host}:${controller_port}`,
         ].join(' ')
 
-        // // create directory structure
-        // let fs = await import('fs')
-        // await fs.promises.mkdir(kafka_path, {recursive: true})
+        let env = {
+            ...process.env,     // preserve existing environment variables
+            KAFKA_NODE_ID: id,
+            KAFKA_LOG_DIRS: kafka_path,
+            KAFKA_LISTENERS: `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
+            KAFKA_ADVERTISED_LISTENERS: `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
+            KAFKA_CONTROLLER_QUORUM_VOTERS: `${id}@${host}:${controller_port}`,
+        }
 
         // create local storage in ./local/kafka with a fixed cluster id ("CLUSTER"), but unique node.id:
-        let command = `/opt/kafka/bin/kafka-storage.sh format -t CLUSTER -c ${props_path} ${overrides}`
+        let command = `/opt/kafka/bin/kafka-storage.sh format -t CLUSTER -c ${props_path}`  //${overrides}
         print('KafkaBroker.__install__():', command)
         
-        let {stdout, stderr} = await exec_promise(command, {cwd: node.site_root})
+        let {stdout, stderr} = await exec_promise(command, {cwd: node.site_root, env})
 
         print(`Kafka storage formatted: ${stdout}`)
         if (stderr) print(`Kafka storage format stderr: ${stderr}`)
