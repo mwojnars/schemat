@@ -126,6 +126,7 @@ export class KafkaBroker extends Agent {
 
         let {exec} = await import('node:child_process')
         let {promisify} = await import('node:util')
+        let {readFile, writeFile, mkdir, rm} = await import('fs/promises')
         let exec_promise = promisify(exec)
 
         let id = node.id
@@ -137,9 +138,9 @@ export class KafkaBroker extends Agent {
         let broker_port = node.kafka_port || 9092
         let controller_port = node.kafka_controller_port || 9093
 
-        // // create directory structure
-        // let fs = await import('fs')
-        // await fs.promises.mkdir(kafka_path, {recursive: true})
+        // create directory structure
+        await rm(kafka_path, {recursive: true, force: true})  // ensure the folder is empty
+        await mkdir(kafka_path, {recursive: true})
 
         // let overrides = [
         //     `--override node.id=${id}`,
@@ -148,22 +149,32 @@ export class KafkaBroker extends Agent {
         //     `--override advertised.listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
         //     `--override controller.quorum.voters=${id}@${host}:${controller_port}`,
         // ].join(' ')
+        //
+        // let env = {
+        //     KAFKA_NODE_ID: id,
+        //     KAFKA_LOG_DIRS: kafka_path,
+        //     KAFKA_LISTENERS: `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
+        //     KAFKA_ADVERTISED_LISTENERS: `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
+        //     KAFKA_CONTROLLER_QUORUM_VOTERS: `${id}@${host}:${controller_port}`,
+        // }
+        
+        // read and modify kafka.properties
+        let properties = await readFile(props_path, 'utf8')
+        properties = properties.replace(/node\.id=.*/, `node.id=${id}`)
+        properties = properties.replace(/log\.dirs=.*/, `log.dirs="${kafka_path}"`)
+        properties = properties.replace(/listeners=.*/, `listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`)
+        properties = properties.replace(/advertised\.listeners=.*/, `advertised.listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`)
+        properties = properties.replace(/controller\.quorum\.voters=.*/, `controller.quorum.voters=${id}@${host}:${controller_port}`)
 
-        let env = {
-            KAFKA_NODE_ID: id,
-            KAFKA_LOG_DIRS: kafka_path,
-            KAFKA_LISTENERS: `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
-            KAFKA_ADVERTISED_LISTENERS: `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
-            KAFKA_CONTROLLER_QUORUM_VOTERS: `${id}@${host}:${controller_port}`,
-        }
+        // save the modified properties file
+        let modified_props_path = `${kafka_path}/kafka.properties`
+        await writeFile(modified_props_path, properties)
 
         // create local storage in ./local/kafka with a fixed cluster id ("CLUSTER"), but unique node.id:
-        let command = `/opt/kafka/bin/kafka-storage.sh format -t CLUSTER -c ${props_path}`  //${overrides}
-        print('KafkaBroker.__install__():', env)
+        let command = `/opt/kafka/bin/kafka-storage.sh format -t CLUSTER -c ${modified_props_path}`
         print('KafkaBroker.__install__():', command)
 
-        env = {...process.env, ...env}      // preserve existing environment variables
-        let {stdout, stderr} = await exec_promise(command, {cwd: node.site_root, env})
+        let {stdout, stderr} = await exec_promise(command, {cwd: node.site_root})
 
         print(`Kafka storage formatted: ${stdout}`)
         if (stderr) print(`Kafka storage format stderr: ${stderr}`)
