@@ -178,16 +178,14 @@ export class KafkaBroker extends Agent {
     }
 
     async __uninstall__(node) {
-        let {exec} = await import('child_process')
-        let {rm} = await import('fs/promises')
-        
+
         // get paths
         let kafka_root = `./local/kafka`  //node.kafka_root
         let kafka_path = `${kafka_root}/node-${node.id}`
         
         // first remove the broker from the cluster
         let command = `/opt/kafka/bin/kafka-remove-broker.sh`
-        let {stdout, stderr} = await exec(command, {cwd: node.site_root})
+        let {stdout, stderr} = await exec_promise(command, {cwd: node.site_root})
         
         print(`Kafka broker removed: ${stdout}`)
         if (stderr) print(`Kafka broker removal stderr: ${stderr}`)
