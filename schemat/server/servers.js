@@ -207,14 +207,13 @@ export class Node extends KafkaAgent {
 
     'edit.add_installed'(agent) {
         /* Check that the `agent` is not yet in the array of agents_installed and add it at the end. Idempotent. */
-        let installed = (this.agents_installed ??= [])
-        if (installed.every(a => a.id !== agent.id)) installed.push(agent)
+        if (this.agents_installed.every(a => a.id !== agent.id))
+            this.agents_installed.push(agent)
     }
 
     'edit.delete_installed'(agent) {
         /* Remove the `agent` from the list of agents_installed. Idempotent. */
-        let installed = this.agents_installed || []
-        this.agents_installed = installed.filter(a => a.id !== agent.id)
+        this.agents_installed = this.agents_installed.filter(a => a.id !== agent.id)
     }
 
     'edit.add_running'(agent, {workers = true, master = false}) {
@@ -223,26 +222,20 @@ export class Node extends KafkaAgent {
          */
         if (!this.agents_installed?.some(a => a.id === agent.id)) throw new Error(`agent [${agent.id}] is not installed on node [${this.id}]`)
 
-        if (workers) {
-            let running = (this.agents_running ??= [])
-            if (running.every(a => a.id !== agent.id)) running.push(agent)
-        }
-        if (master) {
-            let master_running = (this.master_agents_running ??= [])
-            if (master_running.every(a => a.id !== agent.id)) master_running.push(agent)
-        }
+        if (workers && this.agents_running.every(a => a.id !== agent.id))
+            this.agents_running.push(agent)
+
+        if (master && this.master_agents_running.every(a => a.id !== agent.id))
+            this.master_agents_running.push(agent)
     }
 
     'edit.delete_running'(agent) {
         /* Remove the `agent` from the list of agents_running and master_agents_running. Idempotent. */
-        let running = (this.agents_running ??= [])
-        this.agents_running = running.filter(a => a.id !== agent.id)
-
-        let master_running = (this.master_agents_running ??= [])
-        this.master_agents_running = master_running.filter(a => a.id !== agent.id)
+        this.agents_running = this.agents_running.filter(a => a.id !== agent.id)
+        this.master_agents_running = this.master_agents_running.filter(a => a.id !== agent.id)
     }
 
-    
+
     'KAFKA.install'() {
         /* Call agent.__install__() on this node and add the agent to `agents_installed`. If start=true, the agent
            is also added to `agents_running` and is started on the next iteration of the host process's life loop.
