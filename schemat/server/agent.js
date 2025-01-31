@@ -161,7 +161,7 @@ export class KafkaBroker extends Agent {
         // read and modify kafka.properties
         let properties = await readFile(props_path, 'utf8')
         properties = properties.replace(/node\.id=.*/, `node.id=${id}`)
-        properties = properties.replace(/log\.dirs=.*/, `log.dirs="${kafka_path}"`)
+        properties = properties.replace(/log\.dirs=.*/, `log.dirs=${kafka_path}`)
         properties = properties.replace(/listeners=.*/, `listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`)
         properties = properties.replace(/advertised\.listeners=.*/, `advertised.listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`)
         properties = properties.replace(/controller\.quorum\.voters=.*/, `controller.quorum.voters=${id}@${host}:${controller_port}`)
