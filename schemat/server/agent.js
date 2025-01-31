@@ -120,6 +120,22 @@ export class KafkaAgent extends Agent {
 // export class Driver extends WebObject {}
 
 export class KafkaBroker extends Agent {
+
+    _overrides(node, kafka_path) {
+        let id = node.id
+        let host = node.kafka_host || node.host || 'localhost'
+        let broker_port = node.kafka_port || 9092
+        let controller_port = node.kafka_controller_port || 9093
+
+        return new Map([
+            ['node.id', id],
+            ['log.dirs', kafka_path],
+            ['listeners', `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`],
+            ['advertised.listeners', `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`],
+            ['controller.quorum.voters', `${id}@${host}:${controller_port}`]
+        ])
+    }
+
     async __install__(node) {
         /* Assumption: Kafka must be already installed in /opt/kafka folder. */
 
@@ -131,31 +147,14 @@ export class KafkaBroker extends Agent {
         let kafka_path = `${kafka_root}/node-${id}`
         let props_path = `./schemat/server/kafka.properties`
 
-        let host = node.kafka_host || node.host || 'localhost'
-        let broker_port = node.kafka_port || 9092
-        let controller_port = node.kafka_controller_port || 9093
-
         // create directory structure
         await rm(kafka_path, {recursive: true, force: true})  // ensure the folder is empty
         await mkdir(kafka_path, {recursive: true})
 
-        // read and modify kafka.properties
+        // read and modify kafka.properties by applying overrides
         let properties = await readFile(props_path, 'utf8')
-        let overrides = new Map([
-            ['node.id', id],
-            ['log.dirs', kafka_path],
-            ['listeners', `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`],
-            ['advertised.listeners', `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`],
-            ['controller.quorum.voters', `${id}@${host}:${controller_port}`]
-        ])
+        let overrides = this._overrides(node, kafka_path)
 
-        // properties = properties.replace(/node\.id=.*/, `node.id=${id}`)
-        // properties = properties.replace(/log\.dirs=.*/, `log.dirs=${kafka_path}`)
-        // properties = properties.replace(/listeners=.*/, `listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`)
-        // properties = properties.replace(/advertised\.listeners=.*/, `advertised.listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`)
-        // properties = properties.replace(/controller\.quorum\.voters=.*/, `controller.quorum.voters=${id}@${host}:${controller_port}`)
-
-        // apply all overrides using the map
         for (let [key, value] of overrides)
             properties = properties.replace(new RegExp(`${key.replace('.', '\\.')}=.*`), `${key}=${value}`)
 
