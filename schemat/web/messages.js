@@ -4,6 +4,12 @@ import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../core/catalog.js";
 
 
+function _valid_code(code) {
+    // validate HTTP status code
+    if (code && code >= 100 && code < 600) return code
+    return 500
+}
+
 /**********************************************************************************************************************/
 
 export class MessageEncoder {
@@ -22,7 +28,7 @@ export class MessageEncoder {
     }
 
     encode_error(error) {
-        return [error.message || 'Internal Error', error.code || 500]
+        return [error.message || 'Internal Error', _valid_code(error.code)]
     }
     decode_error(message, code) {
         throw new RequestFailed({message, code})
@@ -50,12 +56,12 @@ export class mJsonBase extends MessageEncoder {
 }
 
 export class mJsonError extends mJsonBase {
-    encode_error(error)     { let {name, message} = error; return [JSON.stringify({error: {name, message}}), error.code || 500] }
+    encode_error(error)     { let {name, message} = error; return [JSON.stringify({error: {name, message}}), _valid_code(error.code)] }
     decode_error(msg, code) { throw msg ? new RequestFailed({...JSON.parse(msg).error, code}) : new Error(`Unexpected error`) }
 }
 
 export class mJsonxError extends mJsonBase {
-    encode_error(error)     { return [JSONx.stringify({error}), error.code || 500] }
+    encode_error(error)     { return [JSONx.stringify({error}), _valid_code(error.code)] }
     decode_error(msg, code) { throw msg ? JSONx.parse(msg).error : new Error(`Unexpected error`) }
 }
 
