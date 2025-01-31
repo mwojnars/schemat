@@ -175,10 +175,7 @@ export class Node extends KafkaAgent {
 
     agents_installed
     agents_running
-
-    master_agents_installed
     master_agents_running
-
     refresh_interval
 
     get worker_id() {
@@ -224,9 +221,16 @@ export class Node extends KafkaAgent {
         /* Check that the `agent` is installed and not yet on the list of agents_running and/or master_agents_running,
            then add it to the corresponding array(s). Idempotent.
          */
-        
-        let installed = (this.agents_installed ??= [])
-        if (installed.every(a => a.id !== agent.id)) installed.push(agent)
+        if (!this.agents_installed?.some(a => a.id === agent.id)) throw new Error(`agent [${agent.id}] is not installed on node [${this.id}]`)
+
+        if (workers) {
+            let running = (this.agents_running ??= [])
+            if (running.every(a => a.id !== agent.id)) running.push(agent)
+        }
+        if (master) {
+            let master_running = (this.master_agents_running ??= [])
+            if (master_running.every(a => a.id !== agent.id)) master_running.push(agent)
+        }
     }
 
     'KAFKA.install'() {
