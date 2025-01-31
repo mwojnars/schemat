@@ -248,14 +248,15 @@ export class Schemat {
         return Promise.all(objs)
     }
 
-    async get_loaded(id) {
-        // TODO: update the timestamp `last_requested`
-        return this.get_object(id).load()
+    async get_loaded(...ids) {
+        /* Load and return the web object identified by a given ID. If multiple `ids` are provided, an array of objects is returned. */
+        if (ids.length >= 2) return Promise.all(ids.map(id => this.get_object(id).load()))
+        return this.get_object(ids[0]).load()
     }
 
-    async load(id) {
+    async load(...args) {
         /* Alias for get_loaded(). */
-        return this.get_loaded(id)
+        return this.get_loaded(...args)
     }
 
     async reload(id, strict = false) {
