@@ -214,7 +214,7 @@ export class Node extends KafkaAgent {
         if (installed.every(a => a.id !== agent.id)) installed.push(agent)
     }
 
-    'edit.remove_installed'(agent) {
+    'edit.delete_installed'(agent) {
         /* Remove the `agent` from the list of agents_installed. Idempotent. */
         let installed = this.agents_installed || []
         this.agents_installed = installed.filter(a => a.id !== agent.id)
@@ -231,6 +231,7 @@ export class Node extends KafkaAgent {
 
                 let node = this.get_mutable()
                 node.edit.add_installed(agent)
+                // node.edit('agents_installed', []).add(agent)
                 await node.save()
             }
         })
