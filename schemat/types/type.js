@@ -254,12 +254,11 @@ export class Type {
 
 export class GENERIC extends Type {
     /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
-    static options = {repeated: true}
     static Widget = widgets.GENERIC_Widget
 }
 
 // the most generic type for encoding/decoding of objects of any types
-export let generic_type = new GENERIC()
+export let generic_type = new GENERIC({repeated: true})
 
 
 /**********************************************************************************************************************
@@ -607,11 +606,10 @@ export class VARIANT extends Type {
 
 
 export class ARRAY extends GENERIC {
-    /* Represents arrays of objects, all of the same `type` (generic_type by default). */
+    /* Represents arrays of objects of a given `type` (generic_type by default). */
 
     static options = {
         type: generic_type,         // type of all elements in the array, as a Type instance
-        repeated: false,
     }
     static Widget = widgets.ARRAY_Widget
 
