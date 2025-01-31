@@ -38,7 +38,7 @@ export class Process {
 
             [this.node, ...running].map(obj => obj.refresh())       // schedule a reload of relevant objects in the background, for next iteration
 
-            let remaining = this.node.refresh_interval * 1000 - (Date.now() - beginning)
+            let remaining = this.node.refresh_interval - (Date.now() - beginning) / 1000
             if (remaining > 0) await sleep(remaining)
         }
 
@@ -355,7 +355,7 @@ export class WebServer extends Agent {
         // })
 
         try {
-            // await sleep(3000)
+            // await sleep(3)
             let request = new Request({req, res})
             let handler = schemat.site.route(request)
 
@@ -386,7 +386,7 @@ export class WebServer extends Agent {
         // await schemat.after_request()
         // print(`handle() worker ${process.pid} finished: ${req.path}`)
 
-        // await sleep(200)                 // for testing
+        // await sleep(0.2)                 // for testing
         // session.printCounts()
         // await session.stop()
     }
