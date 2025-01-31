@@ -174,7 +174,7 @@ export class KafkaBroker extends Agent {
         let kafka_root = `./local/kafka`  //node.kafka_root
         let kafka_path = `${kafka_root}/node-${node.id}`
         await rm(kafka_path, {recursive: true, force: true})
-        print(`removed Kafka data directory: ${kafka_path}`)
+        print(`KafkaBroker.__uninstall__() removed: ${kafka_path}`)
     }
 
     async __start__() {
