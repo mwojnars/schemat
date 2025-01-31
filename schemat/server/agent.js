@@ -129,7 +129,7 @@ export class KafkaBroker extends Agent {
         let exec_promise = promisify(exec)
 
         let id = node.id
-        let kafka_root = node.kafka_root
+        let kafka_root = `./local/kafka`  //node.kafka_root
         let kafka_path = `${kafka_root}/node-${id}`
         let props_path = `./schemat/server/kafka.properties`
 
@@ -141,16 +141,15 @@ export class KafkaBroker extends Agent {
         // let fs = await import('fs')
         // await fs.promises.mkdir(kafka_path, {recursive: true})
 
-        let overrides = [
-            `--override node.id=${id}`,
-            `--override log.dirs="${kafka_path}"`,
-            `--override listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
-            `--override advertised.listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
-            `--override controller.quorum.voters=${id}@${host}:${controller_port}`,
-        ].join(' ')
+        // let overrides = [
+        //     `--override node.id=${id}`,
+        //     `--override log.dirs="${kafka_path}"`,
+        //     `--override listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
+        //     `--override advertised.listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
+        //     `--override controller.quorum.voters=${id}@${host}:${controller_port}`,
+        // ].join(' ')
 
         let env = {
-            ...process.env,     // preserve existing environment variables
             KAFKA_NODE_ID: id,
             KAFKA_LOG_DIRS: kafka_path,
             KAFKA_LISTENERS: `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
@@ -160,8 +159,10 @@ export class KafkaBroker extends Agent {
 
         // create local storage in ./local/kafka with a fixed cluster id ("CLUSTER"), but unique node.id:
         let command = `/opt/kafka/bin/kafka-storage.sh format -t CLUSTER -c ${props_path}`  //${overrides}
+        print('KafkaBroker.__install__():', env)
         print('KafkaBroker.__install__():', command)
-        
+
+        env = {...process.env, ...env}      // preserve existing environment variables
         let {stdout, stderr} = await exec_promise(command, {cwd: node.site_root, env})
 
         print(`Kafka storage formatted: ${stdout}`)
