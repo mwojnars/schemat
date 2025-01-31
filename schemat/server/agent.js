@@ -4,6 +4,10 @@ import {mJsonx, mJsonxArray} from "../web/messages.js";
 import {Service} from "../web/services.js";
 
 let {Kafka} = await tryimport('kafkajs') || {}
+let {exec} = await tryimport('child_process') || {}     // node:child_process
+let {promisify} = await tryimport('util') || {}         // node:util
+let {readFile, writeFile, mkdir, rm} = await tryimport('fs/promises') || {}
+let exec_promise = exec && promisify(exec)
 
 
 /**********************************************************************************************************************/
@@ -117,17 +121,10 @@ export class KafkaAgent extends Agent {
 
 export class KafkaBroker extends Agent {
     async __install__(node) {
-        /*
-           Assumption: Kafka must be already installed in /opt/kafka folder.
-         */
+        /* Assumption: Kafka must be already installed in /opt/kafka folder. */
 
         // node.site_root    -- root directory of the entire Schemat installation; working directory for every install/uninstall/start/stop
         // node.app_root     -- root directory of the application (can be a subfolder in site_root)
-
-        let {exec} = await import('node:child_process')
-        let {promisify} = await import('node:util')
-        let {readFile, writeFile, mkdir, rm} = await import('fs/promises')
-        let exec_promise = promisify(exec)
 
         let id = node.id
         let kafka_root = `./local/kafka`  //node.kafka_root
@@ -185,7 +182,7 @@ export class KafkaBroker extends Agent {
         let {rm} = await import('fs/promises')
         
         // get paths
-        let kafka_root = node.kafka_root
+        let kafka_root = `./local/kafka`  //node.kafka_root
         let kafka_path = `${kafka_root}/node-${node.id}`
         
         // first remove the broker from the cluster
