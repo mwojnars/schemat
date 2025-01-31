@@ -620,6 +620,7 @@
   schema:
     agents_installed:
       info: Array of Agent objects installed on this machine.
+      default: []
       type:
         category:
           "@": 29
@@ -628,6 +629,7 @@
     agents_running:
       info: Array of installed Agents that should be currently running on worker
         processes of this node.
+      default: []
       type:
         category:
           "@": 29
@@ -636,6 +638,7 @@
     master_agents_running:
       info: Array of installed Agents that should be currently running on the master
         process of this node.
+      default: []
       type:
         category:
           "@": 29

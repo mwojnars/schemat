@@ -237,11 +237,12 @@ export class Node extends KafkaAgent {
         /* Remove the `agent` from the list of agents_running and master_agents_running. Idempotent. */
         let running = (this.agents_running ??= [])
         this.agents_running = running.filter(a => a.id !== agent.id)
-        
+
         let master_running = (this.master_agents_running ??= [])
         this.master_agents_running = master_running.filter(a => a.id !== agent.id)
     }
 
+    
     'KAFKA.install'() {
         /* Call agent.__install__() on this node and add the agent to `agents_installed`. If start=true, the agent
            is also added to `agents_running` and is started on the next iteration of the host process's life loop.
