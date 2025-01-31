@@ -258,7 +258,7 @@ export class Node extends KafkaAgent {
 
     'KAFKA.uninstall'() {
         return new JsonKAFKA({
-            server: async (agent, {stop = true} = {}) => {
+            server: async (agent) => {
                 await agent.load()
                 
                 let node = this.get_mutable()
