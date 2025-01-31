@@ -146,15 +146,7 @@ export class KafkaBroker extends Agent {
         //     `--override advertised.listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
         //     `--override controller.quorum.voters=${id}@${host}:${controller_port}`,
         // ].join(' ')
-        //
-        // let env = {
-        //     KAFKA_NODE_ID: id,
-        //     KAFKA_LOG_DIRS: kafka_path,
-        //     KAFKA_LISTENERS: `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
-        //     KAFKA_ADVERTISED_LISTENERS: `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
-        //     KAFKA_CONTROLLER_QUORUM_VOTERS: `${id}@${host}:${controller_port}`,
-        // }
-        
+
         // read and modify kafka.properties
         let properties = await readFile(props_path, 'utf8')
         properties = properties.replace(/node\.id=.*/, `node.id=${id}`)

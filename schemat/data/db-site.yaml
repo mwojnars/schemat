@@ -264,6 +264,7 @@
     "@": 1024
   __category:
     "@": 21
+  master_agents_running: []
 - __id: 1025
   name: cluster
   __category:
