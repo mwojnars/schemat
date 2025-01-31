@@ -121,7 +121,15 @@ export class KafkaAgent extends Agent {
 
 export class KafkaBroker extends Agent {
 
-    _overrides(node, kafka_path) {
+    // node.site_root    -- root directory of the entire Schemat installation; working directory for every install/uninstall/start/stop
+    // node.app_root     -- root directory of the application (can be a subfolder in site_root)
+
+    get kafka_root() { return schemat.node.kafka_root || `./local/kafka` }
+    get kafka_path() { return `${this.kafka_root}/node-${schemat.node.id}` }
+    get props_path() { return `${this.kafka_path}/kafka.properties` }
+
+    get settings() {
+        let node = schemat.node
         let id = node.id
         let host = node.kafka_host || node.host || 'localhost'
         let broker_port = node.kafka_port || 9092
@@ -129,62 +137,66 @@ export class KafkaBroker extends Agent {
 
         return new Map([
             ['node.id', id],
-            ['log.dirs', kafka_path],
+            ['log.dirs', this.kafka_path],
             ['listeners', `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`],
             ['advertised.listeners', `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`],
             ['controller.quorum.voters', `${id}@${host}:${controller_port}`]
         ])
     }
 
-    async __install__(node) {
+    async __install__() {
         /* Assumption: Kafka must be already installed in /opt/kafka folder. */
 
-        // node.site_root    -- root directory of the entire Schemat installation; working directory for every install/uninstall/start/stop
-        // node.app_root     -- root directory of the application (can be a subfolder in site_root)
+        let props_path_original = `./schemat/server/kafka.properties`
 
-        let id = node.id
-        let kafka_root = `./local/kafka`  //node.kafka_root
-        let kafka_path = `${kafka_root}/node-${id}`
-        let props_path = `./schemat/server/kafka.properties`
-
-        // create directory structure
-        await rm(kafka_path, {recursive: true, force: true})  // ensure the folder is empty
-        await mkdir(kafka_path, {recursive: true})
+        // create directory structure, ensure the folder is empty
+        await rm(this.kafka_path, {recursive: true, force: true})
+        await mkdir(this.kafka_path, {recursive: true})
 
         // read and modify kafka.properties by applying overrides
-        let properties = await readFile(props_path, 'utf8')
-        let overrides = this._overrides(node, kafka_path)
+        let properties = await readFile(props_path_original, 'utf8')
 
-        for (let [key, value] of overrides)
+        for (let [key, value] of this.settings)
             properties = properties.replace(new RegExp(`${key.replace('.', '\\.')}=.*`), `${key}=${value}`)
 
         // save the modified properties file
-        let modified_props_path = `${kafka_path}/kafka.properties`
-        await writeFile(modified_props_path, properties)
+        await writeFile(this.props_path, properties)
 
         // create local storage in ./local/kafka with a fixed cluster id ("CLUSTER"), but unique node.id:
-        let command = `/opt/kafka/bin/kafka-storage.sh format -t CLUSTER -c ${modified_props_path}`
+        let command = `/opt/kafka/bin/kafka-storage.sh format -t CLUSTER -c ${this.props_path}`
         print('KafkaBroker.__install__():', command)
 
-        let {stdout, stderr} = await exec_promise(command, {cwd: node.site_root})
+        let {stdout, stderr} = await exec_promise(command, {cwd: schemat.node.site_root})
 
         print(`Kafka storage formatted: ${stdout}`)
         if (stderr) print(`Kafka storage format stderr: ${stderr}`)
     }
 
-    async __uninstall__(node) {
+    async __uninstall__() {
         /* Revert the installation of the Kafka broker. It is assumed that the broker is already stopped, so the data directory can be safely removed. */
-        let kafka_root = `./local/kafka`  //node.kafka_root
-        let kafka_path = `${kafka_root}/node-${node.id}`
-        await rm(kafka_path, {recursive: true, force: true})
-        print(`KafkaBroker.__uninstall__() removed: ${kafka_path}`)
+        await rm(this.kafka_path, {recursive: true, force: true})
+        print(`KafkaBroker.__uninstall__() removed: ${this.kafka_path}`)
     }
 
     async __start__() {
-        // start Kafka broker
-        // /opt/kafka/bin/kafka-server-start.sh ${props_path} ${overrides}
+        // apply overrides using --override option
+        let overrides = Array.from(this.settings).map(([key, value]) => `--override ${key}=${value}`).join(' ')
+        let command = `/opt/kafka/bin/kafka-server-start.sh ${this.props_path} ${overrides}`
+        print('KafkaBroker.__start__():', command)
+
+        let {stdout, stderr} = await exec_promise(command, {cwd: schemat.node.site_root})
+
+        print(`Kafka broker started: ${stdout}`)
+        if (stderr) print(`Kafka broker start stderr: ${stderr}`)
     }
+
     async __stop__() {
-        // /opt/kafka/bin/kafka-server-stop.sh
+        let command = `/opt/kafka/bin/kafka-server-stop.sh`
+        print('KafkaBroker.__stop__():', command)
+
+        let {stdout, stderr} = await exec_promise(command, {cwd: schemat.node.site_root})
+
+        print(`Kafka broker stopped: ${stdout}`)
+        if (stderr) print(`Kafka broker stop stderr: ${stderr}`)
     }
 }
