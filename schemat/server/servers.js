@@ -261,18 +261,15 @@ export class Node extends KafkaAgent {
             server: async (agent, {stop = true} = {}) => {
                 await agent.load()
                 
-                // let workers know that the agent should be stopped
                 let node = this.get_mutable()
-                node.edit.delete_running(agent)
+                node.edit.delete_running(agent)             // let workers know that the agent should be stopped
                 await node.save()
+                await sleep(this.refresh_interval + 1)      // TODO: wait for actual confirmation(s) that the agent is stopped on all processes
 
-                // TODO: wait for confirmation(s) that the agent is stopped
-                await delay((this.refresh_interval + 1) * 1000)
-
-                node.edit.delete_installed(agent)
+                node.edit.delete_installed(agent)           // mark the agent as uninstalled
                 await node.save()
                 
-                await agent.__uninstall__(this)     // clean up any node-specific resources
+                await agent.__uninstall__(this)             // clean up any node-specific resources
             }
         })
     }
