@@ -7,7 +7,7 @@
  */
 
 import {ROOT_ID, PLURAL, SUBFIELD} from '../common/globals.js'
-import {print, assert, T, escape_html, concat, unique, delay} from '../common/utils.js'
+import {print, assert, T, escape_html, concat, unique, sleep} from '../common/utils.js'
 import {NotLoaded, ValidationError} from '../common/errors.js'
 
 import {Catalog, Struct} from './catalog.js'
@@ -680,7 +680,7 @@ export class WebObject {
 
     // async _init_url() {
     //     while (!schemat.site) {                                     // wait until the site is created; important for bootstrap objects
-    //         await delay()
+    //         await sleep()
     //         if (schemat.is_closing) return                          // site is closing? no need to wait any longer
     //     }
     //

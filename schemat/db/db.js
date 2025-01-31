@@ -1,4 +1,4 @@
-import {T, assert, print, merge, fileBaseName, delay} from '../common/utils.js'
+import {T, assert, print, merge, fileBaseName, sleep} from '../common/utils.js'
 import {DatabaseError} from "../common/errors.js"
 import {WebObject} from "../core/object.js"
 import {DataOperator} from "./sequence.js";

@@ -1,4 +1,4 @@
-import {print, assert, T, delay, splitLast, normalizePath} from '../common/utils.js'
+import {print, assert, T, sleep, splitLast, normalizePath} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
 import {Request} from '../web/request.js'
 import {WebObject} from '../core/object.js'
@@ -53,7 +53,7 @@ export class Site extends WebObject {
     }
 
     async _check_default_container() {
-        while (!schemat.site) await delay()
+        while (!schemat.site) await sleep()
         let default_container = await this.resolve(this.default_path.slice(1))
 
         // check that default_path maps to a container...

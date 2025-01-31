@@ -1,4 +1,4 @@
-import {assert, print, timeout, delay} from '../common/utils.js'
+import {assert, print, timeout, sleep} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {Request} from "../web/request.js";
 import {WebObject} from "../core/object.js";
@@ -39,7 +39,7 @@ export class Process {
             [this.node, ...running].map(obj => obj.refresh())       // schedule a reload of relevant objects in the background, for next iteration
 
             let remaining = this.node.refresh_interval * 1000 - (Date.now() - beginning)
-            if (remaining > 0) await delay(remaining)
+            if (remaining > 0) await sleep(remaining)
         }
 
         print(`Server closed (process #${this.worker_id})`)
