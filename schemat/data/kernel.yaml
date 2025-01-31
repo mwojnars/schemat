@@ -619,15 +619,23 @@
     Kafka, and in this way they form a distributed compute & storage cluster.
   schema:
     agents_installed:
-      info: list of Agent objects installed on this machine
+      info: Array of Agent objects installed on this machine.
       type:
         category:
           "@": 29
         "@": schemat/types/type.js:REF
       "@": schemat/types/type.js:ARRAY
     agents_running:
-      info: list of installed Agent objects that should be currently running on this
-        node
+      info: Array of installed Agents that should be currently running on worker
+        processes of this node.
+      type:
+        category:
+          "@": 29
+        "@": schemat/types/type.js:REF
+      "@": schemat/types/type.js:ARRAY
+    master_agents_running:
+      info: Array of installed Agents that should be currently running on the master
+        process of this node.
       type:
         category:
           "@": 29
