@@ -139,21 +139,25 @@ export class KafkaBroker extends Agent {
         await rm(kafka_path, {recursive: true, force: true})  // ensure the folder is empty
         await mkdir(kafka_path, {recursive: true})
 
-        // let overrides = [
-        //     `--override node.id=${id}`,
-        //     `--override log.dirs="${kafka_path}"`,
-        //     `--override listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
-        //     `--override advertised.listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`,
-        //     `--override controller.quorum.voters=${id}@${host}:${controller_port}`,
-        // ].join(' ')
-
         // read and modify kafka.properties
         let properties = await readFile(props_path, 'utf8')
-        properties = properties.replace(/node\.id=.*/, `node.id=${id}`)
-        properties = properties.replace(/log\.dirs=.*/, `log.dirs=${kafka_path}`)
-        properties = properties.replace(/listeners=.*/, `listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`)
-        properties = properties.replace(/advertised\.listeners=.*/, `advertised.listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`)
-        properties = properties.replace(/controller\.quorum\.voters=.*/, `controller.quorum.voters=${id}@${host}:${controller_port}`)
+        let overrides = new Map([
+            ['node.id', id],
+            ['log.dirs', kafka_path],
+            ['listeners', `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`],
+            ['advertised.listeners', `PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`],
+            ['controller.quorum.voters', `${id}@${host}:${controller_port}`]
+        ])
+
+        // properties = properties.replace(/node\.id=.*/, `node.id=${id}`)
+        // properties = properties.replace(/log\.dirs=.*/, `log.dirs=${kafka_path}`)
+        // properties = properties.replace(/listeners=.*/, `listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`)
+        // properties = properties.replace(/advertised\.listeners=.*/, `advertised.listeners=PLAINTEXT://${host}:${broker_port},CONTROLLER://${host}:${controller_port}`)
+        // properties = properties.replace(/controller\.quorum\.voters=.*/, `controller.quorum.voters=${id}@${host}:${controller_port}`)
+
+        // apply all overrides using the map
+        for (let [key, value] of overrides)
+            properties = properties.replace(new RegExp(`${key.replace('.', '\\.')}=.*`), `${key}=${value}`)
 
         // save the modified properties file
         let modified_props_path = `${kafka_path}/kafka.properties`
