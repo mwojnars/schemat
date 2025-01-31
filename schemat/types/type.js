@@ -611,6 +611,7 @@ export class ARRAY extends GENERIC {
 
     static options = {
         type: generic_type,         // type of all elements in the array, as a Type instance
+        repeated: false,
     }
     static Widget = widgets.ARRAY_Widget
 
