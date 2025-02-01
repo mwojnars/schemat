@@ -309,7 +309,7 @@ export class WebObject {
 
     __ttl_left() {
         /* Remaining time between now and __meta.expire_at, in seconds. Returns a different value on each call, that's why it's not a getter. */
-        return (this.__meta.expire_at - Date.now()) / 1000
+        return ((this.__meta.expire_at || 0) - Date.now()) / 1000
     }
 
     // get __infant_references() {
@@ -491,7 +491,7 @@ export class WebObject {
         this.__meta.loading = loading = this._load(opts)
 
         let id = this.id
-        if (id && schemat.get_object(id) === this)
+        if (id && schemat.registry.get_object(id) === this)
             schemat._loading.set(id, loading.then(() => {schemat._loading.delete(id); return this}))
 
         return loading
