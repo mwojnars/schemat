@@ -222,7 +222,9 @@ export class WebObject {
     __category              category of this item, as a Category object; there can be multiple __category$; they can be inherited from __prototype$
     __container             Container of this item, for canonical URL generation
     __status                a string describing the current state of this object in the DB, e.g., "DELETED"; undefined means normal state
+
     __ttl                   time-to-live of this object in the registry, in seconds; 0 = immediate eviction on the next cache purge
+    __ttl_ms                same as __ttl, but in milliseconds
 
     __ident                 (virtual) string identifier of this object inside its __container
     __path                  (virtual) URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
@@ -304,6 +306,11 @@ export class WebObject {
     }
 
     get _ttl_ms() { return this.__ttl * 1000 }
+
+    __ttl_left() {
+        /* Remaining time between now and __meta.expire_at, in seconds. Returns a different value on each call, that's why it's not a getter. */
+        return (this.__meta.expire_at - Date.now()) / 1000
+    }
 
     // get __infant_references() {
     //     /* Array of all newborn WebObjects referenced from this one. */
