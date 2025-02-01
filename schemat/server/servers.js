@@ -29,17 +29,28 @@ export class Process {
 
         while (true) {
             let beginning = Date.now()
-            schemat.node = this.node = this.node.refresh()
+            // schemat.node = this.node = this.node.refresh()
+
+            let new_node = this.node.refresh()
+            if (new_node.__ttl_left() < 0) new_node = await new_node.reload()
+            schemat.node = this.node = new_node
+
+            // if (new_node !== this.node) print(`worker ${this.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
+            // else print(`worker ${this.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
 
             running = await this._start_stop(running)
 
             if (schemat.is_closing)
                 if (running.length) continue; else break            // let the currently-running agents gently stop
 
-            [this.node, ...running].map(obj => obj.refresh())       // schedule a reload of relevant objects in the background, for next iteration
+            let passed = (Date.now() - beginning) / 1000
+            let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
 
-            let remaining = this.node.refresh_interval - (Date.now() - beginning) / 1000
-            if (remaining > 0) await sleep(remaining)
+            let remaining = this.node.refresh_interval - offset_sec - passed
+            if (remaining > 0) await sleep(remaining);
+
+            [this.node, ...running].map(obj => obj.refresh())       // schedule a reload of relevant objects in the background, for next iteration
+            await sleep(offset_sec)
         }
 
         print(`Server closed (process #${this.worker_id})`)
@@ -62,18 +73,23 @@ export class Process {
         let next = []                               // agents started in this loop iteration, or already running
 
         // find agents in `current` that are not in `agents` and need to be stopped
-        for (let agent of to_stop)
+        for (let agent of to_stop) {
+            print('will stop:', agent.id, 'at', this.node.id, 'worker', this.worker_id)
             promises.push(agent.__stop__(agent.__state))
+        }
 
         // find agents in `agents` that are not in `current` and need to be started
         for (let agent of to_start) {
+            if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
             next.push(agent)
-            promises.push(agent.load().then(async agent => agent.__self.__state = await agent.__start__()))
+            promises.push(agent.__start__().then(state => agent.__self.__state = state))
+            // promises.push(agent.load().then(async agent => agent.__self.__state = await agent.__start__()))
         }
 
         // find agents in `current` that are still in `agents` and need to be refreshed
         for (let prev of to_refresh) {
             let agent = prev.refresh()
+            if (agent.__ttl_left() < 0) agent = await agent.reload()
             next.push(agent)
             if (agent === prev) continue
             promises.push(agent.__restart__(prev.__state, prev).then(state => agent.__self.__state = state))
@@ -264,7 +280,7 @@ export class Node extends KafkaAgent {
                 let node = this.get_mutable()
                 node.edit.delete_running(agent)             // let workers know that the agent should be stopped
                 await node.save()
-                await sleep(this.refresh_interval + 1)      // TODO: wait for actual confirmation(s) that the agent is stopped on all processes
+                await sleep(this.refresh_interval * 2)      // TODO: wait for actual confirmation(s) that the agent is stopped on all processes
 
                 node.edit.delete_installed(agent)           // mark the agent as uninstalled
                 await node.save()
