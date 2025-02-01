@@ -648,7 +648,7 @@ export class WebObject {
             schemat.reload(id)                      // intentionally un-awaited: the reload is done in the background
 
         // also, schedule a reload if the object's age is more than 90% of its TTL
-        else if ((obj.__meta.loaded_at || 0) + obj.__ttl_ms * 0.9 < Date.now())
+        else if (obj.__ttl_left() <= 0.1 * obj.__ttl)
             schemat.reload(id)
 
         return obj?.is_loaded() ? obj : this
