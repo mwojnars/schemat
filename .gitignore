@@ -45,7 +45,7 @@ nosetests.xml
 .idea/workspace.xml
 .idea/ocr.iml
 
-
+local
 _data_
 app-demo
 varia/phd
