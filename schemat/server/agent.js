@@ -184,13 +184,14 @@ export class KafkaBroker extends Agent {
         let command = `/opt/kafka/bin/kafka-server-start.sh ${this.props_path} ${overrides}`
         print('KafkaBroker.__start__():', command)
 
-        let {stdout, stderr} = await exec_promise(command, {cwd: schemat.node.site_root})
+        return exec(command, {cwd: schemat.node.site_root})
 
-        print(`Kafka broker started: ${stdout}`)
-        if (stderr) print(`Kafka broker start stderr: ${stderr}`)
+        // let {stdout, stderr} = await exec_promise(command, {cwd: schemat.node.site_root})
+        // print(`Kafka broker started: ${stdout}`)
+        // if (stderr) print(`Kafka broker start stderr: ${stderr}`)
     }
 
-    async __stop__() {
+    async __stop__(server_running) {
         let command = `/opt/kafka/bin/kafka-server-stop.sh`
         print('KafkaBroker.__stop__():', command)
 
@@ -198,5 +199,8 @@ export class KafkaBroker extends Agent {
 
         print(`Kafka broker stopped: ${stdout}`)
         if (stderr) print(`Kafka broker stop stderr: ${stderr}`)
+
+        await server_running
+        print(`Kafka server stopped`)
     }
 }
