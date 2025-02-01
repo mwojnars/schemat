@@ -641,14 +641,22 @@ export class WebObject {
          */
         // schemat.prepare(obj)     // schedule a reload of this object in the background for another refresh(); not awaited
         let id = this.id
-        let obj = schemat.get_object(id) || this
+        let obj = schemat.registry.get_object(id) || this
         let {json} = schemat.get_record(id) || {}
+
+        if (!obj.is_loaded()) obj = this
+
+        // if (id === 1024) {  // DEBUG
+        //     let left = obj.__ttl_left()
+        //     let get = schemat.registry.get_object(id)
+        //     print(`refresh() id=${id} ttl left ${left}, get_object ${get ? 'YES' : 'NO'} loaded ${get?.is_loaded() ? 'YES' : 'NO'}`)
+        // }
 
         if (json && json !== obj.__json_source)     // a newer record is present in the Registry or __refresh? schedule a reload...
             schemat.reload(id)                      // intentionally un-awaited: the reload is done in the background
 
-        // also, schedule a reload if the object's age is more than 90% of its TTL
-        else if (obj.__ttl_left() <= 0.1 * obj.__ttl)
+        // also, schedule a reload if the object's age is more than 80% of its TTL
+        else if (obj.__ttl_left() < 0.2 * obj.__ttl)
             schemat.reload(id)
 
         return obj?.is_loaded() ? obj : this
