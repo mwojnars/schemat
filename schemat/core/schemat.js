@@ -302,7 +302,7 @@ export class Schemat {
         if (rec) return {json: rec, loaded_at: Date.now()}      // TODO: better to keep true `loaded_at` in Registry
 
         let obj = this.get_object(id)
-        let ttl = obj.__ttl || 0
+        let ttl = obj.__ttl * 1000 || 0
         let {json, loaded_at} = obj?.__refresh || {}
 
         // at least 20% of this record's TTL (as measured by the existing object's TTL) must be still available

@@ -222,7 +222,7 @@ export class WebObject {
     __category              category of this item, as a Category object; there can be multiple __category$; they can be inherited from __prototype$
     __container             Container of this item, for canonical URL generation
     __status                a string describing the current state of this object in the DB, e.g., "DELETED"; undefined means normal state
-    __ttl                   time-to-live of this object in the registry, in milliseconds; 0 = immediate eviction on the next cache purge
+    __ttl                   time-to-live of this object in the registry, in seconds; 0 = immediate eviction on the next cache purge
 
     __ident                 (virtual) string identifier of this object inside its __container
     __path                  (virtual) URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
@@ -298,10 +298,12 @@ export class WebObject {
     }
 
     _impute__ttl() {
-        /* Impute this object's __ttl (cache TTL in milliseconds), if missing. */
+        /* Impute this object's __ttl (cache TTL in seconds), if missing. */
         if (!this.__ring) return 0      // if loaded from a bootstrap ring, schedule this object for immediate reload
-        return (this.__base?.cache_timeout || 0) * 1000
+        return this.__base?.cache_timeout || 0
     }
+
+    get _ttl_ms() { return this.__ttl * 1000 }
 
     // get __infant_references() {
     //     /* Array of all newborn WebObjects referenced from this one. */
@@ -604,7 +606,7 @@ export class WebObject {
         this._init_services()
 
         let __meta = this.__meta
-        __meta.expire_at = __meta.loaded_at + this.__ttl
+        __meta.expire_at = __meta.loaded_at + this.__ttl * 1000
         __meta.active = true
 
         if (this.__ver && !this.__meta.mutable) schemat.register_version(this)
@@ -639,7 +641,7 @@ export class WebObject {
             schemat.reload(id)                      // intentionally un-awaited: the reload is done in the background
 
         // also, schedule a reload if the object's age is more than 90% of its TTL
-        else if ((obj.__meta.loaded_at || 0) + obj.__ttl * 0.9 < Date.now())
+        else if ((obj.__meta.loaded_at || 0) + obj.__ttl_ms * 0.9 < Date.now())
             schemat.reload(id)
 
         return obj?.is_loaded() ? obj : this
