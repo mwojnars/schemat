@@ -74,12 +74,13 @@ export class Process {
 
         // find agents in `current` that are not in `agents` and need to be stopped
         for (let agent of to_stop) {
-            print('will stop:', agent.id, 'at', this.node.id, 'worker', this.worker_id)
-            promises.push(agent.__stop__(agent.__state))
+            print(`node ${this.node.id}:`, 'will stop agent', agent.id, `at worker #${this.worker_id}`)
+            promises.push(agent.__stop__(agent.__state).then(() => {delete agent.__self.__state}))
         }
 
         // find agents in `agents` that are not in `current` and need to be started
         for (let agent of to_start) {
+            print(`node ${this.node.id}:`, 'will start agent', agent.id, `at worker #${this.worker_id}`)
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
             next.push(agent)
             promises.push(agent.__start__().then(state => agent.__self.__state = state))
@@ -280,7 +281,7 @@ export class Node extends KafkaAgent {
                 let node = this.get_mutable()
                 node.edit.delete_running(agent)             // let workers know that the agent should be stopped
                 await node.save()
-                await sleep(this.refresh_interval * 2)      // TODO: wait for actual confirmation(s) that the agent is stopped on all processes
+                await sleep(this.refresh_interval * 2 + node.__ttl)     // TODO: wait for actual confirmation(s) that the agent is stopped on all processes
 
                 node.edit.delete_installed(agent)           // mark the agent as uninstalled
                 await node.save()
