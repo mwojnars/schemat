@@ -22,7 +22,7 @@ export class Process {
     }
 
     async run() {
-        /* Run & refresh loop of active agents. */
+        /* Start/stop loop of active agents. */
         schemat.node = this.node
 
         let running = []        // list of agents currently running on this process, each of them has __state

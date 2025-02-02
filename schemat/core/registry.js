@@ -44,7 +44,7 @@ class ObjectsCache extends Map {
             // if (T.isPromise(done)) pending.push(done)
         }
 
-        print(`evicted from registry: ${count}`)
+        // print(`evicted from registry: ${count}`)
         if (pending.length) return Promise.all(pending)
     }
 }
