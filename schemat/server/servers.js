@@ -33,11 +33,11 @@ export class Process {
 
             let new_node = this.node.refresh()
             if (new_node.__ttl_left() < 0) new_node = await new_node.reload()
-            schemat.node = this.node = new_node
 
             // if (new_node !== this.node) print(`worker ${this.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
             // else print(`worker ${this.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
 
+            schemat.node = this.node = new_node
             running = await this._start_stop(running)
 
             if (schemat.is_closing)
