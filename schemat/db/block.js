@@ -65,7 +65,8 @@ export class Block extends WebObject {
     _reopen() {
         /* Temporary solution for reloading block data to pull changes written by another worker. */
         if (!this._storage.dirty) return this._storage.open()
-        if (this === schemat.registry.get_object(this.id))
+        let ref = schemat.registry.get_object(this.id)
+        if (!ref || this === ref)
             setTimeout(() => this._reopen(), 1000)
     }
 
