@@ -186,6 +186,12 @@ export class KafkaBroker extends Agent {
 
         let server_running = exec_promise(command, {cwd: schemat.node.site_root})
         return {server_running}
+    
+        // let process = spawn(command, {cwd: schemat.node.site_root, shell: true})
+        // process.stdout.on('data', data => print(`stdout: ${data}`))  // print stdout data
+        // process.stderr.on('data', data => print(`stderr: ${data}`))  // print stderr data
+        // process.on('close', code => print(`Kafka server process exited with code ${code}`))
+        // return {server_running: process}
     }
 
     async __stop__({server_running}) {
@@ -201,6 +207,11 @@ export class KafkaBroker extends Agent {
             ({stdout, stderr} = await server_running)  // kafka-server-start.sh terminated here
             print(`Kafka server stopped: ${stdout}`)
             if (stderr) print(`Kafka server stop stderr: ${stderr}`)
+
+            // await new Promise((resolve, reject) => {
+            //     server_running.on('close', resolve)
+            //     server_running.on('error', reject)
+            // })
         } catch (ex) {
             print(`Kafka server termination caught error:`, ex)     // termination error is expected
             print(`stdout:`)
