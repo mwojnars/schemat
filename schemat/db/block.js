@@ -58,7 +58,15 @@ export class Block extends WebObject {
             throw new Error(`[${this.__id}] unsupported storage type, '${format}', for ${this.filename}`)
 
         this._storage = new storage_class(this.filename, this)
-        return this._storage.open()
+        return this._reopen()
+        // return this._storage.open()
+    }
+
+    _reopen() {
+        /* Temporary solution for reloading block data to pull changes written by another worker. */
+        if (!this._storage.dirty) return this._storage.open()
+        if (this === schemat.registry.get_object(this.id))
+            setTimeout(() => this._reopen(), 1000)
     }
 
     async cmd_get(req)      { return this._storage.get(req.args.key) }
