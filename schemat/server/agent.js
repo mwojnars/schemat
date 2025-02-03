@@ -203,8 +203,10 @@ export class KafkaBroker extends Agent {
             if (stderr) print(`Kafka server stop stderr: ${stderr}`)
         } catch (ex) {
             print(`Kafka server termination caught error:`, ex)     // termination error is expected
-            print(`complete stdout:`)
+            print(`stdout:`)
             print(ex.stdout)
+            print(`stderr:`)
+            print(ex.stderr)
         }
     }
 }
