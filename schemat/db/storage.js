@@ -46,12 +46,13 @@ export class MemoryStorage extends Storage {
     /* All records stored in a Map in memory. Possibly synchronized with a file on disk (implemented in subclasses). */
 
     _records = new BinaryMap()       // preloaded records, {binary-key: json-data}; unordered, sorting is done during scan()
+    dirty = false
 
     get(key)            { return this._records.get(key) }
-    put(key, value)     { this._records.set(key, value) }
-    del(key)            { return this._records.delete(key) }
+    put(key, value)     { this.dirty = true; this._records.set(key, value) }
+    del(key)            { this.dirty = true; return this._records.delete(key) }
 
-    erase()             { this._records.clear() }
+    erase()             { this.dirty = true; this._records.clear() }
     // get size()       { return this._records.size }
 
     *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
@@ -88,7 +89,7 @@ export class YamlDataStorage extends MemoryStorage {
         this.filename = filename
     }
 
-    async open() {
+    open() {
         /* Load records from this block's file. */
 
         // print(`YamlDataStorage #1 opening ${this.filename}...`)
@@ -104,6 +105,7 @@ export class YamlDataStorage extends MemoryStorage {
         // let block = req.current_block
         // this.sequence = req.current_data
 
+        assert(!this.dirty)
         createFileIfNotExists(this.filename, fs)
 
         let content = fs.readFileSync(this.filename, 'utf8')
@@ -138,6 +140,7 @@ export class YamlDataStorage extends MemoryStorage {
         })
         let out = yaml.stringify(recs)
         fs.writeFileSync(this.filename, out, 'utf8')
+        this.dirty = false
     }
 }
 
@@ -157,8 +160,9 @@ export class JsonIndexStorage extends MemoryStorage {
         this.filename = filename
     }
 
-    async open() {
+    open() {
         /* Load records from this.filename file into this.records. */
+        assert(!this.dirty)
         createFileIfNotExists(this.filename, fs)
 
         let content = fs.readFileSync(this.filename, 'utf8')
@@ -180,6 +184,7 @@ export class JsonIndexStorage extends MemoryStorage {
             return json_value ? `[${key}, ${json_value}]` : `[${key}]`
         })
         fs.writeFileSync(this.filename, lines.join('\n') + '\n', 'utf8')
+        this.dirty = false
     }
 }
 

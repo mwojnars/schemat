@@ -1,4 +1,4 @@
-import {assert, print, tryimport} from "../common/utils.js"
+import {assert, print, sleep, tryimport} from "../common/utils.js"
 import {WebObject} from "../core/object.js"
 import {mJsonx, mJsonxArray} from "../web/messages.js";
 import {Service} from "../web/services.js";
@@ -184,7 +184,7 @@ export class KafkaBroker extends Agent {
         let command = `/opt/kafka/bin/kafka-server-start.sh ${this.props_path} ${overrides}`
         print('KafkaBroker.__start__():', command)
 
-        return exec(command, {cwd: schemat.node.site_root})
+        return exec_promise(command, {cwd: schemat.node.site_root})
 
         // let {stdout, stderr} = await exec_promise(command, {cwd: schemat.node.site_root})
         // print(`Kafka broker started: ${stdout}`)
@@ -200,7 +200,8 @@ export class KafkaBroker extends Agent {
         print(`Kafka broker stopped: ${stdout}`)
         if (stderr) print(`Kafka broker stop stderr: ${stderr}`)
 
-        await server_running
-        print(`Kafka server stopped`)
+        ({stdout, stderr} = await server_running)
+        print(`Kafka server stopped: ${stdout}`)
+        if (stderr) print(`Kafka server stop stderr: ${stderr}`)
     }
 }
