@@ -85,6 +85,28 @@ export class KafkaAgent extends Agent {
         kafka ??= new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`]})
         if (!start_consumer) return {kafka, start_consumer}
 
+        const admin = kafka.admin()
+        try {
+            await admin.connect()
+        } catch (ex) {
+            print(`Kafka admin connection error, retrying after 10 seconds...`)
+            await sleep(10)
+            await admin.connect()
+        }
+
+        try {
+            // create the topic if it doesn't exist
+            await admin.createTopics({
+                topics: [{topic: this.__kafka_topic, numPartitions: 1, replicationFactor: 1}],
+                waitForLeaders: true
+            })
+        } catch (ex) {
+            print(`Error creating topic ${this.__kafka_topic}:`, ex)
+            throw ex
+        } finally {
+            await admin.disconnect()
+        }
+
         const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true})
         
         try { await consumer.connect() } catch (ex) 
