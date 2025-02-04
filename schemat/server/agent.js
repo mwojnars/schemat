@@ -250,12 +250,9 @@ export class KafkaBroker extends Agent {
             //     server_running.on('close', resolve)
             //     server_running.on('error', reject)
             // })
-        } catch (ex) {
-            print(`Kafka server termination caught error:`, ex)     // termination error is expected
-            print(`stdout:`)
-            print(ex.stdout)
-            print(`stderr:`)
-            print(ex.stderr)
+        } catch (ex) {          // termination error is normal and expected
+            print(`stdout:`); print(ex.stdout)
+            if (ex.stderr) { print(`stderr:`); print(ex.stderr) }
         }
     }
 }
