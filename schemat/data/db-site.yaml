@@ -258,13 +258,15 @@
 - __id: 1024
   agents_installed:
     - "@": 1023
+    - "@": 1031
   agents_running:
     - "@": 1023
   __node:
     "@": 1024
   __category:
     "@": 21
-  master_agents_running: []
+  master_agents_running:
+    - "@": 1031
 - __id: 1025
   name: cluster
   __category:
