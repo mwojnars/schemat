@@ -106,7 +106,7 @@ export class Process {
 
     _get_agents_running() {
         /* List of agents that should be running now on this process. When an agent is to be stopped, it should be first removed from this list. */
-        return this.node.agents_running
+        return [this.node, ...this.node.agents_running]
     }
 
 
@@ -188,7 +188,13 @@ export class Process {
 export class Node extends KafkaAgent {
     /* Node of a Schemat cluster. Technically, each node is a local (master) process launched independently
        on a particular machine, together with its child (worker) processes, if any. Nodes communicate with each other
-       using Kafka, and in this way they form a distributed compute & storage cluster. */
+       using Kafka, and in this way they form a distributed compute & storage cluster.
+
+       The node, as an Agent, must NOT have any __install__() or __uninstall__() method, because these methods will never
+       be launched: the node is assumed to be installed on itself without any installation procedure and without
+       being included in the `agents_installed` list. The node is added implicitly to the list of currently
+       running agents in Process._get_agents_running().
+     */
 
     agents_installed
     agents_running

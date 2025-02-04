@@ -141,7 +141,7 @@ export class MasterProcess extends Process {
     _get_agents_running() {
         /* List of agents that should be running now on this process. When an agent is to be stopped, it should be first removed from this list. */
         // print('MasterProcess agents running:', this.node.master_agents_running.map(a => a.id), 'ttl left', this.node.__ttl_left())
-        return this.node.master_agents_running
+        return [this.node, ...this.node.master_agents_running]
     }
 
     // _install_agents() {
