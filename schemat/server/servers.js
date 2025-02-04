@@ -217,16 +217,16 @@ export class Node extends KafkaAgent {
         return this.__state.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
     }
 
-    async __start__() {
+    async __start__(state = {}) {
         let start_consumer = this.is_master_process()       // only the master process deploys a node-wise consumer
-        let {kafka, ...rest} = await super.__start__({start_consumer})
+        let {kafka, ...rest} = await super.__start__({...state, start_consumer})
 
         let producer = kafka.producer()     // each node process (master/worker) has a single shared Kafka producer
 
         try { await producer.connect() } catch (ex) 
         {
             print(`Kafka producer connection error:`, ex)
-            return {kafka, ...rest}
+            return {kafka, ...rest, failed: true}
         }
         return {kafka, producer, ...rest}
     }

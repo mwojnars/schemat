@@ -90,7 +90,7 @@ export class KafkaAgent extends Agent {
         try { await consumer.connect() } catch (ex) 
         {
             print(`Kafka consumer connection error:`, ex)
-            return {kafka, start_consumer}
+            return {kafka, start_consumer, failed: true}
         }
         await consumer.subscribe({topic: this.__kafka_topic, fromBeginning: true})
         
@@ -107,7 +107,7 @@ export class KafkaAgent extends Agent {
 
     async __restart__(state) {
         // do a hard restart if connecting to Kafka failed on the previous start
-        return (state.start_consumer && !state.consumer) ? this.__start__(state) : state
+        return state.failed ? this.__start__(state) : state
     }
 
     async __stop__({consumer, consumer_running}) {
