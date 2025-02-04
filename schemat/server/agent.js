@@ -29,9 +29,6 @@ export class KafkaService extends Service {
         let topic = target.__kafka_topic
         return schemat.node.kafka_send({topic, messages: [{value: message}]})   // send via a shared Kafka producer
 
-        // let producer = schemat.node.kafka_producer      // shared producer, already connected
-        // return producer.send({topic, messages: [{value: message}]})
-
         // const topic = target.__kafka_topic
         // const producer = target._kafka.producer()
         // await producer.connect()
