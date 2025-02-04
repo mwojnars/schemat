@@ -3,7 +3,7 @@ import {WebObject} from "../core/object.js"
 import {mJsonx, mJsonxArray} from "../web/messages.js";
 import {Service} from "../web/services.js";
 
-let {Kafka} = await tryimport('kafkajs') || {}
+let {Kafka, logLevel} = await tryimport('kafkajs') || {}
 let {exec} = await tryimport('child_process') || {}     // node:child_process
 let {promisify} = await tryimport('util') || {}         // node:util
 let {readFile, writeFile, mkdir, rm} = await tryimport('fs/promises') || {}
@@ -69,6 +69,13 @@ export class Agent extends WebObject {
     }
 }
 
+function kafka_logger(agent) {
+    return () => ({namespace, level, label, log}) => {
+        if (level >= agent._kafka_log_level)
+            console.log(`[${label}] KAFKA ${log.message}`)
+    }
+}
+
 
 export class KafkaAgent extends Agent {
     /* An agent whose event loop processes messages from a Kafka topic. The topic is named after this agent's ID. */
@@ -76,23 +83,25 @@ export class KafkaAgent extends Agent {
     get __kafka_client() { return `agent-${this.id}` }
     get __kafka_topic()  { return `topic-${this.id}` }
 
+    _kafka_log_level = logLevel.NOTHING
 
     async __start__({start_consumer = true, kafka} = {}) {
         /* Start the agent. Return an object of the form {kafka, consumer, consumer_running},
            where `consumer_running` is a Promise returned by consumer.run().
          */
         assert(Kafka)
-        kafka ??= new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`]})
+        kafka ??= new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: kafka_logger(this)})
         if (!start_consumer) return {kafka, start_consumer}
 
         const admin = kafka.admin()
         try {
             await admin.connect()
         } catch (ex) {
-            print(`Kafka admin connection error, retrying after 10 seconds...`)
-            await sleep(10)
+            print(`Kafka admin connection error, retrying after 5 seconds...`)
+            await sleep(5)
             await admin.connect()
         }
+        this._kafka_log_level = logLevel.WARN
 
         try {
             // create the topic if it doesn't exist
