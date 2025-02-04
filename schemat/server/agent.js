@@ -73,6 +73,8 @@ export class Agent extends WebObject {
 export class KafkaAgent extends Agent {
     /* An agent whose event loop processes messages from a Kafka topic. The topic is named after this agent's ID. */
 
+    // __meta.kafka_log_level   -- controls the current log level of Kafka client
+
     get __kafka_client() { return `agent-${this.id}` }
     get __kafka_topic()  { return `topic-${this.id}` }
 
@@ -80,7 +82,7 @@ export class KafkaAgent extends Agent {
         return () => ({namespace, level, label, log}) => {
             // print(this._kafka_log_level, {namespace, level, label, log})
             if (level <= this.__meta.kafka_log_level)
-                console.error(`[KAFKA] ${label} ${log.message}`)
+                console.error(`[KAFKA] ${label} @${log.clientId}: ${log.message}`)
         }
     }
 
