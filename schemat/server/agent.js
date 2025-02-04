@@ -69,13 +69,6 @@ export class Agent extends WebObject {
     }
 }
 
-function kafka_logger(agent) {
-    return () => ({namespace, level, label, log}) => {
-        if (level >= agent._kafka_log_level)
-            console.log(`[${label}] KAFKA ${log.message}`)
-    }
-}
-
 
 export class KafkaAgent extends Agent {
     /* An agent whose event loop processes messages from a Kafka topic. The topic is named after this agent's ID. */
@@ -83,14 +76,22 @@ export class KafkaAgent extends Agent {
     get __kafka_client() { return `agent-${this.id}` }
     get __kafka_topic()  { return `topic-${this.id}` }
 
-    _kafka_log_level = logLevel.NOTHING
+    _kafka_logger() {
+        return () => ({namespace, level, label, log}) => {
+            // print(this._kafka_log_level, {namespace, level, label, log})
+            if (level <= this.__meta.kafka_log_level)
+                console.error(`[KAFKA] ${label} ${log.message}`)
+        }
+    }
 
     async __start__({start_consumer = true, kafka} = {}) {
         /* Start the agent. Return an object of the form {kafka, consumer, consumer_running},
            where `consumer_running` is a Promise returned by consumer.run().
          */
         assert(Kafka)
-        kafka ??= new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: kafka_logger(this)})
+        this.__meta.kafka_log_level = logLevel.NOTHING    // available log levels: NOTHING (0), ERROR (1), WARN (2), INFO (3), DEBUG (4)
+
+        kafka ??= new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger()})
         if (!start_consumer) return {kafka, start_consumer}
 
         const admin = kafka.admin()
@@ -102,7 +103,7 @@ export class KafkaAgent extends Agent {
             await sleep(5)
             await admin.connect()
         }
-        this._kafka_log_level = logLevel.WARN
+        this.__meta.kafka_log_level = logLevel.WARN
 
         try {
             // create the topic if it doesn't exist
@@ -212,6 +213,8 @@ export class KafkaBroker extends Agent {
     }
 
     async __start__() {
+        process.env.KAFKAJS_NO_PARTITIONER_WARNING = '1'  // silence partitioner warning
+
         // apply overrides using --override option
         let overrides = Array.from(this.settings).map(([key, value]) => `--override ${key}=${value}`).join(' ')
         let command = `/opt/kafka/bin/kafka-server-start.sh ${this.props_path} ${overrides}`
