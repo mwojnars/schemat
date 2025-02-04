@@ -97,6 +97,7 @@ export class KafkaAgent extends Agent {
         try {
             await admin.connect()
         } catch (ex) {
+            // the local broker may not have started yet, hence wait a little
             print(`Kafka admin connection error, retrying after 5 seconds...`)
             await sleep(5)
             await admin.connect()
