@@ -100,7 +100,7 @@ export class Process {
             // promises.push(prev.__stop__(prev.__state).then(async () => agent.__self.__state = await agent.__start__()))
         }
 
-        await Promise.all(promises)
+        await Promise.all(promises)     // all start/stop calls are executed concurrently, this is important for Kafka bootstrap
         return next
     }
 
