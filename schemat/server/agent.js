@@ -77,16 +77,21 @@ export class KafkaAgent extends Agent {
     get __kafka_topic()  { return `topic-${this.id}` }
 
 
-    async __start__(start_consumer = true) {
+    async __start__({start_consumer = true, kafka} = {}) {
         /* Start the agent. Return an object of the form {kafka, consumer, consumer_running},
            where `consumer_running` is a Promise returned by consumer.run().
          */
         assert(Kafka)
-        let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`]})
-        if (!start_consumer) return {kafka}
+        kafka ??= new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`]})
+        if (!start_consumer) return {kafka, start_consumer}
 
         const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true})
-        await consumer.connect()
+        
+        try { await consumer.connect() } catch (ex) 
+        {
+            print(`Kafka consumer connection error:`, ex)
+            return {kafka, start_consumer}
+        }
         await consumer.subscribe({topic: this.__kafka_topic, fromBeginning: true})
         
         let consumer_running = consumer.run({
@@ -97,7 +102,12 @@ export class KafkaAgent extends Agent {
                 // await consumer.commitOffsets([{topic, partition, offset: (BigInt(message.offset) + 1n).toString()}])
             }
         })
-        return {kafka, consumer, consumer_running}
+        return {kafka, consumer, consumer_running, start_consumer}
+    }
+
+    async __restart__(state) {
+        // do a hard restart if connecting to Kafka failed on the previous start
+        return (state.start_consumer && !state.consumer) ? this.__start__(state) : state
     }
 
     async __stop__({consumer, consumer_running}) {
