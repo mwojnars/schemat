@@ -27,13 +27,7 @@ export class KafkaService extends Service {
 
         // send `message` to the target's topic
         let topic = target.__kafka_topic
-        return schemat.node.kafka_send({topic, messages: [{value: message}]})   // send via a shared Kafka producer
-
-        // const topic = target.__kafka_topic
-        // const producer = target._kafka.producer()
-        // await producer.connect()
-        // await producer.send({topic, messages: [{value: message}]})   // or sendBatch() to write multiple messages to different topics
-        // await producer.disconnect()
+        return schemat.node.kafka_send(topic, message)
     }
 }
 

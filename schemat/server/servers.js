@@ -207,9 +207,9 @@ export class Node extends KafkaAgent {
 
     is_master_process() { return !this.worker_id}
 
-    // kafka_send(topic, message) {
-    //     return this.__state.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
-    // }
+    kafka_send(topic, message) {
+        return this.__state.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
+    }
 
     async __start__() {
         let start_consumer = this.is_master_process()       // only the master process deploys a node-wise consumer
