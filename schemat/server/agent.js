@@ -4,7 +4,7 @@ import {mJsonx, mJsonxArray} from "../web/messages.js";
 import {Service} from "../web/services.js";
 
 let {Kafka, logLevel} = await tryimport('kafkajs') || {}
-let {exec} = await tryimport('child_process') || {}     // node:child_process
+let {exec, spawn} = await tryimport('child_process') || {}     // node:child_process
 let {promisify} = await tryimport('util') || {}         // node:util
 let {readFile, writeFile, mkdir, rm} = await tryimport('fs/promises') || {}
 let exec_promise = exec && promisify(exec)
@@ -222,17 +222,18 @@ export class KafkaBroker extends Agent {
         let command = `/opt/kafka/bin/kafka-server-start.sh ${this.props_path} ${overrides}`
         print('KafkaBroker.__start__():', command)
 
-        let server_running = exec_promise(command, {cwd: schemat.node.site_root})
-        return {server_running}
+        // let server = exec_promise(command, {cwd: schemat.node.site_root})
+        // return {server}
     
-        // let process = spawn(command, {cwd: schemat.node.site_root, shell: true})
-        // process.stdout.on('data', data => print(`stdout: ${data}`))  // print stdout data
-        // process.stderr.on('data', data => print(`stderr: ${data}`))  // print stderr data
-        // process.on('close', code => print(`Kafka server process exited with code ${code}`))
-        // return {server_running: process}
+        let server = spawn(command, {cwd: schemat.node.site_root, shell: true})
+        server.stdout.on('data', data => console.log(`${data}`))
+        server.stderr.on('data', data => console.error(`${data}`))
+        server.on('close', code => print(`Kafka server process exited with code=${code}`))
+
+        return {server}
     }
 
-    async __stop__({server_running}) {
+    async __stop__({server}) {
         let command = `/opt/kafka/bin/kafka-server-stop.sh`
         print('KafkaBroker.__stop__():', command)
 
@@ -242,14 +243,14 @@ export class KafkaBroker extends Agent {
         if (stderr) print(`Kafka broker stop stderr: ${stderr}`)
 
         try {
-            ({stdout, stderr} = await server_running)  // kafka-server-start.sh terminated here
-            print(`Kafka server stopped: ${stdout}`)
-            if (stderr) print(`Kafka server stop stderr: ${stderr}`)
+            // ({stdout, stderr} = await server)  // kafka-server-start.sh terminated here
+            // print(`Kafka server stopped: ${stdout}`)
+            // if (stderr) print(`Kafka server stop stderr: ${stderr}`)
 
-            // await new Promise((resolve, reject) => {
-            //     server_running.on('close', resolve)
-            //     server_running.on('error', reject)
-            // })
+            await new Promise((resolve, reject) => {
+                server.on('close', resolve)
+                server.on('error', reject)
+            })
         } catch (ex) {          // termination error is normal and expected
             print(`stdout:`); print(ex.stdout)
             if (ex.stderr) { print(`stderr:`); print(ex.stderr) }
