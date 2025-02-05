@@ -93,18 +93,22 @@ export class KafkaAgent extends Agent {
         assert(Kafka)
         this.__meta.kafka_log_level = logLevel.NOTHING    // available log levels: NOTHING (0), ERROR (1), WARN (2), INFO (3), DEBUG (4)
 
-        kafka ??= new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger()})
+        let retry = {initialRetryTime: 1000, retries: 10}
+
+        kafka ??= new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
         if (!start_consumer) return {kafka, start_consumer}
 
         const admin = kafka.admin()
-        try {
-            await admin.connect()
-        } catch (ex) {
-            // the local broker may not have started yet, hence wait a little
-            print(`Kafka admin connection error, retrying after 5 seconds...`)
-            await sleep(5)
-            await admin.connect()
-        }
+        await admin.connect()
+
+        // try {
+        //     await admin.connect()
+        // } catch (ex) {
+        //     // the local broker may not have started yet, hence wait a little
+        //     print(`Kafka admin connection error, retrying after 5 seconds...`)
+        //     await sleep(5)
+        //     await admin.connect()
+        // }
         this.__meta.kafka_log_level = logLevel.WARN
 
         try {
@@ -120,7 +124,7 @@ export class KafkaAgent extends Agent {
             await admin.disconnect()
         }
 
-        const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true})
+        const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true, retry})
         // await consumer.connect()
 
         try { await consumer.connect() } catch (ex) {
@@ -223,12 +227,16 @@ export class KafkaBroker extends Agent {
         print('KafkaBroker.__start__():', command)
 
         // let server = exec_promise(command, {cwd: schemat.node.site_root})
-        // return {server}
-    
-        let server = spawn(command, {cwd: schemat.node.site_root, shell: true})
+
+        // let server = spawn(command, {cwd: schemat.node.site_root, shell: true})
+        let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore'})    // stdio needed to detach from parent's stdio
+
+        // let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: ['ignore', 'pipe', 'pipe'], detached: true})
         // server.stdout.on('data', data => console.log(`${data}`))
         // server.stderr.on('data', data => console.error(`${data}`))
+
         server.on('close', code => print(`Kafka server process exited with code=${code}`))
+        // server.unref()
 
         return {server}
     }
@@ -257,3 +265,10 @@ export class KafkaBroker extends Agent {
         }
     }
 }
+
+/*
+    KAFKA DEBUGGING
+
+    netstat -tulnp | grep 9092                                      -- check if Kafka is listening on port 9092 and get the process PID
+    kafka-topics.sh --list --bootstrap-server localhost:9092        -- list kafka topics
+ */

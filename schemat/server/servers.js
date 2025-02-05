@@ -220,8 +220,9 @@ export class Node extends KafkaAgent {
     async __start__(state = {}) {
         let start_consumer = this.is_master_process()       // only the master process deploys a node-wise consumer
         let {kafka, ...rest} = await super.__start__({...state, start_consumer})
+        let retry = {initialRetryTime: 1000, retries: 10}
 
-        let producer = kafka.producer()     // each node process (master/worker) has a single shared Kafka producer
+        let producer = kafka.producer({retry})     // each node process (master/worker) has a single shared Kafka producer
 
         try { await producer.connect() } catch (ex) 
         {
