@@ -121,9 +121,9 @@ export class KafkaAgent extends Agent {
         }
 
         const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true})
-        
-        try { await consumer.connect() } catch (ex) 
-        {
+        // await consumer.connect()
+
+        try { await consumer.connect() } catch (ex) {
             print(`Kafka consumer connection error:`, ex)
             return {kafka, start_consumer, failed: true}
         }
@@ -226,8 +226,8 @@ export class KafkaBroker extends Agent {
         // return {server}
     
         let server = spawn(command, {cwd: schemat.node.site_root, shell: true})
-        server.stdout.on('data', data => console.log(`${data}`))
-        server.stderr.on('data', data => console.error(`${data}`))
+        // server.stdout.on('data', data => console.log(`${data}`))
+        // server.stderr.on('data', data => console.error(`${data}`))
         server.on('close', code => print(`Kafka server process exited with code=${code}`))
 
         return {server}
