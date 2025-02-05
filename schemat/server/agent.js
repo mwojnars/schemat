@@ -92,7 +92,6 @@ export class KafkaAgent extends Agent {
          */
         assert(Kafka)
         this.__meta.kafka_log_level = logLevel.NOTHING    // available log levels: NOTHING (0), ERROR (1), WARN (2), INFO (3), DEBUG (4)
-
         let retry = {initialRetryTime: 1000, retries: 10}
 
         kafka ??= new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
@@ -101,28 +100,17 @@ export class KafkaAgent extends Agent {
         const admin = kafka.admin()
         await admin.connect()
 
-        // try {
-        //     await admin.connect()
-        // } catch (ex) {
-        //     // the local broker may not have started yet, hence wait a little
-        //     print(`Kafka admin connection error, retrying after 5 seconds...`)
-        //     await sleep(5)
-        //     await admin.connect()
-        // }
         this.__meta.kafka_log_level = logLevel.WARN
 
-        try {
-            // create the topic if it doesn't exist
-            await admin.createTopics({
-                topics: [{topic: this.__kafka_topic, numPartitions: 1, replicationFactor: 1}],
-                waitForLeaders: true
-            })
-        } catch (ex) {
-            print(`Error creating topic ${this.__kafka_topic}:`, ex)
-            throw ex
-        } finally {
-            await admin.disconnect()
-        }
+        let topics = await admin.listTopics()
+        print('Kafka topics:', topics)
+
+        // create the topic if it doesn't exist
+        await admin.createTopics({
+            topics: [{topic: this.__kafka_topic, numPartitions: 1, replicationFactor: 1}],
+            waitForLeaders: true
+        })
+        await admin.disconnect()
 
         const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true, retry})
         // await consumer.connect()
