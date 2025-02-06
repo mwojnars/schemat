@@ -103,10 +103,29 @@ async function test_page(page, url, react_selector = null, strings = [])
 
 /**********************************************************************************************************************/
 
+async function wait_for_port_release(port, retries = 10, delay_ms = 1000) {
+    for (let i = 0; i < retries; i++)
+        try {
+            await new Promise((resolve, reject) => {
+                const server = http.createServer()
+                server.on('error', reject)
+                server.on('listening', () => server.close(() => resolve()))
+                server.listen(port)
+            })
+            return true
+        } catch (err) {
+            if (i === retries - 1) throw new Error(`Port ${port} is still in use after ${retries} attempts`)
+            await delay(delay_ms)
+        }
+}
+
 function server_setup(port, args = '') {
     let server, browser, page, messages
 
-    before(async function () {
+    before(async function() {
+        // wait for port to be released before starting new server
+        await wait_for_port_release(port)
+
         // start the server...
 
         // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
