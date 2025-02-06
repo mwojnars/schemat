@@ -21,6 +21,10 @@ export class Process {
         return process.env.WORKER_ID || 0
     }
 
+    _print(...args) {
+        print(`${this.node.id}/#${this.worker_id}:`, ...args)
+    }
+
     async run() {
         /* Start/stop loop of active agents. */
         schemat.node = this.node
@@ -60,7 +64,10 @@ export class Process {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
 
         let agents = this._get_agents_running()     // agents that *should* be running now on this process (possibly need to be started)
-        if (schemat.is_closing) agents = []         // enforce clean shutdown by stopping all agents
+        if (schemat.is_closing) {
+            agents = []         // enforce clean shutdown by stopping all agents
+            this._print(`closing and stopping all agents`)
+        }
 
         let agent_ids = agents.map(agent => agent.id)
         let current_ids = current.map(agent => agent.id)
@@ -74,13 +81,13 @@ export class Process {
 
         // find agents in `current` that are not in `agents` and need to be stopped
         for (let agent of to_stop) {
-            print(`#${this.worker_id} node ${this.node.id}:`, 'will stop agent', agent.id)
+            this._print('will stop agent', agent.id)
             promises.push(agent.__stop__(agent.__state).then(() => {delete agent.__self.__state}))
         }
 
         // find agents in `agents` that are not in `current` and need to be started
         for (let agent of to_start) {
-            print(`#${this.worker_id} node ${this.node.id}:`, 'will start agent', agent.id)
+            this._print('will start agent', agent.id)
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
             next.push(agent)
             promises.push(agent.__start__().then(state => agent.__self.__state = state))
