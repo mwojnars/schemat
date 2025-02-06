@@ -86,7 +86,7 @@ export class KafkaAgent extends Agent {
         }
     }
 
-    async __start__({start_consumer = true, kafka} = {}) {
+    async __start__(start_consumer = true) {
         /* Start the agent. Return an object of the form {kafka, consumer, consumer_running},
            where `consumer_running` is a Promise returned by consumer.run().
          */
@@ -94,7 +94,7 @@ export class KafkaAgent extends Agent {
         this.__meta.kafka_log_level = logLevel.NOTHING    // available log levels: NOTHING (0), ERROR (1), WARN (2), INFO (3), DEBUG (4)
         let retry = {initialRetryTime: 1000, retries: 10}
 
-        kafka ??= new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
+        let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
         if (!start_consumer) return {kafka, start_consumer}
 
         const admin = kafka.admin()
@@ -132,10 +132,10 @@ export class KafkaAgent extends Agent {
         return {kafka, consumer, consumer_running, start_consumer}
     }
 
-    async __restart__(state) {
-        // do a hard restart if connecting to Kafka failed on the previous start
-        return state.failed ? this.__start__(state) : state
-    }
+    // async __restart__(state) {
+    //     // do a hard restart if connecting to Kafka failed on the previous start
+    //     return state.failed ? this.__start__(state) : state
+    // }
 
     async __stop__({consumer, consumer_running}) {
         await consumer?.disconnect()
