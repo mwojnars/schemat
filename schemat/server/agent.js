@@ -217,22 +217,49 @@ export class KafkaBroker extends Agent {
         // let server = exec_promise(command, {cwd: schemat.node.site_root})
 
         // let server = spawn(command, {cwd: schemat.node.site_root, shell: true})
-        let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore'})    // stdio needed to detach from parent's stdio
+        // let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore'})    // stdio needed to detach from parent's stdio
+        let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore', detached: true})    // stdio needed to detach from parent's stdio; detached=true to create a new process group
 
         // let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: ['ignore', 'pipe', 'pipe'], detached: true})
         // server.stdout.on('data', data => console.log(`${data}`))
         // server.stderr.on('data', data => console.error(`${data}`))
 
         server.on('close', code => print(`Kafka server process exited with code=${code}`))
-        // server.unref()
+        server.unref()      // don't let parent process wait for this child
 
         print(`started Kafka server: PID=${server.pid}`)
         return {server}
     }
 
+    // async __stop__({server}) {
+    //     // if (!server) return
+    //
+    //     console.log(`Stopping Kafka server process PID=${server.pid}`)
+    //     try {
+    //         // send SIGTERM instead of SIGKILL to allow graceful shutdown
+    //         process.kill(-server.pid, 'SIGTERM')    // negative PID targets the process group
+    //
+    //         // wait for process to exit
+    //         await new Promise((resolve) => {
+    //             server.on('close', resolve)
+    //             // add timeout in case process doesn't exit
+    //             setTimeout(() => {
+    //                 try {
+    //                     process.kill(-server.pid, 'SIGKILL')
+    //                 } catch (e) {
+    //                     // process may already be gone
+    //                 }
+    //                 resolve()
+    //             }, 5000)
+    //         })
+    //     } catch (ex) {
+    //         console.log(`Failed to stop process ${server.pid}:`, ex)
+    //     }
+    // }
+    
     async __stop__({server}) {
         print(`Killing Kafka server process PID=${server.pid}`)
-        try { process.kill(server.pid, 'SIGKILL') } 
+        try { process.kill(-server.pid, 'SIGKILL') }
         catch (ex) {
             print(`Failed to kill process ${server.pid}:`, ex)
         }
