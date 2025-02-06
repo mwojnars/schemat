@@ -1,3 +1,11 @@
+/*
+    Kafka-related classes of web objects.
+
+    Kafka debugging:
+    - netstat -tulnp | grep 9092                                    -- check if Kafka is listening on port 9092 and get the process PID
+    - kafka-topics.sh --list --bootstrap-server localhost:9092      -- list kafka topics
+ */
+
 import {assert, print, sleep, tryimport} from "../common/utils.js"
 import {mJsonx, mJsonxArray} from "../web/messages.js";
 import {Service} from "../web/services.js";
@@ -236,10 +244,3 @@ export class KafkaBroker extends Agent {
         }
     }
 }
-
-/*
-    KAFKA DEBUGGING
-
-    netstat -tulnp | grep 9092                                      -- check if Kafka is listening on port 9092 and get the process PID
-    kafka-topics.sh --list --bootstrap-server localhost:9092        -- list kafka topics
- */
