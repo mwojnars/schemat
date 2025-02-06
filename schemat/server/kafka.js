@@ -2,8 +2,9 @@
     Kafka-related classes of web objects.
 
     Kafka debugging:
-    - netstat -tulnp | grep 9092                                    -- check if Kafka is listening on port 9092 and get the process PID
-    - kafka-topics.sh --list --bootstrap-server localhost:9092      -- list kafka topics
+    - netstat -tulnp | grep 9092                                        << check if Kafka is listening on port 9092 and get the process PID
+    - ./kafka-topics.sh --list --bootstrap-server localhost:9092        << list kafka topics
+    - ./kafka-console-producer.sh --bootstrap-server localhost:9092 --topic topic-1024      << send test messages to a topic
  */
 
 import {assert, print, sleep, tryimport} from "../common/utils.js"
