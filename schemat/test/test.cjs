@@ -162,9 +162,7 @@ function server_setup(port, args = '') {
 
     after(async function () {
         await browser?.close()
-        // let killed = server?.kill()
-        // await delay(2000)                                       // wait for server to stop
-        
+
         if (server) {
             const server_exit = new Promise(resolve => {
                 server.on('exit', () => resolve())
