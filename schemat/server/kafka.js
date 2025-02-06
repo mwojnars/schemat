@@ -48,71 +48,6 @@ export class JsonKAFKA extends KafkaService {
 
 /**********************************************************************************************************************/
 
-export class KafkaAgent extends Agent {
-    /* An agent whose event loop processes messages from a Kafka topic. The topic is named after this agent's ID. */
-
-    // __meta.kafka_log_level   -- controls the current log level of Kafka client
-
-    get __kafka_client() { return `agent-${this.id}` }
-    get __kafka_topic()  { return `topic-${this.id}` }
-
-    _kafka_logger() {
-        return () => ({namespace, level, label, log}) => {
-            // print(this._kafka_log_level, {namespace, level, label, log})
-            if (level <= this.__meta.kafka_log_level)
-                console.error(`[KAFKA] ${label} @${log.clientId}: ${log.message}`)
-        }
-    }
-
-    async __start__(start_consumer = true) {
-        /* Start the agent. Return an object of the form {kafka, consumer, consumer_running},
-           where `consumer_running` is a Promise returned by consumer.run().
-         */
-        assert(Kafka)
-        this.__meta.kafka_log_level = logLevel.NOTHING    // available log levels: NOTHING (0), ERROR (1), WARN (2), INFO (3), DEBUG (4)
-        let retry = {initialRetryTime: 1000, retries: 10}
-
-        let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
-        if (!start_consumer) return {kafka}
-
-        const admin = kafka.admin()
-        await admin.connect()
-
-        this.__meta.kafka_log_level = logLevel.WARN
-
-        let topics = await admin.listTopics()
-        print('Kafka topics:', topics)
-
-        // create the topic if it doesn't exist
-        await admin.createTopics({
-            topics: [{topic: this.__kafka_topic, numPartitions: 1, replicationFactor: 1}],
-            waitForLeaders: true
-        })
-        await admin.disconnect()
-
-        const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true, retry})
-        await consumer.connect()
-        await consumer.subscribe({topic: this.__kafka_topic, fromBeginning: true})
-        
-        let consumer_running = consumer.run({
-            eachMessage: async ({topic, partition, message}) => {
-                print(`${topic}[${partition}]: ${message.value}`)
-
-                // // if autoCommit=false, manually commit the message offset
-                // await consumer.commitOffsets([{topic, partition, offset: (BigInt(message.offset) + 1n).toString()}])
-            }
-        })
-        return {kafka, consumer, consumer_running}
-    }
-
-    async __stop__({consumer, consumer_running}) {
-        await consumer?.disconnect()
-        await consumer_running
-    }
-}
-
-/**********************************************************************************************************************/
-
 export class KafkaBroker extends Agent {
 
     // node.site_root    -- root directory of the entire Schemat installation; working directory for every install/uninstall/start/stop
@@ -245,3 +180,70 @@ export class KafkaBroker extends Agent {
         }
     }
 }
+
+
+/**********************************************************************************************************************/
+
+export class KafkaAgent extends Agent {
+    /* An agent whose event loop processes messages from a Kafka topic. The topic is named after this agent's ID. */
+
+    // __meta.kafka_log_level   -- controls the current log level of Kafka client
+
+    get __kafka_client() { return `agent-${this.id}` }
+    get __kafka_topic()  { return `topic-${this.id}` }
+
+    _kafka_logger() {
+        return () => ({namespace, level, label, log}) => {
+            // print(this._kafka_log_level, {namespace, level, label, log})
+            if (level <= this.__meta.kafka_log_level)
+                console.error(`[KAFKA] ${label} @${log.clientId}: ${log.message}`)
+        }
+    }
+
+    async __start__(start_consumer = true) {
+        /* Start the agent. Return an object of the form {kafka, consumer, consumer_running},
+           where `consumer_running` is a Promise returned by consumer.run().
+         */
+        assert(Kafka)
+        this.__meta.kafka_log_level = logLevel.NOTHING    // available log levels: NOTHING (0), ERROR (1), WARN (2), INFO (3), DEBUG (4)
+        let retry = {initialRetryTime: 1000, retries: 10}
+
+        let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
+        if (!start_consumer) return {kafka}
+
+        const admin = kafka.admin()
+        await admin.connect()
+
+        this.__meta.kafka_log_level = logLevel.WARN
+
+        let topics = await admin.listTopics()
+        print('Kafka topics:', topics)
+
+        // create the topic if it doesn't exist
+        await admin.createTopics({
+            topics: [{topic: this.__kafka_topic, numPartitions: 1, replicationFactor: 1}],
+            waitForLeaders: true
+        })
+        await admin.disconnect()
+
+        const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true, retry})
+        await consumer.connect()
+        await consumer.subscribe({topic: this.__kafka_topic, fromBeginning: true})
+
+        let consumer_running = consumer.run({
+            eachMessage: async ({topic, partition, message}) => {
+                print(`${topic}[${partition}]: ${message.value}`)
+
+                // // if autoCommit=false, manually commit the message offset
+                // await consumer.commitOffsets([{topic, partition, offset: (BigInt(message.offset) + 1n).toString()}])
+            }
+        })
+        return {kafka, consumer, consumer_running}
+    }
+
+    async __stop__({consumer, consumer_running}) {
+        await consumer?.disconnect()
+        await consumer_running
+    }
+}
+
