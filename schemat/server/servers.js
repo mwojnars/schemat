@@ -74,13 +74,13 @@ export class Process {
 
         // find agents in `current` that are not in `agents` and need to be stopped
         for (let agent of to_stop) {
-            print(`node ${this.node.id}:`, 'will stop agent', agent.id, `at worker #${this.worker_id}`)
+            print(`#${this.worker_id} node ${this.node.id}:`, 'will stop agent', agent.id)
             promises.push(agent.__stop__(agent.__state).then(() => {delete agent.__self.__state}))
         }
 
         // find agents in `agents` that are not in `current` and need to be started
         for (let agent of to_start) {
-            print(`node ${this.node.id}:`, 'will start agent', agent.id, `at worker #${this.worker_id}`)
+            print(`#${this.worker_id} node ${this.node.id}:`, 'will start agent', agent.id)
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
             next.push(agent)
             promises.push(agent.__start__().then(state => agent.__self.__state = state))
@@ -100,7 +100,7 @@ export class Process {
             // promises.push(prev.__stop__(prev.__state).then(async () => agent.__self.__state = await agent.__start__()))
         }
 
-        await Promise.all(promises)     // all start/stop calls are executed concurrently, this is important for Kafka bootstrap
+        await Promise.all(promises)
         return next
     }
 
@@ -370,7 +370,7 @@ export class WebServer extends Agent {
 
     async __stop__(http_server) {
         if (http_server) await new Promise(resolve => http_server.close(resolve))
-        print(`WebServer closed (worker #${process.env.WORKER_ID})`)
+        print(`#${process.env.WORKER_ID} WebServer closed`)
     }
 
     async _handle(req, res) {
