@@ -184,8 +184,10 @@ export class KafkaBroker extends Agent {
 
 /**********************************************************************************************************************/
 
-export class KafkaAgent extends Agent {
-    /* An agent whose event loop processes messages from a Kafka topic. The topic is named after this agent's ID. */
+export class KafkaClient extends Agent {
+    /* Creates a permanent local KafkaJS client with a connected producer and/or consumer.
+       The consumer only reads from a dedicated topic whose name is derived from this agent's ID.
+     */
 
     // __meta.kafka_log_level   -- controls the current log level of Kafka client
 
