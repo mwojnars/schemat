@@ -57,7 +57,7 @@ export class Process {
             await sleep(offset_sec)
         }
 
-        print(`Server closed (process #${this.worker_id})`)
+        this._print(`process closed`)
     }
 
     async _start_stop(current) {
