@@ -205,8 +205,6 @@ export class KafkaBroker extends Agent {
         print('KafkaBroker.__start__():', command)
 
         // let server = exec_promise(command, {cwd: schemat.node.site_root})
-
-        // let server = spawn(command, {cwd: schemat.node.site_root, shell: true})
         // let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore'})    // stdio needed to detach from parent's stdio
         let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore', detached: true})    // stdio needed to detach from parent's stdio; detached=true to create a new process group
 
@@ -225,18 +223,10 @@ export class KafkaBroker extends Agent {
         if (!server) return
         print(`Killing Kafka server process PID=${server.pid}`)
 
-        try { process.kill(-server.pid, 'SIGKILL') }
+        try { process.kill(-server.pid, 'SIGKILL') }        // kafka-server-stop.sh does the same: just killing the process by PID
         catch (ex) {
             print(`Failed to kill process ${server.pid}:`, ex)
         }
-
-        // let command = `/opt/kafka/bin/kafka-server-stop.sh`
-        // print('KafkaBroker.__stop__():', command)
-        //
-        // let {stdout, stderr} = await exec_promise(command, {cwd: schemat.node.site_root})
-        //
-        // print(`Kafka broker stopped: ${stdout}`)
-        // if (stderr) print(`Kafka broker stop stderr: ${stderr}`)
 
         try {
             // ({stdout, stderr} = await server)  // kafka-server-start.sh terminated here
