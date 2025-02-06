@@ -107,18 +107,22 @@ function server_setup(port, args = '') {
     let server, browser, page, messages
 
     before(async function () {
-
         // start the server...
 
         // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
         // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
         // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
-        server = exec(`exec node --experimental-vm-modules schemat/server/run.js --port ${port} ${args}`, (error, stdout, stderr) => {
-            if (error) console.error('\nError during server startup:', '\n' + stderr)
-            else       console.log('\nServer stdout:', '\n' + stdout)
-        })
+        server = exec(`exec node --experimental-vm-modules schemat/server/run.js --port ${port} ${args}`,
+            {maxBuffer: 1024 * 1024 * 10},  // capture full output, 10MB buffer
+            (error, stdout, stderr) => {
+                if (error) console.error('\nSchemat server error during startup:', '\n' + stderr)
+                if (stdout) console.log('\nSchemat server stdout:', '\n' + stdout)
+            })
 
-        // console.log('Server started:', server.pid)
+        // pipe output in real-time
+        server.stdout.pipe(process.stdout)
+        server.stderr.pipe(process.stderr)
+
         await delay(1000)                                       // wait for server to start
         browser = await puppeteer.launch({headless: "new"})
         page = await browser.newPage()
