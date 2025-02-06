@@ -223,12 +223,13 @@ export class Node extends KafkaAgent {
         let retry = {initialRetryTime: 1000, retries: 10}
 
         let producer = kafka.producer({retry})     // each node process (master/worker) has a single shared Kafka producer
+        await producer.connect()
 
-        try { await producer.connect() } catch (ex) 
-        {
-            print(`Kafka producer connection error:`, ex)
-            return {kafka, ...rest, failed: true}
-        }
+        // try { await producer.connect() } catch (ex)
+        // {
+        //     print(`Kafka producer connection error:`, ex)
+        //     return {kafka, ...rest, failed: true}
+        // }
         return {kafka, producer, ...rest}
     }
 

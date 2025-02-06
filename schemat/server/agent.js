@@ -95,7 +95,7 @@ export class KafkaAgent extends Agent {
         let retry = {initialRetryTime: 1000, retries: 10}
 
         let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
-        if (!start_consumer) return {kafka, start_consumer}
+        if (!start_consumer) return {kafka}
 
         const admin = kafka.admin()
         await admin.connect()
@@ -113,12 +113,12 @@ export class KafkaAgent extends Agent {
         await admin.disconnect()
 
         const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true, retry})
-        // await consumer.connect()
+        await consumer.connect()
 
-        try { await consumer.connect() } catch (ex) {
-            print(`Kafka consumer connection error:`, ex)
-            return {kafka, start_consumer, failed: true}
-        }
+        // try { await consumer.connect() } catch (ex) {
+        //     print(`Kafka consumer connection error:`, ex)
+        //     return {kafka, start_consumer, failed: true}
+        // }
         await consumer.subscribe({topic: this.__kafka_topic, fromBeginning: true})
         
         let consumer_running = consumer.run({
@@ -129,7 +129,7 @@ export class KafkaAgent extends Agent {
                 // await consumer.commitOffsets([{topic, partition, offset: (BigInt(message.offset) + 1n).toString()}])
             }
         })
-        return {kafka, consumer, consumer_running, start_consumer}
+        return {kafka, consumer, consumer_running}
     }
 
     // async __restart__(state) {
