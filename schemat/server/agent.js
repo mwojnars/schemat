@@ -114,11 +114,6 @@ export class KafkaAgent extends Agent {
 
         const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true, retry})
         await consumer.connect()
-
-        // try { await consumer.connect() } catch (ex) {
-        //     print(`Kafka consumer connection error:`, ex)
-        //     return {kafka, start_consumer, failed: true}
-        // }
         await consumer.subscribe({topic: this.__kafka_topic, fromBeginning: true})
         
         let consumer_running = consumer.run({
@@ -131,11 +126,6 @@ export class KafkaAgent extends Agent {
         })
         return {kafka, consumer, consumer_running}
     }
-
-    // async __restart__(state) {
-    //     // do a hard restart if connecting to Kafka failed on the previous start
-    //     return state.failed ? this.__start__(state) : state
-    // }
 
     async __stop__({consumer, consumer_running}) {
         await consumer?.disconnect()
@@ -231,34 +221,10 @@ export class KafkaBroker extends Agent {
         return {server}
     }
 
-    // async __stop__({server}) {
-    //     // if (!server) return
-    //
-    //     console.log(`Stopping Kafka server process PID=${server.pid}`)
-    //     try {
-    //         // send SIGTERM instead of SIGKILL to allow graceful shutdown
-    //         process.kill(-server.pid, 'SIGTERM')    // negative PID targets the process group
-    //
-    //         // wait for process to exit
-    //         await new Promise((resolve) => {
-    //             server.on('close', resolve)
-    //             // add timeout in case process doesn't exit
-    //             setTimeout(() => {
-    //                 try {
-    //                     process.kill(-server.pid, 'SIGKILL')
-    //                 } catch (e) {
-    //                     // process may already be gone
-    //                 }
-    //                 resolve()
-    //             }, 5000)
-    //         })
-    //     } catch (ex) {
-    //         console.log(`Failed to stop process ${server.pid}:`, ex)
-    //     }
-    // }
-    
     async __stop__({server}) {
+        if (!server) return
         print(`Killing Kafka server process PID=${server.pid}`)
+
         try { process.kill(-server.pid, 'SIGKILL') }
         catch (ex) {
             print(`Failed to kill process ${server.pid}:`, ex)

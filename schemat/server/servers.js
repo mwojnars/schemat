@@ -118,73 +118,27 @@ export class Process {
 
 
     // async loop() {
-    //     while (true) {
-    //         this.node = this.node.refresh()
+    //     for (let {prev, agent, oper, migrate} of actions) {
+    //         if (schemat.is_closing) return
+    //         if (!oper) continue                     // no action if the agent instance hasn't changed
     //
-    //         // `oper` is one of: undefined, 'install', 'uninstall', 'dump'
-    //         // `migrate` is a callback that sends the dump data to a new host
+    //         let state = prev?.__state
+    //         let external = (agent || prev)._external_props
     //
-    //         for (let {prev, agent, oper, migrate} of actions) {
-    //             if (schemat.is_closing) return
-    //             if (!oper) continue                     // no action if the agent instance hasn't changed
+    //         // cases:
+    //         // 1) install new agent (from scratch):     status == pending_install_fresh   >   installed
+    //         // 2) install new agent (from migration):   status == pending_install_clone   >   installed
+    //         // 3) migrate agent to another machine:     status == pending_migration & destination   >   installed
+    //         // 3) uninstall agent:   status == 'pending_uninstall'
+    //         // 4)
     //
-    //             let state = prev?.__state
-    //             let external = (agent || prev)._external_props
+    //         if (oper === 'uninstall') {
+    //             if (prev.__meta.started) await prev.__stop__(state)
+    //             await prev.__uninstall__()
     //
-    //             // cases:
-    //             // 1) install new agent (from scratch):     status == pending_install_fresh   >   installed
-    //             // 2) install new agent (from migration):   status == pending_install_clone   >   installed
-    //             // 3) migrate agent to another machine:     status == pending_migration & destination   >   installed
-    //             // 3) uninstall agent:   status == 'pending_uninstall'
-    //             // 4)
-    //
-    //             if (oper === 'uninstall') {
-    //                 if (prev.__meta.started) await prev.__stop__(state)
-    //                 await prev.__uninstall__()
-    //
-    //                 // tear down all external properties that represent/reflect the (desired) state (property) of the environment; every modification (edit)
-    //                 // on such a property requires a corresponding update in the environment, on every machine where this object is deployed
-    //                 for (let prop of external) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
-    //             }
-    //         }
-    //
-    //         for (let {prev, agent, oper, migrate} of actions) {
-    //             if (schemat.is_closing) return
-    //             if (prev === agent) continue            // no action if the agent instance hasn't changed
-    //
-    //             let state = prev?.__state
-    //             let external = (agent || prev)._external_props
-    //
-    //             if (!agent) {                           // stop old agents...
-    //                 await prev.__stop__(state)
-    //                 let dump = await prev.__migrate__()
-    //                 if (dump !== undefined) await migrate(dump)     // & wait for confirmation?
-    //                 // await prev.__uninstall__()
-    //
-    //                 // tear down all external properties that represent/reflect the (desired) state (property) of the environment; every modification (edit)
-    //                 // on such a property requires a corresponding update in the environment, on every machine where this object is deployed
-    //                 for (let prop of external) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
-    //                 continue
-    //             }
-    //
-    //             if (!prev) {                            // deploy new agents...
-    //                 for (let prop of external) if (agent[prop] !== undefined) agent._call_setup[prop](undefined, undefined, agent, agent[prop])
-    //                 await agent.__install__()
-    //                 agent.__self.__state = await agent.__start__()
-    //                 continue
-    //             }
-    //
-    //             // build a list of modifications of external properties
-    //             let changes = agent._external_props
-    //
-    //             // refresh existing agents; invoke setup.* triggers for modified properties...
-    //             if (changes.length) {
-    //                 await prev.__stop__(state)
-    //                 // launch triggers...
-    //                 agent.__self.__state = await agent.__start__()
-    //             }
-    //             else agent.__self.__state = await agent.__restart__(state, prev)
-    //
+    //             // tear down all external properties that represent/reflect the (desired) state (property) of the environment; every modification (edit)
+    //             // on such a property requires a corresponding update in the environment, on every machine where this object is deployed
+    //             for (let prop of external) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
     //         }
     //     }
     // }
@@ -436,23 +390,6 @@ export class WebServer extends Agent {
  **  HTTP SERVER
  **
  */
-
-// function serve_http() {
-//     // let http = require('http');
-//
-//     // limiting the no. of concurrent connections:
-//     //   http.globalAgent.maxTotalSockets = XXX
-//
-//     let server = http.createServer((req, res) => {
-//         res.statusCode = 200;
-//         res.setHeader('Content-Type', 'text/plain');
-//         res.end('Hello World');
-//     });
-//
-//     server.listen(PORT, HOSTNAME, () => {
-//         console.log(`Server running at http://${HOSTNAME}:${PORT}/`);
-//     });
-// }
 
 // async function serve_express() {
 //     let app = express()
