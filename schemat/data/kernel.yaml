@@ -814,7 +814,7 @@
     "@": 1
 - __id: 31
   name: KafkaBroker
-  class: schemat/server/agent.js:KafkaBroker
+  class: schemat/server/kafka.js:KafkaBroker
   __prototype:
     "@": 29
   __category:
