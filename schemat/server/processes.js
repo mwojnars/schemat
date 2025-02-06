@@ -130,8 +130,9 @@ export class MasterProcess extends Process {
         setTimeout(() => process.exit(1), 2 * delay * 1000)
 
         if (cluster.isPrimary)
-            await Promise.all(this.workers.map(worker => new Promise(resolve => {
+            await Promise.all(this.workers.map(worker => new Promise((resolve, reject) => {
                 worker.on('exit', resolve)
+                worker.on('error', reject)
                 worker.kill()
             })))
         else await this.running
