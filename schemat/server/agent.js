@@ -222,7 +222,10 @@ export class KafkaBroker extends Agent {
     }
 
     async _kill_kafka_server() {
-        /* Execute `ps` to check if Kafka processes (both shell and java) are running, and if so, kill them. */
+        /* Execute `ps` to check if Kafka processes (both shell and java) are running with the same `listeners` setting,
+           and if so, kill them. These processes are most likely the remains after unclean shutdown of the previous
+           execution of the same KafkaBroker.
+         */
         let command = `ps aux | grep -E 'kafka-server-start\\.sh|kafka\\.Kafka' | grep ${this.settings.get('listeners')} | grep -v grep | awk '{print $2}'`
         print('KafkaBroker._kill_kafka_server():', command)
 
