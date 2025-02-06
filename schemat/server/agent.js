@@ -199,6 +199,8 @@ export class KafkaBroker extends Agent {
     async __start__() {
         process.env.KAFKAJS_NO_PARTITIONER_WARNING = '1'  // silence partitioner warning
 
+        await this._kill_kafka_server()
+
         // apply overrides using --override option
         let overrides = Array.from(this.settings).map(([key, value]) => `--override ${key}=${value}`).join(' ')
         let command = `/opt/kafka/bin/kafka-server-start.sh ${this.props_path} ${overrides}`
@@ -217,6 +219,27 @@ export class KafkaBroker extends Agent {
 
         print(`started Kafka server: PID=${server.pid}`)
         return {server}
+    }
+
+    async _kill_kafka_server() {
+        /* Execute `ps` to check if Kafka processes (both shell and java) are running, and if so, kill them. */
+        let command = `ps aux | grep -E 'kafka-server-start\\.sh|kafka\\.Kafka' | grep ${this.settings.get('listeners')} | grep -v grep | awk '{print $2}'`
+        print('KafkaBroker._kill_kafka_server():', command)
+
+        let {stdout} = await exec_promise(command, {cwd: schemat.node.site_root})
+        if (!stdout) return
+        
+        // stdout will contain PIDs of both processes, one per line (if they exist)
+        let pids = stdout.trim().split('\n')
+        for (let pid of pids) {
+            print(`Killing Kafka process:`, pid)
+            try {
+                process.kill(-parseInt(pid), 'SIGKILL')     // try killing process group
+                process.kill(parseInt(pid), 'SIGKILL')      // also try killing single process
+            } catch (ex) {}                                 // ignore errors - process may already be dead
+        }
+        await sleep(2)
+        print(`_kill_kafka_server(): done`)
     }
 
     async __stop__({server}) {
