@@ -249,3 +249,36 @@ export class KafkaClient extends Agent {
     }
 }
 
+
+/**********************************************************************************************************************/
+
+export class KafkaAgent extends Agent {
+     /* An agent that creates its own consumer from `schemat.node.kafka`, for internal use, and processes
+        incoming Kafka messages in a custom way. This kind of agent does NOT create another Kafka client nor broker,
+        but instead it uses the global shared client created by the host Node process.
+      */
+    get __kafka_topic()  { return `topic-${this.id}` }
+
+    async __start__() {
+        let kafka = await schemat.node.kafka
+        let consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true, retry: {initialRetryTime: 1000, retries: 10}})
+
+        await consumer.connect()
+        await consumer.subscribe({topic: this.__kafka_topic, fromBeginning: true})
+
+        let consumer_running = consumer.run({
+            eachMessage: ({topic, partition, message}) => this.__consume__(topic, partition, message)
+        })
+        return {consumer, consumer_running}
+    }
+
+    async __stop__({consumer, consumer_running}) {
+        await consumer?.disconnect()
+        await consumer_running
+    }
+
+    async __consume__(topic, partition, message) {
+        /* Override this method to process incoming messages. */
+        print(`${topic}[${partition}]: ${message.value}`)
+    }
+}
