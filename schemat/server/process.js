@@ -65,8 +65,7 @@ export class Process {
     async run() {
         /* Start/stop loop of active agents. */
         schemat.node = this.node
-
-        let running = []        // list of agents currently running on this process, each of them has __state
+        let agents                  // list of agents currently running on this process, each of them has __state
 
         while (true) {
             let beginning = Date.now()
@@ -79,10 +78,10 @@ export class Process {
             // else print(`worker ${this.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
 
             schemat.node = this.node = new_node
-            running = await this._start_stop(running)
+            schemat.agents = agents = await this._start_stop()
 
             if (schemat.is_closing)
-                if (running.length) continue; else break            // let the currently-running agents gently stop
+                if (agents.length) continue; else break            // let the currently-running agents gently stop
 
             let passed = (Date.now() - beginning) / 1000
             let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
@@ -90,17 +89,18 @@ export class Process {
             let remaining = this.node.refresh_interval - offset_sec - passed
             if (remaining > 0) await sleep(remaining);
 
-            [this.node, ...running].map(obj => obj.refresh())       // schedule a reload of relevant objects in the background, for next iteration
+            [this.node, ...agents].map(obj => obj.refresh())       // schedule a reload of relevant objects in the background, for next iteration
             await sleep(offset_sec)
         }
 
         this._print(`process closed`)
     }
 
-    async _start_stop(current) {
+    async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
-
+        let current = schemat.agents
         let agents = this._get_agents_running()     // agents that *should* be running now on this process (possibly need to be started)
+
         if (schemat.is_closing) {
             agents = []         // enforce clean shutdown by stopping all agents
             this._print(`closing and stopping all agents`)

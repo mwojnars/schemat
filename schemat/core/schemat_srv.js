@@ -37,6 +37,7 @@ export class ServerSchemat extends Schemat {
     //                             // new requests wait until the current session completes, see Session.start()
 
     node            // host Node (web object) of the current process; initialized and periodically reloaded in Server
+    agents          // array of Agent objects that are currently running on this node process (worker/master)
 
     _db             // bootstrap DB; regular server-side DB is taken from site.database
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
@@ -56,6 +57,7 @@ export class ServerSchemat extends Schemat {
 
         this._transaction = new AsyncLocalStorage()
         // this.loader = new Loader(import.meta.url)
+        this.agents = []
     }
 
     client_block(request, id_context, ...objects) {
