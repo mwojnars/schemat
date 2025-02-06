@@ -787,7 +787,7 @@
   info: "An agent that implements a web server: a perpetual event loop
     (microservice) that receives web requests from external clients, processes
     them and returns responses over the web."
-  class: schemat/server/servers.js:WebServer
+  class: schemat/server/agent.js:WebServer
   schema:
     host:
       default: 127.0.0.1
