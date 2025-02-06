@@ -226,17 +226,24 @@ export class KafkaBroker extends Agent {
         server.on('close', code => print(`Kafka server process exited with code=${code}`))
         // server.unref()
 
+        print(`started Kafka server: PID=${server.pid}`)
         return {server}
     }
 
     async __stop__({server}) {
-        let command = `/opt/kafka/bin/kafka-server-stop.sh`
-        print('KafkaBroker.__stop__():', command)
+        print(`Killing Kafka server process PID=${server.pid}`)
+        try { process.kill(server.pid, 'SIGKILL') } 
+        catch (ex) {
+            print(`Failed to kill process ${server.pid}:`, ex)
+        }
 
-        let {stdout, stderr} = await exec_promise(command, {cwd: schemat.node.site_root})
-
-        print(`Kafka broker stopped: ${stdout}`)
-        if (stderr) print(`Kafka broker stop stderr: ${stderr}`)
+        // let command = `/opt/kafka/bin/kafka-server-stop.sh`
+        // print('KafkaBroker.__stop__():', command)
+        //
+        // let {stdout, stderr} = await exec_promise(command, {cwd: schemat.node.site_root})
+        //
+        // print(`Kafka broker stopped: ${stdout}`)
+        // if (stderr) print(`Kafka broker stop stderr: ${stderr}`)
 
         try {
             // ({stdout, stderr} = await server)  // kafka-server-start.sh terminated here
