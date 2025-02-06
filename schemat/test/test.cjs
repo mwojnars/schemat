@@ -134,7 +134,8 @@ function server_setup(port, args = '') {
         server = exec(`exec node --experimental-vm-modules schemat/server/run.js --port ${port} ${args}`,
             {maxBuffer: 1024 * 1024 * 10},  // capture full output, 10MB buffer
             (error, stdout, stderr) => {
-                if (error) console.error('\nSchemat server error during startup:', '\n' + stderr)
+                if (error) console.error('\nSchemat server error:', error)
+                if (stderr) console.error('\nSchemat server stderr:', '\n' + stderr)
                 if (stdout) console.log('\nSchemat server stdout:', '\n' + stdout)
             })
 
@@ -184,6 +185,7 @@ function server_setup(port, args = '') {
     })
 
     after(async function () {
+        this.timeout(30000)
         await browser?.close()
 
         if (server) {
