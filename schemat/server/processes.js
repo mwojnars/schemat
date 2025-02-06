@@ -120,13 +120,12 @@ export class MasterProcess extends Process {
 
     async stop() {
         if (schemat.is_closing) return
+        schemat.is_closing = true
 
         let node = await this.node.reload()
         let delay = node.refresh_interval
 
         if (cluster.isPrimary) print(`\nReceived kill signal, shutting down gracefully in approx. ${delay} seconds...`)
-
-        schemat.is_closing = true
         setTimeout(() => process.exit(1), 2 * delay * 1000)
 
         if (cluster.isPrimary)
@@ -135,7 +134,8 @@ export class MasterProcess extends Process {
                 worker.on('error', reject)
                 worker.kill()
             })))
-        else await this.running
+
+        await this.running
         process.exit(0)
     }
 
