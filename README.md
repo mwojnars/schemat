@@ -6,7 +6,7 @@
 internet applications composed of isomorphic **web objects** that live "on the web" (rather than a single machine)
 and can be seamlessly transferred over the network and executed in any local environment (on a client, server, or data node).
 
-Schemat comes with a NoSQL, distributed, schema-aware, internal **data engine** that supports object-oriented storage, index creation,
+Schemat comes with a NoSQL-like, distributed, schema-aware, object-oriented, internal **data store** that supports index creation,
 live schema evolution, object & schema versioning, and more. Web objects are grouped into categories and may utilize multiple inheritance.
 
 By introducing isomorphic, network-aware web objects, Schemat extends the traditional object model to span the entire distributed application stack -- from the database to the client node -- in a way that unifies the client/server environments. Web objects can fully encapsulate a particular web functionality and combine its _data model_, server-side _logic_, and client-side _appearance_ - all in a single, network-native object. This is in contrast to traditional, network-agnostic objects that may only implement a part of any given functionality, the part that is specifically related to the given local environment (client, server, or database).
@@ -20,7 +20,7 @@ Web objects have many useful features that make them suitable for building compl
 
 - The web object has a **unique ID** that serves as its global identifier across all execution environments (client, server, database), and is assigned when the object is inserted to the database. Optionally, a web object may have a human-readable, plain-text **name**.
 
-- Web object has persistent **properties** (_aka_ attributes or fields). They can take on values of various types, including primitives (strings, numbers, booleans), compound (arrays, maps, records), custom types, JavaScript objects, or references to other web objects. Properties may have **default values**, or be imputed with **imputation functions** declared in the property schema.
+- Web object has persistent **properties** (_aka_ attributes or fields) that are automatically serialized and saved in the internal data store. They can take on values of various types, including primitives (strings, numbers, booleans), compound (arrays, maps, records), custom types, JavaScript objects, or references to other web objects. Properties may have **default values**, or be imputed with **imputation functions** declared in the property schema.
 
 - Web object may contain multiple values for a given property, i.e., the same property name can be repeated a number of times in the object, creating a **repeated property** or **multivalued property**. Schemat provides a special "plural" syntax (`.name$`) for accessing an array of all values of a repeated property.
 
