@@ -3,15 +3,15 @@
 [... WORK IN PROGRESS ...]
 
 **Schemat** is an object-oriented platform for building scalable 
-internet applications composed of isomorphic **web objects** that are seamlessly 
-transferred over the network and executed on any machine (client, server, database node).
+internet applications composed of isomorphic **web objects** that live "on the web" (rather than a single machine)
+and can be seamlessly transferred over the network and executed in any local environment (on a client, server, or data node).
 
-Schemat comes with a built-in, distributed, schema-aware, NoSQL **database** engine that supports index creation, live schema evolution, object & schema versioning, and more. Web objects are grouped into categories and may utilize multiple prototypical inheritance.
+Schemat comes with a NoSQL, distributed, schema-aware, internal **data engine** that supports object-oriented storage, index creation,
+live schema evolution, object & schema versioning, and more. Web objects are grouped into categories and may utilize multiple inheritance.
 
-By introducing isomorphic, network-aware web objects, Schemat extends the traditional object model to span the entire distributed application stack -- from the database to the client node -- in a way that unifies all client/server environments. Web objects are designed to fully encapsulate a given web functionality, with its _data model_, server-side _logic_, and client-side _appearance_ - all combined in a single, network-native object. This is in contrast to traditional, network-agnostic objects that are designed to be executed on a single machine.
-As such, Schemat is the first software platform that brings the full expression of OOP paradigm to the web.
+By introducing isomorphic, network-aware web objects, Schemat extends the traditional object model to span the entire distributed application stack -- from the database to the client node -- in a way that unifies the client/server environments. Web objects can fully encapsulate a particular web functionality and combine its _data model_, server-side _logic_, and client-side _appearance_ - all in a single, network-native object. This is in contrast to traditional, network-agnostic objects that may only implement a part of any given functionality, the part that is specifically related to the given local environment (client, server, or database).
 
-Schemat is written in Node.js and Javascript.
+Schemat is the first software platform that brings the full expression of [Object-Oriented Programming (OOP)](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Advanced_JavaScript_objects/Object-oriented_programming) to the web. Schemat is written in Node.js and Javascript.
 
 
 ### Features
@@ -20,9 +20,9 @@ Web objects have many useful features that make them suitable for building compl
 
 - The web object has a **unique ID** that serves as its global identifier across all execution environments (client, server, database), and is assigned when the object is inserted to the database. Optionally, a web object may have a human-readable, plain-text **name**.
 
-- Web object has persistent **properties** (_aka_ attributes or fields). They can take on values of various types, including primitives (strings, numbers, booleans), compound (arrays, maps, records), custom types, JavaScript objects, or references to other web objects. Properties may have **default values** or **imputation functions** defined, which are used to fill in missing values.
+- Web object has persistent **properties** (_aka_ attributes or fields). They can take on values of various types, including primitives (strings, numbers, booleans), compound (arrays, maps, records), custom types, JavaScript objects, or references to other web objects. Properties may have **default values**, or be imputed with **imputation functions** declared in the property schema.
 
-- Web object may contain multiple values for a given property, i.e., the property can be repeated multiples times in the object with different values (a _repeated_ or **multivalued property**), without the need to declare the property as an array. Schemat provides a special syntax for accessing the repeated values.
+- Web object may contain multiple values for a given property, i.e., the same property name can be repeated a number of times in the object, creating a **repeated property** or **multivalued property**. Schemat provides a special "plural" syntax (`.name$`) for accessing an array of all values of a repeated property.
 
 - Web object may belong to a **category** that defines its properties and their schema, and performs automatic validation of the object's content upon insertion and modification. Categories themselves are web objects, so they can be stored in the database, and accessed and modified in the same way as any other web object.
 
