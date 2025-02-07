@@ -199,11 +199,11 @@
         inherit: false
         "@": schemat/types/type.js:STRING
       __ttl:
-        info: Time To Live (TTL) of the object, in seconds. Determines for how long
-          the object is kept in a server-side cache and reused after being
-          loaded from DB. If zero, the object is evicted on the nearest cache
-          purge. A real number. Recommended values are between 1.0 and 600. DO
-          NOT set this too high, because TTL is the *only* mechanism that drives
+        info: Time To Live (TTL) of the object, in seconds. Determines for how long the
+          object is kept in a server-side cache and reused after being loaded
+          from DB. If zero, the object is evicted on the nearest cache purge. A
+          real number. Recommended values are between 1.0 and 600. DO NOT set
+          this too high, because TTL is the *only* mechanism that drives
           server-side object cache eviction and setting a high TTL for multiple
           objects may fill out the cache, even if these objects are no longer
           used.
@@ -618,6 +618,15 @@
     child (worker) processes, if any. Nodes communicate with each other using
     Kafka, and in this way they form a distributed compute & storage cluster.
   schema:
+    agents_installed_map:
+      info: Catalog of all Agent objects installed on this machine.
+      default:
+        "@": schemat:Catalog
+      value_type:
+        category:
+          "@": 29
+        "@": schemat/types/type.js:REF
+      "@": schemat/types/catalog_type.js:CATALOG
     agents_installed:
       info: Array of Agent objects installed on this machine.
       default: []
