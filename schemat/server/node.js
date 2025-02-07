@@ -70,9 +70,19 @@ export class Node extends KafkaClient {
         this.agents_installed_map.set(name, agent)
     }
 
-    'edit.delete_installed'(agent) {
+    'edit.delete_installed'(agent_or_name) {
         /* Remove the `agent` from the list of agents_installed. Idempotent. */
-        this.agents_installed = this.agents_installed.filter(a => a.id !== agent.id)
+        // this.agents_installed = this.agents_installed.filter(a => a.id !== agent.id)
+
+        if (typeof agent_or_name === 'string')
+            this.agents_installed_map.delete(agent_or_name)
+        else
+            // search for the agent ID in the map and remove it
+            for (let [name, agent] of this.agents_installed_map.entries())
+                if (agent.id === agent_or_name.id) {
+                    this.agents_installed_map.delete(name)
+                    break
+                }
     }
 
     'edit.add_running'(agent, {workers = true, master = false}) {
