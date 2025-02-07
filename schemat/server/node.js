@@ -15,6 +15,7 @@ export class Node extends KafkaClient {
        running agents in Process._get_agents_running().
      */
 
+    agents_installed_map
     agents_installed
     agents_running
     master_agents_running

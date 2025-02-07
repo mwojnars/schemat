@@ -256,6 +256,12 @@
   __category:
     "@": 30
 - __id: 1024
+  agents_installed_map:
+    kafka_broker:
+      "@": 1031
+    webserver:
+      "@": 1023
+    "@": schemat:Catalog
   agents_installed:
     - "@": 1023
     - "@": 1031
