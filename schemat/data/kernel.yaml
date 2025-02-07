@@ -618,7 +618,7 @@
     child (worker) processes, if any. Nodes communicate with each other using
     Kafka, and in this way they form a distributed compute & storage cluster.
   schema:
-    agents_installed_map:
+    agents_installed:
       info: Catalog of all Agent objects installed on this machine.
       default:
         "@": schemat:Catalog

@@ -256,7 +256,7 @@
   __category:
     "@": 30
 - __id: 1024
-  agents_installed_map:
+  agents_installed:
     kafka_broker:
       "@": 1031
     webserver:

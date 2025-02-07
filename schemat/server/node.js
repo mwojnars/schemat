@@ -15,7 +15,7 @@ export class Node extends KafkaClient {
        running agents in Process._get_agents_running().
      */
 
-    agents_installed_map
+    agents_installed
     agents_running
     master_agents_running
     refresh_interval
@@ -63,26 +63,26 @@ export class Node extends KafkaClient {
         /* Add the agent to `agents_installed` under the given `name`. Idempotent. */
 
         // check that the name is not already taken
-        let current = this.agents_installed_map.get(name)
+        let current = this.agents_installed.get(name)
         if (current && current.id !== agent.id) throw new Error(`an agent with the same name (${name}), id=${current.id}, is already installed on node [${this.id}]`)
 
         // check that the agent is not already installed under a different name
-        let other_name = Array.from(this.agents_installed_map.entries()).find(([n, a]) => a.id === agent.id && n !== name)?.[0]
+        let other_name = Array.from(this.agents_installed.entries()).find(([n, a]) => a.id === agent.id && n !== name)?.[0]
         if (other_name) throw new Error(`agent [${agent.id}] is already installed on node [${this.id}] under a different name (${other_name})`)
 
-        this.agents_installed_map.set(name, agent)
+        this.agents_installed.set(name, agent)
     }
 
     'edit.delete_installed'(agent_or_name) {
         /* Remove the agent from `agents_installed`; agent_or_name is either an Agent object or its name in `agents_installed`. Idempotent. */
 
         if (typeof agent_or_name === 'string')
-            this.agents_installed_map.delete(agent_or_name)
+            this.agents_installed.delete(agent_or_name)
         else
             // search for the agent ID in the map and remove it
-            for (let [name, agent] of this.agents_installed_map.entries())
+            for (let [name, agent] of this.agents_installed.entries())
                 if (agent.id === agent_or_name.id) {
-                    this.agents_installed_map.delete(name)
+                    this.agents_installed.delete(name)
                     break
                 }
     }
@@ -91,7 +91,7 @@ export class Node extends KafkaClient {
         /* Check that the `agent` is installed and not yet on the list of agents_running and/or master_agents_running,
            then add it to the corresponding array(s). Idempotent.
          */
-        let agents = Array.from(this.agents_installed_map.values())
+        let agents = Array.from(this.agents_installed.values())
         if (!agents.some(a => a.id === agent.id)) throw new Error(`agent [${agent.id}] is not installed on node [${this.id}]`)
 
         if (workers && this.agents_running.every(a => a.id !== agent.id))
