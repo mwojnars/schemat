@@ -11,7 +11,7 @@ export class Node extends KafkaClient {
 
        The node, as an Agent, must NOT have any __install__() or __uninstall__() method, because these methods will never
        be launched: the node is assumed to be installed on itself without any installation procedure and without
-       being included in the `agents_installed` list. The node is added implicitly to the list of currently
+       being included in `agents_installed`. The node is added implicitly to the list of currently
        running agents in Process._get_agents_running().
      */
 
@@ -60,12 +60,16 @@ export class Node extends KafkaClient {
 
 
     'edit.add_installed'(name, agent) {
-        /* Add the agent to `agents_installed` if not already present. Idempotent. */
-        // if (this.agents_installed.every(a => a.id !== agent.id))
-        //     this.agents_installed.push(agent)
+        /* Add the agent to `agents_installed` under the given `name`. Idempotent. */
 
+        // check that the name is not already taken
         let current = this.agents_installed_map.get(name)
-        if (current && current.id !== agent.id) throw new Error(`agent [${agent.id}] is already installed as "${name}"`)
+        if (current && current.id !== agent.id) throw new Error(`an agent with the same name (${name}), id=${current.id}, is already installed on node [${this.id}]`)
+
+        // check that the agent is not already installed under a different name
+        let other_name = Array.from(this.agents_installed_map.entries()).find(([n, a]) => a.id === agent.id && n !== name)?.[0]
+        if (other_name) throw new Error(`agent [${agent.id}] is already installed on node [${this.id}] under a different name (${other_name})`)
+
         this.agents_installed_map.set(name, agent)
     }
 
