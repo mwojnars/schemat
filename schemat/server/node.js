@@ -89,7 +89,8 @@ export class Node extends KafkaClient {
         /* Check that the `agent` is installed and not yet on the list of agents_running and/or master_agents_running,
            then add it to the corresponding array(s). Idempotent.
          */
-        if (!this.agents_installed?.some(a => a.id === agent.id)) throw new Error(`agent [${agent.id}] is not installed on node [${this.id}]`)
+        let agents = Array.from(this.agents_installed_map.values())
+        if (!agents.some(a => a.id === agent.id)) throw new Error(`agent [${agent.id}] is not installed on node [${this.id}]`)
 
         if (workers && this.agents_running.every(a => a.id !== agent.id))
             this.agents_running.push(agent)
