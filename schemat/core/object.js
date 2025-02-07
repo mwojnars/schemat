@@ -346,7 +346,7 @@ export class WebObject {
     edit            // triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', ...args)
     action          // triggers of server-side actions: obj.action.X(...args) invokes POST.action(id, 'X', ...args)
 
-    // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network endpoints, initialized in _init_services().
+    // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network communication endpoints, initialized in _init_services().
     // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
     //      this['<PROTO>.xxx']().invoke(this, '<PROTO>.xxx', ...args)
     // If the handler function doesn't return a service object, the corresponding trigger simply returns the handler's return value, whatever it is.
@@ -948,7 +948,7 @@ export class WebObject {
         assert(this.is_loaded)
         request.target = this
 
-        // convert endpoint names to full protocol-qualified endpoints: GET.name
+        // convert endpoint names to full protocol-qualified communication endpoints: GET.name
         let names = this._get_endpoints(request)
         let endpoints = names.map(e => `${request.protocol}${SEP}${e}`)
 
