@@ -60,10 +60,14 @@ export class Node extends KafkaClient {
     }
 
 
-    'edit.add_installed'(agent) {
-        /* Check that the `agent` is not yet in the array of agents_installed and add it at the end. Idempotent. */
-        if (this.agents_installed.every(a => a.id !== agent.id))
-            this.agents_installed.push(agent)
+    'edit.add_installed'(name, agent) {
+        /* Add the agent to `agents_installed` if not already present. Idempotent. */
+        // if (this.agents_installed.every(a => a.id !== agent.id))
+        //     this.agents_installed.push(agent)
+
+        let current = this.agents_installed_map.get(name)
+        if (current && current.id !== agent.id) throw new Error(`agent [${agent.id}] is already installed as "${name}"`)
+        this.agents_installed_map.set(name, agent)
     }
 
     'edit.delete_installed'(agent) {
@@ -96,12 +100,12 @@ export class Node extends KafkaClient {
            is also added to `agents_running` and is started on the next iteration of the host process's life loop.
          */
         return new JsonKAFKA({
-            server: async (agent, {start = true, workers = true, master = false} = {}) => {
+            server: async (name, agent, {start = true, workers = true, master = false} = {}) => {
                 await agent.load()
                 await agent.__install__(this)       // can modify the local environment of the host node
 
                 let node = this.get_mutable()
-                node.edit.add_installed(agent)
+                node.edit.add_installed(name, agent)
                 // node.edit('agents_installed', []).add(agent)
 
                 if (start) node.edit.add_running(agent, {workers, master})
