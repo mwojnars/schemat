@@ -266,12 +266,13 @@
   __category:
     "@": 30
 - __id: 1024
-  __category:
-    "@": 21
-  agents_installed:
-    - "@": 1023
+  agents_installed_map:
+    webserver:
+      "@": 1023
   agents_running:
     - "@": 1023
+  __category:
+    "@": 21
 - __id: 1025
   name: cluster
   __category:

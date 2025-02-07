@@ -16,7 +16,6 @@ export class Node extends KafkaClient {
      */
 
     agents_installed_map
-    agents_installed
     agents_running
     master_agents_running
     refresh_interval

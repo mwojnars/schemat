@@ -262,9 +262,6 @@
     webserver:
       "@": 1023
     "@": schemat:Catalog
-  agents_installed:
-    - "@": 1023
-    - "@": 1031
   agents_running:
     - "@": 1023
   master_agents_running:
