@@ -259,6 +259,10 @@
   agents_installed:
     kafka_broker:
       "@": 1031
+    kafka_master:
+      "@": 1034
+    kafka_worker:
+      "@": 1035
     webserver:
       "@": 1023
     "@": schemat:Catalog
