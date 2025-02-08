@@ -329,6 +329,10 @@
     "@": 19
 - __id: 1034
   name: kafka-master
+  start_client: true
+  start_producer: true
+  start_consumer: true
+  __class: schemat/server/kafka.js:KafkaNode
   __category:
     "@": 32
 - __id: 1035
