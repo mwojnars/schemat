@@ -1,10 +1,11 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
-import {JsonKAFKA, KafkaAgent} from "./kafka.js";
+import {WebObject} from "../core/object.js";
+import {JsonKAFKA} from "./kafka.js";
 
 
 /**********************************************************************************************************************/
 
-export class Node extends KafkaAgent {
+export class Node extends WebObject {
     /* Node of a Schemat cluster. Technically, each node is a local (master) process launched independently
        on a particular machine, together with its child (worker) processes, if any. Nodes communicate with each other
        using Kafka, and in this way they form a distributed compute & storage cluster.
@@ -23,17 +24,11 @@ export class Node extends KafkaAgent {
     get kafka_client() { return this.__state?.kafka }
     // get kafka_client() { return this.schemat.agents.get('kafka_client').__state.kafka }
     // get kafka_producer() { return this.__state.producer }
+    // is_master_process() { return !this.worker_id}
 
     kafka_send(topic, message) {
         return this.__state.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
     }
-
-    // is_master_process() { return !this.worker_id}
-    //
-    // async __start__() {
-    //     let start_consumer = this.is_master_process()       // only the master process deploys a node-wise consumer
-    //     return super.__start__(start_consumer, true)        // each node process (master/worker) has a single shared Kafka producer
-    // }
 
 
     'edit.add_installed'(name, agent) {

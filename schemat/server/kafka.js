@@ -209,7 +209,7 @@ export class KafkaAgent extends Agent {
         }
     }
 
-    async __start__(start_consumer = true, start_producer = false) {
+    async __start__() {
         /* Start the agent. Return an object of the form {kafka, consumer, consumer_running},
            where `consumer_running` is a Promise returned by consumer.run().
          */
@@ -221,8 +221,8 @@ export class KafkaAgent extends Agent {
         let kafka = (!this.start_client && schemat.node.kafka_client) ||
             new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
 
-        let {consumer, consumer_running} = (this.start_consumer || start_consumer) ? await this._start_consumer(kafka, retry) : {}
-        let {producer} = (this.start_producer || start_producer) ? await this._start_producer(kafka, retry) : {}
+        let {consumer, consumer_running} = this.start_consumer ? await this._start_consumer(kafka, retry) : {}
+        let {producer} = this.start_producer ? await this._start_producer(kafka, retry) : {}
 
         return {kafka, consumer, consumer_running, producer}
     }
@@ -279,13 +279,15 @@ export class KafkaAgent extends Agent {
 /**********************************************************************************************************************/
 
 export class KafkaNode extends KafkaAgent {
-    /* An agent that provides Kafka client (producer/consumer) functionality to the Node instance. */
+    /* An agent that provides Kafka client functionality (producer/consumer) on behalf of a Node instance. */
 
+    // Kafka identifiers use node's ID, not this object's
     get __kafka_client() { return `node-${schemat.node.id}-worker-${schemat.worker_id}` }
+    get __kafka_topic()  { return `topic-${schemat.node.id}` }
 
-    async __consume__(message) {
-        return schemat.node._process_message(message)
-    }
+    // async __consume__(message) {
+    //     return schemat.node._process_message(message)
+    // }
 }
 
 
