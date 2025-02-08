@@ -257,7 +257,8 @@ export class KafkaAgent extends Agent {
         return {producer}
     }
 
-    async __stop__({consumer, consumer_running}) {
+    async __stop__({consumer, consumer_running, producer}) {
+        await producer?.disconnect()
         await consumer?.disconnect()
         await consumer_running
     }
