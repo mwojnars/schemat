@@ -208,7 +208,7 @@ export class KafkaAgent extends Agent {
         }
     }
 
-    async __start__(start_consumer = true) {
+    async __start__(start_consumer = true, start_producer = false) {
         /* Start the agent. Return an object of the form {kafka, consumer, consumer_running},
            where `consumer_running` is a Promise returned by consumer.run().
          */
@@ -219,8 +219,9 @@ export class KafkaAgent extends Agent {
         let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
 
         let {consumer, consumer_running} = (this.start_consumer || start_consumer) ? await this._start_consumer(kafka, retry) : {}
+        let {producer} = (this.start_producer || start_producer) ? await this._start_producer(kafka, retry) : {}
 
-        return {kafka, consumer, consumer_running}
+        return {kafka, consumer, consumer_running, producer}
     }
 
     async _start_consumer(kafka, retry) {
@@ -248,6 +249,12 @@ export class KafkaAgent extends Agent {
         })
 
         return {consumer, consumer_running}
+    }
+
+    async _start_producer(kafka, retry) {
+        let producer = kafka.producer({retry})
+        await producer.connect()
+        return {producer}
     }
 
     async __stop__({consumer, consumer_running}) {
