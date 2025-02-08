@@ -143,21 +143,21 @@ class Intercept {
         ) return Reflect.set(target, path, value, receiver)
 
         let [base, plural] = Intercept._check_plural(path)      // property name without the $ suffix
-        let [step] = base.split(SUBFIELD)                       // first segment of a deep path
+        let [prop] = base.split(SUBFIELD)                       // first segment of a deep path
 
         // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
         // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
         let regular = (path[0] !== '_' || path.startsWith('__'))
         let schema = receiver.__schema              // using `receiver` not `target` because __schema is a cached property and receiver is the proxy wrapper here
-        let type = schema?.get(step)                // can be GENERIC for a field that's NOT explicitly declared in schema
+        let type = schema?.get(prop)                // can be GENERIC for a field that's NOT explicitly declared in schema
 
         // write value in __data only IF the `path` is in schema, or the schema is missing (or non-strict) AND the path name is regular
-        if (schema?.has(step) || (!schema?.options.strict && regular)) {
+        if (schema?.has(prop) || (!schema?.options.strict && regular)) {
             // if (!target.is_newborn()) print('proxy_set updating:', path)
             let {alias, getter} = type.options
 
-            if (alias) return receiver[path.replace(step, alias)] = value
-            if (getter) throw new Error(`cannot modify a getter property (${step})`)
+            if (alias) return receiver[path.replace(prop, alias)] = value
+            // if (getter) throw new Error(`cannot modify a getter property (${prop})`)
 
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${path})`)
@@ -166,7 +166,7 @@ class Intercept {
             else target._make_edit('set', path, value)
             return true
         }
-        else if (regular) throw new Error(`property not in object schema (${step})`)
+        else if (regular) throw new Error(`property not in object schema (${prop})`)
 
         // print('proxy_set() internal:', path, '/', mutable)
         return Reflect.set(target, path, value, receiver)
@@ -822,7 +822,7 @@ export class WebObject {
             }
 
             try {
-                if (type.options.getter) throw new ValueError(`"getter" property cannot be stored explicitly`)
+                // if (type.options.getter) throw new ValueError(`"getter" property cannot be stored explicitly`)
                 entry[1] = type.validate(value)             // may raise an exception
                 // let newval = type.validate(value)
                 // if (post_setup) entry[1] = newval

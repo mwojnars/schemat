@@ -42,7 +42,7 @@ export class Type {
                                     // repeated fields of type CATALOG provide special behavior: they get merged altogether during the property's value computation
 
         inherit  : true,            // if false, inheritance is disabled for this field; used especially for some system fields
-        impute   : undefined,       // name of function to be used for imputation of missing values; `this` references the item;
+        impute   : undefined,       // name of function to be used for imputation of missing values; inside the function, `this` references the containing object;
                                     // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
                                     // the function must be *synchronous* and cannot return a Promise; if the property value is present in DB, no imputation is done (!),
                                     // unlike with a getter method (getter=true) which overshadows all in-DB values simply because the getter uses the same JS attribute name
@@ -50,8 +50,7 @@ export class Type {
         getter   : undefined,       // if true, the value of the object's corresponding property is imputed from the same-named getter method of the object;
                                     // similar to impute=true, but does not require explicit function designation, and the function is implemented as a getter which can be more intuitive;
                                     // having a getter alone, without it being explicitly declared as a property with a type, in many cases is good enough, but prevents the property from being used in indexes (missing type definition);
-                                    // getter=true makes the property virtual (never stored in DB nor inherited), because even if a value was stored, it couldn't be accessed in the presence of a getter (reads are shadowed by the getter);
-                                    // this option only has an effect for top-level properties of web objects
+                                    // this option only has effect for top-level properties of web objects
 
         alias    : undefined,       // name of a property that this one is an alias for; all reads and writes are redirected to the aliased property; only for top-level properties of web objects
 
