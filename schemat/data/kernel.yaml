@@ -6,7 +6,7 @@
     class:
       info: 'Import path of the JS class (e.g., "path/.../file.js:ClassName") to be
         linked to the objects of this category upon object.load(). Can be
-        overriden on a per-object basis by setting object.__class property.
+        overridden on a per-object basis by setting object.__class property.
         Importantly, `class` impacts the category itself: all *static* endpoints
         defined in this class are treated as endpoints of the category object,
         not instances.'
@@ -160,8 +160,8 @@
         "@": schemat/types/type.js:REF
       __class:
         info: Import path of the JS class ("path/file.js:ClassName") that will be linked
-          to this object during loading. (NOTE this is likely obsolete, set
-          category.class instead?)
+          to this object during loading. This property overrides the category-wise
+          setting (__category.class).
         "@": schemat/types/type.js:IMPORT
       __prototype:
         info: An object that serves as a prototype for this one, that is, provides
