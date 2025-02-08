@@ -329,6 +329,9 @@
     "@": 19
 - __id: 1034
   name: kafka-master
+  info: Kafka client of the master process of a node. Comes with a shared producer
+    and a per-node dedicated consumer that processes messages addressed to the
+    Node.
   start_client: true
   start_producer: true
   start_consumer: true
@@ -337,6 +340,9 @@
     "@": 32
 - __id: 1035
   name: kafka-worker
+  info: Kafka client of a worker process of a node. Comes with a shared producer
+    (needed on every worker process), but no per-node consumer (only exists on
+    the master process).
   start_client: true
   start_producer: true
   start_consumer: false
