@@ -820,3 +820,12 @@
     "@": 29
   __category:
     "@": 1
+- __id: 32
+  name: KafkaAgent
+  __prototype:
+    "@": 29
+  schema:
+    "@": schemat:Catalog
+  class: schemat/server/kafka.js:KafkaAgent
+  __category:
+    "@": 1
