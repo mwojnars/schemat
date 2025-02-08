@@ -352,5 +352,6 @@
   start_client: true
   start_producer: true
   start_consumer: false
+  __class: schemat/server/kafka.js:KafkaNode
   __category:
     "@": 32

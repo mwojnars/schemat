@@ -280,6 +280,9 @@ export class KafkaAgent extends Agent {
 
 export class KafkaNode extends KafkaAgent {
     /* An agent that provides Kafka client (producer/consumer) functionality to the Node instance. */
+
+    get __kafka_client() { return `node-${schemat.node.id}-worker-${schemat.worker_id}` }
+
     async __consume__(message) {
         return schemat.node._process_message(message)
     }

@@ -20,8 +20,6 @@ export class Node extends KafkaAgent {
     master_agents_running
     refresh_interval
 
-    get __kafka_client() { return `node-${this.id}-worker-${schemat.worker_id}` }
-
     get kafka_client() { return this.__state?.kafka }
     // get kafka_client() { return this.schemat.agents.get('kafka_client').__state.kafka }
     // get kafka_producer() { return this.__state.producer }
