@@ -112,18 +112,9 @@ export class Process {
         let next = []                               // agents started in this loop iteration, or already running
 
         // find agents in `current` that are not in `agents` and need to be stopped
-        for (let agent of to_stop) {
+        for (let agent of to_stop.toReversed()) {       // iterate in reverse order as some agents may depend on previous ones
             this._print('will stop agent', agent.id)
             promises.push(agent.__stop__(agent.__state).then(() => {delete agent.__self.__state}))
-        }
-
-        // find agents in `agents` that are not in `current` and need to be started
-        for (let agent of to_start) {
-            this._print('will start agent', agent.id)
-            if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
-            next.push(agent)
-            promises.push(agent.__start__().then(state => agent.__self.__state = state))
-            // promises.push(agent.load().then(async agent => agent.__self.__state = await agent.__start__()))
         }
 
         // find agents in `current` that are still in `agents` and need to be refreshed
@@ -137,6 +128,15 @@ export class Process {
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
             // promises.push(prev.__stop__(prev.__state).then(async () => agent.__self.__state = await agent.__start__()))
+        }
+
+        // find agents in `agents` that are not in `current` and need to be started
+        for (let agent of to_start) {
+            this._print('will start agent', agent.id)
+            if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
+            next.push(agent)
+            promises.push(agent.__start__().then(state => agent.__self.__state = state))
+            // promises.push(agent.load().then(async agent => agent.__self.__state = await agent.__start__()))
         }
 
         await Promise.all(promises)
