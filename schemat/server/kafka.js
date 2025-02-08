@@ -37,6 +37,7 @@ export class KafkaService extends Service {
         // send `message` to the target's topic
         let topic = target.__kafka_topic
         return schemat.node.kafka_send(topic, message)
+        // return schemat.get_agent('kafka_client').kafka_send(topic, message)
     }
 }
 
@@ -74,8 +75,9 @@ export class KafkaBroker extends Agent {
     }
 
     async __install__() {
-        /* Assumption: Kafka must be already installed in /opt/kafka folder. */
-
+        /* Create a customized .properties file and format the dedicated Kafka folder for this node's broker.
+           Assumption: Kafka must be already installed in /opt/kafka folder.
+         */
         let props_path_original = `./schemat/server/kafka.properties`
 
         // create directory structure, ensure the folder is empty
@@ -190,6 +192,9 @@ export class KafkaClient extends Agent {
      */
 
     // __meta.kafka_log_level   -- controls the current log level of Kafka client
+
+    start_consumer
+    start_producer
 
     get __kafka_client() { return `agent-${this.id}` }
     get __kafka_topic()  { return `topic-${this.id}` }

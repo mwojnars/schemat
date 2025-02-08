@@ -45,6 +45,8 @@ export class Node extends KafkaClient {
         let producer = kafka.producer({retry})     // each node process (master/worker) has a single shared Kafka producer
         await producer.connect()
         return {kafka, producer, ...rest}
+
+        // TODO: consumer loop
     }
 
     async __stop__({producer, ...rest}) {
@@ -138,12 +140,16 @@ export class Node extends KafkaClient {
         })
     }
 
-    async 'action.start'(agent) {
-        // confirm that `agent` is installed and stopped...
-
-        this.agents_running.push(agent)
+    async 'action.start'(agent, opts = {}) {
+        // TODO: confirm that agents are installed and stopped...
+        // this.agents_running.push(agent)
+        this.edit.add_running(agent, opts)
         await this.save()
     }
-    async 'action.stop'(agent) {}
+
+    async 'action.stop'(agent) {
+        this.edit.delete_running(agent)
+        await this.save()
+    }
 }
 
