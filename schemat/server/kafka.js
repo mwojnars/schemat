@@ -217,8 +217,13 @@ export class KafkaAgent extends Agent {
         let retry = {initialRetryTime: 1000, retries: 10}
 
         let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
-        if (!start_consumer) return {kafka}
 
+        let {consumer, consumer_running} = (this.start_consumer || start_consumer) ? await this._start_consumer(kafka, retry) : {}
+
+        return {kafka, consumer, consumer_running}
+    }
+
+    async _start_consumer(kafka, retry) {
         const admin = kafka.admin()
         await admin.connect()
 
@@ -242,7 +247,7 @@ export class KafkaAgent extends Agent {
             eachMessage: ({topic, partition, message}) => this.__consume__(topic, partition, message)
         })
 
-        return {kafka, consumer, consumer_running}
+        return {consumer, consumer_running}
     }
 
     async __stop__({consumer, consumer_running}) {
