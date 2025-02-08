@@ -45,6 +45,11 @@ export class ServerSchemat extends Schemat {
     get db()    { return this.site?.database || this._db }
     get tx()    { return this._transaction.getStore() }
 
+    get worker_id() {
+        /* Numeric ID (1, 2, 3, ...) of the current worker process of the node; 0 for the master process. */
+        return process.env.WORKER_ID || 0
+    }
+
 
     constructor(config) {
         super(config)

@@ -53,13 +53,8 @@ export class Process {
         this.opts = opts
     }
 
-    get worker_id() {
-        /* Numeric ID (1, 2, 3, ...) of the current worker process; 0 for the master process. */
-        return process.env.WORKER_ID || 0
-    }
-
     _print(...args) {
-        print(`${this.node.id}/#${this.worker_id}:`, ...args)
+        print(`${this.node.id}/#${schemat.worker_id}:`, ...args)
     }
 
     async run() {
@@ -74,8 +69,8 @@ export class Process {
             let new_node = this.node.refresh()
             if (new_node.__ttl_left() < 0) new_node = await new_node.reload()
 
-            // if (new_node !== this.node) print(`worker ${this.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
-            // else print(`worker ${this.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
+            // if (new_node !== this.node) print(`worker ${schemat.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
+            // else print(`worker ${schemat.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
 
             schemat.node = this.node = new_node
             schemat.agents = agents = await this._start_stop()
@@ -200,7 +195,7 @@ export class MasterProcess extends Process {
         // print('loaded:', m)
         // let {WebServer} = await schemat.import('/$/local/schemat/server/agent.js')
 
-        print('MasterProcess.start() WORKER_ID:', this.worker_id)
+        print('MasterProcess.start() WORKER_ID:', process.env.WORKER_ID || 0)
         await boot_schemat(opts)
         this.opts = opts
 
@@ -223,7 +218,7 @@ export class MasterProcess extends Process {
             this.server = this
         }
         else {                                  // in the worker process, start this worker's Process instance
-            print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
+            print(`starting worker #${schemat.worker_id} (PID=${process.pid})...`)
             this.server = new Process(this.node, this.opts)
         }
         this.running = this.server.run()
