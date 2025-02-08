@@ -1,10 +1,10 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
-import {JsonKAFKA, KafkaClient} from "./kafka.js";
+import {JsonKAFKA, KafkaAgent} from "./kafka.js";
 
 
 /**********************************************************************************************************************/
 
-export class Node extends KafkaClient {
+export class Node extends KafkaAgent {
     /* Node of a Schemat cluster. Technically, each node is a local (master) process launched independently
        on a particular machine, together with its child (worker) processes, if any. Nodes communicate with each other
        using Kafka, and in this way they form a distributed compute & storage cluster.

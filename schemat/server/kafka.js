@@ -186,13 +186,14 @@ export class KafkaBroker extends Agent {
 
 /**********************************************************************************************************************/
 
-export class KafkaClient extends Agent {
+export class KafkaAgent extends Agent {
     /* Creates a permanent local KafkaJS client with a connected producer and/or consumer.
        The consumer only reads from a dedicated topic whose name is derived from this agent's ID.
      */
 
     // __meta.kafka_log_level   -- controls the current log level of Kafka client
 
+    start_client
     start_consumer
     start_producer
 
@@ -257,7 +258,7 @@ export class KafkaClient extends Agent {
 
 /**********************************************************************************************************************/
 
-export class KafkaAgent extends Agent {
+export class KafkaAgent__ extends Agent {
      /* An agent that creates its own consumer from `schemat.node.kafka`, for internal use, and processes
         incoming Kafka messages in a custom way. This kind of agent does NOT create another Kafka client nor broker,
         but instead it uses the global shared client created by the host Node process.
