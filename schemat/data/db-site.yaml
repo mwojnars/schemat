@@ -337,5 +337,8 @@
     "@": 32
 - __id: 1035
   name: kafka-worker
+  start_client: true
+  start_producer: true
+  start_consumer: false
   __category:
     "@": 32
