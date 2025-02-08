@@ -200,6 +200,7 @@ export class KafkaAgent extends Agent {
 
     get __kafka_client() { return `agent-${this.id}` }
     get __kafka_topic()  { return `topic-${this.id}` }
+    get __kafka_group()  { return `group-${this.id}` }
 
     _kafka_logger() {
         return () => ({namespace, level, label, log}) => {
@@ -243,7 +244,7 @@ export class KafkaAgent extends Agent {
         })
         await admin.disconnect()
 
-        const consumer = kafka.consumer({groupId: `group-${this.id}`, autoCommit: true, retry})
+        const consumer = kafka.consumer({groupId: this.__kafka_group, autoCommit: true, retry})
         await consumer.connect()
         await consumer.subscribe({topic: this.__kafka_topic, fromBeginning: true})
 
@@ -284,6 +285,7 @@ export class KafkaNode extends KafkaAgent {
     // Kafka identifiers use node's ID, not this object's
     get __kafka_client() { return `node-${schemat.node.id}-worker-${schemat.worker_id}` }
     get __kafka_topic()  { return `topic-${schemat.node.id}` }
+    get __kafka_group()  { return `group-${schemat.node.id}` }
 
     // async __consume__(message) {
     //     return schemat.node._process_message(message)

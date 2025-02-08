@@ -84,6 +84,7 @@ export class Node extends WebObject {
         /* Call agent.__install__() on this node and add the agent to `agents_installed`. If start=true, the agent
            is also added to `agents_running` and is started on the next iteration of the host process's life loop.
          */
+        // process.chdir(this.local_root || schemat.site.local_root)
         return new JsonKAFKA({
             server: async (name, agent, {start = true, workers = true, master = false} = {}) => {
                 await agent.load()
