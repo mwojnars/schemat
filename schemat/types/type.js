@@ -49,6 +49,7 @@ export class Type {
 
         getter   : undefined,       // if true, the value of the object's corresponding property is imputed from the same-named getter method of the object;
                                     // similar to impute=true, but does not require explicit function designation, and the function is implemented as a getter which can be more intuitive;
+                                    // although the getter method (if present) hides any persisted value of the property, assigning to the property is *allowed* because the getter method may not be universally present (say, it exists in a subclass, but not in the base class);
                                     // having a getter alone, without it being explicitly declared as a property with a type, in many cases is good enough, but prevents the property from being used in indexes (missing type definition);
                                     // this option only has effect for top-level properties of web objects
 
