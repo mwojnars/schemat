@@ -217,7 +217,9 @@ export class KafkaAgent extends Agent {
         this.__meta.kafka_log_level = logLevel.NOTHING    // available log levels: NOTHING (0), ERROR (1), WARN (2), INFO (3), DEBUG (4)
         let retry = {initialRetryTime: 1000, retries: 10}
 
-        let kafka = new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
+        // either use the global node.kafka_client, or create a new one
+        let kafka = (!this.start_client && schemat.node.kafka_client) ||
+            new Kafka({clientId: this.__kafka_client, brokers: [`localhost:9092`], logCreator: this._kafka_logger(), retry})
 
         let {consumer, consumer_running} = (this.start_consumer || start_consumer) ? await this._start_consumer(kafka, retry) : {}
         let {producer} = (this.start_producer || start_producer) ? await this._start_producer(kafka, retry) : {}
