@@ -145,7 +145,7 @@ export class Process {
 
     _get_agents_running() {
         /* List of agents that should be running now on this process. When an agent is to be stopped, it should be first removed from this list. */
-        return this.node.agents_running
+        return schemat.worker_id ? this.node.agents_running : this.node.master_agents_running   // master process has its own list of agents
     }
 
 
@@ -270,16 +270,5 @@ export class MasterProcess extends Process {
         await this.running
         process.exit(0)
     }
-
-    _get_agents_running() {
-        /* List of agents that should be running now on this process. When an agent is to be stopped, it should be first removed from this list. */
-        // print('MasterProcess agents running:', this.node.master_agents_running.map(a => a.id), 'ttl left', this.node.__ttl_left())
-        return this.node.master_agents_running
-    }
-
-    // _install_agents() {
-    //     // agents installed sequentially (no concurrency), to avoid conflicting temporary changes in the environment (like CWD)
-    //     process.chdir(schemat.node.local_root || schemat.site.local_root)
-    // }
 }
 
