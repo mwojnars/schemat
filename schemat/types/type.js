@@ -48,7 +48,7 @@ export class Type {
                                     // unlike with a getter method (getter=true) which overshadows all in-DB values simply because the getter uses the same JS attribute name
 
         getter   : undefined,       // if true, the value of the object's corresponding property is imputed from the same-named getter method of the object;
-                                    // similar to impute=true, but does not require explicit function designation, and the function is implemented as a getter which is more intuitive sometimes;
+                                    // similar to impute=true, but does not require explicit function designation, and the function is implemented as a getter which can be more intuitive;
                                     // having a getter alone, without it being explicitly declared as a property with a type, in many cases is good enough, but prevents the property from being used in indexes (missing type definition);
                                     // getter=true makes the property virtual (never stored in DB nor inherited), because even if a value was stored, it couldn't be accessed in the presence of a getter (reads are shadowed by the getter);
                                     // this option only has an effect for top-level properties of web objects
