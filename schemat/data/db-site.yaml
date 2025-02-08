@@ -327,3 +327,11 @@
   format: index-jl
   __category:
     "@": 19
+- __id: 1034
+  name: kafka-master
+  __category:
+    "@": 32
+- __id: 1035
+  name: kafka-worker
+  __category:
+    "@": 32
