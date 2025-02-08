@@ -267,6 +267,7 @@
       "@": 1023
     "@": schemat:Catalog
   agents_running:
+    - "@": 1035
     - "@": 1023
   master_agents_running:
     - "@": 1031
