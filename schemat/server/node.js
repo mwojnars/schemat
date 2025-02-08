@@ -31,16 +31,16 @@ export class Node extends KafkaAgent {
     // get kafka_client() { return this.schemat.agents.get('kafka_client').__state.kafka }
     // get kafka_producer() { return this.__state.producer }
 
-    is_master_process() { return !this.worker_id}
-
     kafka_send(topic, message) {
         return this.__state.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
     }
 
-    async __start__() {
-        let start_consumer = this.is_master_process()       // only the master process deploys a node-wise consumer
-        return super.__start__(start_consumer, true)        // each node process (master/worker) has a single shared Kafka producer
-    }
+    // is_master_process() { return !this.worker_id}
+    //
+    // async __start__() {
+    //     let start_consumer = this.is_master_process()       // only the master process deploys a node-wise consumer
+    //     return super.__start__(start_consumer, true)        // each node process (master/worker) has a single shared Kafka producer
+    // }
 
 
     'edit.add_installed'(name, agent) {
