@@ -822,10 +822,13 @@
     "@": 1
 - __id: 32
   name: KafkaAgent
-  __prototype:
-    "@": 29
+  info: An agent that - depending on the settings - creates a shared Kafka client,
+    a permanently-connected Kafka producer, and/or a Kafka consumer that
+    forwards all incoming messages to the __consume__() method.
   schema:
     "@": schemat:Catalog
   class: schemat/server/kafka.js:KafkaAgent
+  __prototype:
+    "@": 29
   __category:
     "@": 1
