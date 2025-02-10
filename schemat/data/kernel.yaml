@@ -650,6 +650,18 @@
       info: Duration [in seconds] of a single iteration of the agent execution loop in
         run().
       "@": schemat/types/type.js:NUMBER
+    kafka_host:
+      default: localhost
+      info: Host name to be used by Kafka broker.
+      "@": schemat/types/type.js:STRING
+    kafka_port:
+      default: 9092
+      info: TCP port of Kafka broker.
+      "@": schemat/types/type.js:INTEGER
+    kafka_controller_port:
+      default: 9093
+      info: Listener port of Kafka controller.
+      "@": schemat/types/type.js:INTEGER
     "@": schemat:Catalog
   __prototype:
     "@": 29
