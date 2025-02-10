@@ -36,6 +36,7 @@ export class ServerSchemat extends Schemat {
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
+    process         // Process instance that runs the main Schemat loop of the current master/worker process
     node            // host Node (web object) of the current process; initialized and periodically reloaded in Server
     agents          // array of Agent objects that are currently running on this node process (worker/master)
 

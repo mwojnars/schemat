@@ -183,7 +183,6 @@ export class MasterProcess extends Process {
        web server(s), data server(s), load balancer etc.
      */
     workers         // array of Node.js Worker instances (child processes); only present in the primary process
-    server          // the Process instance running inside the current process (master/worker)
     running         // the Promise returned by .run() of the `server`
     worker_pids     // PID to WORKER_ID association
 
@@ -215,13 +214,13 @@ export class MasterProcess extends Process {
 
         if (cluster.isPrimary) {                // in the primary process, start the workers...
             this._start_workers()
-            this.server = this
+            schemat.process = this
         }
         else {                                  // in the worker process, start this worker's Process instance
             print(`starting worker #${schemat.worker_id} (PID=${process.pid})...`)
-            this.server = new Process(this.node, this.opts)
+            schemat.process = new Process(this.node, this.opts)
         }
-        this.running = this.server.run()
+        this.running = schemat.process.run()
     }
 
     _read_node_id() {
