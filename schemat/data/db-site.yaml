@@ -272,8 +272,6 @@
   agents_running:
     - "@": 1035
     - "@": 1023
-  kafka_port: 9092
-  kafka_controller_port: 9093
   __category:
     "@": 21
 - __id: 1025
