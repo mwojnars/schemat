@@ -663,8 +663,6 @@
       info: Listener port of Kafka controller.
       "@": schemat/types/type.js:INTEGER
     "@": schemat:Catalog
-  __prototype:
-    "@": 29
   __category:
     "@": 1
   __container:
