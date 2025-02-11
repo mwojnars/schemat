@@ -21,6 +21,10 @@ export class Node extends WebObject {
     master_agents_running
     refresh_interval
 
+    // Node is not strictly an agent, but can be used as a target in KafkaService, hence the overrides below:
+    get __node()        { return this }                 // for KafkaService._is_local()
+    get __kafka_topic() { return `topic-${this.id}` }   // for KafkaService._submit()
+
     get kafka_client() { return this.__state?.kafka }
     // get kafka_client() { return this.schemat.agents.get('kafka_client').__state.kafka }
     // get kafka_producer() { return this.__state.producer }
