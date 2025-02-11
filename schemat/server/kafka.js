@@ -120,14 +120,18 @@ export class KafkaBroker extends Agent {
         print('KafkaBroker.__start__():', command)
 
         // let server = exec_promise(command, {cwd: schemat.node.site_root})
-        // let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore'})    // stdio needed to detach from parent's stdio
-        let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore', detached: true})    // stdio needed to detach from parent's stdio; detached=true to create a new process group
 
-        // let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: ['ignore', 'pipe', 'pipe'], detached: true})
+        // let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore'})    // stdio needed to detach from parent's stdio
         // server.stdout.on('data', data => console.log(`${data}`))
         // server.stderr.on('data', data => console.error(`${data}`))
 
-        server.on('close', code => print(`Kafka server process exited with code=${code}`))
+        let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore', detached: true})    // stdio needed to detach from parent's stdio; detached=true to create a new process group
+        // let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: ['ignore', 'pipe', 'pipe'], detached: true})
+
+        server.on('close', code => {
+            let msg = `Kafka server process exited with code=${code}`
+            if (code && !schemat.is_closing) throw new Error(msg); else print(msg)
+        })
         server.unref()      // don't let parent process wait for this child
 
         print(`started Kafka server: PID=${server.pid}`)
