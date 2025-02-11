@@ -615,8 +615,8 @@
   class: schemat/server/node.js:Node
   info: Node of a Schemat cluster. Technically, each node is a local (master)
     process launched independently on a particular machine, together with its
-    child (worker) processes, if any. Nodes communicate with each other using
-    Kafka, and in this way they form a distributed compute & storage cluster.
+    all child (worker) processes. Nodes communicate with each other using Kafka,
+    and in this way they form a distributed compute & storage cluster.
   schema:
     agents_installed:
       info: Catalog of all Agent objects installed on this machine.
