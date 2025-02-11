@@ -62,8 +62,8 @@ export class KafkaBroker extends Agent {
         let node = schemat.node
         let id = node.id
         let host = node.kafka_host || node.host || 'localhost'
-        let broker_port = node.kafka_port || 9092
-        let controller_port = node.kafka_controller_port || 9093
+        let broker_port = schemat.config['kafka-port'] || node.kafka_port || 9092
+        let controller_port = schemat.config['kafka-controller-port'] || node.kafka_controller_port || 9093
 
         return new Map([
             ['node.id', id],
@@ -216,8 +216,10 @@ export class KafkaAgent extends Agent {
          */
         assert(Kafka)
         this.__meta.kafka_log_level = logLevel.NOTHING    // available log levels: NOTHING (0), ERROR (1), WARN (2), INFO (3), DEBUG (4)
+
         let retry = {initialRetryTime: 1000, retries: 10}
-        let broker = `${schemat.node.kafka_host}:${schemat.node.kafka_port}`
+        let port = schemat.config['kafka-port'] || schemat.node.kafka_port || 9092
+        let broker = `${schemat.node.kafka_host}:${port}`
 
         // either use the global node.kafka_client, or create a new one
         let kafka = (!this.start_client && schemat.node.kafka_client) ||
