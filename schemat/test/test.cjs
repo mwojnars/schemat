@@ -41,6 +41,7 @@ function check_internet(fail, retries = 2) {
 
 /**********************************************************************************************************************/
 
+const NODE = 1024           // ID of the Node object that should be loaded upon start up
 const HOST = '127.0.0.1'
 const PORT = 3001
 const DOMAIN = `http://${HOST}:${PORT}`
@@ -131,7 +132,7 @@ function server_setup(port, args = '') {
         // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
         // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
         // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
-        server = exec(`exec node --experimental-vm-modules schemat/server/run.js --port ${port} ${args}`,
+        server = exec(`exec node --experimental-vm-modules schemat/server/run.js --port ${port} --node ${NODE} ${args}`,
             {maxBuffer: 1024 * 1024 * 10},  // capture full output, 10MB buffer
             (error, stdout, stderr) => {
                 if (error) console.error('\nSchemat server error:', error)
