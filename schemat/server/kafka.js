@@ -109,7 +109,7 @@ export class KafkaBroker extends Agent {
         print(`KafkaBroker.__uninstall__() removed: ${this.kafka_path}`)
     }
 
-    async __start__() {
+    async __start__(verbose = false) {
         process.env.KAFKAJS_NO_PARTITIONER_WARNING = '1'  // silence partitioner warning
 
         await this._kill_kafka_server()
@@ -120,13 +120,14 @@ export class KafkaBroker extends Agent {
         print('KafkaBroker.__start__():', command)
 
         // let server = exec_promise(command, {cwd: schemat.node.site_root})
+        // let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore'})    // stdio needs to be detached from parent's stdio
 
-        // let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore'})    // stdio needed to detach from parent's stdio
-        // server.stdout.on('data', data => console.log(`${data}`))
-        // server.stderr.on('data', data => console.error(`${data}`))
-
-        let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: 'ignore', detached: true})    // stdio needed to detach from parent's stdio; detached=true to create a new process group
-        // let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: ['ignore', 'pipe', 'pipe'], detached: true})
+        // stdio needs to be detached from parent's stdio; detached=true to create a new process group
+        let server = spawn(command, {cwd: schemat.node.site_root, shell: true, stdio: ['ignore', 'pipe', 'pipe'], detached: true})
+        if (verbose) {
+            server.stdout.on('data', data => console.log(`${data}`))
+            server.stderr.on('data', data => console.error(`${data}`))
+        }
 
         server.on('close', code => {
             let msg = `Kafka server process exited with code=${code}`
