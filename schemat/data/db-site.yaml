@@ -272,8 +272,8 @@
   agents_running:
     - "@": 1035
     - "@": 1023
-  __node:
-    "@": 1024
+  kafka_port: 9092
+  kafka_controller_port: 9093
   __category:
     "@": 21
 - __id: 1025
@@ -355,3 +355,24 @@
   __class: schemat/server/kafka.js:KafkaNode
   __category:
     "@": 32
+- __id: 1036
+  agents_installed:
+    kafka_broker:
+      "@": 1031
+    kafka_master:
+      "@": 1034
+    kafka_worker:
+      "@": 1035
+    webserver:
+      "@": 1023
+    "@": schemat:Catalog
+  master_agents_running:
+    - "@": 1031
+    - "@": 1034
+  agents_running:
+    - "@": 1035
+    - "@": 1023
+  kafka_port: 9094
+  kafka_controller_port: 9095
+  __category:
+    "@": 21
