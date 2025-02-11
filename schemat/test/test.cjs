@@ -41,10 +41,13 @@ function check_internet(fail, retries = 2) {
 
 /**********************************************************************************************************************/
 
-const NODE = 1024           // ID of the Node object that should be loaded upon start up
+// const NODE = 1024           // ID of the Node object that should be loaded upon start up
 const HOST = '127.0.0.1'
 const PORT = 3001
 const DOMAIN = `http://${HOST}:${PORT}`
+
+const KAFKA_PORT = 11092 //9092
+const KAFKA_CONTROLLER_PORT = 11093 //9093
 
 
 async function expect_status_ok(page, status = 200) {
@@ -126,13 +129,14 @@ function server_setup(port, args = '') {
     before(async function() {
         // wait for port to be released before starting new server
         await wait_for_port_release(port)
+        let opts = `--port ${port} --kafka-port ${KAFKA_PORT} --kafka-controller-port ${KAFKA_CONTROLLER_PORT} ${args}`   //--node ${NODE}
 
         // start the server...
 
         // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
         // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
         // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
-        server = exec(`exec node --experimental-vm-modules schemat/server/run.js --port ${port} --node ${NODE} ${args}`,
+        server = exec(`exec node --experimental-vm-modules schemat/server/run.js ${opts}`,
             {maxBuffer: 1024 * 1024 * 10},  // capture full output, 10MB buffer
             (error, stdout, stderr) => {
                 if (error) console.error('\nSchemat server error:', error)
