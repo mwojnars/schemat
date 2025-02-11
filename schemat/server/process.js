@@ -201,14 +201,18 @@ export class MasterProcess extends Process {
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
-        let node_id = this._read_node_id()
+        let node_id = opts.node || this._read_node_id()
         let Node = await schemat.import('/$/sys/Node')
 
-        if (node_id)
+        if (node_id) {
+            if (cluster.isPrimary) print(`starting node:`, node_id)
             this.node = await schemat.load(node_id)
+        }
         else {
+            assert(!cluster.isPrimary, 'unexpected error: a new Node object should only be created in the primary process, not in a worker')
             this.node = await Node.new().save({ring: 'db-site'})
             fs.writeFileSync('./schemat/node.id', this.node.id.toString())
+            print(`created new node:`, this.node.id)
         }
         assert(this.node)
 

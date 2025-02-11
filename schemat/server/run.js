@@ -17,6 +17,7 @@ await (async function run() {
         .option('host',    {type: 'string', default: HOST})
         .option('port',    {type: 'number', default: PORT})
         .option('workers', {type: 'number', default: WORKERS})
+        .option('node',    {type: 'number'})        // ID of the node object in DB, overrides the content of node.id
         .help().alias('help', 'h')
         .argv
 
