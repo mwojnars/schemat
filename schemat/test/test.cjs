@@ -41,7 +41,7 @@ function check_internet(fail, retries = 2) {
 
 /**********************************************************************************************************************/
 
-// const NODE = 1024           // ID of the Node object that should be loaded upon start up
+const NODE = 1024           // ID of the Node object that should be loaded upon start up  ... 1036 is missing in Demo database
 const HOST = '127.0.0.1'
 const PORT = 3001
 const DOMAIN = `http://${HOST}:${PORT}`
@@ -129,7 +129,7 @@ function server_setup(port, args = '') {
     before(async function() {
         // wait for port to be released before starting new server
         await wait_for_port_release(port)
-        let opts = `--port ${port} --kafka-port ${KAFKA_PORT} --kafka-controller-port ${KAFKA_CONTROLLER_PORT} ${args}`   //--node ${NODE}
+        let opts = `--port ${port} --kafka-port ${KAFKA_PORT} --kafka-controller-port ${KAFKA_CONTROLLER_PORT} --node ${NODE} ${args}`
 
         // start the server...
 
