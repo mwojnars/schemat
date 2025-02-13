@@ -10,6 +10,7 @@
 import {assert, print, sleep, tryimport} from "../common/utils.js"
 import {mJsonx, mJsonxArray} from "../web/messages.js";
 import {Service} from "../web/services.js";
+import {Request} from "../web/request.js"
 import {Agent} from "./agent.js";
 
 let {Kafka, logLevel} = await tryimport('kafkajs') || {}
@@ -21,6 +22,13 @@ let exec_promise = exec && promisify(exec)
 
 /**********************************************************************************************************************/
 
+export class KafkaRequest extends Request {
+    /* Network request sent through a Kafka topic. */
+
+    message         // Kafka message object: {key, value, timestamp, headers: {target, endpoint, sender, ...}}, most fields are Buffers
+}
+
+
 export class KafkaService extends Service {
 
     _is_local(target) {
@@ -31,9 +39,15 @@ export class KafkaService extends Service {
         // return target.__node$.some(node => node.id === schemat.node.id)
     }
 
-    async _submit(target, message) {
+    async _submit(target, value) {
         if (this.endpoint_type !== 'KAFKA') throw new Error(`KafkaService can only be exposed at KAFKA endpoint, not ${this.endpoint}`)
-        if (message && typeof message !== 'string') message = JSON.stringify(message)
+
+        // let key = null
+        let headers = {
+            target: target.id,
+            endpoint: this.endpoint_name,
+        }
+        let message = {value, headers}
 
         // send `message` to the target's topic
         let topic = target.__kafka_topic

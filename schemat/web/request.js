@@ -3,7 +3,7 @@ import {Objects} from "../common/structs.js";
 
 
 export class Request {
-    /* Base class for network requests submitted over any protocol: HTTP(S) GET, POST, Kafka, ... */
+    /* Base class for network requests submitted over different protocols: HTTP(S) GET, POST, Kafka, ... */
 
     target          // target web object (recipient of the request)
     endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
