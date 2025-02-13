@@ -3,7 +3,12 @@ import {print, assert, splitLast} from "../common/utils.js";
 import {Objects} from "../common/structs.js";
 
 
-export class WebRequest {   // Connection ?
+export class Request {
+    /* Base class for network requests submitted over any kind of protocol: a web request, Kafka message etc. */
+}
+
+
+export class WebRequest extends Request {   // Connection ?
     /* Schemat's own representation of a web request, OR internal request;
        together with context information that may evolve during the routing procedure.
      */
@@ -26,6 +31,7 @@ export class WebRequest {   // Connection ?
 
 
     constructor({path, method, req, res}) {
+        super()
         this.req = req
         this.res = res
 
