@@ -59,11 +59,11 @@ export class WebRequest extends Request {   // Connection ?
     }
 
     _push(...endpoints) {
-        /* Append names to this.methods. Each name must start with '::' for easier detection of method names
+        /* Append names to this.methods. Each name must start with '::' for easier detection of endpoint names
            in a source code - this prefix is truncated when appended to this.methods.
          */
-        for (const method of endpoints) {
-            let m = this._prepare(method)
+        for (const endpoint of endpoints) {
+            let m = this._prepare(endpoint)
             if (m && !this.methods.includes(m)) this.methods.push(m)
         }
     }
@@ -79,7 +79,7 @@ export class RequestContext {
     site            // ID of the site object
     target          // ID of the requested object (target of the web request)
     objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
-    endpoint        // name of the target's endpoint method that was called, like "GET.admin"
+    endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
 
     static from_request(request, ...objects) {
         /* For use on the server. Optional `objects` are included in the context as seed objects together
