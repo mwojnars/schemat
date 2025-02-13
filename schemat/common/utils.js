@@ -67,6 +67,11 @@ export function timeout(ms, error = new Error('Timeout')) {
     return new Promise((_, reject) => setTimeout(() => reject(error), ms))
 }
 
+export function utc() {
+    /* Current UTC timestamp in human-readable format: "YYYY-MM-DD HH:mm:ss.sss", T/Z letters removed. */
+    return new Date().toISOString().replace('T', ' ').replace('Z', ' ')
+}
+
 
 /*************************************************************************************************
  **
