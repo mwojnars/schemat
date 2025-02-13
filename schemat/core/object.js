@@ -979,7 +979,7 @@ export class WebObject {
         /* Return a list of endpoint names (no protocol included) to be tried for this request. */
 
         // use request's endpoint if specified in the URL (::endpoint)
-        let {methods: endpoints, protocol} = request
+        let {endpoints, protocol} = request
         if (endpoints.length) return endpoints
 
         // otherwise, use category defaults, OR global defaults (for no-category objects)

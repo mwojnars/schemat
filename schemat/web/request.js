@@ -24,7 +24,7 @@ export class WebRequest extends Request {   // Connection ?
     path            // URL path with trailing ::endpoint name removed
 
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
-    methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
+    endpoints = []  // endpoints to be tried for accessing the target object: the first one that's present is used, or 'default' if `endpoints` are empty
 
     target          // target object responsible for handling of the request; found by the routing procedure starting at the site object
     endpoint        // endpoint of the target item, as found by the routing procedure
@@ -59,12 +59,12 @@ export class WebRequest extends Request {   // Connection ?
     }
 
     _push(...endpoints) {
-        /* Append names to this.methods. Each name must start with '::' for easier detection of endpoint names
-           in a source code - this prefix is truncated when appended to this.methods.
+        /* Append names to this.endpoints. Each name must start with '::' for easier detection of endpoint names
+           in a source code - this prefix is truncated when appended to this.endpoints.
          */
         for (const endpoint of endpoints) {
             let m = this._prepare(endpoint)
-            if (m && !this.methods.includes(m)) this.methods.push(m)
+            if (m && !this.endpoints.includes(m)) this.endpoints.push(m)
         }
     }
 }
