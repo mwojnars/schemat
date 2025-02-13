@@ -958,7 +958,7 @@ export class WebObject {
             if (!handler) continue
 
             // print(`handle() endpoint: ${endpoint}`)
-            request.endpoint = endpoint
+            request.set_endpoint(endpoint)
             let result = handler.call(this, request)
 
             if (result instanceof Promise) result = await result

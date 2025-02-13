@@ -5,6 +5,11 @@ import {Objects} from "../common/structs.js";
 
 export class Request {
     /* Base class for network requests submitted over any kind of protocol: a web request, Kafka message etc. */
+
+    target          // target web object (recipient of the request)
+    endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
+
+    set_endpoint(endpoint) { this.endpoint = endpoint }
 }
 
 
@@ -24,10 +29,7 @@ export class WebRequest extends Request {   // Connection ?
     path            // URL path with trailing ::endpoint name removed
 
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
-    endpoints = []  // endpoints to be tried for accessing the target object: the first one that's present is used, or 'default' if `endpoints` are empty
-
-    target          // target object responsible for handling of the request; found by the routing procedure starting at the site object
-    endpoint        // endpoint of the target item, as found by the routing procedure
+    endpoints = []  // candidate endpoints that should be tried; the first one that's present in the `target` is used, or 'default' if `endpoints` are empty
 
 
     constructor({path, req, res}) {
