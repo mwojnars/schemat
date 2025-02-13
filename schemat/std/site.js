@@ -160,7 +160,7 @@ export class Site extends WebObject {
         //     // TODO: redirect to the canonical URL
         // }
 
-        return object._handle_web(request)
+        return object._handle_request(request)
     }
 
     async resolve(path) { return this.root.resolve(path) }

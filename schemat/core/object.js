@@ -939,7 +939,7 @@ export class WebObject {
         }
     }
 
-    async _handle_web(request, SEP = '.') {
+    async _handle_request(request, SEP = '.') {
         /* Handle a web or internal Request by executing the corresponding handler or service from this.__handlers.
            Query parameters are passed in `req.query`, as:
            - a string if there's one occurrence of PARAM in a query string,
