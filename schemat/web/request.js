@@ -3,7 +3,7 @@ import {Objects} from "../common/structs.js";
 
 
 export class Request {
-    /* Base class for network requests submitted over any kind of protocol: a web request, Kafka message etc. */
+    /* Base class for network requests submitted over any protocol: HTTP(S) GET, POST, Kafka, ... */
 
     target          // target web object (recipient of the request)
     endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
@@ -14,11 +14,10 @@ export class Request {
 }
 
 
-export class WebRequest extends Request {   // Connection ?
+export class WebRequest extends Request {
     /* Schemat's own representation of a web request, OR internal request;
        together with context information that may evolve during the routing procedure.
      */
-
     static SEP_ENDPOINT = '::'          // separator of endpoint name within a URL path
 
     req             // instance of node.js express' Request
