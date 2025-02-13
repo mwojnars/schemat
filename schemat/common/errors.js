@@ -41,55 +41,51 @@ export class BaseError extends Error {
         }
     }
 
-    toString() {
-
-    }
+    toString() {}
 }
 
+/**********************************************************************************************************************/
 
-export class DatabaseError extends BaseError { static message = "database error" }
-export class DataAccessError extends DatabaseError { static message = "data access error" }
+export class DatabaseError extends BaseError            { static message = "database error" }
+export class DataAccessError extends DatabaseError      { static message = "data access error" }
 export class DataConsistencyError extends DatabaseError { static message = "data consistency error" }
+export class ObjectNotFound extends DatabaseError       { static message = "ID not found in the database" }
 
-export class ObjectNotFound extends DatabaseError {
-    static message = "ID not found in the database"
-}
+/**********************************************************************************************************************/
 
+export class NetworkError extends BaseError {}
 
-export class RequestError extends BaseError {}
-
-export class UrlPathNotFound extends RequestError {
+export class UrlPathNotFound extends NetworkError {
     static message = "URL path not found"
     static code    = 404
 }
 
-export class NotImplemented extends BaseError {
-    static message = "not implemented"
+export class ServerTimeoutError extends NetworkError {
+    static message = "response generation took too long"
+    static code    = 504
 }
 
-export class ValidationError extends BaseError  { static message = "validation of object's fields failed" }
-export class ValueError extends ValidationError { static message = "incorrect value of an object's field" }
-
-export class NotLoaded extends BaseError {
-    constructor(obj) { super(`object is not loaded yet, run 'await obj.load()', id=${obj.__id}`) }
-}
-
-export class ServerError extends BaseError {
-    /* Raised on client side when an internal call to the server completed with a non-OK status code. */
-    constructor(response) {
-        super()
-        this.response = response            // an original Response object as returned from fetch()
-    }
-}
-
-export class RequestFailed extends BaseError {
-    /* Raised client-side when an internal call to the server completed with an error status code. */
+export class RequestFailed extends NetworkError {
+    /* Raised on client when an internal call to the server completed with an error status code. */
     constructor({message, args, code, name}) {
         super(message, args, code, name)
     }
 }
 
-export class ServerTimeoutError extends BaseError {
-    static message = "response generation took too long"
-    static code    = 504
+/**********************************************************************************************************************/
+
+export class ValidationError extends BaseError  { static message = "validation of object's fields failed" }
+export class ValueError extends ValidationError { static message = "incorrect value of an object's field" }
+
+/**********************************************************************************************************************/
+
+export class InternalError extends BaseError {}
+
+export class NotImplemented extends InternalError {
+    static message = "not implemented"
 }
+
+export class NotLoaded extends InternalError {
+    constructor(obj) { super(`object is not loaded yet, run 'await obj.load()', id=${obj.__id}`) }
+}
+

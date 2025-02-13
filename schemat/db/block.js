@@ -158,7 +158,7 @@ export class DataBlock extends Block {
     async assert_unique(id, msg) {
         let key = this.sequence.encode_key(id)
         if (await this._storage.get(key))
-            throw new DataConsistencyError(msg || "item with this ID already exists", {id})
+            throw new DataConsistencyError(msg || "record with this ID already exists", {id})
     }
 
     _annotate(json) {
