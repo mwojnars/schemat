@@ -15,7 +15,7 @@ import {REF} from "../types/type.js"
 import {SCHEMA_GENERIC} from "../types/catalog_type.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
-import {Request} from "../web/request.js"
+import {WebRequest} from "../web/request.js"
 import {ReactPage, ItemInspectView} from "../web/pages.js"
 import {JsonPOST, Service} from "../web/services.js";
 import {mWebObjects} from "../web/messages.js";
@@ -996,7 +996,7 @@ export class WebObject {
            `args` will be appended to URL as a query string.
          */
         let path = this.__url || this.system_url                        // no-category objects may have no __url because of lack of schema and __url imputation
-        if (endpoint) path += Request.SEP_ENDPOINT + endpoint           // append ::endpoint and ?args if present...
+        if (endpoint) path += WebRequest.SEP_ENDPOINT + endpoint        // append ::endpoint and ?args if present...
         if (args) path += '?' + new URLSearchParams(args).toString()
         return path
     }

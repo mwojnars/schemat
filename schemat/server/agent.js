@@ -1,6 +1,6 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
-import {Request} from "../web/request.js";
+import {WebRequest} from "../web/request.js";
 import {WebObject} from "../core/object.js"
 // import {thread_local_variable} from "./thread.js";
 
@@ -113,7 +113,7 @@ export class WebServer extends Agent {
 
         try {
             // await sleep(3)
-            let request = new Request({req, res})
+            let request = new WebRequest({req, res})
             let handler = schemat.site.route(request)
 
             if (this.request_timeout) {

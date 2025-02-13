@@ -1,6 +1,6 @@
 import {print, assert, T, sleep, splitLast, normalizePath} from '../common/utils.js'
 import {UrlPathNotFound} from "../common/errors.js"
-import {Request} from '../web/request.js'
+import {WebRequest} from '../web/request.js'
 import {WebObject} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
 import {JsonPOST} from "../web/services.js";
@@ -134,7 +134,7 @@ export class Site extends WebObject {
 
     // async find_object(path) {
     //     /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
-    //     // return this.route(new Request({path, method: '::item'}))
+    //     // return this.route(new WebRequest({path, method: '::item'}))
     //     assert(path[0] === '/')
     //     return this.route_local(path)
     // }
@@ -143,8 +143,8 @@ export class Site extends WebObject {
         /* URL-call to a LOCAL/* endpoint of an object identified by a URL `path`.
            The path should contain an endpoint name, otherwise the default endpoint is used.
          */
-        return this.route(new Request({path}))
-        // return Request.run_with({path}, () => this.route(request))
+        return this.route(new WebRequest({path}))
+        // return WebRequest.run_with({path}, () => this.route(request))
     }
 
     async route(request) {

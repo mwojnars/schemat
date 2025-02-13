@@ -3,7 +3,7 @@ import {print, assert, splitLast} from "../common/utils.js";
 import {Objects} from "../common/structs.js";
 
 
-export class Request {   // Connection ?
+export class WebRequest {   // Connection ?
     /* Schemat's own representation of a web request, OR internal request;
        together with context information that may evolve during the routing procedure.
      */
@@ -35,7 +35,7 @@ export class Request {   // Connection ?
                                           "POST"            // POST = write access through HTTP POST
 
         path ??= this.req.path
-        let endp, sep = Request.SEP_ENDPOINT;
+        let endp, sep = WebRequest.SEP_ENDPOINT;
         [this.path, endp] = path.includes(sep) ? splitLast(path, sep) : [path, '']
 
         // in Express, the web path always starts with at least on character, '/', even if the URL contains a domain alone;
@@ -46,7 +46,7 @@ export class Request {   // Connection ?
 
     _prepare(endpoint) {
         if (!endpoint) return endpoint
-        let sep = Request.SEP_ENDPOINT
+        let sep = WebRequest.SEP_ENDPOINT
         assert(endpoint.startsWith(sep), `endpoint must start with '${sep}' (${endpoint})`)
         return endpoint.slice(sep.length)
     }
