@@ -301,6 +301,8 @@ export class KafkaAgent extends Agent {
 
         print(`${topic}[${partition}]: ${message.value}`)
 
+        // this.log(msg)
+
         // // if autoCommit=false, manually commit the message offset
         // await consumer.commitOffsets([{topic, partition, offset: (BigInt(message.offset) + 1n).toString()}])
     }

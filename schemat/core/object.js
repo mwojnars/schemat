@@ -840,6 +840,19 @@ export class WebObject {
         this.__validate__()
     }
 
+    log(msg, args = null, level = 'INFO') {
+        /* Server-side distributed logging of debug messages, warnings, errors.
+           On client, the message is printed to the console with object ID prepended.
+         */
+        if (SERVER) return schemat.site.logger.KAFKA.log(msg, args, level)
+
+        if (args) {
+            let list = Object.entries(args).map(([k, v]) => k + `=${JSON.stringify(v)}`).join(', ')
+            if (list) msg = `${msg} | ${list}`
+        }
+        console.log(`[${this.id}] ${msg}`)
+    }
+
 
     /***  Hooks  ***/
 

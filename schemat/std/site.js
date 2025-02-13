@@ -40,6 +40,7 @@ export class Site extends WebObject {
     default_path
     cache_purge_interval
     eval_allowed
+    logger
 
 
     async __init__()  {
@@ -47,6 +48,7 @@ export class Site extends WebObject {
         if (SERVER) {
             await this.root.load()
             await this.database?.load()
+            await this.logger?.load()
             // this._vm = await import('node:vm')
             this._check_default_container()                 // no await to avoid blocking the site's startup
         }
