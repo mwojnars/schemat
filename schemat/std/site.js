@@ -134,7 +134,7 @@ export class Site extends WebObject {
 
     // async find_object(path) {
     //     /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
-    //     // return this.route(new WebRequest({path, method: '::item'}))
+    //     // return this.route(new WebRequest({path}))
     //     assert(path[0] === '/')
     //     return this.route_local(path)
     // }

@@ -30,8 +30,9 @@ export class WebRequest extends Request {   // Connection ?
     endpoint        // endpoint of the target item, as found by the routing procedure
 
 
-    constructor({path, method, req, res}) {
+    constructor({path, req, res}) {
         super()
+
         this.req = req
         this.res = res
 
@@ -47,7 +48,7 @@ export class WebRequest extends Request {   // Connection ?
         // in Express, the web path always starts with at least on character, '/', even if the URL contains a domain alone;
         // this leading-trailing slash has to be truncated for correct segmentation and detection of an empty path
         if (this.path === '/') this.path = ''
-        this._push(method, sep + endp)
+        this._push(sep + endp)
     }
 
     _prepare(endpoint) {
@@ -57,11 +58,11 @@ export class WebRequest extends Request {   // Connection ?
         return endpoint.slice(sep.length)
     }
 
-    _push(...methods) {
+    _push(...endpoints) {
         /* Append names to this.methods. Each name must start with '::' for easier detection of method names
            in a source code - this prefix is truncated when appended to this.methods.
          */
-        for (const method of methods) {
+        for (const method of endpoints) {
             let m = this._prepare(method)
             if (m && !this.methods.includes(m)) this.methods.push(m)
         }
