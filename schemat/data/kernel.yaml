@@ -589,6 +589,8 @@
       info: "storage format: data-yaml, index-jl, rocksdb (in the future), ..."
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
+  __prototype:
+    "@": 32
   __category:
     "@": 1
 - __id: 19
