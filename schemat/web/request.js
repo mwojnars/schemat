@@ -63,6 +63,8 @@ export class Request {   // Connection ?
 }
 
 
+/**********************************************************************************************************************/
+
 export class RequestContext {
     /* Seed web objects and request-related context information to be embedded in HTML response and then unpacked on the client
        to enable boot up of a client-side Schemat. The objects are flattened (state-encoded), but not yet stringified.

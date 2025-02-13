@@ -130,6 +130,10 @@ export class Block extends KafkaAgent {
     // propagate() {
     //     /* For now, there's NO propagation from index blocks, only from data blocks (see below). */
     // }
+
+    async __consume__(kafka_message) {
+        /* Process an incoming Kafka message. */
+    }
 }
 
 

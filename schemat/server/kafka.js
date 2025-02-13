@@ -276,6 +276,15 @@ export class KafkaAgent extends Agent {
 
     async __consume__(message, topic, partition) {
         /* Override this method to process incoming messages. */
+
+        // find corresponding KAFKA.*() handler ...
+        // let endpoint = message.headers.endpoint?.toString()
+        // let handler = this._get_handler(`KAFKA.${endpoint}`)
+
+        // message.headers: sender ID, transaction ID, type (blob/json), msg schema version, ...
+        let key = message.key?.toString()           // message.key & .value are Buffers
+        let msg = message.value?.toString()
+
         print(`${topic}[${partition}]: ${message.value}`)
 
         // // if autoCommit=false, manually commit the message offset
