@@ -177,7 +177,7 @@ export class Ring extends WebObject {
 export class Database extends WebObject {
     /* A number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
        ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
-       If ItemNotFound/ReadOnly is caught, the next ring is tried.
+       If ObjectNotFound/ReadOnly is caught, the next ring is tried.
        This class is only instantiated on the server, while the client uses a ClientDB proxy instead.
      */
     static __category = 11  // ID of Database category

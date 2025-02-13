@@ -9,6 +9,7 @@ export class Request {
     target          // target web object (recipient of the request)
     endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
 
+    set_target(target) { this.target = target }
     set_endpoint(endpoint) { this.endpoint = endpoint }
 }
 

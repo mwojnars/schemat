@@ -51,16 +51,16 @@ export class DatabaseError extends BaseError { static message = "database error"
 export class DataAccessError extends DatabaseError { static message = "data access error" }
 export class DataConsistencyError extends DatabaseError { static message = "data consistency error" }
 
-export class ItemNotFound extends DatabaseError {
+export class ObjectNotFound extends DatabaseError {
     static message = "ID not found in the database"
 }
 
-export class NotFound extends BaseError {
-    static message = "URL not found"
-    static code    = 404
-}
-export class UrlPathNotFound extends NotFound {
+
+export class RequestError extends BaseError {}
+
+export class UrlPathNotFound extends RequestError {
     static message = "URL path not found"
+    static code    = 404
 }
 
 export class NotImplemented extends BaseError {

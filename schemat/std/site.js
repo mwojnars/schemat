@@ -159,6 +159,7 @@ export class Site extends WebObject {
         // if (path !== object.url()) {
         //     // TODO: redirect to the canonical URL
         // }
+        request.set_target(object)
 
         return object._handle_request(request)
     }

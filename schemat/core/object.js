@@ -946,7 +946,6 @@ export class WebObject {
            - an array [val1, val2, ...] if PARAM occurs multiple times.
         */
         assert(this.is_loaded)
-        request.target = this
 
         // convert endpoint names to full protocol-qualified communication endpoints: GET.name
         let names = this._get_endpoints(request)

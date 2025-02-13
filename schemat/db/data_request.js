@@ -1,5 +1,5 @@
 import {assert, print, cloneObject} from "../common/utils.js";
-import {DataAccessError, ItemNotFound} from "../common/errors.js";
+import {DataAccessError, ObjectNotFound} from "../common/errors.js";
 
 
 /**********************************************************************************************************************/
@@ -108,8 +108,8 @@ export class DataRequest {
 
     // assert_valid_id(msg)        { return this.current_ring.assert_valid_id(this.args?.id, msg || `object ID is outside of the valid range for the ring`) }
 
-    error_access(msg)           { throw new DataAccessError(msg, {id: this.args?.id}) }
-    error_id_not_found(msg)     { throw new ItemNotFound(msg, {id: this.args?.id}) }
+    error_access(msg)       { throw new DataAccessError(msg, {id: this.args?.id}) }
+    error_not_found(msg)    { throw new ObjectNotFound(msg, {id: this.args?.id}) }
 
 
     /***  forward request to lower/higher rings  ***/
@@ -122,7 +122,7 @@ export class DataRequest {
         let current = this.current_ring
         if (current) this.push_ring(current)
         let ring = current ? current.lower_ring : this.current_db.top_ring
-        return ring ? ring.handle(this) : this.error_id_not_found()
+        return ring ? ring.handle(this) : this.error_not_found()
     }
 
     forward_save() {

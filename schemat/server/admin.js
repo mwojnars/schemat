@@ -1,5 +1,5 @@
 import {assert, print} from "../common/utils.js";
-import {ItemNotFound} from "../common/errors.js";
+import {ObjectNotFound} from "../common/errors.js";
 import {WebObject} from "../core/object.js";
 import {Struct} from "../core/catalog.js";
 import {boot_schemat} from "./process.js";
@@ -97,7 +97,7 @@ export class AdminProcess {
         for (let id of id_list) {
             try { obj = await schemat.get_loaded(id) }
             catch (ex) {
-                if (ex instanceof ItemNotFound) {
+                if (ex instanceof ObjectNotFound) {
                     print(`...WARNING: object [${id}] not found, skipping`)
                     continue
                 }
