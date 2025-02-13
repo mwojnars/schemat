@@ -7,6 +7,7 @@ export class Request {
 
     target          // target web object (recipient of the request)
     endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
+    protocol        // endpoint type: LOCAL, GET, POST, KAFKA, ... (SOCK in the future)
 
     set_target(target) { this.target = target }
     set_endpoint(endpoint) { this.endpoint = endpoint }
@@ -18,16 +19,13 @@ export class WebRequest extends Request {   // Connection ?
        together with context information that may evolve during the routing procedure.
      */
 
-    static SEP_ENDPOINT = '::'          // separator of an endpoint name within a URL path
+    static SEP_ENDPOINT = '::'          // separator of endpoint name within a URL path
 
     req             // instance of node.js express' Request
     res             // instance of node.js express' Response
 
-    protocol        // endpoint type: LOCAL, GET, POST, (SOCK in the future)
-    path            // URL path with trailing ::endpoint name removed
-
-    args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
-    endpoints = []  // candidate endpoints that should be tried; the first one that's present in the `target` is used, or 'default' if `endpoints` are empty
+    path            // URL path with trailing ::endpoint removed
+    endpoints = []  // candidate endpoints that should be tried if `endpoint` is not yet decided; the first one that's present in the `target` is used, or 'default' if empty
 
 
     constructor({path, req, res}) {
