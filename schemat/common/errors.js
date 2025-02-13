@@ -55,8 +55,8 @@ export class ObjectNotFound extends DatabaseError       { static message = "ID n
 
 export class NetworkError extends BaseError {}
 
-export class UrlPathNotFound extends NetworkError {
-    static message = "URL path not found"
+export class URLNotFound extends NetworkError {
+    static message = "URL not found"
     static code    = 404
 }
 

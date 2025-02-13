@@ -8,7 +8,7 @@
 
 import {ROOT_ID, PLURAL, SUBFIELD} from '../common/globals.js'
 import {print, assert, T, escape_html, concat, unique, sleep} from '../common/utils.js'
-import {NotLoaded, ValidationError} from '../common/errors.js'
+import {NotLoaded, URLNotFound, ValidationError} from '../common/errors.js'
 
 import {Catalog, Struct} from './catalog.js'
 import {REF} from "../types/type.js"
@@ -967,7 +967,7 @@ export class WebObject {
             return result
         }
 
-        request.throwNotFound(`endpoint(s) not found in the target object: [${endpoints}]`)
+        throw new URLNotFound(`endpoint(s) not found in the target object: [${endpoints}]`, {path: request.path})
     }
 
     _get_handler(endpoint) {
@@ -987,7 +987,7 @@ export class WebObject {
         let defaults = catg_defaults || glob_defaults[protocol]
         if (defaults.length) return defaults
 
-        request.throwNotFound(`endpoint not specified (protocol ${protocol})`)
+        throw new URLNotFound(`endpoint not specified (protocol ${protocol})`, {path: request.path})
     }
 
     url(endpoint, args) {

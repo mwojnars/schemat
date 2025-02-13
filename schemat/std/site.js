@@ -1,5 +1,5 @@
 import {print, assert, T, sleep, splitLast, normalizePath} from '../common/utils.js'
-import {UrlPathNotFound} from "../common/errors.js"
+import {URLNotFound} from "../common/errors.js"
 import {WebRequest} from '../web/request.js'
 import {WebObject} from '../core/object.js'
 import {ObjectSpace} from "./containers.js";
@@ -151,7 +151,7 @@ export class Site extends WebObject {
         /* Find the object pointed to by the request's URL path and execute its endpoint function through handle(). */
         let path = request.path.slice(1)                // drop the leading slash
         let object = await this.resolve(path)
-        if (!object) throw new UrlPathNotFound({path})
+        if (!object) throw new URLNotFound({path})
 
         if (typeof object === 'function') return object(request)        // `object` can be a tail function, just call it then
         if (!object.is_loaded()) await object.load()

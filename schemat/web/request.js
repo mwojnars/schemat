@@ -1,4 +1,3 @@
-import {UrlPathNotFound} from "../common/errors.js";
 import {print, assert, splitLast} from "../common/utils.js";
 import {Objects} from "../common/structs.js";
 
@@ -20,8 +19,6 @@ export class WebRequest extends Request {   // Connection ?
      */
 
     static SEP_ENDPOINT = '::'          // separator of an endpoint name within a URL path
-
-    throwNotFound(msg, args)  { throw new UrlPathNotFound(msg, args || {path: this.path}) }
 
     req             // instance of node.js express' Request
     res             // instance of node.js express' Response

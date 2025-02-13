@@ -4,7 +4,7 @@
 
 import {assert, print, T} from "../common/utils.js"
 import {WebObject} from "../core/object.js"
-import {UrlPathNotFound, warn} from "../common/errors.js";
+import {URLNotFound, warn} from "../common/errors.js";
 
 
 /**********************************************************************************************************************/
