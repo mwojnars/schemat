@@ -300,8 +300,10 @@ export class KafkaAgent extends Agent {
         let msg = message.value?.toString()
 
         print(`${topic}[${partition}]: ${message.value}`)
-
-        // this.log(msg)
+        try { this.log(msg) }
+        catch (e) {
+            console.error(e)
+        }
         // schemat.log(msg)
 
         // // if autoCommit=false, manually commit the message offset
