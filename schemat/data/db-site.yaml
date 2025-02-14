@@ -14,6 +14,8 @@
     "@": 1025
   database:
     "@": 1002
+  logger:
+    "@": 1037
   eval_allowed: true
   __category:
     "@": 2
