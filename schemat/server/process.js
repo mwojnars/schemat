@@ -146,7 +146,8 @@ export class Process {
 
     _get_agents_running() {
         /* List of agents that should be running now on this process. When an agent is to be stopped, it should be first removed from this list. */
-        return schemat.worker_id ? this.node.agents_running : this.node.master_agents_running   // master process has its own list of agents
+        let agents = schemat.worker_id ? this.node.agents_running : this.node.master_agents_running   // master process has its own list of agents
+        return agents.map(agent => typeof agent === 'object' ? agent : this.node.agents_installed.get(agent))
     }
 
 
