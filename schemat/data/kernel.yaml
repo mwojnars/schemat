@@ -242,11 +242,11 @@
     webserver:
       info: A WebServer that handles all web requests.
       "@": schemat/types/type.js:REF
-    default_path:
-      info: URL path of a default container that can be used to access any object via
-        its ID. For internal purposes. Should contain a leading slash and no
-        trailing slash.
-      "@": schemat/types/type.js:PATH
+    logger:
+      info: Logger object that collects all log messages produced in the cluster.
+      category:
+        "@": 33
+      "@": schemat/types/type.js:REF
     root:
       info: "Root of the object hierarchy and the starting point for URL routing: each
         URL path is mapped to an object placed somewhere below the `root`
@@ -254,6 +254,11 @@
       category:
         "@": 3
       "@": schemat/types/type.js:REF
+    default_path:
+      info: URL path of a default container that can be used to access any object via
+        its ID. For internal purposes. Should contain a leading slash and no
+        trailing slash.
+      "@": schemat/types/type.js:PATH
     global:
       value_type:
         "@": schemat/types/type.js:REF
