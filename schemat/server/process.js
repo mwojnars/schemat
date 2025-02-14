@@ -114,7 +114,7 @@ export class Process {
         // find agents in `current` that are not in `agents` and need to be stopped
         for (let agent of to_stop.toReversed()) {       // iterate in reverse order as some agents may depend on previous ones
             this._print('will stop agent', agent.id)
-            let state = this.state.agent
+            // let state = this.state[agent_name]
             promises.push(agent.__stop__(agent.__state).then(() => {delete agent.__self.__state}))
         }
 
