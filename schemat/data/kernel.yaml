@@ -635,22 +635,18 @@
         "@": schemat/types/type.js:REF
       "@": schemat/types/catalog_type.js:CATALOG
     agents_running:
-      info: Array of installed Agents that should be currently running on worker
+      info: Names of installed agents that should be currently running on worker
         processes of this node.
       default: []
       type:
-        category:
-          "@": 29
-        "@": schemat/types/type.js:REF
+        "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
     master_agents_running:
-      info: Array of installed Agents that should be currently running on the master
+      info: Names of installed agents that should be currently running on the master
         process of this node.
       default: []
       type:
-        category:
-          "@": 29
-        "@": schemat/types/type.js:REF
+        "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
     refresh_interval:
       default: 10
