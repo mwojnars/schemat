@@ -866,5 +866,8 @@
     "@": 1
 - __id: 33
   name: Logger
+  class: schemat/server/logger.js:Logger
+  __prototype:
+    "@": 32
   __category:
     "@": 1
