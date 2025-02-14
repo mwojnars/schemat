@@ -31,7 +31,11 @@ export class Node extends WebObject {
     // is_master_process() { return !this.worker_id}
 
     kafka_send(topic, message) {
-        return this.__state.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
+        let kafka = schemat.process.state.kafka_worker
+        if (!kafka) throw new Error(`kafka_worker is not running`)
+        if (!kafka.producer) throw new Error(`missing producer in kafka_worker`)
+        return kafka.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
+        // return this.__state.kafka_worker.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
     }
 
 
