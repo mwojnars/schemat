@@ -48,6 +48,9 @@ export async function boot_schemat(opts) {
 export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
+    agents = []     // Agent objects that are currently running in this process
+    state  = {}     // {agent_name: state}, current states of execution of the agents running in this process
+
     constructor(node, opts) {
         this.node = node        // Node web object that represents the physical node this process is running on
         this.opts = opts
@@ -60,7 +63,6 @@ export class Process {
     async run() {
         /* Start/stop loop of active agents. */
         schemat.node = this.node
-        let agents                  // list of agents currently running on this process, each of them has __state
 
         while (true) {
             let beginning = Date.now()
@@ -73,10 +75,10 @@ export class Process {
             // else print(`worker ${schemat.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
 
             schemat.node = this.node = new_node
-            schemat.agents = agents = await this._start_stop()
+            this.agents = await this._start_stop()
 
             if (schemat.is_closing)
-                if (agents.length) continue; else break            // let the currently-running agents gently stop
+                if (this.agents.length) continue; else break        // let the currently-running agents gently stop
 
             let passed = (Date.now() - beginning) / 1000
             let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
@@ -84,7 +86,7 @@ export class Process {
             let remaining = this.node.refresh_interval - offset_sec - passed
             if (remaining > 0) await sleep(remaining);
 
-            [this.node, ...agents].map(obj => obj.refresh())       // schedule a reload of relevant objects in the background, for next iteration
+            [this.node, ...this.agents].map(obj => obj.refresh())   // schedule a reload of relevant objects in the background, for next iteration
             await sleep(offset_sec)
         }
 
@@ -93,7 +95,7 @@ export class Process {
 
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
-        let current = schemat.agents
+        let current = this.agents
         let agents = this._get_agents_running()     // agents that *should* be running now on this process (possibly need to be started)
 
         if (schemat.is_closing) {
@@ -114,6 +116,7 @@ export class Process {
         // find agents in `current` that are not in `agents` and need to be stopped
         for (let agent of to_stop.toReversed()) {       // iterate in reverse order as some agents may depend on previous ones
             this._print('will stop agent', agent.id)
+            let state = this.state.agent
             promises.push(agent.__stop__(agent.__state).then(() => {delete agent.__self.__state}))
         }
 
