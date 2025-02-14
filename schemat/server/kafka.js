@@ -51,6 +51,8 @@ export class KafkaService extends Service {
 
         // send `message` to the target's topic
         let topic = target.__kafka_topic
+        print(`KafkaService._submit(${topic}):`, message)
+
         return schemat.node.kafka_send(topic, message)
         // return schemat.get_agent('kafka_client').kafka_send(topic, message)
     }
