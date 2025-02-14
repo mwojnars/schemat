@@ -864,3 +864,7 @@
     "@": 29
   __category:
     "@": 1
+- __id: 33
+  name: Logger
+  __category:
+    "@": 1
