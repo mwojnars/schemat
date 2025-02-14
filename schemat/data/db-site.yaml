@@ -374,3 +374,7 @@
   kafka_controller_port: 9095
   __category:
     "@": 21
+- __id: 1037
+  name: logger
+  __category:
+    "@": 33
