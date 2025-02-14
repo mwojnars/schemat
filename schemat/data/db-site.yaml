@@ -269,11 +269,11 @@
       "@": 1023
     "@": schemat:Catalog
   master_agents_running:
-    - "@": 1031
-    - "@": 1034
+    - kafka_broker
+    - kafka_master
   agents_running:
-    - "@": 1035
-    - "@": 1023
+    - kafka_worker
+    - webserver
   __category:
     "@": 21
 - __id: 1025
@@ -367,11 +367,11 @@
       "@": 1023
     "@": schemat:Catalog
   master_agents_running:
-    - "@": 1031
-    - "@": 1034
+    - kafka_broker
+    - kafka_master
   agents_running:
-    - "@": 1035
-    - "@": 1023
+    - kafka_worker
+    - webserver
   kafka_port: 9094
   kafka_controller_port: 9095
   __category:
