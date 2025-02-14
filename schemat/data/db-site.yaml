@@ -378,5 +378,7 @@
     "@": 21
 - __id: 1037
   name: logger
+  __node:
+    "@": 1024
   __category:
     "@": 33
