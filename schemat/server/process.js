@@ -62,11 +62,9 @@ export class Process {
 
     async run() {
         /* Start/stop loop of active agents. */
-        schemat.node = this.node
-
         while (true) {
             let beginning = Date.now()
-            // schemat.node = this.node = this.node.refresh()
+            // this.node = this.node.refresh()
 
             let new_node = this.node.refresh()
             if (new_node.__ttl_left() < 0) new_node = await new_node.reload()
@@ -74,7 +72,7 @@ export class Process {
             // if (new_node !== this.node) print(`worker ${schemat.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
             // else print(`worker ${schemat.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
 
-            schemat.node = this.node = new_node
+            this.node = new_node
             this.agents = await this._start_stop()
 
             if (schemat.is_closing)
