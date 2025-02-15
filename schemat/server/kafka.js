@@ -248,6 +248,9 @@ export class KafkaAgent extends Agent {
         let {consumer, consumer_running} = this.start_consumer ? await this._start_consumer(kafka, retry) : {}
         let {producer} = this.start_producer ? await this._start_producer(kafka, retry) : {}
 
+        if (consumer) print(`[${this.id}] started consumer at ${this.__kafka_topic}`)
+        if (producer) print(`[${this.id}] started producer`)
+
         return {kafka, consumer, consumer_running, producer}
     }
 
