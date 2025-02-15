@@ -18,6 +18,8 @@
     "@": 1025
   database:
     "@": 1002
+  logger:
+    "@": 1037
   eval_allowed: true
   __category:
     "@": 2
@@ -267,10 +269,21 @@
     "@": 30
 - __id: 1024
   agents_installed:
+    kafka_broker:
+      "@": 1031
+    kafka_master:
+      "@": 1034
+    kafka_worker:
+      "@": 1035
     webserver:
       "@": 1023
+    "@": schemat:Catalog
+  master_agents_running:
+    - kafka_broker
+    - kafka_master
   agents_running:
-    - "@": 1023
+    - kafka_worker
+    - webserver
   __category:
     "@": 21
 - __id: 1025
@@ -330,3 +343,52 @@
   format: index-jl
   __category:
     "@": 19
+- __id: 1034
+  name: kafka-master
+  info: Kafka client of the master process of a node. Comes with a shared producer
+    and a per-node dedicated consumer that processes messages addressed to the
+    Node.
+  start_client: true
+  start_producer: true
+  start_consumer: true
+  __class: schemat/server/kafka.js:KafkaNode
+  __category:
+    "@": 32
+- __id: 1035
+  name: kafka-worker
+  info: Kafka client of a worker process of a node. Comes with a shared producer
+    (needed on every worker process), but no per-node consumer (only exists on
+    the master process).
+  start_client: true
+  start_producer: true
+  start_consumer: false
+  __class: schemat/server/kafka.js:KafkaNode
+  __category:
+    "@": 32
+- __id: 1036
+  agents_installed:
+    kafka_broker:
+      "@": 1031
+    kafka_master:
+      "@": 1034
+    kafka_worker:
+      "@": 1035
+    webserver:
+      "@": 1023
+    "@": schemat:Catalog
+  master_agents_running:
+    - kafka_broker
+    - kafka_master
+  agents_running:
+    - kafka_worker
+    - webserver
+  kafka_port: 9094
+  kafka_controller_port: 9095
+  __category:
+    "@": 21
+- __id: 1037
+  name: logger
+  __node:
+    "@": 1036
+  __category:
+    "@": 33
