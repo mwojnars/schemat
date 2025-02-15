@@ -93,8 +93,8 @@ export class Process {
 
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
-        let current = this.agents                       // current: Map<agent_name, agent_object>
-        let agents = this._get_agent_names_running()    // desired agents: Map<agent_name, agent_object>
+        let current = this.agents                       // currently running agents, Map<name, agent>
+        let agents = this._get_agents_running()         // desired agents, Map<name, agent>
 
         if (schemat.is_closing) {
             agents = new Map()                          // enforce clean shutdown by stopping all agents
@@ -148,13 +148,8 @@ export class Process {
     }
 
     _get_agents_running() {
-        /* List of agents that should be running now on this process. When an agent is to be stopped, it should be first removed from this list. */
-        let agents = schemat.worker_id ? this.node.agents_running : this.node.master_agents_running   // master process has its own list of agents
-        return agents.map(agent => typeof agent === 'object' ? agent : this.node.agents_installed.get(agent))
-    }
-
-    _get_agent_names_running() {
-        let names = schemat.worker_id ? this.node.agents_running : this.node.master_agents_running   // master process has its own list of agents
+        /* Map of agents that should be running now on this process. */
+        let names = schemat.worker_id ? this.node.agents_running : this.node.master_agents_running   // the set of agents at master vs workers can differ
         return new Map(names.map(name => [name, this.node.agents_installed.get(name)]))
     }
 
