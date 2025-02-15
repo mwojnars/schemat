@@ -42,19 +42,18 @@ export class KafkaService extends Service {
     async _submit(target, value) {
         if (this.endpoint_type !== 'KAFKA') throw new Error(`KafkaService can only be exposed at KAFKA endpoint, not ${this.endpoint}`)
 
-        let key = null
+        // let key = ''
         let headers = {
-            target: target.id,
-            endpoint: this.endpoint_name,
+            target: `${target.id}`,
+            endpoint: this.endpoint_name
         }
-        let message = {key, value, headers}
+        let message = {value, headers}
 
         // send `message` to the target's topic
         let topic = target.__kafka_topic
         print(`KafkaService._submit(${topic}):`, message)
 
-        // return schemat.node.kafka_send(topic, message)
-
+        return schemat.node.kafka_send(topic, message)
         // return schemat.get_agent('kafka_client').kafka_send(topic, message)
     }
 }
