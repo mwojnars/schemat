@@ -365,10 +365,13 @@
       "@": 1035
     webserver:
       "@": 1023
+    logger:
+      "@": 1037
     "@": schemat:Catalog
   master_agents_running:
     - kafka_broker
     - kafka_master
+    - logger
   agents_running:
     - kafka_worker
     - webserver
