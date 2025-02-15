@@ -48,8 +48,8 @@ export async function boot_schemat(opts) {
 export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
-    agents = new Map()  // Agent objects that are currently running in this process, keyed by agent names
-    states = new Map()  // {agent_name: state}, current states of execution of the agents running in this process
+    agents = new Map()      // Agent objects that are currently running in this process, keyed by agent names
+    states = new Map()      // state objects of agents running in this process as returned by __start__(), keyed by agent names
 
     constructor(node, opts) {
         this.node = node        // Node web object that represents the physical node this process is running on
@@ -115,8 +115,8 @@ export class Process {
         for (let name of to_stop.toReversed()) {        // iterate in reverse order as some agents may depend on previous ones
             let agent = current.get(name)
             this._print(`will stop agent '${name}'`)
-            // let state = this.state[agent_name]
-            promises.push(agent.__stop__(agent.__state).then(() => {delete agent.__self.__state}))
+            let state = this.states.get(name)
+            promises.push(agent.__stop__(state).then(() => this.states.delete(name)))
         }
 
         // find agents in `current` that are still in `agents` and need to be refreshed
@@ -126,7 +126,8 @@ export class Process {
             if (agent.__ttl_left() < 0) agent = await agent.reload()
             next.set(name, agent)
             if (agent === prev) continue
-            promises.push(agent.__restart__(prev.__state, prev).then(state => agent.__self.__state = state))
+            let state = this.states.get(name)
+            promises.push(agent.__restart__(state, prev).then(state => this.states.set(name, state)))
 
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
@@ -139,8 +140,7 @@ export class Process {
             this._print(`will start agent '${name}'`)
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
             next.set(name, agent)
-            promises.push(agent.__start__().then(state => agent.__self.__state = state))
-            // promises.push(agent.load().then(async agent => agent.__self.__state = await agent.__start__()))
+            promises.push(agent.__start__().then(state => this.states.set(name, state)))
         }
 
         await Promise.all(promises)
