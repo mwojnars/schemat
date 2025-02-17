@@ -29,11 +29,12 @@ export class JSONx {
     Dump & load arbitrary objects to/from JSON strings.
     Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
     */
-    static FLAG_BIN   = "(bin)"         // special value of ATTR_CLASS that informs the value is a hex-encoded Uint8Array instance
-    static FLAG_TYPE  = "(class)"       // special value of ATTR_CLASS that informs the value is a class rather than an instance
-    static FLAG_WRAP  = "(object)"      // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
-    static ATTR_CLASS = "@"             // special attribute appended to object state to store a class name (with package) of the object being encoded
-    static ATTR_STATE = "="             // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
+    // static FLAG_BIGINT= "%big"      // special value of ATTR_CLASS that informs the value is a BigInt decimal string
+    static FLAG_BIN   = "%hex"      // special value of ATTR_CLASS that informs the value is a hex-encoded Uint8Array instance
+    static FLAG_TYPE  = "%class"    // special value of ATTR_CLASS that informs the value is a class rather than an instance
+    static FLAG_WRAP  = "%wrap"     // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
+    static ATTR_CLASS = "@"         // special attribute appended to object state to store a class name (with package) of the object being encoded
+    static ATTR_STATE = "="         // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
 
     // constructor(transform) {
     //     // for now, this constructor is only used internally in static encode() & static decode()
