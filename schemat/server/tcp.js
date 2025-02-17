@@ -1,7 +1,8 @@
 import net from 'net';
-import { assert } from '../common/utils.js';
+
+import {assert} from '../common/utils.js';
+import {JSONx} from '../common/jsonx.js';
 import {Agent} from "./agent.js";
-import { JSONx } from '../common/jsonx.js';
 
 
 /**********************************************************************************************************************/
@@ -33,7 +34,7 @@ export class TCP_Sender extends Agent {
     async __start__({host, port}) {
         let pending = new Map()                 // Map<id, {message, retries}>
         let retry_timer = null
-        let next_msg_id = 1
+        let message_id = 1
 
         let socket = net.createConnection({host, port}, () => {
             socket.setNoDelay(false)            // up to 40ms delay (Nagle's algorithm, output buffer)
@@ -61,7 +62,7 @@ export class TCP_Sender extends Agent {
         })
 
         function send(msg) {
-            let id = next_msg_id++
+            let id = message_id++
             let json = JSONx.stringify({id, msg}) + '\n'
             pending.set(id, {message: json, retries: 0})
             socket.write(json)
@@ -86,7 +87,7 @@ export class TCP_Receiver extends Agent {
     /* Receive messages from other nodes in the cluster, send replies and acknowledgements. */
 
     // properties:
-    // tcp_port = 5850
+    // tcp_port = 5828
 
     async __start__() {
         
@@ -113,17 +114,18 @@ export class TCP_Receiver extends Agent {
         return {server}
     }
 
+    async __stop__({server}) {
+        server?.close()
+    }
+
     _respond(socket, id, result) {
-        let resp = {id, result}
+        let resp = {id}
+        if (result !== undefined) resp.result = result
         socket.write(JSONx.stringify(resp) + '\n') 
     }
 
     _process_request(message) {
         console.log('Received message:', message) 
-    }
-
-    async __stop__({server}) {
-        server?.close()
     }
 }
 
