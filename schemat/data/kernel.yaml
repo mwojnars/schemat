@@ -872,3 +872,15 @@
     "@": 32
   __category:
     "@": 1
+- __id: 34
+  name: TCP_Sender
+  __prototype:
+    "@": 29
+  __category:
+    "@": 1
+- __id: 35
+  name: TCP_Receiver
+  __prototype:
+    "@": 29
+  __category:
+    "@": 1
