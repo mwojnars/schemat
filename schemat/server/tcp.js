@@ -14,7 +14,7 @@ class ChunkParser {
 
     feed(data) {
         this.buffer += data
-        const messages = this.buffer.split('\n')
+        let messages = this.buffer.split('\n')
         this.buffer = messages.pop()
         messages.forEach(msg => msg && this.callback(msg))
     }
@@ -30,21 +30,21 @@ export class TCP_Sender extends Agent {
     // retry_interval = 2000
 
     async __start__({host, port}) {
-        const pending = new Map()  // Map<id, {message, attempts}>
-        const socket = net.createConnection({host, port}, () => {
-            socket.setNoDelay(true)
-            const retry_timer = setInterval(() => {
-                for (const [id, entry] of pending) {
-                    entry.attempts++
+        let pending = new Map()                 // Map<id, {message, retries}>
+        let socket = net.createConnection({host, port}, () => {
+            socket.setNoDelay(false)            // up to 40ms delay (Nagle's algorithm, output buffer)
+            let retry_timer = setInterval(() => {
+                for (let [id, entry] of pending) {
+                    entry.retries++
                     socket.write(entry.message)
                 }
             }, this.retry_interval)
-            state.retry_timer = retry_timer  // add timer to state for cleanup
+            state.retry_timer = retry_timer     // add timer to state for cleanup
         })
 
-        const ack_parser = new ChunkParser(msg => {
+        let ack_parser = new ChunkParser(msg => {
             try {
-                const {id} = JSON.parse(msg)
+                let {id} = JSON.parse(msg)
                 pending.delete(id)
             } catch (e) { console.error('Invalid ACK:', msg) }
         })
@@ -56,13 +56,13 @@ export class TCP_Sender extends Agent {
             socket = null
         })
 
-        const state = {
+        let state = {
             host, port, socket, pending,
             next_msg_id: 1,
             send: (payload) => {
-                const msg_id = state.next_msg_id++
-                const message = JSON.stringify({id: msg_id, payload}) + '\n'
-                pending.set(msg_id, {message, attempts: 0})
+                let msg_id = state.next_msg_id++
+                let message = JSON.stringify({id: msg_id, payload}) + '\n'
+                pending.set(msg_id, {message, retries: 0})
                 socket.write(message)
                 return msg_id
             }
@@ -89,7 +89,7 @@ export class TCP_Receiver extends Agent {
 
     _process_message(msg) {
         try {
-            const {id, payload} = JSON.parse(msg)
+            let {id, payload} = JSON.parse(msg)
             if (id > this.processed_offset) {
                 this._handle_payload(payload)
                 this.processed_offset = id
