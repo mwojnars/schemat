@@ -877,7 +877,7 @@
   schema:
     retry_interval:
       default: 5000
-      info: Delay before resending an unacknowledged message.
+      info: Delay [ms] before resending a message that lacks acknowledgement.
       "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
   class: schemat/server/tcp.js:TCP_Sender
