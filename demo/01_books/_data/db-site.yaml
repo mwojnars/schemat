@@ -278,11 +278,8 @@
     webserver:
       "@": 1023
     "@": schemat:Catalog
-  master_agents_running:
-    - kafka_broker
-    - kafka_master
+  master_agents_running: []
   agents_running:
-    - kafka_worker
     - webserver
   __category:
     "@": 21
@@ -375,10 +372,13 @@
       "@": 1035
     webserver:
       "@": 1023
+    logger:
+      "@": 1037
     "@": schemat:Catalog
   master_agents_running:
     - kafka_broker
     - kafka_master
+    - logger
   agents_running:
     - kafka_worker
     - webserver
@@ -392,3 +392,11 @@
     "@": 1036
   __category:
     "@": 33
+- __id: 1038
+  name: tcp-sender
+  __category:
+    "@": 34
+- __id: 1039
+  name: tcp-receiver
+  __category:
+    "@": 35
