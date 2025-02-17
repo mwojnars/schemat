@@ -268,11 +268,8 @@
     webserver:
       "@": 1023
     "@": schemat:Catalog
-  master_agents_running:
-    - kafka_broker
-    - kafka_master
+  master_agents_running: []
   agents_running:
-    - kafka_worker
     - webserver
   __category:
     "@": 21

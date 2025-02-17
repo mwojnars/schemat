@@ -114,7 +114,7 @@ export class Process {
         // find agents in `current` that are not in `agents` and need to be stopped
         for (let name of to_stop.toReversed()) {        // iterate in reverse order as some agents may depend on previous ones
             let agent = current.get(name)
-            this._print(`will stop agent '${name}'`)
+            this._print(`stopping agent '${name}'`)
             let state = this.states.get(name)
             promises.push(agent.__stop__(state).then(() => this.states.delete(name)))
         }
@@ -136,7 +136,7 @@ export class Process {
         // find agents in `agents` that are not in `current` and need to be started
         for (let name of to_start) {
             let agent = agents.get(name)
-            this._print(`will start agent '${name}'`)
+            this._print(`starting agent '${name}'`)
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
             next.set(name, agent)
             promises.push(agent.__start__().then(state => this.states.set(name, state)))
