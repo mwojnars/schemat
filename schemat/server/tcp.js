@@ -25,49 +25,49 @@ class ChunkParser {
 export class TCP_Sender extends Agent {
     /* Send messages to other nodes in the cluster via persistent connections. Generate unique identifiers
        for WRITE messages, process acknowledgements and resend un-acknowledged messages. */
-    next_msg_id = 1
-    pending = new Map()     // Map<id, {message, attempts}>
-    socket = null
-    retry_interval = 2000
-    ack_parser = new ChunkParser(msg => this._handle_ack(msg))
+
+    // properties:
+    // retry_interval = 2000
 
     async __start__({host, port}) {
-        this.socket = net.createConnection({host, port}, () => {
-            this.socket.setNoDelay(true)
-            this.retry_timer = setInterval(() => this._resend_pending(), this.retry_interval)
+        const pending = new Map()  // Map<id, {message, attempts}>
+        const socket = net.createConnection({host, port}, () => {
+            socket.setNoDelay(true)
+            const retry_timer = setInterval(() => {
+                for (const [id, entry] of pending) {
+                    entry.attempts++
+                    socket.write(entry.message)
+                }
+            }, this.retry_interval)
+            state.retry_timer = retry_timer  // add timer to state for cleanup
         })
 
-        this.socket.on('data', data => this.ack_parser.feed(data.toString()))
-        this.socket.on('close', () => this._handle_disconnect())
-        return {host, port}
-    }
+        const ack_parser = new ChunkParser(msg => {
+            try {
+                const {id} = JSON.parse(msg)
+                pending.delete(id)
+            } catch (e) { console.error('Invalid ACK:', msg) }
+        })
 
-    async send(payload) {
-        const msg_id = this.next_msg_id++
-        const message = JSON.stringify({id: msg_id, payload}) + '\n'
-        this.pending.set(msg_id, {message, attempts: 0})
-        this.socket.write(message)
-        return msg_id
-    }
+        socket.on('data', data => ack_parser.feed(data.toString()))
+        socket.on('close', () => {
+            clearInterval(state.retry_timer)
+            socket.removeAllListeners()
+            socket = null
+        })
 
-    _resend_pending() {
-        for (const [id, entry] of this.pending) {
-            entry.attempts++
-            this.socket.write(entry.message)
+        const state = {
+            host, port, socket, pending,
+            next_msg_id: 1,
+            send: (payload) => {
+                const msg_id = state.next_msg_id++
+                const message = JSON.stringify({id: msg_id, payload}) + '\n'
+                pending.set(msg_id, {message, attempts: 0})
+                socket.write(message)
+                return msg_id
+            }
         }
-    }
-
-    _handle_ack(ack) {
-        try {
-            const {id} = JSON.parse(ack)
-            this.pending.delete(id)
-        } catch (e) { console.error('Invalid ACK:', ack) }
-    }
-
-    _handle_disconnect() {
-        clearInterval(this.retry_timer)
-        this.socket.removeAllListeners()
-        this.socket = null
+        return state
     }
 }
 
