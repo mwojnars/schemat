@@ -1,8 +1,8 @@
-import net from 'net';
-
-import {assert} from '../common/utils.js';
+import {assert, tryimport} from '../common/utils.js';
 import {JSONx} from '../common/jsonx.js';
 import {Agent} from "./agent.js";
+
+let {net} = await tryimport('net') || {}         // node:net
 
 
 /**********************************************************************************************************************/
