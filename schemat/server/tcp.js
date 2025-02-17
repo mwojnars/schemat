@@ -1,6 +1,7 @@
 import net from 'net';
 import { assert } from '../common/utils.js';
 import {Agent} from "./agent.js";
+import { JSONx } from '../common/jsonx.js';
 
 
 /**********************************************************************************************************************/
@@ -46,8 +47,9 @@ export class TCP_Sender extends Agent {
 
         let ack_parser = new ChunkParser(msg => {
             try {
-                let {id} = JSON.parse(msg)
+                let {id, result} = JSONx.parse(msg)
                 pending.delete(id)
+                this._process_result(result)
             } catch (e) { console.error('Invalid ACK:', msg) }
         })
 
@@ -58,12 +60,12 @@ export class TCP_Sender extends Agent {
             socket = null
         })
 
-        function send(payload) {
-            let msg_id = next_msg_id++
-            let message = JSON.stringify({id: msg_id, payload}) + '\n'
-            pending.set(msg_id, {message, retries: 0})
-            socket.write(message)
-            return msg_id
+        function send(msg) {
+            let id = next_msg_id++
+            let json = JSONx.stringify({id, msg}) + '\n'
+            pending.set(id, {message: json, retries: 0})
+            socket.write(json)
+            return id
         }
 
         return {socket, send}
@@ -71,6 +73,10 @@ export class TCP_Sender extends Agent {
     
     async __stop__({socket}) {
         socket?.end()
+    }
+
+    _process_result(result) {
+        console.log('Received result:', result)
     }
 }
 
@@ -87,14 +93,15 @@ export class TCP_Receiver extends Agent {
         let server = net.createServer(socket => {
             // per-connection state
             let processed_offset = 0
-            let msg_parser = new ChunkParser(msg => {
+            let msg_parser = new ChunkParser(json => {
                 try {
-                    let {id, payload} = JSON.parse(msg)
+                    let {id, msg} = JSONx.parse(json)
+                    let result
                     if (id > processed_offset) {
-                        this.__consume__(payload)
                         processed_offset = id
+                        result = this._process_request(msg)
                     }
-                    this._send_ack(socket, id)
+                    this._respond(socket, id, result)
                 } catch (e) { console.error('Invalid message:', e) }
             })
 
@@ -106,9 +113,14 @@ export class TCP_Receiver extends Agent {
         return {server}
     }
 
-    _send_ack(socket, id)   { socket.write(JSON.stringify({id}) + '\n') }
+    _respond(socket, id, result) {
+        let resp = {id, result}
+        socket.write(JSONx.stringify(resp) + '\n') 
+    }
 
-    __consume__(message)    { console.log('Received message:', message) }
+    _process_request(message) {
+        console.log('Received message:', message) 
+    }
 
     async __stop__({server}) {
         server?.close()
