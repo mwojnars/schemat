@@ -653,6 +653,10 @@
       info: Duration [in seconds] of a single iteration of the agent execution loop in
         run().
       "@": schemat/types/type.js:NUMBER
+    tcp_port:
+      default: 5828
+      info: This node's TCP port for incoming messages (TCP_Receiver).
+      "@": schemat/types/type.js:INTEGER
     kafka_host:
       default: localhost
       info: Host name to be used by Kafka broker.
@@ -889,8 +893,8 @@
   name: TCP_Receiver
   schema:
     tcp_port:
-      default: 5828
-      info: Listening at this TCP port number.
+      info: Listening on this TCP port number, or schemat.node.tcp_port if
+        this.tcp_port is undefined.
       "@": schemat/types/type.js:INTEGER
     "@": schemat:Catalog
   class: schemat/server/tcp.js:TCP_Receiver

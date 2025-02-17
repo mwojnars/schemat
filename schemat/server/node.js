@@ -20,6 +20,7 @@ export class Node extends WebObject {
     agents_running
     master_agents_running
     refresh_interval
+    tcp_port
 
     // Node is not strictly an agent, but can be used as a target in KafkaService, hence the overrides below:
     get __node()        { return this }                 // for KafkaService._is_local()

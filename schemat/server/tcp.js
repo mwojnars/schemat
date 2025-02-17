@@ -110,7 +110,7 @@ export class TCP_Receiver extends Agent {
             socket.on('error', () => socket.destroy())
         })
 
-        server.listen(this.tcp_port)
+        server.listen(this.tcp_port || schemat.node.tcp_port)
         return {server}
     }
 
