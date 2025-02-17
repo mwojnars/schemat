@@ -29,7 +29,7 @@ export class TCP_Sender extends Agent {
        for WRITE messages, process acknowledgements and resend un-acknowledged messages. */
 
     // properties:
-    // retry_interval = 2000
+    retry_interval
 
     async __start__({host, port}) {
         let pending = new Map()                 // Map<id, {message, retries}>
@@ -87,7 +87,7 @@ export class TCP_Receiver extends Agent {
     /* Receive messages from other nodes in the cluster, send replies and acknowledgements. */
 
     // properties:
-    // tcp_port = 5828
+    tcp_port
 
     async __start__() {
         

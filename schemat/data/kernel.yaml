@@ -887,6 +887,12 @@
     "@": 1
 - __id: 35
   name: TCP_Receiver
+  schema:
+    tcp_port:
+      default: 5828
+      info: Listening at this TCP port number.
+      "@": schemat/types/type.js:INTEGER
+    "@": schemat:Catalog
   class: schemat/server/tcp.js:TCP_Receiver
   __prototype:
     "@": 29
