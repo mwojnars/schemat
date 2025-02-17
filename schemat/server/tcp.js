@@ -2,7 +2,7 @@ import {assert, tryimport} from '../common/utils.js';
 import {JSONx} from '../common/jsonx.js';
 import {Agent} from "./agent.js";
 
-let {net} = await tryimport('net') || {}         // node:net
+let net = await tryimport('net')            // node:net
 
 
 /**********************************************************************************************************************/
@@ -31,7 +31,7 @@ export class TCP_Sender extends Agent {
     // properties:
     retry_interval
 
-    async __start__({host, port}) {
+    async __start__() {
         let sockets = new Map()         // Map<"host:port", net.Socket>
         let pending = new Map()         // Map<id, {message, retries, socket}>
         let message_id = 1
@@ -61,17 +61,14 @@ export class TCP_Sender extends Agent {
                 socket.removeAllListeners()
                 sockets.delete(key)
             })
+            sockets.set(key, socket)
 
             return socket
         }
 
         function send(msg, host, port) {
             let key = `${host}:${port}`
-            let socket = sockets.get(key)
-            if (!socket) {
-                socket = _create_connection(host, port)
-                sockets.set(key, socket)
-            }
+            let socket = sockets.get(key) || _create_connection(host, port)
 
             let id = message_id++
             let json = JSONx.stringify({id, msg}) + '\n'
