@@ -45,7 +45,7 @@ export class TCP_Sender extends Agent {
             }
         }, this.retry_interval)
 
-        const _create_connection = (host, port) => {
+        function _connect(host, port) {
             let address = `${host}:${port}`
             let socket = net.createConnection({host, port})
             socket.setNoDelay(false)
@@ -70,7 +70,7 @@ export class TCP_Sender extends Agent {
 
         function send(msg, host, port) {
             let address = `${host}:${port}`
-            let socket = sockets.get(address) || _create_connection(host, port)
+            let socket = sockets.get(address) || _connect(host, port)
 
             let id = message_id++
             let json = JSONx.stringify({id, msg}) + '\n'
