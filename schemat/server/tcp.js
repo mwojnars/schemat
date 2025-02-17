@@ -68,44 +68,46 @@ export class TCP_Sender extends Agent {
 
         return {socket, send}
     }
+    
+    async __stop__({socket}) {
+        socket?.end()
+    }
 }
 
 /**********************************************************************************************************************/
 
 export class TCP_Receiver extends Agent {
     /* Receive messages from other nodes in the cluster, send replies and acknowledgements. */
-    processed_offset = 0
-    msg_parser = new ChunkParser(msg => this._process_message(msg))
 
     async __start__({port}) {
-        this.server = net.createServer(socket => {
-            socket.on('data', data => this.msg_parser.feed(data.toString()))
+        
+        let server = net.createServer(socket => {
+            // per-connection state
+            let processed_offset = 0
+            let msg_parser = new ChunkParser(msg => {
+                try {
+                    let {id, payload} = JSON.parse(msg)
+                    if (id > processed_offset) {
+                        this.__consume__(payload)
+                        processed_offset = id
+                    }
+                    this._send_ack(socket, id)
+                } catch (e) { console.error('Invalid message:', e) }
+            })
+
+            socket.on('data', data => msg_parser.feed(data.toString()))
             socket.on('error', () => socket.destroy())
         })
-        this.server.listen(port)
-        return {port}
+
+        server.listen(port)
+        return {server}
     }
 
-    _process_message(msg) {
-        try {
-            let {id, payload} = JSON.parse(msg)
-            if (id > this.processed_offset) {
-                this._handle_payload(payload)
-                this.processed_offset = id
-            }
-            this._send_ack(id)
-        } catch (e) { console.error('Invalid message:', e) }
-    }
+    _send_ack(socket, id)   { socket.write(JSON.stringify({id}) + '\n') }
+    __consume__(message)    { console.log('Received message:', message) }
 
-    _send_ack(id) {
-        this.server?.clients.forEach(client => 
-            client.write(JSON.stringify({id}) + '\n')
-        )
-    }
-
-    _handle_payload(payload) {
-        // override this method to handle received payloads
-        console.log('Received payload:', payload)
+    async __stop__({server}) {
+        server?.close()
     }
 }
 
