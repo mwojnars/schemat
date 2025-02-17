@@ -31,15 +31,17 @@ export class TCP_Sender extends Agent {
 
     async __start__({host, port}) {
         let pending = new Map()                 // Map<id, {message, retries}>
+        let retry_timer = null
+        let next_msg_id = 1
+
         let socket = net.createConnection({host, port}, () => {
             socket.setNoDelay(false)            // up to 40ms delay (Nagle's algorithm, output buffer)
-            let retry_timer = setInterval(() => {
+            retry_timer = setInterval(() => {
                 for (let [id, entry] of pending) {
                     entry.retries++
                     socket.write(entry.message)
                 }
             }, this.retry_interval)
-            state.retry_timer = retry_timer     // add timer to state for cleanup
         })
 
         let ack_parser = new ChunkParser(msg => {
@@ -51,23 +53,20 @@ export class TCP_Sender extends Agent {
 
         socket.on('data', data => ack_parser.feed(data.toString()))
         socket.on('close', () => {
-            clearInterval(state.retry_timer)
+            clearInterval(retry_timer)
             socket.removeAllListeners()
             socket = null
         })
 
-        let state = {
-            host, port, socket, pending,
-            next_msg_id: 1,
-            send: (payload) => {
-                let msg_id = state.next_msg_id++
-                let message = JSON.stringify({id: msg_id, payload}) + '\n'
-                pending.set(msg_id, {message, retries: 0})
-                socket.write(message)
-                return msg_id
-            }
+        function send(payload) {
+            let msg_id = next_msg_id++
+            let message = JSON.stringify({id: msg_id, payload}) + '\n'
+            pending.set(msg_id, {message, retries: 0})
+            socket.write(message)
+            return msg_id
         }
-        return state
+
+        return {socket, send}
     }
 }
 
