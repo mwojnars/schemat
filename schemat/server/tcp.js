@@ -32,48 +32,61 @@ export class TCP_Sender extends Agent {
     retry_interval
 
     async __start__({host, port}) {
-        let pending = new Map()                 // Map<id, {message, retries}>
-        let retry_timer = null
+        let sockets = new Map()         // Map<"host:port", net.Socket>
+        let pending = new Map()         // Map<id, {message, retries, socket}>
         let message_id = 1
 
-        let socket = net.createConnection({host, port}, () => {
-            socket.setNoDelay(false)            // up to 40ms delay (Nagle's algorithm, output buffer)
-            retry_timer = setInterval(() => {
-                for (let [id, entry] of pending) {
-                    entry.retries++
-                    socket.write(entry.message)
-                }
-            }, this.retry_interval)
-        })
+        let retry_timer = setInterval(() => {
+            for (let [id, entry] of pending) {
+                entry.retries++
+                entry.socket.write(entry.message)
+            }
+        }, this.retry_interval)
 
-        let ack_parser = new ChunkParser(msg => {
-            try {
-                let {id, result} = JSONx.parse(msg)
-                pending.delete(id)
-                this._process_result(result)
-            } catch (e) { console.error('Invalid ACK:', msg) }
-        })
+        const _create_connection = (host, port) => {
+            let key = `${host}:${port}`
+            let socket = net.createConnection({host, port})
+            socket.setNoDelay(false)
 
-        socket.on('data', data => ack_parser.feed(data.toString()))
-        socket.on('close', () => {
-            clearInterval(retry_timer)
-            socket.removeAllListeners()
-            socket = null
-        })
+            let ack_parser = new ChunkParser(msg => {
+                try {
+                    let {id, result} = JSONx.parse(msg)
+                    pending.delete(id)
+                    this._process_result(result)
+                } catch (e) { console.error('Invalid ACK:', msg) }
+            })
 
-        function send(msg) {
+            socket.on('data', data => ack_parser.feed(data.toString()))
+            socket.on('close', () => {
+                socket.removeAllListeners()
+                sockets.delete(key)
+            })
+
+            return socket
+        }
+
+        function send(msg, host, port) {
+            let key = `${host}:${port}`
+            let socket = sockets.get(key)
+            if (!socket) {
+                socket = _create_connection(host, port)
+                sockets.set(key, socket)
+            }
+
             let id = message_id++
             let json = JSONx.stringify({id, msg}) + '\n'
-            pending.set(id, {message: json, retries: 0})
+
+            pending.set(id, {message: json, retries: 0, socket})
             socket.write(json)
             return id
         }
 
-        return {socket, send}
+        return {sockets, send, retry_timer}
     }
     
-    async __stop__({socket}) {
-        socket?.end()
+    async __stop__({sockets, retry_timer}) {
+        clearInterval(retry_timer)
+        for (let socket of sockets.values()) socket.end()
     }
 
     _process_result(result) {
