@@ -259,6 +259,10 @@
     "@": 30
 - __id: 1024
   agents_installed:
+    tcp:
+      "@": 1038
+    tcp_receiver:
+      "@": 1039
     kafka_broker:
       "@": 1031
     kafka_master:
@@ -268,7 +272,9 @@
     webserver:
       "@": 1023
     "@": schemat:Catalog
-  master_agents_running: []
+  master_agents_running:
+    - tcp
+    - tcp_receiver
   agents_running:
     - webserver
   __category:
