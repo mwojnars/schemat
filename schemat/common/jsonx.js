@@ -29,7 +29,7 @@ export class JSONx {
     Dump & load arbitrary objects to/from JSON strings.
     Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
     */
-    // static FLAG_BIGINT= "%big"      // special value of ATTR_CLASS that informs the value is a BigInt decimal string
+    static FLAG_BIGINT = "%big"     // special value of ATTR_CLASS that informs the value is a BigInt decimal string
     static FLAG_BIN   = "%hex"      // special value of ATTR_CLASS that informs the value is a hex-encoded Uint8Array instance
     static FLAG_TYPE  = "%class"    // special value of ATTR_CLASS that informs the value is a class rather than an instance
     static FLAG_WRAP  = "%wrap"     // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
@@ -100,6 +100,9 @@ export class JSONx {
             let state = bin_to_hex(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_BIN}
         }
+        
+        if (typeof obj === 'bigint')    // handle BigInt values
+            return {[JSONx.ATTR_STATE]: obj.toString(), [JSONx.ATTR_CLASS]: JSONx.FLAG_BIGINT}
 
         if (T.isClass(obj)) {
             let state = schemat.get_classpath(obj)
@@ -141,6 +144,9 @@ export class JSONx {
         if (plain && type) {
             if (type === JSONx.FLAG_BIN)            // decoding of a Uint8Array
                 return hex_to_bin(state[JSONx.ATTR_STATE])
+
+            if (type === JSONx.FLAG_BIGINT)         // handle BigInt decoding
+                return BigInt(state[JSONx.ATTR_STATE])
 
             if (type === JSONx.FLAG_TYPE) {         // decoding of a class object
                 let classname = state[JSONx.ATTR_STATE]
