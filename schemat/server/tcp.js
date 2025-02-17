@@ -32,19 +32,21 @@ export class TCP_Sender extends Agent {
     retry_interval
 
     async __start__() {
-        let sockets = new Map()         // Map<"host:port", net.Socket>
-        let pending = new Map()         // Map<id, {message, retries, socket}>
+        let sockets = new Map()         // Map<address, net.Socket>
+        let pending = new Map()         // Map<id, {message, retries, address}>
         let message_id = 1
 
         let retry_timer = setInterval(() => {
             for (let [id, entry] of pending) {
                 entry.retries++
-                entry.socket.write(entry.message)
+                let socket = sockets.get(entry.address)
+                assert(socket)
+                socket.write(entry.message)
             }
         }, this.retry_interval)
 
         const _create_connection = (host, port) => {
-            let key = `${host}:${port}`
+            let address = `${host}:${port}`
             let socket = net.createConnection({host, port})
             socket.setNoDelay(false)
 
@@ -59,21 +61,21 @@ export class TCP_Sender extends Agent {
             socket.on('data', data => ack_parser.feed(data.toString()))
             socket.on('close', () => {
                 socket.removeAllListeners()
-                sockets.delete(key)
+                sockets.delete(address)
             })
-            sockets.set(key, socket)
+            sockets.set(address, socket)
 
             return socket
         }
 
         function send(msg, host, port) {
-            let key = `${host}:${port}`
-            let socket = sockets.get(key) || _create_connection(host, port)
+            let address = `${host}:${port}`
+            let socket = sockets.get(address) || _create_connection(host, port)
 
             let id = message_id++
             let json = JSONx.stringify({id, msg}) + '\n'
 
-            pending.set(id, {message: json, retries: 0, socket})
+            pending.set(id, {message: json, retries: 0, address})
             socket.write(json)
             return id
         }
