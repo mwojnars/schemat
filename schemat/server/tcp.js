@@ -79,7 +79,10 @@ export class TCP_Sender extends Agent {
 export class TCP_Receiver extends Agent {
     /* Receive messages from other nodes in the cluster, send replies and acknowledgements. */
 
-    async __start__({port}) {
+    // properties:
+    // tcp_port = 5850
+
+    async __start__() {
         
         let server = net.createServer(socket => {
             // per-connection state
@@ -99,11 +102,12 @@ export class TCP_Receiver extends Agent {
             socket.on('error', () => socket.destroy())
         })
 
-        server.listen(port)
+        server.listen(this.tcp_port)
         return {server}
     }
 
     _send_ack(socket, id)   { socket.write(JSON.stringify({id}) + '\n') }
+
     __consume__(message)    { console.log('Received message:', message) }
 
     async __stop__({server}) {
