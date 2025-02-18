@@ -360,6 +360,10 @@
     "@": 32
 - __id: 1036
   agents_installed:
+    tcp:
+      "@": 1038
+    tcp_receiver:
+      "@": 1039
     kafka_broker:
       "@": 1031
     kafka_master:
@@ -372,11 +376,10 @@
       "@": 1037
     "@": schemat:Catalog
   master_agents_running:
-    - kafka_broker
-    - kafka_master
+    - tcp
+    - tcp_receiver
     - logger
   agents_running:
-    - kafka_worker
     - webserver
   kafka_port: 9094
   kafka_controller_port: 9095
