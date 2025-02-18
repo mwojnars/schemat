@@ -14,6 +14,10 @@ globalThis.CLIENT = !globalThis.SERVER
 //     process.versions != null &&                     // process.versions contains Node.js-specific version information
 //     process.versions.node != null                   // process.versions.node is the Node.js version string
 
+globalThis.server_import = function(path) {
+    /* Backend-only version of import(). On browser, returns undefined. */
+    return SERVER ? import(path) : undefined
+}
 
 /**********************************************************************************************************************/
 
