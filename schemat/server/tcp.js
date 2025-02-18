@@ -129,14 +129,14 @@ export class TCP_Receiver extends Agent {
         server?.close()
     }
 
+    _process_request(message) {
+        console.log('Received message:', message) 
+    }
+
     _respond(socket, id, result) {
         let resp = {id}
         if (result !== undefined) resp.result = result
         socket.write(JSONx.stringify(resp) + '\n') 
-    }
-
-    _process_request(message) {
-        console.log('Received message:', message) 
     }
 }
 
