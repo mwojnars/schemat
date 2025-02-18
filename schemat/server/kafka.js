@@ -7,16 +7,16 @@
     - ./kafka-console-producer.sh --bootstrap-server localhost:9092 --topic topic-1024      << send test messages to a topic
  */
 
-import {assert, print, sleep, tryimport} from "../common/utils.js"
+import {assert, print, sleep} from "../common/utils.js"
 import {mJsonx, mJsonxArray} from "../web/messages.js";
 import {Service} from "../web/services.js";
 import {Request} from "../web/request.js"
 import {Agent} from "./agent.js";
 
-let {Kafka, logLevel} = await tryimport('kafkajs') || {}
-let {exec, spawn} = await tryimport('child_process') || {}     // node:child_process
-let {promisify} = await tryimport('util') || {}         // node:util
-let {readFile, writeFile, mkdir, rm} = await tryimport('fs/promises') || {}
+let {Kafka, logLevel} = await server_import('kafkajs') || {}
+let {exec, spawn} = await server_import('node:child_process') || {}
+let {promisify} = await server_import('node:util') || {}
+let {readFile, writeFile, mkdir, rm} = await server_import('fs/promises') || {}
 let exec_promise = exec && promisify(exec)
 
 

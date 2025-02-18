@@ -1,10 +1,10 @@
-import {assert, print, T, tryimport} from '../common/utils.js'
+import {assert, print, T} from '../common/utils.js'
 import {NotImplemented} from '../common/errors.js'
 import {BinaryMap, compare_uint8} from "../common/binary.js"
 import {data_schema} from "./records.js"
 
-const fs = await tryimport('fs')     //node:fs
-const yaml = (await tryimport('yaml'))?.default
+const fs = await server_import('node:fs')
+const yaml = (await server_import('yaml'))?.default
 
 
 
