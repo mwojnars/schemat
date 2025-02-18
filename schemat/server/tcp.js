@@ -45,8 +45,9 @@ export class TCP_Sender extends Agent {
             }
         }, this.retry_interval)
 
-        function _connect(host, port) {
-            let address = `${host}:${port}`
+        function _connect(address) {
+            let [host, port] = address.split(':')
+            port = parseInt(port)
             let socket = net.createConnection({host, port})
             socket.setNoDelay(false)
 
@@ -68,10 +69,8 @@ export class TCP_Sender extends Agent {
             return socket
         }
 
-        function send(msg, host, port) {
-            let address = `${host}:${port}`
-            let socket = sockets.get(address) || _connect(host, port)
-
+        function send(msg, address) {
+            let socket = sockets.get(address) || _connect(address)
             let id = message_id++
             let json = JSONx.stringify({id, msg}) + '\n'
 
