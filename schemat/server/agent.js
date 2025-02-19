@@ -19,10 +19,10 @@ export class Agent extends WebObject {
 
     hard_restart
 
-    async __install__(node) {}      // ideally, this method should be idempotent in case of failure and subsequent re-launch
+    async __install__(node) {}  // ideally, this method should be idempotent in case of failure and subsequent re-launch
     async __uninstall__(node) {}
 
-    async __start__()   {}          // may return an "execution context" object of custom shape that will be passed to __stop__()
+    async __start__()   {}      // may create and return an "execution context" (an object of arbitrary shape) that will be passed to __stop__()
     async __stop__(ctx) {}
 
     async __restart__(ctx, prev) {
