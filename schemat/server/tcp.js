@@ -55,7 +55,7 @@ export class TCP_Sender extends Agent {
                 try {
                     let {id, result} = JSONx.parse(msg)
                     pending.delete(id)
-                    this._process_result(result)
+                    this._handle_result(result)
                 } catch (e) { console.error('Invalid ACK:', msg) }
             })
 
@@ -87,7 +87,7 @@ export class TCP_Sender extends Agent {
         for (let socket of sockets.values()) socket.end()
     }
 
-    _process_result(result) {
+    _handle_result(result) {
         console.log('Received result:', result)
     }
 }
@@ -111,7 +111,7 @@ export class TCP_Receiver extends Agent {
                     let result
                     if (id > processed_offset) {
                         processed_offset = id
-                        result = this._process_request(msg)
+                        result = this._handle_message(msg)
                     }
                     this._respond(socket, id, result)
                 } catch (e) { console.error('Invalid message:', e) }
@@ -129,7 +129,8 @@ export class TCP_Receiver extends Agent {
         server?.close()
     }
 
-    _process_request(message) {
+    _handle_message(message) {
+        // schemat.node.forward_message(message)
         console.log('Received message:', message) 
     }
 

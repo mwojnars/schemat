@@ -957,6 +957,7 @@ export class WebObject {
            Query parameters are passed in `req.query`, as:
            - a string if there's one occurrence of PARAM in a query string,
            - an array [val1, val2, ...] if PARAM occurs multiple times.
+           TODO: move this method to Site.handle_web(request)
         */
         assert(this.is_loaded)
 
@@ -966,6 +967,7 @@ export class WebObject {
 
         // find the first endpoint that matches this request and launch its handler
         for (let endpoint of endpoints) {
+            // TODO: method _call_endpoint(endpoint, ...args)
             let handler = this._get_handler(endpoint)
             if (!handler) continue
 

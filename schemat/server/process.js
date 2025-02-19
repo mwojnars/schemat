@@ -45,6 +45,13 @@ export async function boot_schemat(opts) {
 
 /**********************************************************************************************************************/
 
+class AgentState {
+    agent           // ref to web object
+    context         // execution context returned by __start__()
+    semaphore       // no. of currently executing RPC calls
+    stopping        // if true, no more RPC calls can be started
+}
+
 export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
