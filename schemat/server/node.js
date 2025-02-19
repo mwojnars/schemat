@@ -26,7 +26,7 @@ export class Node extends WebObject {
     get __node()        { return this }                 // for KafkaService._is_local()
     get __kafka_topic() { return `topic-${this.id}` }   // for KafkaService._submit()
 
-    get kafka_client() { return this.__state?.kafka }
+    // get kafka_client() { return this.__state?.kafka }
     // get kafka_client() { return this.schemat.agents.get('kafka_client').__state.kafka }
     // get kafka_producer() { return this.__state.producer }
     // is_master_process() { return !this.worker_id}

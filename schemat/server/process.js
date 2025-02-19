@@ -48,7 +48,8 @@ export async function boot_schemat(opts) {
 class AgentState {
     agent           // ref to web object
     context         // execution context returned by __start__()
-    semaphore       // no. of currently executing RPC calls
+    semaphore       // no. of currently executing RPC calls; all of them must return before __stop__() can be called ...
+                    // ... or a Promise that resolves when all the currently executing RPC calls return
     stopping        // if true, no more RPC calls can be started
 }
 

@@ -237,7 +237,6 @@ export class WebObject {
     __json                  stringified representation of this object's __data; can be passed to Catalog.load() to recreate the original __data structure
 
     __refresh               struct of the form {json, loaded_at} containing a newer version of this object's record, for use in .refresh()
-    __state                 (only present in Agent objects) the state of agent execution as returned by agent.__start__() or __restart__()
     */
 
     set __id(id) {
