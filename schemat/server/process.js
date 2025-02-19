@@ -57,7 +57,7 @@ export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
     agents = new Map()      // Agent objects that are currently running in this process, keyed by agent names
-    states = new Map()      // state objects of agents running in this process as returned by __start__(), keyed by agent names
+    contexts = new Map()    // context objects of agents running in this process as returned by __start__(), keyed by agent names
 
     constructor(node, opts) {
         this.node = node        // Node web object that represents the physical node this process is running on
@@ -123,8 +123,8 @@ export class Process {
         for (let name of to_stop.toReversed()) {        // iterate in reverse order as some agents may depend on previous ones
             let agent = current.get(name)
             this._print(`stopping agent '${name}'`)
-            let state = this.states.get(name)
-            promises.push(agent.__stop__(state).then(() => this.states.delete(name)))
+            let ctx = this.contexts.get(name)
+            promises.push(agent.__stop__(ctx).then(() => this.contexts.delete(name)))
         }
 
         // find agents in `current` that are still in `agents` and need to be refreshed
@@ -134,8 +134,8 @@ export class Process {
             if (agent.__ttl_left() < 0) agent = await agent.reload()
             next.set(name, agent)
             if (agent === prev) continue
-            let state = this.states.get(name)
-            promises.push(agent.__restart__(state, prev).then(state => this.states.set(name, state)))
+            let ctx = this.contexts.get(name)
+            promises.push(agent.__restart__(ctx, prev).then(ctx => this.contexts.set(name, ctx)))
 
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
@@ -147,7 +147,7 @@ export class Process {
             this._print(`starting agent '${name}'`)
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
             next.set(name, agent)
-            promises.push(agent.__start__().then(state => this.states.set(name, state)))
+            promises.push(agent.__start__().then(ctx => this.contexts.set(name, ctx)))
         }
 
         await Promise.all(promises)
