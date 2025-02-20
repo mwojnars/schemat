@@ -342,17 +342,6 @@ export class WebObject {
         edits:          undefined,  // array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
     }
 
-    // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network communication endpoints, initialized in _init_services().
-    // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
-    //      this['<PROTO>.xxx']().invoke(this, '<PROTO>.xxx', ...args)
-    // If the handler function doesn't return a service object, the corresponding trigger simply returns the handler's return value, whatever it is.
-
-    // GET             // triggers for HTTP GET endpoints of this object
-    // POST            // triggers for HTTP POST endpoints
-    // LOCAL           // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
-    //                 // ... Other trigger groups are created automatically for other protocol names.
-
-    static __handlers               // Map of network handlers defined by this class or parent classes; computed in _collect_methods()
     static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in Intercept
 
     static _collect_cachable_getters() {
@@ -915,6 +904,16 @@ export class WebObject {
         })
     }
 
+    // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network communication endpoints, initialized in _init_services().
+    // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
+    //      this['<PROTO>.xxx']().invoke(this, '<PROTO>.xxx', ...args)
+    // If the handler function doesn't return a service object, the corresponding trigger simply returns the handler's return value, whatever it is.
+
+    // GET             // triggers for HTTP GET endpoints of this object
+    // POST            // triggers for HTTP POST endpoints
+    // LOCAL           // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
+    //                 // ... Other trigger groups are created automatically for other protocol names.
+
     get GET()   { return this._service_triggers('GET') }
     get POST()  { return this._service_triggers('POST') }
     get LOCAL() { return this._service_triggers('LOCAL') }
@@ -938,37 +937,37 @@ export class WebObject {
 
     /***  Networking  ***/
 
-    static _collect_methods(protocols = ['LOCAL', 'GET', 'POST', 'KAFKA'], SEP = '.') {
-        /* Collect all special methods of this class: web handlers + actions + edit operators. */
-        let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
-        let proto = this.prototype
-        let props = T.getAllPropertyNames(proto)
-
-        let handlers = props.filter(is_endpoint).filter(name => proto[name]).map(name => [name, proto[name]])
-        this.__handlers = new Map(handlers)
-    }
-
-    _init_services(SEP = '.') {
-        /* For each endpoint of the form "PROTO.name" create a trigger method, "name(...args)",
-           that executes a given handler (client- or server-side) and, if the result is a Service instance,
-           calls its .client() or .server() depending on the current environment.
-         */
-        if (!this.constructor.prototype.hasOwnProperty('__handlers')) this.constructor._collect_methods()
-        let self = this.__self
-
-        for (let [endpoint, handler] of this.constructor.__handlers.entries()) {
-            let [protocol, name] = endpoint.split(SEP)
-
-            self[protocol] ??= Object.create(null)
-            if (self[protocol][name]) throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
-
-            self[protocol][name] = (...args) => {
-                let invoke = (res) => res instanceof Service ? res.invoke(this, endpoint, ...args) : res
-                let result = handler.call(this)
-                return result instanceof Promise ? result.then(invoke) : invoke(result)
-            }
-        }
-    }
+    // static _collect_methods(protocols = ['LOCAL', 'GET', 'POST', 'KAFKA'], SEP = '.') {
+    //     /* Collect all special methods of this class: web handlers + actions + edit operators. */
+    //     let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
+    //     let proto = this.prototype
+    //     let props = T.getAllPropertyNames(proto)
+    //
+    //     let handlers = props.filter(is_endpoint).filter(name => proto[name]).map(name => [name, proto[name]])
+    //     this.__handlers = new Map(handlers)
+    // }
+    //
+    // _init_services(SEP = '.') {
+    //     /* For each endpoint of the form "PROTO.name" create a trigger method, "name(...args)",
+    //        that executes a given handler (client- or server-side) and, if the result is a Service instance,
+    //        calls its .client() or .server() depending on the current environment.
+    //      */
+    //     if (!this.constructor.prototype.hasOwnProperty('__handlers')) this.constructor._collect_methods()
+    //     let self = this.__self
+    //
+    //     for (let [endpoint, handler] of this.constructor.__handlers.entries()) {
+    //         let [protocol, name] = endpoint.split(SEP)
+    //
+    //         self[protocol] ??= Object.create(null)
+    //         if (self[protocol][name]) throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
+    //
+    //         self[protocol][name] = (...args) => {
+    //             let invoke = (res) => res instanceof Service ? res.invoke(this, endpoint, ...args) : res
+    //             let result = handler.call(this)
+    //             return result instanceof Promise ? result.then(invoke) : invoke(result)
+    //         }
+    //     }
+    // }
 
     async _handle_request(request, SEP = '.') {
         /* Handle a web or internal Request by executing the corresponding handler or service from this.__handlers.
