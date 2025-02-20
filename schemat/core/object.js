@@ -347,10 +347,10 @@ export class WebObject {
     //      this['<PROTO>.xxx']().invoke(this, '<PROTO>.xxx', ...args)
     // If the handler function doesn't return a service object, the corresponding trigger simply returns the handler's return value, whatever it is.
 
-    GET             // triggers for HTTP GET endpoints of this object
-    POST            // triggers for HTTP POST endpoints
-    LOCAL           // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
-                    // ... Other trigger groups are created automatically for other protocol names.
+    // GET             // triggers for HTTP GET endpoints of this object
+    // POST            // triggers for HTTP POST endpoints
+    // LOCAL           // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
+    //                 // ... Other trigger groups are created automatically for other protocol names.
 
     static __handlers               // Map of network handlers defined by this class or parent classes; computed in _collect_methods()
     static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in Intercept
@@ -603,7 +603,7 @@ export class WebObject {
         /* Make the object fully operational by initializing edit operations and network services.
            Configure expiration time and put the object in the Registry.
          */
-        this._init_services()
+        // this._init_services()
 
         let __meta = this.__meta
         __meta.expire_at = __meta.loaded_at + this.__ttl * 1000
@@ -895,8 +895,8 @@ export class WebObject {
          */
         let obj = this
         return new Proxy({}, {
-            get(target, prop) {
-                if (typeof prop === 'string') return (...args) => obj._make_edit(prop, ...args)
+            get(target, name) {
+                if (typeof name === 'string') return (...args) => obj._make_edit(name, ...args)
             }
         })
     }
@@ -909,8 +909,28 @@ export class WebObject {
         let id = this.id
         assert(id)
         return new Proxy({}, {
-            get(target, prop) {
-                if (typeof prop === 'string') return (...args) => schemat.site.POST.action(id, prop, ...args)
+            get(target, name) {
+                if (typeof name === 'string') return (...args) => schemat.site.POST.action(id, name, ...args)
+            }
+        })
+    }
+
+    get GET()   { return this._service_triggers('GET') }
+    get POST()  { return this._service_triggers('POST') }
+    get LOCAL() { return this._service_triggers('LOCAL') }
+    get KAFKA() { return this._service_triggers('KAFKA') }
+
+    _service_triggers(protocol, SEP = '.') {
+        /* Create a Proxy to web services of a given protocol. */
+        let obj = this
+        return new Proxy({}, {
+            get(target, name) {
+                if (typeof name === 'string') return (...args) => {
+                    let endpoint = protocol + SEP + name
+                    let result = obj.__self[endpoint]()
+                    let invoke = (res) => res instanceof Service ? res.invoke(obj, endpoint, ...args) : res
+                    return result instanceof Promise ? result.then(invoke) : invoke(result)
+                }
             }
         })
     }
