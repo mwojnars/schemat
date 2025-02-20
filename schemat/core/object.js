@@ -900,19 +900,16 @@ export class WebObject {
         })
     }
 
-    // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network communication endpoints.
-    // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
-    //      this['<PROTO>.xxx']().invoke(this, '<PROTO>.xxx', ...args)
-    // If the handler function doesn't return a service object, the corresponding trigger simply returns the handler's return value, whatever it is.
+    // GET/POST/LOCAL.*() are isomorphic triggers ({name: trigger_function}) for this object's web endpoints ...
 
-    get GET()   { return this._service_triggers('GET') }        // triggers for HTTP GET endpoints of this object
-    get POST()  { return this._service_triggers('POST') }       // triggers for HTTP POST endpoints
-    get LOCAL() { return this._service_triggers('LOCAL') }      // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
-    get KAFKA() { return this._service_triggers('KAFKA') }
+    get GET()   { return this._web_triggers('GET') }        // triggers for HTTP GET endpoints of this object
+    get POST()  { return this._web_triggers('POST') }       // triggers for HTTP POST endpoints
+    get LOCAL() { return this._web_triggers('LOCAL') }      // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
+    get KAFKA() { return this._web_triggers('KAFKA') }
 
-    _service_triggers(protocol, SEP = '.') {
+    _web_triggers(protocol, SEP = '.') {
         /* Triggers of web endpoints on a given protocol: obj.<protocol>.<endpoint>() redirects to obj['<protocol>.<endpoint>']().
-           If the result is a Service instance, its .client() or .server() is called, depending on the current environment.
+           If the result is a Service, its .client() or .server() is called (via .invoke()), depending on the current environment.
          */
         let obj = this
         return new Proxy({}, {
