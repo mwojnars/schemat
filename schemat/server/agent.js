@@ -1,4 +1,4 @@
-import {assert, print, timeout, sleep} from '../common/utils.js'
+import {assert, print, timeout, sleep, utc} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {WebRequest} from "../web/request.js";
 import {WebObject} from "../core/object.js"
@@ -33,6 +33,11 @@ export class Agent extends WebObject {
         if (!this.hard_restart) return ctx
         await prev.__stop__(ctx)
         return this.__start__()
+    }
+
+    'remote.ping'(msg) {
+        /* For testing of inter-cluster communication. */
+        print(`[${utc()}] PING: agent [${this.id}], ${msg}`)
     }
 }
 
