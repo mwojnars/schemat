@@ -357,6 +357,7 @@ export class WebObject {
 
     static __edits                  // array of names of all edit operators, 'edit.X'(), present in this class or parent classes; this.edit.X() triggers are generated for each object during activation, see _collect_methods()
     static __actions                // array of names of all actions, 'action.X'(), present in this class or parent classes; this.action.X() triggers are generated for each object during activation, see _collect_methods()
+    static __remotes                // array of names of all remote methods available for RPC calls, 'remote.X'(), present in this class or parent classes; this.remote.X() triggers are generated for each object during activation, see _collect_methods()
     static __handlers               // Map of network handlers defined by this class or parent classes; computed in _collect_methods()
     static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in Intercept
 
@@ -900,6 +901,7 @@ export class WebObject {
         let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
         let is_editfunc = prop => prop.startsWith('edit' + SEP)
         let is_action   = prop => prop.startsWith('action' + SEP)
+        let is_remote   = prop => prop.startsWith('remote' + SEP)
 
         let proto = this.prototype
         let props = T.getAllPropertyNames(proto)
@@ -909,6 +911,7 @@ export class WebObject {
 
         this.__edits = props.filter(is_editfunc).filter(name => proto[name]).map(name => name.slice(5))
         this.__actions = props.filter(is_action).filter(name => proto[name]).map(name => name.slice(7))
+        this.__remotes = props.filter(is_remote).filter(name => proto[name]).map(name => name.slice(7))
     }
 
     _init_services(SEP = '.') {
