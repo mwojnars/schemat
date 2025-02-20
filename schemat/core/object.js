@@ -889,7 +889,7 @@ export class WebObject {
     get action() {
         /* Triggers of server-side actions: obj.action.X(...args) invokes site.POST.action(id, 'X', ...args),
            which forwards the call to obj['action.X'](...args) on server.
-           This call can be used on client/server WITHOUT loading the target object, a stub is enough (!).
+           Triggers can be called on stubs, without fully loading the target object.
          */
         let id = this.id
         assert(id)
