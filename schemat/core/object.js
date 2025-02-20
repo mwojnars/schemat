@@ -936,7 +936,7 @@ export class WebObject {
     }
 
     _init_triggers(SEP = '.') {
-        /* Create this.edit.*() triggers (actions now handled by Proxy) */
+        /* Create this.edit.*() triggers. */
         if (!this.constructor.prototype.hasOwnProperty('__edits')) this.constructor._collect_methods()
         let {__edits} = this.constructor
 
@@ -945,12 +945,6 @@ export class WebObject {
             for (let name of __edits)
                 edit[name] = (...args) => this._make_edit(name, ...args)
         }
-
-        // if (__actions.length) {
-        //     let action = this.__self.action = {}
-        //     for (let name of __actions)
-        //         action[name] = (...args) => schemat.site.POST.action(this.id, name, ...args)
-        // }
     }
 
     get action() {
@@ -962,9 +956,7 @@ export class WebObject {
         assert(id)
         return new Proxy({}, {
             get(target, prop) {
-                if (typeof prop !== 'string') return
-                // print(`[${id}].action.${prop}`)
-                return (...args) => schemat.site.POST.action(id, prop, ...args)
+                if (typeof prop === 'string') return (...args) => schemat.site.POST.action(id, prop, ...args)
             }
         })
     }

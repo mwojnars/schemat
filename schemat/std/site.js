@@ -198,7 +198,6 @@ export class Site extends WebObject {
         /* Submit a server-side action to be executed at the physical location of the target object. */
         return new JsonPOST({
             server: async (id, action, ...args) => {
-                print(`ACTION: [${id}] ${action}`)
                 let obj = await schemat.get_loaded(id)
                 let exec = () => obj.get_mutable()._execute_action(action, ...args)
                 let [tx, result] = schemat.tx_run(exec)
