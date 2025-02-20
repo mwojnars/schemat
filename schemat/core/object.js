@@ -343,7 +343,6 @@ export class WebObject {
     }
 
     edit            // triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', ...args)
-    action          // triggers of server-side actions: obj.action.X(...args) invokes POST.action(id, 'X', ...args)
 
     // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network communication endpoints, initialized in _init_services().
     // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
@@ -937,9 +936,9 @@ export class WebObject {
     }
 
     _init_triggers(SEP = '.') {
-        /* Create this.edit.*() and this.action.*() triggers. Done once per object during activation. */
+        /* Create this.edit.*() triggers (actions now handled by Proxy) */
         if (!this.constructor.prototype.hasOwnProperty('__edits')) this.constructor._collect_methods()
-        let {__edits, __actions} = this.constructor
+        let {__edits} = this.constructor
 
         if (__edits.length) {
             let edit = this.__self.edit = {}
@@ -947,11 +946,27 @@ export class WebObject {
                 edit[name] = (...args) => this._make_edit(name, ...args)
         }
 
-        if (__actions.length) {
-            let action = this.__self.action = {}
-            for (let name of __actions)
-                action[name] = (...args) => schemat.site.POST.action(this.id, name, ...args)
-        }
+        // if (__actions.length) {
+        //     let action = this.__self.action = {}
+        //     for (let name of __actions)
+        //         action[name] = (...args) => schemat.site.POST.action(this.id, name, ...args)
+        // }
+    }
+
+    get action() {
+        /* Triggers of server-side actions: obj.action.X(...args) invokes site.POST.action(id, 'X', ...args),
+           which forwards the call to obj['action.X'](...args) on server.
+           This call can be used on client/server WITHOUT loading the target object, a stub is enough (!).
+         */
+        let id = this.id
+        assert(id)
+        return new Proxy({}, {
+            get(target, prop) {
+                if (typeof prop !== 'string') return
+                // print(`[${id}].action.${prop}`)
+                return (...args) => schemat.site.POST.action(id, prop, ...args)
+            }
+        })
     }
 
     async _handle_request(request, SEP = '.') {
