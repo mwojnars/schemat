@@ -920,7 +920,10 @@ export class WebObject {
     get KAFKA() { return this._service_triggers('KAFKA') }
 
     _service_triggers(protocol, SEP = '.') {
-        /* Create a Proxy to web services of a given protocol. */
+        /* Create a Proxy that triggers web services of a given protocol, such that obj.<protocol>.<endpoint>()
+           redirects to the corresponding handler: obj['<protocol>.<endpoint>'](). If the result is a Service instance,
+           its .client() or .server() is called subsequently, depending on the current environment.
+         */
         let obj = this
         return new Proxy({}, {
             get(target, name) {
@@ -937,16 +940,6 @@ export class WebObject {
 
     /***  Networking  ***/
 
-    // static _collect_methods(protocols = ['LOCAL', 'GET', 'POST', 'KAFKA'], SEP = '.') {
-    //     /* Collect all special methods of this class: web handlers + actions + edit operators. */
-    //     let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
-    //     let proto = this.prototype
-    //     let props = T.getAllPropertyNames(proto)
-    //
-    //     let handlers = props.filter(is_endpoint).filter(name => proto[name]).map(name => [name, proto[name]])
-    //     this.__handlers = new Map(handlers)
-    // }
-    //
     // _init_services(SEP = '.') {
     //     /* For each endpoint of the form "PROTO.name" create a trigger method, "name(...args)",
     //        that executes a given handler (client- or server-side) and, if the result is a Service instance,
