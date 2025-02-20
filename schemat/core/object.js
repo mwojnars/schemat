@@ -589,11 +589,7 @@ export class WebObject {
     }
 
     _activate() {
-        /* Make the object fully operational by initializing edit operations and network services.
-           Configure expiration time and put the object in the Registry.
-         */
-        // this._init_services()
-
+        /* Make the object fully operational: configure expiration time, put the object in the Registry. */
         let __meta = this.__meta
         __meta.expire_at = __meta.loaded_at + this.__ttl * 1000
         __meta.active = true
@@ -904,19 +900,14 @@ export class WebObject {
         })
     }
 
-    // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network communication endpoints, initialized in _init_services().
+    // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network communication endpoints.
     // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
     //      this['<PROTO>.xxx']().invoke(this, '<PROTO>.xxx', ...args)
     // If the handler function doesn't return a service object, the corresponding trigger simply returns the handler's return value, whatever it is.
 
-    // GET             // triggers for HTTP GET endpoints of this object
-    // POST            // triggers for HTTP POST endpoints
-    // LOCAL           // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
-    //                 // ... Other trigger groups are created automatically for other protocol names.
-
-    get GET()   { return this._service_triggers('GET') }
-    get POST()  { return this._service_triggers('POST') }
-    get LOCAL() { return this._service_triggers('LOCAL') }
+    get GET()   { return this._service_triggers('GET') }        // triggers for HTTP GET endpoints of this object
+    get POST()  { return this._service_triggers('POST') }       // triggers for HTTP POST endpoints
+    get LOCAL() { return this._service_triggers('LOCAL') }      // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
     get KAFKA() { return this._service_triggers('KAFKA') }
 
     _service_triggers(protocol, SEP = '.') {
@@ -939,28 +930,6 @@ export class WebObject {
 
 
     /***  Networking  ***/
-
-    // _init_services(SEP = '.') {
-    //     /* For each endpoint of the form "PROTO.name" create a trigger method, "name(...args)",
-    //        that executes a given handler (client- or server-side) and, if the result is a Service instance,
-    //        calls its .client() or .server() depending on the current environment.
-    //      */
-    //     if (!this.constructor.prototype.hasOwnProperty('__handlers')) this.constructor._collect_methods()
-    //     let self = this.__self
-    //
-    //     for (let [endpoint, handler] of this.constructor.__handlers.entries()) {
-    //         let [protocol, name] = endpoint.split(SEP)
-    //
-    //         self[protocol] ??= Object.create(null)
-    //         if (self[protocol][name]) throw new Error(`service at this endpoint already exists (${endpoint}) in [${this.id}]`)
-    //
-    //         self[protocol][name] = (...args) => {
-    //             let invoke = (res) => res instanceof Service ? res.invoke(this, endpoint, ...args) : res
-    //             let result = handler.call(this)
-    //             return result instanceof Promise ? result.then(invoke) : invoke(result)
-    //         }
-    //     }
-    // }
 
     async _handle_request(request, SEP = '.') {
         /* Handle a web or internal Request by executing the corresponding handler or service from this.__handlers.
