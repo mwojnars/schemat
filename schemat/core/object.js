@@ -352,9 +352,6 @@ export class WebObject {
     LOCAL           // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
                     // ... Other trigger groups are created automatically for other protocol names.
 
-    static __edits                  // array of names of all edit operators, 'edit.X'(), present in this class or parent classes; this.edit.X() triggers are generated for each object during activation, see _collect_methods()
-    static __actions                // array of names of all actions, 'action.X'(), present in this class or parent classes; this.action.X() triggers are generated for each object during activation, see _collect_methods()
-    static __remotes                // array of names of all remote methods available for RPC calls, 'remote.X'(), present in this class or parent classes; this.remote.X() triggers are generated for each object during activation, see _collect_methods()
     static __handlers               // Map of network handlers defined by this class or parent classes; computed in _collect_methods()
     static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in Intercept
 
@@ -606,7 +603,6 @@ export class WebObject {
         /* Make the object fully operational by initializing edit operations and network services.
            Configure expiration time and put the object in the Registry.
          */
-        // this._init_triggers()
         this._init_services()
 
         let __meta = this.__meta
@@ -893,18 +889,6 @@ export class WebObject {
 
     /***  Triggers  ***/
 
-    // _init_triggers() {
-    //     /* Create this.edit.*() triggers. */
-    //     if (!this.constructor.prototype.hasOwnProperty('__edits')) this.constructor._collect_methods()
-    //     let {__edits} = this.constructor
-    //
-    //     if (__edits.length) {
-    //         let edit = this.__self.edit = {}
-    //         for (let name of __edits)
-    //             edit[name] = (...args) => this._make_edit(name, ...args)
-    //     }
-    // }
-
     get edit() {
         /* Triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', ...args).
            Can be called on client and server alike.
@@ -946,10 +930,6 @@ export class WebObject {
 
         let handlers = props.filter(is_endpoint).filter(name => proto[name]).map(name => [name, proto[name]])
         this.__handlers = new Map(handlers)
-
-        this.__edits = props.filter(is_editfunc).filter(name => proto[name]).map(name => name.slice(5))
-        this.__actions = props.filter(is_action).filter(name => proto[name]).map(name => name.slice(7))
-        this.__remotes = props.filter(is_remote).filter(name => proto[name]).map(name => name.slice(7))
     }
 
     _init_services(SEP = '.') {
