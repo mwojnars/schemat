@@ -921,10 +921,6 @@ export class WebObject {
     static _collect_methods(protocols = ['LOCAL', 'GET', 'POST', 'KAFKA'], SEP = '.') {
         /* Collect all special methods of this class: web handlers + actions + edit operators. */
         let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
-        let is_editfunc = prop => prop.startsWith('edit' + SEP)
-        let is_action   = prop => prop.startsWith('action' + SEP)
-        let is_remote   = prop => prop.startsWith('remote' + SEP)
-
         let proto = this.prototype
         let props = T.getAllPropertyNames(proto)
 
