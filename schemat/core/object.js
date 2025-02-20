@@ -342,8 +342,6 @@ export class WebObject {
         edits:          undefined,  // array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
     }
 
-    edit            // triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', ...args)
-
     // GET/POST/LOCAL/... are isomorphic service triggers ({name: trigger_function}) for the object's network communication endpoints, initialized in _init_services().
     // this.<PROTO>.xxx(...args) call is equivalent to executing .invoke() of the Service object returned by this endpoint's handler function '<PROTO>.xxx'():
     //      this['<PROTO>.xxx']().invoke(this, '<PROTO>.xxx', ...args)
@@ -608,7 +606,7 @@ export class WebObject {
         /* Make the object fully operational by initializing edit operations and network services.
            Configure expiration time and put the object in the Registry.
          */
-        this._init_triggers()
+        // this._init_triggers()
         this._init_services()
 
         let __meta = this.__meta
@@ -893,6 +891,47 @@ export class WebObject {
     //     /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 
 
+    /***  Triggers  ***/
+
+    // _init_triggers() {
+    //     /* Create this.edit.*() triggers. */
+    //     if (!this.constructor.prototype.hasOwnProperty('__edits')) this.constructor._collect_methods()
+    //     let {__edits} = this.constructor
+    //
+    //     if (__edits.length) {
+    //         let edit = this.__self.edit = {}
+    //         for (let name of __edits)
+    //             edit[name] = (...args) => this._make_edit(name, ...args)
+    //     }
+    // }
+
+    get edit() {
+        /* Triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', ...args).
+           Can be called on client and server alike.
+         */
+        let obj = this
+        return new Proxy({}, {
+            get(target, prop) {
+                if (typeof prop === 'string') return (...args) => obj._make_edit(prop, ...args)
+            }
+        })
+    }
+
+    get action() {
+        /* Triggers of server-side actions: obj.action.X(...args) invokes site.POST.action(id, 'X', ...args),
+           which forwards the call to obj['action.X'](...args) on server.
+           This call can be used on client/server WITHOUT loading the target object, a stub is enough (!).
+         */
+        let id = this.id
+        assert(id)
+        return new Proxy({}, {
+            get(target, prop) {
+                if (typeof prop === 'string') return (...args) => schemat.site.POST.action(id, prop, ...args)
+            }
+        })
+    }
+
+
     /***  Networking  ***/
 
     static _collect_methods(protocols = ['LOCAL', 'GET', 'POST', 'KAFKA'], SEP = '.') {
@@ -933,32 +972,6 @@ export class WebObject {
                 return result instanceof Promise ? result.then(invoke) : invoke(result)
             }
         }
-    }
-
-    _init_triggers(SEP = '.') {
-        /* Create this.edit.*() triggers. */
-        if (!this.constructor.prototype.hasOwnProperty('__edits')) this.constructor._collect_methods()
-        let {__edits} = this.constructor
-
-        if (__edits.length) {
-            let edit = this.__self.edit = {}
-            for (let name of __edits)
-                edit[name] = (...args) => this._make_edit(name, ...args)
-        }
-    }
-
-    get action() {
-        /* Triggers of server-side actions: obj.action.X(...args) invokes site.POST.action(id, 'X', ...args),
-           which forwards the call to obj['action.X'](...args) on server.
-           This call can be used on client/server WITHOUT loading the target object, a stub is enough (!).
-         */
-        let id = this.id
-        assert(id)
-        return new Proxy({}, {
-            get(target, prop) {
-                if (typeof prop === 'string') return (...args) => schemat.site.POST.action(id, prop, ...args)
-            }
-        })
     }
 
     async _handle_request(request, SEP = '.') {
