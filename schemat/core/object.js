@@ -911,9 +911,8 @@ export class WebObject {
     get KAFKA() { return this._service_triggers('KAFKA') }
 
     _service_triggers(protocol, SEP = '.') {
-        /* Create a Proxy that triggers web services of a given protocol, such that obj.<protocol>.<endpoint>()
-           redirects to the corresponding handler: obj['<protocol>.<endpoint>'](). If the result is a Service instance,
-           its .client() or .server() is called subsequently, depending on the current environment.
+        /* Triggers of web endpoints on a given protocol: obj.<protocol>.<endpoint>() redirects to obj['<protocol>.<endpoint>']().
+           If the result is a Service instance, its .client() or .server() is called, depending on the current environment.
          */
         let obj = this
         return new Proxy({}, {
