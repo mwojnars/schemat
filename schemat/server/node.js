@@ -24,20 +24,20 @@ export class Node extends WebObject {
 
     // Node is not strictly an agent, but can be used as a target in KafkaService, hence the overrides below:
     get __node()        { return this }                 // for KafkaService._is_local()
-    get __kafka_topic() { return `topic-${this.id}` }   // for KafkaService._submit()
 
+    // get __kafka_topic() { return `topic-${this.id}` }   // for KafkaService._submit()
     // get kafka_client() { return this.__state?.kafka }
     // get kafka_client() { return this.schemat.agents.get('kafka_client').__state.kafka }
     // get kafka_producer() { return this.__state.producer }
     // is_master_process() { return !this.worker_id}
-
-    kafka_send(topic, message) {
-        let kafka = schemat.process.states.get('kafka_master')
-        if (!kafka) throw new Error(`kafka_worker is not running`)
-        if (!kafka.producer) throw new Error(`missing producer in kafka_worker`)
-        return kafka.producer.send({topic, messages: [message]})        // or sendBatch() to write multiple messages to different topics
-        // return this.__state.kafka_worker.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
-    }
+    //
+    // kafka_send(topic, message) {
+    //     let kafka = schemat.process.states.get('kafka_master')
+    //     if (!kafka) throw new Error(`kafka_worker is not running`)
+    //     if (!kafka.producer) throw new Error(`missing producer in kafka_worker`)
+    //     return kafka.producer.send({topic, messages: [message]})        // or sendBatch() to write multiple messages to different topics
+    //     // return this.__state.kafka_worker.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
+    // }
 
 
     'edit.add_installed'(name, agent) {
