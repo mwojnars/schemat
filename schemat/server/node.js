@@ -1,4 +1,5 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
+import {JSONx} from "../common/jsonx.js";
 import {WebObject} from "../core/object.js";
 import {JsonKAFKA} from "./kafka.js";
 
@@ -39,6 +40,10 @@ export class Node extends WebObject {
     //     // return this.__state.kafka_worker.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
     // }
 
+    send_remote(id, name, ...args) {
+        let msg = ['RPC', id, name, JSONx.encode(args)]       // , schemat.tx
+        return process.send(msg)
+    }
 
     'edit.add_installed'(name, agent) {
         /* Add the agent to `agents_installed` under the given `name`. Idempotent. */
