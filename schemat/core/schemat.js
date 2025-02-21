@@ -93,7 +93,10 @@ export class Schemat {
     get root_category() { return this.get_object(ROOT_ID) }
     get site()          { return this.registry.get_object(this.site_id) }
     get db()            { return this.site?.database }      // a stub when on client, fully loaded when on server
+
+    // on server only:
     get tx()            { return undefined }
+    get node()          { return undefined }
 
 
     // web objects currently being loaded/initialized with a call to .load()
