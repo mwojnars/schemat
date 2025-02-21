@@ -3,7 +3,8 @@
 [... WORK IN PROGRESS ...]
 
 **Schemat** is an object-oriented platform for building scalable 
-internet applications composed of isomorphic **web objects** that live "on the web" rather than on a single machine. Web objects can be seamlessly transferred over the network and executed in any local environment (on a client, server, or data node). Network communication is done transparently, between remote instances of the same web object, and without the programmer writing any custom networking code - so the network becomes a truly consistent, unified, distributed execution environment for web objects.
+internet applications composed of isomorphic **web objects** that live "on the web" rather than on a single machine. Web objects can be seamlessly transferred over the network and executed in any local environment (on client, server, or data node). 
+<!-- Network communication happens transparently between instances of the same web object and without the programmer writing any networking code, so the network becomes a unified execution environment for web objects. -->
 
 Schemat comes with an internal, NoSQL-like, distributed, schema-aware, object-oriented **data store** that supports index creation,
 live schema evolution, object & schema versioning, and more. Web objects are grouped into categories that define their schemas and behavior, and they may derive properties from other objects via prototype-based inheritance.
