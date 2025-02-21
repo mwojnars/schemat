@@ -249,19 +249,14 @@ export class MasterProcess extends Process {
         this.workers = []
         this.worker_pids = new Map()
 
-        for (let i = 0; i < num_workers; i++) {
+        for (let i = 0; i < num_workers; i++)
             this._start_worker(i + 1)
-            // let worker = this.workers[i] = cluster.fork({WORKER_ID: i + 1})
-            // this.worker_pids.set(worker.process.pid, i + 1)
-        }
 
         cluster.on('exit', (worker) => {
             if (schemat.is_closing) return
             let id = this.worker_pids.get(worker.process.pid)               // retrieve WORKER_ID using PID
             print(`worker #${id} (PID=${worker.process.pid}) exited`)
             worker = this._start_worker(id)
-            // this.workers[id-1] = worker = cluster.fork({WORKER_ID: id})     // restart the process
-            // this.worker_pids.set(worker.process.pid, id)                    // update the map with new PID
             print(`worker #${id} (PID=${worker.process.pid}) restarted`)
         })
     }
@@ -270,12 +265,13 @@ export class MasterProcess extends Process {
         /* Start or restart a worker process. */
         let worker = this.workers[id-1] = cluster.fork({WORKER_ID: id})
         this.worker_pids.set(worker.process.pid, id)                        // remember PID-to-ID mapping
+
+        worker.on("message", (msg) => {
+            print("master process received:", msg)
+        })
+
         return worker
     }
-
-    // child.on("message", (msg) => {
-    //     console.log("Parent received:", msg);
-    // })
 
     async stop() {
         if (schemat.is_closing) return
