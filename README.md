@@ -76,12 +76,12 @@ It is important to note that not only user-facing functionalities or data are re
 
 One important group of system objects are **system categories**, primarily the root category (`[Category]`) that all other categories inherit from.
 
-Another group are **agents**: objects of the `[Agent]` category that can be _installed_ on a specific node in the cluster and execute a recurring _event loop_ over there. Typically, agents are responsible for managing and granting access to local resources, like disk space or network ports; and they can also serve as a **microservice** for other system objects. Examples include:
-- **servers** that accept external requests, like the edge HTTP servers;
-- data blocks that manage local data files and serve read/write requests via **RPC calls** from other nodes in the cluster;
-- **background tasks** that perform periodic operations, like pruning and compacting the log files in the database.
+Another group are **agents**: objects of the `[Agent]` category that can be _installed_ on a specific node in the cluster to execute a recurring _event loop_ over there. Typically, agents are responsible for managing and granting access to local resources, like disk space or network ports; and they can also serve as a **microservice** for other system objects. Examples include:
+- **servers** that accept external requests, like the edge HTTP server threads;
+- data blocks that manage local data files and serve read/write requests via **RPC calls** on behalf of other objects;
+- **background tasks** that perform periodic operations, like pruning and compacting log files in the database.
 
-All such activities are implemented as web objects that inherit from the `[Agent]` category and get deployed on particular nodes in the cluster before they become fully operational. Agents can be _installed_ and _uninstalled_ on a given node; and they can be _started_, _stopped_ or _restarted_ on demand. Once in a while, running agents get refreshed (reloaded and reinstantiated), to let the cluster dynamically react to the changes in agent configuration and their internal settings. When the changes are critical and need to be quickly propagated across the cluster, they can be **broadcasted** to all nodes right after being saved to the database. In such case, the local cached instances of the affected objects - agents or other system objects - are expired and replaced with the new content from the database.
+All such activities are implemented as web objects that inherit from the `[Agent]` category and get deployed on particular nodes in the cluster before they become fully operational. Agents can be _installed_ and _uninstalled_ on a given node; and they can be _started_, _stopped_ or _restarted_ on demand. Once in a while, running agents get refreshed (reloaded and reinstantiated), to let the cluster dynamically react to the changes in agent configuration and their internal settings. When the changes to agents or other system objects are critical and need to be quickly propagated across the cluster, they can be **broadcasted** to all nodes right after being saved to the database. In such case, the local cached instances of the objects are expired and replaced with the new content from the database.
 
 
 <!-- Some of these system objects make use of special internal functionality provided by Schemat.
