@@ -901,7 +901,7 @@ export class WebObject {
     }
 
     get remote() {
-        /* Triggers of inter-cluster RPC calls: obj.remote.X(...args) makes the node send a TCP message that
+        /* Triggers of inter-cluster RPC calls: obj.remote.X(...args) call makes the node send a TCP message that
            invokes obj['remote.X'](...args) on the host node of the object. The `obj` must be an Agent, because
            only agents are deployed on specific nodes in the cluster, execute a perpetual event loop and accept RPC calls.
          */

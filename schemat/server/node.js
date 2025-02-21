@@ -41,9 +41,11 @@ export class Node extends WebObject {
 
     is_master() { return !schemat.worker_id}
 
-    send_remote(id, name, ...args) {
-        /* Send an RPC message to the master process via IPC channel, so that it can be sent over the network to another node in the cluster. */
-        let msg = ['RPC', [id, name, JSONx.encode(args)]]       // , schemat.tx
+    send_remote(target_id, method, ...args) {
+        /* Send an RPC message to the master process via IPC channel, so it gets sent over the network to another node
+           and then to the `target_id` object (agent) where it should invoke its 'remote.<method>'(...args).
+         */
+        let msg = ['RPC', [target_id, method, JSONx.encode(args)]]       // , schemat.tx
         return this.is_master() ? this.from_worker(msg) : process.send(msg)
     }
 
