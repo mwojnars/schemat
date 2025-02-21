@@ -938,6 +938,16 @@ export class WebObject {
         })
     }
 
+    // static _collect_methods(protocols = ['LOCAL', 'GET', 'POST', 'KAFKA'], SEP = '.') {
+    //     /* Collect all special methods of this class: web handlers + actions + edit operators. */
+    //     let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
+    //     let proto = this.prototype
+    //     let props = T.getAllPropertyNames(proto)
+    //
+    //     let handlers = props.filter(is_endpoint).filter(name => proto[name]).map(name => [name, proto[name]])
+    //     this.__handlers = new Map(handlers)
+    // }
+    //
 
     /***  Networking  ***/
 
