@@ -48,9 +48,9 @@ export class Node extends WebObject {
     }
 
     from_worker([type, msg]) {
-        /* On master process, handle an IPC message from a worker. */
+        /* On master process, handle an IPC message received from a worker process. */
         if (type === 'RPC') {
-            print("master process received:", msg)
+            print("from_worker():", msg)
         }
         throw new Error(`unknown worker-to-master process message type: ${type}`)
     }
