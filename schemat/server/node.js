@@ -41,21 +41,43 @@ export class Node extends WebObject {
 
     is_master() { return !schemat.worker_id}
 
-    send_remote(target_id, method, ...args) {
-        /* Send an RPC message to the master process via IPC channel, so it gets sent over the network to another node
-           and then to the `target_id` object (agent) where it should invoke its 'remote.<method>'(...args).
+    send_rpc(target_id, method, ...args) {
+        /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node
+           and then to the `target_id` object (agent) where it should invoke its 'remote.<method>'(...args). Wait for the returned result.
          */
-        let msg = ['RPC', [target_id, method, JSONx.encode(args)]]       // , schemat.tx
+        let msg = ['RPC', target_id, method, JSONx.encode(args)]       // , schemat.tx
         return this.is_master() ? this.from_worker(msg) : process.send(msg)
     }
 
-    from_worker([type, msg]) {
+    async from_worker([type, ...msg]) {
         /* On master process, handle an IPC message received from a worker process. */
         if (type === 'RPC') {
             print("from_worker():", msg)
+
+            // locate the target object in the cluster
+            let [target_id] = msg
+            let target = await schemat.get_loaded(target_id)
+            let node = target.__node
+
+            if (!node) throw new Error(`missing host node for RPC target [${target_id}]`)
+            if (node.is(schemat.node)) return this.handle_remote(msg)       // target agent is deployed on the current node
+
+            return this.send_tcp(node, [type, ...msg])
         }
-        else throw new Error(`unknown worker-to-master process message type: ${type}`)
+        else throw new Error(`unknown worker-to-master message type: ${type}`)
     }
+
+    send_tcp(node, msg) {
+        let tcp_msg = msg
+        return schemat.agents.tcp.send(tcp_msg, node.__tcp_address)
+    }
+
+    handle_remote([target_id, method, args]) {
+        /* Handle an incoming RPC message from another node that's addressed to the agent `target_id` running on this node.
+           In a rare case, the agent may have moved to yet another node in the meantime and the message has to be forwarded.
+         */
+    }
+
 
     'edit.add_installed'(name, agent) {
         /* Add the agent to `agents_installed` under the given `name`. Idempotent. */

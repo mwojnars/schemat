@@ -909,7 +909,7 @@ export class WebObject {
         assert(id)
         return new Proxy({}, {
             get(target, name) {
-                if (typeof name === 'string') return (...args) => schemat.node.send_remote(id, name, ...args)
+                if (typeof name === 'string') return (...args) => schemat.node.send_rpc(id, name, ...args)
             }
         })
     }
