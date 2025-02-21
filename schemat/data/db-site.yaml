@@ -263,12 +263,6 @@
       "@": 1038
     tcp_receiver:
       "@": 1039
-    kafka_broker:
-      "@": 1031
-    kafka_master:
-      "@": 1034
-    kafka_worker:
-      "@": 1035
     webserver:
       "@": 1023
     "@": schemat:Catalog
@@ -364,12 +358,6 @@
       "@": 1038
     tcp_receiver:
       "@": 1039
-    kafka_broker:
-      "@": 1031
-    kafka_master:
-      "@": 1034
-    kafka_worker:
-      "@": 1035
     webserver:
       "@": 1023
     logger:
