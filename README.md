@@ -7,12 +7,12 @@ internet applications composed of isomorphic **web objects** that live "on the w
 <!-- Network communication happens transparently between instances of the same web object and without the programmer writing any networking code, so the network becomes a unified execution environment for web objects. -->
 
 Schemat comes with an internal, NoSQL-like, distributed, schema-aware, object-oriented **data store** that supports index creation,
-live schema evolution, object & schema versioning, and more. Web objects are grouped into categories that define their schemas and behavior, and they may derive properties from other objects via prototype-based inheritance.
+live schema evolution, object & schema versioning, and more. Web objects are grouped into **categories** that define their schemas and behavior, and may derive properties from other objects via prototype-based inheritance.
 
-By introducing [isomorphic](https://en.wikipedia.org/wiki/Isomorphic_JavaScript), network-aware web objects, Schemat extends the traditional object model across the entire distributed application stack -- from database, to server, to client -- in a way that unifies all these local environments.
-Web object can fully encapsulate a particular web functionality and combine its _data model_, _logic_, and _presentation_ in a single, network-native entity. This contrasts with traditional network-agnostic objects which are limited to implementing a part of any given functionality, specifically related to a single isolated environment: either the client, or the server, or the database, but not all three at once.
+By introducing [isomorphic](https://en.wikipedia.org/wiki/Isomorphic_JavaScript), network-aware web objects, Schemat extends the traditional [OOP](https://en.wikipedia.org/wiki/Object-oriented_programming) object model and makes it compatible with the distributed nature of web applications, allowing the object to cover the specifics of - and execute in - all different local environments (client, server, database). <!-- span all elements ... the entire distributed application stack -- from database, to server, to client -- in a way that unifies all these local environments. -->
+Web objects can fully encapsulate a particular web functionality, with the _presentation_ layer, the server-side _logic_, and the _data model_, all combined in a single, network-native entity. This contrasts with traditional, network-agnostic object model, which only implements a part of any given web functionality related to a single isolated environment: either the client, or the server, or the database, but not all three at once.
 
-Schemat is the first software platform that elevates [Object-Oriented Programming (OOP)](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Advanced_JavaScript_objects/Object-oriented_programming) to the network level and brings full expression of the OOP paradigm to the web. Schemat is written in Javascript and Node.js.
+As such, Schemat is the first software platform that elevates [Object-Oriented Programming](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Advanced_JavaScript_objects/Object-oriented_programming) (OOP) to the network level and brings full expression of the OOP paradigm to the web. Schemat is written in Javascript and Node.js.
 
 
 ### Features
