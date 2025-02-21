@@ -267,6 +267,7 @@ export class MasterProcess extends Process {
         this.worker_pids.set(worker.process.pid, id)                        // remember PID-to-ID mapping
 
         worker.on("message", (msg) => {
+            // this.node.from_worker(msg)
             print("master process received:", msg)
         })
 

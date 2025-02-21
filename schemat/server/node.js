@@ -30,7 +30,6 @@ export class Node extends WebObject {
     // get kafka_client() { return this.__state?.kafka }
     // get kafka_client() { return this.schemat.agents.get('kafka_client').__state.kafka }
     // get kafka_producer() { return this.__state.producer }
-    // is_master_process() { return !this.worker_id}
     //
     // kafka_send(topic, message) {
     //     let kafka = schemat.process.states.get('kafka_master')
@@ -40,9 +39,20 @@ export class Node extends WebObject {
     //     // return this.__state.kafka_worker.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
     // }
 
+    is_master() { return !schemat.worker_id}
+
     send_remote(id, name, ...args) {
-        let msg = ['RPC', id, name, JSONx.encode(args)]       // , schemat.tx
-        return process.send(msg)
+        /* Send an RPC message to the master process via IPC channel, so that it can be sent over the network to another node in the cluster. */
+        let msg = ['RPC', [id, name, JSONx.encode(args)]]       // , schemat.tx
+        return this.is_master() ? this.from_worker(msg) : process.send(msg)
+    }
+
+    from_worker([type, msg]) {
+        /* On master process, handle an IPC message from a worker. */
+        if (type === 'RPC') {
+            print("master process received:", msg)
+        }
+        throw new Error(`unknown worker-to-master process message type: ${type}`)
     }
 
     'edit.add_installed'(name, agent) {
