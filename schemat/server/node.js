@@ -52,7 +52,7 @@ export class Node extends WebObject {
         if (type === 'RPC') {
             print("from_worker():", msg)
         }
-        throw new Error(`unknown worker-to-master process message type: ${type}`)
+        else throw new Error(`unknown worker-to-master process message type: ${type}`)
     }
 
     'edit.add_installed'(name, agent) {
