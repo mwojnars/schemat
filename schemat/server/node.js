@@ -60,7 +60,7 @@ export class Node extends WebObject {
             let node = target.__node
 
             if (!node) throw new Error(`missing host node for RPC target [${target_id}]`)
-            if (node.is(schemat.node)) return this.handle_remote(msg)       // target agent is deployed on the current node
+            if (node.is(schemat.node)) return this.handle_rpc(msg)       // target agent is deployed on the current node
 
             return this.send_tcp(node, [type, ...msg])
         }
@@ -72,10 +72,14 @@ export class Node extends WebObject {
         return schemat.agents.tcp.send(tcp_msg, node.__tcp_address)
     }
 
-    handle_remote([target_id, method, args]) {
-        /* Handle an incoming RPC message from another node that's addressed to the agent `target_id` running on this node.
-           In a rare case, the agent may have moved to yet another node in the meantime and the message has to be forwarded.
+    handle_rpc([target_id, method, args]) {
+        /* On master process, handle an incoming RPC message from another node that's addressed to the agent `target_id` running on this node.
+           (??) In a rare case, the agent may have moved to another node in the meantime and the message has to be forwarded.
          */
+        print("handle_rpc():", [target_id, method, args])
+
+        // find `target_id` among running agents, either on master or worker process
+        
     }
 
 
