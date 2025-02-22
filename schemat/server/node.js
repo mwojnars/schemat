@@ -1,12 +1,12 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {JSONx} from "../common/jsonx.js";
-import {WebObject} from "../core/object.js";
+import {Agent} from "./agent.js";
 import {JsonKAFKA} from "./kafka.js";
 
 
 /**********************************************************************************************************************/
 
-export class Node extends WebObject {
+export class Node extends Agent {
     /* Node of a Schemat cluster. Technically, each node is a local (master) process launched independently
        on a particular machine, together with its child (worker) processes, if any. Nodes communicate with each other
        using Kafka, and in this way they form a distributed compute & storage cluster.
@@ -23,9 +23,6 @@ export class Node extends WebObject {
     refresh_interval
     tcp_port
 
-    // Node is not strictly an agent, but can be used as a target in KafkaService, hence the overrides below:
-    get __node()        { return this }                 // for KafkaService._is_local()
-
     // get __kafka_topic() { return `topic-${this.id}` }   // for KafkaService._submit()
     // get kafka_client() { return this.__state?.kafka }
     // get kafka_client() { return this.schemat.agents.get('kafka_client').__state.kafka }
@@ -38,6 +35,9 @@ export class Node extends WebObject {
     //     return kafka.producer.send({topic, messages: [message]})        // or sendBatch() to write multiple messages to different topics
     //     // return this.__state.kafka_worker.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
     // }
+
+    // node as an agent is deployed on itself and runs on master process
+    get __node() { return this }
 
     is_master() { return !schemat.worker_id}
 
