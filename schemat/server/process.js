@@ -51,17 +51,22 @@ class AgentState {
     semaphore       // no. of currently executing RPC calls; all of them must return before __stop__() can be called ...
                     // ... or a Promise that resolves when all the currently executing RPC calls return
     stopping        // if true, no more RPC calls can be started
+
+    constructor(agent, context = null) {
+        this.agent = agent
+        this.context = context
+    }
 }
 
 export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
-    agents = new Map()      // Agent objects that are currently running in this process, keyed by agent names
-    contexts = new Map()    // context objects of agents running in this process as returned by __start__(), keyed by agent names
+    agents = new Map()      // AgentState objects for currently running agents, keyed by agent names
 
     constructor(node, opts) {
         this.node = node        // Node web object that represents the physical node this process is running on
         this.opts = opts
+        if (!this.is_master()) process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
     }
 
     _print(...args) {
@@ -99,7 +104,8 @@ export class Process {
             let remaining = this.node.refresh_interval - offset_sec - passed
             if (remaining > 0) await sleep(remaining);
 
-            [this.node, ...this.agents.values()].map(obj => obj.refresh())      // schedule a reload of relevant objects in the background, for next iteration
+            let agents = Array.from(this.agents.values(), state => state.agent);
+            [this.node, ...agents].map(obj => obj.refresh())        // schedule a reload of relevant objects in the background, for next iteration
             await sleep(offset_sec)
         }
 
@@ -108,7 +114,7 @@ export class Process {
 
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
-        let current = this.agents                       // currently running agents, Map<name, agent>
+        let current = this.agents                       // currently running agents, Map<name, AgentState>
         let agents = this._get_agents_running()         // desired agents, Map<name, agent>
 
         if (schemat.is_closing) {
@@ -119,42 +125,40 @@ export class Process {
         let current_names = Array.from(current.keys())
         let new_names = Array.from(agents.keys())
 
-        let to_stop = current_names.filter(name => !agents.has(name))
-        let to_start = new_names.filter(name => !current.has(name))
-        let to_refresh = current_names.filter(name => agents.has(name))
+        let to_stop = current_names.filter(name => !agents.has(name))    // find agents in `current` that are not in `agents` and need to be stopped
+        let to_start = new_names.filter(name => !current.has(name))      // find agents in `agents` that are not in `current` and need to be started
+        let to_refresh = current_names.filter(name => agents.has(name))  // find agents in `current` that are still in `agents` and need to be refreshed
 
         let promises = []
         let next = new Map()                            // agents to continue running
 
-        // find agents in `current` that are not in `agents` and need to be stopped
+        // stop agents
         for (let name of to_stop.toReversed()) {        // iterate in reverse order as some agents may depend on previous ones
-            let agent = current.get(name)
+            let state = current.get(name)
             this._print(`stopping agent '${name}'`)
-            let ctx = this.contexts.get(name)
-            promises.push(agent.__stop__(ctx).then(() => this.contexts.delete(name)))
+            promises.push(state.agent.__stop__(state.context).then(() => this.agents.delete(name)))
         }
 
-        // find agents in `current` that are still in `agents` and need to be refreshed
+        // refresh agents
         for (let name of to_refresh) {
-            let prev = current.get(name)
-            let agent = prev.refresh()
+            let state = current.get(name)
+            let agent = state.agent.refresh()
             if (agent.__ttl_left() < 0) agent = await agent.reload()
-            next.set(name, agent)
-            if (agent === prev) continue
-            let ctx = this.contexts.get(name)
-            promises.push(agent.__restart__(ctx, prev).then(ctx => this.contexts.set(name, ctx)))
+            if (agent === state.agent) continue
+
+            next.set(name, state)
+            promises.push(agent.__restart__(state.context, state.agent).then(ctx => state.context = ctx))
 
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
         }
 
-        // find agents in `agents` that are not in `current` and need to be started
+        // start new agents
         for (let name of to_start) {
             let agent = agents.get(name)
             this._print(`starting agent '${name}'`)
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
-            next.set(name, agent)
-            promises.push(agent.__start__().then(ctx => this.contexts.set(name, ctx)))
+            promises.push(agent.__start__().then(ctx => next.set(name, new AgentState(agent, ctx))))
         }
 
         await Promise.all(promises)
