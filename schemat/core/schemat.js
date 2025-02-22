@@ -94,7 +94,8 @@ export class Schemat {
     get site()          { return this.registry.get_object(this.site_id) }
     get db()            { return this.site?.database }      // a stub when on client, fully loaded when on server
 
-    // on server only:
+    // defined on server only:
+    process
     get tx()            { return undefined }
     get node()          { return undefined }
 
