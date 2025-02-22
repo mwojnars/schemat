@@ -168,7 +168,7 @@ export class Process {
         let agents = names.map(name => [name, this.node.agents_installed.get(name)])
 
         assert(!this.node.agents_installed.has('node'))
-        if (master) agents = [['node', this.node], ...agents]       // current node is added as the 'node' agent by default
+        if (master) agents = [['node', this.node], ...agents]       // on master, add the current node as implicit 'node' agent
 
         return new Map(agents)
     }
@@ -278,7 +278,7 @@ export class MasterProcess extends Process {
         /* Start or restart a worker process. */
         let worker = this.workers[id-1] = cluster.fork({WORKER_ID: id})
         this.worker_pids.set(worker.process.pid, id)                        // remember PID-to-ID mapping
-        worker.on("message", msg => this.node.from_worker(msg))
+        worker.on("message", msg => this.node.from_worker(msg))             // let master process accept messages from `worker`
         return worker
     }
 
