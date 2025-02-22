@@ -1,6 +1,6 @@
 # Schemat
 
-🚧 🚧  _WORK IN PROGRESS!_  🚧 🚧
+🚧 🚧 ... WORK IN PROGRESS! ... 🚧 🚧
 
 **Schemat** is an object-oriented platform for building scalable 
 internet applications composed of isomorphic **web objects** that live "on the web" rather than on a single machine. Web objects can be seamlessly transferred over the network and executed in any local environment (on client, server, or data node). 
