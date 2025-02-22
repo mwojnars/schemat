@@ -78,8 +78,22 @@ export class Node extends WebObject {
          */
         print("handle_rpc():", [target_id, method, args])
 
-        // find `target_id` among running agents, either on master or worker process
-        
+        // find `target_id` among running agents, either on master or a worker process
+
+    }
+
+    get running_agents_by_id() {
+        /* Map of running agents by their IDs. The values are process IDs: 0 for master, >=1 for workers. */
+        let agents = new Map()
+        for (let name of this.master_agents_running) {
+            let agent = this.agents_installed.get(name)
+            agents.set(agent.id, 0)
+        }
+        for (let name of this.agents_running) {
+            let agent = this.agents_installed.get(name)
+            agents.set(agent.id, 1)
+        }
+        return agents
     }
 
 
