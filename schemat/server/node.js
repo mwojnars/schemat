@@ -40,7 +40,7 @@ export class Node extends Agent {
     get __node() { return this }
 
     get worker_id() { return schemat.process.worker_id }
-    is_master()     { return schemat.process.is_master }
+    is_master()     { return schemat.process.is_master() }
 
 
     /* outgoing message processing */
@@ -105,6 +105,9 @@ export class Node extends Agent {
            (??) In a rare case, the agent may have moved to another node in the meantime and the message has to be forwarded.
          */
         print("handle_rpc():", [target_id, method, args])
+
+        // locate the agent by its `target_id`, it should be running here in this process
+
     }
 
     get agent_locations() {
