@@ -100,6 +100,12 @@ export class Node extends Agent {
         else throw new Error(`unknown node-to-node message type: ${type}`)
     }
 
+    from_master([type, ...msg]) {
+        assert(type === 'RPC')
+        print("from_master():", [type, ...msg])
+        return this.handle_rpc(msg)
+    }
+
     handle_rpc([target_id, method, args]) {
         /* On master process, handle an incoming RPC message from another node that's addressed to the agent `target_id` running on this node.
            (??) In a rare case, the agent may have moved to another node in the meantime and the message has to be forwarded.
@@ -107,7 +113,7 @@ export class Node extends Agent {
         print("handle_rpc():", [target_id, method, args])
 
         // locate the agent by its `target_id`, it should be running here in this process
-
+        
     }
 
     get agent_locations() {
