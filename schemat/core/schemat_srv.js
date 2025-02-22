@@ -45,11 +45,6 @@ export class ServerSchemat extends Schemat {
     get tx()    { return this._transaction.getStore() }
     get node()  { return this.process.node }    // host Node (web object) of the current process; initialized and periodically reloaded in Server
 
-    get worker_id() {
-        /* Numeric ID (1, 2, 3, ...) of the current worker process of the node; 0 for the master process. */
-        return process.env.WORKER_ID || 0
-    }
-
 
     constructor(config) {
         super(config)

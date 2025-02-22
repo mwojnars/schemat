@@ -39,7 +39,7 @@ export class Node extends Agent {
     // node as an agent is deployed on itself and runs on master process
     get __node() { return this }
 
-    is_master() { return !schemat.worker_id}
+    is_master() { return !schemat.process.worker_id}
 
     send_rpc(target_id, method, ...args) {
         /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node

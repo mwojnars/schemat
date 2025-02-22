@@ -323,7 +323,7 @@ export class KafkaNode extends KafkaAgent {
     /* An agent that provides Kafka client functionality (producer/consumer) on behalf of a Node instance. */
 
     // Kafka identifiers use node's ID, not this object's
-    get __kafka_client() { return `node-${schemat.node.id}-worker-${schemat.worker_id}` }
+    get __kafka_client() { return `node-${schemat.node.id}-worker-${schemat.process.worker_id}` }
     get __kafka_topic()  { return `topic-${schemat.node.id}` }
     get __kafka_group()  { return `group-${schemat.node.id}` }
 
