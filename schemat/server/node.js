@@ -90,7 +90,7 @@ export class Node extends Agent {
             let process_id = this.agent_locations.get(target_id)
             print("handle_tcp():", process_id)
 
-            if (process_id === undefined) throw new Error(`target agent [${target_id}] not found on this node`)
+            if (process_id === undefined) throw new Error(`agent [${target_id}] not found on this node`)
             if (process_id !== this.worker_id) {
                 let worker = schemat.process.workers[process_id]
                 return worker.send([type, ...msg])      // forward the message down to a worker process
@@ -112,9 +112,9 @@ export class Node extends Agent {
          */
         print("handle_rpc():", [target_id, method, args])
 
-        // locate the agent by its `target_id`, it should be running here in this process
+        // locate an agent by its `target_id`, should be running here in this process
         let state = schemat.process.agents.values().find(state => state.agent.id === target_id)
-        if (!state) throw new Error(`agent [${target_id}] not found on this node`)
+        if (!state) throw new Error(`agent [${target_id}] not found on this node process`)
 
         let func = state.agent.__self[`remote.${method}`]
         if (!func) throw new Error(`agent [${target_id}] has no RPC endpoint "${method}"`)
