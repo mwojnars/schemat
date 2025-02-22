@@ -65,8 +65,15 @@ export class Process {
     }
 
     _print(...args) {
-        print(`${this.node.id}/#${schemat.worker_id}:`, ...args)
+        print(`${this.node.id}/#${this.worker_id}:`, ...args)
     }
+
+    get worker_id() {
+        /* Numeric ID (1, 2, 3, ...) of the current worker process of the node; 0 for the master process. */
+        return process.env.WORKER_ID || 0
+    }
+
+    is_master() { return !this.worker_id}
 
     async run() {
         /* Start/stop loop of active agents. */
@@ -77,8 +84,8 @@ export class Process {
             let new_node = this.node.refresh()
             if (new_node.__ttl_left() < 0) new_node = await new_node.reload()
 
-            // if (new_node !== this.node) print(`worker ${schemat.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
-            // else print(`worker ${schemat.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
+            // if (new_node !== this.node) print(`worker ${this.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
+            // else print(`worker ${this.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
 
             this.node = new_node
             this.agents = await this._start_stop()
@@ -156,8 +163,14 @@ export class Process {
 
     _get_agents_running() {
         /* Map of agents that should be running now on this process. */
-        let names = schemat.worker_id ? this.node.agents_running : this.node.master_agents_running   // the set of agents at master vs workers can differ
-        return new Map(names.map(name => [name, this.node.agents_installed.get(name)]))
+        let master = this.is_master()
+        let names  = master ? this.node.master_agents_running : this.node.agents_running    // different set of agents at master vs workers
+        let agents = names.map(name => [name, this.node.agents_installed.get(name)])
+
+        assert(!this.node.agents_installed.has('node'))
+        if (master) agents = [['node', this.node], ...agents]       // current node is added as the 'node' agent by default
+
+        return new Map(agents)
     }
 
     // async loop() {
@@ -232,7 +245,7 @@ export class MasterProcess extends Process {
             schemat.process = this
         }
         else {                                  // in the worker process, start this worker's Process instance
-            print(`starting worker #${schemat.worker_id} (PID=${process.pid})...`)
+            print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
             schemat.process = new Process(this.node, this.opts)
         }
         this.running = schemat.process.run()
