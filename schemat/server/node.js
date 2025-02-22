@@ -82,8 +82,8 @@ export class Node extends WebObject {
 
     }
 
-    get running_agents_by_id() {
-        /* Map of running agents by their IDs. The values are process IDs: 0 for master, >=1 for workers. */
+    get agent_locations() {
+        /* Map of running agent IDs to process IDs: 0 for master, >=1 for workers. */
         let agents = new Map()
         for (let name of this.master_agents_running) {
             let agent = this.agents_installed.get(name)
