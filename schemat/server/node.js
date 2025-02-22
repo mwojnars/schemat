@@ -113,7 +113,7 @@ export class Node extends Agent {
         print("handle_rpc():", [target_id, method, args])
 
         // locate the agent by its `target_id`, it should be running here in this process
-        
+
     }
 
     get agent_locations() {

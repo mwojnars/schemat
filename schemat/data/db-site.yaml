@@ -369,8 +369,6 @@
     - logger
   agents_running:
     - webserver
-  kafka_port: 9094
-  kafka_controller_port: 9095
   __category:
     "@": 21
 - __id: 1037
