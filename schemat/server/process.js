@@ -95,7 +95,7 @@ export class Process {
 
             this.node = new_node
             this.agents = await this._start_stop()
-            this.contexts = new Map(this.agents.map(([name, state]) => [name, state.context]))
+            this.contexts = new Map(Array.from(this.agents, ([name, state]) => [name, state.context]))
 
             if (schemat.is_closing)
                 if (this.agents.size) continue; else break          // let the currently-running agents gently stop
