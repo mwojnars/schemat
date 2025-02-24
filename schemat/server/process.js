@@ -48,7 +48,7 @@ export async function boot_schemat(opts) {
 class AgentState {
     agent               // ref to web object
     context             // execution context returned by __start__()
-    pending_calls = []  // promises for currently executing concurrent calls on this agent
+    calls = []          // promises for currently executing concurrent calls on this agent
     stopping = false    // if true, no more RPC calls can be started
 
     constructor(agent, context = null) {
@@ -57,13 +57,13 @@ class AgentState {
     }
     
     track_call(call_promise) {
-        /* Create a wrapped promise that removes itself from `pending_calls` when done. */
-        let tracked_promise = call_promise.finally(() => {
-            this.pending_calls = this.pending_calls.filter(p => p !== tracked_promise)
+        /* Create a wrapped promise that removes itself from `calls` when done. */
+        let tracked = call_promise.finally(() => {
+            this.calls = this.calls.filter(p => p !== tracked)
         })
         
-        this.pending_calls.push(tracked_promise)
-        return tracked_promise
+        this.calls.push(tracked)
+        return tracked
     }
 }
 
@@ -174,9 +174,9 @@ export class Process {
             this._print(`stopping agent '${name}'`)
             state.stopping = true                       // mark agent as stopping to prevent new calls
             
-            if (state.pending_calls.length > 0) {       // wait for pending calls to complete before stopping
-                this._print(`waiting for ${state.pending_calls.length} pending calls to agent '${name}' to complete`)
-                await Promise.all(state.pending_calls)
+            if (state.calls.length > 0) {               // wait for pending calls to complete before stopping
+                this._print(`waiting for ${state.calls.length} pending calls to agent '${name}' to complete`)
+                await Promise.all(state.calls)
             }
             promises.push(state.agent.__stop__(state.context).then(() => this.agents.delete(name)))
         }
