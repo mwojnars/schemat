@@ -62,7 +62,7 @@ export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
     agents = new Map()      // AgentState objects for currently running agents, keyed by agent names
-    contexts = new Map()    // execution contexts of currently running agents, keyed by agent names; derived from `agents`
+    contexts = {}           // execution contexts of currently running agents, keyed by agent names; derived from `agents`
 
     constructor(node, opts) {
         this.node = node        // Node web object that represents the physical node this process is running on
@@ -95,7 +95,7 @@ export class Process {
 
             this.node = new_node
             this.agents = await this._start_stop()
-            this.contexts = new Map(Array.from(this.agents, ([name, state]) => [name, state.context]))
+            this.contexts = Object.fromEntries(Array.from(this.agents, ([name, state]) => [name, state.context]))
 
             if (schemat.is_closing)
                 if (this.agents.size) continue; else break          // let the currently-running agents gently stop
