@@ -653,6 +653,10 @@
       info: Duration [in seconds] of a single iteration of the agent execution loop in
         run().
       "@": schemat/types/type.js:NUMBER
+    tcp_host:
+      default: localhost
+      info: Host name to be used node-to-node TCP connections.
+      "@": schemat/types/type.js:STRING
     tcp_port:
       default: 5828
       info: This node's TCP port for incoming messages (TCP_Receiver).

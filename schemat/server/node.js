@@ -75,7 +75,7 @@ export class Node extends Agent {
 
     send_tcp(node, msg) {
         let tcp_msg = msg
-        return schemat.agents.tcp.send(tcp_msg, node.__tcp_address)
+        return schemat.agents.tcp.send(tcp_msg, node.tcp_address)
     }
 
     /* incoming message processing */
@@ -93,7 +93,7 @@ export class Node extends Agent {
             if (process_id === undefined) throw new Error(`agent [${target_id}] not found on this node`)
             if (process_id !== this.worker_id) {
                 let worker = schemat.process.workers[process_id]
-                return worker.send([type, ...msg])      // forward the message down to a worker process
+                return worker.send([type, ...msg])      // forward the message down to a worker process, to its from_master()
             }
             return this.handle_rpc(msg)                 // process the message here in the master process
         }
