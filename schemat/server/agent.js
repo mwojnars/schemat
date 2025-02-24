@@ -52,7 +52,7 @@ export class Agent extends WebObject {
         })
     }
 
-    'remote.ping'(msg) {
+    'remote.ping'(ctx, msg) {
         /* Default RPC endpoint for testing inter-cluster communication. */
         print(`[${utc()}]  PING: agent [${this.id}], ${msg}`)
     }
@@ -112,11 +112,12 @@ export class WebServer extends Agent {
         let host = schemat.config.host || this.host
         let port = schemat.config.port || this.port
 
-        return app.listen(port, host, () => print(`worker ${process.pid} listening at http://${host}:${port}`))
+        let server = app.listen(port, host, () => print(`worker ${process.pid} listening at http://${host}:${port}`))
+        return {server}
     }
 
-    async __stop__(http_server) {
-        if (http_server) await new Promise(resolve => http_server.close(resolve))
+    async __stop__({server}) {
+        if (server) await new Promise(resolve => server.close(resolve))
         print(`#${schemat.process.worker_id} WebServer closed`)
     }
 

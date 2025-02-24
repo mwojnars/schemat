@@ -127,7 +127,8 @@ export class Node extends Agent {
         let func = state.agent.__self[`remote.${method}`]
         if (!func) throw new Error(`agent [${target_id}] has no RPC endpoint "${method}"`)
 
-        return func.call(state.agent, ...args)
+        let call_promise = Promise.resolve(func.call(state.agent, state.context, ...args))
+        return state.track_call(call_promise)
     }
 
     get agent_locations() {

@@ -46,15 +46,24 @@ export async function boot_schemat(opts) {
 /**********************************************************************************************************************/
 
 class AgentState {
-    agent           // ref to web object
-    context         // execution context returned by __start__()
-    semaphore       // no. of currently executing RPC calls; all of them must return before __stop__() can be called ...
-                    // ... or a Promise that resolves when all the currently executing RPC calls return
-    stopping        // if true, no more RPC calls can be started
+    agent               // ref to web object
+    context             // execution context returned by __start__()
+    pending_calls = []  // promises for currently executing concurrent calls on this agent
+    stopping = false    // if true, no more RPC calls can be started
 
     constructor(agent, context = null) {
         this.agent = agent
         this.context = context
+    }
+    
+    track_call(call_promise) {
+        /* Create a wrapped promise that removes itself from `pending_calls` when done. */
+        let tracked_promise = call_promise.finally(() => {
+            this.pending_calls = this.pending_calls.filter(p => p !== tracked_promise)
+        })
+        
+        this.pending_calls.push(tracked_promise)
+        return tracked_promise
     }
 }
 
@@ -62,12 +71,37 @@ export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
     agents = new Map()      // AgentState objects for currently running agents, keyed by agent names
-    contexts = {}           // execution contexts of currently running agents, keyed by agent names; derived from `agents`
+    contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `agents`
 
     constructor(node, opts) {
         this.node = node        // Node web object that represents the physical node this process is running on
         this.opts = opts
         if (!this.is_master()) process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
+    }
+    
+    _update_contexts() {
+        /* Create a new `contexts` object with proxied agent contexts, so that function calls on the contexts are tracked
+           and the agent can be stopped gracefully.
+         */
+        let contexts = Object.fromEntries(Array.from(this.agents, ([name, state]) => [name, state.context]))
+        
+        for (let [name, state] of this.agents.entries()) {
+            let context = state.context
+            if (!context) continue
+            if (!T.isPlain(context)) throw new Error(`context for agent '${name}' must be a plain object`)
+
+            this.contexts[name] = new Proxy(context, {
+                get: (ctx, prop) => {
+                    if (typeof ctx[prop] !== 'function') return ctx[prop]   // use non-function properties directly
+                    return function(...args) {
+                        if (state.stopping) throw new Error(`agent '${name}' is in the process of stopping`)
+                        let call_promise = Promise.resolve(ctx[prop].apply(ctx, args))
+                        return state.track_call(call_promise)
+                    }
+                }
+            })
+        }
+        return contexts
     }
 
     _print(...args) {
@@ -95,7 +129,7 @@ export class Process {
 
             this.node = new_node
             this.agents = await this._start_stop()
-            this.contexts = Object.fromEntries(Array.from(this.agents, ([name, state]) => [name, state.context]))
+            this.contexts = this._update_contexts()
 
             if (schemat.is_closing)
                 if (this.agents.size) continue; else break          // let the currently-running agents gently stop
@@ -138,6 +172,12 @@ export class Process {
         for (let name of to_stop.toReversed()) {        // iterate in reverse order as some agents may depend on previous ones
             let state = current.get(name)
             this._print(`stopping agent '${name}'`)
+            state.stopping = true                       // mark agent as stopping to prevent new calls
+            
+            if (state.pending_calls.length > 0) {       // wait for pending calls to complete before stopping
+                this._print(`waiting for ${state.pending_calls.length} pending calls to agent '${name}' to complete`)
+                await Promise.all(state.pending_calls)
+            }
             promises.push(state.agent.__stop__(state.context).then(() => this.agents.delete(name)))
         }
 
