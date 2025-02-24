@@ -91,12 +91,10 @@ export class Process {
             if (!T.isPlain(context)) throw new Error(`context for agent '${name}' must be a plain object`)
 
             this.contexts[name] = new Proxy(context, {
-                get: (ctx, prop) => {
-                    if (typeof ctx[prop] !== 'function') return ctx[prop]   // use non-function properties directly
-                    return function(...args) {
-                        if (state.stopping) throw new Error(`agent '${name}' is in the process of stopping`)
-                        return state.track_call(ctx[prop].apply(ctx, args))
-                    }
+                // whenever a function from context (ctx.fun()) is called, wrap it up with track_call()
+                get: (ctx, prop) => (typeof ctx[prop] !== 'function') ? ctx[prop] : function(...args) {
+                    if (state.stopping) throw new Error(`agent '${name}' is in the process of stopping`)
+                    return state.track_call(ctx[prop].apply(ctx, args))
                 }
             })
         }
