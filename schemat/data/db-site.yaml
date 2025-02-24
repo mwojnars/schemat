@@ -369,6 +369,7 @@
     - logger
   agents_running:
     - webserver
+  tcp_port: 5829
   __category:
     "@": 21
 - __id: 1037
