@@ -21,6 +21,7 @@ export class Node extends Agent {
     agents_running
     master_agents_running
     refresh_interval
+    tcp_host
     tcp_port
 
     // get __kafka_topic() { return `topic-${this.id}` }   // for KafkaService._submit()
@@ -41,6 +42,11 @@ export class Node extends Agent {
 
     get worker_id() { return schemat.process.worker_id }
     is_master()     { return schemat.process.is_master() }
+
+    get tcp_address() {
+        if (!this.tcp_host || !this.tcp_port) throw new Error(`tcp_host and tcp_port must be set`)
+        return `${this.tcp_host}:${this.tcp_port}` 
+    }
 
 
     /* outgoing message processing */
