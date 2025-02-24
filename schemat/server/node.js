@@ -124,11 +124,11 @@ export class Node extends Agent {
         let state = schemat.process.agents.values().find(state => state.agent.id === target_id)
         if (!state) throw new Error(`agent [${target_id}] not found on this node process`)
 
-        let func = state.agent.__self[`remote.${method}`]
+        let {agent, context} = state
+        let func = agent.__self[`remote.${method}`]
         if (!func) throw new Error(`agent [${target_id}] has no RPC endpoint "${method}"`)
 
-        let promise = Promise.resolve(func.call(state.agent, state.context, ...args))
-        return state.track_call(promise)
+        return state.track_call(func.call(agent, context, ...args))
     }
 
     get agent_locations() {

@@ -56,12 +56,12 @@ class AgentState {
         this.context = context
     }
     
-    track_call(call_promise) {
+    track_call(call) {
         /* Create a wrapped promise that removes itself from `calls` when done. */
-        let tracked = call_promise.finally(() => {
+        let promise = Promise.resolve(call)
+        let tracked = promise.finally(() => {
             this.calls = this.calls.filter(p => p !== tracked)
         })
-        
         this.calls.push(tracked)
         return tracked
     }
@@ -95,8 +95,7 @@ export class Process {
                     if (typeof ctx[prop] !== 'function') return ctx[prop]   // use non-function properties directly
                     return function(...args) {
                         if (state.stopping) throw new Error(`agent '${name}' is in the process of stopping`)
-                        let call_promise = Promise.resolve(ctx[prop].apply(ctx, args))
-                        return state.track_call(call_promise)
+                        return state.track_call(ctx[prop].apply(ctx, args))
                     }
                 }
             })
