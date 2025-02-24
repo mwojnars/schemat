@@ -41,13 +41,10 @@ export class ServerSchemat extends Schemat {
     _db             // bootstrap DB; regular server-side DB is taken from site.database
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
-    get db()    { return this.site?.database || this._db }
-    get tx()    { return this._transaction.getStore() }
-    get node()  { return this.process.node }    // host Node (web object) of the current process; initialized and periodically reloaded in Server
-
-    get agents() {
-
-    }
+    get db()     { return this.site?.database || this._db }
+    get tx()     { return this._transaction.getStore() }
+    get node()   { return this.process.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
+    get agents() { return this.process.contexts }   // execution contexts of currently running agents
 
 
     constructor(config) {
