@@ -96,6 +96,8 @@ export class Schemat {
 
     // defined on server only:
     process
+    agents
+
     get tx()            { return undefined }
     get node()          { return undefined }
 

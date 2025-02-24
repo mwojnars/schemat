@@ -45,6 +45,10 @@ export class ServerSchemat extends Schemat {
     get tx()    { return this._transaction.getStore() }
     get node()  { return this.process.node }    // host Node (web object) of the current process; initialized and periodically reloaded in Server
 
+    get agents() {
+
+    }
+
 
     constructor(config) {
         super(config)
