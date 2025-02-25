@@ -1,4 +1,4 @@
-import {assert} from '../common/utils.js';
+import {assert, print} from '../common/utils.js';
 import {JSONx} from '../common/jsonx.js';
 import {Agent} from "./agent.js";
 
@@ -11,7 +11,7 @@ class ChunkParser {
     // Generic chunk reassembly handler using newline delimiter
     constructor(callback) {
         this.buffer = ''
-        this.callback = callback
+        this.callback = callback    // can be async, but the returned promise is not awaited
     }
 
     feed(data) {
@@ -45,7 +45,7 @@ export class TCP_Sender extends Agent {
             }
         }, this.retry_interval)
 
-        function _connect(address) {
+        let _connect = (address) => {
             let [host, port] = address.split(':')
             port = parseInt(port)
             let socket = net.createConnection({host, port})
@@ -53,10 +53,13 @@ export class TCP_Sender extends Agent {
 
             let ack_parser = new ChunkParser(msg => {
                 try {
+                    print('TCP response:', msg)
                     let {id, result} = JSONx.parse(msg)
                     pending.delete(id)
                     this._handle_result(result)
-                } catch (e) { console.error('Invalid ACK:', msg) }
+                    print('pending:', pending.size)
+                }
+                catch (e) { console.error('Invalid ACK:', msg) }
             })
 
             socket.on('data', data => ack_parser.feed(data.toString()))
@@ -69,7 +72,7 @@ export class TCP_Sender extends Agent {
             return socket
         }
 
-        function send(msg, address) {
+        let send = (msg, address) => {
             let socket = sockets.get(address) || _connect(address)
             let id = message_id++
             let json = JSONx.stringify({id, msg}) + '\n'
@@ -105,13 +108,14 @@ export class TCP_Receiver extends Agent {
         let server = net.createServer(socket => {
             // per-connection state
             let processed_offset = 0
-            let msg_parser = new ChunkParser(json => {
+            let msg_parser = new ChunkParser(async json => {
                 try {
                     let {id, msg} = JSONx.parse(json)
                     let result
                     if (id > processed_offset) {
                         processed_offset = id
                         result = this._handle_message(msg)
+                        if (result instanceof Promise) result = await result
                     }
                     this._respond(socket, id, result)
                 } catch (e) { console.error('Invalid message:', e) }
