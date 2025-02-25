@@ -82,6 +82,7 @@ export class Node extends Agent {
     send_tcp(node, msg) {
         /* On master process, send a message to another node via TCP. */
         assert(this.is_master())
+        assert(node.is_loaded())        // target node's TCP address is needed
         let tcp_msg = msg
         return schemat.agents.tcp.send(tcp_msg, node.tcp_address)
     }

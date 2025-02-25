@@ -130,8 +130,8 @@ export class TCP_Receiver extends Agent {
     }
 
     _handle_message(message) {
-        // schemat.node.forward_message(message)
-        console.log('Received message:', message) 
+        console.log('TCP_Receiver._handle_message():', message)
+        return schemat.node.handle_tcp(message)
     }
 
     _respond(socket, id, result) {
