@@ -1,8 +1,8 @@
 import {assert, print, utc} from '../common/utils.js'
-import {JsonKAFKA, KafkaAgent} from "./kafka.js";
+import {Agent} from "./agent.js";
 
 
-export class Logger extends KafkaAgent {
+export class Logger extends Agent {
     /* Receives debug messages in its private Kafka topic. Performs post-processing, persistence,
        and periodical cleanup of old messages.
      */
