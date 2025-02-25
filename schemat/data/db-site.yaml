@@ -365,9 +365,9 @@
   master_agents_running:
     - tcp
     - tcp_receiver
-    - logger
   agents_running:
     - webserver
+    - logger
   tcp_port: 5829
   __category:
     "@": 21
