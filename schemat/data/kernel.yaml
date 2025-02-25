@@ -653,6 +653,18 @@
       info: Duration [in seconds] of a single iteration of the agent execution loop in
         run().
       "@": schemat/types/type.js:NUMBER
+    http_host:
+      default: localhost
+      info: Host name to be used by HTTP(S) servers running on this node.
+      "@": schemat/types/type.js:STRING
+    http_port:
+      default: 80
+      info: HTTP port to be used by HTTP servers running on this node.
+      "@": schemat/types/type.js:INTEGER
+    https_port:
+      default: 443
+      info: HTTPS port to be used by HTTPS servers running on this node.
+      "@": schemat/types/type.js:INTEGER
     tcp_host:
       default: localhost
       info: Host name to be used node-to-node TCP connections.
