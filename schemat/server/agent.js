@@ -50,20 +50,6 @@ export class Agent extends WebObject {
 
     /***  Triggers  ***/
 
-    get remote() {
-        /* Triggers of intra-cluster RPC calls: obj.remote.X(...args) call makes the current node send a TCP message that
-           invokes obj['remote.X'](...args) on the host node of this object. The object must be an Agent, because only
-           agents are deployed on specific nodes in the cluster, execute a perpetual event loop and accept RPC calls.
-         */
-        let id = this.id
-        assert(id)
-        return new Proxy({}, {
-            get(target, name) {
-                if (typeof name === 'string') return (...args) => schemat.node.send_rpc(id, name, ...args)
-            }
-        })
-    }
-
     'remote.ping'(ctx, msg) {
         /* Default RPC endpoint for testing intra-cluster communication. */
         print(`[${utc()}]  PING: agent [${this.id}], ${msg}`)

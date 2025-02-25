@@ -900,6 +900,22 @@ export class WebObject {
         })
     }
 
+    get remote() {
+        /* Triggers of intra-cluster RPC calls: obj.remote.X(...args) call makes the current node send a TCP message that
+           invokes obj['remote.X'](...args) on the host node of this object. The object should be an Agent, because only
+           agents are deployed on specific nodes in the cluster, execute a perpetual event loop and accept RPC calls;
+           however, to avoid the necessity to load the object only to send an RPC call to it, remote() is defined here
+           at the top WebObject level.
+         */
+        let id = this.id
+        assert(id)
+        return new Proxy({}, {
+            get(target, name) {
+                if (typeof name === 'string') return (...args) => schemat.node.send_rpc(id, name, ...args)
+            }
+        })
+    }
+
     // GET/POST/LOCAL.*() are isomorphic triggers ({name: trigger_function}) for this object's web endpoints ...
 
     get GET()   { return this._web_triggers('GET') }        // triggers for HTTP GET endpoints of this object
