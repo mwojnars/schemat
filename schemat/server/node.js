@@ -79,10 +79,11 @@ export class Node extends Agent {
         else throw new Error(`unknown worker-to-master message type: ${type}`)
     }
 
-    send_tcp(node, msg) {
+    async send_tcp(node, msg) {
         /* On master process, send a message to another node via TCP. */
         assert(this.is_master())
-        assert(node.is_loaded())        // target node's TCP address is needed
+        if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
+
         let tcp_msg = msg
         return schemat.agents.tcp.send(tcp_msg, node.tcp_address)
     }
@@ -97,7 +98,7 @@ export class Node extends Agent {
 
             // find out which process (worker >= 1 or master = 0), has the `target_id` agent deployed
             let process_id = this.agent_locations.get(target_id)
-            print("handle_tcp():", process_id)
+            // print("handle_tcp(): process", process_id)
 
             if (process_id === undefined) throw new Error(`agent [${target_id}] not found on this node`)
             if (process_id !== this.worker_id) {
@@ -119,7 +120,7 @@ export class Node extends Agent {
         /* On master process, handle an incoming RPC message from another node that's addressed to the agent `target_id` running on this node.
            (??) In a rare case, the agent may have moved to another node in the meantime and the message has to be forwarded.
          */
-        print("handle_rpc():", [target_id, method, args])
+        // print("handle_rpc():", [target_id, method, args])
 
         // locate an agent by its `target_id`, should be running here in this process
         let state = schemat.process.agents.values().find(state => state.agent.id === target_id)

@@ -57,7 +57,7 @@ export class TCP_Sender extends Agent {
                     let {id, result} = JSONx.parse(msg)
                     pending.delete(id)
                     this._handle_result(result)
-                    print('pending:', pending.size)
+                    // print('pending:', pending.size)
                 }
                 catch (e) { console.error('Invalid ACK:', msg) }
             })
