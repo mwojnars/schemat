@@ -18,6 +18,10 @@ export class Logger extends Agent {
         print(`[${utc()}] ${level.padStart(5)}: ${msg}`)
     }
 
+    'remote.log'(ctx, msg, args = null, level = 'INFO') {
+        return this.log(msg, args, level)
+    }
+
     // 'KAFKA.log'() {
     //     return new JsonKAFKA({
     //         server: async (msg, args = null, level = 'INFO') => {
