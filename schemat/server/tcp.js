@@ -125,7 +125,10 @@ export class TCP_Receiver extends Agent {
             socket.on('error', () => socket.destroy())
         })
 
-        server.listen(this.tcp_port || schemat.node.tcp_port)
+        let port = schemat.config['tcp-port'] || this.tcp_port || schemat.node.tcp_port
+        print(`listening at TCP port`, port)
+
+        server.listen(port)
         return {server}
     }
 

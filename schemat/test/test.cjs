@@ -127,7 +127,7 @@ function server_setup(port, args = '') {
     before(async function() {
         // wait for port to be released before starting new server
         await wait_for_port_release(port)
-        let opts = `--port ${port} --node ${NODE} ${args}`
+        let opts = `--port ${port} --tcp-port ${TCP_PORT} --node ${NODE} ${args}`
 
         // start the server...
 

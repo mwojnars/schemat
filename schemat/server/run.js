@@ -18,6 +18,7 @@ await (async function run() {
         .option('host',    {type: 'string', default: HOST})
         .option('port',    {type: 'number', default: PORT})
         .option('node',    {type: 'number'})        // ID of the node object in DB, overrides the content of node.id
+        .option('tcp-port',{type: 'number'})
         // .option('kafka-port',               {type: 'number'})
         // .option('kafka-controller-port',    {type: 'number'})
         .help().alias('help', 'h')
