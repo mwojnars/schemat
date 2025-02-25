@@ -22,8 +22,20 @@ export class Agent extends WebObject {
     async __install__(node) {}  // ideally, this method should be idempotent in case of failure and subsequent re-launch
     async __uninstall__(node) {}
 
-    async __start__()   {}      // may create and return an "execution context" (an object of arbitrary shape) that will be passed to __stop__()
-    async __stop__(ctx) {}
+    async __start__()   {
+        /* Start the microservice implemented by this agent. May create and return an "execution context",
+           which will be accessible to external calls to the running agent (RPC calls or direct function calls)
+           and will be passed to __stop__() upon microservice termination. Typically, the context object contains
+           handlers to all the resources that were opened during __start__() and must be released in __stop__().
+           The execution context, if present, should be a plain JS object. If the microservice allows local direct
+           function calls to the microservice, these functions should be top-level elements of the returned context
+           (ctx.fun()) - all calls to these functions will be automatically protected and monitored, so that
+           the microservice termination awaits the graceful completion of such calls; same for RPC (obj.remote.X()) calls.
+         */
+    }
+    async __stop__(ctx) {
+        /* Release any local resources that were acquired during __start__() and are passed here in the execution context `ctx`. */
+    }
 
     async __restart__(ctx, prev) {
         /* In many cases, refreshing an agent in the worker process does NOT require full stop+start, which might have undesired side effects
