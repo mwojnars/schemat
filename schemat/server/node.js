@@ -21,6 +21,9 @@ export class Node extends Agent {
     agents_running
     master_agents_running
     refresh_interval
+    http_host
+    http_port
+    https_port
     tcp_host
     tcp_port
 

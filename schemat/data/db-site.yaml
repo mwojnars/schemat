@@ -254,7 +254,6 @@
     "@": 28
 - __id: 1023
   name: webserver
-  port: 3000
   __category:
     "@": 30
 - __id: 1024

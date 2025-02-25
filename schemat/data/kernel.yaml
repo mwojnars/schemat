@@ -824,14 +824,14 @@
   class: schemat/server/agent.js:WebServer
   schema:
     host:
-      default: 127.0.0.1
-      info: IP number of the local network interface where the server should be
-        deployed to accept incoming web requests.
+      info: Host name of the local network interface where the server should be
+        deployed to accept incoming web requests. Overriden by CLI option
+        --http-host. If both missing, node.http_host is used.
       "@": schemat/types/type.js:STRING
     port:
-      default: 80
-      info: Local port number for incoming HTTP connections where the server should be
-        deployed.
+      info: Port number for incoming HTTP connections where the server should be
+        deployed. Overriden by CLI option --http-port. If both missing,
+        node.http_port is used.
       "@": schemat/types/type.js:INTEGER
     request_timeout:
       default: 60

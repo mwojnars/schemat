@@ -121,8 +121,8 @@ export class WebServer extends Agent {
 
         app.all('*', (req, res) => this._handle(req, res))
 
-        let host = schemat.config.host || this.host
-        let port = schemat.config.port || this.port
+        let host = schemat.config.host || this.host || schemat.node.http_host
+        let port = schemat.config.port || this.port || schemat.node.http_port
 
         let server = app.listen(port, host, () => print(`worker ${process.pid} listening at http://${host}:${port}`))
         return {server}
