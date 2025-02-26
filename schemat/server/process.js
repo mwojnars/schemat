@@ -101,21 +101,11 @@ export class Process {
 
         let node_id = opts.node || this._read_node_id()
         this.node = node_id ? await schemat.load(node_id) : await this._create_node()
-
-        // if (node_id)
-        //     this.node = await schemat.load(node_id)
-        // else {
-        //     if (!cluster.isPrimary) throw new Error('unexpected error: a new Node object should only be created in the primary process, not in a worker')
-        //     let Node = await schemat.import('/$/sys/Node')
-        //     this.node = await Node.new().save({ring: 'db-site'})
-        //     fs.writeFileSync('./schemat/node.id', this.node.id.toString())
-        //     print(`created new node:`, this.node.id)
-        // }
         assert(this.node)
     }
 
     _read_node_id() {
-        /* Read ID of the node object of this local installation from a file. */
+        /* Read from file the ID of the node object to be executed in this local installation. */
         let path = './schemat/node.id'
         try { return Number(fs.readFileSync(path, 'utf8').trim()) }
         catch (ex) { print('node ID not found in', path) }
