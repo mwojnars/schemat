@@ -101,10 +101,8 @@ export class Process {
 
         let node_id = opts.node || this._read_node_id()
 
-        if (node_id) {
-            if (cluster.isPrimary) print(`starting node:`, node_id)
+        if (node_id)
             this.node = await schemat.load(node_id)
-        }
         else {
             if (!cluster.isPrimary) throw new Error('unexpected error: a new Node object should only be created in the primary process, not in a worker')
             let Node = await schemat.import('/$/sys/Node')
@@ -113,6 +111,11 @@ export class Process {
             print(`created new node:`, this.node.id)
         }
         assert(this.node)
+    }
+
+    _read_node_id() {
+        try { return Number(fs.readFileSync('./schemat/node.id', 'utf8').trim()) }
+        catch (ex) { print('node ID not found') }
     }
 
     start() {
@@ -308,43 +311,10 @@ export class MasterProcess extends Process {
     running         // the Promise returned by .run() of the `server`
     worker_pids     // PID to WORKER_ID association
 
-    // async start(opts) {
-    //     await super.start(opts)
-    //
-    //     let node_id = opts.node || this._read_node_id()
-    //
-    //     if (node_id) {
-    //         if (cluster.isPrimary) print(`starting node:`, node_id)
-    //         this.node = await schemat.load(node_id)
-    //     }
-    //     else {
-    //         if (cluster.isPrimary) throw new Error('unexpected error: a new Node object should only be created in the primary process, not in a worker')
-    //         let Node = await schemat.import('/$/sys/Node')
-    //         this.node = await Node.new().save({ring: 'db-site'})
-    //         fs.writeFileSync('./schemat/node.id', this.node.id.toString())
-    //         print(`created new node:`, this.node.id)
-    //     }
-    //     assert(this.node)
-    //
-    //     if (cluster.isPrimary) {                // in the primary process, start the workers...
-    //         this._start_workers()
-    //         schemat.process = this
-    //     }
-    //     else {                                  // in the worker process, start this worker's Process instance
-    //         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-    //         schemat.process = new WorkerProcess(this.node, opts)
-    //     }
-    //     this.running = schemat.process.run()
-    // }
-
     start() {
+        print(`starting node:`, this.node.id)
         this._start_workers()
         super.start()
-    }
-
-    _read_node_id() {
-        try { return Number(fs.readFileSync('./schemat/node.id', 'utf8').trim()) }
-        catch (ex) { print('node ID not found') }
     }
 
     _start_workers(num_workers = 2) {
