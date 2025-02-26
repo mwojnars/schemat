@@ -73,6 +73,46 @@ export class Process {
     agents = new Map()      // AgentState objects for currently running agents, keyed by agent names
     contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `agents`
 
+    async start(opts) {
+        // node = schemat.get_loaded(this_node_ID)
+        // return node.activate()     // start the life-loop and all worker processes (servers)
+
+        // let m = await schemat.import('/$/local/schemat/test/temp1.js')
+        // print('loaded:', m)
+        // let {WebServer} = await schemat.import('/$/local/schemat/server/agent.js')
+
+        print('Process.start() WORKER_ID:', process.env.WORKER_ID || 0)
+        await boot_schemat(opts)
+
+        process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
+        process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
+
+        let node_id = opts.node || this._read_node_id()
+
+        if (node_id) {
+            if (cluster.isPrimary) print(`starting node:`, node_id)
+            this.node = await schemat.load(node_id)
+        }
+        else {
+            if (!cluster.isPrimary) throw new Error('unexpected error: a new Node object should only be created in the primary process, not in a worker')
+            let Node = await schemat.import('/$/sys/Node')
+            this.node = await Node.new().save({ring: 'db-site'})
+            fs.writeFileSync('./schemat/node.id', this.node.id.toString())
+            print(`created new node:`, this.node.id)
+        }
+        assert(this.node)
+
+        if (cluster.isPrimary) {                // in the primary process, start the workers...
+            this._start_workers()
+            schemat.process = this
+        }
+        else {                                  // in the worker process, start this worker's Process instance
+            print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
+            schemat.process = new WorkerProcess(this.node, opts)
+        }
+        this.running = schemat.process.run()
+    }
+
     _update_contexts() {
         /* Create a new `contexts` object with proxied agent contexts, so that function calls on the contexts are tracked
            and the agent can be stopped gracefully.
@@ -250,45 +290,34 @@ export class MasterProcess extends Process {
     running         // the Promise returned by .run() of the `server`
     worker_pids     // PID to WORKER_ID association
 
-    async start(opts) {
-        // node = schemat.get_loaded(this_node_ID)
-        // return node.activate()     // start the life-loop and all worker processes (servers)
-
-        // let m = await schemat.import('/$/local/schemat/test/temp1.js')
-        // print('loaded:', m)
-        // let {WebServer} = await schemat.import('/$/local/schemat/server/agent.js')
-
-        print('MasterProcess.start() WORKER_ID:', process.env.WORKER_ID || 0)
-        await boot_schemat(opts)
-
-        process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
-        process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
-
-        let node_id = opts.node || this._read_node_id()
-
-        if (node_id) {
-            if (cluster.isPrimary) print(`starting node:`, node_id)
-            this.node = await schemat.load(node_id)
-        }
-        else {
-            if (cluster.isPrimary) throw new Error('unexpected error: a new Node object should only be created in the primary process, not in a worker')
-            let Node = await schemat.import('/$/sys/Node')
-            this.node = await Node.new().save({ring: 'db-site'})
-            fs.writeFileSync('./schemat/node.id', this.node.id.toString())
-            print(`created new node:`, this.node.id)
-        }
-        assert(this.node)
-
-        if (cluster.isPrimary) {                // in the primary process, start the workers...
-            this._start_workers()
-            schemat.process = this
-        }
-        else {                                  // in the worker process, start this worker's Process instance
-            print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-            schemat.process = new WorkerProcess(this.node, opts)
-        }
-        this.running = schemat.process.run()
-    }
+    // async start(opts) {
+    //     await super.start(opts)
+    //
+    //     let node_id = opts.node || this._read_node_id()
+    //
+    //     if (node_id) {
+    //         if (cluster.isPrimary) print(`starting node:`, node_id)
+    //         this.node = await schemat.load(node_id)
+    //     }
+    //     else {
+    //         if (cluster.isPrimary) throw new Error('unexpected error: a new Node object should only be created in the primary process, not in a worker')
+    //         let Node = await schemat.import('/$/sys/Node')
+    //         this.node = await Node.new().save({ring: 'db-site'})
+    //         fs.writeFileSync('./schemat/node.id', this.node.id.toString())
+    //         print(`created new node:`, this.node.id)
+    //     }
+    //     assert(this.node)
+    //
+    //     if (cluster.isPrimary) {                // in the primary process, start the workers...
+    //         this._start_workers()
+    //         schemat.process = this
+    //     }
+    //     else {                                  // in the worker process, start this worker's Process instance
+    //         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
+    //         schemat.process = new WorkerProcess(this.node, opts)
+    //     }
+    //     this.running = schemat.process.run()
+    // }
 
     _read_node_id() {
         try { return Number(fs.readFileSync('./schemat/node.id', 'utf8').trim()) }
