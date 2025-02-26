@@ -102,18 +102,20 @@ export class Process {
         }
         assert(this.node)
 
-        if (cluster.isPrimary) {                // in the primary process, start the workers...
-            this._start_workers()
-            schemat.process = this
-        }
-        else {                                  // in the worker process, start this worker's Process instance
-            print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-            schemat.process = new WorkerProcess(this.node)
-        }
-        this.running = schemat.process.run()
+        // if (cluster.isPrimary) {                // in the primary process, start the workers...
+        //     this._start_workers()
+        //     schemat.process = this
+        // }
+        // else {                                  // in the worker process, start this worker's Process instance
+        //     print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
+        //     schemat.process = new WorkerProcess(this.node)
+        // }
     }
 
-    start() {}
+    start() {
+        schemat.process = this
+        this.running = this.run()
+    }
 
     async stop() {
         if (schemat.is_closing) return
@@ -343,6 +345,11 @@ export class MasterProcess extends Process {
     //     this.running = schemat.process.run()
     // }
 
+    start() {
+        this._start_workers()
+        super.start()
+    }
+
     _read_node_id() {
         try { return Number(fs.readFileSync('./schemat/node.id', 'utf8').trim()) }
         catch (ex) { print('node ID not found') }
@@ -385,6 +392,11 @@ export class WorkerProcess extends Process {
 
         this._print(`registering "message" handler`)
         process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
+    }
+
+    start() {
+        print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
+        super.start()
     }
 }
 
