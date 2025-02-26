@@ -70,6 +70,7 @@ class AgentState {
 export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
+    node                    // Node web object that represents the Schemat cluster node this process is running
     agents = new Map()      // AgentState objects for currently running agents, keyed by agent names
     contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `agents`
 
@@ -101,15 +102,6 @@ export class Process {
             print(`created new node:`, this.node.id)
         }
         assert(this.node)
-
-        // if (cluster.isPrimary) {                // in the primary process, start the workers...
-        //     this._start_workers()
-        //     schemat.process = this
-        // }
-        // else {                                  // in the worker process, start this worker's Process instance
-        //     print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-        //     schemat.process = new WorkerProcess(this.node)
-        // }
     }
 
     start() {
@@ -386,16 +378,10 @@ export class MasterProcess extends Process {
 
 export class WorkerProcess extends Process {
 
-    constructor(node) {
-        super()
-        this.node = node        // Node web object that represents the physical node this process is running on
-
-        this._print(`registering "message" handler`)
-        process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
-    }
-
     start() {
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
+        this._print(`registering "message" handler`)
+        process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
         super.start()
     }
 }
