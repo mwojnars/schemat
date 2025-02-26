@@ -105,7 +105,9 @@ export class Node extends Agent {
 
             if (process_id === undefined) throw new Error(`agent [${target_id}] not found on this node`)
             if (process_id !== this.worker_id) {
-                let worker = schemat.process.workers[process_id]
+                assert(process_id > 0)
+                print(`handle_tcp(): sending message to #${process_id}`)
+                let worker = schemat.process.workers[process_id - 1]    // workers 1,2,3... stored under indices 0,1,2...
                 return worker.send([type, ...msg])      // forward the message down to a worker process, to its from_master()
             }
             return this.handle_rpc(msg)                 // process the message here in the master process
