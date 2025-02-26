@@ -73,15 +73,6 @@ export class Process {
     agents = new Map()      // AgentState objects for currently running agents, keyed by agent names
     contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `agents`
 
-    constructor(node, opts) {
-        this.node = node        // Node web object that represents the physical node this process is running on
-        this.opts = opts
-        if (!this.is_master()) {
-            this._print(`registering "message" handler`)
-            process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
-        }
-    }
-    
     _update_contexts() {
         /* Create a new `contexts` object with proxied agent contexts, so that function calls on the contexts are tracked
            and the agent can be stopped gracefully.
@@ -292,7 +283,7 @@ export class MasterProcess extends Process {
         }
         else {                                  // in the worker process, start this worker's Process instance
             print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-            schemat.process = new Process(this.node, this.opts)
+            schemat.process = new WorkerProcess(this.node, this.opts)
         }
         this.running = schemat.process.run()
     }
@@ -347,6 +338,20 @@ export class MasterProcess extends Process {
 
         await this.running
         process.exit(0)
+    }
+}
+
+/**********************************************************************************************************************/
+
+export class WorkerProcess extends Process {
+
+    constructor(node, opts) {
+        super()
+        this.node = node        // Node web object that represents the physical node this process is running on
+        this.opts = opts
+
+        this._print(`registering "message" handler`)
+        process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
     }
 }
 
