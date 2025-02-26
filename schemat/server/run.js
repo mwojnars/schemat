@@ -14,12 +14,13 @@ const WORKERS =  1 //Math.floor(os.cpus().length / 2)
 
 await (async function run() {
     let opts = yargs(hideBin(process.argv))
-        .option('config',  {type: 'string', default: './schemat/config.yaml'})
-        .option('workers', {type: 'number', default: WORKERS})
-        .option('host',    {type: 'string', default: HOST})
-        .option('port',    {type: 'number', default: PORT})
-        .option('node',    {type: 'number'})        // ID of the node object in DB, overrides the content of node.id
-        .option('tcp-port',{type: 'number'})
+        .option('config',    {type: 'string', default: './schemat/config.yaml'})
+        .option('node-file', {type: 'string', default: './schemat/node.id'})
+        .option('workers',   {type: 'number', default: WORKERS})
+        .option('host',      {type: 'string', default: HOST})
+        .option('port',      {type: 'number', default: PORT})
+        .option('node',      {type: 'number'})        // ID of the node object in DB, overrides the content of node.id
+        .option('tcp-port',  {type: 'number'})
         // .option('kafka-port',               {type: 'number'})
         // .option('kafka-controller-port',    {type: 'number'})
         .help().alias('help', 'h')
