@@ -3,9 +3,7 @@ import {DataAccessError, DataConsistencyError} from '../common/errors.js'
 import {WebObject} from '../core/object.js'
 import {Struct} from "../core/catalog.js";
 import {MemoryStorage, JsonIndexStorage, YamlDataStorage} from "./storage.js";
-import {KafkaAgent} from "../server/kafka.js";
-
-// import { Kafka } from 'kafkajs'
+import {Agent} from "../server/agent.js";
 
 
 /**********************************************************************************************************************
@@ -14,7 +12,7 @@ import {KafkaAgent} from "../server/kafka.js";
  **
  */
 
-export class Block extends KafkaAgent {
+export class Block extends Agent {
     /* A continuous subrange of key-value records of a data/index sequence, physically located on a single machine.
        A unit of data replication, distribution and concurrency. Records are arranged by key using byte order.
      */
