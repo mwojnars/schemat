@@ -73,7 +73,7 @@ export class Process {
     agents = new Map()      // AgentState objects for currently running agents, keyed by agent names
     contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `agents`
 
-    async start(opts) {
+    async init(opts) {
         // node = schemat.get_loaded(this_node_ID)
         // return node.activate()     // start the life-loop and all worker processes (servers)
 
@@ -108,10 +108,34 @@ export class Process {
         }
         else {                                  // in the worker process, start this worker's Process instance
             print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-            schemat.process = new WorkerProcess(this.node, opts)
+            schemat.process = new WorkerProcess(this.node)
         }
         this.running = schemat.process.run()
     }
+
+    start() {}
+
+    async stop() {
+        if (schemat.is_closing) return
+        schemat.is_closing = true
+
+        let node = await this.node.reload()
+        let delay = node.refresh_interval
+
+        if (cluster.isPrimary) print(`\nReceived kill signal, shutting down gracefully in approx. ${delay} seconds...`)
+        setTimeout(() => process.exit(1), 2 * delay * 1000)
+
+        if (cluster.isPrimary)
+            await Promise.all(this.workers.map(worker => new Promise((resolve, reject) => {
+                worker.on('exit', resolve)
+                worker.on('error', reject)
+                worker.kill()
+            })))
+
+        await this.running
+        process.exit(0)
+    }
+
 
     _update_contexts() {
         /* Create a new `contexts` object with proxied agent contexts, so that function calls on the contexts are tracked
@@ -349,37 +373,15 @@ export class MasterProcess extends Process {
         worker.on("message", msg => this.node.from_worker(msg))             // let master process accept messages from `worker`
         return worker
     }
-
-    async stop() {
-        if (schemat.is_closing) return
-        schemat.is_closing = true
-
-        let node = await this.node.reload()
-        let delay = node.refresh_interval
-
-        if (cluster.isPrimary) print(`\nReceived kill signal, shutting down gracefully in approx. ${delay} seconds...`)
-        setTimeout(() => process.exit(1), 2 * delay * 1000)
-
-        if (cluster.isPrimary)
-            await Promise.all(this.workers.map(worker => new Promise((resolve, reject) => {
-                worker.on('exit', resolve)
-                worker.on('error', reject)
-                worker.kill()
-            })))
-
-        await this.running
-        process.exit(0)
-    }
 }
 
 /**********************************************************************************************************************/
 
 export class WorkerProcess extends Process {
 
-    constructor(node, opts) {
+    constructor(node) {
         super()
         this.node = node        // Node web object that represents the physical node this process is running on
-        this.opts = opts
 
         this._print(`registering "message" handler`)
         process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
