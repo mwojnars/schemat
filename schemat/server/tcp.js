@@ -137,7 +137,7 @@ export class TCP_Receiver extends Agent {
     }
 
     _handle_message(message) {
-        console.log('TCP_Receiver._handle_message():', message)
+        // console.log('TCP_Receiver._handle_message():', message)
         return schemat.node.handle_tcp(message)
     }
 
