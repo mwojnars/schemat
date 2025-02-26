@@ -41,24 +41,30 @@ export class Block extends Agent {
         if (!this.sequence.is_loaded()) //this.sequence.load()      // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block;
             assert(this.sequence.__meta.loading)                    // it's assumed that .sequence gets fully loaded before any CRUD operation (ins/upd/del) is executed
 
-        let format = this.format
-        let storage_class
+        let storage_class = this._detect_storage_class()
+        this._storage = new storage_class(this.filename, this)
+        return this._reopen()
+        // return this._storage.open()
+    }
 
-        // infer the storage type from the filename extension
+    _detect_storage_class() {
+        let format = this.format
         if (!format) {
+            // infer the storage type from the filename extension
             let extension = this.filename.split('.').pop()
             if (extension === 'yaml') format = 'data-yaml'
             if (extension === 'jl')   format = 'index-jl'
         }
 
-        if      (format === 'data-yaml') storage_class = YamlDataStorage
-        else if (format === 'index-jl')  storage_class = JsonIndexStorage
+        if      (format === 'data-yaml') return YamlDataStorage
+        else if (format === 'index-jl')  return JsonIndexStorage
         else
             throw new Error(`[${this.__id}] unsupported storage type, '${format}', for ${this.filename}`)
+    }
 
-        this._storage = new storage_class(this.filename, this)
+    async __start__() {
+        let storage = new storage_class(this.filename, this)
         return this._reopen()
-        // return this._storage.open()
     }
 
     _reopen() {
