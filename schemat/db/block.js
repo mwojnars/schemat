@@ -43,8 +43,7 @@ export class Block extends Agent {
 
         let storage_class = this._detect_storage_class()
         this._storage = new storage_class(this.filename, this)
-        return this._reopen()
-        // return this._storage.open()
+        return this._reopen(this._storage)
     }
 
     _detect_storage_class() {
@@ -63,16 +62,19 @@ export class Block extends Agent {
     }
 
     async __start__() {
+        let storage_class = this._detect_storage_class()
         let storage = new storage_class(this.filename, this)
-        return this._reopen()
+        await this._reopen(storage)
+        // return storage.open()
+        return {storage}
     }
 
-    _reopen() {
+    _reopen(storage) {
         /* Temporary solution for reloading block data to pull changes written by another worker. */
-        if (!this._storage.dirty) return this._storage.open()
+        if (!storage.dirty) return storage.open()
         let ref = schemat.registry.get_object(this.id)
         if (!ref || this === ref)
-            setTimeout(() => this._reopen(), 1000)
+            setTimeout(() => this._reopen(storage), 1000)
     }
 
     async cmd_get(req)      { return this._storage.get(req.args.key) }
