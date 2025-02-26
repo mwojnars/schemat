@@ -241,7 +241,10 @@ export class Process {
 
 export class MasterProcess extends Process {
     /* Top-level Schemat process running on a given node. Spawns and manages worker processes that execute agents:
-       web server(s), data server(s), load balancer etc.
+       web server(s), data server(s), load balancer etc. On worker nodes, the MasterProcess object is STILL being
+       created, because run.js that creates MasterProcess is re-run for every child process, only the initialization
+       follows a different path and finally assigns a WorkerProcess to schemat.process - so there are actually two
+       Process instances (non-active MasterProcess + active WorkerProcess).
      */
     workers         // array of Node.js Worker instances (child processes); only present in the primary process
     running         // the Promise returned by .run() of the `server`
@@ -257,7 +260,6 @@ export class MasterProcess extends Process {
 
         print('MasterProcess.start() WORKER_ID:', process.env.WORKER_ID || 0)
         await boot_schemat(opts)
-        this.opts = opts
 
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
@@ -283,7 +285,7 @@ export class MasterProcess extends Process {
         }
         else {                                  // in the worker process, start this worker's Process instance
             print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-            schemat.process = new WorkerProcess(this.node, this.opts)
+            schemat.process = new WorkerProcess(this.node, opts)
         }
         this.running = schemat.process.run()
     }
