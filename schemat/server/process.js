@@ -352,7 +352,7 @@ export class WorkerProcess extends Process {
 
     start() {
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-        this._print(`registering "message" handler`)
+        // this._print(`registering "message" handler`)
         process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
         super.start()
     }
