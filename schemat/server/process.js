@@ -76,7 +76,10 @@ export class Process {
     constructor(node, opts) {
         this.node = node        // Node web object that represents the physical node this process is running on
         this.opts = opts
-        if (!this.is_master()) process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
+        if (!this.is_master()) {
+            this._print(`registering "message" handler`)
+            process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
+        }
     }
     
     _update_contexts() {
@@ -102,7 +105,7 @@ export class Process {
     }
 
     _print(...args) {
-        print(`${this.node.id}/#${this.worker_id}:`, ...args)
+        print(`${this.node?.id}/#${this.worker_id}:`, ...args)
     }
 
     get worker_id() {
