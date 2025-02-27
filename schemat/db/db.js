@@ -238,6 +238,7 @@ export class Database extends WebObject {
     async select(id) {
         /* Returns a json string (`data`) or undefined. */
         return this.top_ring.handle(new DataRequest(this, 'select', {id}))
+        // return this.top_ring.select(id)
     }
 
     async update(id, ...edits) {
