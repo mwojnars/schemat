@@ -110,35 +110,5 @@ export class DataRequest {
     }
 
     // assert_valid_id(msg)        { return this.current_ring.assert_valid_id(this.args?.id, msg || `object ID is outside of the valid range for the ring`) }
-
-    // error_access(msg)       { throw new DataAccessError(msg, {id: this.args?.id}) }
-    // error_not_found(msg)    { throw new ObjectNotFound(msg, {id: this.args?.id}) }
-
-
-    /***  forward request to lower/higher rings  ***/
-
-    // forward_down() {
-    //     /* Forward the request to a lower ring if the current ring doesn't contain the requested object ID - during
-    //        select/update/delete operations. It is assumed that args[0] is the object ID.
-    //      */
-    //     // print(`forward_down(${this.command}, ${this.args})`)
-    //     let current = this.current_ring
-    //     if (current) this.push_ring(current)
-    //     let ring = current ? current.lower_ring : this.current_db.top_ring
-    //     if (!ring) throw new ObjectNotFound(null, {id: this.args?.id})
-    //     return ring.handle(this)
-    // }
-    //
-    // forward_save() {
-    //     /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
-    //        Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
-    //        No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
-    //      */
-    //     let ring = this.current_ring
-    //     assert(ring)
-    //     while (ring?.readonly) ring = this.pop_ring()        // go upwards to find the first writable ring
-    //     if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: this.args?.id})
-    //     return ring.handle(this)
-    // }
 }
 
