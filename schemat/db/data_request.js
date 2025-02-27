@@ -117,17 +117,17 @@ export class DataRequest {
 
     /***  forward request to lower/higher rings  ***/
 
-    forward_down() {
-        /* Forward the request to a lower ring if the current ring doesn't contain the requested object ID - during
-           select/update/delete operations. It is assumed that args[0] is the object ID.
-         */
-        // print(`forward_down(${this.command}, ${this.args})`)
-        let current = this.current_ring
-        if (current) this.push_ring(current)
-        let ring = current ? current.lower_ring : this.current_db.top_ring
-        if (!ring) throw new ObjectNotFound(null, {id: this.args?.id})
-        return ring.handle(this)
-    }
+    // forward_down() {
+    //     /* Forward the request to a lower ring if the current ring doesn't contain the requested object ID - during
+    //        select/update/delete operations. It is assumed that args[0] is the object ID.
+    //      */
+    //     // print(`forward_down(${this.command}, ${this.args})`)
+    //     let current = this.current_ring
+    //     if (current) this.push_ring(current)
+    //     let ring = current ? current.lower_ring : this.current_db.top_ring
+    //     if (!ring) throw new ObjectNotFound(null, {id: this.args?.id})
+    //     return ring.handle(this)
+    // }
 
     forward_save() {
         /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.

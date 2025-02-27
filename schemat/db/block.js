@@ -1,5 +1,5 @@
 import {assert, print, T, zip, amap, sleep} from '../common/utils.js'
-import {DataAccessError, DataConsistencyError} from '../common/errors.js'
+import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {WebObject} from '../core/object.js'
 import {Struct} from "../core/catalog.js";
 import {MemoryStorage, JsonIndexStorage, YamlDataStorage} from "./storage.js";
@@ -167,9 +167,20 @@ export class DataBlock extends Block {
         return JSON.stringify(plain)
     }
 
+    _forward_down(req) {
+        /* Forward the request to a lower ring if the current ring doesn't contain the requested object ID - during
+           select/update/delete operations. It is assumed that args[0] is the object ID.
+         */
+        let current = req.current_ring
+        if (current) req.push_ring(current)
+        let ring = current ? current.lower_ring : req.current_db.top_ring
+        if (!ring) throw new ObjectNotFound(null, {id: req.args?.id})
+        return ring.handle(req)
+    }
+
     async cmd_select(req) {
         let data = await this._storage.get(req.args.key)    // JSON string
-        if (!data) return req.forward_down()
+        if (!data) return this._forward_down(req)
         return this._annotate(data)
     }
 
@@ -262,7 +273,7 @@ export class DataBlock extends Block {
          */
         let {id, key, edits} = req.args
         let data = await this._storage.get(key)
-        if (data === undefined) return req.forward_down()
+        if (data === undefined) return this._forward_down(req)
 
         let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
         let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev.clone() to avoid repeated async initialization
@@ -319,7 +330,7 @@ export class DataBlock extends Block {
         let id = this.sequence.decode_key(key)
 
         let data = await this._storage.get(key)
-        if (data === undefined) return req.forward_down()
+        if (data === undefined) return this._forward_down(req)
 
         if (this.ring.readonly)
             // TODO: find the first writable ring upwards from this one and write a tombstone for `id` there
