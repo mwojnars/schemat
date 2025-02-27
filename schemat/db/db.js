@@ -102,14 +102,12 @@ export class Ring extends WebObject {
 
     // shortcut methods for handle() when the ring needs to be accessed directly without a database ...
 
-    async select(id, req = null) {
-        req = req || new DataRequest()
-        return this.data_sequence.handle(req.safe_step(this, 'select', {id}))
+    async select(id) {
+        return this.data_sequence.handle(new DataRequest(this, 'select', {id}))
     }
 
-    async delete(id, req = null) {
-        req = req || new DataRequest()
-        return this.data_sequence.handle(req.safe_step(this, 'delete', {id}))
+    async delete(id) {
+        return this.data_sequence.handle(new DataRequest(this, 'delete', {id}))
     }
 
     async insert(id, data, req = null) {
@@ -237,8 +235,8 @@ export class Database extends WebObject {
 
     async select(id) {
         /* Returns a json string (`data`) or undefined. */
-        return this.top_ring.handle(new DataRequest(this, 'select', {id}))
-        // return this.top_ring.select(id)
+        // return this.top_ring.handle(new DataRequest(this, 'select', {id}))
+        return this.top_ring.select(id)
     }
 
     async update(id, ...edits) {
@@ -287,7 +285,7 @@ export class Database extends WebObject {
            Return true on success, or false if the ID was not found (no modifications are done in such case).
          */
         let id = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id
-        return this.top_ring.handle(new DataRequest(this, 'delete', {id}))
+        return this.top_ring.delete(id)
     }
 
 
