@@ -1,5 +1,5 @@
 import {T, assert, print, merge, fileBaseName, sleep} from '../common/utils.js'
-import {DataAccessError, DatabaseError} from "../common/errors.js"
+import {DataAccessError, DatabaseError, ObjectNotFound} from "../common/errors.js"
 import {WebObject} from "../core/object.js"
 import {DataOperator} from "./sequence.js";
 import {data_schema, Record} from "./records.js";
@@ -210,6 +210,7 @@ export class Database extends WebObject {
     async __init__() {
         if (CLIENT) return
         // print(`initializing database [${this.__id}] ...`)
+        assert(this.top_ring, 'missing rings in the database')
         await this.top_ring.load()
     }
 
@@ -235,8 +236,9 @@ export class Database extends WebObject {
     /***  Data access & modification (CRUD operations)  ***/
 
     async select(id) {
-        // returns a json string (`data`) or undefined
-        return new DataRequest(this, 'select', {id}).forward_down()
+        /* Returns a json string (`data`) or undefined. */
+        return this.top_ring.handle(new DataRequest(this, 'select', {id}))
+        // return new DataRequest(this, 'select', {id}).forward_down()
     }
 
     async update(id, ...edits) {
@@ -247,7 +249,8 @@ export class Database extends WebObject {
                    even without changing the record's data.
          */
         assert(edits.length, 'missing edits')
-        return new DataRequest(this, 'update', {id, edits}).forward_down()
+        return this.top_ring.handle(new DataRequest(this, 'update', {id, edits}))
+        // return new DataRequest(this, 'update', {id, edits}).forward_down()
     }
 
     async insert(data, {ring} = {}) {
@@ -285,7 +288,8 @@ export class Database extends WebObject {
            Return true on success, or false if the ID was not found (no modifications are done in such case).
          */
         let id = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id
-        return new DataRequest(this, 'delete', {id}).forward_down()
+        return this.top_ring.handle(new DataRequest(this, 'delete', {id}))
+        // return new DataRequest(this, 'delete', {id}).forward_down()
     }
 
 
