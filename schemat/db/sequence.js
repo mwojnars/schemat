@@ -77,16 +77,16 @@ export class Sequence extends WebObject {
     }
 
 
-    async put(req) {
-        let block = this._find_block(req.args.key)
+    async put({key, value}) {
+        let block = this._find_block(key)
         if (!block.is_loaded()) block = await block.load()
-        return block.cmd_put(req)
+        return block.cmd_put({key, value})
     }
 
-    async del(req) {
-        let block = this._find_block(req.args.key)
+    async del({key, value}) {
+        let block = this._find_block(key)
         if (!block.is_loaded()) block = await block.load()
-        return block.cmd_del(req)
+        return block.cmd_del({key, value})
     }
 
     async* scan_binary({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {

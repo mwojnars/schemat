@@ -5,7 +5,8 @@ import {BinaryInput} from "../common/binary.js";
 
 
 export class Subsequence {
-    /* A sequence of binary key-value pairs that is physically stored as a subsequence of another Sequence, with keys prefixed
+    /* !! NOT USED right now !!
+       A sequence of binary key-value pairs that is physically stored as a subsequence of another Sequence, with keys prefixed
        by a constant: the ID of the Operator that produced this subsequence. As a thin wrapper around the underlying
        physical (sub)sequence, this class is NOT stored in the DB, and does NOT inherit from Sequence nor WebObject.
      */
@@ -21,16 +22,14 @@ export class Subsequence {
         this.prefix = Subsequence.iid_type.encode_uint(id)
     }
 
-    async put(req) {
-        let prefixed_key = this._prefix_key(req.args.key)
-        let modified_req = req.safe_step(this, 'put', {...req.args, key: prefixed_key})
-        return this.base_sequence.put(modified_req)
+    async put({key, value}) {
+        let prefixed_key = this._prefix_key(key)
+        return this.base_sequence.put({key: prefixed_key, value})
     }
 
-    async del(req) {
-        let prefixed_key = this._prefix_key(req.args.key)
-        let modified_req = req.safe_step(this, 'del', {...req.args, key: prefixed_key})
-        return this.base_sequence.del(modified_req)
+    async del({key, value}) {
+        let prefixed_key = this._prefix_key(key)
+        return this.base_sequence.del({key: prefixed_key, value})
     }
 
     async* scan_binary(opts = {}) {
