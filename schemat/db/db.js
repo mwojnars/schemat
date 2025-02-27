@@ -234,9 +234,9 @@ export class Database extends WebObject {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select(req) {
+    async select(id) {
         // returns a json string (`data`) or undefined
-        return req.make_step(this, 'select').forward_down()
+        return new DataRequest(this, 'select', {id}).forward_down()
     }
 
     async update(id, ...edits) {

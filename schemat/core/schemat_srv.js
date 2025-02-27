@@ -6,7 +6,6 @@ import {AsyncLocalStorage} from 'node:async_hooks'
 import {assert, print, T} from '../common/utils.js'
 import {Schemat} from './schemat.js'
 import {RequestContext} from "../web/request.js";
-import {DataRequest} from "../db/data_request.js";
 
 
 /**********************************************************************************************************************/
@@ -81,10 +80,7 @@ export class ServerSchemat extends Schemat {
         return `import {Client} from "/$/local/schemat/web/client.js"; await new Client("#${id_context}").boot();`
     }
 
-    _select(id) {
-        let req = new DataRequest(null, 'load', {id})
-        return this.db.select(req)
-    }
+    _select(id)  { return this.db.select(id) }
 
 
     /***  Indexes  ***/
