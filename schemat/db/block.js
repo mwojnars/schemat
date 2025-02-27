@@ -183,7 +183,7 @@ export class DataBlock extends Block {
            Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
            No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
          */
-        let ring = req.current_ring
+        let ring = this.ring
         while (ring?.readonly) ring = req.pop_ring()        // go upwards to find the first writable ring
         if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: req.args?.id})
         return ring.handle(req)

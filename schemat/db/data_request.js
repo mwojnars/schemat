@@ -58,7 +58,7 @@ export class DataRequest {
     // they are updated automatically when a new step is added to the trace; these properties include:
 
     // current_db
-    current_ring
+    // current_ring
 
     // current_data
     // current_index
