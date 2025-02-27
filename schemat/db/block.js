@@ -79,12 +79,12 @@ export class Block extends Agent {
 
     async cmd_get({key})      { return this._storage.get(key) }
 
-    async cmd_put({key, value}) {
-        /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
-           No forward of the request to another ring.
-         */
-        return this.put(key, value)
-    }
+    // async cmd_put({key, value}) {
+    //     /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
+    //        No forward of the request to another ring.
+    //      */
+    //     return this.put(key, value)
+    // }
 
     async put(key, value) {
         // let value_old = await this._storage.get(key) || null
@@ -93,7 +93,7 @@ export class Block extends Agent {
         // await this.propagate(key, value_old, value)
     }
 
-    async cmd_del({key, value}) {
+    async del(key, value) {
         if (value === undefined) value = await this._storage.get(key)
         if (value === undefined) return false           // TODO: notify about data inconsistency (there should no missing records)
 

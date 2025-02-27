@@ -80,13 +80,13 @@ export class Sequence extends WebObject {
     async put({key, value}) {
         let block = this._find_block(key)
         if (!block.is_loaded()) block = await block.load()
-        return block.cmd_put({key, value})
+        return block.put(key, value)
     }
 
     async del({key, value}) {
         let block = this._find_block(key)
         if (!block.is_loaded()) block = await block.load()
-        return block.cmd_del({key, value})
+        return block.del(key, value)
     }
 
     async* scan_binary({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
@@ -138,7 +138,7 @@ export class DataSequence extends Sequence {
      */
     static __category = 14
     static role       = 'data'          // for use in ProcessingStep and DataRequest
-    static COMMANDS   = ['get', 'put', 'select', 'insert', 'update', 'save', 'delete']
+    static COMMANDS   = ['get', 'select', 'insert', 'update', 'save', 'delete']
 
     __new__(ring, filename) {
         super.__new__(ring)
