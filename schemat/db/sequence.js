@@ -77,13 +77,13 @@ export class Sequence extends WebObject {
     }
 
 
-    async put({key, value}) {
+    async put(key, value) {
         let block = this._find_block(key)
         if (!block.is_loaded()) block = await block.load()
         return block.put(key, value)
     }
 
-    async del({key, value}) {
+    async del(key, value) {
         let block = this._find_block(key)
         if (!block.is_loaded()) block = await block.load()
         return block.del(key, value)
