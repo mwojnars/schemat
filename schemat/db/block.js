@@ -83,10 +83,10 @@ export class Block extends Agent {
         /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
            No forward of the request to another ring.
          */
-        return this._put(key, value)
+        return this.put(key, value)
     }
 
-    async _put(key, value) {
+    async put(key, value) {
         // let value_old = await this._storage.get(key) || null
         await this._storage.put(key, value)
         this._flush()
@@ -326,7 +326,7 @@ export class DataBlock extends Block {
         let data = obj.__json
         let key = this.sequence.encode_key(id)
 
-        await this._put(key, data)
+        await this.put(key, data)
         await this.propagate_change(key, prev, obj)
 
         data = this._annotate(data)
@@ -360,9 +360,6 @@ export class DataBlock extends Block {
 
         assert(Number(deleted) === 1)
         return Number(deleted)
-
-        // req = req.make_step(this, null, {key, value: data})
-        // return this.cmd_del(req)                    // perform the delete
     }
 
     async erase() {
