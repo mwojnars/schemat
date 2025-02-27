@@ -105,17 +105,17 @@ export class Ring extends WebObject {
 
     async select(id, req = null) {
         req = req || new DataRequest()
-        return this.handle(req.safe_step(this, 'select', {id}))
+        return this.data_sequence.handle(req.safe_step(this, 'select', {id}))
     }
 
     async delete(id, req = null) {
         req = req || new DataRequest()
-        return this.handle(req.safe_step(null, 'delete', {id}))
+        return this.data_sequence.handle(req.safe_step(this, 'delete', {id}))
     }
 
     async insert(id, data, req = null) {
         req = req || new DataRequest()
-        return this.handle(req.safe_step(this, 'insert', {id, data}))
+        return this.data_sequence.handle(req.safe_step(this, 'insert', {id, data}))
     }
 
     async update_full(id_or_obj, data = null, req = null) {
@@ -124,7 +124,7 @@ export class Ring extends WebObject {
         let id  = obj?.id || id_or_obj
         data ??= obj.__data //__json
         let edits = [['overwrite', data]]
-        return this.handle(req.safe_step(this, 'update', {id, edits}))
+        return this.data_sequence.handle(req.safe_step(this, 'update', {id, edits}))
     }
 
 
@@ -268,7 +268,7 @@ export class Database extends WebObject {
             if (!ring) return req.error_access("all ring(s) are read-only")
         }
         if (!ring.writable()) return req.error_access("the ring is read-only")
-        return ring.handle(req)                                     // perform the insert & return newly assigned ID
+        return ring.data_sequence.handle(req)                       // perform the insert & return newly assigned ID
     }
 
     // async update_full(item) {
