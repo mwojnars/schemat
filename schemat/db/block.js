@@ -296,7 +296,7 @@ export class DataBlock extends Block {
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
         if (this.ring.readonly) {                   // can't write the update here in this ring? forward to a higher ring
-            req = req.make_step(this, 'save', {id, key, data: obj.__json})
+            req = req.make_step(this, 'upsave', {id, key, data: obj.__json})
             return this._forward_save(req)
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
@@ -305,7 +305,7 @@ export class DataBlock extends Block {
         return this._save(obj, prev)                // save changes and perform change propagation
     }
 
-    async cmd_save(req) {
+    async cmd_upsave(req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
         let {id, key, data} = req.args
 

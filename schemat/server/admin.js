@@ -55,7 +55,7 @@ export class AdminProcess {
     //
     //     // load the item from its current ID; save a copy under the new ID, this will propagate to a higher ring if `id` can't be stored in `target`
     //     let data = await source.select(id, req)
-    //     await db.save_update(req.safe_step(target, 'save', {id: newid, data}))
+    //     await db.save_update(req.safe_step(target, 'upsave', {id: newid, data}))
     //
     //     if (!sameID) await this._update_references(id, newid)
     //

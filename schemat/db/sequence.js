@@ -138,7 +138,7 @@ export class DataSequence extends Sequence {
      */
     static __category = 14
     static role       = 'data'          // for use in ProcessingStep and DataRequest
-    static COMMANDS   = ['select', 'insert', 'update', 'save', 'delete']
+    static COMMANDS   = ['select', 'insert', 'update', 'upsave', 'delete']
 
     __new__(ring, filename) {
         super.__new__(ring)
