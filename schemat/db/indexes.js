@@ -3,7 +3,6 @@ import {assert, print, T} from "../common/utils.js";
 import {Catalog} from "../core/catalog.js";
 import {BinaryMap} from "../common/binary.js"
 import {Record} from "./records.js";
-import {DataRequest} from "./data_request.js";
 import {Operator} from "./sequence.js";
 
 
@@ -51,16 +50,13 @@ export class IndexOperator extends DerivedOperator {
 
         this._prune_plan(del_records, put_records)
 
-        // TODO: request object, only used when another propagation step is to be done
-        let req = new DataRequest(this, 'change')
-
         // delete old records
         for (let [key, value] of del_records || [])     // TODO: `key` may be duplicated (repeated values), remove duplicates beforehand
-            sequence.del(req.safe_step(this, 'del', {key})) //|| print(`deleted [${key}]`)
+            sequence.del({key, value}) //|| print(`deleted [${key}]`)
 
         // (over)write new records
         for (let [key, value] of put_records || [])     // TODO: `key` may be duplicated, keep the *first* one only
-            sequence.put(req.safe_step(this, 'put', {key, value})) //|| print(`put [${key}]`)
+            sequence.put({key, value}) //|| print(`put [${key}]`)
     }
 
     _make_records(key, entity) {
