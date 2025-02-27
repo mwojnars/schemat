@@ -96,7 +96,10 @@ export class DataRequest {
 
         if (step.role) this[`current_${step.role}`] = actor
         if (command) this.command = command
-        if (args) this.args = args
+        if (args) {
+            this.args = args
+            for (let key in args) this[key] = args[key]
+        }
 
         return this
     }

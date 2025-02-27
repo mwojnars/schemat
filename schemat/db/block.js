@@ -94,9 +94,7 @@ export class Block extends Agent {
         // await this.propagate(key, value_old, value)
     }
 
-    async cmd_del(req) {
-        let {key, value} = req.args                     // `value` is needed for change calculation & propagation
-
+    async cmd_del({key, value}) {
         if (value === undefined) value = await this._storage.get(key)
         if (value === undefined) return false           // TODO: notify about data inconsistency (there should no missing records)
 
@@ -176,12 +174,11 @@ export class DataBlock extends Block {
         return this._annotate(data)
     }
 
-    async cmd_insert(req) {
+    async cmd_insert({id, data}) {
         let ring = this.ring
         assert(ring?.is_loaded())
 
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
-        let {id, data} = req.args
         let batch = (data instanceof Array)
 
         // if (typeof data === 'string') data = JSONx.parse(data)
