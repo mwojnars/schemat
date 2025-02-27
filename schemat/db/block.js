@@ -1,4 +1,4 @@
-import {assert, print, T, zip, amap} from '../common/utils.js'
+import {assert, print, T, zip, amap, sleep} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError} from '../common/errors.js'
 import {WebObject} from '../core/object.js'
 import {Struct} from "../core/catalog.js";
@@ -69,12 +69,12 @@ export class Block extends Agent {
         return {storage}
     }
 
-    _reopen(storage) {
+    async _reopen(storage) {
         /* Temporary solution for reloading block data to pull changes written by another worker. */
         if (!storage.dirty) return storage.open()
         let ref = schemat.registry.get_object(this.id)
         if (!ref || this === ref)
-            setTimeout(() => this._reopen(storage), 1000)
+            return sleep(1000).then(() => this._reopen(storage))
     }
 
     async cmd_get(req)      { return this._storage.get(req.args.key) }
