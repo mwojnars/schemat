@@ -20,7 +20,7 @@ export class Ring extends WebObject {
      */
 
     static __category = 12  // ID of Ring category in the kernel
-    static role = 'ring'    // Actor.role, for use in requests (ProcessingStep, DataRequest)
+    static role = 'ring'    // Actor.role, for use in requests (DataRequest)
 
     data_sequence           // DataSequence containing all primary data of this ring
 
@@ -113,6 +113,17 @@ export class Ring extends WebObject {
     async insert(id, data, req = null) {
         req = req || new DataRequest()
         return this.data_sequence.handle(req.safe_step(this, 'insert', {id, data}))
+    }
+
+    async update(id, ...edits) {
+        /* Apply `edits` to an item's data and store under the `id` in top-most ring that allows writing this particular `id`.
+           Return an {id, data} record as written to the data block.
+           FUTURE: `edits` may perform tests or create side effects, for example, to check for a specific item version
+                   to apply the edits to; or to perform a sensitive operation inside the record-level exclusive lock,
+                   even without changing the record's data.
+         */
+        assert(edits.length, 'missing edits')
+        return this.data_sequence.handle(new DataRequest(this, 'update', {id, edits}))
     }
 
     async update_full(id_or_obj, data = null, req = null) {
@@ -235,7 +246,6 @@ export class Database extends WebObject {
 
     async select(id) {
         /* Returns a json string (`data`) or undefined. */
-        // return this.top_ring.handle(new DataRequest(this, 'select', {id}))
         return this.top_ring.select(id)
     }
 
@@ -246,16 +256,13 @@ export class Database extends WebObject {
                    to apply the edits to; or to perform a sensitive operation inside the record-level exclusive lock,
                    even without changing the record's data.
          */
-        assert(edits.length, 'missing edits')
-        return this.top_ring.handle(new DataRequest(this, 'update', {id, edits}))
+        return this.top_ring.update(id, ...edits)
     }
 
     async insert(data, {ring} = {}) {
         /* Find the top-most writable ring and insert `data` as a new entry there. Return {id, data} record.
            `ring` is an optional name of a ring to use.
          */
-        // let req = new DataRequest(this, 'insert', {data})
-
         if (typeof ring === 'string') {                             // find the ring by name
             let name = ring
             ring = this.find_ring(name)
@@ -271,7 +278,6 @@ export class Database extends WebObject {
         // if (!ring.writable()) return req.error_access("the ring is read-only")
 
         return ring.insert(null, data)
-        // return ring.data_sequence.handle(req)
     }
 
     // async update_full(item) {
