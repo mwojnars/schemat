@@ -1,5 +1,5 @@
 import {T, assert, print, merge, fileBaseName, sleep} from '../common/utils.js'
-import {DatabaseError} from "../common/errors.js"
+import {DataAccessError, DatabaseError} from "../common/errors.js"
 import {WebObject} from "../core/object.js"
 import {DataOperator} from "./sequence.js";
 import {data_schema, Record} from "./records.js";
@@ -255,20 +255,24 @@ export class Database extends WebObject {
         /* Find the top-most writable ring and insert `data` as a new entry there. Return {id, data} record.
            `ring` is an optional name of a ring to use.
          */
-        // if (!T.isString(data)) data = data.dump?.() || JSONx.stringify(data)
-        let req = new DataRequest(this, 'insert', {data})
+        // let req = new DataRequest(this, 'insert', {data})
 
         if (typeof ring === 'string') {                             // find the ring by name
             let name = ring
             ring = this.find_ring(name)
-            if (!ring) return req.error_access(`target ring not found: '${name}'`)
+            if (!ring) throw new DataAccessError(`target ring not found: '${name}'`)
+            // if (!ring) return req.error_access(`target ring not found: '${name}'`)
         }
         if (!ring) {
             ring = this.rings_reversed.find(r => r.writable())      // find the first writable ring
-            if (!ring) return req.error_access("all ring(s) are read-only")
+            if (!ring) throw new DataAccessError("all ring(s) are read-only")
+            // if (!ring) return req.error_access("all ring(s) are read-only")
         }
-        if (!ring.writable()) return req.error_access("the ring is read-only")
-        return ring.data_sequence.handle(req)                       // perform the insert & return newly assigned ID
+        if (!ring.writable()) throw new DataAccessError("the ring is read-only")
+        // if (!ring.writable()) return req.error_access("the ring is read-only")
+
+        return ring.insert(null, data)
+        // return ring.data_sequence.handle(req)
     }
 
     // async update_full(item) {
