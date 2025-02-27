@@ -77,13 +77,12 @@ export class Block extends Agent {
             return sleep(1000).then(() => this._reopen(storage))
     }
 
-    async cmd_get(req)      { return this._storage.get(req.args.key) }
+    async cmd_get({key})      { return this._storage.get(key) }
 
-    async cmd_put(req) {
+    async cmd_put({key, value}) {
         /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
            No forward of the request to another ring.
          */
-        let {key, value} = req.args                     // handle 'value' arg instead of 'data'?
         return this._put(key, value)
     }
 
@@ -341,10 +340,10 @@ export class DataBlock extends Block {
         // return this.cmd_del(req)                    // perform the delete
     }
 
-    async erase(req) {
+    async erase() {
         /* Remove all records from this sequence; open() should be called first. */
         this._autoincrement = 1
-        return super.erase(req)
+        return super.erase()
     }
 
     async propagate_change(key, obj_old = null, obj_new = null) {
