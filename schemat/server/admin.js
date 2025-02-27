@@ -106,7 +106,7 @@ export class AdminProcess {
             new_id = (await ring.insert(new_id, obj.__json)).id
             await ring.flush()
             await this._update_references(id, new_id)
-            await db.delete(id)
+            await db.top_ring.delete(id)
 
             print(`...reinserted object [${id}] as [${new_id}]`)
             new_id = undefined

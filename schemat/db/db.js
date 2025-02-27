@@ -285,14 +285,14 @@ export class Database extends WebObject {
     //     let data = item.__json
     //     return this.update(item.__id, ['overwrite', data])
     // }
-
-    async delete(obj_or_id) {
-        /* Find and delete the top-most occurrence of a web object, or ID.
-           Return true on success, or false if the ID was not found (no modifications are done in such case).
-         */
-        let id = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id
-        return this.top_ring.delete(id)
-    }
+    //
+    // async delete(obj_or_id) {
+    //     /* Find and delete the top-most occurrence of a web object, or ID.
+    //        Return true on success, or false if the ID was not found (no modifications are done in such case).
+    //      */
+    //     let id = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id
+    //     return this.top_ring.delete(id)
+    // }
 
 
     /***  Indexes  ***/

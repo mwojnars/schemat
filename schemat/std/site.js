@@ -189,7 +189,7 @@ export class Site extends WebObject {
     }
 
     'action.delete_object'(id) {
-        return this.database.delete(id)
+        return this.top_ring.delete(id)
     }
 
 
