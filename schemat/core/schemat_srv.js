@@ -80,7 +80,7 @@ export class ServerSchemat extends Schemat {
         return `import {Client} from "/$/local/schemat/web/client.js"; await new Client("#${id_context}").boot();`
     }
 
-    _select(id)  { return this.db.select(id) }
+    _select(id)  { return this.db.top_ring.select(id) }
 
 
     /***  Indexes  ***/

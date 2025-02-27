@@ -42,6 +42,7 @@ export class Site extends WebObject {
     eval_allowed
     logger
 
+    get top_ring() { return this.database.top_ring }
 
     async __init__()  {
         this._modules_cache = new Map()
@@ -184,7 +185,7 @@ export class Site extends WebObject {
         /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
            of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
          */
-        return this.database.update(id, ...edits)
+        return this.top_ring.update(id, ...edits)
     }
 
     'action.delete_object'(id) {

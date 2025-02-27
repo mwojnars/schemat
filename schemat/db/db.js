@@ -244,20 +244,20 @@ export class Database extends WebObject {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select(id) {
-        /* Returns a json string (`data`) or undefined. */
-        return this.top_ring.select(id)
-    }
-
-    async update(id, ...edits) {
-        /* Apply `edits` to an item's data and store under the `id` in top-most ring that allows writing this particular `id`.
-           Return an {id, data} record as written to the data block.
-           FUTURE: `edits` may perform tests or create side effects, for example, to check for a specific item version
-                   to apply the edits to; or to perform a sensitive operation inside the record-level exclusive lock,
-                   even without changing the record's data.
-         */
-        return this.top_ring.update(id, ...edits)
-    }
+    // async select(id) {
+    //     /* Returns a json string (`data`) or undefined. */
+    //     return this.top_ring.select(id)
+    // }
+    //
+    // async update(id, ...edits) {
+    //     /* Apply `edits` to an item's data and store under the `id` in top-most ring that allows writing this particular `id`.
+    //        Return an {id, data} record as written to the data block.
+    //        FUTURE: `edits` may perform tests or create side effects, for example, to check for a specific item version
+    //                to apply the edits to; or to perform a sensitive operation inside the record-level exclusive lock,
+    //                even without changing the record's data.
+    //      */
+    //     return this.top_ring.update(id, ...edits)
+    // }
 
     async insert(data, {ring} = {}) {
         /* Find the top-most writable ring and insert `data` as a new entry there. Return {id, data} record.
