@@ -316,14 +316,17 @@ export class DataBlock extends Block {
            Log an error if the ring is read-only and the `id` is present here.
          */
         let {key} = req.args
+        let id = this.sequence.decode_key(key)
+
         let data = await this._storage.get(key)
         if (data === undefined) return req.forward_down()
 
-        if (this.ring.readonly) return req.error_access("cannot remove the item, the ring is read-only")
+        if (this.ring.readonly)
+            // TODO: find the first writable ring upwards from this one and write a tombstone for `id` there
+            throw new DataAccessError("cannot remove the item, the ring is read-only", {id})
+            // return req.error_access("cannot remove the item, the ring is read-only")
 
-        let id = this.sequence.decode_key(key)
         let obj = await WebObject.from_data(id, data, {activate: false})
-
         let deleted = this._storage.del(key)
         if (!deleted) return 0
 

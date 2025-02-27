@@ -111,8 +111,8 @@ export class DataRequest {
 
     // assert_valid_id(msg)        { return this.current_ring.assert_valid_id(this.args?.id, msg || `object ID is outside of the valid range for the ring`) }
 
-    error_access(msg)       { throw new DataAccessError(msg, {id: this.args?.id}) }
-    error_not_found(msg)    { throw new ObjectNotFound(msg, {id: this.args?.id}) }
+    // error_access(msg)       { throw new DataAccessError(msg, {id: this.args?.id}) }
+    // error_not_found(msg)    { throw new ObjectNotFound(msg, {id: this.args?.id}) }
 
 
     /***  forward request to lower/higher rings  ***/
@@ -125,7 +125,8 @@ export class DataRequest {
         let current = this.current_ring
         if (current) this.push_ring(current)
         let ring = current ? current.lower_ring : this.current_db.top_ring
-        return ring ? ring.handle(this) : this.error_not_found()
+        if (!ring) throw new ObjectNotFound(null, {id: this.args?.id})
+        return ring.handle(this)
     }
 
     forward_save() {
@@ -136,8 +137,8 @@ export class DataRequest {
         let ring = this.current_ring
         assert(ring)
         while (ring?.readonly) ring = this.pop_ring()        // go upwards to find the first writable ring
-        return ring ? ring.handle(this)
-            : this.error_access(`can't save an updated object, either the ring(s) are read-only or the ID is outside the ring's valid ID range`)
+        if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: this.args?.id})
+        return ring.handle(this)
     }
 }
 
