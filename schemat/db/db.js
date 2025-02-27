@@ -238,7 +238,6 @@ export class Database extends WebObject {
     async select(id) {
         /* Returns a json string (`data`) or undefined. */
         return this.top_ring.handle(new DataRequest(this, 'select', {id}))
-        // return new DataRequest(this, 'select', {id}).forward_down()
     }
 
     async update(id, ...edits) {
@@ -250,7 +249,6 @@ export class Database extends WebObject {
          */
         assert(edits.length, 'missing edits')
         return this.top_ring.handle(new DataRequest(this, 'update', {id, edits}))
-        // return new DataRequest(this, 'update', {id, edits}).forward_down()
     }
 
     async insert(data, {ring} = {}) {
@@ -289,7 +287,6 @@ export class Database extends WebObject {
          */
         let id = T.isNumber(obj_or_id) ? obj_or_id : obj_or_id.__id
         return this.top_ring.handle(new DataRequest(this, 'delete', {id}))
-        // return new DataRequest(this, 'delete', {id}).forward_down()
     }
 
 
