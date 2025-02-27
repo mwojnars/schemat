@@ -180,7 +180,7 @@ export class Database extends WebObject {
        This class is only instantiated on the server, while the client uses a ClientDB proxy instead.
      */
     static __category = 11  // ID of Database category
-    static role = 'db'      // for use in ProcessingStep and DataRequest
+    // static role = 'db'      // for use in ProcessingStep and DataRequest
 
     // properties:
     top_ring

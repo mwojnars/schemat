@@ -16,7 +16,7 @@ export class Block extends Agent {
     /* A continuous subrange of key-value records of a data/index sequence, physically located on a single machine.
        A unit of data replication, distribution and concurrency. Records are arranged by key using byte order.
      */
-    static role = 'block'   // for use in ProcessingStep and DataRequest
+    // static role = 'block'   // for use in ProcessingStep and DataRequest
 
     sequence                // parent sequence
     filename                // path to a local file or folder on the worker node where this block is stored

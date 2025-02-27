@@ -56,7 +56,8 @@ export class DataRequest {
 
     // `current_[ROLE]` properties contain the last actor of a given type in the `trace`;
     // they are updated automatically when a new step is added to the trace; these properties include:
-    current_db
+
+    // current_db
     current_ring
 
     // current_data
