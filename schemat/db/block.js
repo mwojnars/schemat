@@ -77,16 +77,12 @@ export class Block extends Agent {
             return sleep(1000).then(() => this._reopen(storage))
     }
 
-    async cmd_get({key})      { return this._storage.get(key) }
-
-    // async cmd_put({key, value}) {
-    //     /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
-    //        No forward of the request to another ring.
-    //      */
-    //     return this.put(key, value)
-    // }
+    // async get({key})   { return this._storage.get(key) }
 
     async put(key, value) {
+        /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
+           No forward of the request to another ring.
+         */
         // let value_old = await this._storage.get(key) || null
         await this._storage.put(key, value)
         this._flush()
