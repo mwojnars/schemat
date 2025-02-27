@@ -128,17 +128,17 @@ export class DataRequest {
     //     if (!ring) throw new ObjectNotFound(null, {id: this.args?.id})
     //     return ring.handle(this)
     // }
-
-    forward_save() {
-        /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
-           Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
-           No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
-         */
-        let ring = this.current_ring
-        assert(ring)
-        while (ring?.readonly) ring = this.pop_ring()        // go upwards to find the first writable ring
-        if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: this.args?.id})
-        return ring.handle(this)
-    }
+    //
+    // forward_save() {
+    //     /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
+    //        Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
+    //        No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
+    //      */
+    //     let ring = this.current_ring
+    //     assert(ring)
+    //     while (ring?.readonly) ring = this.pop_ring()        // go upwards to find the first writable ring
+    //     if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: this.args?.id})
+    //     return ring.handle(this)
+    // }
 }
 
