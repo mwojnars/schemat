@@ -153,7 +153,7 @@ export class DataSequence extends Sequence {
         return data_schema.decode_key(key)[0]
     }
 
-    async handle(req /*DataRequest*/) {
+    async handle(req /*DataRequest*/, ...args) {
         /* Handle a request for data access/modification. The call is redirected to [req.command] method
            of the block containing a given item ID or record key.
          */
