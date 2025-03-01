@@ -268,12 +268,33 @@
       "@": 1039
     webserver:
       "@": 1023
+    block_1010:
+      "@": 1010
+    block_1015:
+      "@": 1015
+    block_1026:
+      "@": 1026
+    block_1029:
+      "@": 1029
+    block_1030:
+      "@": 1030
+    block_1032:
+      "@": 1032
+    block_1033:
+      "@": 1033
     "@": schemat:Catalog
   master_agents_running:
     - tcp
     - tcp_receiver
   agents_running:
     - webserver
+    - block_1010
+    - block_1015
+    - block_1026
+    - block_1029
+    - block_1030
+    - block_1032
+    - block_1033
   __category:
     "@": 21
 - __id: 1025
