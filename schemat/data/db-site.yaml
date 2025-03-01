@@ -133,11 +133,13 @@
   __category:
     "@": 5
 - __id: 1010
-  __category:
-    "@": 19
   sequence:
     "@": 1017
   filename: ./schemat/data/db-app_02.yaml
+  __node:
+    "@": 1024
+  __category:
+    "@": 19
 - __id: 1011
   operator:
     "@": 23
@@ -176,6 +178,8 @@
   filename: ./schemat/data/kernel.yaml
   format: data-yaml
   insert_mode: compact
+  __node:
+    "@": 1024
   __category:
     "@": 19
 - __id: 1016
@@ -281,6 +285,8 @@
     "@": 1013
   filename: ./schemat/data/kernel.index.jl
   format: index-jl
+  __node:
+    "@": 1024
   __category:
     "@": 19
 - __id: 1027
@@ -301,6 +307,8 @@
   sequence:
     "@": 1017
   filename: ./schemat/data/db-app.yaml
+  __node:
+    "@": 1024
   __category:
     "@": 19
 - __id: 1030
@@ -308,6 +316,8 @@
     "@": 1018
   filename: ./schemat/data/db-app.index.jl
   format: index-jl
+  __node:
+    "@": 1024
   __category:
     "@": 19
 - __id: 1031
@@ -320,6 +330,8 @@
   filename: ./schemat/data/db-site.yaml
   format: data-yaml
   insert_mode: compact
+  __node:
+    "@": 1024
   __category:
     "@": 19
 - __id: 1033
@@ -327,6 +339,8 @@
     "@": 1028
   filename: ./schemat/data/db-site.index.jl
   format: index-jl
+  __node:
+    "@": 1024
   __category:
     "@": 19
 - __id: 1034
