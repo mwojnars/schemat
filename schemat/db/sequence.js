@@ -40,8 +40,8 @@ export class Sequence extends WebObject {
 
         if (CLIENT) return                                  // don't initialize internals when on client
         if (!this.ring) return                              // don't initialize internals when not yet assigned to a ring
-        if (!this.ring.is_loaded()) //this.ring.load()      // intentionally not awaited to avoid deadlocks
-            assert(this.ring.__meta.loading)
+        if (!this.ring.is_loaded()) this.ring.load()        // intentionally not awaited to avoid deadlocks
+            // assert(this.ring.__meta.loading)
 
         // doing block.load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
         // doing the same later may cause infinite recursion, because the load() request for a block may be directed
