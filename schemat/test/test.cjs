@@ -43,8 +43,8 @@ function check_internet(fail, retries = 2) {
 
 const NODE = 1024           // ID of the Node object that should be loaded upon start up  ... 1036 is missing in Demo database
 const HOST = '127.0.0.1'
-const PORT = 2999
-const TCP_PORT = 5821
+const PORT = 2998
+const TCP_PORT = 5828
 const DOMAIN = `http://${HOST}:${PORT}`
 
 
@@ -122,8 +122,8 @@ async function wait_for_port_release(port, retries = 10, delay_ms = 1000) {
 }
 
 async function start_server(node, port, tcp_port, args = '') {
-    await wait_for_port_release(port)
-    let opts = `--node ${NODE} --port ${port} --tcp-port ${TCP_PORT} ${args}`
+    await wait_for_port_release(port)           // wait for port to be released before starting new server
+    let opts = `--node ${node} --port ${port} --tcp-port ${tcp_port} ${args}`
 
     // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
     // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
@@ -137,12 +137,14 @@ async function start_server(node, port, tcp_port, args = '') {
         })
 }
 
-function server_setup({node = NODE, port = PORT, tcp_port = TCP_PORT, args = ''} = {}) {
-    let server, browser, page, messages
+function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PORT, args = ''} = {}) {
+    let server, servers = [], browser, page, messages
 
     before(async function() {
-        // wait for port to be released before starting new server
-        server = await start_server(node, port, tcp_port, args)
+        nodes ??= [node]
+
+        for (let node of nodes) servers.push(await start_server(node, port++, tcp_port++, args))
+        server = servers[0]
 
         // pipe output in real-time
         server.stdout.pipe(process.stdout)
@@ -193,7 +195,7 @@ function server_setup({node = NODE, port = PORT, tcp_port = TCP_PORT, args = ''}
         this.timeout(30000)
         await browser?.close()
 
-        if (server) {
+        for (let server of servers) {
             const server_exit = new Promise(resolve => {
                 server.on('exit', () => resolve())
             })
@@ -204,7 +206,7 @@ function server_setup({node = NODE, port = PORT, tcp_port = TCP_PORT, args = ''}
         }
     })
 
-    return () => ({server, browser, page, messages})
+    return () => ({server, servers, browser, page, messages})
 }
 
 
@@ -228,7 +230,7 @@ describe('Schemat Tests', function () {
 
     describe('Web Application', function () {
 
-        let setup = server_setup()
+        let setup = server_setup({nodes: [1024, 1036]})
         let server, browser, page, messages
 
         before(async function () {({server, browser, page, messages} = setup())})
