@@ -110,6 +110,7 @@ export class TCP_Receiver extends Agent {
             let processed_offset = 0
             let msg_parser = new ChunkParser(async json => {
                 try {
+                    print(`TCP message:`, json)
                     let {id, msg} = JSONx.parse(json)
                     let result
                     if (id > processed_offset) {

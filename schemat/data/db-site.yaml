@@ -272,16 +272,10 @@
       "@": 1010
     block_1015:
       "@": 1015
-    block_1026:
-      "@": 1026
     block_1029:
       "@": 1029
-    block_1030:
-      "@": 1030
     block_1032:
       "@": 1032
-    block_1033:
-      "@": 1033
     "@": schemat:Catalog
   master_agents_running:
     - tcp
@@ -290,11 +284,8 @@
     - webserver
     - block_1010
     - block_1015
-    - block_1026
     - block_1029
-    - block_1030
     - block_1032
-    - block_1033
   __category:
     "@": 21
 - __id: 1025
@@ -307,7 +298,7 @@
   filename: ./schemat/data/kernel.index.jl
   format: index-jl
   __node:
-    "@": 1024
+    "@": 1036
   __category:
     "@": 19
 - __id: 1027
@@ -338,7 +329,7 @@
   filename: ./schemat/data/db-app.index.jl
   format: index-jl
   __node:
-    "@": 1024
+    "@": 1036
   __category:
     "@": 19
 - __id: 1031
@@ -361,7 +352,7 @@
   filename: ./schemat/data/db-site.index.jl
   format: index-jl
   __node:
-    "@": 1024
+    "@": 1036
   __category:
     "@": 19
 - __id: 1034
@@ -396,6 +387,12 @@
       "@": 1023
     logger:
       "@": 1037
+    block_1026:
+      "@": 1026
+    block_1030:
+      "@": 1030
+    block_1033:
+      "@": 1033
     "@": schemat:Catalog
   master_agents_running:
     - tcp
@@ -403,6 +400,9 @@
   agents_running:
     - webserver
     - logger
+    - block_1026
+    - block_1030
+    - block_1033
   tcp_port: 5829
   __category:
     "@": 21
