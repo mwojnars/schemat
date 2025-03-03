@@ -123,6 +123,7 @@ export class Node extends Agent {
     handle_rpc([target_id, method, args]) {
         /* On master process, handle an incoming RPC message from another node that's addressed to the agent `target_id` running on this node.
            (??) In a rare case, the agent may have moved to another node in the meantime and the message has to be forwarded.
+           `args` are JSONx-encoded.
          */
         // print("handle_rpc():", [target_id, method, args])
 
@@ -133,6 +134,8 @@ export class Node extends Agent {
         let {agent, context} = state
         let func = agent.__self[`remote.${method}`]
         if (!func) throw new Error(`agent [${target_id}] has no RPC endpoint "${method}"`)
+
+        args = JSONx.decode(args)
 
         return state.track_call(func.call(agent, context, ...args))
     }
