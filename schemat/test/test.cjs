@@ -291,7 +291,7 @@ describe('Schemat Tests', function () {
 
         it('rebuild_indexes', async function () {
             await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main')
-            await delay(100)
+            await delay(200)
             // let done = await page.evaluate(async () => {
             //     let db = await schemat.db.load()
             //     return db.action.rebuild_indexes()
@@ -303,6 +303,7 @@ describe('Schemat Tests', function () {
         it('Directory', async function () {
             await test_page(page, `${DOMAIN}/$/sys/Directory`, '#page-main',
                 ['Directory', 'nested containers', 'file system', 'containers.js:Directory'])
+            await delay(300)
         })
 
         it('Varia object', async function () {
