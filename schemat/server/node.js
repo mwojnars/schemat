@@ -67,7 +67,7 @@ export class Node extends Agent {
         assert(this.is_master())
 
         if (type === 'RPC') {
-            print("from_worker():", msg)
+            // print("from_worker():", msg)
 
             // locate the cluster node where the target object is deployed
             let [target_id] = msg
@@ -101,7 +101,7 @@ export class Node extends Agent {
 
             // find out which process (worker >= 1 or master = 0), has the `target_id` agent deployed
             let process_id = this.agent_locations.get(target_id)
-            print("handle_tcp(): process", process_id)
+            // print("handle_tcp(): process", process_id)
 
             if (process_id === undefined) throw new Error(`agent [${target_id}] not found on this node`)
             if (process_id !== this.worker_id) {
@@ -116,7 +116,7 @@ export class Node extends Agent {
 
     from_master([type, ...msg]) {
         assert(type === 'RPC')
-        print(`#${this.worker_id} from_master():`, [type, ...msg])
+        // print(`#${this.worker_id} from_master():`, [type, ...msg])
         return this.handle_rpc(msg)
     }
 
