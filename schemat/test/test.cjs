@@ -121,26 +121,28 @@ async function wait_for_port_release(port, retries = 10, delay_ms = 1000) {
         }
 }
 
-function server_setup(port, args = '') {
+async function start_server(node, port, tcp_port, args = '') {
+    await wait_for_port_release(port)
+    let opts = `--node ${NODE} --port ${port} --tcp-port ${TCP_PORT} ${args}`
+
+    // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
+    // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
+    // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
+    return exec(`exec node --experimental-vm-modules schemat/server/run.js ${opts}`,
+        {maxBuffer: 1024 * 1024 * 10},  // capture full output, 10MB buffer
+        (error, stdout, stderr) => {
+            if (error) console.error('\nSchemat server error:', error)
+            if (stderr) console.error('\nSchemat server stderr:', '\n' + stderr)
+            if (stdout) console.log('\nSchemat server stdout:', '\n' + stdout)
+        })
+}
+
+function server_setup({node = NODE, port = PORT, tcp_port = TCP_PORT, args = ''} = {}) {
     let server, browser, page, messages
 
     before(async function() {
         // wait for port to be released before starting new server
-        await wait_for_port_release(port)
-        let opts = `--port ${port} --tcp-port ${TCP_PORT} --node ${NODE} ${args}`
-
-        // start the server...
-
-        // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
-        // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
-        // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
-        server = exec(`exec node --experimental-vm-modules schemat/server/run.js ${opts}`,
-            {maxBuffer: 1024 * 1024 * 10},  // capture full output, 10MB buffer
-            (error, stdout, stderr) => {
-                if (error) console.error('\nSchemat server error:', error)
-                if (stderr) console.error('\nSchemat server stderr:', '\n' + stderr)
-                if (stdout) console.log('\nSchemat server stdout:', '\n' + stdout)
-            })
+        server = await start_server(node, port, tcp_port, args)
 
         // pipe output in real-time
         server.stdout.pipe(process.stdout)
@@ -226,7 +228,7 @@ describe('Schemat Tests', function () {
 
     describe('Web Application', function () {
 
-        let setup = server_setup(PORT)
+        let setup = server_setup()
         let server, browser, page, messages
 
         before(async function () {({server, browser, page, messages} = setup())})
@@ -352,7 +354,7 @@ describe('Schemat Tests', function () {
 
     describe('Demo 01', function () {
 
-        let setup = server_setup(PORT, "--config ./demo/01_books/config.yaml")
+        let setup = server_setup({args: "--config ./demo/01_books/config.yaml"})
         let server, browser, page, messages
 
         before(async function () {({server, browser, page, messages} = setup())})
