@@ -862,12 +862,12 @@ export class WebObject {
     __edited__(prev, curr) {}
         /* Post-processing after the __data was edited on the server during update of the record in DB. */
 
-    // __setup__(id) {}
-    //     /* One-time global setup after this object was created (on client or server) AND is pending insertion to DB (on server),
-    //        BUT already has a provisional ID assigned (`id`). Typically, this method may insert related sub-objects.
-    //        Can be declared async in subclasses or return a Promise.
-    //      */
-    //
+    __setup__(id) {}
+        /* One-time setup of the object launched on server when the object is being inserted to a data block
+           and already has a provisional ID assigned (`id`). Typically, this method creates related sub-objects
+           and creates links to/from itself and these objects. May return a Promise in subclasses.
+         */
+
     // __done__() {}
     //     /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 

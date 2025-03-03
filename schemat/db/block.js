@@ -230,6 +230,9 @@ export class DataBlock extends Block {
         // the object must be instantiated for validation, but is not activated (for performance): neither __init__() nor _activate() is executed
         let obj = await WebObject.from_data(id, data, {mutable: true, activate: false})
 
+        let setup = obj.__setup__(id)
+        if (setup instanceof Promise) await setup
+
         obj.__data.delete('__ver')          // just in case, it's forbidden to pass __ver from the outside
         obj.validate()                      // data validation
         obj._bump_version()                 // set __ver=1 if needed
