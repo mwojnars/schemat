@@ -94,7 +94,9 @@ export class Node extends Agent {
     /* incoming message processing */
 
     handle_tcp([type, ...msg]) {
-        /* On master process, handle a message received via TCP from another node or directly from this node via a shortcut. */
+        /* On master process, handle a message received via TCP from another node or directly from this node via a shortcut.
+           `msg` is a plain object/array whose elements may still need to be JSONx-decoded.
+         */
         assert(this.is_master())
         if (type === 'RPC') {
             let [target_id] = msg

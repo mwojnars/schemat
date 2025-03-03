@@ -73,9 +73,10 @@ export class TCP_Sender extends Agent {
         }
 
         let send = (msg, address) => {
+            /* `msg` is a plain object/array whose elements have to be JSONx-encoded already if needed. */
             let socket = sockets.get(address) || _connect(address)
             let id = message_id++
-            let json = JSONx.stringify({id, msg}) + '\n'
+            let json = JSON.stringify({id, msg}) + '\n'
 
             pending.set(id, {message: json, retries: 0, address})
             socket.write(json)
@@ -111,7 +112,7 @@ export class TCP_Receiver extends Agent {
             let msg_parser = new ChunkParser(async json => {
                 try {
                     print(`TCP message:`, json)
-                    let {id, msg} = JSONx.parse(json)
+                    let {id, msg} = JSON.parse(json)
                     let result
                     if (id > processed_offset) {
                         processed_offset = id
