@@ -1,11 +1,15 @@
 - __id: 1001
-  name: main-site
+  name: Bookstore (demo site)
   info: The "site" object is the main entry point to the entire application. It
     contains top-level configuration of the website, cluster, database, URL
     routes etc.
   root:
     "@": 1007
   global:
+    AuthorCategory:
+      "@": 5001
+    BookCategory:
+      "@": 5000
     "@": schemat:Catalog
   default_path: /$/id
   webserver:
@@ -39,7 +43,7 @@
   __category:
     "@": 12
 - __id: 1004
-  name: db-site
+  name: 01_site
   lower_ring:
     "@": 1003
   lower_ring_writable: true
@@ -59,7 +63,7 @@
   info: Path to the local directory containing source code of the application.
     Typically, this directory does NOT include Schemat source code, and is
     mainly used for serving static files, like .css files, robots.txt etc.
-  local_path: ./app
+  local_path: ./demo/01_books
   __container:
     "@": 1007
   __category:
@@ -76,6 +80,12 @@
   name: <root>
   info: Root of the container hierarchy exposed at URL path = /
   entries:
+    authors:
+      "@": 5001
+    books:
+      "@": 5000
+    book:
+      "@": 5014
     "":
       "@": 1008
     $:
@@ -133,13 +143,11 @@
   __category:
     "@": 5
 - __id: 1010
-  sequence:
-    "@": 1017
-  filename: ./schemat/data/db-app_02.yaml
-  __node:
-    "@": 1024
   __category:
     "@": 19
+  sequence:
+    "@": 1017
+  filename: ./demo/01_books/_data/db-app_02.yaml
 - __id: 1011
   operator:
     "@": 23
@@ -178,8 +186,6 @@
   filename: ./schemat/data/00_kernel.yaml
   format: data-yaml
   insert_mode: compact
-  __node:
-    "@": 1024
   __category:
     "@": 19
 - __id: 1016
@@ -258,34 +264,23 @@
     "@": 28
 - __id: 1023
   name: webserver
+  port: 3000
   __category:
     "@": 30
 - __id: 1024
   agents_installed:
-    tcp:
-      "@": 1038
-    tcp_receiver:
-      "@": 1039
+    kafka_broker:
+      "@": 1031
+    kafka_master:
+      "@": 1034
+    kafka_worker:
+      "@": 1035
     webserver:
       "@": 1023
-    block_1010:
-      "@": 1010
-    block_1015:
-      "@": 1015
-    block_1029:
-      "@": 1029
-    block_1032:
-      "@": 1032
     "@": schemat:Catalog
-  master_agents_running:
-    - tcp
-    - tcp_receiver
+  master_agents_running: []
   agents_running:
     - webserver
-    - block_1010
-    - block_1015
-    - block_1029
-    - block_1032
   __category:
     "@": 21
 - __id: 1025
@@ -297,8 +292,6 @@
     "@": 1013
   filename: ./schemat/data/00_kernel.index.jl
   format: index-jl
-  __node:
-    "@": 1036
   __category:
     "@": 19
 - __id: 1027
@@ -318,18 +311,14 @@
 - __id: 1029
   sequence:
     "@": 1017
-  filename: ./schemat/data/db-app.yaml
-  __node:
-    "@": 1024
+  filename: ./demo/01_books/_data/db-app.yaml
   __category:
     "@": 19
 - __id: 1030
   sequence:
     "@": 1018
-  filename: ./schemat/data/db-app.index.jl
+  filename: ./demo/01_books/_data/db-app.index.jl
   format: index-jl
-  __node:
-    "@": 1036
   __category:
     "@": 19
 - __id: 1031
@@ -339,20 +328,16 @@
 - __id: 1032
   sequence:
     "@": 1027
-  filename: ./schemat/data/db-site.yaml
+  filename: ./demo/01_books/_data/01_site.yaml
   format: data-yaml
   insert_mode: compact
-  __node:
-    "@": 1024
   __category:
     "@": 19
 - __id: 1033
   sequence:
     "@": 1028
-  filename: ./schemat/data/db-site.index.jl
+  filename: ./demo/01_books/_data/01_site.index.jl
   format: index-jl
-  __node:
-    "@": 1036
   __category:
     "@": 19
 - __id: 1034
@@ -379,31 +364,26 @@
     "@": 32
 - __id: 1036
   agents_installed:
-    tcp:
-      "@": 1038
-    tcp_receiver:
-      "@": 1039
+    kafka_broker:
+      "@": 1031
+    kafka_master:
+      "@": 1034
+    kafka_worker:
+      "@": 1035
     webserver:
       "@": 1023
     logger:
       "@": 1037
-    block_1026:
-      "@": 1026
-    block_1030:
-      "@": 1030
-    block_1033:
-      "@": 1033
     "@": schemat:Catalog
   master_agents_running:
-    - tcp
-    - tcp_receiver
-  agents_running:
-    - webserver
+    - kafka_broker
+    - kafka_master
     - logger
-    - block_1026
-    - block_1030
-    - block_1033
-  tcp_port: 5829
+  agents_running:
+    - kafka_worker
+    - webserver
+  kafka_port: 9094
+  kafka_controller_port: 9095
   __category:
     "@": 21
 - __id: 1037

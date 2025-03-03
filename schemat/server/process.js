@@ -114,7 +114,7 @@ export class Process {
     async _create_node(path) {
         if (!cluster.isPrimary) throw new Error('unexpected error: a new Node object should only be created in the primary process, not in a worker')
         let Node = await schemat.import('/$/sys/Node')
-        let node = await Node.new().save({ring: 'db-site'})
+        let node = await Node.new().save({ring: '01_site'})
         fs.writeFileSync(path, this.node.id.toString())
         print(`created new node:`, this.node.id)
         return node

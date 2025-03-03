@@ -18,4 +18,4 @@ bootstrap_rings:
   - name: boot_kernel
     file: ./schemat/data/00_kernel.yaml                    # core categories; practically immutable (very rarely changed)
   - name: boot_site
-    file: ./schemat/data/db-site.yaml
+    file: ./schemat/data/01_site.yaml

@@ -1,5 +1,5 @@
 /*
-    Generate demo DB files in ../../demo/XXX by copying db-site.* ring and replacing file paths, names etc.
+    Generate demo DB files in ../../demo/XXX by copying 01_site.* ring and replacing file paths, names etc.
     The other ring, db-app, is left *untouched*, so any app-specific data is preserved (!).
  */
 
@@ -22,9 +22,9 @@ let demo_names = [null, '01_books', '02_blog', '03_chatter']
 
 
 function _load_data_init() {
-    /* Read db-site.yaml and return its plain-text content. Drop unneeded objects. */
+    /* Read 01_site.yaml and return its plain-text content. Drop unneeded objects. */
 
-    let path = `${root_dir}/schemat/data/db-site.yaml`
+    let path = `${root_dir}/schemat/data/01_site.yaml`
     let db = fs.readFileSync(path, 'utf8')
     // let data = yaml.load(db)
     return db
@@ -44,7 +44,7 @@ function _load_data_init() {
 /**********************************************************************************************************************/
 
 async function create_demo_01() {
-    // load initial `db` from db-site.yaml
+    // load initial `db` from 01_site.yaml
     let demo_name = demo_names[1]
     let demo_dir = `${root_dir}/demo/${demo_name}`
     let db = _load_data_init()
@@ -58,11 +58,11 @@ async function create_demo_01() {
     db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 5001\n    BookCategory:\n      "@": 5000`)
     db = db.replaceAll(`entries:\n    ""`, `entries:\n    authors:\n      "@": 5001\n    books:\n      "@": 5000\n    book:\n      "@": 5014\n    ""`)
 
-    // save as db-site.yaml in the demo folder
-    fs.writeFileSync(`${demo_dir}/_data/db-site.yaml`, db, 'utf8')
+    // save as 01_site.yaml in the demo folder
+    fs.writeFileSync(`${demo_dir}/_data/01_site.yaml`, db, 'utf8')
     
     // copy the index file
-    fs.copyFileSync(`${root_dir}/schemat/data/db-site.index.jl`, `${demo_dir}/_data/db-site.index.jl`)
+    fs.copyFileSync(`${root_dir}/schemat/data/01_site.index.jl`, `${demo_dir}/_data/01_site.index.jl`)
 }
 
 async function create_demo(demo_id) {
