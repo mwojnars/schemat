@@ -1,6 +1,6 @@
 /*
     Generate demo DB files in ../../demo/XXX by copying 01_site.* ring and replacing file paths, names etc.
-    The other ring, db-app, is left *untouched*, so any app-specific data is preserved (!).
+    The other ring, 02_app, is left *untouched*, so any app-specific data is preserved (!).
  */
 
 import fs from 'node:fs'

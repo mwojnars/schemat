@@ -135,7 +135,7 @@
 - __id: 1010
   sequence:
     "@": 1017
-  filename: ./schemat/data/db-app_02.yaml
+  filename: ./schemat/data/block_1010.yaml
   __node:
     "@": 1024
   __category:
@@ -183,7 +183,7 @@
   __category:
     "@": 19
 - __id: 1016
-  name: db-app
+  name: 02_app
   lower_ring:
     "@": 1004
   lower_ring_writable: true
@@ -318,7 +318,7 @@
 - __id: 1029
   sequence:
     "@": 1017
-  filename: ./schemat/data/db-app.yaml
+  filename: ./schemat/data/02_app.yaml
   __node:
     "@": 1024
   __category:
@@ -326,7 +326,7 @@
 - __id: 1030
   sequence:
     "@": 1018
-  filename: ./schemat/data/db-app.index.jl
+  filename: ./schemat/data/02_app.index.jl
   format: index-jl
   __node:
     "@": 1036

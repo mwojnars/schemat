@@ -13,7 +13,7 @@ Objectives:
 
 What's new (as compared to traditional web frameworks):
 - site configuration is fully stored in DB (see 01_site.yaml)
-- schema of application objects is fully stored in DB (Category objects, see db-app.yaml)
+- schema of application objects is fully stored in DB (Category objects, see 02_app.yaml)
   - web interface for schema editing (todo: improve)
   - smooth modifications of the schema in the future; incremental migrations
   - type attributes: `info`, `repeated`
