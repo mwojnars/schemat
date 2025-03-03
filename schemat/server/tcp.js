@@ -53,7 +53,7 @@ export class TCP_Sender extends Agent {
 
             let ack_parser = new ChunkParser(msg => {
                 try {
-                    print('TCP response:', msg)
+                    // print('TCP response:', msg)
                     let {id, result} = JSONx.parse(msg)
                     pending.delete(id)
                     this._handle_result(result)
@@ -92,7 +92,7 @@ export class TCP_Sender extends Agent {
     }
 
     _handle_result(result) {
-        console.log('Received result:', result)
+        // console.log('Received result:', result)
     }
 }
 
@@ -111,7 +111,7 @@ export class TCP_Receiver extends Agent {
             let processed_offset = 0
             let msg_parser = new ChunkParser(async json => {
                 try {
-                    print(`TCP message:`, json)
+                    // print(`TCP message:`, json)
                     let {id, msg} = JSON.parse(json)
                     let result
                     if (id > processed_offset) {
