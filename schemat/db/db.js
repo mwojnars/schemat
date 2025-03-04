@@ -22,6 +22,7 @@ export class Ring extends WebObject {
     static __category = 12  // ID of Ring category in the kernel
     static role = 'ring'    // Actor.role, for use in requests (DataRequest)
 
+    file_prefix
     data_sequence           // DataSequence containing all primary data of this ring
 
     streams                 // logical sequences of structured data records produced by particular data operators in this ring
@@ -45,7 +46,7 @@ export class Ring extends WebObject {
     }
 
 
-    __new__({name, lower_ring, file, start_id = 0, stop_id, readonly = false} = {}) {
+    __new__({name, lower_ring, file_prefix, file, start_id = 0, stop_id, readonly = false} = {}) {
         this.name = name || fileBaseName(file)
         this.lower_ring = lower_ring
 
@@ -54,6 +55,7 @@ export class Ring extends WebObject {
         //     // this.name = file.substring(file.lastIndexOf('/') + 1, file.lastIndexOf('.') >= 0 ? file.lastIndexOf('.') : undefined)
         //     // this.name = path.basename(file, path.extname(file))
 
+        this.file_prefix = file_prefix
         this.readonly = readonly
         this.start_id = start_id
         this.stop_id = stop_id

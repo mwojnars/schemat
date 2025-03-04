@@ -453,6 +453,10 @@
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
   schema:
+    file_prefix:
+      info: Optional prefix to be prepended (with a separating dot '.') to names of
+        new data files created by sequences in this ring.
+      "@": schemat/types/type.js:STRING
     lower_ring:
       info: Reference to the lower ring. If an object is not found in this ring, it is
         searched for in the lower_ring.
