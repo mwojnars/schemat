@@ -30,18 +30,33 @@ export class Block extends Agent {
     get ring()      { return this.sequence.ring }
     get stream()    { return this.sequence.stream }
 
-    get file_extension() {
-        let ext = this.filename?.split('.').pop()
-        if (ext) return ext
-        if (this.format === 'data-yaml') return 'yaml'
-        if (this.format === 'index-jl') return 'jl'
-    }
-    get file_path() { return this.filename || joinPath(this.__node.data_directory, `block_${this.id}.${this.file_extension}`) }
-
-    __new__(sequence, filename) {
+    __new__(sequence, filename = undefined) {
         sequence.assert_active()
         this.sequence = sequence
         this.filename = filename
+    }
+
+    async __setup__() {
+        await this.sequence.load()
+        await this.stream.load()
+        await this.ring.load()
+        this.filename ??= this._create_filename()
+    }
+
+    _create_filename() {
+        let parts = [
+            this.ring.file_prefix,
+            this.sequence.file_prefix || this.stream.file_prefix,
+            `${this.id}`,
+            this._file_extension()
+        ]
+        return joinPath(this.__node.data_directory, parts.filter(Boolean).join('.'))
+    }
+
+    _file_extension() {
+        if (this.format === 'data-yaml') return 'yaml'
+        if (this.format === 'index-jl') return 'jl'
+        if (this.format === 'rocksdb') return ''
     }
 
     async __init__() {
@@ -50,7 +65,7 @@ export class Block extends Agent {
             // assert(this.sequence.__meta.loading)                    // it's assumed that .sequence gets fully loaded before any CRUD operation (ins/upd/del) is executed
 
         let storage_class = this._detect_storage_class()
-        this._storage = new storage_class(this.file_path, this)
+        this._storage = new storage_class(this.filename, this)
         return this._reopen(this._storage)
     }
 
@@ -58,7 +73,7 @@ export class Block extends Agent {
         let format = this.format
         if (!format) {
             // infer the storage type from the filename extension
-            let extension = this.file_extension  //this.filename.split('.').pop()
+            let extension = this.filename.split('.').pop()
             if (extension === 'yaml') format = 'data-yaml'
             if (extension === 'jl')   format = 'index-jl'
         }
@@ -71,7 +86,7 @@ export class Block extends Agent {
 
     async __start__() {
         let storage_class = this._detect_storage_class()
-        let storage = new storage_class(this.file_path, this)
+        let storage = new storage_class(this.filename, this)
         await this._reopen(storage)
         // return storage.open()
         return {storage}
