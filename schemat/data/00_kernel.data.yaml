@@ -706,6 +706,8 @@
     "@": 13
   __category:
     "@": 1
+  __container:
+    "@": 1009
 - __id: 23
   name: idx_category
   info: "Index of all objects by their category: the key is [category ID, item

@@ -127,6 +127,8 @@
       "@": 17
     Node:
       "@": 21
+    IndexSequence:
+      "@": 22
     "@": schemat:Catalog
   __container:
     "@": 1019
