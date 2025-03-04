@@ -854,17 +854,6 @@ export class WebObject {
            and incompatible with object cloning as done by get_mutable(). This method can be async in subclasses.
          */
 
-    __destroy__() {}
-        /* Custom tear down that is executed once before this object is permanently deleted from the database. */
-
-    __validate__() {}
-        /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema.
-           Called on NON-activated object; should NOT require that __init__() or _activate() was called beforehand!
-         */
-
-    __edited__(prev, curr) {}
-        /* Post-processing after the __data was edited on the server during update of the record in DB. */
-
     __setup__({ring, block}) {}
         /* One-time setup of the object, launched on server when the object is being inserted to a data `block`
            and already has an ID assigned (this.id is present). Typically, this method creates related sub-objects
@@ -873,6 +862,17 @@ export class WebObject {
            in the future, these objects will be inserted automatically with the parent object. May return a Promise.
            __setup__() can be viewed as continuation of __new__(), but asynchronous and executed on server (inside a data block).
          */
+
+    __validate__() {}
+        /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema.
+           Called on NON-activated object; should NOT require that __init__() or _activate() was called beforehand!
+         */
+
+    // __edited__(prev, curr) {}
+    //     /* Post-processing after the __data was edited on the server during update of the record in DB. */
+
+    __destroy__() {}
+        /* Custom tear down that is executed once before this object is permanently deleted from the database. */
 
     // __done__() {}
     //     /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
