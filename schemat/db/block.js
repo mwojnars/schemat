@@ -236,13 +236,13 @@ export class DataBlock extends Block {
             data = [data]
         }
 
-        id ??= this._reserve_id(data.length)            // assign IDs to all new objects
-        data = this._transform_provisional(id, data)
+        let ids = id || this._reserve_id(data.length)   // assign IDs to all new objects
+        data = this._transform_provisional(ids, data)
 
-        let pairs = zip(id, data)
+        let pairs = zip(ids, data)
         await amap(pairs, pair => this._insert_one(...pair))    // TODO: save all objects at once, atomically
 
-        return batch ? id : id[0]
+        return batch ? ids : ids[0]
     }
 
     _transform_provisional(ids, data) {
