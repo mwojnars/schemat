@@ -38,9 +38,9 @@ export class Block extends Agent {
 
     async __setup__() {
         print('Block.__setup__() ...')
-        // if (!this.sequence.is_loaded()) await this.sequence.load()
-        // if (!this.stream.is_loaded()) await this.stream.load()
-        // if (!this.ring.is_loaded()) await this.ring.load()
+        if (!this.sequence.is_loaded()) await this.sequence.load()
+        if (this.stream && !this.stream?.is_loaded()) await this.stream.load()
+        if (!this.ring.is_loaded()) await this.ring.load()
         // this.filename ??= this._create_filename()
         print('Block.__setup__() done')
     }
@@ -222,6 +222,7 @@ export class DataBlock extends Block {
 
     async cmd_insert({id, data}) {
         /* `data` can be an array if multiple objects are to be inserted. */
+
         let ring = this.ring
         assert(ring?.is_loaded())
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
