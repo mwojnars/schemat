@@ -529,6 +529,8 @@
     "@": 13
   __category:
     "@": 1
+  __container:
+    "@": 1009
 - __id: 15
   name: IndexOperator
   info: Base category for indexes over the data sequence.
