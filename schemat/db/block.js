@@ -30,6 +30,14 @@ export class Block extends Agent {
     get ring()      { return this.sequence.ring }
     get stream()    { return this.sequence.stream }
 
+    get file_extension() {
+        let ext = this.__self.__data['filename']?.split('.').pop()
+        if (ext) return ext
+        if (this.format === 'data-yaml') return 'yaml'
+        if (this.format === 'index-jl') return 'jl'
+    }
+    // get filename()  { return path_join(this.__node.data_directory, `block_${this.id}.${this.file_extension}`) }
+
     __new__(sequence, filename) {
         sequence.assert_active()
         this.sequence = sequence
