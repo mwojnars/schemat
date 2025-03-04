@@ -46,7 +46,7 @@ export class Sequence extends WebObject {
         // doing block.load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
         // doing the same later may cause infinite recursion, because the load() request for a block may be directed
         // to the current sequence (which has an unloaded block!), and cause another block.load(), and so on...
-        return Promise.all(this.blocks.map(b => b.load()))
+        return Promise.all(this.blocks?.map(b => b.load()))
     }
 
     // add_derived(sequence) {
@@ -57,7 +57,7 @@ export class Sequence extends WebObject {
 
     _find_block(binary_key) {
         // print('binary_key:', binary_key)
-        if (!this.splits) return this.blocks[0]
+        if (!this.splits) return this.blocks?.[0]
 
         let index = this.splits.findIndex(split => compare_uint8(split, binary_key) > 0)
         if (index === -1) index = this.blocks.length - 1
@@ -101,8 +101,8 @@ export class Sequence extends WebObject {
         yield* block.scan({start, stop})
     }
 
-    async erase()   { return Promise.all(this.blocks.map(b => b.erase())) }
-    async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
+    async erase()   { return Promise.all(this.blocks?.map(b => b.erase())) }
+    async flush()   { return Promise.all(this.blocks?.map(b => b.flush())) }
 }
 
 
