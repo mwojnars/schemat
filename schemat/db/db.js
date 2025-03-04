@@ -64,7 +64,7 @@ export class Ring extends WebObject {
         this.data_sequence = DataSequence.new(this, file)
     }
 
-    async __setup__(id, {ring}) {
+    async __setup__({ring}) {
         /* Create `data_sequence` and replicate indexes from the lower ring. */
         // this.data_sequence = DataSequence.new(this, file)
         this.streams = new Catalog()

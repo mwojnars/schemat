@@ -124,11 +124,11 @@ export class IndexSequence extends Sequence {
         // this.blocks = [await IndexBlock.new(this, filename)]
     }
 
-    // async __setup__(id) {
+    // async __setup__() {
     //     // let {IndexBlock} = this.__category.preloaded
     //     // let IndexBlock = await this.__category.import('./IndexBlock')
     //     let IndexBlock = await schemat.import('/$/sys/IndexBlock')
-    //     this.blocks = [await IndexBlock.new(id, this.filename).save()]
+    //     this.blocks = [await IndexBlock.new(this, this.filename).save()]
     // }
 }
 
@@ -265,7 +265,7 @@ export class IndexStream extends Stream {
     /* Index deployed in a particular ring's sequence. */
     get file_prefix() { return 'index' }
 
-    async __setup__(id, {ring}) {
+    async __setup__({ring}) {
         print('IndexStream.__setup__() creating this.sequence')
         let IndexSequence = await schemat.import('/$/sys/IndexSequence')
         this.sequence = IndexSequence.new(this.ring)

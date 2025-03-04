@@ -451,7 +451,7 @@ export class WebObject {
     }
 
     static async from_data(id, data, {mutable = false, sealed = true, activate = true} = {}) {
-        /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSON string). */
+        /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSONx string). */
         // assert(typeof data === 'string' || data instanceof Catalog)
         let obj = WebObject.stub(id, {mutable})
         obj._set_data(data)
@@ -519,7 +519,7 @@ export class WebObject {
 
     _set_data(data, loaded_at = Date.now()) {
         /* Create this.__data using content from `data`. Set related special fields. Extract & drop the temporary data.__meta.
-           `data` can be a JSON string, or a Catalog, or a Catalog's state object.
+           `data` can be a JSONx string, or a Catalog, or a Catalog's state object.
          */
         let self = this.__self
         let json, meta
@@ -865,9 +865,9 @@ export class WebObject {
     __edited__(prev, curr) {}
         /* Post-processing after the __data was edited on the server during update of the record in DB. */
 
-    __setup__(id, {ring, block}) {}
+    __setup__({ring, block}) {}
         /* One-time setup of the object, launched on server when the object is being inserted to a data `block`
-           and already has a provisional ID assigned (`id`). Typically, this method creates related sub-objects
+           and already has an ID assigned (this.id is present). Typically, this method creates related sub-objects
            and creates links to/from itself and these objects - creating such objects on client is in many cases
            either impossible or inefficient. For now, __setup__() must explicitly save the objects it creates;
            in the future, these objects will be inserted automatically with the parent object. May return a Promise.
