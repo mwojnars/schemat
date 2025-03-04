@@ -202,7 +202,8 @@ export class WebObject {
 
     __provisional_id        temporary ID (1,2,3...) of a newly-created object not yet saved to DB; only used to differentiate the object
                             in a batch of interconnected objects that are being inserted to DB altogether
-    __hash                  random integer assigned during instantiation, to differentiate between local instances of the same web object
+    __hash                  random integer assigned during instantiation to differentiate between multiple local instances of the same web object;
+                            NOT strictly unique (!); has no relation to the object's content and does NOT change when the instance is edited
 
     __ring                  Ring instance that represents the ring where this object was retrieved from; stub or loaded
     __block                 Block instance that represents the physical data block where this object was retrieved from; stub or loaded
