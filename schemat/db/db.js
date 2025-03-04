@@ -60,13 +60,15 @@ export class Ring extends WebObject {
         this.start_id = start_id
         this.stop_id = stop_id
 
-        // create data sequence: data and indexes...
-        this.data_sequence = DataSequence.new(this, file)
+        // create data sequence, but only during bootstrap (?), because the object created here lacks __category
+        if (!lower_ring) this.data_sequence = DataSequence.new(this, file)
     }
 
     async __setup__({ring}) {
         /* Create `data_sequence` and replicate indexes from the lower ring. */
-        // this.data_sequence = DataSequence.new(this, file)
+
+        let DataSequence = await schemat.import('/$/sys/DataSequence')
+        this.data_sequence = DataSequence.new(this)
         this.streams = new Catalog()
 
         if (!this.lower_ring) return
@@ -75,9 +77,7 @@ export class Ring extends WebObject {
 
         for (let stream of this.lower_ring.streams?.values() || []) {
             let name = stream.operator.name
-            print(`Ring.__setup__() creating stream '${name}' ...`)
-            this.streams[name] = await IndexStream.new(this, stream.operator).save({ring, reload: false})
-            print(`Ring.__setup__() created stream '${name}'`)
+            this.streams.set(name, IndexStream.new(this, stream.operator))
         }
     }
 
