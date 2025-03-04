@@ -38,10 +38,10 @@ export class Block extends Agent {
 
     async __setup__() {
         print('Block.__setup__() ...')
-        if (!this.sequence.is_loaded()) await this.sequence.load()
-        if (!this.stream.is_loaded()) await this.stream.load()
-        if (!this.ring.is_loaded()) await this.ring.load()
-        this.filename ??= this._create_filename()
+        // if (!this.sequence.is_loaded()) await this.sequence.load()
+        // if (!this.stream.is_loaded()) await this.stream.load()
+        // if (!this.ring.is_loaded()) await this.ring.load()
+        // this.filename ??= this._create_filename()
         print('Block.__setup__() done')
     }
 
@@ -249,8 +249,8 @@ export class DataBlock extends Block {
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
         let prov
         let rectify = (ref) => (ref instanceof WebObject && (prov = ref.__provisional_id) ? records[prov-1].obj : undefined)
-        for (let rec of records)
-            rec.data = Struct.transform(rec.data, rectify)
+        for (let {obj} of records)
+            Struct.transform(obj.__data, rectify)
 
         // go through all the records:
         // - assign ID & instantiate the web object (if not yet instantiated)
@@ -263,22 +263,34 @@ export class DataBlock extends Block {
 
             let setup = obj.__setup__({ring: this.ring, block: this})       // call __setup__()
             if (setup instanceof Promise) await setup
-            this._prepare_object(obj)                                       // validate obj.__data
 
             // find all unseen newborn references and add their JSON content to the queue
             obj.__references.forEach(ref => {
                 if (ref.is_newborn() && !unique.has(ref)) { records.push({obj: ref}); unique.add(ref) }
+                // if (ref.is_newborn() && !unique.has(ref)) {
+                //     assert(ref.__data, `missing __data in reference at ${pos}`)
+                //     records.push({data: ref.__json}); unique.add(ref)
+                // }
             })
+
+            assert(obj.__data, `missing __data in [${obj.id}] at ${pos}`)
         }
 
         print(`[${this.id}].cmd_insert() saving ${records.length} object(s)`)
-        await Promise.all(records.map(({obj}) => this._save(obj)))
+
+        for (let {obj} of records) {
+            this._prepare_object(obj)                                       // validate obj.__data
+            await this._save(obj)
+        }
+        // await Promise.all(records.map(({obj}) => {}))
 
         let ids = records.map(rec => rec.obj.id)
+        print(`[${this.id}].cmd_insert() saved IDs:`, ids)
+        
         return batch ? ids : ids[0]
     }
 
-    async _prepare_object(obj) {
+    _prepare_object(obj) {
         obj.__data.delete('__ver')          // just in case, it's forbidden to pass __ver from the outside
         obj.validate()                      // data validation
         obj._bump_version()                 // set __ver=1 if needed
