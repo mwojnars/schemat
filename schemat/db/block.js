@@ -231,7 +231,7 @@ export class DataBlock extends Block {
         if (!batch) data = [data]
 
         let records = data.map(d => ({data: d}))        // {id, data, obj} tuples that await ID assignment + setup
-        let unique = new Set()
+        let objects = []
 
         if (batch) assert(!id)
         else if (id) {
@@ -239,51 +239,49 @@ export class DataBlock extends Block {
             records[0].id = id
         }
 
-        // let instantiate = ({id, data}) => WebObject.from_data(id || this._assign_id(), data, {mutable: true, activate: false})
-
         // assign IDs to the initial group of objects, as they may be referenced from other objects via provisional IDs;
         // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
         for (let rec of records) {
             let {id, data} = rec
-            rec.obj = await WebObject.from_data(id || this._assign_id(), data, {mutable: true, activate: false})
-            unique.add(rec.obj)
-            // unique.add(rec.obj = await instantiate(rec))
+            let obj = await WebObject.from_data(id || this._assign_id(), data, {mutable: true, activate: false})
+            objects.push(obj)
         }
+        let unique = new Set(objects)
 
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
         let prov
-        let rectify = (ref) => (ref instanceof WebObject && (prov = ref.__provisional_id) ? records[prov-1].obj : undefined)
-        for (let {obj} of records)
+        let rectify = (ref) => (ref instanceof WebObject && (prov = ref.__provisional_id) ? objects[prov-1] : undefined)
+        for (let obj of objects)
             Struct.transform(obj.__data, rectify)
 
-        // go through all the records:
+        // go through all the objects:
         // - assign ID & instantiate the web object (if not yet instantiated)
-        // - call __setup__(), which may create new related objects/records (!) that are added to the queue
+        // - call __setup__(), which may create new related objects (!) that are added to the queue
 
-        for (let pos = 0; pos < records.length; pos++) {
-            let {obj} = records[pos]
+        for (let pos = 0; pos < objects.length; pos++) {
+            let obj = objects[pos]
             obj.__id ??= this._assign_id()
 
-            let setup = obj.__setup__({ring: this.ring, block: this})       // call __setup__()
+            let setup = obj.__setup__({ring: this.ring, block: this})
             if (setup instanceof Promise) await setup
 
             // find all unseen newborn references and add their JSON content to the queue
             obj.__references.forEach(ref => {
-                if (ref.is_newborn() && !unique.has(ref)) { records.push({obj: ref}); unique.add(ref) }
+                if (ref.is_newborn() && !unique.has(ref)) { objects.push(ref); unique.add(ref) }
             })
 
             assert(obj.__data, `missing __data in [${obj.id}] at ${pos}`)
         }
 
-        print(`[${this.id}].cmd_insert() saving ${records.length} object(s)`)
+        print(`[${this.id}].cmd_insert() saving ${objects.length} object(s)`)
 
-        for (let {obj} of records) {
-            this._prepare_object(obj)                                       // validate obj.__data
+        for (let obj of objects) {
+            this._prepare_object(obj)       // validate obj.__data
             await this._save(obj)
         }
-        // await Promise.all(records.map(({obj}) => {}))
+        // await Promise.all(objects.map(obj => {}))
 
-        let ids = records.map(rec => rec.obj.id)
+        let ids = objects.map(obj => obj.id)
         print(`[${this.id}].cmd_insert() saved IDs:`, ids)
 
         return batch ? ids.slice(0, data.length) : ids[0]
