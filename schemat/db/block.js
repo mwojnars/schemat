@@ -220,8 +220,70 @@ export class DataBlock extends Block {
         return this._annotate(data)
     }
 
+    async cmd_insert__({id, data}) {
+        /* `data` can be an array if multiple objects are to be inserted. */
+        let ring = this.ring
+        assert(ring?.is_loaded())
+        if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
+
+        // convert scalar arguments to an array
+        let batch = (data instanceof Array)
+        if (!batch) data = [data]
+
+        let records = data.map(d => ({data: d}))        // {id, data, obj} tuples that await ID assignment + setup
+        let unique = new Set()
+
+        if (batch) assert(!id)
+        else if (id) {
+            await this.assert_unique(id)                // fixed ID provided by the caller? check for uniqueness
+            records[0].id = id
+        }
+
+        // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
+        let instantiate = ({id, data}) => WebObject.from_data(id || this._assign_id(), data, {mutable: true, activate: false})
+
+        // assign IDs to the initial group of objects, as they may be referenced from other objects via provisional IDs
+        for (let rec of records)
+            unique.add(rec.obj = await instantiate(rec))
+
+        // replace provisional IDs with references to proper objects having ultimate IDs assigned
+        let prov
+        let rectify = (ref) => (ref instanceof WebObject && (prov = ref.__provisional_id) ? records[prov-1].obj : undefined)
+        for (let rec of records)
+            rec.data = Struct.transform(rec.data, rectify)
+
+        // go through all the records:
+        // - assign ID & instantiate the web object (if not yet instantiated)
+        // - call __setup__(), which may create new related objects/records (!) that are added to the queue
+
+        for (let pos = 0; pos < records.length; pos++) {
+            let {obj, data} = records[pos]
+            records[pos].obj = obj ??= await instantiate({data})
+
+            let setup = obj.__setup__({ring: this.ring, block: this})       // call __setup__()
+            if (setup instanceof Promise) await setup
+            this._prepare_object(obj)                                       // validate obj.__data
+
+            // find any unseen newborn references and add them to the queue
+            obj.__references.forEach(ref => {if (ref.is_newborn() && !unique.has(ref)) {records.push(ref); unique.add(ref)}})
+        }
+
+        await Promise.all(records.map(({obj}) => this._save(obj)))
+
+        let ids = records.map(rec => rec.obj.id)
+        return batch ? ids : ids[0]
+    }
+
+    async _prepare_object(obj) {
+        obj.__data.delete('__ver')          // just in case, it's forbidden to pass __ver from the outside
+        obj.validate()                      // data validation
+        obj._bump_version()                 // set __ver=1 if needed
+        obj._seal_dependencies()            // set __seal
+    }
+
+    
     async cmd_insert({id, data}) {
-        /* `data` can be an array, in such case multiple objects are inserted. */
+        /* `data` can be an array if multiple objects are to be inserted. */
         let ring = this.ring
         assert(ring?.is_loaded())
 
@@ -257,7 +319,7 @@ export class DataBlock extends Block {
         // the object must be instantiated for validation, but is not activated (for performance): neither __init__() nor _activate() is executed
         let obj = await WebObject.from_data(id, data, {mutable: true, activate: false})
 
-        let setup = obj.__setup__(id, {ring: this.ring, block: this})
+        let setup = obj.__setup__({ring: this.ring, block: this})
         if (setup instanceof Promise) await setup
 
         // obj.__references.forEach(ref => {
