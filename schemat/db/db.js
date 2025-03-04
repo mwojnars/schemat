@@ -87,8 +87,9 @@ export class Ring extends WebObject {
 
         for (let stream of this.lower_ring.streams?.values() || []) {
             let name = stream.operator.name
-            print(`Ring.__setup__() creating stream '${name}'`)
-            this.streams[name] = await IndexStream.new(this, stream.operator).save({ring})
+            print(`Ring.__setup__() creating stream '${name}' ...`)
+            this.streams[name] = await IndexStream.new(this, stream.operator).save({ring, reload: false})
+            print(`Ring.__setup__() created stream '${name}'`)
         }
     }
 

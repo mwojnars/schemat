@@ -285,7 +285,7 @@ export class DataBlock extends Block {
         this._reserved.add(id)
         this._autoincrement = Math.max(id, this._autoincrement)
 
-        print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
+        // print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
         return id
     }
 

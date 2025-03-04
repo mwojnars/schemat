@@ -270,7 +270,7 @@ export class IndexStream extends Stream {
         let IndexSequence = await schemat.import('/$/sys/IndexSequence')
         this.sequence = IndexSequence.new(this.ring)
         print('IndexStream.__setup__() saving this.sequence ...')
-        await this.sequence.save({ring})
+        await this.sequence.save({ring, reload: false})
         print('IndexStream.__setup__() saved this.sequence')
     }
 }
