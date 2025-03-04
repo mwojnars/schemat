@@ -64,18 +64,6 @@ export class Ring extends WebObject {
         this.data_sequence = DataSequence.new(this, file)
     }
 
-    async __init__() {
-        /* Initialize the ring after it's been loaded from DB. */
-        if (CLIENT) return
-        // print(`... ring [${this.__id || '---'}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
-
-        await this.lower_ring?.load()
-        await this.data_sequence.load()
-
-        for (let stream of this.streams?.values() || [])
-            await stream.load()
-    }
-
     async __setup__(id, {ring}) {
         /* Create `data_sequence` and replicate indexes from the lower ring. */
         // this.data_sequence = DataSequence.new(this, file)
@@ -91,6 +79,18 @@ export class Ring extends WebObject {
             this.streams[name] = await IndexStream.new(this, stream.operator).save({ring, reload: false})
             print(`Ring.__setup__() created stream '${name}'`)
         }
+    }
+
+    async __init__() {
+        /* Initialize the ring after it's been loaded from DB. */
+        if (CLIENT) return
+        // print(`... ring [${this.__id || '---'}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
+
+        await this.lower_ring?.load()
+        await this.data_sequence.load()
+
+        for (let stream of this.streams?.values() || [])
+            await stream.load()
     }
 
     async erase(req) {

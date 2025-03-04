@@ -221,6 +221,7 @@ export class DataBlock extends Block {
     }
 
     async cmd_insert({id, data}) {
+        /* `data` can be an array, in such case multiple objects are inserted. */
         let ring = this.ring
         assert(ring?.is_loaded())
 
@@ -245,7 +246,7 @@ export class DataBlock extends Block {
     }
 
     _transform_provisional(ids, data) {
-        /* Transform `data` of every object so that provisional IDs (-1, -2, ...) are replaced with the actual IDs. */
+        /* Transform `data` of every object so that provisional IDs are replaced with ultimate IDs. */
         let stubs = ids.map(id => WebObject.stub(id))
         let prov
         let f = (obj) => (obj instanceof WebObject && (prov = obj.__provisional_id) ? stubs[prov-1] : undefined)
@@ -258,6 +259,10 @@ export class DataBlock extends Block {
 
         let setup = obj.__setup__(id, {ring: this.ring, block: this})
         if (setup instanceof Promise) await setup
+
+        // obj.__references.forEach(ref => {
+        //     if (ref.is_newborn() && !unique.has(ref)) {unique.add(ref); queue.push(ref); objects.push(ref)}
+        // })
 
         obj.__data.delete('__ver')          // just in case, it's forbidden to pass __ver from the outside
         obj.validate()                      // data validation
