@@ -239,12 +239,16 @@ export class DataBlock extends Block {
             records[0].id = id
         }
 
-        // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
-        let instantiate = ({id, data}) => WebObject.from_data(id || this._assign_id(), data, {mutable: true, activate: false})
+        // let instantiate = ({id, data}) => WebObject.from_data(id || this._assign_id(), data, {mutable: true, activate: false})
 
-        // assign IDs to the initial group of objects, as they may be referenced from other objects via provisional IDs
-        for (let rec of records)
-            unique.add(rec.obj = await instantiate(rec))
+        // assign IDs to the initial group of objects, as they may be referenced from other objects via provisional IDs;
+        // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
+        for (let rec of records) {
+            let {id, data} = rec
+            rec.obj = await WebObject.from_data(id || this._assign_id(), data, {mutable: true, activate: false})
+            unique.add(rec.obj)
+            // unique.add(rec.obj = await instantiate(rec))
+        }
 
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
         let prov
