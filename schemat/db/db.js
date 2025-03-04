@@ -45,9 +45,9 @@ export class Ring extends WebObject {
     }
 
 
-    __new__({name, file, start_id = 0, stop_id, readonly = false} = {}) {
-        this._file = file
+    __new__({name, lower_ring, file, start_id = 0, stop_id, readonly = false} = {}) {
         this.name = name || fileBaseName(file)
+        this.lower_ring = lower_ring
 
         // if (!name && file)
         //     this.name = file.replace(/^.*\/|\.[^.]*$/g, '')         // extract the name from the file path (no directory, no extension)
@@ -59,7 +59,7 @@ export class Ring extends WebObject {
         this.stop_id = stop_id
 
         // create data sequence: data and indexes...
-        this.data_sequence = DataSequence.new(this, this._file)
+        this.data_sequence = DataSequence.new(this, file)
     }
 
     async __init__() {
@@ -76,7 +76,7 @@ export class Ring extends WebObject {
 
     async __setup__(id, {ring}) {
         /* Create `data_sequence` and replicate indexes from the lower ring. */
-        // this.data_sequence = DataSequence.new(this, this._file)
+        // this.data_sequence = DataSequence.new(this, file)
         this.streams = new Catalog()
 
         if (!this.lower_ring) return
