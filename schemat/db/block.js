@@ -257,8 +257,7 @@ export class DataBlock extends Block {
         // - call __setup__(), which may create new related objects/records (!) that are added to the queue
 
         for (let pos = 0; pos < records.length; pos++) {
-            let {obj, data} = records[pos]
-            // records[pos].obj = obj ??= await instantiate({data})
+            let {obj} = records[pos]
             obj.__id ??= this._assign_id()
 
             let setup = obj.__setup__({ring: this.ring, block: this})       // call __setup__()
@@ -292,66 +291,6 @@ export class DataBlock extends Block {
         obj._bump_version()                 // set __ver=1 if needed
         obj._seal_dependencies()            // set __seal
     }
-
-    
-    // async cmd_insert({id, data}) {
-    //     /* `data` can be an array if multiple objects are to be inserted. */
-    //     let ring = this.ring
-    //     assert(ring?.is_loaded())
-    //
-    //     if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
-    //     let batch = (data instanceof Array)
-    //
-    //     // if (typeof data === 'string') data = JSONx.parse(data)
-    //     if (data instanceof Array) assert(!id)
-    //     else {
-    //         if (id) await this.assert_unique(id)        // fixed ID provided by the caller? check for uniqueness
-    //         id = id ? [id] : null
-    //         data = [data]
-    //     }
-    //
-    //     let ids = id || this._reserve_id(data.length)   // assign IDs to all new objects
-    //     data = this._transform_provisional(ids, data)
-    //
-    //     let pairs = zip(ids, data)
-    //     await amap(pairs, pair => this._insert_one(...pair))    // TODO: save all objects at once, atomically
-    //
-    //     return batch ? ids : ids[0]
-    // }
-    //
-    // _transform_provisional(ids, data) {
-    //     /* Transform `data` of every object so that provisional IDs are replaced with ultimate IDs. */
-    //     let stubs = ids.map(id => WebObject.stub(id))
-    //     let prov
-    //     let f = (obj) => (obj instanceof WebObject && (prov = obj.__provisional_id) ? stubs[prov-1] : undefined)
-    //     return data.map(d => Struct.transform(d, f))
-    // }
-    //
-    // async _insert_one(id, data) {
-    //     // the object must be instantiated for validation, but is not activated (for performance): neither __init__() nor _activate() is executed
-    //     let obj = await WebObject.from_data(id, data, {mutable: true, activate: false})
-    //
-    //     let setup = obj.__setup__({ring: this.ring, block: this})
-    //     if (setup instanceof Promise) await setup
-    //
-    //     // obj.__references.forEach(ref => {
-    //     //     if (ref.is_newborn() && !unique.has(ref)) {unique.add(ref); queue.push(ref); objects.push(ref)}
-    //     // })
-    //
-    //     obj.__data.delete('__ver')          // just in case, it's forbidden to pass __ver from the outside
-    //     obj.validate()                      // data validation
-    //     obj._bump_version()                 // set __ver=1 if needed
-    //     obj._seal_dependencies()            // set __seal
-    //
-    //     return this._save(obj)              // save the object and perform change propagation
-    // }
-    //
-    // _reserve_id(count) {
-    //     // call _assign_id() `count` times and return an array of `count` IDs
-    //     return Array.from({length: count}, () => this._assign_id())
-    // }
-
-    // _reclaim_id(...ids)
 
     _assign_id() {
         /* Calculate a new `id` to be assigned to the record being inserted. */
@@ -391,6 +330,8 @@ export class DataBlock extends Block {
         }
         return this._autoincrement + 1                  // no gaps found, return the next ID after the last record
     }
+
+    // _reclaim_id(...ids)
 
     async cmd_update(req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
