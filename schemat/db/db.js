@@ -46,7 +46,7 @@ export class Ring extends WebObject {
     }
 
 
-    __new__({name, lower_ring, file_prefix, file, start_id = 0, stop_id, readonly = false} = {}) {
+    __new__({name, lower_ring, file_prefix, file, start_id = 0, stop_id, readonly = false, bootstrap = false} = {}) {
         this.name = name || fileBaseName(file)
         this.lower_ring = lower_ring
 
@@ -60,8 +60,8 @@ export class Ring extends WebObject {
         this.start_id = start_id
         this.stop_id = stop_id
 
-        // create data sequence, but only during bootstrap (?), because the object created here lacks __category
-        if (!lower_ring) this.data_sequence = DataSequence.new(this, file)
+        // create data sequence, but only during bootstrap because the object here lacks __category (!)
+        if (bootstrap) this.data_sequence = DataSequence.new(this, file)
     }
 
     async __setup__({ring}) {
@@ -228,7 +228,7 @@ export class Database extends WebObject {
         let top
 
         for (const spec of ring_specs) {
-            let ring = await Ring.new(spec).load()
+            let ring = await Ring.new({...spec, bootstrap: true}).load()
             ring.lower_ring = top
             top = ring
         }
