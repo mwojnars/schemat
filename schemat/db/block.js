@@ -303,11 +303,12 @@ export class DataBlock extends Block {
         for (let [key, value] of this._storage.scan()) {
             let id = seq.decode_key(key)
             if (id + 1 < ring.start_id) continue        // skip records outside the current ring's range
-            if (gap < id && !this._reserved.has(gap))   // found a gap before `id`? return it unless already reserved
-                return gap
+            while (gap < id)                            // found a gap before `id`? return it unless already reserved
+                if (this._reserved.has(gap)) gap++
+                else return gap
             gap = id + 1
         }
-        return gap                                      // no gaps found, return the next ID after the last record
+        return this._autoincrement + 1                  // no gaps found, return the next ID after the last record
     }
 
     async cmd_update(req) {
