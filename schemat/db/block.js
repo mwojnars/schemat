@@ -284,7 +284,9 @@ export class DataBlock extends Block {
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         // id = this.schema.decode_key(new_key)[0]
         let ring = this.ring
-        let id = (this.insert_mode === 'compact') ? this._assign_id_compact() : Math.max(this._autoincrement + 1, ring.start_id)
+        let id = (this.insert_mode === 'compact' && !this._reserved.has(this._autoincrement))
+                    ? this._assign_id_compact()
+                    : Math.max(this._autoincrement + 1, ring.start_id)
         if (!ring.valid_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
 
         this._reserved.add(id)
