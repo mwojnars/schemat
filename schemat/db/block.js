@@ -31,12 +31,12 @@ export class Block extends Agent {
     get stream()    { return this.sequence.stream }
 
     get file_extension() {
-        let ext = this.__self.__data['filename']?.split('.').pop()
+        let ext = this.filename?.split('.').pop()
         if (ext) return ext
         if (this.format === 'data-yaml') return 'yaml'
         if (this.format === 'index-jl') return 'jl'
     }
-    get file_path() { return joinPath(this.__node.data_directory, `block_${this.id}.${this.file_extension}`) }
+    get file_path() { return this.filename || joinPath(this.__node.data_directory, `block_${this.id}.${this.file_extension}`) }
 
     __new__(sequence, filename) {
         sequence.assert_active()
@@ -50,7 +50,7 @@ export class Block extends Agent {
             // assert(this.sequence.__meta.loading)                    // it's assumed that .sequence gets fully loaded before any CRUD operation (ins/upd/del) is executed
 
         let storage_class = this._detect_storage_class()
-        this._storage = new storage_class(this.filename, this)
+        this._storage = new storage_class(this.file_path, this)
         return this._reopen(this._storage)
     }
 
@@ -58,7 +58,7 @@ export class Block extends Agent {
         let format = this.format
         if (!format) {
             // infer the storage type from the filename extension
-            let extension = this.filename.split('.').pop()
+            let extension = this.file_extension  //this.filename.split('.').pop()
             if (extension === 'yaml') format = 'data-yaml'
             if (extension === 'jl')   format = 'index-jl'
         }
@@ -71,7 +71,7 @@ export class Block extends Agent {
 
     async __start__() {
         let storage_class = this._detect_storage_class()
-        let storage = new storage_class(this.filename, this)
+        let storage = new storage_class(this.file_path, this)
         await this._reopen(storage)
         // return storage.open()
         return {storage}
