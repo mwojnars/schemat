@@ -140,6 +140,8 @@ export class DataSequence extends Sequence {
     static role       = 'data'          // for use in ProcessingStep and DataRequest
     static COMMANDS   = ['select', 'insert', 'update', 'upsave', 'delete']
 
+    get file_prefix() { return 'data' }
+
     __new__(ring, filename) {
         super.__new__(ring)
         this.blocks = [DataBlock.new(this, filename)]
@@ -256,10 +258,12 @@ export class Stream extends WebObject {
 
 export class ObjectsStream extends Stream {
     /* The "objects" stream: primary data stream containing web objects. */
+    get file_prefix() { return 'data' }
 }
 
 export class IndexStream extends Stream {
     /* Index deployed in a particular ring's sequence. */
+    get file_prefix() { return 'index' }
 }
 
 
