@@ -202,6 +202,7 @@ export class WebObject {
 
     __provisional_id        temporary ID (1,2,3...) of a newly-created object not yet saved to DB; only used to differentiate the object
                             in a batch of interconnected objects that are being inserted to DB altogether
+    __hash                  random integer assigned during instantiation, to differentiate between local instances of the same web object
 
     __ring                  Ring instance that represents the ring where this object was retrieved from; stub or loaded
     __block                 Block instance that represents the physical data block where this object was retrieved from; stub or loaded
@@ -394,6 +395,7 @@ export class WebObject {
         if (id) this.__id = id
 
         this.__self = this              // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
+        this.__hash = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
 
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
         // only on the client this flag can be changed after object creation
