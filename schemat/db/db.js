@@ -83,12 +83,12 @@ export class Ring extends WebObject {
 
         if (!this.lower_ring) return
         await this.lower_ring.load()
-        let Stream = await schemat.import('/$/sys/Stream')
+        let IndexStream = await schemat.import('/$/sys/IndexStream')
 
         for (let stream of this.lower_ring.streams?.values() || []) {
             let name = stream.operator.name
             print(`Ring.__setup__() creating stream '${name}'`)
-            this.streams[name] = await Stream.new(this, stream.operator).save({ring})
+            this.streams[name] = await IndexStream.new(this, stream.operator).save({ring})
         }
     }
 

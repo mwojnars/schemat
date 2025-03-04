@@ -129,6 +129,8 @@
       "@": 21
     IndexSequence:
       "@": 22
+    IndexStream:
+      "@": 28
     "@": schemat:Catalog
   __container:
     "@": 1019
