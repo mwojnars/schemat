@@ -176,6 +176,7 @@ export class DataBlock extends Block {
 
     async __init__() {
         this._autoincrement = await super.__init__() || 1
+        this._reserved = new Set()      // IDs that were already assigned during insert(), for proper handling of "compact" insertion
     }
 
     async assert_unique(id, msg) {
@@ -280,7 +281,10 @@ export class DataBlock extends Block {
         let ring = this.ring
         let id = (this.insert_mode === 'compact') ? this._assign_id_compact() : Math.max(this._autoincrement + 1, ring.start_id)
         if (!ring.valid_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
+
+        this._reserved.add(id)
         this._autoincrement = Math.max(id, this._autoincrement)
+
         print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
         return id
     }
@@ -298,7 +302,8 @@ export class DataBlock extends Block {
 
         for (let [key, value] of this._storage.scan()) {
             let id = seq.decode_key(key)
-            if (id < ring.start_id) continue            // skip records outside the current ring's range
+            if (this._reserved.has(id)) continue        // this ID was already taken during a previous insert()?
+            if (id + 1 < ring.start_id) continue        // skip records outside the current ring's range
             if (id > next) return next                  // found a gap? return the first available ID
             next = id + 1
         }
@@ -393,6 +398,7 @@ export class DataBlock extends Block {
     async erase() {
         /* Remove all records from this sequence; open() should be called first. */
         this._autoincrement = 1
+        this._reserved = new Set()
         return super.erase()
     }
 
