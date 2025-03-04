@@ -184,7 +184,7 @@ export class JSONx {
 
         console.assert(cls !== undefined, {msg: "`cls` is undefined", state})
 
-        // instantiate the output object; special handling for standard JSON types and WebObject
+        // instantiate the output object; special handling for standard JSON types
         if (T.isPrimitiveClass(cls))  return state
         if (cls === Object)           return this.decode_object(state)
         if (cls === Array)            return this.decode_array(state)
