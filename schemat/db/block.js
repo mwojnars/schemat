@@ -298,16 +298,16 @@ export class DataBlock extends Block {
 
         let seq  = this.sequence
         let ring = seq.ring
-        let next = ring.start_id
+        let gap  = ring.start_id
 
         for (let [key, value] of this._storage.scan()) {
             let id = seq.decode_key(key)
-            if (this._reserved.has(id)) continue        // this ID was already taken during a previous insert()?
             if (id + 1 < ring.start_id) continue        // skip records outside the current ring's range
-            if (id > next) return next                  // found a gap? return the first available ID
-            next = id + 1
+            if (gap < id && !this._reserved.has(gap))   // found a gap before `id`? return it unless already reserved
+                return gap
+            gap = id + 1
         }
-        return next                                     // no gaps found, return the next ID after the last record
+        return gap                                      // no gaps found, return the next ID after the last record
     }
 
     async cmd_update(req) {
