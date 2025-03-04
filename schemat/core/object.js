@@ -847,13 +847,6 @@ export class WebObject {
         if (T.isPOJO(data) || data instanceof Catalog) this.__data.updateAll(data)
     }
 
-    __init__() {}
-        /* Custom initialization after this.__data was created (in a newborn object), or loaded from DB.
-           Typically, this method loads selected related objects, so that other methods can use them directly with synchronous calls.
-           Any other form of initialization that stores temporary data in local attributes (this.x = ...) is FORBIDDEN
-           and incompatible with object cloning as done by get_mutable(). This method can be async in subclasses.
-         */
-
     __setup__({ring, block}) {}
         /* One-time setup of the object, launched on server when the object is being inserted to a data `block`
            and already has an ID assigned (this.id is present). Typically, this method creates related sub-objects
@@ -863,16 +856,22 @@ export class WebObject {
            __setup__() can be viewed as continuation of __new__(), but asynchronous and executed on server (inside a data block).
          */
 
+    __init__() {}
+        /* Custom initialization after this.__data was created (in a newborn object), or loaded from DB.
+           Typically, this method loads selected related objects, so that other methods can use them directly with synchronous calls.
+           Any other form of initialization that stores temporary data in local attributes (this.x = ...) is FORBIDDEN
+           and incompatible with object cloning as done by get_mutable(). This method can be async in subclasses.
+         */
+
     __validate__() {}
-        /* Validate this object's own properties during update/insert. Called *after* validation of individual values through their schema.
+        /* Validate this object's own properties during insert/update. Called *after* validation of individual values through their schema.
            Called on NON-activated object; should NOT require that __init__() or _activate() was called beforehand!
          */
 
-    // __edited__(prev, curr) {}
-    //     /* Post-processing after the __data was edited on the server during update of the record in DB. */
-
-    __destroy__() {}
-        /* Custom tear down that is executed once before this object is permanently deleted from the database. */
+    __delete__() {}
+        /* Custom tear down executed when this object is permanently deleted from the database. Typically,
+           this method removes related objects that are no longer needed after the current one is removed.
+         */
 
     // __done__() {}
     //     /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
