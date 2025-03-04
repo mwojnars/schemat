@@ -37,10 +37,12 @@ export class Block extends Agent {
     }
 
     async __setup__() {
-        await this.sequence.load()
-        await this.stream.load()
-        await this.ring.load()
+        print('Block.__setup__() ...')
+        if (!this.sequence.is_loaded()) await this.sequence.load()
+        if (!this.stream.is_loaded()) await this.stream.load()
+        if (!this.ring.is_loaded()) await this.ring.load()
         this.filename ??= this._create_filename()
+        print('Block.__setup__() done')
     }
 
     _create_filename() {
@@ -279,6 +281,7 @@ export class DataBlock extends Block {
         let id = (this.insert_mode === 'compact') ? this._assign_id_compact() : Math.max(this._autoincrement + 1, ring.start_id)
         if (!ring.valid_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
         this._autoincrement = Math.max(id, this._autoincrement)
+        print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
         return id
     }
 

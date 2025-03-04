@@ -25,13 +25,14 @@ export class Sequence extends WebObject {
     ring                // parent Ring of this sequence
     stream              // parent Stream of this sequence
     splits              // array of split points between blocks
-    blocks              // array of Blocks that make up this sequence
+    blocks              // array of Blocks that make up this sequence, can be empty []
     flush_delay         // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
 
 
     __new__(ring) {
         ring.assert_active()
         this.ring = ring
+        this.blocks = []
     }
 
     async __init__() {
@@ -46,7 +47,7 @@ export class Sequence extends WebObject {
         // doing block.load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
         // doing the same later may cause infinite recursion, because the load() request for a block may be directed
         // to the current sequence (which has an unloaded block!), and cause another block.load(), and so on...
-        return Promise.all(this.blocks?.map(b => b.load()))
+        return Promise.all(this.blocks.map(b => b.load()))
     }
 
     // add_derived(sequence) {
@@ -57,7 +58,7 @@ export class Sequence extends WebObject {
 
     _find_block(binary_key) {
         // print('binary_key:', binary_key)
-        if (!this.splits) return this.blocks?.[0]
+        if (!this.splits) return this.blocks[0]
 
         let index = this.splits.findIndex(split => compare_uint8(split, binary_key) > 0)
         if (index === -1) index = this.blocks.length - 1
@@ -101,8 +102,8 @@ export class Sequence extends WebObject {
         yield* block.scan({start, stop})
     }
 
-    async erase()   { return Promise.all(this.blocks?.map(b => b.erase())) }
-    async flush()   { return Promise.all(this.blocks?.map(b => b.flush())) }
+    async erase()   { return Promise.all(this.blocks.map(b => b.erase())) }
+    async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
 }
 
 
@@ -114,7 +115,8 @@ export class IndexSequence extends Sequence {
     __new__(ring, filename) {
         super.__new__(ring)
         // assert(filename.endsWith('.jl'))
-        this.blocks = [Block.new(this, filename)]
+        print('IndexSequence.__new__() creating a block')
+        // this.blocks.push(Block.new(this, filename))
 
         // let {IndexBlock} = this.__category.preloaded
         // let IndexBlock = await this.__category.import('./IndexBlock')
@@ -264,9 +266,12 @@ export class IndexStream extends Stream {
     get file_prefix() { return 'index' }
 
     async __setup__(id, {ring}) {
-        print('IndexStream.__setup__() creating IndexSequence')
+        print('IndexStream.__setup__() creating this.sequence')
         let IndexSequence = await schemat.import('/$/sys/IndexSequence')
-        this.sequence = await IndexSequence.new(this.ring).save({ring})
+        this.sequence = IndexSequence.new(this.ring)
+        print('IndexStream.__setup__() saving this.sequence ...')
+        await this.sequence.save({ring})
+        print('IndexStream.__setup__() saved this.sequence')
     }
 }
 
