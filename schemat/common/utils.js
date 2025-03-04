@@ -314,6 +314,7 @@ export function fileBaseName(filepath) {
 export function normalizePath(path) {
     /* Drop single dots '.' occurring as `path` segments; truncate parent segments wherever '..' occur. */
     while (path.includes('/./')) path = path.replaceAll('/./', '/')
+    while (path.includes('//')) path = path.replaceAll('//', '/')
     let lead = path[0] === '/' ? path[0] : ''
     if (lead) path = path.slice(1)
 
@@ -325,6 +326,11 @@ export function normalizePath(path) {
         else parts.push(part)
 
     return lead + parts.join('/')
+}
+
+export function joinPath(...parts) {
+    /* Join path parts into a single path. */
+    return normalizePath(parts.join('/'))
 }
 
 
