@@ -113,7 +113,7 @@ export class IndexSequence extends Sequence {
 
     __new__(ring, filename) {
         super.__new__(ring)
-        assert(filename.endsWith('.jl'))
+        // assert(filename.endsWith('.jl'))
         this.blocks = [Block.new(this, filename)]
 
         // let {IndexBlock} = this.__category.preloaded
@@ -228,8 +228,6 @@ export class Stream extends WebObject {
     __new__(ring, operator) {
         this.ring = ring
         this.operator = operator
-        // let index_file = ring._file.replace(/\.yaml$/, '.index.jl')
-        // this.sequence = IndexSequence.new(ring, index_file)
     }
 
     async __init__() {
@@ -256,14 +254,19 @@ export class Stream extends WebObject {
     }
 }
 
-export class ObjectsStream extends Stream {
-    /* The "objects" stream: primary data stream containing web objects. */
-    get file_prefix() { return 'data' }
-}
+// export class ObjectsStream extends Stream {
+//     /* The "objects" stream: primary data stream containing web objects. */
+//     get file_prefix() { return 'data' }
+// }
 
 export class IndexStream extends Stream {
     /* Index deployed in a particular ring's sequence. */
     get file_prefix() { return 'index' }
+
+    async __setup__(id, {ring}) {
+        let IndexSequence = await schemat.import('/$/sys/IndexSequence')
+        this.sequence = await IndexSequence.new(this.ring).save({ring})
+    }
 }
 
 

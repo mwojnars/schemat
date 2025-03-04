@@ -863,11 +863,12 @@ export class WebObject {
         /* Post-processing after the __data was edited on the server during update of the record in DB. */
 
     __setup__(id, {ring, block}) {}
-        /* One-time setup of the object, launched on server when the object is being inserted to a data block
+        /* One-time setup of the object, launched on server when the object is being inserted to a data `block`
            and already has a provisional ID assigned (`id`). Typically, this method creates related sub-objects
            and creates links to/from itself and these objects - creating such objects on client is in many cases
            either impossible or inefficient. For now, __setup__() must explicitly save the objects it creates;
            in the future, these objects will be inserted automatically with the parent object. May return a Promise.
+           __setup__() can be viewed as continuation of __new__(), but asynchronous and executed on server (inside a data block).
          */
 
     // __done__() {}
