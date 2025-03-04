@@ -625,6 +625,10 @@
     all child (worker) processes. Nodes communicate with each other using Kafka,
     and in this way they form a distributed compute & storage cluster.
   schema:
+    data_directory:
+      default: ./schemat/data
+      info: Local directory where data blocks should be kept.
+      "@": schemat/types/type.js:STRING
     agents_installed:
       info: Catalog of all Agent objects installed on this machine.
       default:

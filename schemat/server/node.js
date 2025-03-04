@@ -17,6 +17,7 @@ export class Node extends Agent {
        running agents in Process._get_agents_running().
      */
 
+    data_directory
     agents_installed
     agents_running
     master_agents_running
