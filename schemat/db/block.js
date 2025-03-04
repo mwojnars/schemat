@@ -265,15 +265,12 @@ export class DataBlock extends Block {
             let setup = obj.__setup__({ring: this.ring, block: this})
             if (setup instanceof Promise) await setup
 
-            // find all unseen newborn references and add their JSON content to the queue
+            // find all unseen newborn references and add them to the queue
             obj.__references.forEach(ref => {
                 if (ref.is_newborn() && !unique.has(ref)) { objects.push(ref); unique.add(ref) }
             })
-
-            assert(obj.__data, `missing __data in [${obj.id}] at ${pos}`)
         }
-
-        print(`[${this.id}].cmd_insert() saving ${objects.length} object(s)`)
+        // print(`[${this.id}].cmd_insert() saving ${objects.length} object(s)`)
 
         for (let obj of objects) {
             this._prepare_object(obj)       // validate obj.__data
@@ -282,7 +279,7 @@ export class DataBlock extends Block {
         // await Promise.all(objects.map(obj => {}))
 
         let ids = objects.map(obj => obj.id)
-        print(`[${this.id}].cmd_insert() saved IDs:`, ids)
+        // print(`[${this.id}].cmd_insert() saved IDs:`, ids)
 
         return batch ? ids.slice(0, data.length) : ids[0]
     }
