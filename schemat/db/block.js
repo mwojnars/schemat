@@ -267,10 +267,6 @@ export class DataBlock extends Block {
             // find all unseen newborn references and add their JSON content to the queue
             obj.__references.forEach(ref => {
                 if (ref.is_newborn() && !unique.has(ref)) { records.push({obj: ref}); unique.add(ref) }
-                // if (ref.is_newborn() && !unique.has(ref)) {
-                //     assert(ref.__data, `missing __data in reference at ${pos}`)
-                //     records.push({data: ref.__json}); unique.add(ref)
-                // }
             })
 
             assert(obj.__data, `missing __data in [${obj.id}] at ${pos}`)
@@ -286,8 +282,8 @@ export class DataBlock extends Block {
 
         let ids = records.map(rec => rec.obj.id)
         print(`[${this.id}].cmd_insert() saved IDs:`, ids)
-        
-        return batch ? ids : ids[0]
+
+        return batch ? ids.slice(0, data.length) : ids[0]
     }
 
     _prepare_object(obj) {
