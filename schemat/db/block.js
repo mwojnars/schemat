@@ -258,16 +258,20 @@ export class DataBlock extends Block {
 
         for (let pos = 0; pos < records.length; pos++) {
             let {obj, data} = records[pos]
-            records[pos].obj = obj ??= await instantiate({data})
+            // records[pos].obj = obj ??= await instantiate({data})
+            obj.__id ??= this._assign_id()
 
             let setup = obj.__setup__({ring: this.ring, block: this})       // call __setup__()
             if (setup instanceof Promise) await setup
             this._prepare_object(obj)                                       // validate obj.__data
 
-            // find any unseen newborn references and add them to the queue
-            obj.__references.forEach(ref => {if (ref.is_newborn() && !unique.has(ref)) {records.push(ref); unique.add(ref)}})
+            // find all unseen newborn references and add their JSON content to the queue
+            obj.__references.forEach(ref => {
+                if (ref.is_newborn() && !unique.has(ref)) { records.push({obj: ref}); unique.add(ref) }
+            })
         }
 
+        print(`[${this.id}].cmd_insert() saving ${records.length} object(s)`)
         await Promise.all(records.map(({obj}) => this._save(obj)))
 
         let ids = records.map(rec => rec.obj.id)
