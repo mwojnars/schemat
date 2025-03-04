@@ -26,7 +26,7 @@
   __category:
     "@": 11
 - __id: 1003
-  name: kernel
+  name: ring-kernel
   data_sequence:
     "@": 1012
   streams:
@@ -39,7 +39,7 @@
   __category:
     "@": 12
 - __id: 1004
-  name: 01_site
+  name: ring-site
   lower_ring:
     "@": 1003
   lower_ring_writable: true
@@ -185,7 +185,7 @@
   __category:
     "@": 19
 - __id: 1016
-  name: 02_app
+  name: ring-app
   lower_ring:
     "@": 1004
   lower_ring_writable: true
