@@ -303,7 +303,7 @@ describe('Schemat Tests', function () {
         it('Directory', async function () {
             await test_page(page, `${DOMAIN}/$/sys/Directory`, '#page-main',
                 ['Directory', 'nested containers', 'file system', 'containers.js:Directory'])
-            await delay(400)
+            await delay(500)
         })
 
         it('Varia object', async function () {

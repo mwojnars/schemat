@@ -1,4 +1,4 @@
-import {assert, print, T, zip, amap, sleep, utc} from '../common/utils.js'
+import {assert, print, T, zip, amap, sleep, utc, joinPath} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {WebObject} from '../core/object.js'
 import {Struct} from "../core/catalog.js";
@@ -36,7 +36,7 @@ export class Block extends Agent {
         if (this.format === 'data-yaml') return 'yaml'
         if (this.format === 'index-jl') return 'jl'
     }
-    // get filename()  { return path_join(this.__node.data_directory, `block_${this.id}.${this.file_extension}`) }
+    get file_path() { return joinPath(this.__node.data_directory, `block_${this.id}.${this.file_extension}`) }
 
     __new__(sequence, filename) {
         sequence.assert_active()
