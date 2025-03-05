@@ -1,7 +1,6 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {JSONx} from "../common/jsonx.js";
 import {Agent} from "./agent.js";
-import {JsonKAFKA} from "./kafka.js";
 
 
 /**********************************************************************************************************************/
@@ -211,41 +210,33 @@ export class Node extends Agent {
     }
 
 
-    'KAFKA.install'() {
+    async 'remote.install'(name, agent, {start = true, workers = true, master = false} = {}) {
         /* Call agent.__install__() on this node and add the agent to `agents_installed`. If start=true, the agent
            is also added to `agents_running` and is started on the next iteration of the host process's life loop.
          */
         // process.chdir(this.local_root || schemat.site.local_root)
-        return new JsonKAFKA({
-            server: async (name, agent, {start = true, workers = true, master = false} = {}) => {
-                await agent.load()
-                await agent.__install__(this)       // can modify the local environment of the host node
+        await agent.load()
+        await agent.__install__(this)       // can modify the local environment of the host node
 
-                let node = this.get_mutable()
-                node.edit.add_installed(name, agent)
+        let node = this.get_mutable()
+        node.edit.add_installed(name, agent)
 
-                if (start) node.edit.add_running(agent, {workers, master})
-                await node.save()
-            }
-        })
+        if (start) node.edit.add_running(agent, {workers, master})
+        await node.save()
     }
 
-    'KAFKA.uninstall'() {
-        return new JsonKAFKA({
-            server: async (agent) => {
-                await agent.load()
-                
-                let node = this.get_mutable()
-                node.edit.delete_running(agent)             // let workers know that the agent should be stopped
-                await node.save()
-                await sleep(this.refresh_interval * 2 + node.__ttl)     // TODO: wait for actual confirmation(s) that the agent is stopped on all processes
+    async 'remote.uninstall'(agent) {
+        await agent.load()
 
-                node.edit.delete_installed(agent)           // mark the agent as uninstalled
-                await node.save()
-                
-                await agent.__uninstall__(this)             // clean up any node-specific resources
-            }
-        })
+        let node = this.get_mutable()
+        node.edit.delete_running(agent)             // let workers know that the agent should be stopped
+        await node.save()
+        await sleep(this.refresh_interval * 2 + node.__ttl)     // TODO: wait for actual confirmation(s) that the agent is stopped on all processes
+
+        node.edit.delete_installed(agent)           // mark the agent as uninstalled
+        await node.save()
+
+        await agent.__uninstall__(this)             // clean up any node-specific resources
     }
 
     async 'action.start'(agent, opts = {}) {
