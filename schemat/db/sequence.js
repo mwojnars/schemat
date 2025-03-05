@@ -116,19 +116,19 @@ export class IndexSequence extends Sequence {
         super.__new__(ring)
         // assert(filename.endsWith('.jl'))
         print('IndexSequence.__new__() creating a block')
-        // this.blocks.push(Block.new(this, filename))
+        // this.blocks.push(Block.new(this, {filename}))
 
         // let {IndexBlock} = this.__category.preloaded
         // let IndexBlock = await this.__category.import('./IndexBlock')
         // let IndexBlock = await schemat.import('/$/sys/IndexBlock')
-        // this.blocks = [await IndexBlock.new(this, filename)]
+        // this.blocks = [await IndexBlock.new(this, {filename})]
     }
 
     // async __setup__() {
     //     // let {IndexBlock} = this.__category.preloaded
     //     // let IndexBlock = await this.__category.import('./IndexBlock')
     //     let IndexBlock = await schemat.import('/$/sys/IndexBlock')
-    //     this.blocks = [await IndexBlock.new(this, this.filename).save()]
+    //     this.blocks = [await IndexBlock.new(this, this.{filename}).save()]
     // }
 }
 
@@ -146,7 +146,7 @@ export class DataSequence extends Sequence {
 
     __new__(ring, filename) {
         super.__new__(ring)
-        this.blocks = [DataBlock.new(this, filename)]
+        this.blocks = [DataBlock.new(this, {filename})]
     }
 
     encode_key(id) {

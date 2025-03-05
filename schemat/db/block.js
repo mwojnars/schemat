@@ -28,10 +28,11 @@ export class Block extends Agent {
     get ring()      { return this.sequence.ring }
     get stream()    { return this.sequence.stream }
 
-    __new__(sequence, filename = undefined) {
+    __new__(sequence, {filename, node} = {}) {
         sequence.assert_active()
         this.sequence = sequence
         this.filename = filename
+        this.__node = node
     }
 
     async __setup__() {
