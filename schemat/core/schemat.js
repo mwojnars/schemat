@@ -383,22 +383,6 @@ export class Schemat {
         /* Cache the specific version (__ver) of a loaded web object for reuse. */
     }
 
-    async _purge_registry() {
-        /* Purge the objects cache in the registry. Schedule periodical re-run: the interval is configured
-           in site.cache_purge_interval and may change over time.
-         */
-        if (this.is_closing) return
-
-        try {
-            this._report_memory()
-            return this.registry.purge()
-        }
-        finally {
-            let interval = (this.site?.cache_purge_interval || 1) * 1000        // [ms]
-            setTimeout(() => this._purge_registry(), interval)
-        }
-    }
-
     _report_memory() {
         let memory = SERVER ? process.memoryUsage().heapUsed : performance.memory?.usedJSHeapSize   // performance.memory only exists on Chrome
         if (memory) print(`memory used: ${(memory / 1024 / 1024).toFixed(2)} MB`)
