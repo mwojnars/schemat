@@ -82,7 +82,7 @@ export class ServerSchemat extends Schemat {
 
     _select(id)  { return this.db.top_ring.select(id) }
 
-    async _purge_registry() {
+    async _purge_registry(generation = 0, ERASE_TIMEOUT = 5) {
         /* Purge the objects cache in the registry. Schedule periodical re-run: the interval is configured
            in site.cache_purge_interval and may change over time.
          */
@@ -90,12 +90,25 @@ export class ServerSchemat extends Schemat {
 
         try {
             this._report_memory()
+            if (generation >= ERASE_TIMEOUT) {
+                generation = 0
+                return this._erase_registry()
+            }
             return this.registry.purge()
         }
         finally {
             let interval = (this.site?.cache_purge_interval || 1) * 1000        // [ms]
-            setTimeout(() => this._purge_registry(), interval)
+            setTimeout(() => this._purge_registry(generation + 1), interval)
         }
+    }
+
+    _erase_registry() {
+        /* Once in a while, clear the object cache entirely (except `site` and `root category`!) to cut links between subsequent
+           generations of instances and allow efficient garbage-collection in case of cyclic links between different web objects.
+         */
+        let count = this.registry.objects.size - this._essential_objects.length
+        print(`erasure of registry (${count} objects)`)
+        this.registry.erase(this._essential_objects)
     }
 
 

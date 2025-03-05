@@ -83,12 +83,15 @@ export class Schemat {
 
     config                  // boot configuration (on server) or RequestContext (on client)
     site_id                 // ID of the active Site object
+    // _site                   // [site] of the previous generation, remembered here during complete cache erasure to keep the .site() getter operational
     registry                // cache of web objects, records and indexes loaded from DB
     builtin                 // a Classpath containing built-in classes and their paths
     is_closing = false      // true if the Schemat node is in the process of shutting down
 
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
 
+
+    get _essential_objects() { return [ROOT_ID, this.site_id] }    // these objects are always available as fully-loaded not stubs
 
     get root_category() { return this.get_object(ROOT_ID) }
     get site()          { return this.registry.get_object(this.site_id) }

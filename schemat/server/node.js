@@ -89,6 +89,7 @@ export class Node extends Agent {
 
         let tcp_msg = msg
         return schemat.agents.tcp.send(tcp_msg, node.tcp_address)
+        // return this.tcp_sender.local.send(tcp_msg, node.tcp_address)
     }
 
     /* incoming message processing */
