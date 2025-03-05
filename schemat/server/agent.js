@@ -14,8 +14,9 @@ export class Agent extends WebObject {
        being allocated/deallocated in __install__/__uninstall__(), while some others (e.g., sockets) in __start__/__stop__().
     */
 
-    // __node / __node$ -- the host node(s) where this agent is installed/running
-    // __num_workers    -- 0/1/N, the number of concurrent workers per node that should execute this agent's loop at the same time; 0 = "all available"
+    // __node __node$       -- node(s) where this agent is installed & running as a leader
+    // __replica __replica$ -- node(s) where this agent is installed & running as a replica
+    // __num_workers        -- 0/1/N, the number of concurrent workers per node that should execute this agent's loop at the same time; 0 = "all available"
 
     hard_restart
 
