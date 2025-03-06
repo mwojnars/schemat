@@ -214,8 +214,7 @@ export class DataBlock extends Block {
         return ring
     }
 
-    async cmd_select(req) {
-        let {id} = req
+    async cmd_select(id, req) {
         let key = this.sequence.encode_key(id)
         let data = await this._storage.get(key)         // JSON string
         if (data) return this._annotate(data)
@@ -393,13 +392,12 @@ export class DataBlock extends Block {
         schemat.register_modification({id, data})
     }
 
-    async cmd_delete(req) {
+    async cmd_delete(id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
         // let {key} = req.args
         // let id = this.sequence.decode_key(key)
-        let {id} = req
         let key = this.sequence.encode_key(id)
 
         let data = await this._storage.get(key)

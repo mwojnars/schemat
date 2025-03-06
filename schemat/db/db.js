@@ -114,11 +114,11 @@ export class Ring extends WebObject {
     _random_block() { return this.data_sequence.blocks[0] }
 
     async select(id, req) {
-        return this._find_block(id).cmd_select(req || new DataRequest(this, 'select', {id}))
+        return this._find_block(id).cmd_select(id, req || new DataRequest())
     }
 
     async delete(id, req) {
-        return this._find_block(id).cmd_delete(req || new DataRequest(this, 'delete', {id}))
+        return this._find_block(id).cmd_delete(id, req || new DataRequest())
     }
 
     async insert(data, req) {
