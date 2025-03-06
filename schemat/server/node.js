@@ -54,7 +54,11 @@ export class Node extends Agent {
 
     /* outgoing message processing */
 
-    send_rpc(target_id, method, ...args) {
+    call_remote(id, method, args) {
+        return this.send_rpc(id, method, args)
+    }
+
+    send_rpc(target_id, method, args) {
         /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node
            and then to the `target_id` object (agent) where it should invoke its 'remote.<method>'(...args). Wait for the returned result.
          */
@@ -67,7 +71,7 @@ export class Node extends Agent {
         assert(this.is_master())
 
         if (type === 'RPC') {
-            // print("from_worker():", msg)
+            print("from_worker():", msg)
 
             // locate the cluster node where the target object is deployed
             let [target_id] = msg
@@ -119,7 +123,7 @@ export class Node extends Agent {
 
     from_master([type, ...msg]) {
         assert(type === 'RPC')
-        // print(`#${this.worker_id} from_master():`, [type, ...msg])
+        print(`#${this.worker_id} from_master():`, [type, ...msg])
         return this.handle_rpc(msg)
     }
 
