@@ -5,6 +5,55 @@ import {Agent} from "./agent.js";
 
 /**********************************************************************************************************************/
 
+class Outbox {
+    /* Send messages via a communication channel and wait for responses. */
+
+    constructor(child, timeout = 10000) {
+        this.child = child              // child process to send messages to
+        this.counter = 0                // no. of requests sent so far
+        this.pending = new Map()        // requests sent awaiting a response
+        this.timeout = timeout          // timeout for waiting for a response
+        this._start_listener()
+    }
+
+    async send(msg) {
+        return new Promise((resolve, reject) => {
+            const id = ++this.counter
+            this.pending.set(id, resolve)
+
+            this._send([id, msg])
+            // this.child.send([id, msg])
+
+            if (this.timeout)           // add timeout for safety
+                setTimeout(() => {
+                    if (this.pending.has(id)) {
+                        this.pending.delete(id)
+                        reject(new Error(`Timeout for request ${id}`))
+                    }
+                }, this.timeout)
+        })
+    }
+
+    _start_listener() {
+        this.child.on("message", (message) => this._handle_response(message))
+    }
+
+    _send(message) {
+        this.child.send(message)
+    }
+
+    _handle_response([id, response]) {
+        if (this.pending.has(id)) {
+            this.pending.get(id)(response)      // resolve the promise with the response
+            this.pending.delete(id)
+        }
+        else console.warn(`unknown response id: ${id}`)
+    }
+}
+
+
+/**********************************************************************************************************************/
+
 export class Node extends Agent {
     /* Node of a Schemat cluster. Technically, each node is a local (master) process launched independently
        on a particular machine, together with its child (worker) processes, if any. Nodes communicate with each other
@@ -49,6 +98,14 @@ export class Node extends Agent {
     get tcp_address() {
         if (!this.tcp_host || !this.tcp_port) throw new Error(`tcp_host and tcp_port must be set`)
         return `${this.tcp_host}:${this.tcp_port}` 
+    }
+
+    __start__() {
+        // here, a *request* is a message followed by a response, in contrary to "notifications" that are fire-and-forget messages (no response)
+        return {
+            ipc_requests: new Map(),        // requests sent via IPC awaiting a response
+            ipc_counter:  0,                // no. of requests sent so far via IPC, for generating message IDs
+        }
     }
 
 

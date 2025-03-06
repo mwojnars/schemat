@@ -56,7 +56,7 @@ export class TCP_Sender extends Agent {
                     print('TCP response:', msg)
                     let {id, result} = JSONx.parse(msg)
                     pending.delete(id)
-                    this._handle_result(result)
+                    this._handle_response(result)
                     // print('pending:', pending.size)
                 }
                 catch (e) { console.error('Invalid ACK:', msg) }
@@ -91,7 +91,7 @@ export class TCP_Sender extends Agent {
         for (let socket of sockets.values()) socket.end()
     }
 
-    _handle_result(result) {
+    _handle_response(result) {
         console.log('Received result:', result)
     }
 }
