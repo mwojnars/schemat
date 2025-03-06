@@ -106,10 +106,8 @@ export class ServerSchemat extends Schemat {
         /* Once in a while, clear the object cache entirely (except `site` and `root category`!) to cut links between subsequent
            generations of instances and allow efficient garbage-collection in presence of cyclic links between different web objects.
          */
-        let count = this.registry.objects.size //- this._essential_objects.length
-        print(`erasure of registry (${count} objects)`)
-        this.registry.erase()  //[this._essential_objects[0]])
-
+        print(`erasure of registry (${this.registry.objects.size} objects)`)
+        this.registry.erase()
         this._site = this.site
         this.reload(this.site_id, true)     // not awaited
     }

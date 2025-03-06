@@ -90,9 +90,6 @@ export class Schemat {
 
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
 
-
-    get _essential_objects() { return [ROOT_ID, this.site_id] }    // these objects are always available as fully-loaded not stubs
-
     get root_category() { return this.get_object(ROOT_ID) }
     get site()          { return this.registry.get_object(this.site_id) || this._site }
     get db()            { return this.site?.database }      // a stub when on client, fully loaded when on server

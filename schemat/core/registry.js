@@ -119,9 +119,5 @@ export class Registry {
         this.records.clear()
     }
 
-    erase(stop_list = []) {
-        let keep = stop_list.map(id => this.objects.get(id))
-        this.objects.clear()
-        keep.forEach(obj => this.objects.set(obj.id, obj))
-    }
+    erase() { this.objects.clear() }
 }
