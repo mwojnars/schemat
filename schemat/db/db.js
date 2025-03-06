@@ -114,7 +114,8 @@ export class Ring extends WebObject {
     _random_block() { return this.data_sequence.blocks[0] }
 
     async select(id, req) {
-        return this._find_block(id).cmd_select(id, req || new DataRequest())
+        // return this._find_block(id).remote.select(id, req || new DataRequest())
+        return this._find_block(id)._select(id, req || new DataRequest())
     }
 
     async delete(id, req) {
@@ -194,7 +195,10 @@ export class Ring extends WebObject {
 }
 
 export class BootRing extends Ring {
-    // select(id, req)  { print('boot ring select()'); return super.select(id, req) }
+    // select(id, req)  {
+    //     print('boot ring select()')
+    //     return this._find_block(id)._select(id, req || new DataRequest())
+    // }
     insert() {assert(false)}
     update() {assert(false)}
     delete() {assert(false)}
