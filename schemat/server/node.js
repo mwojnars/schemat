@@ -5,12 +5,13 @@ import {Agent} from "./agent.js";
 
 /**********************************************************************************************************************/
 
-export class Outbox {
-    /* Send messages via a one-way communication channel and wait for responses. The details of the channel 
-       are implemented in subclasses by overriding the `_listen()` and `_send()` methods.
+export class Mailbox {
+    /* Send messages via a one-way communication channel and wait for responses on another channel of the same type.
+       The details of the channel are implemented in subclasses by overriding the `_listen()` and `_send()` methods.
      */
 
-    constructor(timeout = 10000) {
+    constructor(callback, timeout = 10000) {
+        this.callback = callback        // processing function for incoming messages
         this.counter = 0                // no. of requests sent so far
         this.pending = new Map()        // requests sent awaiting a response
         this.timeout = timeout          // timeout for waiting for a response
@@ -34,11 +35,12 @@ export class Outbox {
     }
 
     notify(msg) {
-        /* Send a message without expecting a response (fire-and-forget). */
+        /* Send a message without waiting for a response (fire-and-forget). */
         this._send([0, msg])
     }
 
     _handle_response([id, response]) {
+        id = -id
         if (this.pending.has(id)) {
             this.pending.get(id)(response)      // resolve the promise with the response
             this.pending.delete(id)
@@ -46,17 +48,28 @@ export class Outbox {
         else console.warn(`unknown response id: ${id}`)
     }
 
+    async _handle_message([id, msg]) {
+        if (id < 0) return this._handle_response([id, msg])     // received a response from the peer
+
+        let response = this.callback(msg)                       // received a message: run the callback
+        if (id === 0) return
+        
+        // send response to the peer, negative ID indicates this is a response not a message
+        if (response instanceof Promise) response = await response
+        return this._send([-id, response])
+    }
+
     _listen()       { throw new Error('not implemented') }
     _send(message)  { throw new Error('not implemented') }
 }
 
-export class IPC_Outbox extends Outbox {
-    constructor(child) {
-        super()
-        this.child = child
+export class IPC_Mailbox extends Mailbox {
+    constructor(peer, callback) {
+        super(callback)
+        this.peer = peer
     }
-    _listen()       { this.child.on("message", (message) => this._handle_response(message)) }
-    _send(message)  { return this.child.send(message) }
+    _listen()       { this.peer.on("message", (message) => this._handle_message(message)) }
+    _send(message)  { return this.peer.send(message) }
 }
 
 
