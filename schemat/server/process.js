@@ -7,6 +7,7 @@ import {print, assert, T, sleep} from "../common/utils.js";
 import {WebObject} from "../core/object.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {Database, BootDatabase} from "../db/db.js";
+import {Agent} from "./agent.js";
 
 
 // print NODE_PATH:
@@ -254,6 +255,11 @@ export class Process {
             let agent = agents.get(name)
             this._print(`starting agent '${name}'`)
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
+
+            // print(`_start_stop():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
+            assert(agent.is_loaded())
+            assert(agent instanceof Agent)
+
             promises.push(agent.__start__().then(ctx => next.set(name, new AgentState(agent, ctx))))
         }
 
