@@ -5,24 +5,23 @@ import {Agent} from "./agent.js";
 
 /**********************************************************************************************************************/
 
-class Outbox {
-    /* Send messages via a communication channel and wait for responses. */
+export class Outbox {
+    /* Send messages via a communication channel and wait for responses. The details of the channel are implemented 
+       in subclasses by overriding the `_listen()` and `_send()` methods.
+     */
 
-    constructor(child, timeout = 10000) {
-        this.child = child              // child process to send messages to
+    constructor(timeout = 10000) {
         this.counter = 0                // no. of requests sent so far
         this.pending = new Map()        // requests sent awaiting a response
         this.timeout = timeout          // timeout for waiting for a response
-        this._start_listener()
+        this._listen()
     }
 
     async send(msg) {
         return new Promise((resolve, reject) => {
             const id = ++this.counter
             this.pending.set(id, resolve)
-
             this._send([id, msg])
-            // this.child.send([id, msg])
 
             if (this.timeout)           // add timeout for safety
                 setTimeout(() => {
@@ -34,12 +33,8 @@ class Outbox {
         })
     }
 
-    _start_listener() {
-        this.child.on("message", (message) => this._handle_response(message))
-    }
-
-    _send(message) {
-        this.child.send(message)
+    notify(msg) {
+        this._send([0, msg])
     }
 
     _handle_response([id, response]) {
@@ -49,6 +44,15 @@ class Outbox {
         }
         else console.warn(`unknown response id: ${id}`)
     }
+}
+
+export class IPC_Outbox extends Outbox {
+    constructor(child) {
+        super()
+        this.child = child
+    }
+    _listen()       { this.child.on("message", (message) => this._handle_response(message)) }
+    _send(message)  { return this.child.send(message) }
 }
 
 
