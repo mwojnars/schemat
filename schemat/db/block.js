@@ -214,7 +214,9 @@ export class DataBlock extends Block {
         return ring
     }
 
-    async cmd_select(id, req) {
+    async 'remote.select'(_, id, req) { return this._select(id, req) }
+
+    async _select(id, req) {
         let key = this.sequence.encode_key(id)
         let data = await this._storage.get(key)         // JSON string
         if (data) return this._annotate(data)
