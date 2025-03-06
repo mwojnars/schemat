@@ -164,15 +164,18 @@ export class DataSequence extends Sequence {
         let command = req.command
         assert(this.constructor.COMMANDS.includes(command), `unknown command: ${command}`)
 
-        let {id, key} = req.args
+        let {id} = req
+        let key = this.encode_key(id)
 
-        // calculate a `key` from `id` if missing in args
-        if (key === undefined && id !== undefined && id !== null) {
-            key = this.encode_key(id)
-            req.make_step(this, null, {...req.args, key})
-        }
-        else
-            req.make_step(this)
+        // let {id, key} = req.args
+        //
+        // // calculate a `key` from `id` if missing in args
+        // if (key === undefined && id !== undefined && id !== null) {
+        //     key = this.encode_key(id)
+        //     req.make_step(this, null, {...req.args, key})
+        // }
+        // else
+        //     req.make_step(this)
 
         let block = this._find_block(key)
         block.assert_active()

@@ -198,7 +198,7 @@ export class DataBlock extends Block {
         /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring. */
         let ring = this.ring
         let lower = ring.lower_ring
-        if (!lower) throw new ObjectNotFound(null, {id: req.args?.id})
+        if (!lower) throw new ObjectNotFound(null, {id: req.id})
         req.push_ring(ring)
         return lower
     }
@@ -210,14 +210,16 @@ export class DataBlock extends Block {
          */
         let ring = this.ring
         while (ring?.readonly) ring = req.pop_ring()        // go upwards to find the first writable ring
-        if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: req.args?.id})
+        if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: req.id})
         return ring
     }
 
     async cmd_select(req) {
-        let data = await this._storage.get(req.args.key)    // JSON string
+        let {id} = req
+        let key = this.sequence.encode_key(id)
+        let data = await this._storage.get(key)         // JSON string
         if (data) return this._annotate(data)
-        return this._move_down(req).select(req.id, req)
+        return this._move_down(req).select(id, req)
     }
 
     async cmd_insert({id, data}) {
@@ -338,7 +340,8 @@ export class DataBlock extends Block {
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring. Return {id, data}.
          */
-        let {id, key, edits} = req.args
+        let {id, edits} = req
+        let key = this.sequence.encode_key(id)
         let data = await this._storage.get(key)
         if (data === undefined) return this._move_down(req).update(id, edits, req)
 
@@ -367,7 +370,8 @@ export class DataBlock extends Block {
 
     async cmd_upsave(req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
-        let {id, key, data} = req.args
+        let {id, data} = req
+        let key = this.sequence.encode_key(id)
 
         // if `id` is already present in this ring, redo the update (apply `edits` again) instead of overwriting
         // the object with the `data` calculated in a previous ring
@@ -393,8 +397,10 @@ export class DataBlock extends Block {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
-        let {key} = req.args
-        let id = this.sequence.decode_key(key)
+        // let {key} = req.args
+        // let id = this.sequence.decode_key(key)
+        let {id} = req
+        let key = this.sequence.encode_key(id)
 
         let data = await this._storage.get(key)
         if (data === undefined) return this._move_down(req).delete(id, req)
