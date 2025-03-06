@@ -34,6 +34,7 @@ export class Outbox {
     }
 
     notify(msg) {
+        /* Send a message without expecting a response (fire-and-forget). */
         this._send([0, msg])
     }
 
@@ -44,6 +45,9 @@ export class Outbox {
         }
         else console.warn(`unknown response id: ${id}`)
     }
+
+    _listen()       { throw new Error('not implemented') }
+    _send(message)  { throw new Error('not implemented') }
 }
 
 export class IPC_Outbox extends Outbox {
