@@ -196,7 +196,7 @@ export class DataBlock extends Block {
 
     _forward_down(req) {
         /* Forward the request to a lower ring if the current ring doesn't contain the requested object ID - during
-           select/update/delete operations. It is assumed that args[0] is the object ID.
+           select/update/delete operations.
          */
         let ring = this.ring
         let lower = ring.lower_ring
