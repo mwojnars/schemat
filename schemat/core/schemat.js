@@ -183,6 +183,7 @@ export class Schemat {
         await builtin.fetch("../std/files.js")
         await builtin.fetch("../std/site.js")
         await builtin.fetch("../std/containers.js")
+        await builtin.fetch("../db/data_request.js")
         await builtin.fetch("../db/records.js")
         await builtin.fetch("../db/block.js")
         await builtin.fetch("../db/sequence.js")
