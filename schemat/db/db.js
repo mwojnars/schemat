@@ -121,12 +121,12 @@ export class Ring extends WebObject {
 
     // shortcut methods for handle() when the ring needs to be accessed directly without a database ...
 
-    async select(id) {
-        return this.data_sequence.handle(new DataRequest(this, 'select', {id}))
+    async select(id, req) {
+        return this.data_sequence.handle(req || new DataRequest(this, 'select', {id}))
     }
 
-    async delete(id) {
-        return this.data_sequence.handle(new DataRequest(this, 'delete', {id}))
+    async delete(id, req) {
+        return this.data_sequence.handle(req || new DataRequest(this, 'delete', {id}))
     }
 
     async insert(id, data, req = null) {
@@ -196,7 +196,7 @@ export class Ring extends WebObject {
 
 export class BootRing extends Ring {
     handle(req) { print(`boot ring handle(${req.command})`); return super.handle(req) }
-    // select(id)  { print('boot ring select()'); return super.select(id) }
+    // select(id, req)  { print('boot ring select()'); return super.select(id, req) }
 
     insert() {assert(false)}
     update() {assert(false)}

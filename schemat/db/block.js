@@ -205,6 +205,17 @@ export class DataBlock extends Block {
         return lower.handle(req)
     }
 
+    _move_down(req) {
+        /* Forward the request to a lower ring if the current ring doesn't contain the requested object ID - during
+           select/update/delete operations.
+         */
+        let ring = this.ring
+        let lower = ring.lower_ring
+        if (!lower) throw new ObjectNotFound(null, {id: req.args?.id})
+        req.push_ring(ring)
+        return lower
+    }
+
     _forward_save(req) {
         /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
            Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
@@ -218,8 +229,9 @@ export class DataBlock extends Block {
 
     async cmd_select(req) {
         let data = await this._storage.get(req.args.key)    // JSON string
-        if (!data) return this._forward_down(req)
-        return this._annotate(data)
+        if (data) return this._annotate(data)
+        return this._move_down(req).select(req.id, req)
+        // return this._forward_down(req)
     }
 
     async cmd_insert({id, data}) {
