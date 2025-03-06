@@ -204,7 +204,7 @@ export class DataBlock extends Block {
     }
 
     _move_up(req) {
-        /* Return higher ring and update `req` before forwarding upwards a write operation of an object update.
+        /* Return the first writable ring that's above this one and update `req` before forwarding a write phase of an object update.
            Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
            No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
          */
@@ -221,7 +221,7 @@ export class DataBlock extends Block {
         return this._move_down(req).select(id, req)
     }
 
-    async cmd_insert(id, data, req) {
+    async cmd_insert(id, data) {
         /* `data` can be an array if multiple objects are to be inserted. */
 
         let ring = this.ring
@@ -357,7 +357,7 @@ export class DataBlock extends Block {
         if (obj.__base?.save_revisions)
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
-        if (this.ring.readonly)                     // can't write the update here in this ring? forward to a higher ring
+        if (this.ring.readonly)                     // can't write the update here in this ring? forward to the first higher ring that's writable
             return this._move_up(req).upsave(id, obj.__json, req)
 
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
@@ -370,11 +370,12 @@ export class DataBlock extends Block {
     async cmd_upsave(id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
         let key = this.sequence.encode_key(id)
-        let prev_data = await this._storage.get(key)
+        if (await this._storage.get(key))
+            throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
 
-        // if `id` is already present in this ring, redo the update (apply `edits` again) instead of overwriting
-        // the object with the `data` calculated in a previous ring
-        if (prev_data) return this.cmd_update(req)
+        // // if `id` is already present in this ring, redo the update (apply `edits` again) instead of overwriting
+        // // the object with the `data` calculated in a previous ring
+        // if (await this._storage.get(key)) return this.cmd_update(req)
 
         let obj = await WebObject.from_data(id, data, {activate: false})
         return this._save(obj)
