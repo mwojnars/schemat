@@ -194,21 +194,19 @@ export class DataBlock extends Block {
         return JSON.stringify(plain)
     }
 
-    _forward_down(req) {
-        /* Forward the request to a lower ring if the current ring doesn't contain the requested object ID - during
-           select/update/delete operations.
-         */
-        let ring = this.ring
-        let lower = ring.lower_ring
-        if (!lower) throw new ObjectNotFound(null, {id: req.args?.id})
-        req.push_ring(ring)
-        return lower.handle(req)
-    }
+    // _forward_down(req) {
+    //     /* Forward the request to a lower ring if the current ring doesn't contain the requested object ID - during
+    //        select/update/delete operations.
+    //      */
+    //     let ring = this.ring
+    //     let lower = ring.lower_ring
+    //     if (!lower) throw new ObjectNotFound(null, {id: req.args?.id})
+    //     req.push_ring(ring)
+    //     return lower.handle(req)
+    // }
 
     _move_down(req) {
-        /* Forward the request to a lower ring if the current ring doesn't contain the requested object ID - during
-           select/update/delete operations.
-         */
+        /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring. */
         let ring = this.ring
         let lower = ring.lower_ring
         if (!lower) throw new ObjectNotFound(null, {id: req.args?.id})
@@ -354,7 +352,8 @@ export class DataBlock extends Block {
          */
         let {id, key, edits} = req.args
         let data = await this._storage.get(key)
-        if (data === undefined) return this._forward_down(req)
+        if (data === undefined) return this._move_down(req).update(id, edits, req)
+        // if (data === undefined) return this._forward_down(req)
 
         let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
         let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev.clone() to avoid repeated async initialization
@@ -411,7 +410,8 @@ export class DataBlock extends Block {
         let id = this.sequence.decode_key(key)
 
         let data = await this._storage.get(key)
-        if (data === undefined) return this._forward_down(req)
+        if (data === undefined) return this._move_down(req).delete(id, req)
+        // if (data === undefined) return this._forward_down(req)
 
         if (this.ring.readonly)
             // TODO: find the first writable ring upwards from this one and write a tombstone for `id` there
