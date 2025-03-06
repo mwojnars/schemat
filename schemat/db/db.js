@@ -110,17 +110,6 @@ export class Ring extends WebObject {
 
     /***  Data access & modification  ***/
 
-    async handle(req) {
-        /* Handle a DataRequest by passing it to an appropriate method of this.data sequence.
-           This is the method that should be used for all standard operations: select/update/delete.
-         */
-        // if (command === req.command)            // don't overwrite the command if it already occurred in the previous step
-        //     command = null
-        return this.data_sequence.handle(req.make_step(this))
-    }
-
-    // shortcut methods for handle() when the ring needs to be accessed directly without a database ...
-
     async select(id, req) {
         return this.data_sequence.handle(req || new DataRequest(this, 'select', {id}))
     }
