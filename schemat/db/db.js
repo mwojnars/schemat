@@ -64,7 +64,7 @@ export class Ring extends WebObject {
         if (bootstrap) this.data_sequence = DataSequence.new(this, file)
     }
 
-    async __setup__({ring}) {
+    async __setup__() {
         /* Create `data_sequence` and replicate indexes from the lower ring. */
 
         let DataSequence = await schemat.import('/$/sys/DataSequence')
@@ -192,6 +192,16 @@ export class Ring extends WebObject {
         for (let stream of this.streams.values())
             await stream.rebuild()
     }
+}
+
+export class BootRing extends Ring {
+    handle(req) { print(`boot ring handle(${req.command})`); return super.handle(req) }
+    // select(id)  { print('boot ring select()'); return super.select(id) }
+
+    insert() {assert(false)}
+    update() {assert(false)}
+    delete() {assert(false)}
+    scan()   {assert(false)}
 }
 
 
@@ -332,7 +342,7 @@ export class BootDatabase extends Database {
         let top
 
         for (const spec of ring_specs) {
-            let ring = await Ring.new({...spec, bootstrap: true}).load()
+            let ring = await BootRing.new({...spec, bootstrap: true}).load()
             ring.lower_ring = top
             top = ring
         }
