@@ -194,28 +194,6 @@ export class DataBlock extends Block {
         return JSON.stringify(plain)
     }
 
-    // _forward_down(req) {
-    //     /* Forward the request to a lower ring if the current ring doesn't contain the requested object ID - during
-    //        select/update/delete operations.
-    //      */
-    //     let ring = this.ring
-    //     let lower = ring.lower_ring
-    //     if (!lower) throw new ObjectNotFound(null, {id: req.args?.id})
-    //     req.push_ring(ring)
-    //     return lower.handle(req)
-    // }
-    //
-    // _forward_save(req) {
-    //     /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
-    //        Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
-    //        No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
-    //      */
-    //     let ring = this.ring
-    //     while (ring?.readonly) ring = req.pop_ring()        // go upwards to find the first writable ring
-    //     if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: req.args?.id})
-    //     return ring.handle(req)
-    // }
-
     _move_down(req) {
         /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring. */
         let ring = this.ring
@@ -240,7 +218,6 @@ export class DataBlock extends Block {
         let data = await this._storage.get(req.args.key)    // JSON string
         if (data) return this._annotate(data)
         return this._move_down(req).select(req.id, req)
-        // return this._forward_down(req)
     }
 
     async cmd_insert({id, data}) {
@@ -364,7 +341,6 @@ export class DataBlock extends Block {
         let {id, key, edits} = req.args
         let data = await this._storage.get(key)
         if (data === undefined) return this._move_down(req).update(id, edits, req)
-        // if (data === undefined) return this._forward_down(req)
 
         let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
         let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev.clone() to avoid repeated async initialization
@@ -381,8 +357,6 @@ export class DataBlock extends Block {
 
         if (this.ring.readonly) {                   // can't write the update here in this ring? forward to a higher ring
             return this._move_up(req).upsave(id, obj.__json, req)
-            // req = req.make_step(this, 'upsave', {id, key, data: obj.__json})
-            // return this._forward_save(req)
 
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
@@ -424,7 +398,6 @@ export class DataBlock extends Block {
 
         let data = await this._storage.get(key)
         if (data === undefined) return this._move_down(req).delete(id, req)
-        // if (data === undefined) return this._forward_down(req)
 
         if (this.ring.readonly)
             // TODO: find the first writable ring upwards from this one and write a tombstone for `id` there
