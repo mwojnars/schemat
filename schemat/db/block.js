@@ -275,9 +275,10 @@ export class DataBlock extends Block {
         // print(`[${this.id}].cmd_insert() saving ${objects.length} object(s)`)
 
         for (let obj of objects) {
-            this._prepare_object(obj)       // validate obj.__data
+            this._prepare_for_insert(obj)       // validate obj.__data
             await this._save(obj)
         }
+
         // await Promise.all(objects.map(obj => {}))
 
         let ids = objects.map(obj => obj.id)
@@ -286,7 +287,7 @@ export class DataBlock extends Block {
         return batch ? ids.slice(0, data.length) : ids[0]
     }
 
-    _prepare_object(obj) {
+    _prepare_for_insert(obj) {
         obj.__data.delete('__ver')          // just in case, it's forbidden to pass __ver from the outside
         obj.validate()                      // data validation
         obj._bump_version()                 // set __ver=1 if needed
@@ -356,23 +357,24 @@ export class DataBlock extends Block {
         if (obj.__base?.save_revisions)
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
-        if (this.ring.readonly) {                   // can't write the update here in this ring? forward to a higher ring
+        if (this.ring.readonly)                     // can't write the update here in this ring? forward to a higher ring
             return this._move_up(req).upsave(id, obj.__json, req)
 
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
-        }
+
         return this._save(obj, prev)                // save changes and perform change propagation
     }
 
     async cmd_upsave(id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
         let key = this.sequence.encode_key(id)
+        let prev_data = await this._storage.get(key)
 
         // if `id` is already present in this ring, redo the update (apply `edits` again) instead of overwriting
         // the object with the `data` calculated in a previous ring
-        if (await this._storage.get(key)) return this.cmd_update(req)
+        if (prev_data) return this.cmd_update(req)
 
         let obj = await WebObject.from_data(id, data, {activate: false})
         return this._save(obj)
