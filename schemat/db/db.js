@@ -208,7 +208,6 @@ export class Database extends WebObject {
        This class is only instantiated on the server, while the client uses a ClientDB proxy instead.
      */
     static __category = 11  // ID of Database category
-    // static role = 'db'      // for use in ProcessingStep and DataRequest
 
     // properties:
     top_ring
@@ -219,21 +218,6 @@ export class Database extends WebObject {
     get rings()             { return this.top_ring.stack }      // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
     get rings_reversed()    { return this.rings.toReversed() }
     get bottom_ring()       { return this.rings[0] }
-
-    async open(ring_specs) {
-        /* In a newly-created Database, create all rings according to `ring_specs` specification. */
-
-        assert(this.is_newborn())           // open() is a mutating operation, it can only be called on a newborn object (not in DB)
-        print(`creating database...`)
-        let top
-
-        for (const spec of ring_specs) {
-            let ring = await Ring.new({...spec, bootstrap: true}).load()
-            ring.lower_ring = top
-            top = ring
-        }
-        this.top_ring = top
-    }
 
     async __init__() {
         if (CLIENT) return
@@ -338,3 +322,23 @@ export class Database extends WebObject {
     }
 }
 
+
+export class BootDatabase extends Database {
+    async open(ring_specs) {
+        /* Create bootstrap rings according to `ring_specs` specification. */
+
+        // assert(this.is_newborn())           // open() is a mutating operation, it can only be called on a newborn object (not in DB)
+        print(`creating bootstrap database...`)
+        let top
+
+        for (const spec of ring_specs) {
+            let ring = await Ring.new({...spec, bootstrap: true}).load()
+            ring.lower_ring = top
+            top = ring
+        }
+        this.top_ring = top
+    }
+
+    insert() {assert(false)}
+    scan() {assert(false)}
+}

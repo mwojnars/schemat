@@ -6,7 +6,7 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 import {print, assert, T, sleep} from "../common/utils.js";
 import {WebObject} from "../core/object.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
-import {Database} from "../db/db.js";
+import {Database, BootDatabase} from "../db/db.js";
 
 
 // print NODE_PATH:
@@ -34,7 +34,7 @@ export async function boot_schemat(opts) {
     }
 
     async function _open_bootstrap_db() {
-        let db = Database.new()
+        let db = BootDatabase.new()
         let rings = config.bootstrap_rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
         await db.open(rings)
