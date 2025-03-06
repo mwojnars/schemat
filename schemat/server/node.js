@@ -6,8 +6,8 @@ import {Agent} from "./agent.js";
 /**********************************************************************************************************************/
 
 export class Outbox {
-    /* Send messages via a communication channel and wait for responses. The details of the channel are implemented 
-       in subclasses by overriding the `_listen()` and `_send()` methods.
+    /* Send messages via a one-way communication channel and wait for responses. The details of the channel 
+       are implemented in subclasses by overriding the `_listen()` and `_send()` methods.
      */
 
     constructor(timeout = 10000) {
