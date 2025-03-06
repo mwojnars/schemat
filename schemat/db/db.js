@@ -145,12 +145,11 @@ export class Ring extends WebObject {
     }
 
     async update_full(id_or_obj, data = null, req = null) {
-        req ??= new DataRequest()
         let obj = T.isNumber(id_or_obj) ? null : id_or_obj
         let id  = obj?.id || id_or_obj
         data ??= obj.__data //__json
         let edits = [['overwrite', data]]
-        return this.data_sequence.handle(req.safe_step(this, 'update', {id, edits}))
+        return this.data_sequence.handle(req || new DataRequest(this, 'update', {id, edits}))
     }
 
 
