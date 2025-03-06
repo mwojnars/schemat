@@ -122,11 +122,11 @@ export class Ring extends WebObject {
     }
 
     async insert(data, req) {
-        return this._random_block().cmd_insert(req || new DataRequest(this, 'insert', {data}))
+        return this._random_block().cmd_insert(null, data)
     }
 
-    async insert_at(id, data, req) {
-        return this._find_block(id).cmd_insert(req || new DataRequest(this, 'insert', {id, data}))
+    async insert_at(id, data) {
+        return this._find_block(id).cmd_insert(id, data)
     }
 
     async update(id, edits, req) {
@@ -137,7 +137,7 @@ export class Ring extends WebObject {
                    even without changing the record's data.
          */
         assert(edits.length, 'missing edits')
-        return this._find_block(id).cmd_update(req || new DataRequest(this, 'update', {id, edits}))
+        return this._find_block(id).cmd_update(id, edits, req || new DataRequest())
     }
 
     async update_full(id_or_obj, data = null, req = null) {
@@ -146,11 +146,11 @@ export class Ring extends WebObject {
         data ??= obj.__data //__json
         let edits = [['overwrite', data]]
 
-        return this._find_block(id).cmd_update(req || new DataRequest(this, 'update', {id, edits}))
+        return this._find_block(id).cmd_update(id, edits, req || new DataRequest())
     }
 
     async upsave(id, data, req) {
-        return this._find_block(id).cmd_upsave(req || new DataRequest(this, 'upsave', {id, data}))
+        return this._find_block(id).cmd_upsave(id, data, req || new DataRequest())
     }
 
 

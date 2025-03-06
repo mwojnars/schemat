@@ -221,7 +221,7 @@ export class DataBlock extends Block {
         return this._move_down(req).select(id, req)
     }
 
-    async cmd_insert({id, data}) {
+    async cmd_insert(id, data, req) {
         /* `data` can be an array if multiple objects are to be inserted. */
 
         let ring = this.ring
@@ -334,12 +334,11 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async cmd_update(req) {
+    async cmd_update(id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring. Return {id, data}.
          */
-        let {id, edits} = req
         let key = this.sequence.encode_key(id)
         let data = await this._storage.get(key)
         if (data === undefined) return this._move_down(req).update(id, edits, req)
@@ -367,9 +366,8 @@ export class DataBlock extends Block {
         return this._save(obj, prev)                // save changes and perform change propagation
     }
 
-    async cmd_upsave(req) {
+    async cmd_upsave(id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
-        let {id, data} = req
         let key = this.sequence.encode_key(id)
 
         // if `id` is already present in this ring, redo the update (apply `edits` again) instead of overwriting
