@@ -157,32 +157,32 @@ export class DataSequence extends Sequence {
         return data_schema.decode_key(key)[0]
     }
 
-    async handle(req /*DataRequest*/, ...args) {
-        /* Handle a request for data access/modification. The call is redirected to [req.command] method
-           of the block containing a given item ID or record key.
-         */
-        let command = req.command
-        assert(this.constructor.COMMANDS.includes(command), `unknown command: ${command}`)
-
-        let {id} = req
-        let key = this.encode_key(id)
-
-        // let {id, key} = req.args
-        //
-        // // calculate a `key` from `id` if missing in args
-        // if (key === undefined && id !== undefined && id !== null) {
-        //     key = this.encode_key(id)
-        //     req.make_step(this, null, {...req.args, key})
-        // }
-        // else
-        //     req.make_step(this)
-
-        let block = this._find_block(key)
-        block.assert_active()
-        // if (!block.is_loaded()) block = await block.load()
-
-        return block[`cmd_${command}`].call(block, req)
-    }
+    // async handle(req /*DataRequest*/, ...args) {
+    //     /* Handle a request for data access/modification. The call is redirected to [req.command] method
+    //        of the block containing a given item ID or record key.
+    //      */
+    //     let command = req.command
+    //     assert(this.constructor.COMMANDS.includes(command), `unknown command: ${command}`)
+    //
+    //     let {id} = req
+    //     let key = this.encode_key(id)
+    //
+    //     // let {id, key} = req.args
+    //     //
+    //     // // calculate a `key` from `id` if missing in args
+    //     // if (key === undefined && id !== undefined && id !== null) {
+    //     //     key = this.encode_key(id)
+    //     //     req.make_step(this, null, {...req.args, key})
+    //     // }
+    //     // else
+    //     //     req.make_step(this)
+    //
+    //     let block = this._find_block(key)
+    //     block.assert_active()
+    //     // if (!block.is_loaded()) block = await block.load()
+    //
+    //     return block[`cmd_${command}`].call(block, req)
+    // }
 }
 
 

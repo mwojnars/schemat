@@ -110,16 +110,21 @@ export class Ring extends WebObject {
 
     /***  Data access & modification  ***/
 
+    _find_block(id) { return this.data_sequence._find_block(id) }
+
     async select(id, req) {
-        return this.data_sequence.handle(req || new DataRequest(this, 'select', {id}))
+        return this._find_block(id).cmd_select(req || new DataRequest(this, 'select', {id}))
+        // return this.data_sequence.handle(req || new DataRequest(this, 'select', {id}))
     }
 
     async delete(id, req) {
-        return this.data_sequence.handle(req || new DataRequest(this, 'delete', {id}))
+        return this._find_block(id).cmd_delete(req || new DataRequest(this, 'delete', {id}))
+        // return this.data_sequence.handle(req || new DataRequest(this, 'delete', {id}))
     }
 
     async insert(id, data, req) {
-        return this.data_sequence.handle(req || new DataRequest(this, 'insert', {id, data}))
+        return this._find_block(id).cmd_insert(req || new DataRequest(this, 'insert', {id, data}))
+        // return this.data_sequence.handle(req || new DataRequest(this, 'insert', {id, data}))
     }
 
     async update(id, edits, req) {
@@ -130,7 +135,8 @@ export class Ring extends WebObject {
                    even without changing the record's data.
          */
         assert(edits.length, 'missing edits')
-        return this.data_sequence.handle(req || new DataRequest(this, 'update', {id, edits}))
+        return this._find_block(id).cmd_update(req || new DataRequest(this, 'update', {id, edits}))
+        // return this.data_sequence.handle(req || new DataRequest(this, 'update', {id, edits}))
     }
 
     async update_full(id_or_obj, data = null, req = null) {
@@ -138,11 +144,14 @@ export class Ring extends WebObject {
         let id  = obj?.id || id_or_obj
         data ??= obj.__data //__json
         let edits = [['overwrite', data]]
-        return this.data_sequence.handle(req || new DataRequest(this, 'update', {id, edits}))
+
+        return this._find_block(id).cmd_update(req || new DataRequest(this, 'update', {id, edits}))
+        // return this.data_sequence.handle(req || new DataRequest(this, 'update', {id, edits}))
     }
 
     async upsave(id, data, req) {
-        return this.data_sequence.handle(req.make_step(this, 'upsave', {id, data}))
+        return this._find_block(id).cmd_upsave(req || new DataRequest(this, 'upsave', {id, data}))
+        // return this.data_sequence.handle(req.make_step(this, 'upsave', {id, data}))
     }
 
 
@@ -186,9 +195,7 @@ export class Ring extends WebObject {
 }
 
 export class BootRing extends Ring {
-    handle(req) { print(`boot ring handle(${req.command})`); return super.handle(req) }
     // select(id, req)  { print('boot ring select()'); return super.select(id, req) }
-
     insert() {assert(false)}
     update() {assert(false)}
     delete() {assert(false)}
