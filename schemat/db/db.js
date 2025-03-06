@@ -129,12 +129,11 @@ export class Ring extends WebObject {
         return this.data_sequence.handle(req || new DataRequest(this, 'delete', {id}))
     }
 
-    async insert(id, data, req = null) {
-        req = req || new DataRequest()
-        return this.data_sequence.handle(req.safe_step(this, 'insert', {id, data}))
+    async insert(id, data, req) {
+        return this.data_sequence.handle(req || new DataRequest(this, 'insert', {id, data}))
     }
 
-    async update(id, ...edits) {
+    async update(id, edits, req) {
         /* Apply `edits` to an item's data and store under the `id` in top-most ring that allows writing this particular `id`.
            Return an {id, data} record as written to the data block.
            FUTURE: `edits` may perform tests or create side effects, for example, to check for a specific item version
@@ -142,7 +141,7 @@ export class Ring extends WebObject {
                    even without changing the record's data.
          */
         assert(edits.length, 'missing edits')
-        return this.data_sequence.handle(new DataRequest(this, 'update', {id, edits}))
+        return this.data_sequence.handle(req || new DataRequest(this, 'update', {id, edits}))
     }
 
     async update_full(id_or_obj, data = null, req = null) {
