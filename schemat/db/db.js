@@ -152,6 +152,10 @@ export class Ring extends WebObject {
         return this.data_sequence.handle(req || new DataRequest(this, 'update', {id, edits}))
     }
 
+    async upsave(id, data, req) {
+        return this.data_sequence.handle(req.make_step(this, 'upsave', {id, data}))
+    }
+
 
     /***  Indexes and Transforms  ***/
 

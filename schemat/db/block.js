@@ -204,6 +204,17 @@ export class DataBlock extends Block {
     //     req.push_ring(ring)
     //     return lower.handle(req)
     // }
+    //
+    // _forward_save(req) {
+    //     /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
+    //        Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
+    //        No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
+    //      */
+    //     let ring = this.ring
+    //     while (ring?.readonly) ring = req.pop_ring()        // go upwards to find the first writable ring
+    //     if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: req.args?.id})
+    //     return ring.handle(req)
+    // }
 
     _move_down(req) {
         /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring. */
@@ -214,15 +225,15 @@ export class DataBlock extends Block {
         return lower
     }
 
-    _forward_save(req) {
-        /* Save an object update (args = {id,key,value}) to the lowest ring that's writable, starting at current_ring.
+    _move_up(req) {
+        /* Return higher ring and update `req` before forwarding upwards a write operation of an object update.
            Called after the 1st phase of update which consisted of top-down search for the ID in the stack of rings.
            No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
          */
         let ring = this.ring
         while (ring?.readonly) ring = req.pop_ring()        // go upwards to find the first writable ring
         if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: req.args?.id})
-        return ring.handle(req)
+        return ring
     }
 
     async cmd_select(req) {
@@ -369,8 +380,10 @@ export class DataBlock extends Block {
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
         if (this.ring.readonly) {                   // can't write the update here in this ring? forward to a higher ring
-            req = req.make_step(this, 'upsave', {id, key, data: obj.__json})
-            return this._forward_save(req)
+            return this._move_up(req).upsave(id, obj.__json, req)
+            // req = req.make_step(this, 'upsave', {id, key, data: obj.__json})
+            // return this._forward_save(req)
+
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
