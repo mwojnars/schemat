@@ -56,7 +56,7 @@ export class Sequence extends WebObject {
     // }
 
 
-    _find_block(binary_key) {
+    find_block(binary_key) {
         // print('binary_key:', binary_key)
         if (!this.splits) return this.blocks[0]
 
@@ -79,13 +79,13 @@ export class Sequence extends WebObject {
 
 
     async put(key, value) {
-        let block = this._find_block(key)
+        let block = this.find_block(key)
         if (!block.is_loaded()) block = await block.load()
         return block.remote.put(key, value)
     }
 
     async del(key, value) {
-        let block = this._find_block(key)
+        let block = this.find_block(key)
         if (!block.is_loaded()) block = await block.load()
         return block.remote.del(key, value)
     }
@@ -96,7 +96,7 @@ export class Sequence extends WebObject {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is defined, yield items in batches of `batch_size` items.
          */
-        let block = this._find_block(start)
+        let block = this.find_block(start)
         block.assert_active()
         // if (!block.is_loaded()) block = await block.load()
         yield* block.scan({start, stop})
@@ -139,8 +139,6 @@ export class DataSequence extends Sequence {
        Supports direct inserts (of new items) with auto-assignment and autoincrement of ID.
      */
     static __category = 14
-    static role       = 'data'          // for use in ProcessingStep and DataRequest
-    static COMMANDS   = ['select', 'insert', 'update', 'upsave', 'delete']
 
     get file_prefix() { return 'data' }
 
@@ -157,32 +155,10 @@ export class DataSequence extends Sequence {
         return data_schema.decode_key(key)[0]
     }
 
-    // async handle(req /*DataRequest*/, ...args) {
-    //     /* Handle a request for data access/modification. The call is redirected to [req.command] method
-    //        of the block containing a given item ID or record key.
-    //      */
-    //     let command = req.command
-    //     assert(this.constructor.COMMANDS.includes(command), `unknown command: ${command}`)
-    //
-    //     let {id} = req
-    //     let key = this.encode_key(id)
-    //
-    //     // let {id, key} = req.args
-    //     //
-    //     // // calculate a `key` from `id` if missing in args
-    //     // if (key === undefined && id !== undefined && id !== null) {
-    //     //     key = this.encode_key(id)
-    //     //     req.make_step(this, null, {...req.args, key})
-    //     // }
-    //     // else
-    //     //     req.make_step(this)
-    //
-    //     let block = this._find_block(key)
-    //     block.assert_active()
-    //     // if (!block.is_loaded()) block = await block.load()
-    //
-    //     return block[`cmd_${command}`].call(block, req)
-    // }
+    find_block_id(id) {
+        let key = this.encode_key(id)
+        return this.find_block(key)
+    }
 }
 
 

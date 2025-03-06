@@ -110,7 +110,7 @@ export class Ring extends WebObject {
 
     /***  Data access & modification  ***/
 
-    _find_block(id) { return this.data_sequence._find_block(id) }
+    _find_block(id) { return this.data_sequence.find_block_id(id) }
 
     async select(id, req) {
         return this._find_block(id).cmd_select(req || new DataRequest(this, 'select', {id}))
