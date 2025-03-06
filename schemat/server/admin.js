@@ -103,7 +103,9 @@ export class AdminProcess {
                 }
             }
 
-            new_id = (await ring.insert(new_id, obj.__json)).id
+            let insert = new_id ? ring.insert_at(new_id, obj.__json) : ring.insert(obj.__json)
+            new_id = (await insert).id
+
             await ring.flush()
             await this._update_references(id, new_id)
             await db.top_ring.delete(id)
@@ -161,7 +163,7 @@ export class AdminProcess {
     //             let item = await WebObject.from_data(id, data)
     //
     //             print(`reinserting item [${id}]...`)
-    //             let new_id = await ring.insert(null, item.__json)
+    //             let new_id = await ring.insert(item.__json)
     //             // item = await WebObject.from_data(new_id, data)
     //
     //             print(`...new id=[${new_id}]`)

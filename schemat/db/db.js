@@ -111,20 +111,22 @@ export class Ring extends WebObject {
     /***  Data access & modification  ***/
 
     _find_block(id) { return this.data_sequence.find_block_id(id) }
+    _random_block() { return this.data_sequence.blocks[0] }
 
     async select(id, req) {
         return this._find_block(id).cmd_select(req || new DataRequest(this, 'select', {id}))
-        // return this.data_sequence.handle(req || new DataRequest(this, 'select', {id}))
     }
 
     async delete(id, req) {
         return this._find_block(id).cmd_delete(req || new DataRequest(this, 'delete', {id}))
-        // return this.data_sequence.handle(req || new DataRequest(this, 'delete', {id}))
     }
 
-    async insert(id, data, req) {
+    async insert(data, req) {
+        return this._random_block().cmd_insert(req || new DataRequest(this, 'insert', {data}))
+    }
+
+    async insert_at(id, data, req) {
         return this._find_block(id).cmd_insert(req || new DataRequest(this, 'insert', {id, data}))
-        // return this.data_sequence.handle(req || new DataRequest(this, 'insert', {id, data}))
     }
 
     async update(id, edits, req) {
@@ -136,7 +138,6 @@ export class Ring extends WebObject {
          */
         assert(edits.length, 'missing edits')
         return this._find_block(id).cmd_update(req || new DataRequest(this, 'update', {id, edits}))
-        // return this.data_sequence.handle(req || new DataRequest(this, 'update', {id, edits}))
     }
 
     async update_full(id_or_obj, data = null, req = null) {
@@ -146,12 +147,10 @@ export class Ring extends WebObject {
         let edits = [['overwrite', data]]
 
         return this._find_block(id).cmd_update(req || new DataRequest(this, 'update', {id, edits}))
-        // return this.data_sequence.handle(req || new DataRequest(this, 'update', {id, edits}))
     }
 
     async upsave(id, data, req) {
         return this._find_block(id).cmd_upsave(req || new DataRequest(this, 'upsave', {id, data}))
-        // return this.data_sequence.handle(req.make_step(this, 'upsave', {id, data}))
     }
 
 
@@ -263,7 +262,7 @@ export class Database extends WebObject {
         if (!ring.writable()) throw new DataAccessError("the ring is read-only")
         // if (!ring.writable()) return req.error_access("the ring is read-only")
 
-        return ring.insert(null, data)
+        return ring.insert(data)
     }
 
 
