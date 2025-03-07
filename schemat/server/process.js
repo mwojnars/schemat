@@ -322,6 +322,10 @@ export class MasterProcess extends Process {
     workers         // array of Node.js Worker instances (child processes); only present in the primary process
     worker_pids     // PID to WORKER_ID association
 
+    get_worker(process_id) {
+        return this.workers[process_id - 1]     // workers 1,2,3... stored under indices 0,1,2...
+    }
+
     start() {
         print(`starting node:`, this.node.id)
         this._start_workers()

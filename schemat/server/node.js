@@ -146,11 +146,11 @@ export class Node extends Agent {
         return `${this.tcp_host}:${this.tcp_port}` 
     }
 
-    __start__() {
-        return {
-            ipc_mailbox: new IPC_Mailbox()      // for sending/receiving IPC messages between parent <> worker processes
-        }
-    }
+    // __start__() {
+    //     return {
+    //         ipc_mailbox: new IPC_Mailbox()      // for sending/receiving IPC messages between parent <> worker processes
+    //     }
+    // }
 
 
     /* outgoing message processing */
@@ -214,7 +214,7 @@ export class Node extends Agent {
             if (process_id === undefined) throw new Error(`agent [${target_id}] not found on this node`)
             if (process_id !== this.worker_id) {
                 assert(process_id > 0)
-                let worker = schemat.process.workers[process_id - 1]    // workers 1,2,3... stored under indices 0,1,2...
+                let worker = schemat.process.get_worker(process_id)    // workers 1,2,3... stored under indices 0,1,2...
                 return worker.send([type, ...msg])      // forward the message down to a worker process, to its from_master()
             }
             return this.handle_rpc(msg)                 // process the message here in the master process
