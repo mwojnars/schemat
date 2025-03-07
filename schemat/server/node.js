@@ -158,9 +158,8 @@ export class Node extends Agent {
     }
 
     execute_rpc([target_id, method, args]) {
-        /* On master process, handle an incoming RPC message from another node that's addressed to the agent `target_id` running on this node.
-           (??) In a rare case, the agent may have moved to another node in the meantime and the message has to be forwarded.
-           `args` are JSONx-encoded.
+        /* Execute an RPC message that's addressed to the agent `target_id` running on this process.
+           Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
         // print("execute_rpc():", [target_id, method, args])
 
@@ -212,7 +211,7 @@ export class Node extends Agent {
     }
 
 
-    /* horizontal (TCP) communication between different nodes */
+    /* horizontal (TCP) communication between nodes */
 
     async send_tcp(node, msg) {
         /* On master process, send a message to another node via TCP. */
