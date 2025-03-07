@@ -145,12 +145,6 @@ export class Node extends Agent {
         return `${this.tcp_host}:${this.tcp_port}` 
     }
 
-    // __start__() {
-    //     return {
-    //         ipc_mailbox: new IPC_Mailbox()      // for sending/receiving IPC messages between parent <> worker processes
-    //     }
-    // }
-
 
     /* outgoing message processing */
 
@@ -164,11 +158,10 @@ export class Node extends Agent {
          */
         let msg = ['RPC', target_id, method, JSONx.encode(args)]       // , schemat.tx
         return this.is_master() ? this.from_worker(msg) : schemat.process.mailbox.send(msg)
-        // return this.is_master() ? this.from_worker(msg) : process.send(msg)
     }
 
     async from_worker([type, ...msg]) {
-        /* On master process, handle an IPC message received from a worker process. */
+        /* On master process, handle an IPC message received from a worker process, or directly from itself. */
         assert(this.is_master())
 
         if (type === 'RPC') {
@@ -214,11 +207,10 @@ export class Node extends Agent {
             if (process_id === undefined) throw new Error(`agent [${target_id}] not found on this node`)
             if (process_id !== this.worker_id) {
                 assert(process_id > 0)
-                let worker = schemat.process.get_worker(process_id)    // workers 1,2,3... stored under indices 0,1,2...
-                return worker.mailbox.send([type, ...msg])      // forward the message down to a worker process, to its from_master()
-                // return worker.send([type, ...msg])      // forward the message down to a worker process, to its from_master()
+                let worker = schemat.process.get_worker(process_id)
+                return worker.mailbox.send([type, ...msg])          // forward the message down to a worker process, to its from_master()
             }
-            return this.handle_rpc(msg)                 // process the message here in the master process
+            return this.handle_rpc(msg)                             // process the message here in the master process
         }
         else throw new Error(`unknown node-to-node message type: ${type}`)
     }

@@ -319,7 +319,7 @@ export class MasterProcess extends Process {
        follows a different path and finally assigns a WorkerProcess to schemat.process - so there are actually two
        Process instances (non-active MasterProcess + active WorkerProcess).
      */
-    workers         // array of Node.js Worker instances (child processes); only present in the primary process
+    workers         // array of Node.js Worker instances (child processes); each item has .mailbox (IPC_Mailbox) for communication with this worker
     worker_pids     // PID to WORKER_ID association
 
     get_worker(process_id) {
@@ -355,7 +355,6 @@ export class MasterProcess extends Process {
         let worker = this.workers[id-1] = cluster.fork({WORKER_ID: id})
         this.worker_pids.set(worker.process.pid, id)                        // remember PID-to-ID mapping
         worker.mailbox = new IPC_Mailbox(worker, msg => this.node.from_worker(msg))     // messages to/from `worker`
-        // worker.on("message", msg => this.node.from_worker(msg))             // let master process accept messages from `worker`
         return worker
     }
 }
@@ -363,11 +362,11 @@ export class MasterProcess extends Process {
 /**********************************************************************************************************************/
 
 export class WorkerProcess extends Process {
+    mailbox     // IPC_Mailbox for communication with the master process
 
     start() {
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.from_master(msg))    // messages to/from master
-        // process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
         super.start()
     }
 }
