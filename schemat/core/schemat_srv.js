@@ -45,7 +45,6 @@ export class ServerSchemat extends Schemat {
     get node()   { return this.process?.node }      // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get agents() { return this.process?.contexts }  // execution contexts of currently running agents
 
-
     constructor(config) {
         super(config)
 
@@ -110,6 +109,12 @@ export class ServerSchemat extends Schemat {
         this.registry.erase()
         this._site = this.site
         this.reload(this.site_id, true)     // not awaited
+    }
+
+    get_frame(id_or_obj) {
+        /* Find and return the current execution frame of an agent. */
+        let id = (typeof id_or_obj === 'object') ? id_or_obj.id : id_or_obj
+        return this.process.frames.values().find(frame => frame.agent.id === id)
     }
 
 

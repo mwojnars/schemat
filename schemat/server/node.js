@@ -151,7 +151,7 @@ export class Node extends Agent {
         // print("execute_rpc():", [target_id, method, args])
 
         // locate an agent by its `target_id`, should be running here in this process
-        let frame = schemat.process.frames.values().find(frame => frame.agent.id === target_id)
+        let frame = schemat.get_frame(target_id)
         if (!frame)
             throw new Error(`agent [${target_id}] not found on this node process`)
 

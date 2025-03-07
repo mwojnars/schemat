@@ -96,9 +96,10 @@ export class Schemat {
 
     // defined on server only:
     process
-    get tx()            { return undefined }
-    get node()          { return undefined }
-    get agents()        { return undefined }
+    get tx()        {}
+    get node()      {}
+    get agents()    {}
+    get_frame()     {}
 
 
     // web objects currently being loaded/initialized with a call to .load()
