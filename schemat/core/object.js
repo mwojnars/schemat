@@ -917,7 +917,7 @@ export class WebObject {
         // assert(id)
         return new Proxy({}, {
             get(target, name) {
-                if (typeof name === 'string') return (...args) => (id && schemat.node) ? schemat.node.call_remote(id, name, args)
+                if (typeof name === 'string') return (...args) => (id && schemat.node) ? schemat.node.send_rpc(id, name, args)
                     : obj.__self[`remote.${name}`].call(obj, undefined, ...args)
             }
         })

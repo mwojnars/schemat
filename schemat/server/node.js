@@ -148,10 +148,6 @@ export class Node extends Agent {
 
     /* outgoing message processing */
 
-    call_remote(id, method, args) {
-        return this.send_rpc(id, method, args)
-    }
-
     send_rpc(target_id, method, args) {
         /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node
            and then to the `target_id` object (agent) where it should invoke its 'remote.<method>'(...args). Wait for the returned result.
@@ -165,7 +161,7 @@ export class Node extends Agent {
         assert(this.is_master())
 
         if (type === 'RPC') {
-            print("from_worker():", JSON.stringify(msg))
+            print(`#${this.worker_id} from_worker():`, JSON.stringify(msg))
 
             // locate the cluster node where the target object is deployed
             let [target_id] = msg
@@ -210,23 +206,23 @@ export class Node extends Agent {
                 let worker = schemat.process.get_worker(process_id)
                 return worker.mailbox.send([type, ...msg])          // forward the message down to a worker process, to its from_master()
             }
-            return this.handle_rpc(msg)                             // process the message here in the master process
+            return this.execute_rpc(msg)                            // process the message here in the master process
         }
         else throw new Error(`unknown node-to-node message type: ${type}`)
     }
 
     from_master([type, ...msg]) {
         assert(type === 'RPC')
-        print(`#${this.worker_id} from_master():`, [type, ...msg])
-        return this.handle_rpc(msg)
+        print(`#${this.worker_id} from_master():`, JSON.stringify(msg))
+        return this.execute_rpc(msg)
     }
 
-    handle_rpc([target_id, method, args]) {
+    execute_rpc([target_id, method, args]) {
         /* On master process, handle an incoming RPC message from another node that's addressed to the agent `target_id` running on this node.
            (??) In a rare case, the agent may have moved to another node in the meantime and the message has to be forwarded.
            `args` are JSONx-encoded.
          */
-        // print("handle_rpc():", [target_id, method, args])
+        // print("execute_rpc():", [target_id, method, args])
 
         // locate an agent by its `target_id`, should be running here in this process
         let state = schemat.process.agents.values().find(state => state.agent.id === target_id)
