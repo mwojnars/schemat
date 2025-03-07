@@ -233,7 +233,8 @@ export class Process {
                 this._print(`waiting for ${state.calls.length} pending calls to agent '${name}' to complete`)
                 await Promise.all(state.calls)
             }
-            promises.push(state.agent.__stop__(state.context).then(() => this.agents.delete(name)))
+            let stop = Promise.resolve(state.agent.__stop__(state.context))
+            promises.push(stop.then(() => this.agents.delete(name)))
         }
 
         // refresh agents
@@ -244,7 +245,8 @@ export class Process {
             if (agent === state.agent) continue
 
             next.set(name, state)
-            promises.push(agent.__restart__(state.context, state.agent).then(ctx => state.context = ctx))
+            let restart = Promise.resolve(agent.__restart__(state.context, state.agent))
+            promises.push(restart.then(ctx => state.context = ctx))
 
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
@@ -260,7 +262,8 @@ export class Process {
             assert(agent.is_loaded())
             assert(agent instanceof Agent)
 
-            promises.push(agent.__start__().then(ctx => next.set(name, new AgentState(agent, ctx))))
+            let start = Promise.resolve(agent.__start__())
+            promises.push(start.then(ctx => next.set(name, new AgentState(agent, ctx))))
         }
 
         await Promise.all(promises)
