@@ -11,7 +11,7 @@ export class Mailbox {
        The details of the channel are implemented in subclasses by overriding the `_listen()` and `_send()` methods.
      */
 
-    constructor(callback, timeout = 10000) {
+    constructor(callback, timeout = null) { //10000) {
         this.callback = callback        // processing function for incoming messages
         this.counter = 0                // no. of requests sent so far
         this.pending = new Map()        // requests sent awaiting a response
@@ -165,7 +165,7 @@ export class Node extends Agent {
         assert(this.is_master())
 
         if (type === 'RPC') {
-            print("from_worker():", msg)
+            print("from_worker():", JSON.stringify(msg))
 
             // locate the cluster node where the target object is deployed
             let [target_id] = msg
@@ -230,7 +230,8 @@ export class Node extends Agent {
 
         // locate an agent by its `target_id`, should be running here in this process
         let state = schemat.process.agents.values().find(state => state.agent.id === target_id)
-        if (!state) throw new Error(`agent [${target_id}] not found on this node process`)
+        if (!state)
+            throw new Error(`agent [${target_id}] not found on this node process`)
 
         let {agent, context} = state
         let func = agent.__self[`remote.${method}`]

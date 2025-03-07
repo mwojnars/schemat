@@ -256,15 +256,19 @@ export class Process {
         // start new agents
         for (let name of to_start) {
             let agent = agents.get(name)
-            this._print(`starting agent '${name}'`)
+            this._print(`starting agent '${name}' ...`)
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
 
             // print(`_start_stop():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
             assert(agent.is_loaded())
             assert(agent instanceof Agent)
 
-            let start = Promise.resolve(agent.__start__())
-            promises.push(start.then(ctx => next.set(name, new Execution(agent, ctx))))
+            let ctx = await agent.__start__()
+            next.set(name, new Execution(agent, ctx))
+            this._print(`starting agent '${name}' done`)
+
+            // let start = Promise.resolve(agent.__start__())
+            // promises.push(start.then(ctx => next.set(name, new Execution(agent, ctx))))
         }
 
         await Promise.all(promises)
