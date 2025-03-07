@@ -146,15 +146,40 @@ export class Node extends Agent {
     }
 
 
-    /* outgoing message processing */
+    /* RPC calls to other processes or nodes */
 
     send_rpc(target_id, method, args) {
         /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node
-           and then to the `target_id` object (agent) where it should invoke its 'remote.<method>'(...args). Wait for the returned result.
+           and then to the `target_id` object (agent) where it should invoke its 'remote.<method>'(...args).
+           Return a response from the remote target.
          */
         let msg = ['RPC', target_id, method, JSONx.encode(args)]       // , schemat.tx
         return this.is_master() ? this.from_worker(msg) : schemat.process.mailbox.send(msg)
     }
+
+    execute_rpc([target_id, method, args]) {
+        /* On master process, handle an incoming RPC message from another node that's addressed to the agent `target_id` running on this node.
+           (??) In a rare case, the agent may have moved to another node in the meantime and the message has to be forwarded.
+           `args` are JSONx-encoded.
+         */
+        // print("execute_rpc():", [target_id, method, args])
+
+        // locate an agent by its `target_id`, should be running here in this process
+        let state = schemat.process.agents.values().find(state => state.agent.id === target_id)
+        if (!state)
+            throw new Error(`agent [${target_id}] not found on this node process`)
+
+        let {agent, context} = state
+        let func = agent.__self[`remote.${method}`]
+        if (!func) throw new Error(`agent [${target_id}] has no RPC endpoint "${method}"`)
+
+        args = JSONx.decode(args)
+
+        return state.track_call(func.call(agent, context, ...args))
+    }
+
+
+    /* vertical (IPC) communication between master/worker processes */
 
     async from_worker([type, ...msg]) {
         /* On master process, handle an IPC message received from a worker process, or directly from itself. */
@@ -180,6 +205,15 @@ export class Node extends Agent {
         else throw new Error(`unknown worker-to-master message type: ${type}`)
     }
 
+    from_master([type, ...msg]) {
+        assert(type === 'RPC')
+        print(`#${this.worker_id} from_master():`, JSON.stringify(msg))
+        return this.execute_rpc(msg)
+    }
+
+
+    /* horizontal (TCP) communication between different nodes */
+
     async send_tcp(node, msg) {
         /* On master process, send a message to another node via TCP. */
         assert(this.is_master())
@@ -189,8 +223,6 @@ export class Node extends Agent {
         return schemat.agents.tcp.send(tcp_msg, node.tcp_address)
         // return this.tcp_sender.local.send(tcp_msg, node.tcp_address)
     }
-
-    /* incoming message processing */
 
     recv_tcp([type, ...msg]) {
         /* On master process, handle a message received via TCP from another node or directly from this node via a shortcut.
@@ -213,33 +245,6 @@ export class Node extends Agent {
             return this.execute_rpc(msg)                            // process the message here in the master process
         }
         else throw new Error(`unknown node-to-node message type: ${type}`)
-    }
-
-    from_master([type, ...msg]) {
-        assert(type === 'RPC')
-        print(`#${this.worker_id} from_master():`, JSON.stringify(msg))
-        return this.execute_rpc(msg)
-    }
-
-    execute_rpc([target_id, method, args]) {
-        /* On master process, handle an incoming RPC message from another node that's addressed to the agent `target_id` running on this node.
-           (??) In a rare case, the agent may have moved to another node in the meantime and the message has to be forwarded.
-           `args` are JSONx-encoded.
-         */
-        // print("execute_rpc():", [target_id, method, args])
-
-        // locate an agent by its `target_id`, should be running here in this process
-        let state = schemat.process.agents.values().find(state => state.agent.id === target_id)
-        if (!state)
-            throw new Error(`agent [${target_id}] not found on this node process`)
-
-        let {agent, context} = state
-        let func = agent.__self[`remote.${method}`]
-        if (!func) throw new Error(`agent [${target_id}] has no RPC endpoint "${method}"`)
-
-        args = JSONx.decode(args)
-
-        return state.track_call(func.call(agent, context, ...args))
     }
 
     get agent_locations() {
