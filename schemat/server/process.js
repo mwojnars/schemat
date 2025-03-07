@@ -74,7 +74,7 @@ export class Process {
 
     node                    // Node web object that represents the Schemat cluster node this process is running
     frames = new Map()      // Frame objects of currently running agents, keyed by agent names
-    contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `agents`
+    contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `frames`
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
 
     get worker_id() {

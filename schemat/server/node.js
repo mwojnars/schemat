@@ -164,17 +164,17 @@ export class Node extends Agent {
         // print("execute_rpc():", [target_id, method, args])
 
         // locate an agent by its `target_id`, should be running here in this process
-        let state = schemat.process.agents.values().find(state => state.agent.id === target_id)
-        if (!state)
+        let frame = schemat.process.frames.values().find(frame => frame.agent.id === target_id)
+        if (!frame)
             throw new Error(`agent [${target_id}] not found on this node process`)
 
-        let {agent, context} = state
+        let {agent, context} = frame
         let func = agent.__self[`remote.${method}`]
         if (!func) throw new Error(`agent [${target_id}] has no RPC endpoint "${method}"`)
 
         args = JSONx.decode(args)
 
-        return state.track_call(func.call(agent, context, ...args))
+        return frame.track_call(func.call(agent, context, ...args))
     }
 
 
@@ -217,10 +217,8 @@ export class Node extends Agent {
         /* On master process, send a message to another node via TCP. */
         assert(this.is_master())
         if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
-
-        let tcp_msg = msg
-        return schemat.agents.tcp.send(tcp_msg, node.tcp_address)
-        // return this.tcp_sender.local.send(tcp_msg, node.tcp_address)
+        return schemat.agents.tcp.send(msg, node.tcp_address)
+        // return this.tcp_sender.local.send(msg, node.tcp_address)
     }
 
     recv_tcp([type, ...msg]) {
