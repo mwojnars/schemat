@@ -47,6 +47,7 @@ export async function boot_schemat(opts) {
 /**********************************************************************************************************************/
 
 class Execution {
+    /* Information about a running agent. */
     agent               // ref to web object
     context             // execution context returned by __start__()
     calls = []          // promises for currently executing concurrent calls on this agent
@@ -319,7 +320,6 @@ export class MasterProcess extends Process {
        Process instances (non-active MasterProcess + active WorkerProcess).
      */
     workers         // array of Node.js Worker instances (child processes); only present in the primary process
-    running         // the Promise returned by .run() of the `server`
     worker_pids     // PID to WORKER_ID association
 
     start() {
