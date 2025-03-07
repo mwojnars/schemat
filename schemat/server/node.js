@@ -14,7 +14,11 @@ export class Mailbox {
         this.callback = callback        // processing function for incoming messages
         this.counter = 0                // no. of requests sent so far
         this.pending = new Map()        // requests sent awaiting a response
+
         this.timeout = timeout          // timeout for waiting for a response
+        this.timestamps = new Map()     // timestamps for pending requests
+        this.interval = timeout ? setInterval(() => this._check_timeouts(), timeout) : null
+
         this._listen()
     }
 
@@ -24,14 +28,32 @@ export class Mailbox {
             this.pending.set(id, resolve)
             this._send([id, msg])
 
-            if (this.timeout)           // add timeout for safety
-                setTimeout(() => {
-                    if (this.pending.has(id)) {
-                        this.pending.delete(id)
-                        reject(new Error(`Timeout for request ${id}`))
-                    }
-                }, this.timeout)
+            if (this.timeout) {           // add timeout for safety
+                this.timestamps.set(id, {
+                    timestamp: Date.now(),
+                    reject: reject
+                })
+            }
         })
+    }
+
+    _check_timeouts() {
+        const now = Date.now()
+        for (const [id, {timestamp, reject}] of this.timestamps.entries()) {
+            if (now - timestamp > this.timeout) {
+                this.timestamps.delete(id)
+                this.pending.delete(id)
+                reject(new Error(`timeout for request ${id}`))
+            }
+        }
+    }
+
+    close() {
+        // clear the interval to prevent memory leaks
+        if (this.interval) {
+            clearInterval(this.interval)
+            this.interval = null
+        }
     }
 
     notify(msg) {
@@ -44,6 +66,7 @@ export class Mailbox {
         if (this.pending.has(id)) {
             this.pending.get(id)(response)      // resolve the promise with the response
             this.pending.delete(id)
+            this.timestamps.delete(id)
         }
         else console.warn(`unknown response id: ${id}`)
     }
@@ -53,7 +76,7 @@ export class Mailbox {
 
         let response = this.callback(msg)                       // received a message: run the callback
         if (id === 0) return
-        
+
         // send response to the peer, negative ID indicates this is a response not a message
         if (response instanceof Promise) response = await response
         return this._send([-id, response])
@@ -64,8 +87,8 @@ export class Mailbox {
 }
 
 export class IPC_Mailbox extends Mailbox {
-    constructor(peer, callback) {
-        super(callback)
+    constructor(peer, on_message) {
+        super(on_message)
         this.peer = peer
     }
     _listen()       { this.peer.on("message", (message) => this._handle_message(message)) }
