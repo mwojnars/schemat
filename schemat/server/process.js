@@ -73,7 +73,7 @@ export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
     node                    // Node web object that represents the Schemat cluster node this process is running
-    agents = new Map()      // Frame objects for currently running agents, keyed by agent names
+    frames = new Map()      // Frame objects of currently running agents, keyed by agent names
     contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `agents`
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
 
@@ -153,9 +153,9 @@ export class Process {
         /* Create a new `contexts` object with proxied agent contexts, so that function calls on the contexts are tracked
            and the agent can be stopped gracefully.
          */
-        let contexts = Object.fromEntries(Array.from(this.agents, ([name, state]) => [name, state.context]))
+        let contexts = Object.fromEntries(Array.from(this.frames, ([name, state]) => [name, state.context]))
         
-        for (let [name, state] of this.agents.entries()) {
+        for (let [name, state] of this.frames.entries()) {
             let context = state.context
             if (!context) continue
             if (!T.isPlain(context)) throw new Error(`context for agent '${name}' must be a plain object`)
@@ -185,11 +185,11 @@ export class Process {
 
             this.node = new_node
             await this._start_stop()
-            // this.agents = await this._start_stop()
+            // this.frames = await this._start_stop()
             this.contexts = this._update_contexts()
 
             if (schemat.is_closing)
-                if (this.agents.size) continue; else break          // let the currently-running agents gently stop
+                if (this.frames.size) continue; else break          // let the currently-running agents gently stop
 
             let passed = (Date.now() - beginning) / 1000
             let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
@@ -197,7 +197,7 @@ export class Process {
             let remaining = this.node.refresh_interval - offset_sec - passed
             if (remaining > 0) await sleep(remaining);
 
-            let agents = Array.from(this.agents.values(), state => state.agent);
+            let agents = Array.from(this.frames.values(), state => state.agent);
             [this.node, ...agents].map(obj => obj.refresh())        // schedule a reload of relevant objects in the background, for next iteration
             await sleep(offset_sec)
         }
@@ -207,7 +207,7 @@ export class Process {
 
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
-        let current = this.agents                       // currently running agents, Map<name, Frame>
+        let current = this.frames                       // currently running agents, Map<name, Frame>
         let desired = this._get_agents_running()        // goal: agents that should be running now, Map<name, agent>
 
         if (schemat.is_closing) {
@@ -236,7 +236,7 @@ export class Process {
             assert(agent instanceof Agent)
 
             let ctx = await agent.__start__()
-            this.agents.set(name, new Frame(agent, ctx))
+            this.frames.set(name, new Frame(agent, ctx))
             this._print(`starting agent '${name}' done`)
 
             // let start = Promise.resolve(agent.__start__())
@@ -275,11 +275,11 @@ export class Process {
             }
 
             await state.agent.__stop__(state.context)
-            this.agents.delete(name)
+            this.frames.delete(name)
             this._print(`stopping agent '${name}' done`)
 
             // let stop = Promise.resolve(state.agent.__stop__(state.context))
-            // promises.push(stop.then(() => this.agents.delete(name)))
+            // promises.push(stop.then(() => this.frames.delete(name)))
         }
 
         await Promise.all(promises)
