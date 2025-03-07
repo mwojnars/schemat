@@ -351,6 +351,7 @@ export class MasterProcess extends Process {
         let worker = this.workers[id-1] = cluster.fork({WORKER_ID: id})
         this.worker_pids.set(worker.process.pid, id)                        // remember PID-to-ID mapping
         worker.on("message", msg => this.node.from_worker(msg))             // let master process accept messages from `worker`
+        // let mailbox =
         return worker
     }
 }

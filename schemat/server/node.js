@@ -6,7 +6,8 @@ import {Agent} from "./agent.js";
 /**********************************************************************************************************************/
 
 export class Mailbox {
-    /* Send messages via a one-way communication channel and wait for responses on another channel of the same type.
+    /* Send messages via a one-way communication channel and (optionally) wait for responses on another channel of the same type.
+       Here, "requests" are messages that are followed by a response, while "notifications" are fire-and-forget messages (no response).
        The details of the channel are implemented in subclasses by overriding the `_listen()` and `_send()` methods.
      */
 
@@ -146,10 +147,8 @@ export class Node extends Agent {
     }
 
     __start__() {
-        // here, a *request* is a message followed by a response, in contrary to "notifications" that are fire-and-forget messages (no response)
         return {
-            ipc_requests: new Map(),        // requests sent via IPC awaiting a response
-            ipc_counter:  0,                // no. of requests sent so far via IPC, for generating message IDs
+            ipc_mailbox: new IPC_Mailbox()      // for sending/receiving IPC messages between parent <> worker processes
         }
     }
 
