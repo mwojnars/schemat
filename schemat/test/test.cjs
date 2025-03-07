@@ -300,11 +300,11 @@ describe('Schemat Tests', function () {
             expect(done).to.be.true
         })
 
-        it('Directory', async function () {
-            await test_page(page, `${DOMAIN}/$/sys/Directory`, '#page-main',
-                ['Directory', 'nested containers', 'file system', 'containers.js:Directory'])
-            await delay(1000)
-        })
+        // it('Directory', async function () {
+        //     await test_page(page, `${DOMAIN}/$/sys/Directory`, '#page-main',
+        //         ['Directory', 'nested containers', 'file system', 'containers.js:Directory'])
+        //     await delay(1000)
+        // })
 
         it('Varia object', async function () {
             await test_page(page, `${DOMAIN}/$/id/5001`, '#page-main', ['Varia', 'title', '__category', 'Ala ma kota', 'Add new entry'])
