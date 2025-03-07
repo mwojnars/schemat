@@ -23,6 +23,7 @@ export class Mailbox {
     }
 
     async send(msg) {
+        /* Send `msg` to the peer and wait for the response. */
         return new Promise((resolve, reject) => {
             const id = ++this.counter
             this.pending.set(id, resolve)
@@ -35,6 +36,11 @@ export class Mailbox {
                 })
             }
         })
+    }
+
+    notify(msg) {
+        /* Send a message without waiting for a response (fire-and-forget). */
+        this._send([0, msg])
     }
 
     _check_timeouts() {
@@ -54,11 +60,6 @@ export class Mailbox {
             clearInterval(this.interval)
             this.interval = null
         }
-    }
-
-    notify(msg) {
-        /* Send a message without waiting for a response (fire-and-forget). */
-        this._send([0, msg])
     }
 
     _handle_response([id, response]) {
