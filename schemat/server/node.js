@@ -143,7 +143,7 @@ export class Node extends Agent {
         let msg = [target_id, method, JSONx.encode(args)]
         let message = ['RPC', ...msg]       // , schemat.tx
 
-        // check if the target object is deployed here, then no need to look any further
+        // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
         let frame = schemat.get_frame(target_id)
         if (frame) return this.execute_rpc(...msg)
@@ -177,14 +177,22 @@ export class Node extends Agent {
     async from_worker([type, ...msg]) {
         /* On master process, handle an IPC message received from a worker process, or directly from itself. */
         assert(this.is_master())
+        let node
 
         if (type === 'RPC') {
             print(`#${this.worker_id} from_worker():`, JSON.stringify(msg))
-
-            // locate the cluster node where the target object is deployed
             let [target_id] = msg
-            let target = await schemat.get_loaded(target_id)
-            let node = target.__node
+
+            // check if the target object is deployed here on this node, then no need to look any further
+            // -- this rule is important for loading data blocks during and after bootstrap
+            let process_id = this.agent_locations.get(target_id)
+            if (process_id !== undefined)
+                node = this
+            else {
+                // load the object and check its __node to locate the destination where it is deployed
+                let target = await schemat.get_loaded(target_id)
+                node = target.__node
+            }
 
             if (!node) throw new Error(`missing host node for RPC target [${target_id}]`)
             if (node.is(schemat.node)) return this.recv_tcp([type, ...msg])     // target agent is deployed on the current node
@@ -239,13 +247,13 @@ export class Node extends Agent {
         let agents = new Map()
         agents.set(this.id, 0)          // the current node runs as an agent on master
 
+        for (let name of this.agents_running) {
+            let agent = this.agents_installed.get(name)
+            agents.set(agent.id, 1)     // FIXME
+        }
         for (let name of this.master_agents_running) {
             let agent = this.agents_installed.get(name)
             agents.set(agent.id, 0)
-        }
-        for (let name of this.agents_running) {
-            let agent = this.agents_installed.get(name)
-            agents.set(agent.id, 1)
         }
         return agents
     }
