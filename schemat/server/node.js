@@ -140,11 +140,18 @@ export class Node extends Agent {
            and then to the `target_id` object (agent) where it should invoke its 'remote.<method>'(...args).
            Return a response from the remote target.
          */
-        let msg = ['RPC', target_id, method, JSONx.encode(args)]       // , schemat.tx
-        return this.is_master() ? this.from_worker(msg) : schemat.process.mailbox.send(msg)
+        let msg = [target_id, method, JSONx.encode(args)]
+        let message = ['RPC', ...msg]       // , schemat.tx
+
+        // check if the target object is deployed here, then no need to look any further
+        // -- this rule is important for loading data blocks during and after bootstrap
+        let frame = schemat.get_frame(target_id)
+        if (frame) return this.execute_rpc(...msg)
+
+        return this.is_master() ? this.from_worker(message) : schemat.process.mailbox.send(message)
     }
 
-    execute_rpc([target_id, method, args]) {
+    execute_rpc(target_id, method, args) {
         /* Execute an RPC message that's addressed to the agent `target_id` running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
@@ -174,10 +181,6 @@ export class Node extends Agent {
         if (type === 'RPC') {
             print(`#${this.worker_id} from_worker():`, JSON.stringify(msg))
 
-            // check if the target object is possibly deployed here, then no need to look any further
-            // - this rule is very important for loading data blocks during/after boot
-            // ....
-
             // locate the cluster node where the target object is deployed
             let [target_id] = msg
             let target = await schemat.get_loaded(target_id)
@@ -194,7 +197,7 @@ export class Node extends Agent {
     from_master([type, ...msg]) {
         assert(type === 'RPC')
         print(`#${this.worker_id} from_master():`, JSON.stringify(msg))
-        return this.execute_rpc(msg)
+        return this.execute_rpc(...msg)
     }
 
 
@@ -226,7 +229,7 @@ export class Node extends Agent {
                 let worker = schemat.process.get_worker(process_id)
                 return worker.mailbox.send([type, ...msg])          // forward the message down to a worker process, to its from_master()
             }
-            return this.execute_rpc(msg)                            // process the message here in the master process
+            return this.execute_rpc(...msg)                         // process the message here in the master process
         }
         else throw new Error(`unknown node-to-node message type: ${type}`)
     }
