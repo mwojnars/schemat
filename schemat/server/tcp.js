@@ -139,7 +139,7 @@ export class TCP_Receiver extends Agent {
     }
 
     _handle_message(message) {
-        return schemat.node.handle_tcp(message)
+        return schemat.node.recv_tcp(message)
     }
 
     _respond(socket, id, result) {
