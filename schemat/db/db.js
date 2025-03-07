@@ -110,8 +110,15 @@ export class Ring extends WebObject {
 
     /***  Data access & modification  ***/
 
-    _find_block(id) { return this.data_sequence.find_block_id(id) }
-    _random_block() { return this.data_sequence.blocks[0] }
+    _find_block(id) {
+        assert(this.__meta.active, `trying to access uninitialized ring '${this.name}' [${this.id}] for object [${id}]`)
+        return this.data_sequence.find_block_id(id)
+    }
+
+    _random_block() {
+        assert(this.__meta.active, `trying to access uninitialized ring '${this.name}' [${this.id}] for insert`)
+        return this.data_sequence.blocks[0]
+    }
 
     async select(id, req) {
         // return this._find_block(id).remote.select(id, req || new DataRequest())
