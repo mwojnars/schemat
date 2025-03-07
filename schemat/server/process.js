@@ -75,7 +75,7 @@ export class Process {
     node                    // Node web object that represents the Schemat cluster node this process is running
     agents = new Map()      // Execution objects for currently running agents, keyed by agent names
     contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `agents`
-    running                 // Promise returned by .loop(), kept here for graceful termination in .stop()
+    _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
 
     get worker_id() {
         /* Numeric ID (1, 2, 3, ...) of the current worker process of the node; 0 for the master process. */
@@ -124,7 +124,7 @@ export class Process {
 
     start() {
         schemat.process = this
-        this.running = this.loop()
+        this._promise = this.main()
     }
 
     async stop() {
@@ -144,7 +144,7 @@ export class Process {
                 worker.kill()
             })))
 
-        await this.running
+        await this._promise
         process.exit(0)
     }
 
@@ -171,7 +171,7 @@ export class Process {
         return contexts
     }
 
-    async loop() {
+    async main() {
         /* Start/stop loop of active agents. */
         while (true) {
             let beginning = Date.now()
@@ -298,7 +298,7 @@ export class Process {
         return new Map(agents)
     }
 
-    // async loop() {
+    // async main() {
     //     for (let {prev, agent, oper, migrate} of actions) {
     //         if (schemat.is_closing) return
     //         if (!oper) continue                     // no action if the agent instance hasn't changed
