@@ -43,7 +43,7 @@ export class ServerSchemat extends Schemat {
     get db()     { return this.site?.database || this._db }
     get tx()     { return this._transaction.getStore() }
     get node()   { return this.process?.node }      // host Node (web object) of the current process; initialized and periodically reloaded in Server
-    get agents() { return this.process?.contexts }  // execution contexts of currently running agents
+    get agents() { return this.process?.states }    // execution states of currently running agents
 
     constructor(config) {
         super(config)

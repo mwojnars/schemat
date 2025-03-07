@@ -74,7 +74,7 @@ export class Process {
 
     node                    // Node web object that represents the Schemat cluster node this process is running
     frames = new Map()      // Frame objects of currently running agents, keyed by agent names
-    contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `frames`
+    states = {}             // execution states of currently running agents, keyed by agent names, proxied; derived from `frames`
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
 
     get worker_id() {
@@ -149,26 +149,26 @@ export class Process {
     }
 
 
-    _update_contexts() {
-        /* Create a new `contexts` object with proxied agent contexts, so that function calls on the contexts are tracked
+    _update_states() {
+        /* Create a new `states` object with proxied agent states, so that function calls on the states are tracked
            and the agent can be stopped gracefully.
          */
-        let contexts = Object.fromEntries(Array.from(this.frames, ([name, frame]) => [name, frame.context]))
+        let states = Object.fromEntries(Array.from(this.frames, ([name, frame]) => [name, frame.context]))
         
         for (let [name, frame] of this.frames.entries()) {
-            let context = frame.context
-            if (!context) continue
-            if (!T.isPlain(context)) throw new Error(`context for agent '${name}' must be a plain object`)
+            let state = frame.context
+            if (!state) continue
+            if (!T.isPlain(state)) throw new Error(`state of agent '${name}' must be a plain object`)
 
-            this.contexts[name] = new Proxy(context, {
-                // whenever a function from context (ctx.fun()) is called, wrap it up with track_call()
-                get: (ctx, prop) => (typeof ctx[prop] !== 'function') ? ctx[prop] : function(...args) {
+            this.states[name] = new Proxy(state, {
+                // whenever a function from state (state.fun()) is called, wrap it up with track_call()
+                get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
                     if (frame.stopping) throw new Error(`agent '${name}' is in the process of stopping`)
-                    return frame.track_call(ctx[prop].apply(ctx, args))
+                    return frame.track_call(state[prop].apply(state, args))
                 }
             })
         }
-        return contexts
+        return states
     }
 
     async main() {
@@ -185,7 +185,7 @@ export class Process {
 
             this.node = new_node
             await this._start_stop()
-            this.contexts = this._update_contexts()
+            this.states = this._update_states()
 
             if (schemat.is_closing)
                 if (this.frames.size) continue; else break          // let the currently-running agents gently stop
