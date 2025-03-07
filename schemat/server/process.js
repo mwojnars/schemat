@@ -46,7 +46,7 @@ export async function boot_schemat(opts) {
 
 /**********************************************************************************************************************/
 
-class AgentState {
+class Execution {
     agent               // ref to web object
     context             // execution context returned by __start__()
     calls = []          // promises for currently executing concurrent calls on this agent
@@ -72,7 +72,7 @@ export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
     node                    // Node web object that represents the Schemat cluster node this process is running
-    agents = new Map()      // AgentState objects for currently running agents, keyed by agent names
+    agents = new Map()      // Execution objects for currently running agents, keyed by agent names
     contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `agents`
     running                 // Promise returned by .loop(), kept here for graceful termination in .stop()
 
@@ -205,7 +205,7 @@ export class Process {
 
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
-        let current = this.agents                       // currently running agents, Map<name, AgentState>
+        let current = this.agents                       // currently running agents, Map<name, Execution>
         let agents = this._get_agents_running()         // desired agents, Map<name, agent>
 
         if (schemat.is_closing) {
@@ -263,7 +263,7 @@ export class Process {
             assert(agent instanceof Agent)
 
             let start = Promise.resolve(agent.__start__())
-            promises.push(start.then(ctx => next.set(name, new AgentState(agent, ctx))))
+            promises.push(start.then(ctx => next.set(name, new Execution(agent, ctx))))
         }
 
         await Promise.all(promises)
