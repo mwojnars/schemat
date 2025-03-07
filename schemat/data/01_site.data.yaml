@@ -268,12 +268,6 @@
     "@": 30
 - __id: 1024
   agents_installed:
-    tcp:
-      "@": 1038
-    tcp_receiver:
-      "@": 1039
-    webserver:
-      "@": 1023
     block_1010:
       "@": 1010
     block_1015:
@@ -282,16 +276,22 @@
       "@": 1029
     block_1032:
       "@": 1032
+    tcp:
+      "@": 1038
+    tcp_receiver:
+      "@": 1039
+    webserver:
+      "@": 1023
     "@": schemat:Catalog
   master_agents_running:
     - tcp
     - tcp_receiver
   agents_running:
-    - webserver
     - block_1010
     - block_1015
     - block_1029
     - block_1032
+    - webserver
   __category:
     "@": 21
 - __id: 1025
