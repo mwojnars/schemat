@@ -121,19 +121,6 @@ export class Node extends Agent {
     tcp_host
     tcp_port
 
-    // get __kafka_topic() { return `topic-${this.id}` }   // for KafkaService._submit()
-    // get kafka_client() { return this.__state?.kafka }
-    // get kafka_client() { return this.schemat.agents.get('kafka_client').__state.kafka }
-    // get kafka_producer() { return this.__state.producer }
-    //
-    // kafka_send(topic, message) {
-    //     let kafka = schemat.process.states.get('kafka_master')
-    //     if (!kafka) throw new Error(`kafka_worker is not running`)
-    //     if (!kafka.producer) throw new Error(`missing producer in kafka_worker`)
-    //     return kafka.producer.send({topic, messages: [message]})        // or sendBatch() to write multiple messages to different topics
-    //     // return this.__state.kafka_worker.producer.send({topic, messages: [{value: message}]})    // or sendBatch() to write multiple messages to different topics
-    // }
-
     // node as an agent is deployed on itself and runs on master process
     get __node() { return this }
 
@@ -178,7 +165,7 @@ export class Node extends Agent {
     }
 
 
-    /* vertical (IPC) communication between master/worker processes */
+    /* IPC: vertical communication between master/worker processes */
 
     async from_worker([type, ...msg]) {
         /* On master process, handle an IPC message received from a worker process, or directly from itself. */
@@ -211,7 +198,7 @@ export class Node extends Agent {
     }
 
 
-    /* horizontal (TCP) communication between nodes */
+    /* TCP: horizontal communication between nodes */
 
     async send_tcp(node, msg) {
         /* On master process, send a message to another node via TCP. */
