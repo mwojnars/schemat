@@ -148,7 +148,7 @@ export class Node extends Agent {
 
     /* RPC calls to other processes or nodes */
 
-    send_rpc(target_id, method, args) {
+    request_rpc(target_id, method, args) {
         /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node
            and then to the `target_id` object (agent) where it should invoke its 'remote.<method>'(...args).
            Return a response from the remote target.
