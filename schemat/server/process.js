@@ -4,10 +4,10 @@ import fs from 'node:fs'
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {print, assert, T, sleep} from "../common/utils.js";
-import {WebObject} from "../core/object.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {Database, BootDatabase} from "../db/db.js";
 import {Agent} from "./agent.js";
+import {IPC_Mailbox} from "./node.js";
 
 
 // print NODE_PATH:
@@ -354,8 +354,8 @@ export class MasterProcess extends Process {
         /* Start or restart a worker process. */
         let worker = this.workers[id-1] = cluster.fork({WORKER_ID: id})
         this.worker_pids.set(worker.process.pid, id)                        // remember PID-to-ID mapping
-        worker.on("message", msg => this.node.from_worker(msg))             // let master process accept messages from `worker`
-        // let mailbox =
+        worker.mailbox = new IPC_Mailbox(worker, msg => this.node.from_worker(msg))     // messages to/from `worker`
+        // worker.on("message", msg => this.node.from_worker(msg))             // let master process accept messages from `worker`
         return worker
     }
 }
@@ -366,8 +366,8 @@ export class WorkerProcess extends Process {
 
     start() {
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-        // this._print(`registering "message" handler`)
-        process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
+        this.mailbox = new IPC_Mailbox(process, msg => this.node.from_master(msg))    // messages to/from master
+        // process.on("message", msg => this.node.from_master(msg))    // let worker process accept messages from master
         super.start()
     }
 }

@@ -19,8 +19,6 @@ export class Mailbox {
         this.timeout = timeout          // timeout for waiting for a response
         this.timestamps = new Map()     // timestamps for pending requests
         this.interval = timeout ? setInterval(() => this._check_timeouts(), timeout) : null
-
-        this._listen()
     }
 
     async send(msg) {
@@ -92,6 +90,7 @@ export class IPC_Mailbox extends Mailbox {
     constructor(peer, on_message) {
         super(on_message)
         this.peer = peer
+        this._listen()
     }
     _listen()       { this.peer.on("message", (message) => this._handle_message(message)) }
     _send(message)  { return this.peer.send(message) }
@@ -164,7 +163,8 @@ export class Node extends Agent {
            and then to the `target_id` object (agent) where it should invoke its 'remote.<method>'(...args). Wait for the returned result.
          */
         let msg = ['RPC', target_id, method, JSONx.encode(args)]       // , schemat.tx
-        return this.is_master() ? this.from_worker(msg) : process.send(msg)
+        return this.is_master() ? this.from_worker(msg) : schemat.process.mailbox.send(msg)
+        // return this.is_master() ? this.from_worker(msg) : process.send(msg)
     }
 
     async from_worker([type, ...msg]) {
@@ -215,7 +215,8 @@ export class Node extends Agent {
             if (process_id !== this.worker_id) {
                 assert(process_id > 0)
                 let worker = schemat.process.get_worker(process_id)    // workers 1,2,3... stored under indices 0,1,2...
-                return worker.send([type, ...msg])      // forward the message down to a worker process, to its from_master()
+                return worker.mailbox.send([type, ...msg])      // forward the message down to a worker process, to its from_master()
+                // return worker.send([type, ...msg])      // forward the message down to a worker process, to its from_master()
             }
             return this.handle_rpc(msg)                 // process the message here in the master process
         }
