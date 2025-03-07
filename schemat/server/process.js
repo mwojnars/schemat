@@ -46,10 +46,10 @@ export async function boot_schemat(opts) {
 
 /**********************************************************************************************************************/
 
-class Execution {
-    /* Information about a running agent. */
-    agent               // ref to web object
-    context             // execution context returned by __start__()
+class Frame {
+    /* Execution frame that keeps information about a running agent. */
+    agent               // web object that created this frame
+    context             // state object returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
     stopping = false    // if true, no more RPC calls can be started
 
@@ -73,7 +73,7 @@ export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
     node                    // Node web object that represents the Schemat cluster node this process is running
-    agents = new Map()      // Execution objects for currently running agents, keyed by agent names
+    agents = new Map()      // Frame objects for currently running agents, keyed by agent names
     contexts = {}           // execution contexts of currently running agents, keyed by agent names, proxied; derived from `agents`
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
 
@@ -207,7 +207,7 @@ export class Process {
 
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
-        let current = this.agents                       // currently running agents, Map<name, Execution>
+        let current = this.agents                       // currently running agents, Map<name, Frame>
         let desired = this._get_agents_running()        // goal: agents that should be running now, Map<name, agent>
 
         if (schemat.is_closing) {
@@ -236,11 +236,11 @@ export class Process {
             assert(agent instanceof Agent)
 
             let ctx = await agent.__start__()
-            this.agents.set(name, new Execution(agent, ctx))
+            this.agents.set(name, new Frame(agent, ctx))
             this._print(`starting agent '${name}' done`)
 
             // let start = Promise.resolve(agent.__start__())
-            // promises.push(start.then(ctx => next.set(name, new Execution(agent, ctx))))
+            // promises.push(start.then(ctx => next.set(name, new Frame(agent, ctx))))
         }
 
         // refresh agents
