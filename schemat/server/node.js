@@ -155,13 +155,13 @@ export class Node extends Agent {
         if (!frame)
             throw new Error(`agent [${target_id}] not found on this node process`)
 
-        let {agent, context} = frame
+        let {agent, state} = frame
         let func = agent.__self[`remote.${method}`]
         if (!func) throw new Error(`agent [${target_id}] has no RPC endpoint "${method}"`)
 
         args = JSONx.decode(args)
 
-        return frame.track_call(func.call(agent, context, ...args))
+        return frame.track_call(func.call(agent, state, ...args))
     }
 
 

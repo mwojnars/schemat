@@ -24,34 +24,34 @@ export class Agent extends WebObject {
     async __uninstall__(node) {}
 
     async __start__()   {
-        /* Start the microservice implemented by this agent. May create and return an "execution context",
+        /* Start the microservice implemented by this agent. May create and return an "execution state",
            which will be accessible to external calls to the running agent (RPC calls or direct function calls)
-           and will be passed to __stop__() upon microservice termination. Typically, the context object contains
+           and will be passed to __stop__() upon microservice termination. Typically, the state object contains
            handlers to all the resources that were opened during __start__() and must be released in __stop__().
-           The execution context, if present, should be a plain JS object. If the microservice allows local direct
-           function calls to the microservice, these functions should be top-level elements of the returned context
-           (ctx.fun()) - all calls to these functions will be automatically protected and monitored, so that
+           The execution state, if present, should be a plain JS object. If the microservice allows local direct
+           function calls to the microservice, these functions should be top-level elements of the returned state
+           (state.fun()) - all calls to these functions will be automatically protected and monitored, so that
            the microservice termination awaits the graceful completion of such calls; same for RPC (obj.remote.X()) calls.
          */
     }
-    async __stop__(ctx) {
-        /* Release any local resources that were acquired during __start__() and are passed here in the execution context `ctx`. */
+    async __stop__(state) {
+        /* Release any local resources that were acquired during __start__() and are passed here in the `state` of execution. */
     }
 
-    async __restart__(ctx, prev) {
+    async __restart__(state, prev) {
         /* In many cases, refreshing an agent in the worker process does NOT require full stop+start, which might have undesired side effects
            (temporary unavailability of the microservice). For this reason, __restart__() is called upon agent refresh - it can be customized
            in subclasses, and the default implementation either does nothing (default), or performs the full stop+start cycle (if hard_restart=true).
          */
-        if (!this.hard_restart) return ctx
-        await prev.__stop__(ctx)
+        if (!this.hard_restart) return state
+        await prev.__stop__(state)
         return this.__start__()
     }
 
 
     /***  Triggers  ***/
 
-    'remote.ping'(ctx, msg) {
+    'remote.ping'(state, msg) {
         /* Default RPC endpoint for testing intra-cluster communication. */
         print(`[${utc()}]  PING: agent [${this.id}], ${msg}`)
     }

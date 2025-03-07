@@ -49,13 +49,13 @@ export async function boot_schemat(opts) {
 class Frame {
     /* Execution frame that keeps information about a running agent. */
     agent               // web object that created this frame
-    context             // state object returned by agent.__start__()
+    state               // state object returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
     stopping = false    // if true, no more RPC calls can be started
 
-    constructor(agent, context = null) {
+    constructor(agent, state = null) {
         this.agent = agent
-        this.context = context
+        this.state = state
     }
     
     track_call(call) {
@@ -153,10 +153,10 @@ export class Process {
         /* Create a new `states` object with proxied agent states, so that function calls on the states are tracked
            and the agent can be stopped gracefully.
          */
-        let states = Object.fromEntries(Array.from(this.frames, ([name, frame]) => [name, frame.context]))
+        let states = Object.fromEntries(Array.from(this.frames, ([name, frame]) => [name, frame.state]))
         
         for (let [name, frame] of this.frames.entries()) {
-            let state = frame.context
+            let state = frame.state
             if (!state) continue
             if (!T.isPlain(state)) throw new Error(`state of agent '${name}' must be a plain object`)
 
@@ -234,12 +234,12 @@ export class Process {
             assert(agent.is_loaded())
             assert(agent instanceof Agent)
 
-            let ctx = await agent.__start__()
-            this.frames.set(name, new Frame(agent, ctx))
+            let state = await agent.__start__()
+            this.frames.set(name, new Frame(agent, state))
             this._print(`starting agent '${name}' done`)
 
             // let start = Promise.resolve(agent.__start__())
-            // promises.push(start.then(ctx => next.set(name, new Frame(agent, ctx))))
+            // promises.push(start.then(state => next.set(name, new Frame(agent, state))))
         }
 
         // refresh agents
@@ -250,13 +250,13 @@ export class Process {
             if (agent.__ttl_left() < 0) agent = await agent.reload()
             if (agent === frame.agent) continue
 
-            frame.context = await agent.__restart__(frame.context, frame.agent)
+            frame.state = await agent.__restart__(frame.state, frame.agent)
             frame.agent = agent
             this._print(`restarting agent '${name}' done`)
 
             // next.set(name, frame)
-            // let restart = Promise.resolve(agent.__restart__(frame.context, frame.agent))
-            // promises.push(restart.then(ctx => frame.context = ctx))
+            // let restart = Promise.resolve(agent.__restart__(frame.state, frame.agent))
+            // promises.push(restart.then(state => frame.state = state))
 
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
@@ -273,11 +273,11 @@ export class Process {
                 await Promise.all(frame.calls)
             }
 
-            await frame.agent.__stop__(frame.context)
+            await frame.agent.__stop__(frame.state)
             this.frames.delete(name)
             this._print(`stopping agent '${name}' done`)
 
-            // let stop = Promise.resolve(frame.agent.__stop__(frame.context))
+            // let stop = Promise.resolve(frame.agent.__stop__(frame.state))
             // promises.push(stop.then(() => this.frames.delete(name)))
         }
 
