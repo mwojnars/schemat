@@ -225,23 +225,22 @@ export class Process {
         let promises = []
         // let next = new Map()                            // agents to continue running
 
-        // stop agents
-        for (let name of to_stop.toReversed()) {        // iterate in reverse order as some agents may depend on previous ones
-            this._print(`stopping agent '${name}' ...`)
-            let state = current.get(name)
-            state.stopping = true                       // mark agent as stopping to prevent new calls
-            
-            if (state.calls.length > 0) {               // wait for pending calls to complete before stopping
-                this._print(`waiting for ${state.calls.length} pending calls to agent '${name}' to complete`)
-                await Promise.all(state.calls)
-            }
+        // start new agents
+        for (let name of to_start) {
+            this._print(`starting agent '${name}' ...`)
+            let agent = desired.get(name)
+            if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
 
-            await state.agent.__stop__(state.context)
-            this.agents.delete(name)
-            this._print(`stopping agent '${name}' done`)
+            // print(`_start_stop():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
+            assert(agent.is_loaded())
+            assert(agent instanceof Agent)
 
-            // let stop = Promise.resolve(state.agent.__stop__(state.context))
-            // promises.push(stop.then(() => this.agents.delete(name)))
+            let ctx = await agent.__start__()
+            this.agents.set(name, new Execution(agent, ctx))
+            this._print(`starting agent '${name}' done`)
+
+            // let start = Promise.resolve(agent.__start__())
+            // promises.push(start.then(ctx => next.set(name, new Execution(agent, ctx))))
         }
 
         // refresh agents
@@ -264,22 +263,23 @@ export class Process {
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
         }
 
-        // start new agents
-        for (let name of to_start) {
-            this._print(`starting agent '${name}' ...`)
-            let agent = desired.get(name)
-            if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
+        // stop agents
+        for (let name of to_stop.toReversed()) {        // iterate in reverse order as some agents may depend on previous ones
+            this._print(`stopping agent '${name}' ...`)
+            let state = current.get(name)
+            state.stopping = true                       // mark agent as stopping to prevent new calls
 
-            // print(`_start_stop():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
-            assert(agent.is_loaded())
-            assert(agent instanceof Agent)
+            if (state.calls.length > 0) {               // wait for pending calls to complete before stopping
+                this._print(`waiting for ${state.calls.length} pending calls to agent '${name}' to complete`)
+                await Promise.all(state.calls)
+            }
 
-            let ctx = await agent.__start__()
-            this.agents.set(name, new Execution(agent, ctx))
-            this._print(`starting agent '${name}' done`)
+            await state.agent.__stop__(state.context)
+            this.agents.delete(name)
+            this._print(`stopping agent '${name}' done`)
 
-            // let start = Promise.resolve(agent.__start__())
-            // promises.push(start.then(ctx => next.set(name, new Execution(agent, ctx))))
+            // let stop = Promise.resolve(state.agent.__stop__(state.context))
+            // promises.push(stop.then(() => this.agents.delete(name)))
         }
 
         await Promise.all(promises)
