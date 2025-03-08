@@ -240,8 +240,8 @@ export class Database extends WebObject {
     async __init__() {
         if (CLIENT) return
         // print(`initializing database [${this.__id}] ...`)
-        assert(this.top_ring, 'missing rings in the database')
-        await this.top_ring.load()
+        // assert(this.top_ring, 'missing rings in the database')
+        await this.top_ring?.load()
     }
 
     locate_ring(ring_or_id) {
