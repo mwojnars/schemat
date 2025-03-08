@@ -159,7 +159,7 @@ export class TCP_Sender__ {
 
     async start(retry_interval) {
         this.sockets = new Map()         // Map<address, net.Socket>
-        this.pending = new Map()         // Map<id, {message, retries, address}>
+        this.pending = new Map()         // Map<id, {message, retries, address, resolve, reject}>
         this.message_id = 1
 
         this.retry_timer = setInterval(() => {
@@ -177,15 +177,16 @@ export class TCP_Sender__ {
         for (let socket of this.sockets.values()) socket.end()
     }
 
-    send(msg, address) {
+    async send(msg, address) {
         /* `msg` is a plain object/array whose elements have to be JSONx-encoded already if needed. */
-        let socket = this.sockets.get(address) || this._connect(address)
-        let id = this.message_id++
-        let json = JSON.stringify({id, msg}) + '\n'
+        return new Promise((resolve, reject) => {
+            let socket = this.sockets.get(address) || this._connect(address)
+            let id = this.message_id++
+            let json = JSON.stringify({id, msg}) + '\n'
 
-        this.pending.set(id, {message: json, retries: 0, address})
-        socket.write(json)
-        return id
+            this.pending.set(id, {message: json, retries: 0, address, resolve, reject})
+            socket.write(json)
+        })
     }
 
     _connect(address) {
@@ -198,9 +199,11 @@ export class TCP_Sender__ {
             try {
                 print('TCP response:', msg)
                 let {id, result} = JSONx.parse(msg)
-                this.pending.delete(id)
-                this._handle_response(result)
-                // print('pending:', pending.size)
+                let entry = this.pending.get(id)
+                if (entry) {
+                    entry.resolve(result)
+                    this.pending.delete(id)
+                } else console.warn('Response received for unknown request:', id)
             }
             catch (e) { console.error('Invalid ACK:', msg) }
         })
@@ -213,10 +216,6 @@ export class TCP_Sender__ {
         this.sockets.set(address, socket)
 
         return socket
-    }
-
-    _handle_response(result) {
-        console.log('Received result:', result)
     }
 }
 
