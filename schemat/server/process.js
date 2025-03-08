@@ -122,8 +122,9 @@ export class Process {
         return node
     }
 
-    start() {
+    async start() {
         schemat.process = this
+        if (this.is_master()) await sleep(1.0)
         this._promise = this.main()
     }
 
@@ -343,7 +344,7 @@ export class MasterProcess extends Process {
     start() {
         print(`starting node:`, this.node.id)
         this._start_workers()
-        super.start()
+        return super.start()
     }
 
     _start_workers(num_workers = 2) {
@@ -381,7 +382,7 @@ export class WorkerProcess extends Process {
     start() {
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.from_master(msg))    // messages to/from master
-        super.start()
+        return super.start()
     }
 }
 
