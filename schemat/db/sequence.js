@@ -119,12 +119,10 @@ export class IndexSequence extends Sequence {
         // this.blocks.push(Block._draft(this, {filename}))
     }
 
-    // async __setup__() {
-    //     // let {IndexBlock} = this.__category.preloaded
-    //     // let IndexBlock = await this.__category.import('./IndexBlock')
-    //     let IndexBlock = await schemat.import('/$/sys/IndexBlock')
-    //     this.blocks = [IndexBlock.new(this, this.{filename})]
-    // }
+    async __setup__() {
+        let Block = await schemat.import('/$/sys/Block')
+        this.blocks = [Block.new(this)]
+    }
 }
 
 /**********************************************************************************************************************/
