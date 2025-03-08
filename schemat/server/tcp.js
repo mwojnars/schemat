@@ -212,6 +212,7 @@ export class TCP_Sender__ {
         }
 
         this.state = {sockets, send, retry_timer}
+        this.send = send
     }
 
     async stop() {

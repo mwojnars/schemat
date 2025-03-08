@@ -228,8 +228,9 @@ export class Node extends Agent {
         /* On master process, send a message to another node via TCP. */
         assert(this.is_master())
         if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
-        return schemat.agents.tcp.send(msg, node.tcp_address)
-        // return this.tcp_sender.local.send(msg, node.tcp_address)
+        let local = schemat.get_state(this)
+        return local.tcp_sender.send(msg, node.tcp_address)
+        // return schemat.agents.tcp.send(msg, node.tcp_address)
     }
 
     recv_tcp([type, ...msg]) {
