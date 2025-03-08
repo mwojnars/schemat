@@ -224,6 +224,8 @@ export class Node extends Agent {
            `msg` is a plain object/array whose elements may still need to be JSONx-decoded.
          */
         assert(this.is_master())
+        print(`#${this.worker_id} recv_tcp():`, JSON.stringify(msg))
+
         if (type === 'RPC') {
             let [target_id] = msg
 

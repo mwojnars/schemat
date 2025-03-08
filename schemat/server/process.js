@@ -124,7 +124,7 @@ export class Process {
 
     async start() {
         schemat.process = this
-        if (this.is_master()) await sleep(1.0)
+        if (this.is_master()) await sleep(1.0)      // master should wait for workers to start their IPC before sending requests
         this._promise = this.main()
     }
 
