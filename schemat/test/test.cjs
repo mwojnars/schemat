@@ -143,12 +143,13 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
     before(async function() {
         nodes ??= [node]
 
-        for (let node of nodes) servers.push(await start_server(node, port++, tcp_port++, args))
+        for (let node of nodes) {
+            let srv = await start_server(node, port++, tcp_port++, args)
+            servers.push(srv)
+            srv.stdout.pipe(process.stdout)                     // pipe output in real-time
+            srv.stderr.pipe(process.stderr)
+        }
         server = servers[0]
-
-        // pipe output in real-time
-        server.stdout.pipe(process.stdout)
-        server.stderr.pipe(process.stderr)
 
         await delay(1000)                                       // wait for server to start
         browser = await puppeteer.launch({headless: "new"})
