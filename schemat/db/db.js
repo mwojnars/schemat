@@ -47,7 +47,7 @@ export class Ring extends WebObject {
 
 
     __new__({name, lower_ring, file_prefix, file, start_id = 0, stop_id, readonly = false} = {}) {
-        this.name = name || fileBaseName(file)
+        this.name = name || (file && fileBaseName(file))
         this.lower_ring = lower_ring
 
         // if (!name && file)
@@ -59,9 +59,6 @@ export class Ring extends WebObject {
         this.readonly = readonly
         this.start_id = start_id
         this.stop_id = stop_id
-
-        // // create data sequence, but only during bootstrap because the object here lacks __category (!)
-        // if (bootstrap) this.data_sequence = DataSequence.new(this, file)
     }
 
     async __setup__() {
@@ -202,6 +199,11 @@ export class Ring extends WebObject {
 }
 
 export class BootRing extends Ring {
+    /* During boot, we don't have access to category objects, so we cannot create full web objects (with __category)
+       comprising the database rings. Also, the objects created are only temporary and *not* inserted to DB, so their
+       __setup__() is *not* executed, hence all initialization must be done in __new__().
+     */
+
     __new__(opts = {}) {
         let {file, ..._opts} = opts
         super.__new__(_opts)
