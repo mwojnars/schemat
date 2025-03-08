@@ -208,7 +208,7 @@ export class BootRing extends Ring {
         let {file, ..._opts} = opts
         super.__new__(_opts)
 
-        // the object here is created from a class and lacks __category (!), we cannot do this differently during boot
+        // the object here is created from a class and lacks __category; this kind of hack is only allowed during boot
         this.data_sequence = DataSequence.new(this, file)
     }
 
@@ -361,7 +361,7 @@ export class BootDatabase extends Database {
         let top
 
         for (const spec of ring_specs) {
-            let ring = await BootRing.new({...spec, bootstrap: true}).load()
+            let ring = await BootRing.new(spec).load()
             ring.lower_ring = top
             top = ring
         }
