@@ -198,7 +198,7 @@ export class Node extends Agent {
         let node
 
         if (type === 'RPC') {
-            print(`#${this.worker_id} from_worker():`, JSON.stringify(msg))
+            print(`${this.id}/#${this.worker_id} from_worker():`, JSON.stringify(msg))
             let [target_id] = msg
 
             // check if the target object is deployed here on this node, then no need to look any further
@@ -213,7 +213,13 @@ export class Node extends Agent {
             }
 
             if (!node) throw new Error(`missing host node for RPC target [${target_id}]`)
-            if (node.is(schemat.node)) return this.recv_tcp([type, ...msg])     // target agent is deployed on the current node
+            if (node.is(schemat.node)) {
+                print(`${this.id}/#${this.worker_id} from_worker(): redirecting to self`)
+                return this.recv_tcp([type, ...msg])     // target agent is deployed on the current node
+            }
+
+            await node.load()
+            print(`${this.id}/#${this.worker_id} from_worker(): sending to ${node.id} at ${node.tcp_address}`)
 
             return this.send_tcp(node, [type, ...msg])
         }
@@ -222,7 +228,7 @@ export class Node extends Agent {
 
     from_master([type, ...msg]) {
         assert(type === 'RPC')
-        print(`#${this.worker_id} from_master():`, JSON.stringify(msg))
+        print(`${this.id}/#${this.worker_id} from_master():`, JSON.stringify(msg))
         return this.execute_rpc(...msg)
     }
 
@@ -252,7 +258,10 @@ export class Node extends Agent {
             let process_id = this.agent_locations.get(target_id)
             // print("recv_tcp(): process", process_id)
 
-            if (process_id === undefined) throw new Error(`agent [${target_id}] not found on this node`)
+            if (process_id === undefined) {
+                print(`${this.id}/#${this.worker_id} agent locations:`, [...this.agent_locations.entries()])
+                throw new Error(`${this.id}/#${this.worker_id}: agent [${target_id}] not found on this node`)
+            }
             if (process_id !== this.worker_id) {
                 assert(process_id > 0)
                 let worker = schemat.process.get_worker(process_id)
