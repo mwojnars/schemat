@@ -1,4 +1,4 @@
-# [test-site] is used for unit tests
+# [test-site] is used for integration tests
 site: 1045
 
 bootstrap_rings:
