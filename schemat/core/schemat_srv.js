@@ -43,7 +43,6 @@ export class ServerSchemat extends Schemat {
     get db()     { return this.site?.database || this._db }
     get tx()     { return this._transaction.getStore() }
     get node()   { return this.process?.node }      // host Node (web object) of the current process; initialized and periodically reloaded in Server
-    get agents() { return this.process?.states }    // execution states of currently running agents
 
     constructor(config) {
         super(config)
@@ -115,6 +114,11 @@ export class ServerSchemat extends Schemat {
         /* Find and return the current execution frame of an agent. */
         let id = (typeof id_or_obj === 'object') ? id_or_obj.id : id_or_obj
         return this.process.frames.values().find(frame => frame.agent.id === id)
+    }
+
+    get_state(id_or_obj) {
+        /* Find and return the current execution state of an agent. */
+        return this.get_frame(id_or_obj)?.state
     }
 
 
