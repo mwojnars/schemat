@@ -116,19 +116,14 @@ export class IndexSequence extends Sequence {
         super.__new__(ring)
         // assert(filename.endsWith('.jl'))
         print('IndexSequence.__new__() creating a block')
-        // this.blocks.push(Block.new(this, {filename}))
-
-        // let {IndexBlock} = this.__category.preloaded
-        // let IndexBlock = await this.__category.import('./IndexBlock')
-        // let IndexBlock = await schemat.import('/$/sys/IndexBlock')
-        // this.blocks = [await IndexBlock.new(this, {filename})]
+        // this.blocks.push(Block._draft(this, {filename}))
     }
 
     // async __setup__() {
     //     // let {IndexBlock} = this.__category.preloaded
     //     // let IndexBlock = await this.__category.import('./IndexBlock')
     //     let IndexBlock = await schemat.import('/$/sys/IndexBlock')
-    //     this.blocks = [await IndexBlock.new(this, this.{filename}).save()]
+    //     this.blocks = [IndexBlock.new(this, this.{filename})]
     // }
 }
 
@@ -142,16 +137,15 @@ export class DataSequence extends Sequence {
 
     get file_prefix() { return 'data' }
 
-    __new__(ring, filename) {
+    __new__(ring, {boot_file}) {
         super.__new__(ring)
-        // let DataBlock = await schemat.import('/$/sys/DataBlock')
-        this.blocks = [DataBlock.new(this, {filename})]
+        if (boot_file) this.blocks = [DataBlock._draft(this, {filename: boot_file})]
     }
 
-    // async __setup__() {
-    //     let DataBlock = await schemat.import('/$/sys/DataBlock')
-    //     this.blocks = [DataBlock.new(this, {filename})]
-    // }
+    async __setup__() {
+        let DataBlock = await schemat.import('/$/sys/DataBlock')
+        this.blocks = [DataBlock.new(this, {format: 'data-yaml'})]
+    }
 
     encode_key(id) {
         assert(id !== undefined)
