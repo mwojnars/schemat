@@ -240,7 +240,8 @@ export class TCP_Receiver__ {
                         if (result instanceof Promise) result = await result
                     }
                     this._respond(socket, id, result)
-                } catch (e) { console.error('Invalid message:', e) }
+                } catch (e) { throw e }
+                // } catch (e) { console.error('Error while processing TCP message:', e) }
             })
 
             socket.on('data', data => msg_parser.feed(data.toString()))
