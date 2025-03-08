@@ -290,7 +290,7 @@ export class Process {
         /* Map of agents that should be running now on this process. */
         let master = this.is_master()
         let names  = master ? this.node.master_agents_running : this.node.agents_running    // different set of agents at master vs workers
-        let agents = names.map(name => [name, this.node.agents_installed.get(name)])
+        let agents = (names || []).map(name => [name, this.node.agents_installed.get(name)])
 
         assert(!this.node.agents_installed.has('node'))
         if (master) agents = [['node', this.node], ...agents]       // on master, add the current node as implicit 'node' agent

@@ -1,6 +1,7 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {JSONx} from "../common/jsonx.js";
 import {Agent} from "./agent.js";
+import {TCP_Receiver__, TCP_Sender__} from "./tcp.js";
 
 
 /**********************************************************************************************************************/
@@ -132,6 +133,18 @@ export class Node extends Agent {
         return `${this.tcp_host}:${this.tcp_port}` 
     }
 
+    async __start__() {
+        let tcp_sender = new TCP_Sender__()
+        let tcp_receiver = new TCP_Receiver__()
+        await tcp_sender.start()
+        await tcp_receiver.start()
+        return {tcp_sender, tcp_receiver}
+    }
+
+    async __stop__({tcp_sender, tcp_receiver}) {
+        await tcp_receiver.stop()
+        await tcp_sender.stop()
+    }
 
     /* RPC calls to other processes or nodes */
 

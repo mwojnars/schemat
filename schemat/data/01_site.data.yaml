@@ -283,9 +283,7 @@
     webserver:
       "@": 1023
     "@": schemat:Catalog
-  master_agents_running:
-    - tcp
-    - tcp_receiver
+  master_agents_running: []
   agents_running:
     - block_1010
     - block_1015
@@ -400,9 +398,7 @@
     block_1033:
       "@": 1033
     "@": schemat:Catalog
-  master_agents_running:
-    - tcp
-    - tcp_receiver
+  master_agents_running: []
   agents_running:
     - webserver
     - logger
