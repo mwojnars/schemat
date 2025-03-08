@@ -144,8 +144,14 @@ export class DataSequence extends Sequence {
 
     __new__(ring, filename) {
         super.__new__(ring)
+        // let DataBlock = await schemat.import('/$/sys/DataBlock')
         this.blocks = [DataBlock.new(this, {filename})]
     }
+
+    // async __setup__() {
+    //     let DataBlock = await schemat.import('/$/sys/DataBlock')
+    //     this.blocks = [DataBlock.new(this, {filename})]
+    // }
 
     encode_key(id) {
         assert(id !== undefined)

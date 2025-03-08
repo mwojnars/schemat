@@ -41,7 +41,7 @@ function check_internet(fail, retries = 2) {
 
 /**********************************************************************************************************************/
 
-const CONFIG = './schemat/config.yaml'
+const CONFIG = './schemat/config.yaml' //'./schemat/test/config.yaml'
 const NODE = 1024           // ID of the Node object that should be loaded upon start up  ... 1036 is missing in Demo database
 const HOST = '127.0.0.1'
 const PORT = 2998

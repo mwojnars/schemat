@@ -46,7 +46,7 @@ export class Ring extends WebObject {
     }
 
 
-    __new__({name, lower_ring, file_prefix, file, start_id = 0, stop_id, readonly = false, bootstrap = false} = {}) {
+    __new__({name, lower_ring, file_prefix, file, start_id = 0, stop_id, readonly = false} = {}) {
         this.name = name || fileBaseName(file)
         this.lower_ring = lower_ring
 
@@ -60,8 +60,8 @@ export class Ring extends WebObject {
         this.start_id = start_id
         this.stop_id = stop_id
 
-        // create data sequence, but only during bootstrap because the object here lacks __category (!)
-        if (bootstrap) this.data_sequence = DataSequence.new(this, file)
+        // // create data sequence, but only during bootstrap because the object here lacks __category (!)
+        // if (bootstrap) this.data_sequence = DataSequence.new(this, file)
     }
 
     async __setup__() {
@@ -202,10 +202,19 @@ export class Ring extends WebObject {
 }
 
 export class BootRing extends Ring {
+    __new__(opts = {}) {
+        let {file, ..._opts} = opts
+        super.__new__(_opts)
+
+        // the object here is created from a class and lacks __category (!), we cannot do this differently during boot
+        this.data_sequence = DataSequence.new(this, file)
+    }
+
     // select(id, req)  {
     //     print('boot ring select()')
     //     return this._find_block(id)._select(id, req || new DataRequest())
     // }
+
     insert() {assert(false)}
     update() {assert(false)}
     delete() {assert(false)}
