@@ -426,7 +426,10 @@ export class WebObject {
     }
 
     static _new(categories = [], ...args) {
-        /* `categories` may contain category objects or object IDs; in the latter case, IDs are converted to stubs. */
+        /* Create a newborn object and execute its __new__(...args) to perform caller-side initialization.
+           Return the object. If __new__() returns a Promise, this method returns a Promise too.
+           `categories` (if any) are category objects/IDs to be written to the object's __category property.
+         */
         let obj = this.newborn()
         categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat) || []
         
@@ -440,6 +443,15 @@ export class WebObject {
         // obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
         // let ret = obj.__new__(...args)
         // return ret instanceof Promise ? ret.then(() => obj) : obj
+    }
+
+    static _draft(...args) {
+        /* Draft newborn object that is properly initialized via its class's __new__(), but does NOT have any
+           __category assigned, which is incorrect in normal circumstances. This method should only be used
+           for internal purposes, typically during bootstrap, when category objects cannot be loaded yet
+           and draft instances must be created from classes rather than categories.
+         */
+        return this._new([], ...args)
     }
 
     static new(...args) {

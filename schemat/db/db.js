@@ -209,7 +209,7 @@ export class BootRing extends Ring {
         super.__new__(_opts)
 
         // the object here is created from a class and lacks __category; this kind of hack is only allowed during boot
-        this.data_sequence = DataSequence.new(this, file)
+        this.data_sequence = DataSequence._draft(this, file)
     }
 
     // select(id, req)  {
