@@ -47,11 +47,11 @@ export class Site extends WebObject {
     async __init__()  {
         this._modules_cache = new Map()
         if (SERVER) {
-            await this.root.load()
+            await this.root?.load()
             await this.database?.load()
             await this.logger?.load()
             // this._vm = await import('node:vm')
-            this._check_default_container()                 // no await to avoid blocking the site's startup
+            if (this.default_path) this._check_default_container()      // no await to avoid blocking the site's startup
         }
     }
 
