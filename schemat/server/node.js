@@ -121,6 +121,7 @@ export class Node extends Agent {
     https_port
     tcp_host
     tcp_port
+    tcp_retry_interval
 
     // node as an agent is deployed on itself and runs on master process
     get __node() { return this }
@@ -128,16 +129,20 @@ export class Node extends Agent {
     get worker_id() { return schemat.process.worker_id }
     is_master()     { return schemat.process.is_master() }
 
+    get _tcp_port() { return schemat.config['tcp-port'] || this.tcp_port }      // FIXME: workaround
+
     get tcp_address() {
-        if (!this.tcp_host || !this.tcp_port) throw new Error(`tcp_host and tcp_port must be set`)
-        return `${this.tcp_host}:${this.tcp_port}` 
+        if (!this.tcp_host || !this._tcp_port) throw new Error(`TCP host and port must be configured`)
+        return `${this.tcp_host}:${this._tcp_port}`
     }
 
     async __start__() {
         let tcp_sender = new TCP_Sender__()
         let tcp_receiver = new TCP_Receiver__()
-        await tcp_sender.start()
-        await tcp_receiver.start()
+
+        await tcp_sender.start(this.tcp_retry_interval || 5000)
+        await tcp_receiver.start(this._tcp_port)
+
         return {tcp_sender, tcp_receiver}
     }
 

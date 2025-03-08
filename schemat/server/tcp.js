@@ -157,9 +157,7 @@ export class TCP_Sender__ {
     /* Send messages to other nodes in the cluster via persistent connections. Generate unique identifiers
        for WRITE messages, process acknowledgements and resend un-acknowledged messages. */
 
-    retry_interval
-
-    async start() {
+    async start(retry_interval) {
         this.sockets = new Map()         // Map<address, net.Socket>
         this.pending = new Map()         // Map<id, {message, retries, address}>
         this.message_id = 1
@@ -171,7 +169,7 @@ export class TCP_Sender__ {
                 assert(socket)
                 socket.write(entry.message)
             }
-        }, this.retry_interval)
+        }, retry_interval)
     }
 
     async stop() {
@@ -227,12 +225,9 @@ export class TCP_Sender__ {
 export class TCP_Receiver__ {
     /* Receive messages from other nodes in the cluster, send replies and acknowledgements. */
 
-    // properties:
-    tcp_port
+    async start(port) {
 
-    async start() {
-
-        let server = net.createServer(socket => {
+        this.server = net.createServer(socket => {
             // per-connection state
             let processed_offset = 0
             let msg_parser = new ChunkParser(async json => {
@@ -253,11 +248,8 @@ export class TCP_Receiver__ {
             socket.on('error', () => socket.destroy())
         })
 
-        let port = schemat.config['tcp-port'] || this.tcp_port || schemat.node.tcp_port
+        this.server.listen(port)
         print(`listening at TCP port`, port)
-
-        server.listen(port)
-        this.server = server
     }
 
     async stop() {
