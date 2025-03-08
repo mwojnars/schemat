@@ -616,6 +616,8 @@
     "@": 18
   __category:
     "@": 1
+  __container:
+    "@": 1009
 - __id: 20
   name: ObjectsStream
   class: schemat/db/sequence.js:ObjectsStream
