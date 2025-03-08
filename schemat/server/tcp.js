@@ -160,65 +160,61 @@ export class TCP_Sender__ {
     retry_interval
 
     async start() {
-        let sockets = new Map()         // Map<address, net.Socket>
-        let pending = new Map()         // Map<id, {message, retries, address}>
-        let message_id = 1
+        this.sockets = new Map()         // Map<address, net.Socket>
+        this.pending = new Map()         // Map<id, {message, retries, address}>
+        this.message_id = 1
 
-        let retry_timer = setInterval(() => {
-            for (let [id, entry] of pending) {
+        this.retry_timer = setInterval(() => {
+            for (let [id, entry] of this.pending) {
                 entry.retries++
-                let socket = sockets.get(entry.address)
+                let socket = this.sockets.get(entry.address)
                 assert(socket)
                 socket.write(entry.message)
             }
         }, this.retry_interval)
-
-        let _connect = (address) => {
-            let [host, port] = address.split(':')
-            port = parseInt(port)
-            let socket = net.createConnection({host, port})
-            socket.setNoDelay(false)
-
-            let ack_parser = new ChunkParser(msg => {
-                try {
-                    print('TCP response:', msg)
-                    let {id, result} = JSONx.parse(msg)
-                    pending.delete(id)
-                    this._handle_response(result)
-                    // print('pending:', pending.size)
-                }
-                catch (e) { console.error('Invalid ACK:', msg) }
-            })
-
-            socket.on('data', data => ack_parser.feed(data.toString()))
-            socket.on('close', () => {
-                socket.removeAllListeners()
-                sockets.delete(address)
-            })
-            sockets.set(address, socket)
-
-            return socket
-        }
-
-        let send = (msg, address) => {
-            /* `msg` is a plain object/array whose elements have to be JSONx-encoded already if needed. */
-            let socket = sockets.get(address) || _connect(address)
-            let id = message_id++
-            let json = JSON.stringify({id, msg}) + '\n'
-
-            pending.set(id, {message: json, retries: 0, address})
-            socket.write(json)
-            return id
-        }
-
-        this.state = {sockets, send, retry_timer}
-        this.send = send
     }
 
     async stop() {
-        let {sockets, retry_timer} = this.state
-        clearInterval(retry_timer)
-        for (let socket of sockets.values()) socket.end()
+        clearInterval(this.retry_timer)
+        for (let socket of this.sockets.values()) socket.end()
+    }
+
+    send(msg, address) {
+        /* `msg` is a plain object/array whose elements have to be JSONx-encoded already if needed. */
+        let socket = this.sockets.get(address) || this._connect(address)
+        let id = this.message_id++
+        let json = JSON.stringify({id, msg}) + '\n'
+
+        this.pending.set(id, {message: json, retries: 0, address})
+        socket.write(json)
+        return id
+    }
+
+    _connect(address) {
+        let [host, port] = address.split(':')
+        port = parseInt(port)
+        let socket = net.createConnection({host, port})
+        socket.setNoDelay(false)
+
+        let ack_parser = new ChunkParser(msg => {
+            try {
+                print('TCP response:', msg)
+                let {id, result} = JSONx.parse(msg)
+                this.pending.delete(id)
+                this._handle_response(result)
+                // print('pending:', pending.size)
+            }
+            catch (e) { console.error('Invalid ACK:', msg) }
+        })
+
+        socket.on('data', data => ack_parser.feed(data.toString()))
+        socket.on('close', () => {
+            socket.removeAllListeners()
+            this.sockets.delete(address)
+        })
+        this.sockets.set(address, socket)
+
+        return socket
     }
 
     _handle_response(result) {
