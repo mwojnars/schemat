@@ -835,7 +835,7 @@
       category:
         "@": 21
       "@": schemat/types/type.js:REF
-    __num_workers:
+    num_workers:
       default: 1
       info: How many concurrent workers on the __node should execute this agent's loop
         at the same time. Zero (0) means 'all available'. Most agents need only
