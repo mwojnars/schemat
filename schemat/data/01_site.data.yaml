@@ -410,14 +410,6 @@
     "@": 1036
   __category:
     "@": 33
-- __id: 1038
-  name: tcp-sender
-  __category:
-    "@": 34
-- __id: 1039
-  name: tcp-receiver
-  __category:
-    "@": 35
 - __id: 1040
   name: ring-test
   lower_ring:
