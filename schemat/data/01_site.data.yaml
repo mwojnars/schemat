@@ -280,10 +280,6 @@
       "@": 1029
     block_1032:
       "@": 1032
-    tcp:
-      "@": 1038
-    tcp_receiver:
-      "@": 1039
     webserver:
       "@": 1023
     "@": schemat:Catalog
@@ -387,10 +383,6 @@
     "@": 32
 - __id: 1036
   agents_installed:
-    tcp:
-      "@": 1038
-    tcp_receiver:
-      "@": 1039
     webserver:
       "@": 1023
     logger:
