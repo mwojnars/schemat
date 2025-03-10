@@ -944,16 +944,3 @@
     "@": 29
   __category:
     "@": 1
-- __id: 35
-  name: TCP_Receiver
-  schema:
-    tcp_port:
-      info: Listening on this TCP port number, or schemat.node.tcp_port if
-        this.tcp_port is undefined.
-      "@": schemat/types/type.js:INTEGER
-    "@": schemat:Catalog
-  class: schemat/server/tcp.js:TCP_Receiver
-  __prototype:
-    "@": 29
-  __category:
-    "@": 1
