@@ -1,7 +1,7 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {JSONx} from "../common/jsonx.js";
 import {Agent} from "./agent.js";
-import {TCP_Receiver__, TCP_Sender__} from "./tcp.js";
+import {TCP_Receiver, TCP_Sender} from "./tcp.js";
 
 
 /**********************************************************************************************************************/
@@ -137,8 +137,8 @@ export class Node extends Agent {
     }
 
     async __start__() {
-        let tcp_sender = new TCP_Sender__()
-        let tcp_receiver = new TCP_Receiver__()
+        let tcp_sender = new TCP_Sender()
+        let tcp_receiver = new TCP_Receiver()
 
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this._tcp_port)

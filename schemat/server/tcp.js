@@ -23,7 +23,7 @@ class ChunkParser {
 
 /**********************************************************************************************************************/
 
-export class TCP_Sender__ {
+export class TCP_Sender {
     /* Send messages to other nodes in the cluster via persistent connections. Generate unique identifiers
        for WRITE messages, process acknowledgements and resend un-acknowledged messages. */
 
@@ -91,9 +91,9 @@ export class TCP_Sender__ {
 
 /**********************************************************************************************************************/
 
-export class TCP_Receiver__ {
+export class TCP_Receiver {
     /* Receive messages from other nodes in the cluster, send replies and acknowledgements. */
-
+    
     async start(port) {
 
         this.server = net.createServer(socket => {
