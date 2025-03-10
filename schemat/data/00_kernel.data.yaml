@@ -777,6 +777,11 @@
         be used to handle requests at the `::view` endpoint of the URL where
         this Page is deployed.
       "@": schemat/types/type.js:STRING
+    admin_endpoint:
+      info: Import path of the page rendering function, `view(request)`, that should
+        be used to handle requests at the `::admin` endpoint of the URL where
+        this Page is deployed.
+      "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   __category:
     "@": 1

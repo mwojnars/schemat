@@ -93,7 +93,7 @@ export class TCP_Sender {
 
 export class TCP_Receiver {
     /* Receive messages from other nodes in the cluster, send replies and acknowledgements. */
-    
+
     async start(port) {
 
         this.server = net.createServer(socket => {
