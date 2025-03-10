@@ -931,16 +931,3 @@
     "@": 32
   __category:
     "@": 1
-- __id: 34
-  name: TCP_Sender
-  schema:
-    retry_interval:
-      default: 5000
-      info: Delay [ms] before resending a message that lacks acknowledgement.
-      "@": schemat/types/type.js:NUMBER
-    "@": schemat:Catalog
-  class: schemat/server/tcp.js:TCP_Sender
-  __prototype:
-    "@": 29
-  __category:
-    "@": 1
