@@ -192,25 +192,30 @@ export class WebObject {
     name
     info
 
-    /***  Special properties:
-
-    (some of the props below have getters defined, so they must be commented out not to mask the getters)
+    /***
+    SYSTEM properties (POJO attributes or getters; not in DB or stored outside __data):
 
     __id                    database ID of the object, globally unique; undefined in a newly created item; must never be changed for an existing item;
                             it is assumed that if __id exists, the object is ALREADY stored in the DB; for newly-created objects,
                             __provisional_id is used instead to keep a temporary ID of a batch of interconnected objects being saved to DB
 
-    __provisional_id        temporary ID (1,2,3...) of a newly-created object not yet saved to DB; only used to differentiate the object
-                            in a batch of interconnected objects that are being inserted to DB altogether
-    __hash                  random integer in [0, MAX_SAFE_INTEGER) assigned during instantiation to differentiate between multiple local instances of the same web object;
-                            NOT strictly unique (!); does NOT depend on the object's content and does NOT change when the instance is edited
+    __data                  own properties of this object in their raw form (before imputation etc.), as a Catalog object created during .load()
+    __object                JS object representation of __data, NOT encoded; for repeated fields, only the first value is included; may still contain nested Catalogs
+    __json_source           if __data was parsed from a JSON string, __json_source holds this string for future reference
+    __refresh               struct of the form {json, loaded_at} containing a newer version of this object's record, for use in .refresh()
 
     __ring                  Ring instance that represents the ring where this object was retrieved from; stub or loaded
     __block                 Block instance that represents the physical data block where this object was retrieved from; stub or loaded
-    __json_source           if __data was parsed from a JSON string, __json_source holds this string for future reference
+    __hash                  random integer in [0, MAX_SAFE_INTEGER) assigned during instantiation to differentiate between multiple local instances of the same web object;
+                            NOT strictly unique (!); does NOT depend on the object's content and does NOT change when the instance is edited
 
-    __data                  own properties of this object in their raw form (before imputation etc.), as a Catalog object created during .load()
-    __object                JS object representation of __data, NOT encoded; for repeated fields, only the first value is included; may still contain nested Catalogs
+    __meta, __proxy, __self -- see below in the code for details
+
+
+    SPECIAL properties (some of them virtual or imputed with getters; must be commented out not to mask the getters):
+
+    __provisional_id        temporary ID (1,2,3...) of a newly-created object not yet saved to DB; only used to differentiate the object
+                            in a batch of interconnected objects that are being inserted to DB altogether
 
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
                             that inherits (like from prototypes) from all __category$ listed in this object or inherited
@@ -232,13 +237,11 @@ export class WebObject {
     __path                  (virtual) URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
     __url                   (virtual) absolute URL path of this object, calculated via __url() getter
 
-    __assets                cached web Assets of this object's __schema
-
     __record                JSONx-encoded representation of this object as {id, data}, where `data` is this.__flat
     __flat                  JSONx-encoded representation of this object's __data, where custom classes are replaced using {@:...} notation; suitable for JSON.stringify()
     __json                  stringified representation of this object's __data; can be passed to Catalog.load() to recreate the original __data structure
+    __assets                cached web Assets of this object's __schema
 
-    __refresh               struct of the form {json, loaded_at} containing a newer version of this object's record, for use in .refresh()
     */
 
     set __id(id) {
