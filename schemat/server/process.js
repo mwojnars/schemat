@@ -133,7 +133,7 @@ export class Process {
         schemat.is_closing = true
 
         let node = await this.node.reload()
-        let delay = node.refresh_interval
+        let delay = node.agent_refresh_interval
 
         if (cluster.isPrimary) print(`\nReceived kill signal, shutting down gracefully in approx. ${delay} seconds...`)
         setTimeout(() => process.exit(1), 2 * delay * 1000)
@@ -194,7 +194,7 @@ export class Process {
             let passed = (Date.now() - beginning) / 1000
             let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
 
-            let remaining = this.node.refresh_interval - offset_sec - passed
+            let remaining = this.node.agent_refresh_interval - offset_sec - passed
             if (remaining > 0) await sleep(remaining);
 
             let agents = Array.from(this.frames.values(), frame => frame.agent);

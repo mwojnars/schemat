@@ -115,7 +115,7 @@ export class Node extends Agent {
     agents_installed
     agents_running
     master_agents_running
-    refresh_interval
+    agent_refresh_interval
     http_host
     http_port
     https_port
@@ -362,7 +362,7 @@ export class Node extends Agent {
         let node = this.get_mutable()
         node.edit.delete_running(agent)             // let workers know that the agent should be stopped
         await node.save()
-        await sleep(this.refresh_interval * 2 + node.__ttl)     // TODO: wait for actual confirmation(s) that the agent is stopped on all processes
+        await sleep(this.agent_refresh_interval * 2 + node.__ttl)     // TODO: wait for actual confirmation(s) that the agent is stopped on all processes
 
         node.edit.delete_installed(agent)           // mark the agent as uninstalled
         await node.save()
