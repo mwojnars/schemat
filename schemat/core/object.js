@@ -48,7 +48,7 @@ class Intercept {
     // these special props are always read from regular POJO attributes and NEVER from object's __data;
     // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
     // defining a custom `then` prop is unsafe, hence we disallow it
-    static SPECIAL = ['then', '__id', '__meta', '__data', '__self']
+    static SPECIAL = ['then', '__id', '__meta', '__data', '__self', '__ring']
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
@@ -741,7 +741,10 @@ export class WebObject {
             prop === '__prototype' ? new REF({inherit: false}) :
                                      proxy.__schema.get(prop)
 
-        if (!type) return []
+        if (!type) {
+            console.warn(`trying to read an out-of-schema property '${prop}' of [${this.id}], returning undefined`)
+            return []
+        }
 
         // if the property is atomic (non-repeated and non-compound) and an own value is present, skip inheritance to speed up
         if (!type.isRepeated() && !type.isCATALOG() && data.has(prop)) {
