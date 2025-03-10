@@ -48,7 +48,7 @@ class Intercept {
     // these special props are always read from regular POJO attributes and NEVER from object's __data;
     // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
     // defining a custom `then` prop is unsafe, hence we disallow it
-    static SPECIAL = ['then', '__id', '__meta', '__data', '__self', '__ring']
+    static SPECIAL = new Set(['then', '__id', '__meta', '__data', '__self', '__ring', '__refresh'])
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
@@ -88,7 +88,7 @@ class Intercept {
         // return if the object is not loaded yet, or the property is special in any way
         if (!target.__data
             || typeof prop !== 'string'                 // `prop` can be a symbol like [Symbol.toPrimitive] - should skip
-            || Intercept.SPECIAL.includes(prop)
+            || Intercept.SPECIAL.has(prop)
         ) return undefined
 
         let [base, plural] = Intercept._check_plural(prop)      // property name without the $ suffix
@@ -139,7 +139,7 @@ class Intercept {
         // also, when the __data is not loaded yet, *every* write goes to __self
         if (!(target.is_newborn() || target.is_loaded())
             || typeof path !== 'string'                         // `path` can be a symbol like [Symbol.toPrimitive]
-            || Intercept.SPECIAL.includes(path)
+            || Intercept.SPECIAL.has(path)
         ) return Reflect.set(target, path, value, receiver)
 
         let [base, plural] = Intercept._check_plural(path)      // property name without the $ suffix
