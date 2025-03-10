@@ -692,6 +692,11 @@
       default: 5828
       info: This node's TCP port for incoming messages (TCP_Receiver).
       "@": schemat/types/type.js:INTEGER
+    tcp_retry_interval:
+      default: 5
+      info: Delay [in seconds] before a TCP message is resent if no acknowledgement
+        has been received.
+      "@": schemat/types/type.js:NUMBER
     kafka_host:
       default: localhost
       info: Host name to be used by Kafka broker.
