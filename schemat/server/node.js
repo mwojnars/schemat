@@ -195,7 +195,7 @@ export class Node extends Agent {
     async from_worker([type, ...msg]) {
         /* On master process, handle an IPC message received from a worker process, or directly from itself. */
         assert(this.is_master())
-        let node
+        let node, target
 
         if (type === 'RPC') {
             print(`${this.id}/#${this.worker_id} from_worker():`, JSON.stringify(msg))
@@ -208,11 +208,12 @@ export class Node extends Agent {
                 node = this
             else {
                 // load the object and check its __node to locate the destination where it is deployed
-                let target = await schemat.get_loaded(target_id)
+                target = await schemat.get_loaded(target_id)
                 node = target.__node
             }
 
-            if (!node) throw new Error(`missing host node for RPC target [${target_id}]`)
+            if (!node)
+                throw new Error(`missing host node for RPC target [${target_id}]`)
             if (node.is(schemat.node)) {
                 print(`${this.id}/#${this.worker_id} from_worker(): redirecting to self`)
                 return this.recv_tcp([type, ...msg])     // target agent is deployed on the current node
