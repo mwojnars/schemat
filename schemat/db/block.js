@@ -23,7 +23,7 @@ export class Block extends Agent {
     format                  // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
 
     _storage                // Storage for this block's records
-    _pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
+    // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
     get ring()      { return this.sequence.ring }
     get stream()    { return this.sequence.stream }
@@ -148,11 +148,11 @@ export class Block extends Agent {
         let delay = this.sequence.flush_delay
 
         if (with_delay && delay) {
-            if (this._pending_flush) return
-            this._pending_flush = true
+            if (this.__meta.pending_flush) return
+            this.__meta.pending_flush = true
             return setTimeout(() => this._flush(false), delay * 1000)
         }
-        this._pending_flush = false
+        this.__meta.pending_flush = false
         return this._storage.flush()
     }
 
