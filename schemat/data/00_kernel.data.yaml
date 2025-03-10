@@ -511,6 +511,11 @@
           "@": 18
         "@": schemat/types/type.js:REF
       "@": schemat/types/type.js:ARRAY
+    splits:
+      info: Array of (n-1) split points between `blocks`.
+      type:
+        "@": schemat/types/type.js:BINARY
+      "@": schemat/types/type.js:ARRAY
     flush_delay:
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together

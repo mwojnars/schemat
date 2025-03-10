@@ -58,7 +58,7 @@ export class Sequence extends WebObject {
 
     find_block(binary_key) {
         // print('binary_key:', binary_key)
-        if (!this.splits) return this.blocks[0]
+        if (!this.splits?.length) return this.blocks[0]
 
         let index = this.splits.findIndex(split => compare_uint8(split, binary_key) > 0)
         if (index === -1) index = this.blocks.length - 1
