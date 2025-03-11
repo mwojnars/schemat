@@ -410,61 +410,18 @@
     "@": 1036
   __category:
     "@": 33
-- __id: 1040
-  name: ring-test
-  lower_ring:
-    "@": 1016
-  file_prefix: 03_test
-  readonly: false
-  start_id: 10000
-  __category:
-    "@": 12
-  data_sequence:
-    "@": 1041
-  streams:
-    idx_category:
-      "@": 1042
-    "@": schemat:Catalog
-- __id: 1041
-  ring:
-    "@": 1040
-  blocks:
-    - "@": 1043
-  __category:
-    "@": 14
-- __id: 1042
-  ring:
-    "@": 1040
-  operator:
-    "@": 23
-  __category:
-    "@": 28
-  sequence:
-    "@": 1044
-- __id: 1043
-  sequence:
-    "@": 1041
-  filename: ./schemat/data/03_test.data.1043
-  __node:
-    "@": 1024
-- __id: 1044
-  ring:
-    "@": 1040
-  blocks: []
-  __category:
-    "@": 22
-- __id: 1045
+- __id: 1038
   name: test-site
   info: Test site object for unit tests. Inherits most properties from
     [main-site], but extends the database with the [test-ring] to override some
     system configuration like TCP port numbers.
   database:
-    "@": 1046
+    "@": 1039
   __prototype:
     "@": 1001
   __category:
     "@": 2
-- __id: 1046
+- __id: 1039
   name: test-database
   top_ring:
     "@": 1040
