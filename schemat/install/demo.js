@@ -49,11 +49,13 @@ async function create_demo_01() {
     let demo_dir = `${root_dir}/demo/${demo_name}`
     let db = _load_data_init()
     
-    // replace file paths and object names in `db`
+    // replace file paths, object names and port numbers in `db`
     db = db.replaceAll('main-site', `Bookstore (demo site)`)
     db = db.replaceAll('/schemat/data/01', `/demo/${demo_name}/_data/01`)       // 01_site.*
     db = db.replaceAll('/schemat/data/02', `/demo/${demo_name}/_data/02`)       // 02_app.*
     db = db.replaceAll('/app', `/demo/${demo_name}`)
+    db = db.replaceAll('tcp_port: 5828', `tcp_port: 5820`)
+    db = db.replaceAll('tcp_port: 5829', `tcp_port: 5821`)
 
     // insert AuthorCategory and BookCategory references in [site.global]; insert URL routes
     db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 5001\n    BookCategory:\n      "@": 5000`)
