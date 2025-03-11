@@ -61,6 +61,7 @@ export class Block extends Agent {
         if (this.format === 'data-yaml') return 'yaml'
         if (this.format === 'index-jl') return 'jl'
         if (this.format === 'rocksdb') return ''
+        throw new Error(`unknown storage type '${this.format}' in [${this.__id}]`)
     }
 
     async __init__() {
@@ -85,7 +86,7 @@ export class Block extends Agent {
         if      (format === 'data-yaml') return YamlDataStorage
         else if (format === 'index-jl')  return JsonIndexStorage
         else
-            throw new Error(`[${this.__id}] unsupported storage type, '${format}', for ${this.filename}`)
+            throw new Error(`unsupported storage type '${format}' in [${this.__id}] for ${this.filename}`)
     }
 
     async __start__() {
