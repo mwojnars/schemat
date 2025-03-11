@@ -290,6 +290,7 @@
     - block_1029
     - block_1032
     - webserver
+  tcp_port: 5828
   __category:
     "@": 21
 - __id: 1025
