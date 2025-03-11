@@ -51,7 +51,7 @@ async function create_demo_01() {
     
     // replace file paths and object names in `db`
     db = db.replaceAll('main-site', `Bookstore (demo site)`)
-    db = db.replaceAll('/schemat/data/db-', `/demo/${demo_name}/_data/db-`)
+    db = db.replaceAll('/schemat/data/0', `/demo/${demo_name}/_data/0`)
     db = db.replaceAll('/app', `/demo/${demo_name}`)
 
     // insert AuthorCategory and BookCategory references in [site.global]; insert URL routes
