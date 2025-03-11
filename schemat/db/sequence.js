@@ -113,14 +113,15 @@ export class Sequence extends WebObject {
 export class IndexSequence extends Sequence {
     static __category = 22
 
-    __new__(ring, filename) {
-        super.__new__(ring)
+    __new__(ring, stream) {
+        super.__new__(ring, stream)
         // assert(filename.endsWith('.jl'))
-        print('IndexSequence.__new__() creating a block')
+        // print('IndexSequence.__new__() creating a block')
         // this.blocks.push(Block._draft(this, {filename}))
     }
 
     async __setup__() {
+        print('IndexSequence.__setup__() creating a block')
         let Block = await schemat.import('/$/sys/Block')
         this.blocks = [Block.new(this)]
     }
