@@ -123,7 +123,7 @@ export class IndexSequence extends Sequence {
     async __setup__() {
         print('IndexSequence.__setup__() creating a block')
         let Block = await schemat.import('/$/sys/Block')
-        this.blocks = [Block.new(this)]
+        this.blocks = [Block.new(this, {format: 'index-jl'})]
     }
 }
 
