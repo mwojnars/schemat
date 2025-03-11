@@ -304,7 +304,7 @@
   __node:
     "@": 1036
   __category:
-    "@": 19
+    "@": 18
 - __id: 1027
   ring:
     "@": 1004
@@ -335,7 +335,7 @@
   __node:
     "@": 1036
   __category:
-    "@": 19
+    "@": 18
 - __id: 1031
   name: kafka-broker
   __category:
@@ -358,7 +358,7 @@
   __node:
     "@": 1036
   __category:
-    "@": 19
+    "@": 18
 - __id: 1034
   name: kafka-master
   info: Kafka client of the master process of a node. Comes with a shared producer
