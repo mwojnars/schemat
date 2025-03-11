@@ -242,7 +242,7 @@ export class IndexStream extends Stream {
     /* Index deployed in a particular ring's sequence. */
     get file_prefix() { return 'index' }
 
-    async __setup__({ring}) {
+    async __setup__({}) {
         print('IndexStream.__setup__() creating this.sequence')
         let IndexSequence = await schemat.import('/$/sys/IndexSequence')
         this.sequence = IndexSequence.new(this.ring)
