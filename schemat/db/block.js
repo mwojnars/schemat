@@ -44,7 +44,7 @@ export class Block extends Agent {
         this.__node ??= schemat.node
         this.filename ??= this._create_filename()
 
-        print('Block.__setup__() done')
+        print('Block.__setup__() done, filename', this.filename)
     }
 
     _create_filename() {
