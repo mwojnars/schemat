@@ -530,6 +530,10 @@
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together
       "@": schemat/types/type.js:NUMBER
+    file_prefix:
+      info: Prefix (infix) to be inserted in file names of all new blocks created in
+        this sequence.
+      "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   defaults:
     flush_delay: 0.01
