@@ -615,6 +615,7 @@
       info: "storage format: data-yaml, index-jl, rocksdb (in the future), ..."
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
+  class: schemat/db/block.js:Block
   __prototype:
     "@": 29
   __category:
