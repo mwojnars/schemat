@@ -29,9 +29,10 @@ export class Sequence extends WebObject {
     flush_delay         // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
 
 
-    __new__(ring) {
+    __new__(ring, stream = undefined) {
         ring.assert_active()
         this.ring = ring
+        this.stream = stream
         this.blocks = []
     }
 
@@ -246,7 +247,7 @@ export class IndexStream extends Stream {
     async __setup__({}) {
         print('IndexStream.__setup__() creating this.sequence')
         let IndexSequence = await schemat.import('/$/sys/IndexSequence')
-        this.sequence = IndexSequence.new(this.ring)
+        this.sequence = IndexSequence.new(this.ring, this)
         // await this.sequence.save({ring, reload: false})
     }
 }
