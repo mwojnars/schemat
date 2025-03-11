@@ -1,1 +1,52 @@
-[]
+- __id: 1024
+  agents_installed:
+    block_1010:
+      "@": 1010
+    block_1015:
+      "@": 1015
+    block_1029:
+      "@": 1029
+    block_1032:
+      "@": 1032
+    block_1043:
+      "@": 1043
+    block_1045:
+      "@": 1045
+    webserver:
+      "@": 1023
+    "@": schemat:Catalog
+  master_agents_running: []
+  agents_running:
+    - block_1010
+    - block_1015
+    - block_1029
+    - block_1032
+    - block_1043
+    - block_1045
+    - webserver
+  tcp_port: 5820
+  __category:
+    "@": 21
+- __id: 1036
+  agents_installed:
+    webserver:
+      "@": 1023
+    logger:
+      "@": 1037
+    block_1026:
+      "@": 1026
+    block_1030:
+      "@": 1030
+    block_1033:
+      "@": 1033
+    "@": schemat:Catalog
+  master_agents_running: []
+  agents_running:
+    - block_1026
+    - block_1030
+    - block_1033
+    - webserver
+    - logger
+  tcp_port: 5821
+  __category:
+    "@": 21

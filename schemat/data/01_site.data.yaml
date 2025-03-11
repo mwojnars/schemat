@@ -280,10 +280,6 @@
       "@": 1029
     block_1032:
       "@": 1032
-    block_1043:
-      "@": 1043
-    block_1045:
-      "@": 1045
     webserver:
       "@": 1023
     "@": schemat:Catalog
@@ -293,8 +289,6 @@
     - block_1015
     - block_1029
     - block_1032
-    - block_1043
-    - block_1045
     - webserver
   __category:
     "@": 21
