@@ -427,3 +427,62 @@
     "@": 1040
   __category:
     "@": 11
+- __id: 1040
+  name: ring-test
+  lower_ring:
+    "@": 1016
+  file_prefix: 03_test
+  readonly: false
+  start_id: 10000
+  __category:
+    "@": 12
+  data_sequence:
+    "@": 1041
+  streams:
+    idx_category:
+      "@": 1042
+    "@": schemat:Catalog
+- __id: 1041
+  ring:
+    "@": 1040
+  stream: null
+  blocks:
+    - "@": 1043
+  __category:
+    "@": 14
+- __id: 1042
+  ring:
+    "@": 1040
+  operator:
+    "@": 23
+  __category:
+    "@": 28
+  sequence:
+    "@": 1044
+- __id: 1043
+  sequence:
+    "@": 1041
+  filename: ./schemat/data/03_test.data.1043.yaml
+  format: data-yaml
+  __node:
+    "@": 1024
+  __category:
+    "@": 19
+- __id: 1044
+  ring:
+    "@": 1040
+  stream:
+    "@": 1042
+  blocks:
+    - "@": 1045
+  __category:
+    "@": 22
+- __id: 1045
+  sequence:
+    "@": 1044
+  filename: ./schemat/data/03_test.idx_category.1045.jl
+  format: index-jl
+  __node:
+    "@": 1024
+  __category:
+    "@": 18
