@@ -61,8 +61,8 @@ export class Ring extends WebObject {
         this.stop_id = stop_id
     }
 
-    async __setup__() {
-        /* Create `data_sequence` and replicate indexes from the lower ring. */
+    async __setup__({}) {
+        /* Create `data_sequence` and all the same indexes as in the lower ring. */
 
         let DataSequence = await schemat.import('/$/sys/DataSequence')
         this.data_sequence = DataSequence.new(this)
