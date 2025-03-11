@@ -147,8 +147,8 @@
         "@": schemat/types/type.js:ID
       __provisional_id:
         info: Temporary ID (1,2,3...) of a newly-created object not yet saved to DB;
-          only used to differentiate the object in a batch of interconnected objects
-          that are being inserted to DB altogether.
+          only used to differentiate the object in a batch of interconnected
+          objects that are being inserted to DB altogether.
         "@": schemat/types/type.js:INTEGER
       __cid:
         getter: true
@@ -508,6 +508,11 @@
       info: parent Ring of this sequence
       category:
         "@": 12
+      "@": schemat/types/type.js:REF
+    stream:
+      info: parent Stream of this sequence
+      category:
+        "@": 17
       "@": schemat/types/type.js:REF
     blocks:
       info: array of Blocks containing records of this sequence
