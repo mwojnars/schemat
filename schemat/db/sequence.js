@@ -203,6 +203,7 @@ export class Stream extends WebObject {
     operator
     sequence            // Sequence where the records of this stream are stored
     // derived          // derived streams that must be updated upon changes in this stream
+    file_prefix
 
     __new__(ring, operator) {
         this.ring = ring

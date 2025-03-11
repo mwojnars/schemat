@@ -597,6 +597,10 @@
       category:
         "@": 13
       "@": schemat/types/type.js:REF
+    file_prefix:
+      info: Prefix (infix) to be inserted in file names of all new blocks created in
+        this stream.
+      "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   __category:
     "@": 1
