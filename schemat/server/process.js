@@ -47,7 +47,7 @@ export async function boot_schemat(opts) {
 /**********************************************************************************************************************/
 
 class Frame {
-    /* Execution frame that keeps information about a running agent. */
+    /* Information about a running agent. */
     agent               // web object that created this frame
     state               // state object returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
