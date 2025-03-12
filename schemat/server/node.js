@@ -114,7 +114,6 @@ export class Node extends Agent {
     data_directory
     agents_installed
     agents_running
-    master_agents_running
     agent_refresh_interval
     http_host
     http_port
@@ -321,7 +320,7 @@ export class Node extends Agent {
     }
 
     'edit.add_running'(agent, {workers = true, master = false}) {
-        /* Check that the `agent` is installed and not yet on the list of agents_running and/or master_agents_running,
+        /* Check that the `agent` is installed and not yet on the list of running agents,
            then add it to the corresponding array(s). Idempotent.
          */
         let agents = Array.from(this.agents_installed.values())

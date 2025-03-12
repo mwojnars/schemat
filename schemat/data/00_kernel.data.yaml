@@ -681,7 +681,7 @@
       "@": schemat/types/type.js:ARRAY
     master_agents_running:
       info: Names of installed agents that should be currently running on the master
-        process of this node.
+        process of this node. [NOT USED!]
       default: []
       type:
         "@": schemat/types/type.js:STRING
