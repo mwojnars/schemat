@@ -308,16 +308,16 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
     static css_class = "REF"
 
     view() {
-        let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
-        if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
+        let {value: obj, loaded} = this.props       // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
+        if (!loaded(obj))                           // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
             return SPAN({suppressHydrationWarning: true}, "loading...")
 
-        let url = item.url()
-        let name = item.name
-        let stamp = HTML(item.get_stamp({html: false, brackets: false}))
+        let url = obj.url()
+        let name = obj.name
+        let stamp = HTML(obj.get_stamp({html: false, brackets: false}))
 
         if (name && url) {
-            let note = item.__category.name || null
+            let note = obj.__category.name || null
             return SPAN(
                 url ? A({href: url}, name) : name,
                 SPAN(cl('ref-category'), note || stamp)
