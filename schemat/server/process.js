@@ -49,13 +49,30 @@ export async function boot_schemat(opts) {
 class Frame {
     /* Information about a running agent. */
     agent               // web object that created this frame
-    state               // state object returned by agent.__start__()
+    state               // proxied state object that tracks calls
+    raw_state           // original unproxied state object returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
     stopping = false    // if true, no more RPC calls can be started
 
     constructor(agent, state = null) {
         this.agent = agent
-        this.state = state
+        this.set_state(state)
+    }
+    
+    set_state(state) {
+        /* Store the raw state and create a proxied version of it for tracking calls */
+        this.raw_state = state
+        if (!state) return this.state = state
+        if (!T.isPlain(state)) throw new Error(`state of ${this.agent.__label} agent must be a plain object`)
+        
+        let frame = this
+        this.state = new Proxy(state, {
+            // whenever a function from state (state.fun()) is called, wrap it up with track_call()
+            get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
+                if (frame.stopping) throw new Error(`agent ${frame.agent.__label} is in the process of stopping`)
+                return frame.track_call(state[prop].apply(state, args))
+            }
+        })
     }
     
     track_call(call) {
@@ -74,7 +91,6 @@ export class Process {
 
     node                    // Node web object that represents the Schemat cluster node this process is running
     frames = new Map()      // Frame objects of currently running agents, keyed by agent names
-    states = {}             // execution states of currently running agents, keyed by agent names, proxied; derived from `frames`
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
 
     get worker_id() {
@@ -149,29 +165,6 @@ export class Process {
         process.exit(0)
     }
 
-
-    _update_states() {
-        /* Create a new `states` object with proxied agent states, so that function calls on the states are tracked
-           and the agent can be stopped gracefully.
-         */
-        let states = Object.fromEntries(Array.from(this.frames, ([name, frame]) => [name, frame.state]))
-        
-        for (let [name, frame] of this.frames.entries()) {
-            let state = frame.state
-            if (!state) continue
-            if (!T.isPlain(state)) throw new Error(`state of agent '${name}' must be a plain object`)
-
-            this.states[name] = new Proxy(state, {
-                // whenever a function from state (state.fun()) is called, wrap it up with track_call()
-                get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
-                    if (frame.stopping) throw new Error(`agent '${name}' is in the process of stopping`)
-                    return frame.track_call(state[prop].apply(state, args))
-                }
-            })
-        }
-        return states
-    }
-
     async main() {
         /* Start/stop loop of active agents. */
         while (true) {
@@ -186,7 +179,6 @@ export class Process {
 
             this.node = new_node
             await this._start_stop()
-            this.states = this._update_states()
 
             if (schemat.is_closing)
                 if (this.frames.size) continue; else break          // let the currently-running agents gently stop
@@ -251,7 +243,7 @@ export class Process {
             if (agent === frame.agent) continue
 
             this._print(`restarting agent ${agent.__label} ...`)
-            frame.state = await agent.__restart__(frame.state, frame.agent)
+            frame.set_state(await agent.__restart__(frame.raw_state, frame.agent))
             frame.agent = agent
             this._print(`restarting agent ${agent.__label} done`)
 
@@ -275,7 +267,7 @@ export class Process {
             }
 
             this._print(`stopping agent ${agent.__label} ...`)
-            await agent.__stop__(frame.state)
+            await agent.__stop__(frame.raw_state)
             this.frames.delete(name)
             this._print(`stopping agent ${agent.__label} done`)
 
