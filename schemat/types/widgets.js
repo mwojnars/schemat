@@ -316,14 +316,20 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
         let name = obj.name
         let stamp = HTML(obj.get_stamp({html: false, brackets: false}))
 
-        if (name && url) {
-            let note = obj.__category.name || null
-            return SPAN(
-                url ? A({href: url}, name) : name,
-                SPAN(cl('ref-category'), note || stamp)
-            )
-        } else
-            return SPAN('[', url ? A({href: url, ...stamp}) : SPAN(stamp), ']')
+        let linked = (txt) => url ? A({href: url}, txt) : txt
+        let label = name ? linked(name) : SPAN('[', linked(`${obj.id}`), ']')
+        let catg = obj.__category.name
+
+        return catg ? SPAN(label, SPAN(cl('ref-category'), catg)) : label
+
+        // if (name && url) {
+        //     let note = obj.__category.name || null
+        //     return SPAN(
+        //         url ? A({href: url}, name) : name,
+        //         SPAN(cl('ref-category'), note || stamp)
+        //     )
+        // } else
+        //     return SPAN('[', url ? A({href: url, ...stamp}) : SPAN(stamp), ']')
     }
 
     // widget({value: item}) {
