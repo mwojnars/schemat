@@ -246,13 +246,13 @@ describe('Schemat Tests', function () {
 
         it('Category', async function () {
             await test_page(page, `${DOMAIN}/$/id/1`, '#page-main',
-                ['Category:1', 'Category of objects', 'name', '__ttl', 'defaults', 'schema', 'Ring', 'Varia'])
+                ['Category of objects', 'name', '__ttl', 'defaults', 'schema', 'Ring', 'Varia', 'schemat:Category'])
         })
 
         it('Varia: load/insert/delete', async function () {
             // navigate to the Varia category page
             await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main',
-                ['Category:5000', 'Varia', 'name', '__category', 'schema', 'Varia:5001', 'Create'])
+                ['Varia', 'Category', 'name', '__category', 'schema', 'Varia:5001', 'Create'])
 
             // these strings are only available after client-side rendering, not in HTML source:
             expect_include_all(await extract_content(page), 'check', 'Varia.code')
