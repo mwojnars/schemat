@@ -295,6 +295,13 @@ export class WebObject {
     get __flat()   { return this.__data.encode() }
     get __json()   { return JSON.stringify(this.__flat) }
 
+    get __label()  {
+        /* [NAME] or [ID/CATEGORY] string that can be used in debug messages. */
+        if (this.name) return `[${this.name}]`
+        if (this.__category?.name) return `[${this.id}/${this.__category.name}]`
+        return `[${this.id}]`
+    }
+
     get __references() {       // find_references()
         /* Array of all WebObjects referenced from this one. */
         let refs = []
