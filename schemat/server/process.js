@@ -228,16 +228,16 @@ export class Process {
         // start new agents
         for (let name of to_start) {
             let agent = desired.get(name)
-            this._print(`starting agent ${agent.name} ...`)
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
 
             // print(`_start_stop():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
             assert(agent.is_loaded())
             assert(agent instanceof Agent)
+            this._print(`starting agent ${agent.__label} ...`)
 
             let state = await agent.__start__()
             this.frames.set(name, new Frame(agent, state))
-            this._print(`starting agent '${name}' done`)
+            this._print(`starting agent ${agent.__label} done`)
 
             // let start = Promise.resolve(agent.__start__())
             // promises.push(start.then(state => next.set(name, new Frame(agent, state))))
@@ -245,15 +245,15 @@ export class Process {
 
         // refresh agents
         for (let name of to_refresh) {
-            this._print(`restarting agent '${name}' ...`)
             let frame = current.get(name)
             let agent = frame.agent.refresh()
             if (agent.__ttl_left() < 0) agent = await agent.reload()
             if (agent === frame.agent) continue
 
+            this._print(`restarting agent ${agent.__label} ...`)
             frame.state = await agent.__restart__(frame.state, frame.agent)
             frame.agent = agent
-            this._print(`restarting agent '${name}' done`)
+            this._print(`restarting agent ${agent.__label} done`)
 
             // next.set(name, frame)
             // let restart = Promise.resolve(agent.__restart__(frame.state, frame.agent))
@@ -265,18 +265,19 @@ export class Process {
 
         // stop agents
         for (let name of to_stop.toReversed()) {        // iterate in reverse order as some agents may depend on previous ones
-            this._print(`stopping agent '${name}' ...`)
             let frame = current.get(name)
+            let {agent, calls} = frame
             frame.stopping = true                       // mark agent as stopping to prevent new calls
 
-            if (frame.calls.length > 0) {               // wait for pending calls to complete before stopping
-                this._print(`waiting for ${frame.calls.length} pending calls to agent '${name}' to complete`)
-                await Promise.all(frame.calls)
+            if (calls.length > 0) {                     // wait for pending calls to complete before stopping
+                this._print(`waiting for ${calls.length} pending calls to agent ${agent.__label} to complete`)
+                await Promise.all(calls)
             }
 
-            await frame.agent.__stop__(frame.state)
+            this._print(`stopping agent ${agent.__label} ...`)
+            await agent.__stop__(frame.state)
             this.frames.delete(name)
-            this._print(`stopping agent '${name}' done`)
+            this._print(`stopping agent ${agent.__label} done`)
 
             // let stop = Promise.resolve(frame.agent.__stop__(frame.state))
             // promises.push(stop.then(() => this.frames.delete(name)))
