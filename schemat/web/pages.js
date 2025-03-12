@@ -228,7 +228,7 @@ export class ItemInspectView extends ReactPage.View {
         // print('html_title(): ', this.name, this.title, this.is_loaded)
         // let title = this.html_title
         // if (typeof title === 'string') return title
-        let stamp = this.make_stamp({html: false})
+        let stamp = this.get_stamp({html: false})
         return `${this.name || ''} ${stamp}`
     }
 
@@ -258,7 +258,7 @@ export class ItemInspectView extends ReactPage.View {
     Title() {
         /* <H1> element to be displayed as a page title. */
         let name = this.name
-        let stamp = this.make_stamp()
+        let stamp = this.get_stamp()
         if (name)
             return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(stamp)}))
         else
@@ -320,7 +320,7 @@ export class CategoryInspectView extends ItemInspectView {
 
     _ItemEntry({item, remove}) {
         /* A single row in the list of items. */
-        let name = item.name || item.make_stamp({html:false})
+        let name = item.name || item.get_stamp({html:false})
         let url  = item.system_url
         return TR(
             TD(`${item.__id} ${NBSP}`),

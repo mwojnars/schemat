@@ -314,7 +314,7 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
 
         let url = item.url()
         let name = item.name
-        let stamp = HTML(item.make_stamp({html: false, brackets: false}))
+        let stamp = HTML(item.get_stamp({html: false, brackets: false}))
 
         if (name && url) {
             let note = item.__category.name || null
@@ -334,7 +334,7 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
     //
     //     let url  = item.url()
     //     let name = item.name || ''
-    //     let stamp = HTML(item.make_stamp({html: false, brackets: false}))
+    //     let stamp = HTML(item.get_stamp({html: false, brackets: false}))
     //
     //     if (name && url) {
     //         let note = item.category.name
