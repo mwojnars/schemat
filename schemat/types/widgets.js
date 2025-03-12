@@ -314,14 +314,13 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
 
         let url = obj.url()
         let name = obj.name
-        let stamp = HTML(obj.get_stamp({html: false, brackets: false}))
-
         let linked = (txt) => url ? A({href: url}, txt) : txt
         let label = name ? linked(name) : SPAN('[', linked(`${obj.id}`), ']')
         let catg = obj.__category.name
 
         return catg ? SPAN(label, SPAN(cl('ref-category'), catg)) : label
 
+        // let stamp = HTML(obj.get_stamp({html: false, brackets: false}))
         // if (name && url) {
         //     let note = obj.__category.name || null
         //     return SPAN(
@@ -331,26 +330,6 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
         // } else
         //     return SPAN('[', url ? A({href: url, ...stamp}) : SPAN(stamp), ']')
     }
-
-    // widget({value: item}) {
-    //
-    //     let loaded = useItemLoading()
-    //     if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
-    //         return SPAN({suppressHydrationWarning: true}, "loading...")
-    //
-    //     let url  = item.url()
-    //     let name = item.name || ''
-    //     let stamp = HTML(item.get_stamp({html: false, brackets: false}))
-    //
-    //     if (name && url) {
-    //         let note = item.category.name
-    //         return SPAN(
-    //             url ? A({href: url}, name) : name,
-    //             SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : stamp)}, note)
-    //         )
-    //     } else
-    //         return SPAN('[', url ? A({href: url, ...stamp}) : SPAN(stamp), ']')
-    // }
 })
 
 export class ARRAY_Widget extends GENERIC_Widget {
