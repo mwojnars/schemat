@@ -155,6 +155,28 @@ export class Node extends Agent {
         await tcp_sender.stop()
     }
 
+    _allocate_agents__() {
+        /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running of this process.
+           Return an array of arrays, where index [p][i] is the i-th agent at the p-th process.
+         */
+        let N = schemat.process.workers.length
+        assert(N >= 1)
+
+        let worker = 1
+        let plan = Array.from({length: N + 1}, () => [])
+        plan[0] = [this.id]             // master process runs the node agent and nothing else
+
+        // distribute agents uniformly across processes
+        for (let agent of this.agents_installed || []) {
+            let num_workers = agent.num_workers || N
+            for (let i = 0; i < num_workers; i++) {
+                plan[worker++].push(agent.id)
+                if (worker >= N) worker = 1
+            }
+        }
+        return plan
+    }
+
     _allocate_agents() {
         let locations = new Map()           // map of running agent IDs to process IDs: 0 for master, >=1 for workers
         locations.set(this.id, 0)           // the current node runs (as an agent) on master process
