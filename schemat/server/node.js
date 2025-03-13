@@ -266,22 +266,6 @@ export class Node extends Agent {
         else throw new Error(`unknown node-to-node message type: ${type}`)
     }
 
-    // get agent_locations() {
-    //     /* Map of running agent IDs to process IDs: 0 for master, >=1 for workers. */
-    //     let agents = new Map()
-    //     agents.set(this.id, 0)          // the current node runs as an agent on master
-    //
-    //     for (let name of this.agents_running) {
-    //         let agent = this.agents_installed.get(name)
-    //         agents.set(agent.id, 1)     // FIXME
-    //     }
-    //     for (let name of this.master_agents_running) {
-    //         let agent = this.agents_installed.get(name)
-    //         agents.set(agent.id, 0)
-    //     }
-    //     return agents
-    // }
-
 
     /*************/
 
