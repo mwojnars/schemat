@@ -70,7 +70,7 @@ class Frame {
             // whenever a function from state (state.fun()) is called, wrap it up with track_call()
             get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
                 if (frame.stopping) throw new Error(`agent ${frame.agent.__label} is in the process of stopping`)
-                print(`calling agent ${frame.agent.__label}.${prop}() in tracked mode`)
+                print(`calling agent ${frame.agent.__label}.state.${prop}() in tracked mode`)
                 return frame.track_call(state[prop].apply(state, args))
             }
         })
@@ -78,6 +78,7 @@ class Frame {
     
     track_call(call) {
         /* Create a wrapped promise that removes itself from `calls` when done. */
+        print(`calling agent ${frame.agent.__label} own method in tracked mode`)
         let promise = Promise.resolve(call)
         let tracked = promise.finally(() => {
             this.calls = this.calls.filter(p => p !== tracked)
@@ -285,11 +286,7 @@ export class Process {
         let master = this.is_master()
         let names = master ? this.node.master_agents_running : this.node.agents_running    // different set of agents at master vs workers
         let agents = (names || []).map(name => this.node.agents_installed.get(name))
-
-        assert(!this.node.agents_installed.has('node'))
-        if (master) agents = [this.node, ...agents]         // on master, add the current node as implicit 'node' agent
-
-        return agents
+        return master ? [this.node, ...agents] : agents         // on master, add the current node as implicit 'node' agent
     }
 
     // async main() {
