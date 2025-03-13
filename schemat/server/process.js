@@ -277,7 +277,8 @@ export class Process {
     _get_agents_running() {
         /* Array of agents that should be running now on this process. */
         let master = this.is_master()
-        return master ? [this.node] : Array.from(this.node.agents_installed.values())
+        return master ? [this.node] : [...this.node.agents_installed]
+        // return master ? [this.node] : Array.from(this.node.agents_installed.values())
 
         // let names = master ? this.node.master_agents_running : this.node.agents_running    // different set of agents at master vs workers
         // let agents = (names || []).map(name => this.node.agents_installed.get(name))

@@ -664,14 +664,13 @@
       info: Local directory where data blocks should be kept.
       "@": schemat/types/type.js:STRING
     agents_installed:
-      info: Catalog of all Agent objects installed on this machine.
-      default:
-        "@": schemat:Catalog
-      value_type:
+      info: Array of all Agent objects installed on this machine.
+      default: []
+      type:
         category:
           "@": 29
         "@": schemat/types/type.js:REF
-      "@": schemat/types/catalog_type.js:CATALOG
+      "@": schemat/types/type.js:ARRAY
     agents_running:
       info: Names of installed agents that should be currently running on worker
         processes of this node.
