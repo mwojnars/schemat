@@ -78,7 +78,7 @@ class Frame {
     
     track_call(call) {
         /* Create a wrapped promise that removes itself from `calls` when done. */
-        print(`calling agent ${frame.agent.__label} own method in tracked mode`)
+        // print(`calling agent's ${this.agent.__label} own method in tracked mode`)
         let promise = Promise.resolve(call)
         let tracked = promise.finally(() => {
             this.calls = this.calls.filter(p => p !== tracked)
@@ -202,7 +202,7 @@ export class Process {
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
         let current = this.frames                       // currently running agents, Map<id, Frame>
-        let desired = this._get_agents_running()        // goal: agents that should be running now, array of agent objects
+        let desired = this._get_agents_running()        // agents that should be running now, as an array of agent objects
 
         if (schemat.is_closing) {
             desired = []                                // enforce clean shutdown by stopping all agents
@@ -217,9 +217,6 @@ export class Process {
         let to_start = desired.filter(agent => !current.has(agent.id))              // find agents to start (desired but not running)
         let to_refresh = current_agents.filter(agent => desired_ids.has(agent.id))  // find agents to refresh (running and still desired)
 
-        let promises = []
-        // let next = new Map()                            // agents to continue running
-
         // start new agents
         for (let agent of to_start) {
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
@@ -232,9 +229,6 @@ export class Process {
             let state = await agent.__start__()
             this.frames.set(agent.id, new Frame(agent, state))
             this._print(`starting agent ${agent.__label} done`)
-
-            // let start = Promise.resolve(agent.__start__())
-            // promises.push(start.then(state => next.set(name, new Frame(agent, state))))
         }
 
         // refresh agents
@@ -248,10 +242,6 @@ export class Process {
             frame.set_state(await agent.__restart__(frame.raw_state, frame.agent))
             frame.agent = agent
             this._print(`restarting agent ${agent.__label} done`)
-
-            // next.set(name, frame)
-            // let restart = Promise.resolve(agent.__restart__(frame.state, frame.agent))
-            // promises.push(restart.then(state => frame.state = state))
 
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
@@ -272,13 +262,7 @@ export class Process {
             await agent.__stop__(frame.raw_state)
             this.frames.delete(agent.id)
             this._print(`stopping agent ${agent.__label} done`)
-
-            // let stop = Promise.resolve(frame.agent.__stop__(frame.state))
-            // promises.push(stop.then(() => this.frames.delete(name)))
         }
-
-        await Promise.all(promises)
-        // return next
     }
 
     _get_agents_running() {
