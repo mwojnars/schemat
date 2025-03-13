@@ -282,17 +282,11 @@
     "@": 30
 - __id: 1024
   agents_installed:
-    block_1010:
-      "@": 1010
-    block_1015:
-      "@": 1015
-    block_1029:
-      "@": 1029
-    block_1032:
-      "@": 1032
-    webserver:
-      "@": 1023
-    "@": schemat:Catalog
+    - "@": 1010
+    - "@": 1015
+    - "@": 1029
+    - "@": 1032
+    - "@": 1023
   agents_running:
     - block_1010
     - block_1015
@@ -393,17 +387,11 @@
     "@": 32
 - __id: 1036
   agents_installed:
-    webserver:
-      "@": 1023
-    logger:
-      "@": 1037
-    block_1026:
-      "@": 1026
-    block_1030:
-      "@": 1030
-    block_1033:
-      "@": 1033
-    "@": schemat:Catalog
+    - "@": 1023
+    - "@": 1037
+    - "@": 1026
+    - "@": 1030
+    - "@": 1033
   agents_running:
     - block_1026
     - block_1030
