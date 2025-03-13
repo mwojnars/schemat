@@ -948,6 +948,11 @@ export class WebObject {
         })
     }
 
+    get local() {
+        /* Current local execution state of the agent represented by this web object, as returned by __start__(). See the Agent class. */
+        return schemat.get_state(this.id)
+    }
+
     // GET/POST/LOCAL.*() are isomorphic triggers ({name: trigger_function}) for this object's web endpoints ...
 
     get GET()   { return this._web_triggers('GET') }        // triggers for HTTP GET endpoints of this object

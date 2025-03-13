@@ -110,6 +110,9 @@ export class ServerSchemat extends Schemat {
         this.reload(this.site_id, true)     // not awaited
     }
 
+
+    /***  Agents  ***/
+
     get_frame(id_or_obj) {
         /* Find and return the current execution frame of an agent. */
         let id = (typeof id_or_obj === 'object') ? id_or_obj.id : id_or_obj

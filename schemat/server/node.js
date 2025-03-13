@@ -231,9 +231,9 @@ export class Node extends Agent {
         /* On master process, send a message to another node via TCP. */
         assert(this.is_master())
         if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
-        let local = schemat.get_state(this)
-        return local.tcp_sender.send(msg, node.tcp_address)
-        // return schemat.agents.tcp.send(msg, node.tcp_address)
+        return this.local.tcp_sender.send(msg, node.tcp_address)
+        // let local = schemat.get_state(this)
+        // return local.tcp_sender.send(msg, node.tcp_address)
     }
 
     recv_tcp([type, ...msg]) {
@@ -247,6 +247,7 @@ export class Node extends Agent {
             let [target_id] = msg
 
             // find out which process (worker >= 1 or master = 0), has the `target_id` agent deployed
+            // let process_id = this.local.agent_locations.get(target_id)
             let process_id = this.agent_locations.get(target_id)
             // print("recv_tcp(): process", process_id)
 
