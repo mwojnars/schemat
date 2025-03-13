@@ -67,18 +67,27 @@ class Frame {
         
         let frame = this
         this.state = new Proxy(state, {
-            // whenever a function from state (state.fun()) is called, wrap it up with track_call()
+            // whenever a function from state (state.fun()) is called, wrap it up with _track_call()
             get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
                 if (frame.stopping) throw new Error(`agent ${frame.agent.__label} is in the process of stopping`)
                 print(`calling agent ${frame.agent.__label}.state.${prop}() in tracked mode`)
-                return frame.track_call(state[prop].apply(state, args))
+                return frame._track_call(state[prop].apply(state, args))
             }
         })
     }
+
+    call_agent(method, args) {
+        /* Call agent's method in tracked mode and pass `state` context as an extra argument. */
+        let {agent, state} = this
+        let func = agent.__self[method]
+        if (!func) throw new Error(`agent ${agent.__label} has no RPC endpoint "${method}"`)
+
+        print(`calling agent ${agent.__label}.${method}() in tracked mode`)
+        return this._track_call(func.call(agent, state, ...args))
+    }
     
-    track_call(call) {
+    _track_call(call) {
         /* Create a wrapped promise that removes itself from `calls` when done. */
-        // print(`calling agent's ${this.agent.__label} own method in tracked mode`)
         let promise = Promise.resolve(call)
         let tracked = promise.finally(() => {
             this.calls = this.calls.filter(p => p !== tracked)
