@@ -90,7 +90,7 @@ export class Process {
     /* Master or worker process that executes message loops of Agents assigned to the current node. */
 
     node                    // Node web object that represents the Schemat cluster node this process is running
-    frames = new Map()      // Frame objects of currently running agents, keyed by agent names
+    frames = new Map()      // Frame objects of currently running agents, keyed by agent IDs
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
 
     get worker_id() {
@@ -199,27 +199,27 @@ export class Process {
 
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
-        let current = this.frames                       // currently running agents, Map<name, Frame>
-        let desired = this._get_agents_running()        // goal: agents that should be running now, Map<name, agent>
+        let current = this.frames                       // currently running agents, Map<id, Frame>
+        let desired = this._get_agents_running()        // goal: agents that should be running now, array of agent objects
 
         if (schemat.is_closing) {
-            desired = new Map()                         // enforce clean shutdown by stopping all agents
+            desired = []                                // enforce clean shutdown by stopping all agents
             this._print(`closing and stopping all agents`)
         }
 
-        let current_names = Array.from(current.keys())
-        let new_names = Array.from(desired.keys())
-
-        let to_stop = current_names.filter(name => !desired.has(name))   // find agents in `current` that are not in `agents` and need to be stopped
-        let to_start = new_names.filter(name => !current.has(name))      // find agents in `agents` that are not in `current` and need to be started
-        let to_refresh = current_names.filter(name => desired.has(name)) // find agents in `current` that are still in `agents` and need to be refreshed
+        // Create a set of IDs for quick lookup
+        let desired_ids = new Set(desired.map(agent => agent.id))
+        let current_agents = Array.from(current.values()).map(frame => frame.agent)
+        
+        let to_stop = current_agents.filter(agent => !desired_ids.has(agent.id))    // find agents to stop (currently running but not desired)
+        let to_start = desired.filter(agent => !current.has(agent.id))              // find agents to start (desired but not running)
+        let to_refresh = current_agents.filter(agent => desired_ids.has(agent.id))  // find agents to refresh (running and still desired)
 
         let promises = []
         // let next = new Map()                            // agents to continue running
 
         // start new agents
-        for (let name of to_start) {
-            let agent = desired.get(name)
+        for (let agent of to_start) {
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
 
             // print(`_start_stop():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
@@ -228,7 +228,7 @@ export class Process {
             this._print(`starting agent ${agent.__label} ...`)
 
             let state = await agent.__start__()
-            this.frames.set(name, new Frame(agent, state))
+            this.frames.set(agent.id, new Frame(agent, state))
             this._print(`starting agent ${agent.__label} done`)
 
             // let start = Promise.resolve(agent.__start__())
@@ -236,9 +236,9 @@ export class Process {
         }
 
         // refresh agents
-        for (let name of to_refresh) {
-            let frame = current.get(name)
-            let agent = frame.agent.refresh()
+        for (let agent of to_refresh) {
+            let frame = current.get(agent.id)
+            agent = frame.agent.refresh()
             if (agent.__ttl_left() < 0) agent = await agent.reload()
             if (agent === frame.agent) continue
 
@@ -255,10 +255,10 @@ export class Process {
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
         }
 
-        // stop agents
-        for (let name of to_stop.toReversed()) {        // iterate in reverse order as some agents may depend on previous ones
-            let frame = current.get(name)
-            let {agent, calls} = frame
+        // stop agents - still use reverse order as some agents may depend on previous ones
+        for (let agent of to_stop.reverse()) {
+            let frame = current.get(agent.id)
+            let {calls} = frame
             frame.stopping = true                       // mark agent as stopping to prevent new calls
 
             if (calls.length > 0) {                     // wait for pending calls to complete before stopping
@@ -268,7 +268,7 @@ export class Process {
 
             this._print(`stopping agent ${agent.__label} ...`)
             await agent.__stop__(frame.raw_state)
-            this.frames.delete(name)
+            this.frames.delete(agent.id)
             this._print(`stopping agent ${agent.__label} done`)
 
             // let stop = Promise.resolve(frame.agent.__stop__(frame.state))
@@ -280,15 +280,15 @@ export class Process {
     }
 
     _get_agents_running() {
-        /* Map of agents that should be running now on this process. */
+        /* Array of agents that should be running now on this process. */
         let master = this.is_master()
-        let names  = master ? this.node.master_agents_running : this.node.agents_running    // different set of agents at master vs workers
-        let agents = (names || []).map(name => [name, this.node.agents_installed.get(name)])
+        let names = master ? this.node.master_agents_running : this.node.agents_running    // different set of agents at master vs workers
+        let agents = (names || []).map(name => this.node.agents_installed.get(name))
 
         assert(!this.node.agents_installed.has('node'))
-        if (master) agents = [['node', this.node], ...agents]       // on master, add the current node as implicit 'node' agent
+        if (master) agents = [this.node, ...agents]         // on master, add the current node as implicit 'node' agent
 
-        return new Map(agents)
+        return agents
     }
 
     // async main() {
