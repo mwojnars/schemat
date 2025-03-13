@@ -17,15 +17,15 @@ export class Agent extends WebObject {
     // __node __node$       -- node(s) where this agent is installed & running as a leader
     // __replica __replica$ -- node(s) where this agent is installed & running as a replica
 
-    num_workers     // 0/1/N, the number of concurrent workers per node that should execute this agent's loop at the same time; 0 = "all available"
+    num_workers     // 0/1/N, the number of concurrent workers per node that should execute this agent's microservice at the same time; 0 = "all available"
     hard_restart
 
     async __install__(node) {}  // ideally, this method should be idempotent in case of failure and subsequent re-launch
     async __uninstall__(node) {}
 
     async __start__()   {
-        /* Start the microservice implemented by this agent. May create and return an "execution state",
-           which will be accessible to external calls to the running agent (RPC calls or direct function calls)
+        /* Start the microservice implemented by this agent. Return an "execution state" which will be accessible
+           to external calls addressed to the running agent (RPC calls or direct function calls)
            and will be passed to __stop__() upon microservice termination. Typically, the state object contains
            handlers to all the resources that were opened during __start__() and must be released in __stop__().
            The execution state, if present, should be a plain JS object. If the microservice allows local direct

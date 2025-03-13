@@ -862,10 +862,11 @@
       "@": schemat/types/type.js:REF
     num_workers:
       default: 1
-      info: How many concurrent workers on the __node should execute this agent's loop
-        at the same time. Zero (0) means 'all available'. Most agents need only
-        one worker, but some rare types of agents (like a web server) may
-        benefit from concurrent execution on multiple workers.
+      info: The number of concurrent worker processes on the host node that should
+        execute this agent's microservice at the same time. Zero (0) means 'all
+        available'. Most agents need only one worker per node, but some others
+        (like web servers) may benefit from concurrent execution on multiple
+        workers.
       "@": schemat/types/type.js:INTEGER
     hard_restart:
       default: false
