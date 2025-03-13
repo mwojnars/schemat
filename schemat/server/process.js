@@ -70,6 +70,7 @@ class Frame {
             // whenever a function from state (state.fun()) is called, wrap it up with track_call()
             get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
                 if (frame.stopping) throw new Error(`agent ${frame.agent.__label} is in the process of stopping`)
+                print(`calling agent ${frame.agent.__label}.${prop}() in tracked mode`)
                 return frame.track_call(state[prop].apply(state, args))
             }
         })
