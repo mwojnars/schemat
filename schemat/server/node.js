@@ -142,7 +142,11 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this._tcp_port)
 
-        return {tcp_sender, tcp_receiver}
+        let agent_locations = new Map()         // map of running agent IDs to process IDs: 0 for master, >=1 for workers
+        agent_locations.set(this.id, 0)         // the current node runs (as an agent) on master process
+        this.agents_installed.forEach(agent => agent_locations.set(agent.id, 1))
+
+        return {tcp_sender, tcp_receiver, agent_locations}
     }
 
     async __stop__({tcp_sender, tcp_receiver}) {
@@ -194,7 +198,7 @@ export class Node extends Agent {
 
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
-            let process_id = this.agent_locations.get(target_id)
+            let process_id = this.local.agent_locations.get(target_id)
             if (process_id !== undefined)
                 node = this
             else {
@@ -245,12 +249,11 @@ export class Node extends Agent {
             let [target_id] = msg
 
             // find out which process (worker >= 1 or master = 0), has the `target_id` agent deployed
-            // let process_id = this.local.agent_locations.get(target_id)
-            let process_id = this.agent_locations.get(target_id)
+            let process_id = this.local.agent_locations.get(target_id)
             // print("recv_tcp(): process", process_id)
 
             if (process_id === undefined) {
-                print(`${this.id}/#${this.worker_id} agent locations:`, [...this.agent_locations.entries()])
+                print(`${this.id}/#${this.worker_id} agent locations:`, [...this.local.agent_locations.entries()])
                 throw new Error(`${this.id}/#${this.worker_id}: agent [${target_id}] not found on this node`)
             }
             if (process_id !== this.worker_id) {
@@ -263,24 +266,21 @@ export class Node extends Agent {
         else throw new Error(`unknown node-to-node message type: ${type}`)
     }
 
-    get agent_locations() {
-        /* Map of running agent IDs to process IDs: 0 for master, >=1 for workers. */
-        let agents = new Map()
-        agents.set(this.id, 0)          // the current node runs as an agent on master
-
-        this.agents_installed.forEach(agent => agents.set(agent.id, 1))
-        // Array.from(this.agents_installed.values()).forEach(agent => agents.set(agent.id, 1))
-
-        // for (let name of this.agents_running) {
-        //     let agent = this.agents_installed.get(name)
-        //     agents.set(agent.id, 1)     // FIXME
-        // }
-        // for (let name of this.master_agents_running) {
-        //     let agent = this.agents_installed.get(name)
-        //     agents.set(agent.id, 0)
-        // }
-        return agents
-    }
+    // get agent_locations() {
+    //     /* Map of running agent IDs to process IDs: 0 for master, >=1 for workers. */
+    //     let agents = new Map()
+    //     agents.set(this.id, 0)          // the current node runs as an agent on master
+    //
+    //     for (let name of this.agents_running) {
+    //         let agent = this.agents_installed.get(name)
+    //         agents.set(agent.id, 1)     // FIXME
+    //     }
+    //     for (let name of this.master_agents_running) {
+    //         let agent = this.agents_installed.get(name)
+    //         agents.set(agent.id, 0)
+    //     }
+    //     return agents
+    // }
 
 
     /*************/
