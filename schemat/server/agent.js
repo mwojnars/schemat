@@ -48,6 +48,11 @@ export class Agent extends WebObject {
         return this.__start__()
     }
 
+    // defined already in WebObject:
+    //
+    // get remote()
+    // get local()
+
 
     /***  Triggers  ***/
 

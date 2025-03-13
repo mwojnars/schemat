@@ -232,8 +232,6 @@ export class Node extends Agent {
         assert(this.is_master())
         if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
         return this.local.tcp_sender.send(msg, node.tcp_address)
-        // let local = schemat.get_state(this)
-        // return local.tcp_sender.send(msg, node.tcp_address)
     }
 
     recv_tcp([type, ...msg]) {

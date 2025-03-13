@@ -949,8 +949,10 @@ export class WebObject {
     }
 
     get local() {
-        /* Current local execution state of the agent represented by this web object, as returned by __start__(). See the Agent class. */
-        return schemat.get_state(this.id)
+        /* Current local execution state of the agent represented by this web object, as returned by __start__()
+           - see the Agent class. NOT cached.
+         */
+        return {value: schemat.get_state(this.id), [Intercept.NO_CACHING]: true}
     }
 
     // GET/POST/LOCAL.*() are isomorphic triggers ({name: trigger_function}) for this object's web endpoints ...
