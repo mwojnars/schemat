@@ -177,15 +177,7 @@ export class Node extends Agent {
         // locate an agent by its `target_id`, should be running here in this process
         let frame = schemat.get_frame(target_id)
         if (!frame) throw new Error(`agent [${target_id}] not found on this node process`)
-
-        args = JSONx.decode(args)
-        return frame.call_agent(`remote.${method}`, args)
-
-        // let {agent, state} = frame
-        // let func = agent.__self[`remote.${method}`]
-        // if (!func) throw new Error(`agent [${target_id}] has no RPC endpoint "${method}"`)
-        //
-        // return frame._track_call(func.call(agent, state, ...args))
+        return frame.call_agent(`remote.${method}`, JSONx.decode(args))
     }
 
 
