@@ -113,7 +113,7 @@ export class ServerSchemat extends Schemat {
     get_frame(id_or_obj) {
         /* Find and return the current execution frame of an agent. */
         let id = (typeof id_or_obj === 'object') ? id_or_obj.id : id_or_obj
-        return this.process.frames.values().find(frame => frame.agent.id === id)
+        return this.process.frames.get(id)
     }
 
     get_state(id_or_obj) {
