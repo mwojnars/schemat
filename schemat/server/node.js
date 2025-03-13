@@ -269,14 +269,16 @@ export class Node extends Agent {
         let agents = new Map()
         agents.set(this.id, 0)          // the current node runs as an agent on master
 
-        for (let name of this.agents_running) {
-            let agent = this.agents_installed.get(name)
-            agents.set(agent.id, 1)     // FIXME
-        }
-        for (let name of this.master_agents_running) {
-            let agent = this.agents_installed.get(name)
-            agents.set(agent.id, 0)
-        }
+        Array.from(this.agents_installed.values()).forEach(agent => agents.set(agent.id, 1))
+
+        // for (let name of this.agents_running) {
+        //     let agent = this.agents_installed.get(name)
+        //     agents.set(agent.id, 1)     // FIXME
+        // }
+        // for (let name of this.master_agents_running) {
+        //     let agent = this.agents_installed.get(name)
+        //     agents.set(agent.id, 0)
+        // }
         return agents
     }
 

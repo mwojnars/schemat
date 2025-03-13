@@ -277,9 +277,11 @@ export class Process {
     _get_agents_running() {
         /* Array of agents that should be running now on this process. */
         let master = this.is_master()
-        let names = master ? this.node.master_agents_running : this.node.agents_running    // different set of agents at master vs workers
-        let agents = (names || []).map(name => this.node.agents_installed.get(name))
-        return master ? [this.node, ...agents] : agents         // on master, add the current node as implicit 'node' agent
+        return master ? [this.node] : Array.from(this.node.agents_installed.values())
+
+        // let names = master ? this.node.master_agents_running : this.node.agents_running    // different set of agents at master vs workers
+        // let agents = (names || []).map(name => this.node.agents_installed.get(name))
+        // return master ? [this.node, ...agents] : agents         // on master, add the current node as implicit 'node' agent
     }
 
     // async main() {
