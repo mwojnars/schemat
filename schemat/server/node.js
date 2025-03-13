@@ -142,16 +142,24 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this._tcp_port)
 
-        let agent_locations = new Map()         // map of running agent IDs to process IDs: 0 for master, >=1 for workers
-        agent_locations.set(this.id, 0)         // the current node runs (as an agent) on master process
-        this.agents_installed.forEach(agent => agent_locations.set(agent.id, 1))
+        return {tcp_sender, tcp_receiver, agent_locations: this._allocate_agents()}
+    }
 
-        return {tcp_sender, tcp_receiver, agent_locations}
+    async __restart__(state, prev) {
+        state.agent_locations = this._allocate_agents()     // re-allocate agents if their configuration changed
+        return state
     }
 
     async __stop__({tcp_sender, tcp_receiver}) {
         await tcp_receiver.stop()
         await tcp_sender.stop()
+    }
+
+    _allocate_agents() {
+        let locations = new Map()           // map of running agent IDs to process IDs: 0 for master, >=1 for workers
+        locations.set(this.id, 0)           // the current node runs (as an agent) on master process
+        this.agents_installed.forEach(agent => locations.set(agent.id, 1))
+        return locations
     }
 
     /* RPC calls to other processes or nodes */
