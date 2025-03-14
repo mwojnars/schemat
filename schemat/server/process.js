@@ -214,6 +214,7 @@ export class Process {
         let current = this.frames                       // currently running agents, Map<id, Frame>
         let desired = this._get_agents_running()        // agents that should be running now, as an array of agent objects
         // let desired = [...this.agents_running]          // agents that should be running now, as an array of agent objects
+        // if (this.is_master()) desired = [this.node, ...desired]
 
         if (schemat.is_closing) {
             desired = []                                // enforce clean shutdown by stopping all agents
@@ -285,10 +286,6 @@ export class Process {
         let master = this.is_master()
         return master ? [this.node] : [...this.node.agents_installed]
         // return master ? [this.node] : Array.from(this.node.agents_installed.values())
-
-        // let names = master ? this.node.master_agents_running : this.node.agents_running    // different set of agents at master vs workers
-        // let agents = (names || []).map(name => this.node.agents_installed.get(name))
-        // return master ? [this.node, ...agents] : agents         // on master, add the current node as implicit 'node' agent
     }
 
     // async main() {

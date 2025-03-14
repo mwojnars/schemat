@@ -136,6 +136,10 @@ export class Node extends Agent {
         return `${this.tcp_host}:${this._tcp_port}`
     }
 
+    async __init__() {
+        await Promise.all(this.agents_installed.map(agent => agent.load()))
+    }
+
     async __start__() {
         let tcp_sender = new TCP_Sender()
         let tcp_receiver = new TCP_Receiver()
@@ -148,7 +152,7 @@ export class Node extends Agent {
     }
 
     async __restart__(state, prev) {
-        state.agent_locations = this._allocate_agents()     // re-allocate agents if their configuration changed
+        state.agent_locations = this._allocate_agents()     // re-allocate agents in case their configuration changed
         return state
     }
 
@@ -166,11 +170,14 @@ export class Node extends Agent {
 
         let current_worker = 1
         let plan = Array.from({length: N + 1}, () => [])
-        plan[0] = [this.id]             // master process runs the node agent and nothing else
+        // plan[0] = [this.id]             // master process runs the node agent and nothing else
 
         // distribute agents uniformly across worker processes
-        for (let agent of this.agents_installed || []) {
-            let num_workers = agent.num_workers || N
+        for (let agent of this.agents_installed) {
+            // assert(agent.is_loaded())
+            let num_workers = agent.num_workers
+            if (num_workers === -1) num_workers = N
+
             for (let i = 0; i < num_workers; i++) {
                 plan[current_worker++].push(agent.id)
                 if (current_worker > N) current_worker = 1
@@ -191,7 +198,7 @@ export class Node extends Agent {
             for (let agent of plan[i])
                 if (locations.has(agent)) locations.get(agent).push(i)
                 else locations.set(agent, [i])
-        // this._print(`agents locations:`, locations)
+        this._print(`agents locations:`, locations)
 
         return locations
     }
