@@ -192,7 +192,7 @@ export class Node extends Agent {
             for (let agent of plan[i])
                 if (locations.has(agent)) locations.get(agent).push(i)
                 else locations.set(agent, [i])
-        this._print(`agents locations:`, locations)
+        // this._print(`agents locations:`, locations)
 
         return locations
     }
@@ -245,7 +245,7 @@ export class Node extends Agent {
         let node, target
 
         if (type === 'RPC') {
-            this._print(`from_worker():`, JSON.stringify(msg))
+            // this._print(`from_worker():`, JSON.stringify(msg))
             let [target_id] = msg
 
             // check if the target object is deployed here on this node, then no need to look any further
@@ -266,7 +266,7 @@ export class Node extends Agent {
             }
 
             await node.load()
-            this._print(`from_worker(): sending to ${node.id} at ${node.tcp_address}`)
+            // this._print(`from_worker(): sending to ${node.id} at ${node.tcp_address}`)
 
             return this.send_tcp(node, [type, ...msg])
         }
@@ -274,7 +274,7 @@ export class Node extends Agent {
     }
 
     from_master([type, ...msg]) {
-        this._print(`from_master(${type}):`, JSON.stringify(msg))
+        // this._print(`from_master(${type}):`, JSON.stringify(msg))
         if (type === 'RPC') return this.execute_rpc(...msg)
         if (type === 'SYS') {
             let [method, args] = msg
@@ -297,7 +297,7 @@ export class Node extends Agent {
            `msg` is a plain object/array whose elements may still need to be JSONx-decoded.
          */
         assert(this.is_master())
-        this._print(`recv_tcp():`, JSON.stringify(msg))
+        // this._print(`recv_tcp():`, JSON.stringify(msg))
 
         if (type === 'RPC') {
             let [target_id] = msg

@@ -82,7 +82,7 @@ class Frame {
         let func = agent.__self[method]
         if (!func) throw new Error(`agent ${agent.__label} has no RPC endpoint "${method}"`)
 
-        print(`calling agent ${agent.__label}.${method}() in tracked mode`)
+        // print(`calling agent ${agent.__label}.${method}() in tracked mode`)
         return this._track_call(func.call(agent, state, ...args))
     }
     

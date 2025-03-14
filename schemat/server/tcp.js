@@ -67,7 +67,7 @@ export class TCP_Sender {
 
         let ack_parser = new ChunkParser(msg => {
             try {
-                print(`${schemat.node.id} TCP response received:`, msg)
+                // print(`${schemat.node.id} TCP response received:`, msg)
                 let {id, result} = JSONx.parse(msg)
                 let entry = this.pending.get(id)
                 if (entry) {
@@ -101,7 +101,7 @@ export class TCP_Receiver {
             let processed_offset = 0
             let msg_parser = new ChunkParser(async json => {
                 try {
-                    print(`${schemat.node.id} TCP message received:`, json)
+                    // print(`${schemat.node.id} TCP message received:`, json)
                     let {id, msg} = JSON.parse(json)
                     let result
                     if (id > processed_offset) {
