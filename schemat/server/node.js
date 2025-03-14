@@ -170,7 +170,6 @@ export class Node extends Agent {
 
         let current_worker = 1
         let plan = Array.from({length: N + 1}, () => [])
-        // plan[0] = [this.id]             // master process runs the node agent and nothing else
 
         // distribute agents uniformly across worker processes
         for (let agent of this.agents_installed) {
@@ -198,7 +197,7 @@ export class Node extends Agent {
             for (let agent of plan[i])
                 if (locations.has(agent)) locations.get(agent).push(i)
                 else locations.set(agent, [i])
-        this._print(`agents locations:`, locations)
+        // this._print(`agents locations:`, locations)
 
         return locations
     }

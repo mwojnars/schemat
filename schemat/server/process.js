@@ -213,7 +213,7 @@ export class Process {
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
         let current_agents = Array.from(this.frames.values(), frame => frame.agent)     // currently running agents
-        let desired_agents = this.is_master() ? [this.node] : [...this.agents_running]  // agents that should be running now, as an array of agent objects
+        let desired_agents = this.is_master() ? [this.node] : [...this.agents_running]  // agents that should be running when this method completes; master process runs the node agent and nothing else
 
         if (schemat.is_closing) {
             desired_agents = []                                 // enforce clean shutdown by stopping all agents
