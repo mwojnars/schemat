@@ -127,6 +127,7 @@ export class Node extends Agent {
 
     get worker_id() { return schemat.process.worker_id }
     is_master()     { return schemat.process.is_master() }
+    _print(...args) { print(`${this.id}/#${this.worker_id}`, ...args) }
 
     get _tcp_port() { return schemat.config['tcp-port'] || this.tcp_port }      // FIXME: workaround
 
@@ -186,7 +187,7 @@ export class Node extends Agent {
         return plan
     }
 
-    sys_agents_running(agents) { return schemat.process.set_agents_running(agents) }
+    sys_agents_running(agents) { schemat.process.set_agents_running(agents) }
 
     _allocate_agents() {
         let locations = new Map()           // map of running agent IDs to process IDs: 0 for master, >=1 for workers
@@ -234,7 +235,7 @@ export class Node extends Agent {
         let node, target
 
         if (type === 'RPC') {
-            print(`${this.id}/#${this.worker_id} from_worker():`, JSON.stringify(msg))
+            this._print(`from_worker():`, JSON.stringify(msg))
             let [target_id] = msg
 
             // check if the target object is deployed here on this node, then no need to look any further
@@ -249,14 +250,14 @@ export class Node extends Agent {
             }
 
             if (!node)
-                throw new Error(`missing host node for RPC target [${target_id}]`)
+                throw new Error(`missing host node for RPC target [${target.__label}]`)
             if (node.is(schemat.node)) {
-                print(`${this.id}/#${this.worker_id} from_worker(): redirecting to self`)
+                this._print(`from_worker(): redirecting to self`)
                 return this.recv_tcp([type, ...msg])     // target agent is deployed on the current node
             }
 
             await node.load()
-            print(`${this.id}/#${this.worker_id} from_worker(): sending to ${node.id} at ${node.tcp_address}`)
+            this._print(`from_worker(): sending to ${node.id} at ${node.tcp_address}`)
 
             return this.send_tcp(node, [type, ...msg])
         }
@@ -264,7 +265,7 @@ export class Node extends Agent {
     }
 
     from_master([type, ...msg]) {
-        print(`${this.id}/#${this.worker_id} from_master(${type}):`, JSON.stringify(msg))
+        this._print(`from_master(${type}):`, JSON.stringify(msg))
         if (type === 'RPC') return this.execute_rpc(...msg)
         if (type === 'SYS') {
             let [method, args] = msg
@@ -287,7 +288,7 @@ export class Node extends Agent {
            `msg` is a plain object/array whose elements may still need to be JSONx-decoded.
          */
         assert(this.is_master())
-        print(`#${this.worker_id} recv_tcp():`, JSON.stringify(msg))
+        this._print(`recv_tcp():`, JSON.stringify(msg))
 
         if (type === 'RPC') {
             let [target_id] = msg
@@ -297,7 +298,7 @@ export class Node extends Agent {
             // print("recv_tcp(): process", process_id)
 
             if (process_id === undefined) {
-                print(`${this.id}/#${this.worker_id} agent locations:`, [...this.local.agent_locations.entries()])
+                this._print(`agent locations:`, [...this.local.agent_locations.entries()])
                 throw new Error(`${this.id}/#${this.worker_id}: agent [${target_id}] not found on this node`)
             }
             if (process_id !== this.worker_id) {

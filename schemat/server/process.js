@@ -112,7 +112,7 @@ export class Process {
 
     is_master() { return !this.worker_id}
 
-    _print(...args) { print(`${this.node?.id}/#${this.worker_id}:`, ...args) }
+    _print(...args) { print(`${this.node?.id}/#${this.worker_id}`, ...args) }
 
 
     async init(opts) {
