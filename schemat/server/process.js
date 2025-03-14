@@ -102,6 +102,7 @@ export class Process {
 
     node                    // Node web object that represents the Schemat cluster node this process is running
     frames = new Map()      // Frame objects of currently running agents, keyed by agent IDs
+    agents_running = []     // IDs of agents that should be running now
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
 
     get worker_id() {
@@ -272,6 +273,10 @@ export class Process {
             this.frames.delete(agent.id)
             this._print(`stopping agent ${agent.__label} done`)
         }
+    }
+
+    set_agents_running(agents) {
+        this.agents_running = agents
     }
 
     _get_agents_running() {
