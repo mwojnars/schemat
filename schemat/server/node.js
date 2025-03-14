@@ -177,6 +177,7 @@ export class Node extends Agent {
                 if (current_worker > N) current_worker = 1
             }
         }
+        this._print(`agents allocation:`, plan)
 
         // notify the plan to every process
         schemat.process.set_agents_running(plan[0])
@@ -184,6 +185,9 @@ export class Node extends Agent {
             let worker = schemat.process.get_worker(i)
             worker.mailbox.notify(['SYS', 'sys_agents_running', [plan[i]]])
         }
+
+        // convert the plan to a map of agent IDs to arrays of their locations (process IDs)
+
         return plan
     }
 
@@ -191,8 +195,8 @@ export class Node extends Agent {
 
     _allocate_agents() {
         let locations = new Map()           // map of running agent IDs to process IDs: 0 for master, >=1 for workers
-        locations.set(this.id, 0)           // the current node runs (as an agent) on master process
-        this.agents_installed.forEach(agent => locations.set(agent.id, 1))
+        locations.set(this.id, [0])           // the current node runs (as an agent) on master process
+        this.agents_installed.forEach(agent => locations.set(agent.id, [1]))
         return locations
     }
 
@@ -240,9 +244,8 @@ export class Node extends Agent {
 
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
-            let process_id = this.local.agent_locations.get(target_id)
-            if (process_id !== undefined)
-                node = this
+            let locs = this.local.agent_locations.get(target_id)
+            if (locs?.length) node = this
             else {
                 // load the object and check its __node to locate the destination where it is deployed
                 target = await schemat.get_loaded(target_id)
@@ -250,7 +253,7 @@ export class Node extends Agent {
             }
 
             if (!node)
-                throw new Error(`missing host node for RPC target [${target.__label}]`)
+                throw new Error(`missing host node for RPC target ${target.__label}`)
             if (node.is(schemat.node)) {
                 this._print(`from_worker(): redirecting to self`)
                 return this.recv_tcp([type, ...msg])     // target agent is deployed on the current node
@@ -294,7 +297,10 @@ export class Node extends Agent {
             let [target_id] = msg
 
             // find out which process (worker >= 1 or master = 0), has the `target_id` agent deployed
-            let process_id = this.local.agent_locations.get(target_id)
+            let locs = this.local.agent_locations.get(target_id)
+            if (locs.length > 1) throw new Error(`TCP target agent [${target_id}] is deployed multiple times on ${this.__label}`)
+
+            let process_id = locs[0]
             // print("recv_tcp(): process", process_id)
 
             if (process_id === undefined) {
