@@ -102,7 +102,7 @@ export class Process {
 
     node                    // Node web object that represents the Schemat cluster node this process is running
     frames = new Map()      // Frame objects of currently running agents, keyed by agent IDs
-    agents_running = []     // IDs of agents that should be running now
+    agents_running = []     // web objects that should be running now as agents
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
 
     get worker_id() {
@@ -213,6 +213,7 @@ export class Process {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
         let current = this.frames                       // currently running agents, Map<id, Frame>
         let desired = this._get_agents_running()        // agents that should be running now, as an array of agent objects
+        // let desired = [...this.agents_running]          // agents that should be running now, as an array of agent objects
 
         if (schemat.is_closing) {
             desired = []                                // enforce clean shutdown by stopping all agents
@@ -276,7 +277,7 @@ export class Process {
     }
 
     set_agents_running(agents) {
-        this.agents_running = agents
+        this.agents_running = agents.map(id => schemat.get_object(id))
     }
 
     _get_agents_running() {
