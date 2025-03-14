@@ -155,8 +155,16 @@ export class DataSequence extends Sequence {
         return data_schema.decode_key(key)[0]
     }
 
+    encode_id(id) {
+        assert(id !== undefined)
+        return data_schema.encode_key([id])
+    }
+    decode_id(key) {
+        return data_schema.decode_key(key)[0]
+    }
+
     find_block_id(id) {
-        let key = this.encode_key(id)
+        let key = this.encode_id(id)
         return this.find_block(key)
     }
 }
