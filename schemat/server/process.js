@@ -211,26 +211,27 @@ export class Process {
 
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
-        let current = this.frames                       // currently running agents, Map<id, Frame>
-        let desired = this._get_agents_running()        // agents that should be running now, as an array of agent objects
+        let current_frames = this.frames                       // currently running agents, Map<id, Frame>
+        let desired_agents = this._get_agents_running()        // agents that should be running now, as an array of agent objects
         // let desired = [...this.agents_running]          // agents that should be running now, as an array of agent objects
         // if (this.is_master()) desired = [this.node, ...desired]
 
+        // sets of IDs for quick lookup
+        let desired = new Set(desired_agents.map(agent => agent.id))
+        let current = new Set(current_frames.keys())
+        
         if (schemat.is_closing) {
-            desired = []                                // enforce clean shutdown by stopping all agents
+            desired = new Set()                                 // enforce clean shutdown by stopping all agents
             this._print(`closing and stopping all agents`)
         }
 
-        // Create a set of IDs for quick lookup
-        let desired_ids = new Set(desired.map(agent => agent.id))
-        let current_agents = Array.from(current.values()).map(frame => frame.agent)
-        
-        let to_stop = current_agents.filter(agent => !desired_ids.has(agent.id))    // find agents to stop (currently running but not desired)
-        let to_start = desired.filter(agent => !current.has(agent.id))              // find agents to start (desired but not running)
-        let to_refresh = current_agents.filter(agent => desired_ids.has(agent.id))  // find agents to refresh (running and still desired)
+        let to_stop = Array.from(current).filter(id => !desired.has(id))        // find agents to stop (currently running but not desired)
+        let to_start = Array.from(desired).filter(id => !current.has(id))       // find agents to start (desired but not running)
+        let to_refresh = Array.from(current).filter(id => desired.has(id))      // find agents to refresh (running and still desired)
 
         // start new agents
-        for (let agent of to_start) {
+        for (let id of to_start) {
+            let agent = schemat.get_object(id)
             if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
 
             // print(`_start_stop():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
@@ -244,9 +245,9 @@ export class Process {
         }
 
         // refresh agents
-        for (let agent of to_refresh) {
-            let frame = current.get(agent.id)
-            agent = frame.agent.refresh()
+        for (let id of to_refresh) {
+            let frame = this.frames.get(id)
+            let agent = frame.agent.refresh()
             if (agent.__ttl_left() < 0) agent = await agent.reload()
             if (agent === frame.agent) continue
 
@@ -260,9 +261,9 @@ export class Process {
         }
 
         // stop agents - still use reverse order as some agents may depend on previous ones
-        for (let agent of to_stop.reverse()) {
-            let frame = current.get(agent.id)
-            let {calls} = frame
+        for (let id of to_stop.reverse()) {
+            let frame = this.frames.get(id)
+            let {agent, calls} = frame
             frame.stopping = true                       // mark agent as stopping to prevent new calls
 
             if (calls.length > 0) {                     // wait for pending calls to complete before stopping
