@@ -301,7 +301,6 @@ export class DataBlock extends Block {
     _assign_id() {
         /* Calculate a new `id` to be assigned to the record being inserted. */
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
-        // id = this.schema.decode_key(new_key)[0]
         let ring = this.ring
         let id = (this.insert_mode === 'compact' && !this._reserved.has(this._autoincrement))
                     ? this._assign_id_compact()
@@ -327,7 +326,7 @@ export class DataBlock extends Block {
         let gap  = ring.start_id
 
         for (let [key, value] of this._storage.scan()) {
-            let id = seq.decode_key(key)
+            let id = seq.decode_id(key)
             if (id + 1 < ring.start_id) continue        // skip records outside the current ring's range
             while (gap < id)                            // found a gap before `id`? return it unless already reserved
                 if (this._reserved.has(gap)) gap++
@@ -401,10 +400,7 @@ export class DataBlock extends Block {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
-        // let {key} = req.args
-        // let id = this.sequence.decode_key(key)
         let key = this.sequence.encode_id(id)
-
         let data = await this._storage.get(key)
         if (data === undefined) return this._move_down(req).delete(id, req)
 
