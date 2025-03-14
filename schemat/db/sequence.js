@@ -147,14 +147,6 @@ export class DataSequence extends Sequence {
         this.blocks = [DataBlock.new(this, {format: 'data-yaml'})]
     }
 
-    encode_key(id) {
-        assert(id !== undefined)
-        return data_schema.encode_key([id])
-    }
-    decode_key(key) {
-        return data_schema.decode_key(key)[0]
-    }
-
     encode_id(id) {
         assert(id !== undefined)
         return data_schema.encode_key([id])
