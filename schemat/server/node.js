@@ -142,7 +142,7 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this._tcp_port)
 
-        // let allocations = this._allocate_agents__()
+        let allocations = this._allocate_agents__()
 
         return {tcp_sender, tcp_receiver, agent_locations: this._allocate_agents()}
     }
@@ -179,12 +179,14 @@ export class Node extends Agent {
 
         // notify the plan to every process
         schemat.process.set_agents_running(plan[0])
-        for (let i = 0; i < N; i++) {
+        for (let i = 1; i <= N; i++) {
             let worker = schemat.process.get_worker(i)
-            worker.mailbox.notify(['SYS', 'set_agents_running', [plan[i]]])
+            worker.mailbox.notify(['SYS', 'sys_agents_running', [plan[i]]])
         }
         return plan
     }
+
+    sys_agents_running(agents) { return schemat.process.set_agents_running(agents) }
 
     _allocate_agents() {
         let locations = new Map()           // map of running agent IDs to process IDs: 0 for master, >=1 for workers
@@ -262,9 +264,12 @@ export class Node extends Agent {
     }
 
     from_master([type, ...msg]) {
-        assert(type === 'RPC')
-        print(`${this.id}/#${this.worker_id} from_master():`, JSON.stringify(msg))
-        return this.execute_rpc(...msg)
+        print(`${this.id}/#${this.worker_id} from_master(${type}):`, JSON.stringify(msg))
+        if (type === 'RPC') return this.execute_rpc(...msg)
+        if (type === 'SYS') {
+            let [method, args] = msg
+            return this[method](...args)
+        }
     }
 
 
