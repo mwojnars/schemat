@@ -212,11 +212,8 @@ export class Process {
 
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
-        let current_agents = Array.from(this.frames.values(), frame => frame.agent)     // currently running agents, Map<id, Frame>
-        
-        // let desired_agents = this._get_agents_running()        // agents that should be running now, as an array of agent objects
-        let desired_agents = [...this.agents_running]           // agents that should be running now, as an array of agent objects
-        if (this.is_master()) desired_agents = [this.node, ...desired_agents]
+        let current_agents = Array.from(this.frames.values(), frame => frame.agent)     // currently running agents
+        let desired_agents = this.is_master() ? [this.node] : [...this.agents_running]  // agents that should be running now, as an array of agent objects
 
         if (schemat.is_closing) {
             desired_agents = []                                 // enforce clean shutdown by stopping all agents
@@ -286,12 +283,12 @@ export class Process {
         this.agents_running = agents.map(id => schemat.get_object(id))
     }
 
-    _get_agents_running() {
-        /* Array of agents that should be running now on this process. */
-        let master = this.is_master()
-        return master ? [this.node] : [...this.node.agents_installed]
-        // return master ? [this.node] : Array.from(this.node.agents_installed.values())
-    }
+    // _get_agents_running() {
+    //     /* Array of agents that should be running now on this process. */
+    //     let master = this.is_master()
+    //     return master ? [this.node] : [...this.node.agents_installed]
+    //     // return master ? [this.node] : Array.from(this.node.agents_installed.values())
+    // }
 
     // async main() {
     //     for (let {prev, agent, oper, migrate} of actions) {
