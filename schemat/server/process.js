@@ -211,23 +211,26 @@ export class Process {
 
     async _start_stop() {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
-        let current_frames = this.frames                       // currently running agents, Map<id, Frame>
-        let desired_agents = this._get_agents_running()        // agents that should be running now, as an array of agent objects
-        // let desired = [...this.agents_running]          // agents that should be running now, as an array of agent objects
-        // if (this.is_master()) desired = [this.node, ...desired]
-
-        // sets of IDs for quick lookup
-        let desired = new Set(desired_agents.map(agent => agent.id))
-        let current = new Set(current_frames.keys())
+        let current_agents = Array.from(this.frames.values(), frame => frame.agent)     // currently running agents, Map<id, Frame>
         
+        let desired_agents = this._get_agents_running()        // agents that should be running now, as an array of agent objects
+        // let desired_agents = [...this.agents_running]           // agents that should be running now, as an array of agent objects
+        // if (this.is_master()) desired_agents = [this.node, ...desired_agents]
+
         if (schemat.is_closing) {
-            desired = new Set()                                 // enforce clean shutdown by stopping all agents
+            desired_agents = []                                 // enforce clean shutdown by stopping all agents
             this._print(`closing and stopping all agents`)
         }
 
-        let to_stop = Array.from(current).filter(id => !desired.has(id))        // find agents to stop (currently running but not desired)
-        let to_start = Array.from(desired).filter(id => !current.has(id))       // find agents to start (desired but not running)
-        let to_refresh = Array.from(current).filter(id => desired.has(id))      // find agents to refresh (running and still desired)
+        // sets of IDs for quick lookup
+        let current_ids = current_agents.map(agent => agent.id)
+        let desired_ids = desired_agents.map(agent => agent.id)
+        let current_set = new Set(current_ids)
+        let desired_set = new Set(desired_ids)
+        
+        let to_stop = current_ids.filter(id => !desired_set.has(id))        // find agents to stop (currently running but not desired)
+        let to_start = desired_ids.filter(id => !current_set.has(id))       // find agents to start (desired but not running)
+        let to_refresh = current_ids.filter(id => desired_set.has(id))      // find agents to refresh (running and still desired)
 
         // start new agents
         for (let id of to_start) {
