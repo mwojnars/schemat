@@ -152,7 +152,8 @@ export class Process {
 
     async start() {
         schemat.process = this
-        if (this.is_master()) await sleep(1.0)      // master should wait for workers to start their IPC before sending requests
+        if (this.is_master()) await sleep(1.0)      // master waits for workers to start their IPC before sending requests
+        else await sleep(2.0)                       // worker waits for master to provide an initial list of agents
         this._promise = this.main()
     }
 
@@ -213,9 +214,9 @@ export class Process {
         /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
         let current_agents = Array.from(this.frames.values(), frame => frame.agent)     // currently running agents, Map<id, Frame>
         
-        let desired_agents = this._get_agents_running()        // agents that should be running now, as an array of agent objects
-        // let desired_agents = [...this.agents_running]           // agents that should be running now, as an array of agent objects
-        // if (this.is_master()) desired_agents = [this.node, ...desired_agents]
+        // let desired_agents = this._get_agents_running()        // agents that should be running now, as an array of agent objects
+        let desired_agents = [...this.agents_running]           // agents that should be running now, as an array of agent objects
+        if (this.is_master()) desired_agents = [this.node, ...desired_agents]
 
         if (schemat.is_closing) {
             desired_agents = []                                 // enforce clean shutdown by stopping all agents
