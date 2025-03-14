@@ -143,13 +143,13 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this._tcp_port)
 
-        let allocations = this._allocate_agents__()
+        let agent_locations = this._allocate_agents__()
 
-        return {tcp_sender, tcp_receiver, agent_locations: this._allocate_agents()}
+        return {tcp_sender, tcp_receiver, agent_locations}
     }
 
     async __restart__(state, prev) {
-        state.agent_locations = this._allocate_agents()     // re-allocate agents if their configuration changed
+        state.agent_locations = this._allocate_agents__()     // re-allocate agents if their configuration changed
         return state
     }
 
@@ -186,9 +186,15 @@ export class Node extends Agent {
             worker.mailbox.notify(['SYS', 'sys_agents_running', [plan[i]]])
         }
 
-        // convert the plan to a map of agent IDs to arrays of their locations (process IDs)
+        // convert the plan to a Map<agent ID, array of process IDs>
+        let locations = new Map()
+        for (let i = 0; i <= N; i++)
+            for (let agent of plan[i])
+                if (locations.has(agent)) locations.get(agent).push(i)
+                else locations.set(agent, [i])
+        this._print(`agents locations:`, locations)
 
-        return plan
+        return locations
     }
 
     sys_agents_running(agents) { schemat.process.set_agents_running(agents) }
