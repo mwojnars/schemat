@@ -166,7 +166,7 @@ export class DataSequence extends Sequence {
 
 export class Operator extends WebObject {
     /* Specification of a data operator: source operator(s) + schema of output records + access methods (scan/min/max).
-       The same operator can be applied to multiple rings, producing another stream in each ring.
+       The same operator can be applied to multiple rings, producing a different stream in each ring.
      */
 
     get record_schema() {
