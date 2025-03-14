@@ -153,7 +153,7 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
         }
         server = servers[0]
 
-        await delay(1000)                                       // wait for server to start
+        await delay(2100)                                       // wait for server to start
         browser = await puppeteer.launch({headless: "new"})
         page = await browser.newPage()
 
