@@ -268,6 +268,7 @@
     "@": 28
 - __id: 1023
   name: webserver
+  num_workers: -1
   __category:
     "@": 30
 - __id: 1024

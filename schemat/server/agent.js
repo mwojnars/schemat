@@ -17,7 +17,7 @@ export class Agent extends WebObject {
     // __node __node$       -- node(s) where this agent is installed & running as a leader
     // __replica __replica$ -- node(s) where this agent is installed & running as a replica
 
-    num_workers     // 0/1/N, the number of concurrent workers per node that should execute this agent's microservice at the same time; 0 = "all available"
+    num_workers     // number of concurrent workers per node that should execute this agent's microservice at the same time; -1 = "all available"
     hard_restart
 
     async __install__(node) {}  // ideally, this method should be idempotent in case of failure and subsequent re-launch

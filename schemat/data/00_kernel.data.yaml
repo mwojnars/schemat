@@ -863,7 +863,7 @@
     num_workers:
       default: 1
       info: The number of concurrent worker processes on the host node that should
-        execute this agent's microservice at the same time. Zero (0) means 'all
+        execute this agent's microservice at the same time. -1 means 'all
         available'. Most agents need only one worker per node, but some others
         (like web servers) may benefit from concurrent execution on multiple
         workers.
