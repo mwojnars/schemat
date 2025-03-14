@@ -142,6 +142,8 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this._tcp_port)
 
+        // let allocations = this._allocate_agents__()
+
         return {tcp_sender, tcp_receiver, agent_locations: this._allocate_agents()}
     }
 
@@ -162,7 +164,7 @@ export class Node extends Agent {
         let N = schemat.process.workers.length
         assert(N >= 1)
 
-        let worker = 1
+        let current_worker = 1
         let plan = Array.from({length: N + 1}, () => [])
         plan[0] = [this.id]             // master process runs the node agent and nothing else
 
@@ -170,9 +172,16 @@ export class Node extends Agent {
         for (let agent of this.agents_installed || []) {
             let num_workers = agent.num_workers || N
             for (let i = 0; i < num_workers; i++) {
-                plan[worker++].push(agent.id)
-                if (worker > N) worker = 1
+                plan[current_worker++].push(agent.id)
+                if (current_worker > N) current_worker = 1
             }
+        }
+
+        // notify the plan to every process
+        schemat.process.set_agents_running(plan[0])
+        for (let i = 0; i < N; i++) {
+            let worker = schemat.process.get_worker(i)
+            worker.mailbox.notify(['SYS', 'set_agents_running', [plan[i]]])
         }
         return plan
     }
