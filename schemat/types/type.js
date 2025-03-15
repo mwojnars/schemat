@@ -2,6 +2,7 @@ import {A} from '../web/react-utils.js'
 import {assert, concat, print, T} from '../common/utils.js'
 import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
 import {bytes_uint} from "../common/binary.js";
+import {Shard} from "../common/structs.js";
 import * as widgets from './widgets.js'
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
@@ -558,6 +559,17 @@ export class OBJECT extends GENERIC {
         for (let attr of Object.keys(attrs))
             attrs[attr].validate(obj[attr])
         return obj
+    }
+}
+
+export class SHARD extends OBJECT {
+    /* Accept objects of the Shard class. */
+    static options = {
+        class: Shard,
+        attrs: {
+            offset: new INTEGER({min: 0}),
+            base:   new INTEGER({min: 1}),
+        }
     }
 }
 
