@@ -494,6 +494,12 @@
         inserted in this ring. IMPORTANT: updates are not affected by this
         setting."
       "@": schemat/types/type.js:INTEGER
+    id_start_sharded:
+      info: Lower bound of the (right-unbounded) ID range where sharding holds for
+        inserts into this ring. In this range, inserts of new objects can only
+        assign an ID number that hashes to this ring's `id_shard_bucket` under
+        modulo `2^id_shard_degree`.
+      "@": schemat/types/type.js:INTEGER
     data_sequence:
       info: DataSequence that keeps all primary objects of this ring
       category:
