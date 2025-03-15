@@ -429,6 +429,7 @@ export class Types {
 }
 
 export const isPromise = Types.isPromise
+export let T = Types                    // T is an alias for Types
 
 
 /**********************************************************************************************************************/
@@ -465,8 +466,22 @@ export class Maths {
 
 }
 
-export let T = Types                    // T is an alias for Types
 export let M = Maths                    // M is an alias for Maths
+
+
+export function gcd(a, b) {
+    /* Calculate the greatest common divisor using the Euclidean algorithm. */
+    a = Math.abs(a)
+    b = Math.abs(b)
+    while (b) [a, b] = [b, a % b]
+    return a
+}
+
+export function lcm(a, b) {
+    /* Calculate the least common multiple using the formula: lcm(a,b) = |a*b|/gcd(a,b). */
+    if (a === b) return a       // to speed up in this common case
+    return Math.abs(a * b) / gcd(a, b)
+}
 
 
 /**********************************************************************************************************************/
