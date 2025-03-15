@@ -494,7 +494,7 @@ export async function *merge(order, ...streams) {
 
     while (heads.length > 1 || (heads.length && relation === 0))
     {
-        let pos = M.argmin(heads, order)        // index of the stream with the lowest next value
+        let pos = argmin(heads, order)          // index of the stream with the lowest next value
         assert(pos !== undefined)
 
         if (last !== undefined) {
