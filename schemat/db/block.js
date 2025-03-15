@@ -306,7 +306,7 @@ export class DataBlock extends Block {
         let ring = this.ring
         let id = (this.insert_mode === 'compact' && !this._reserved.has(this._autoincrement))
                     ? this._assign_id_compact()
-                    : Math.max(this._autoincrement + 1, ring.id_start_exclusive)
+                    : Math.max(this._autoincrement + 1, ring.min_id_exclusive)
         if (!ring.valid_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
 
         this._reserved.add(id)
@@ -317,7 +317,7 @@ export class DataBlock extends Block {
     }
 
     _assign_id_compact() {
-        /* Scan this._storage to find the first available `id` for the record to be inserted, starting at ring.id_start_exclusive.
+        /* Scan this._storage to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
            This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
         if (!(this._storage instanceof MemoryStorage))
@@ -325,11 +325,11 @@ export class DataBlock extends Block {
 
         let seq  = this.sequence
         let ring = seq.ring
-        let gap  = ring.id_start_exclusive
+        let gap  = ring.min_id_exclusive
 
         for (let [key, value] of this._storage.scan()) {
             let id = seq.decode_id(key)
-            if (id + 1 < ring.id_start_exclusive) continue  // skip records outside the ring's validity range
+            if (id + 1 < ring.min_id_exclusive) continue    // skip records outside the ring's validity range
             while (gap < id)                                // found a gap before `id`? return it unless already reserved
                 if (this._reserved.has(gap)) gap++
                 else return gap

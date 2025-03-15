@@ -34,8 +34,8 @@
       "@": 1011
     "@": schemat:Catalog
   readonly: false
-  id_start_exclusive: 1
-  id_start_forbidden: 1000
+  min_id_exclusive: 1
+  min_id_forbidden: 1000
   __category:
     "@": 12
 - __id: 1004
@@ -50,8 +50,8 @@
       "@": 1014
     "@": schemat:Catalog
   readonly: false
-  id_start_exclusive: 1001
-  id_start_forbidden: 5000
+  min_id_exclusive: 1001
+  min_id_forbidden: 5000
   __category:
     "@": 12
 - __id: 1005
@@ -204,8 +204,8 @@
       "@": 1022
     "@": schemat:Catalog
   readonly: false
-  id_start_exclusive: 5000
-  id_start_forbidden: null
+  min_id_exclusive: 5000
+  min_id_forbidden: null
   __category:
     "@": 12
 - __id: 1017
@@ -421,7 +421,7 @@
     "@": 1016
   file_prefix: 03_test
   readonly: false
-  id_start_exclusive: 10000
+  min_id_exclusive: 10000
   __category:
     "@": 12
   data_sequence:
