@@ -512,7 +512,8 @@
       "@": schemat/types/type.js:INTEGER
     shard3:
       info: Base-3 (3**k) shard determining the valid set of IDs for objects inserted
-        into this ring in the 'sharded' zone. Should never be modified after the
+        into this ring in the 'sharded' zone. This shard should *not* overlap
+        with the shard of any lower ring; and should never be modified after the
         ring has been created.
       "@": schemat/types/type.js:SHARD
     "@": schemat:Catalog
