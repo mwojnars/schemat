@@ -491,14 +491,13 @@
       "@": schemat/types/type.js:STRING
     min_id_exclusive:
       info: "Lower bound of the exclusive ID insert zone that extends up to
-        `min_id_forbidden` (if present) or `min_id_sharded`. During
-        inserts, any ID from this range can be assigned to new objects created
-        in this ring. If `min_id_exclusive` is missing, there's no exclusive
-        zone and only the IDs from the sharded zone starting at
-        `min_id_sharded` are used for inserts. IMPORTANT: updates are NOT
-        affected by these settings, and any ID from a lower ring (even if
-        disallowed for inserts) can be saved here in this ring as an override of
-        a lower-ring version of the record."
+        `min_id_forbidden` (if present) or `min_id_sharded`. During inserts, any
+        integer from this range can be assigned as an ID to new objects in this
+        ring. If `min_id_exclusive` is missing, there's no exclusive zone and
+        only the IDs from the sharded zone starting at `min_id_sharded` are used
+        for inserts. IMPORTANT: updates are NOT affected by these settings, and
+        any ID from a lower ring (even if disallowed for inserts) can be saved
+        here in this ring as an override of a lower-ring version of the record."
       "@": schemat/types/type.js:INTEGER
     min_id_forbidden:
       info: "The end of the exclusive ID insert zone. No ID value in the range from
