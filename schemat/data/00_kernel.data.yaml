@@ -478,11 +478,17 @@
     readonly:
       "@": schemat/types/type.js:BOOLEAN
     id_start_exclusive:
-      info: the lowest ID that can be inserted in this ring (does *not* affect updates)
+      info: "The beginning of the exclusive ID range that spans up to
+        `id_start_forbidden` or `id_start_sharded` (whatever is lower). During
+        inserts, any ID from this range can be assigned to new objects. If
+        missing, only IDs from the sharded range starting at `id_start_sharded`
+        are used for inserts. IMPORTANT: updates are NOT affected by these
+        settings, so any ID from a lower ring can be overriden here in this
+        ring."
       "@": schemat/types/type.js:INTEGER
     id_start_forbidden:
-      info: upper bound for IDs inserted in this ring (all IDs must be strictly lower than
-        this)
+      info: upper bound for IDs inserted in this ring (all IDs must be strictly lower
+        than this)
       "@": schemat/types/type.js:INTEGER
     data_sequence:
       info: DataSequence that keeps all primary objects of this ring
