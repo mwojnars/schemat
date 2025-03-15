@@ -489,8 +489,10 @@
         a lower-ring version of the record."
       "@": schemat/types/type.js:INTEGER
     id_start_forbidden:
-      info: upper bound for IDs inserted in this ring (all IDs must be strictly lower
-        than this)
+      info: "The end of the exclusive ID insert zone. No ID value in the range from
+        id_start_forbidden to id_start_sharded-1 can be used for new records
+        inserted in this ring. IMPORTANT: updates are not affected by this
+        setting."
       "@": schemat/types/type.js:INTEGER
     data_sequence:
       info: DataSequence that keeps all primary objects of this ring
