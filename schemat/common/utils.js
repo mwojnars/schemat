@@ -432,42 +432,32 @@ export const isPromise = Types.isPromise
 export let T = Types                    // T is an alias for Types
 
 
-/**********************************************************************************************************************/
+/*************************************************************************************************
+ **
+ **  MATH
+ **
+ */
 
-export class Maths {
-    /* Common math operations. */
-
-    static argmin = (arr, order, direction = 1) => {
-        /* Position of the lowest element in `arr` according to the ordering function: order(a,b)*direction.
-           If there are two or more such elements, their lowest index is returned.
-         */
-        if (!arr.length) return undefined
-        if (!order) order = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
-        let pos = -1         // current position of the minimum
-        arr.forEach((v,i) => { if ((v !== undefined) && (pos < 0 || order(v,arr[pos]) * direction < 0)) pos = i })
-        return pos >= 0 ? pos : undefined
-    }
-    static argmax = (arr, order) => { return Maths.argmax(arr, order, -1) }
-
-    static min = (arr, order) => {
-        /* Like Math.min(), but supports a custom ordering function, order(a,b), similar as array.sort() does;
-           and auto-skips `undefined` values. The order(a,b) function should return -1, 0, or 1.
-         */
-        let pos = Maths.argmin(arr, order)
-        if (pos === undefined) return undefined
-        return arr[pos]
-    }
-    // static min = (arr, order) => {
-    //     if (!order) order = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
-    //     let min = arr[0]
-    //     arr.forEach(v => {if (order(min,v) < 0) min = v})
-    //     return min
-    // }
-
+export function argmin(arr, order, direction = 1) {
+    /* Position of the lowest element in `arr` according to the ordering function: order(a,b)*direction.
+        If there are two or more such elements, their lowest index is returned.
+     */
+    if (!arr.length) return undefined
+    if (!order) order = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
+    let pos = -1         // current position of the minimum
+    arr.forEach((v,i) => { if ((v !== undefined) && (pos < 0 || order(v,arr[pos]) * direction < 0)) pos = i })
+    return pos >= 0 ? pos : undefined
 }
+export function argmax(arr, order) { return argmin(arr, order, -1) }
 
-export let M = Maths                    // M is an alias for Maths
-
+export function min(arr, order) {
+    /* Like Math.min(), but supports a custom ordering function, order(a,b), similar as array.sort() does;
+        and auto-skips `undefined` values. The order(a,b) function should return -1, 0, or 1.
+     */
+    let pos = argmin(arr, order)
+    if (pos === undefined) return undefined
+    return arr[pos]
+}
 
 export function gcd(a, b) {
     /* Calculate the greatest common divisor using the Euclidean algorithm. */
