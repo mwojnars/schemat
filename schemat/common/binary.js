@@ -187,6 +187,12 @@ export class BinaryMap extends CustomMap {
 
 /**********************************************************************************************************************/
 
+export function isPowerOfTwo(x) {
+    /* Check that the integer, `x`, is a power of 2. */
+    return Number.isInteger(x) && x > 0 && (x & (x - 1)) === 0
+}
+
+
 export function fnv1aHash(uint8array) {
     /* Fowler–Noll–Vo (FNV-1a) hash function for a Uint8Array. Calculations are performed on 32-bit integers. */
 
