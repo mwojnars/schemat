@@ -229,3 +229,24 @@ export class SpotDiff {
         return [...right_plan, ...left_plan]
     }
 }
+
+/**********************************************************************************************************************/
+
+export class Shard {
+    /* Abstract representation of a shard of integers (e.g., object IDs) as a pair of (offset, base),
+       where `offset` is the remainder and `base` is the divisor for testing if a value belongs to the shard.
+       Namely, a non-negative integer, X, belongs to the shard iff (X % base) == offset.
+     */
+    
+    constructor(offset, base) {
+        assert(Number.isInteger(offset) && Number.isInteger(base))
+        assert(0 <= offset && offset < base && base > 0)
+        this.offset = offset
+        this.base = base
+    }
+
+    get label() { return `${this.offset}/${this.base}` }
+    includes(x) { return (x % this.base) === this.offset }
+}
+
+

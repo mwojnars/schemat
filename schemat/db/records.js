@@ -1,5 +1,5 @@
 /*
-    Low-level representation of items and index records, for storage and transmission from/to the database.
+    Low-level representation of objects and index records, for storage and transmission from/to the database.
  */
 
 import {PLURAL} from "../common/globals.js";
