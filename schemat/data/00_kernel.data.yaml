@@ -512,6 +512,11 @@
         assign an ID number that hashes to this ring's `id_shard_bucket` under
         modulo `2**id_shard_degree`.
       "@": schemat/types/type.js:INTEGER
+    id_shard_dimension:
+      info: 2-base exponent determining the modulus (id_shard_modulus) to be used for
+        sharding IDs of objects inserted into this ring. Should never be
+        modified after the ring has been created.
+      "@": schemat/types/type.js:INTEGER
     "@": schemat:Catalog
   class: schemat/db/db.js:Ring
   __category:
