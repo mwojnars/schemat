@@ -458,10 +458,18 @@
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
   schema:
-    file_prefix:
-      info: Optional prefix to be prepended (with a separating dot '.') to names of
-        new data files created by sequences in this ring.
-      "@": schemat/types/type.js:STRING
+    data_sequence:
+      info: DataSequence that keeps all primary objects of this ring
+      category:
+        "@": 14
+      "@": schemat/types/type.js:REF
+    streams:
+      info: List of (named) data streams present in this ring. The 'objects' stream is
+        obligatory, as the primary stream containing web objects and providing
+        input data for other (derived) streams.
+      value_type:
+        "@": schemat/types/type.js:REF
+      "@": schemat/types/catalog_type.js:CATALOG
     lower_ring:
       info: Reference to the lower ring. If an object is not found in this ring, it is
         searched for in the lower_ring.
@@ -477,6 +485,10 @@
       "@": schemat/types/type.js:BOOLEAN
     readonly:
       "@": schemat/types/type.js:BOOLEAN
+    file_prefix:
+      info: Optional prefix to be prepended (with a separating dot '.') to names of
+        new data files created by sequences in this ring.
+      "@": schemat/types/type.js:STRING
     id_start_exclusive:
       info: "Lower bound of the exclusive ID insert zone that spans up to
         `id_start_forbidden` or `id_start_sharded` (whichever is lower). During
@@ -498,20 +510,8 @@
       info: Lower bound of the (right-unbounded) ID range where sharding holds for
         inserts into this ring. In this range, inserts of new objects can only
         assign an ID number that hashes to this ring's `id_shard_bucket` under
-        modulo `2^id_shard_degree`.
+        modulo `2**id_shard_degree`.
       "@": schemat/types/type.js:INTEGER
-    data_sequence:
-      info: DataSequence that keeps all primary objects of this ring
-      category:
-        "@": 14
-      "@": schemat/types/type.js:REF
-    streams:
-      info: List of (named) data streams present in this ring. The 'objects' stream is
-        obligatory, as the primary stream containing web objects and providing
-        input data for other (derived) streams.
-      value_type:
-        "@": schemat/types/type.js:REF
-      "@": schemat/types/catalog_type.js:CATALOG
     "@": schemat:Catalog
   class: schemat/db/db.js:Ring
   __category:
