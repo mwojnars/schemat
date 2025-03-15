@@ -478,10 +478,10 @@
     readonly:
       "@": schemat/types/type.js:BOOLEAN
     start_id:
-      info: the lowest ID allowed in this ring
+      info: the lowest ID that can be inserted in this ring (does *not* affect updates)
       "@": schemat/types/type.js:INTEGER
     stop_id:
-      info: upper bound for IDs in this ring (all IDs must be strictly lower than
+      info: upper bound for IDs inserted in this ring (all IDs must be strictly lower than
         this)
       "@": schemat/types/type.js:INTEGER
     data_sequence:
