@@ -2,7 +2,7 @@
     Common data structures and algorithms.
  */
 
-import {assert, commonPrefix, commonSuffix} from "./utils.js";
+import {assert, commonPrefix, commonSuffix, lcm} from "./utils.js";
 
 
 /**********************************************************************************************************************/
@@ -251,6 +251,10 @@ export class Shard {
 
     get label() { return `${this.offset}/${this.base}` }
     includes(x) { return (x % this.base) === this.offset }
-}
 
+    static common_base(shards) {
+        /* Return the least common multiple of the bases of the provided shards. */
+        return shards.reduce((a, b) => lcm(a, b.base), 1)
+    }
+}
 
