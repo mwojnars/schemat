@@ -36,8 +36,8 @@ export class Ring extends WebObject {
 
     // validity range [start, stop) for IDs of NEWLY-INSERTED objects in this ring;
     // UPDATED objects (re-inserted here from lower rings) can still have IDs from outside this range (!)
-    start_id = 0
-    stop_id
+    id_start_exclusive = 0
+    id_start_forbidden
 
     get stack() {
         /* Array of all rings in the stack, starting from the innermost ring (bottom of the stack) up to this one, included. */
@@ -46,7 +46,7 @@ export class Ring extends WebObject {
     }
 
 
-    __new__({name, lower_ring, file_prefix, file, start_id = 0, stop_id, readonly = false} = {}) {
+    __new__({name, lower_ring, file_prefix, file, id_start_exclusive = 0, id_start_forbidden, readonly = false} = {}) {
         this.name = name || (file && fileBaseName(file))
         this.lower_ring = lower_ring
 
@@ -57,8 +57,8 @@ export class Ring extends WebObject {
 
         this.file_prefix = file_prefix
         this.readonly = readonly
-        this.start_id = start_id
-        this.stop_id = stop_id
+        this.id_start_exclusive = id_start_exclusive
+        this.id_start_forbidden = id_start_forbidden
     }
 
     async __setup__({}) {
@@ -102,7 +102,7 @@ export class Ring extends WebObject {
     /***  Errors & internal checks  ***/
 
     writable(id)    { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be inserted here (only when inserting a new object, not updating an existing one from a lower ring)
-    valid_id(id)    { return this.start_id <= id && (!this.stop_id || id < this.stop_id) }
+    valid_id(id)    { return this.id_start_exclusive <= id && (!this.id_start_forbidden || id < this.id_start_forbidden) }
 
 
     /***  Data access & modification  ***/
