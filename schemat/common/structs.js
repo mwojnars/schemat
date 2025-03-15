@@ -233,9 +233,10 @@ export class SpotDiff {
 /**********************************************************************************************************************/
 
 export class Shard {
-    /* Abstract representation of a shard of integers (e.g., object IDs) as a pair of (offset, base),
+    /* Abstract representation of a shard of integers (e.g., object IDs) as a pair of the form (offset, base),
        where `offset` is the remainder and `base` is the divisor for testing if a value belongs to the shard.
        Namely, a non-negative integer, X, belongs to the shard iff (X % base) == offset.
+       This class implements basic arithmetic operations on shards.
      */
     
     constructor(offset, base) {
@@ -244,6 +245,9 @@ export class Shard {
         this.offset = offset
         this.base = base
     }
+
+    __getstate__()              { return [this.offset, this.base] }
+    static __setstate__(state)  { return new this(...state) }
 
     get label() { return `${this.offset}/${this.base}` }
     includes(x) { return (x % this.base) === this.offset }
