@@ -253,7 +253,7 @@ export class Type {
  */
 
 export class GENERIC extends Type {
-    /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
+    /* Accept all types of values like the base Type, but display them with a generic JSON widget. */
     static Widget = widgets.GENERIC_Widget
 }
 
@@ -538,6 +538,27 @@ export class BINARY extends GENERIC {
 export class TYPE extends GENERIC {
     static options = {class: Type}
     static Widget = widgets.TYPE_Widget
+}
+
+export class OBJECT extends GENERIC {
+    /* Accept objects of a given `class` (Object by default), with optional validation of their attributes. */
+    static options = {
+        class:  Object,
+        strict: true,           // if true, and `attrs` is defined, the object must not have any own attributes beyond those specified in attrs
+        attrs:  undefined,      // optional plain object interpreted as a dictionary of allowed attributes, {attr: type};
+                                // values of attributes are *not* replaced during validation
+    }
+    _validate(obj) {
+        obj = super._validate(obj)
+        let {attrs, strict} = this.options
+        if (!attrs) return obj
+        if (strict)
+            for (let attr of Object.keys(obj))
+                if (!(attr in attrs)) throw new ValueError(`object has unexpected attribute '${attr}'`)
+        for (let attr of Object.keys(attrs))
+            attrs[attr].validate(obj[attr])
+        return obj
+    }
 }
 
 // export class CLASS extends GENERIC {
