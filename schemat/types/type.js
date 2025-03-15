@@ -655,8 +655,8 @@ export class MAP extends Type {
 
 export class RECORD extends Type {
     /*
-    Data type of dict-like objects that contain a number of named fields, each one having ITS OWN type
-    - unlike in MAP, where all values share the same type. RECORD does not encode keys, but passes them unmodified.
+    Value type for data objects containing some predefined fields, each one having ITS OWN type
+    - unlike in a MAP, where all values share the same type.
     `this.type`, if present, is an exact class (NOT a base class) of accepted objects.
     */
 
