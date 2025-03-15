@@ -506,16 +506,15 @@
         setting."
       "@": schemat/types/type.js:INTEGER
     min_id_sharded:
-      info: Lower bound of the (right-unbounded) ID range where sharding holds for
-        inserts into this ring. In this range, inserts of new objects can only
-        assign an ID number that hashes to this ring's `id_shard_bucket` under
-        modulo `2**id_shard_degree`.
+      info: Lower bound of the (right-unbounded) range where ID sharding is applied to
+        inserts. In this range, inserts can only assign an ID that hashes to
+        this ring's `shard3.offset` under modulo `shard3.base`.
       "@": schemat/types/type.js:INTEGER
     shard3:
-      info: Base-3 shard defining the valid set of IDs for objects inserted into this
-        ring in the 'sharded' zone. Should never be modified after the ring has
-        been created.
-      "@": schemat/types/type.js:INTEGER
+      info: Base-3 (3**k) shard determining the valid set of IDs for objects inserted
+        into this ring in the 'sharded' zone. Should never be modified after the
+        ring has been created.
+      "@": schemat/types/type.js:SHARD
     "@": schemat:Catalog
   class: schemat/db/db.js:Ring
   __category:
