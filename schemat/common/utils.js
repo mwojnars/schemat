@@ -382,7 +382,7 @@ export class Types {
     static isPrimitiveClass = (cls) => [Number, String, Boolean, null].includes(cls)
     static isString       = (obj) => (typeof obj === 'string')
     static isNumber       = (obj) => (typeof obj === 'number' && !isNaN(obj))                 // true if obj is a valid number, not NaN
-    static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
+    static isArray        = (obj) => Array.isArray(obj)
     static isPOJO         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype) // true if obj is a plain object (POJO), no class assigned
     static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === null)             // true if obj is a null-prototype object (Object.create(null))
     static isPlain        = (obj) => (obj && (p => !p || p === Object.prototype)(Object.getPrototypeOf(obj)))   // true if obj is POJO or null-proto object
