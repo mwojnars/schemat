@@ -120,7 +120,7 @@ export class JSONx {
         }
 
         // wrap up the state in a dict, if needed, and append class designator
-        if (typeof state !== 'object' || JSONx.ATTR_CLASS in state)
+        if (!state || typeof state !== 'object' || Array.isArray(state) || JSONx.ATTR_CLASS in state)
             state = {[JSONx.ATTR_STATE]: state}
 
         let t = T.getPrototype(obj)
