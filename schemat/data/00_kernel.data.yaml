@@ -511,10 +511,12 @@
         this ring's `shard3.offset` under modulo `shard3.base`.
       "@": schemat/types/type.js:INTEGER
     shard3:
-      info: Base-3 (3**k) shard that defines the valid set of IDs for objects inserted
-        into this ring in the 'sharded' zone. This shard should *not* overlap
-        with the shard of a lower ring; and should never be modified after the
-        ring has been created.
+      info: Specification of a base-3 (3**k) shard that defines the valid set of IDs
+        for objects inserted into this ring in the 'sharded' zone. The shard's
+        base should be a power of 3 to avoid interference with block-level
+        sharding, which is in base 2. The shard should *not* overlap with the
+        shard of a lower ring; and its specification should never be modified
+        after the ring has been created.
       "@": schemat/types/type.js:SHARD
     "@": schemat:Catalog
   class: schemat/db/db.js:Ring
