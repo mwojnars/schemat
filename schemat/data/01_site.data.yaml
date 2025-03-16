@@ -422,14 +422,14 @@
   file_prefix: 03_test
   readonly: false
   min_id_exclusive: 10000
-  __category:
-    "@": 12
   data_sequence:
     "@": 1041
   streams:
     idx_category:
       "@": 1042
     "@": schemat:Catalog
+  __category:
+    "@": 12
 - __id: 1041
   ring:
     "@": 1040
