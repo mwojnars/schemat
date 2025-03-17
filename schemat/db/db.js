@@ -177,9 +177,6 @@ export class Ring extends WebObject {
          */
         let seq = this.sequence_names.get(name)
         yield* seq.scan({start, stop, limit, reverse, batch_size})
-
-        // let stream = this.streams.get(name)
-        // yield* stream.sequence.scan({start, stop, limit, reverse, batch_size})
     }
 
     async* scan_all() {
@@ -191,16 +188,26 @@ export class Ring extends WebObject {
 
     async 'action.create_sequence'(operator) {
         // TODO SEC: check permissions
-        let name = operator.name
-        if (this.streams[name]) throw new Error(`this stream name already exists: ${name}`)
         if (this.readonly) throw new Error("the ring is read-only")
-
         let opts = {ring: this.__ring, broadcast: true}
-        let Stream = await schemat.import('/$/sys/Stream')
-        this[`streams.${name}`] = await Stream.new(this, operator).save(opts)
+        let IndexSequence = await schemat.import('/$/sys/IndexSequence')
+        let seq = await IndexSequence.new(this).save(opts)
+        this.sequences.push(seq)
         await this.save(opts)
-        // await stream.build()
     }
+
+    // async 'action.create_stream'(operator) {
+    //     // TODO SEC: check permissions
+    //     let name = operator.name
+    //     if (this.streams[name]) throw new Error(`this stream name already exists: ${name}`)
+    //     if (this.readonly) throw new Error("the ring is read-only")
+    //
+    //     let opts = {ring: this.__ring, broadcast: true}
+    //     let Stream = await schemat.import('/$/sys/Stream')
+    //     this[`streams.${name}`] = await Stream.new(this, operator).save(opts)
+    //     await this.save(opts)
+    //     // await stream.build()
+    // }
 
     async rebuild_indexes() {
         /* Rebuild all derived sequences by making a full scan of the data sequence. */
