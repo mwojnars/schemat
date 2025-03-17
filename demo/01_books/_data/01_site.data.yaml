@@ -139,14 +139,10 @@
       "@": 15
     ObjectIndexOperator:
       "@": 16
-    Stream:
-      "@": 17
     Node:
       "@": 21
     IndexSequence:
       "@": 22
-    IndexStream:
-      "@": 28
     DataSequence:
       "@": 14
     DataBlock:
@@ -166,15 +162,6 @@
     "@": 1024
   __category:
     "@": 19
-- __id: 1011
-  operator:
-    "@": 23
-  ring:
-    "@": 1003
-  sequence:
-    "@": 1013
-  __category:
-    "@": 28
 - __id: 1012
   ring:
     "@": 1003
@@ -191,15 +178,6 @@
     - "@": 1026
   __category:
     "@": 22
-- __id: 1014
-  operator:
-    "@": 23
-  ring:
-    "@": 1004
-  sequence:
-    "@": 1028
-  __category:
-    "@": 28
 - __id: 1015
   sequence:
     "@": 1012
@@ -280,15 +258,6 @@
     "@": 1019
   __category:
     "@": 8
-- __id: 1022
-  operator:
-    "@": 23
-  ring:
-    "@": 1016
-  sequence:
-    "@": 1018
-  __category:
-    "@": 28
 - __id: 1023
   name: webserver
   num_workers: -1
@@ -461,20 +430,10 @@
 - __id: 1041
   ring:
     "@": 1040
-  stream: null
   blocks:
     - "@": 1043
   __category:
     "@": 14
-- __id: 1042
-  ring:
-    "@": 1040
-  operator:
-    "@": 23
-  __category:
-    "@": 28
-  sequence:
-    "@": 1044
 - __id: 1043
   sequence:
     "@": 1041
@@ -489,8 +448,6 @@
     "@": 1040
   operator:
     "@": 23
-  stream:
-    "@": 1042
   blocks:
     - "@": 1045
   __category:
