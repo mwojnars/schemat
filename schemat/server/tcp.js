@@ -23,13 +23,13 @@ class ChunkParser {
         // append new data to existing buffer
         this.buffer = Buffer.concat([this.buffer, data])
         
-        // find all complete messages (ending with newline)
+        // find all complete messages (ending with newline), only then UTF-8 decode each of them
+        // (if trying to decode full buffer, we might encounter a multi-byte character split across chunks)
         let start = 0
         let pos = 0
         
         while ((pos = this.buffer.indexOf('\n', start)) !== -1) {
-            // Extract complete message
-            let message = this.buffer.slice(start, pos).toString()
+            let message = this.buffer.slice(start, pos).toString()      // extract complete message
             if (message) this.callback(message)
             start = pos + 1
         }
