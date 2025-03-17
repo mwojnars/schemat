@@ -185,6 +185,10 @@ export class Operator extends WebObject {
        The same operator can be applied to multiple rings, producing a different sequence in each ring.
      */
 
+    key_spec
+    payload
+    file_prefix
+
     get record_schema() {
         /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
         return new RecordSchema(this.key_spec, this.payload)

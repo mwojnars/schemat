@@ -780,6 +780,10 @@
       type:
         "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
+    file_prefix:
+      info: Prefix (infix) inserted in file names of all new blocks created in data
+        sequences of this operator.
+      "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   __category:
     "@": 1
