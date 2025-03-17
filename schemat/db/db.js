@@ -45,10 +45,6 @@ export class Ring extends WebObject {
         return [...stack, this]
     }
 
-    get sequences__() {
-        return [...this.streams.values().map(stream => stream.sequence)]
-    }
-
 
     __new__({name, lower_ring, file_prefix, file, min_id_exclusive = 0, min_id_forbidden, readonly = false} = {}) {
         this.name = name || (file && fileBaseName(file))
@@ -197,7 +193,7 @@ export class Ring extends WebObject {
 
     async rebuild_indexes() {
         /* Rebuild all derived sequences by making a full scan of the data sequence. */
-        for (let seq of this.sequences__)
+        for (let seq of this.sequences)
             await seq.rebuild()
     }
 }
