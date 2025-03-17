@@ -179,6 +179,8 @@
 - __id: 1013
   ring:
     "@": 1003
+  operator:
+    "@": 23
   blocks:
     - "@": 1026
   __category:
@@ -234,6 +236,8 @@
 - __id: 1018
   ring:
     "@": 1016
+  operator:
+    "@": 23
   blocks:
     - "@": 1030
   __category:
@@ -325,6 +329,8 @@
 - __id: 1028
   ring:
     "@": 1004
+  operator:
+    "@": 23
   blocks:
     - "@": 1033
   __category:
@@ -479,6 +485,8 @@
 - __id: 1044
   ring:
     "@": 1040
+  operator:
+    "@": 23
   stream:
     "@": 1042
   blocks:
