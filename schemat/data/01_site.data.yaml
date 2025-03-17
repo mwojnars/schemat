@@ -57,6 +57,11 @@
   readonly: false
   min_id_exclusive: 1001
   min_id_forbidden: 5000
+  shard3:
+    =:
+      - 3
+      - 9
+    "@": schemat/common/structs.js:Shard
   __category:
     "@": 12
 - __id: 1005
@@ -211,6 +216,11 @@
   readonly: false
   min_id_exclusive: 5000
   min_id_forbidden: null
+  shard3:
+    =:
+      - 1
+      - 3
+    "@": schemat/common/structs.js:Shard
   __category:
     "@": 12
 - __id: 1017
@@ -426,13 +436,18 @@
     "@": 1016
   file_prefix: 03_test
   readonly: false
-  min_id_exclusive: 10000
   data_sequence:
     "@": 1041
   streams:
     idx_category:
       "@": 1042
     "@": schemat:Catalog
+  min_id_exclusive: 10000
+  shard3:
+    =:
+      - 6
+      - 9
+    "@": schemat/common/structs.js:Shard
   __category:
     "@": 12
 - __id: 1041
