@@ -612,6 +612,8 @@
     "@": 1009
 - __id: 17
   name: DataOperator
+  __prototype:
+    "@": 24
   __category:
     "@": 1
 - __id: 18
