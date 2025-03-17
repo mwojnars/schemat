@@ -26,9 +26,6 @@ export class Ring extends WebObject {
     data_sequence           // DataSequence containing all primary data of this ring
     sequences = []          // array of derived sequences (Sequence objects)
 
-    streams                 // Catalog of Streams in this ring
-    // storage              // distributed key-value stores of different type and characteristic ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping stream outputs
-
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 

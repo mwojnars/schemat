@@ -475,13 +475,6 @@
           "@": 13
         "@": schemat/types/type.js:REF
       "@": schemat/types/type.js:ARRAY
-    streams:
-      info: List of (named) data streams present in this ring. The 'objects' stream is
-        obligatory, as the primary stream containing web objects and providing
-        input data for other (derived) streams.
-      value_type:
-        "@": schemat/types/type.js:REF
-      "@": schemat/types/catalog_type.js:CATALOG
     lower_ring:
       info: Reference to the lower ring. If an object is not found in this ring, it is
         searched for in the lower_ring.
