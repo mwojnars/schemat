@@ -14,7 +14,7 @@ class ChunkParser {
     }
 
     feed(data) {
-        this.buffer += data
+        this.buffer += data.toString()
         let messages = this.buffer.split('\n')
         this.buffer = messages.pop()
         messages.forEach(msg => msg && this.callback(msg))
@@ -78,7 +78,7 @@ export class TCP_Sender {
             catch (e) { console.error('Invalid ACK:', msg) }
         })
 
-        socket.on('data', data => ack_parser.feed(data.toString()))
+        socket.on('data', data => ack_parser.feed(data))
         socket.on('close', () => {
             socket.removeAllListeners()
             this.sockets.delete(address)
@@ -114,7 +114,7 @@ export class TCP_Receiver {
                 // } catch (e) { console.error('Error while processing TCP message:', e) }
             })
 
-            socket.on('data', data => msg_parser.feed(data.toString()))
+            socket.on('data', data => msg_parser.feed(data))
             socket.on('error', () => socket.destroy())
         })
 
@@ -180,7 +180,7 @@ export class TCP_Receiver {
 //                 catch (e) { console.error('Invalid ACK:', msg) }
 //             })
 //
-//             socket.on('data', data => ack_parser.feed(data.toString()))
+//             socket.on('data', data => ack_parser.feed(data))
 //             socket.on('close', () => {
 //                 socket.removeAllListeners()
 //                 sockets.delete(address)
@@ -239,7 +239,7 @@ export class TCP_Receiver {
 //                 } catch (e) { console.error('Invalid message:', e) }
 //             })
 //
-//             socket.on('data', data => msg_parser.feed(data.toString()))
+//             socket.on('data', data => msg_parser.feed(data))
 //             socket.on('error', () => socket.destroy())
 //         })
 //

@@ -242,8 +242,9 @@ export class Shard {
     constructor(offset, base) {
         assert(Number.isInteger(offset) && Number.isInteger(base))
         assert(0 <= offset && offset < base && base > 0)
-        this.offset = offset
-        this.base = base
+
+        this.offset = offset    // the remainder, a number in [0,1,...,base-1]
+        this.base = base        // the divisor
     }
 
     __getstate__()              { return [this.offset, this.base] }
