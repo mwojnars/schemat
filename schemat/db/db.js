@@ -45,6 +45,10 @@ export class Ring extends WebObject {
         return [...stack, this]
     }
 
+    get sequences() {
+        return this.streams.map(stream => stream.sequence)
+    }
+
 
     __new__({name, lower_ring, file_prefix, file, min_id_exclusive = 0, min_id_forbidden, readonly = false} = {}) {
         this.name = name || (file && fileBaseName(file))
@@ -168,7 +172,7 @@ export class Ring extends WebObject {
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
         let stream = this.streams.get(name)
-        yield* stream.scan({start, stop, limit, reverse, batch_size})
+        yield* stream.sequence.scan({start, stop, limit, reverse, batch_size})
     }
 
     async* scan_all() {
@@ -194,7 +198,7 @@ export class Ring extends WebObject {
     async rebuild_indexes() {
         /* Rebuild all derived streams by making a full scan of the data sequence. */
         for (let stream of this.streams.values())
-            await stream.rebuild()
+            await stream.sequence.rebuild()
     }
 }
 

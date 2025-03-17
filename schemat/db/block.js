@@ -39,8 +39,8 @@ export class Block extends Agent {
     async __setup__() {
         print('Block.__setup__() ...')
         if (!this.sequence.is_loaded()) await this.sequence.load()
-        if (this.stream && !this.stream?.is_loaded()) await this.stream.load()
         if (!this.ring.is_loaded()) await this.ring.load()
+        // if (this.stream && !this.stream?.is_loaded()) await this.stream.load()
 
         this.__node ??= schemat.node
         this.filename ??= this._create_filename()
