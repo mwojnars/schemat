@@ -480,6 +480,8 @@ export class WebObject {
         return obj.load({sealed, activate})
     }
 
+    _print(...args) { print(`${schemat.node?.id}/#${schemat.process?.worker_id} in ${this.__label}`, ...args) }
+
 
     /***  Loading & initialization  ***/
 
