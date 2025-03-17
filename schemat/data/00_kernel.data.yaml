@@ -610,31 +610,6 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 17
-  name: Stream
-  schema:
-    ring:
-      info: The parent Ring of this data stream.
-      category:
-        "@": 12
-      "@": schemat/types/type.js:REF
-    operator:
-      info: The Operator that implements data processing logic of this stream.
-      category:
-        "@": 24
-      "@": schemat/types/type.js:REF
-    sequence:
-      info: The underlying Sequence where the records of this stream are stored.
-      category:
-        "@": 13
-      "@": schemat/types/type.js:REF
-    file_prefix:
-      info: Prefix (infix) to be inserted in file names of all new blocks created in
-        this stream.
-      "@": schemat/types/type.js:STRING
-    "@": schemat:Catalog
-  __category:
-    "@": 1
 - __id: 18
   name: Block
   info: A continuous subrange of records of a data/index sequence, physically

@@ -129,8 +129,6 @@
       "@": 15
     ObjectIndexOperator:
       "@": 16
-    Stream:
-      "@": 17
     Node:
       "@": 21
     IndexSequence:
