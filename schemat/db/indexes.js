@@ -110,7 +110,7 @@ export class ObjectIndexOperator extends IndexOperator {
         // print('schema:', schema)
 
         let entries = []
-        for (let field of this.key) {
+        for (let field of this.key) {       // find out the `type` of every `field`, then build the result catalog
             field = truncate_plural(field)
             let type = schema.get(field)
             if (!type) throw new Error(`unknown field in 'key': ${field}`)

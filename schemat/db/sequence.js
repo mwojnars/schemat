@@ -31,6 +31,8 @@ export class Sequence extends WebObject {
     operator
     file_prefix
 
+    // impute_name() { return this.operator?.name }
+
     __new__(ring, stream = undefined) {
         ring.assert_active()
         this.ring = ring
