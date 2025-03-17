@@ -25,7 +25,7 @@ export class Ring extends WebObject {
     file_prefix
     data_sequence           // DataSequence containing all primary data of this ring
 
-    streams                 // logical sequences of structured data records produced by particular data operators in this ring
+    streams                 // Catalog of Streams in this ring
     // storage              // distributed key-value stores of different type and characteristic ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping stream outputs
 
     name                    // human-readable name of this ring for find_ring()
@@ -46,7 +46,7 @@ export class Ring extends WebObject {
     }
 
     get sequences() {
-        return this.streams.map(stream => stream.sequence)
+        return [...this.streams.values().map(stream => stream.sequence)]
     }
 
 
@@ -196,9 +196,9 @@ export class Ring extends WebObject {
     }
 
     async rebuild_indexes() {
-        /* Rebuild all derived streams by making a full scan of the data sequence. */
-        for (let stream of this.streams.values())
-            await stream.sequence.rebuild()
+        /* Rebuild all derived sequences by making a full scan of the data sequence. */
+        for (let seq of this.sequences)
+            await seq.rebuild()
     }
 }
 
