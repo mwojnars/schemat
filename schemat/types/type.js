@@ -186,7 +186,7 @@ export class Type {
                 if (typeof method === 'function') return method.call(obj)
                 if (method !== undefined) throw new Error(`incorrect value of 'impute' option (${impute}), expected a method name`)
             }
-            throw new Error(`incorrect type of 'impute' option (${typeof impute})`)
+            else throw new Error(`incorrect type of 'impute' option (${typeof impute})`)
         }
 
         if (getter) {
