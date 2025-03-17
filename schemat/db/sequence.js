@@ -181,7 +181,7 @@ export class DataSequence extends Sequence {
 /**********************************************************************************************************************/
 
 export class Operator extends WebObject {
-    /* Specification of a data operator: source operator(s) + schema of output records + access methods (scan/min/max).
+    /* Specification of a data sequence operator: source operator(s) + schema of output records + access methods (scan/min/max).
        The same operator can be applied to multiple rings, producing a different sequence in each ring.
      */
 
