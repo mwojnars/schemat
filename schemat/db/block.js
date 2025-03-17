@@ -198,11 +198,11 @@ export class DataBlock extends Block {
         return JSON.stringify(plain)
     }
 
-    _move_down(req) {
+    _move_down(id, req) {
         /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring. */
         let ring = this.ring
         let lower = ring.lower_ring
-        if (!lower) throw new ObjectNotFound(null, {id: req.id})
+        if (!lower) throw new ObjectNotFound(null, {id})
         req.push_ring(ring)
         return lower
     }
@@ -224,7 +224,7 @@ export class DataBlock extends Block {
         let key = this._encode_id(id)
         let data = await this._storage.get(key)         // JSON string
         if (data) return this._annotate(data)
-        return this._move_down(req).select(id, req)
+        return this._move_down(id, req).select(id, req)
     }
 
     async cmd_insert(id, data) {
@@ -347,7 +347,7 @@ export class DataBlock extends Block {
          */
         let key = this._encode_id(id)
         let data = await this._storage.get(key)
-        if (data === undefined) return this._move_down(req).update(id, edits, req)
+        if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
         let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
         let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev.clone() to avoid repeated async initialization
@@ -404,7 +404,7 @@ export class DataBlock extends Block {
          */
         let key = this._encode_id(id)
         let data = await this._storage.get(key)
-        if (data === undefined) return this._move_down(req).delete(id, req)
+        if (data === undefined) return this._move_down(id, req).delete(id, req)
 
         if (this.ring.readonly)
             // TODO: find the first writable ring upwards from this one and write a tombstone for `id` there
