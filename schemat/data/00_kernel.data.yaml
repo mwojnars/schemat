@@ -465,7 +465,8 @@
       "@": schemat/types/type.js:REF
     sequences:
       info: Sequences that contain primary and derived data of this ring. The graph of
-        dependencies between sequences is defined through their operators.
+        dependencies between sequences is defined through their operators
+        (`operator` property).
       type:
         category:
           "@": 13
