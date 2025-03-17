@@ -190,6 +190,16 @@ export class Operator extends WebObject {
         return new RecordSchema(this.key_spec, this.payload)
     }
 
+    encode_key(key) {
+        /* Encode an array of field values [f1,f2,...] to binary representation (Uint8Array). */
+        return this.record_schema.encode_key(key)
+    }
+
+    decode_key(bin_key) {
+        /* Decode binary representation of a key back to an array of field values. */
+        return this.record_schema.decode_key(bin_key)
+    }
+
     async* scan(sequence, opts = {}) {
         /* Scan this operator's output in the [`start`, `stop`) range and yield BinaryRecords. See Sequence.scan() for details. */
         let {start, stop} = opts
