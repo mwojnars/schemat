@@ -19,7 +19,6 @@ export class Ring extends WebObject {
        input data to other (derived) streams: indexes, aggregations etc. Some streams may have special type (e.g., "blobs").
      */
 
-    static __category = 12  // ID of Ring category in the kernel
     static role = 'ring'    // Actor.role, for use in requests (DataRequest)
 
     file_prefix
@@ -250,7 +249,6 @@ export class Database extends WebObject {
        If ObjectNotFound/ReadOnly is caught, the next ring is tried.
        This class is only instantiated on the server, while the client uses a ClientDB proxy instead.
      */
-    static __category = 11  // ID of Database category
 
     // properties:
     top_ring

@@ -169,7 +169,6 @@ export class Block extends Agent {
 export class DataBlock extends Block {
     /* A Block that stores objects and provides the "insert" operation. */
 
-    static __category = 19
 
     _autoincrement = 1      // current maximum ID of records in this block; a new record is assigned id=_autoincrement+1 unless insert_mode='compact';
                             // transient field: NOT saved in the block's configuration in DB but re-initialized during block instantiation

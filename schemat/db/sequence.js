@@ -134,7 +134,6 @@ export class Sequence extends WebObject {
 /**********************************************************************************************************************/
 
 export class IndexSequence extends Sequence {
-    static __category = 22
 
     get file_prefix() { return 'index' }
 
@@ -151,7 +150,6 @@ export class DataSequence extends Sequence {
     /* Data sequence. The main sequence in the database. Consists of item records, {key: item-id, value: item-data}.
        Supports direct inserts (of new items) with auto-assignment and autoincrement of ID.
      */
-    static __category = 14
 
     get file_prefix() { return 'data' }
 
