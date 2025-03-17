@@ -261,5 +261,23 @@ export class Shard {
         /* Return the least common multiple of the bases of the provided shards. */
         return shards.reduce((a, b) => lcm(a, b.base), 1)
     }
+
+    overlaps(shard) {
+        /* Return true if this shard overlaps with `shard`. Calculated by first bringing both shards to the same base,
+           and then comparing the sets of offsets occurring after the up-scaling.
+         */
+        let base = Shard.common_base([this, shard])
+        let scale1 = base / this.base
+        let scale2 = base / shard.base
+
+        let offsets1 = [...Array(scale1).keys()].map(i => this.offset + i * this.base)
+        let offsets2 = [...Array(scale2).keys()].map(i => shard.offset + i * shard.base)
+
+        // find the intersection of the two sets
+        let common = offsets1.filter(o => offsets2.includes(o))
+        // if (common.length > 0) console.log(`shard ${this.label} overlaps with ${shard.label} at ${common[0]}/${base} slice`)
+
+        return common.length > 0
+    }
 }
 
