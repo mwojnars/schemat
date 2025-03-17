@@ -4,27 +4,14 @@ import {DataAccessError, ObjectNotFound} from "../common/errors.js";
 
 /**********************************************************************************************************************/
 
-export class Actor {
-    /* A "virtual" base interface for all classes that can process a data request.
-       Specifies what properties and methods a request processor should have.
-       This class is defined here for documenting purposes; it is not actually used anywhere in the codebase,
-       only because JavaScript doesn't have interfaces nor multiple inheritance.
-     */
-
-    static role
-}
-
 export class ProcessingStep {
     actor           // object that processed the request: a database, ring, sequence, block, ...
-    role            // type of the actor: 'app', 'db', 'ring', 'data', 'index', 'block', ... or undefined
-
     command         // (optional) command name, e.g.: 'select', 'update', 'delete', 'insert', ...
     args            // (optional) command arguments as args={arg1, arg2, ...}
     // response     // (optional) response from the actor after the step is completed
 
     constructor(actor, command, args) {
         this.actor = actor
-        this.role = actor?.constructor?.role
         this.command = command
         this.args = args
     }
@@ -95,7 +82,6 @@ export class DataRequest {
         const step = new ProcessingStep(actor, command, args)
         this.trace.push(step)
 
-        if (step.role) this[`current_${step.role}`] = actor
         if (command) this.command = command
         if (args) {
             this.args = args

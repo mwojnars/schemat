@@ -19,8 +19,6 @@ export class Ring extends WebObject {
        input data to other (derived) streams: indexes, aggregations etc. Some streams may have special type (e.g., "blobs").
      */
 
-    static role = 'ring'    // Actor.role, for use in requests (DataRequest)
-
     file_prefix
     data_sequence           // DataSequence containing all primary data of this ring
     sequences = []          // array of derived sequences (Sequence objects)
