@@ -23,20 +23,19 @@ export class Sequence extends WebObject {
      */
 
     ring                // parent Ring of this sequence
-    stream              // parent Stream of this sequence
+    // stream              // parent Stream of this sequence
+    operator            // Operator that defines this sequence's name, record schema and sources; same operators are shared across rings
     splits              // array of split points between blocks
     blocks              // array of Blocks that make up this sequence, can be empty []
     flush_delay         // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
-
-    operator
     file_prefix
 
     // impute_name() { return this.operator?.name }
 
-    __new__(ring, stream = undefined) {
+    __new__(ring, operator) {
         ring.assert_active()
         this.ring = ring
-        this.stream = stream
+        this.operator = operator
         this.blocks = []
     }
 
@@ -139,13 +138,6 @@ export class IndexSequence extends Sequence {
     static __category = 22
 
     get file_prefix() { return 'index' }
-
-    __new__(ring, stream) {
-        super.__new__(ring, stream)
-        // assert(filename.endsWith('.jl'))
-        // print('IndexSequence.__new__() creating a block')
-        // this.blocks.push(Block._draft(this, {filename}))
-    }
 
     async __setup__() {
         print('IndexSequence.__setup__() creating a block')
