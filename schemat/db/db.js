@@ -24,6 +24,7 @@ export class Ring extends WebObject {
 
     file_prefix
     data_sequence           // DataSequence containing all primary data of this ring
+    sequences = []          // array of derived sequences (Sequence objects)
 
     streams                 // Catalog of Streams in this ring
     // storage              // distributed key-value stores of different type and characteristic ('objects', 'blobs', 'indexes', 'aggregates', ...) for keeping stream outputs
@@ -91,8 +92,7 @@ export class Ring extends WebObject {
         await this.lower_ring?.load()
         await this.data_sequence.load()
 
-        // print(`this.sequences:`, this.sequences)
-        // for (let seq of this.sequences) await seq.load()
+        for (let seq of this.sequences) await seq.load()
 
         for (let stream of this.streams?.values() || [])
             await stream.load()
