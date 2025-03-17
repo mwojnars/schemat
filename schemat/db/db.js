@@ -68,19 +68,22 @@ export class Ring extends WebObject {
     }
 
     async __setup__({}) {
-        /* Create `data_sequence` and all the same indexes as in the lower ring. */
+        /* Create `data_sequence`. Re-create all indexes from the lower ring. */
 
         let DataSequence = await schemat.import('/$/sys/DataSequence')
         this.data_sequence = DataSequence.new(this)
-        this.streams = new Catalog()
+        this.sequences = []
+        // this.streams = new Catalog()
 
         if (!this.lower_ring) return
         await this.lower_ring.load()
-        let IndexStream = await schemat.import('/$/sys/IndexStream')
+        let IndexSequence = await schemat.import('/$/sys/IndexSequence')
+        // let IndexStream = await schemat.import('/$/sys/IndexStream')
 
-        for (let stream of this.lower_ring.streams?.values() || []) {
-            let name = stream.operator.name
-            this.streams.set(name, IndexStream.new(this, stream.operator))
+        for (let seq of this.lower_ring.sequences) {
+            this.sequences.push(IndexSequence.new(this, seq.operator))
+            // let name = stream.operator.name
+            // this.streams.set(name, IndexStream.new(this, stream.operator))
         }
     }
 
@@ -91,11 +94,7 @@ export class Ring extends WebObject {
 
         await this.lower_ring?.load()
         await this.data_sequence.load()
-
         for (let seq of this.sequences) await seq.load()
-
-        for (let stream of this.streams?.values() || [])
-            await stream.load()
     }
 
     async erase(req) {
