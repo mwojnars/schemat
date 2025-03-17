@@ -166,11 +166,11 @@ export class DataSequence extends Sequence {
 
 export class Operator extends WebObject {
     /* Specification of a data operator: source operator(s) + schema of output records + access methods (scan/min/max).
-       The same operator can be applied to multiple rings, producing a different stream in each ring.
+       The same operator can be applied to multiple rings, producing a different sequence in each ring.
      */
 
     get record_schema() {
-        /* RecordSchema that defines the schema (key and payload) of output records produced by this operator. */
+        /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
         return new RecordSchema(this.key_spec, this.payload)
     }
 
