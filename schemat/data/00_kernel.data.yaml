@@ -463,6 +463,14 @@
       category:
         "@": 14
       "@": schemat/types/type.js:REF
+    sequences:
+      info: Sequences that contain primary and derived data of this ring. The graph of
+        dependencies between sequences is defined through their operators.
+      type:
+        category:
+          "@": 13
+        "@": schemat/types/type.js:REF
+      "@": schemat/types/type.js:ARRAY
     streams:
       info: List of (named) data streams present in this ring. The 'objects' stream is
         obligatory, as the primary stream containing web objects and providing
