@@ -28,6 +28,8 @@ export class Sequence extends WebObject {
     blocks              // array of Blocks that make up this sequence, can be empty []
     flush_delay         // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
 
+    operator
+    file_prefix
 
     __new__(ring, stream = undefined) {
         ring.assert_active()
@@ -44,6 +46,8 @@ export class Sequence extends WebObject {
         if (!this.ring) return                              // don't initialize internals when not yet assigned to a ring
         if (!this.ring.is_loaded()) this.ring.load()        // intentionally not awaited to avoid deadlocks
             // assert(this.ring.__meta.loading)
+
+        await this.operator?.load()
 
         // doing block.load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
         // doing the same later may cause infinite recursion, because the load() request for a block may be directed
@@ -103,8 +107,27 @@ export class Sequence extends WebObject {
         yield* block.scan({start, stop})
     }
 
+    async* scan(opts)       { yield* this.operator.scan(this, opts) }
+
+    change(key, prev, next) { return this.operator.change(this, key, prev, next) }
+
     async erase()   { return Promise.all(this.blocks.map(b => b.erase())) }
     async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
+
+    async build() {
+        for await (let {id, data} of this.ring.scan_all()) {
+            let key = data_schema.encode_key([id])
+            let obj = await WebObject.from_data(id, data, {activate: false})
+            await this.change(key, null, obj)
+        }
+        // for await (let record of this.source.scan())
+        //     await this.change(record.key, null, record)
+    }
+
+    async rebuild() {
+        await this.erase()
+        await this.build()
+    }
 }
 
 
@@ -112,6 +135,8 @@ export class Sequence extends WebObject {
 
 export class IndexSequence extends Sequence {
     static __category = 22
+
+    get file_prefix() { return 'index' }
 
     __new__(ring, stream) {
         super.__new__(ring, stream)
