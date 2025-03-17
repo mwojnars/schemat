@@ -29,6 +29,8 @@
   name: ring-kernel
   data_sequence:
     "@": 1012
+  sequences:
+    - "@": 1013
   streams:
     idx_category:
       "@": 1011
@@ -50,6 +52,8 @@
   lower_ring_writable: true
   data_sequence:
     "@": 1027
+  sequences:
+    - "@": 1028
   streams:
     idx_category:
       "@": 1014
