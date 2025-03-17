@@ -215,6 +215,8 @@
   lower_ring_writable: true
   data_sequence:
     "@": 1017
+  sequences:
+    - "@": 1018
   streams:
     idx_category:
       "@": 1022
@@ -448,6 +450,8 @@
   readonly: false
   data_sequence:
     "@": 1041
+  sequences:
+    - "@": 1044
   streams:
     idx_category:
       "@": 1042
