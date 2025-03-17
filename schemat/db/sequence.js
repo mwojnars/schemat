@@ -232,33 +232,33 @@ export class Stream extends WebObject {
     // derived          // derived streams that must be updated upon changes in this stream
     file_prefix
 
-    __new__(ring, operator) {
-        this.ring = ring
-        this.operator = operator
-    }
-
     async __init__() {
         await this.sequence.load()
         await this.operator.load()
     }
 
-    change(key, prev, next) { return this.operator.change(this.sequence, key, prev, next) }
-    async* scan(opts)       { yield* this.operator.scan(this.sequence, opts) }
-
-    async rebuild() {
-        await this.sequence.erase()
-        await this.build()
-    }
-
-    async build() {
-        for await (let {id, data} of this.ring.scan_all()) {
-            let key = data_schema.encode_key([id])
-            let obj = await WebObject.from_data(id, data, {activate: false})
-            await this.change(key, null, obj)
-        }
-        // for await (let record of this.source.scan())
-        //     await this.change(record.key, null, record)
-    }
+    // __new__(ring, operator) {
+    //     this.ring = ring
+    //     this.operator = operator
+    // }
+    //
+    // change(key, prev, next) { return this.operator.change(this.sequence, key, prev, next) }
+    // async* scan(opts)       { yield* this.operator.scan(this.sequence, opts) }
+    //
+    // async rebuild() {
+    //     await this.sequence.erase()
+    //     await this.build()
+    // }
+    //
+    // async build() {
+    //     for await (let {id, data} of this.ring.scan_all()) {
+    //         let key = data_schema.encode_key([id])
+    //         let obj = await WebObject.from_data(id, data, {activate: false})
+    //         await this.change(key, null, obj)
+    //     }
+    //     // for await (let record of this.source.scan())
+    //     //     await this.change(record.key, null, record)
+    // }
 }
 
 // export class ObjectsStream extends Stream {
