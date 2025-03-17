@@ -676,13 +676,6 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 20
-  name: ObjectsStream
-  class: schemat/db/sequence.js:ObjectsStream
-  __prototype:
-    "@": 17
-  __category:
-    "@": 1
 - __id: 21
   name: Node
   class: schemat/server/node.js:Node
