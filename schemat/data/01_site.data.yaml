@@ -139,6 +139,8 @@
       "@": 19
     Block:
       "@": 18
+    DataOperator:
+      "@": 17
     "@": schemat:Catalog
   __container:
     "@": 1019
