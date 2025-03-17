@@ -36,6 +36,11 @@
   readonly: false
   min_id_exclusive: 1
   min_id_forbidden: 1000
+  shard3:
+    =:
+      - 0
+      - 9
+    "@": schemat/common/structs.js:Shard
   __category:
     "@": 12
 - __id: 1004
