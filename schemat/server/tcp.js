@@ -8,16 +8,32 @@ let net = await server_import('node:net')
 
 class ChunkParser {
     // Generic chunk reassembly handler using newline delimiter
+    // Handles UTF-8 encoding properly when chunks might split across character boundaries
     constructor(callback) {
-        this.buffer = ''
+        this.buffer = Buffer.alloc(0)
         this.callback = callback    // can be async, but the returned promise is not awaited
     }
 
     feed(data) {
-        this.buffer += data.toString()
-        let messages = this.buffer.split('\n')
-        this.buffer = messages.pop()
-        messages.forEach(msg => msg && this.callback(msg))
+        // this.buffer += data.toString()
+        // let messages = this.buffer.split('\n')
+        // this.buffer = messages.pop()
+        // messages.forEach(msg => msg && this.callback(msg))
+
+        // append new data to existing buffer
+        this.buffer = Buffer.concat([this.buffer, data])
+        
+        // find all complete messages (ending with newline)
+        let start = 0
+        let pos = 0
+        
+        while ((pos = this.buffer.indexOf('\n', start)) !== -1) {
+            // Extract complete message
+            let message = this.buffer.slice(start, pos).toString()
+            if (message) this.callback(message)
+            start = pos + 1
+        }
+        this.buffer = this.buffer.slice(start)      // keep remaining incomplete message in buffer
     }
 }
 
