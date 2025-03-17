@@ -45,7 +45,7 @@ export class Ring extends WebObject {
         return [...stack, this]
     }
 
-    get sequences() {
+    get sequences__() {
         return [...this.streams.values().map(stream => stream.sequence)]
     }
 
@@ -197,7 +197,7 @@ export class Ring extends WebObject {
 
     async rebuild_indexes() {
         /* Rebuild all derived sequences by making a full scan of the data sequence. */
-        for (let seq of this.sequences)
+        for (let seq of this.sequences__)
             await seq.rebuild()
     }
 }
