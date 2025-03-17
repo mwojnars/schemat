@@ -182,7 +182,7 @@ export class Ring extends WebObject {
             yield record.decode_object()
     }
 
-    async 'action.create_stream'(operator) {
+    async 'action.create_sequence'(operator) {
         // TODO SEC: check permissions
         let name = operator.name
         if (this.streams[name]) throw new Error(`this stream name already exists: ${name}`)
@@ -344,7 +344,7 @@ export class Database extends WebObject {
         // create streams for `index`, in `ring` and all higher rings
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
-            await ring.action.create_stream(index)
+            await ring.action.create_sequence(index)
         }
     }
 
