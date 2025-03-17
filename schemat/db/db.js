@@ -69,18 +69,13 @@ export class Ring extends WebObject {
         let DataSequence = await schemat.import('/$/sys/DataSequence')
         this.data_sequence = DataSequence.new(this)
         this.sequences = []
-        // this.streams = new Catalog()
 
         if (!this.lower_ring) return
         await this.lower_ring.load()
         let IndexSequence = await schemat.import('/$/sys/IndexSequence')
-        // let IndexStream = await schemat.import('/$/sys/IndexStream')
 
-        for (let seq of this.lower_ring.sequences) {
+        for (let seq of this.lower_ring.sequences)
             this.sequences.push(IndexSequence.new(this, seq.operator))
-            // let name = stream.operator.name
-            // this.streams.set(name, IndexStream.new(this, stream.operator))
-        }
     }
 
     async __init__() {
@@ -190,19 +185,6 @@ export class Ring extends WebObject {
         this.sequences.push(seq)
         await this.save(opts)
     }
-
-    // async 'action.create_stream'(operator) {
-    //     // TODO SEC: check permissions
-    //     let name = operator.name
-    //     if (this.streams[name]) throw new Error(`this stream name already exists: ${name}`)
-    //     if (this.readonly) throw new Error("the ring is read-only")
-    //
-    //     let opts = {ring: this.__ring, broadcast: true}
-    //     let Stream = await schemat.import('/$/sys/Stream')
-    //     this[`streams.${name}`] = await Stream.new(this, operator).save(opts)
-    //     await this.save(opts)
-    //     // await stream.build()
-    // }
 
     async rebuild_indexes() {
         /* Rebuild all derived sequences by making a full scan of the data sequence. */
