@@ -469,6 +469,7 @@
         according to the rules defined by each sequence's `operator`. The graph
         of dependencies (connections) between sequences is defined through their
         operators."
+      default: []
       type:
         category:
           "@": 13
