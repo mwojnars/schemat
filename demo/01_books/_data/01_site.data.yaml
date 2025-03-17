@@ -40,6 +40,11 @@
   readonly: false
   min_id_exclusive: 1
   min_id_forbidden: 1000
+  shard3:
+    =:
+      - 0
+      - 9
+    "@": schemat/common/structs.js:Shard
   __category:
     "@": 12
 - __id: 1004
@@ -56,6 +61,11 @@
   readonly: false
   min_id_exclusive: 1001
   min_id_forbidden: 5000
+  shard3:
+    =:
+      - 3
+      - 9
+    "@": schemat/common/structs.js:Shard
   __category:
     "@": 12
 - __id: 1005
@@ -179,6 +189,8 @@
 - __id: 1013
   ring:
     "@": 1003
+  operator:
+    "@": 23
   blocks:
     - "@": 1026
   __category:
@@ -216,6 +228,11 @@
   readonly: false
   min_id_exclusive: 5000
   min_id_forbidden: null
+  shard3:
+    =:
+      - 1
+      - 3
+    "@": schemat/common/structs.js:Shard
   __category:
     "@": 12
 - __id: 1017
@@ -229,6 +246,8 @@
 - __id: 1018
   ring:
     "@": 1016
+  operator:
+    "@": 23
   blocks:
     - "@": 1030
   __category:
@@ -320,6 +339,8 @@
 - __id: 1028
   ring:
     "@": 1004
+  operator:
+    "@": 23
   blocks:
     - "@": 1033
   __category:
@@ -431,15 +452,20 @@
     "@": 1016
   file_prefix: 03_test
   readonly: false
-  min_id_exclusive: 10000
-  __category:
-    "@": 12
   data_sequence:
     "@": 1041
   streams:
     idx_category:
       "@": 1042
     "@": schemat:Catalog
+  min_id_exclusive: 10000
+  shard3:
+    =:
+      - 6
+      - 9
+    "@": schemat/common/structs.js:Shard
+  __category:
+    "@": 12
 - __id: 1041
   ring:
     "@": 1040
@@ -469,6 +495,8 @@
 - __id: 1044
   ring:
     "@": 1040
+  operator:
+    "@": 23
   stream:
     "@": 1042
   blocks:
