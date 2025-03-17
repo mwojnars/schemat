@@ -35,10 +35,6 @@
     "@": 1012
   sequences:
     - "@": 1013
-  streams:
-    idx_category:
-      "@": 1011
-    "@": schemat:Catalog
   readonly: false
   min_id_exclusive: 1
   min_id_forbidden: 1000
@@ -58,10 +54,6 @@
     "@": 1027
   sequences:
     - "@": 1028
-  streams:
-    idx_category:
-      "@": 1014
-    "@": schemat:Catalog
   readonly: false
   min_id_exclusive: 1001
   min_id_forbidden: 5000
@@ -227,10 +219,6 @@
     "@": 1017
   sequences:
     - "@": 1018
-  streams:
-    idx_category:
-      "@": 1022
-    "@": schemat:Catalog
   readonly: false
   min_id_exclusive: 5000
   min_id_forbidden: null
@@ -462,10 +450,6 @@
     "@": 1041
   sequences:
     - "@": 1044
-  streams:
-    idx_category:
-      "@": 1042
-    "@": schemat:Catalog
   min_id_exclusive: 10000
   shard3:
     =:
