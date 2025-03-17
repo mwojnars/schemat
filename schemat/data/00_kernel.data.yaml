@@ -541,11 +541,6 @@
       category:
         "@": 24
       "@": schemat/types/type.js:REF
-    stream:
-      info: parent Stream of this sequence
-      category:
-        "@": 17
-      "@": schemat/types/type.js:REF
     blocks:
       info: array of Blocks containing records of this sequence
       type:
