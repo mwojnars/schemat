@@ -45,6 +45,11 @@ export class Ring extends WebObject {
         return [...stack, this]
     }
 
+    get sequence_names() {
+        /* Map of sequences by their operator's name. */
+        return new Map(this.sequences.map(seq => [seq.operator.name, seq]))
+    }
+
 
     __new__({name, lower_ring, file_prefix, file, min_id_exclusive = 0, min_id_forbidden, readonly = false} = {}) {
         this.name = name || (file && fileBaseName(file))
@@ -85,6 +90,9 @@ export class Ring extends WebObject {
 
         await this.lower_ring?.load()
         await this.data_sequence.load()
+
+        // print(`this.sequences:`, this.sequences)
+        // for (let seq of this.sequences) await seq.load()
 
         for (let stream of this.streams?.values() || [])
             await stream.load()
