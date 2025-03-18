@@ -117,18 +117,18 @@ export class Sequence extends WebObject {
     async erase()   { return Promise.all(this.blocks.map(b => b.erase())) }
     async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
 
-    async rebuild() {
-        /* Erase this (derived) sequence and build it from scratch by re-scanning the data_sequence. */
-        await this.erase()
-
-        for await (let {id, data} of this.ring.scan_all()) {
-            let key = data_schema.encode_key([id])
-            let obj = await WebObject.from_data(id, data, {activate: false})
-            await this.apply_change(key, null, obj)
-        }
-        // for await (let record of this.source.scan())
-        //     await this.apply_change(record.key, null, record)
-    }
+    // async rebuild() {
+    //     /* Erase this (derived) sequence and build it from scratch by re-scanning the data_sequence. */
+    //     await this.erase()
+    //
+    //     for await (let {id, data} of this.ring.scan_all()) {
+    //         let key = data_schema.encode_key([id])
+    //         let obj = await WebObject.from_data(id, data, {activate: false})
+    //         await this.apply_change(key, null, obj)
+    //     }
+    //     // for await (let record of this.source.scan())
+    //     //     await this.apply_change(record.key, null, record)
+    // }
 }
 
 
