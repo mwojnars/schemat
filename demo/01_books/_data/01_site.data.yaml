@@ -149,6 +149,8 @@
       "@": 19
     Block:
       "@": 18
+    DataOperator:
+      "@": 17
     "@": schemat:Catalog
   __container:
     "@": 1019
@@ -165,6 +167,8 @@
 - __id: 1012
   ring:
     "@": 1003
+  operator:
+    "@": 20
   blocks:
     - "@": 1015
   __category:
@@ -210,6 +214,8 @@
 - __id: 1017
   ring:
     "@": 1016
+  operator:
+    "@": 20
   blocks:
     - "@": 1029
     - "@": 1010
@@ -295,6 +301,8 @@
 - __id: 1027
   ring:
     "@": 1004
+  operator:
+    "@": 20
   blocks:
     - "@": 1032
   __category:
@@ -430,6 +438,8 @@
 - __id: 1041
   ring:
     "@": 1040
+  operator:
+    "@": 20
   blocks:
     - "@": 1043
   __category:
