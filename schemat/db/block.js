@@ -89,6 +89,10 @@ export class Block extends Agent {
             throw new Error(`unsupported storage type '${format}' in [${this.__id}] for ${this.filename}`)
     }
 
+    encode_key(key) { return this.sequence.encode_key(key) }
+    decode_key(bin) { return this.sequence.decode_key(bin) }
+
+
     async __start__() {
         let storage_class = this._detect_storage_class()
         let storage = new storage_class(this.filename, this)
@@ -182,12 +186,12 @@ export class DataBlock extends Block {
     }
 
     async assert_unique(id, msg) {
-        let key = this._encode_id(id)
+        let key = this.encode_id(id)
         if (await this._storage.get(key))
             throw new DataConsistencyError(msg || "record with this ID already exists", {id})
     }
 
-    _encode_id(id) { return this.sequence.encode_id(id) }
+    encode_id(id)  { return this.sequence.encode_id(id) }
     decode_id(key) { return this.sequence.decode_id(key) }
 
     _annotate(json) {
@@ -220,7 +224,7 @@ export class DataBlock extends Block {
     async 'remote.select'(_, id, req) { return this._select(id, req) }
 
     async _select(id, req) {
-        let key = this._encode_id(id)
+        let key = this.encode_id(id)
         let data = await this._storage.get(key)         // JSON string
         if (data) return this._annotate(data)
         return this._move_down(id, req).select(id, req)
@@ -343,7 +347,7 @@ export class DataBlock extends Block {
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring. Return {id, data}.
          */
-        let key = this._encode_id(id)
+        let key = this.encode_id(id)
         let data = await this._storage.get(key)
         if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
@@ -372,7 +376,7 @@ export class DataBlock extends Block {
 
     async cmd_upsave(id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
-        let key = this._encode_id(id)
+        let key = this.encode_id(id)
         if (await this._storage.get(key))
             throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
 
@@ -387,7 +391,7 @@ export class DataBlock extends Block {
     async _save(obj, prev = null) {
         let id = obj.id
         let data = obj.__json
-        let key = this._encode_id(id)
+        let key = this.encode_id(id)
 
         await this.put(key, data)
         await this.propagate_change(key, prev, obj)
@@ -400,7 +404,7 @@ export class DataBlock extends Block {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
-        let key = this._encode_id(id)
+        let key = this.encode_id(id)
         let data = await this._storage.get(key)
         if (data === undefined) return this._move_down(id, req).delete(id, req)
 

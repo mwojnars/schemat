@@ -84,7 +84,7 @@ export class Sequence extends WebObject {
 
 
     encode_key(key) { return this.operator.encode_key(key) }    // app > binary representation
-    decode_key(key) { return this.operator.decode_key(key) }    // binary > app representation
+    decode_key(bin) { return this.operator.decode_key(bin) }    // binary > app representation
 
     async put(key, value) {
         let block = this.find_block(key)
@@ -187,9 +187,9 @@ export class Operator extends WebObject {
         return this.record_schema.encode_key(key)
     }
 
-    decode_key(bin_key) {
+    decode_key(bin) {
         /* Decode binary representation of a key back to an array of field values. */
-        return this.record_schema.decode_key(bin_key)
+        return this.record_schema.decode_key(bin)
     }
 
     async* scan(sequence, opts = {}) {
