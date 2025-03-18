@@ -83,6 +83,9 @@ export class Sequence extends WebObject {
     }
 
 
+    encode_key(key) { return this.operator.encode_key(key) }    // app > binary representation
+    decode_key(key) { return this.operator.decode_key(key) }    // binary > app representation
+
     async put(key, value) {
         let block = this.find_block(key)
         if (!block.is_loaded()) block = await block.load()
