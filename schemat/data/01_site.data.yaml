@@ -291,6 +291,8 @@
 - __id: 1027
   ring:
     "@": 1004
+  operator:
+    "@": 20
   blocks:
     - "@": 1032
   __category:
@@ -426,6 +428,8 @@
 - __id: 1041
   ring:
     "@": 1040
+  operator:
+    "@": 20
   blocks:
     - "@": 1043
   __category:
