@@ -172,7 +172,8 @@ export class JsonIndexStorage extends MemoryStorage {
         this._records.clear()
 
         for (let [key, value] of records)
-            this._records.set(Uint8Array.from(key), value ? JSON.stringify(value) : '')
+            this._records.set(this.block.encode_key(key), value ? JSON.stringify(value) : '')
+            // this._records.set(Uint8Array.from(key), value ? JSON.stringify(value) : '')
     }
 
     async flush() {
@@ -180,8 +181,9 @@ export class JsonIndexStorage extends MemoryStorage {
         // print(`YamlIndexStorage flushing ${this._records.size} records to ${this.filename}...`)
 
         let lines = [...this.scan()].map(([binary_key, json_value]) => {
-            let key = JSON.stringify(Array.from(binary_key))
-            return json_value ? `[${key}, ${json_value}]` : `[${key}]`
+            let key = this.block.decode_key(binary_key)
+            let json_key = JSON.stringify(key)  //Array.from(binary_key))
+            return json_value ? `[${json_key}, ${json_value}]` : `[${json_key}]`
         })
         fs.writeFileSync(this.filename, lines.join('\n') + '\n', 'utf8')
         this.dirty = false
