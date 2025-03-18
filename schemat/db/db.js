@@ -351,12 +351,8 @@ export class BootDatabase extends Database {
         // assert(this.is_newborn())           // open() is a mutating operation, it can only be called on a newborn object (not in DB)
         print(`creating bootstrap database...`)
         let top
-
-        for (const spec of ring_specs) {
-            let ring = await BootRing.new(spec).load()
-            ring.lower_ring = top
-            top = ring
-        }
+        for (let spec of ring_specs)
+            top = await BootRing.new({...spec, lower_ring: top}).load()
         this.top_ring = top
     }
 
