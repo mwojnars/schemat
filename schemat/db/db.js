@@ -194,12 +194,6 @@ export class Ring extends WebObject {
             await Promise.all(this.sequences.map(seq => seq.apply_change(key, null, obj)))
         }
     }
-
-    // async rebuild_indexes() {
-    //     /* Rebuild all derived sequences by making a full scan of the data sequence. */
-    //     for (let seq of this.sequences)
-    //         await seq.rebuild()
-    // }
 }
 
 export class BootRing extends Ring {
