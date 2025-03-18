@@ -154,11 +154,6 @@
     "@": 1024
   __category:
     "@": 19
-- __id: 1011
-  name: data
-  file_prefix: data
-  __category:
-    "@": 17
 - __id: 1012
   ring:
     "@": 1003
