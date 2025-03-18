@@ -109,7 +109,7 @@ export class Sequence extends WebObject {
 
     async* scan(opts)       { yield* this.operator.scan(this, opts) }
 
-    change(key, prev, next) { return this.operator.change(this, key, prev, next) }
+    apply_change(key, prev, next) { return this.operator.apply_change(this, key, prev, next) }
 
     async erase()   { return Promise.all(this.blocks.map(b => b.erase())) }
     async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
@@ -121,10 +121,10 @@ export class Sequence extends WebObject {
         for await (let {id, data} of this.ring.scan_all()) {
             let key = data_schema.encode_key([id])
             let obj = await WebObject.from_data(id, data, {activate: false})
-            await this.change(key, null, obj)
+            await this.apply_change(key, null, obj)
         }
         // for await (let record of this.source.scan())
-        //     await this.change(record.key, null, record)
+        //     await this.apply_change(record.key, null, record)
     }
 }
 

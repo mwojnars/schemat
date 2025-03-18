@@ -35,13 +35,13 @@ export class IndexOperator extends DerivedOperator {
     //     // return this.source.record_schema
     // }
 
-    change(sequence /*Sequence or Subsequence*/, key, prev, next) {
+    apply_change(sequence /*Sequence or Subsequence*/, key, prev, next) {
         /* Update this index on the target `sequence` to apply a [prev > next] change that originated
            in the source sequence of this index. `prev` and `next` are source-sequence entities: objects or records.
            Missing 'prev' represents insertion; missing `next` represents deletion.
          */
 
-        // print(`change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
+        // print(`apply_change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
         // let sequence = ring.get_sequence('index', this.id)
 
         // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
