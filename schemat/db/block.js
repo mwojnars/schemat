@@ -188,6 +188,7 @@ export class DataBlock extends Block {
     }
 
     _encode_id(id) { return this.sequence.encode_id(id) }
+    decode_id(key) { return this.sequence.decode_id(key) }
 
     _annotate(json) {
         /* Append metadata (__meta) with ring & block ID to the JSON content of an object retrieved during select/update. */
@@ -321,12 +322,11 @@ export class DataBlock extends Block {
         if (!(this._storage instanceof MemoryStorage))
             throw new Error('Compact insert mode is only supported with MemoryStorage')
 
-        let seq  = this.sequence
-        let ring = seq.ring
+        let ring = this.ring
         let gap  = ring.min_id_exclusive
 
         for (let [key, value] of this._storage.scan()) {
-            let id = seq.decode_id(key)
+            let id = this.decode_id(key)
             if (id + 1 < ring.min_id_exclusive) continue    // skip records outside the ring's validity range
             while (gap < id)                                // found a gap before `id`? return it unless already reserved
                 if (this._reserved.has(gap)) gap++
