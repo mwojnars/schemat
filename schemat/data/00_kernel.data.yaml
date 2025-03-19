@@ -503,17 +503,20 @@
         for inserts. IMPORTANT: updates are NOT affected by these settings, and
         any ID from a lower ring (even if disallowed for inserts) can be saved
         here in this ring as an override of a lower-ring version of the record."
+      min: 1,
       "@": schemat/types/type.js:INTEGER
     min_id_forbidden:
       info: "The end of the exclusive ID insert zone. No ID value in the range from
         min_id_forbidden to min_id_sharded-1 can be used for new records
         inserted in this ring. IMPORTANT: updates are not affected by this
         setting."
+      min: 1
       "@": schemat/types/type.js:INTEGER
     min_id_sharded:
       info: Lower bound of the (right-unbounded) range where ID sharding is applied to
         inserts. In this range, inserts can only assign an ID that hashes to
         this ring's `shard3.offset` under modulo `shard3.base`.
+      min: 1,
       default: 1
       "@": schemat/types/type.js:INTEGER
     shard3:
