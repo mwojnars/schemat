@@ -49,6 +49,11 @@ export class Ring extends WebObject {
         return new Map(this.sequences.map(seq => [seq.operator.name, seq]))
     }
 
+    get id_zones() {
+        // `min_id_sharded` is always defined and positive; A, B can be undefined
+        return [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]
+    }
+
 
     __new__({name, lower_ring, file_prefix, file, min_id_exclusive, min_id_forbidden, min_id_sharded, readonly = false} = {}) {
         this.name = name || (file && fileBaseName(file))
@@ -122,9 +127,9 @@ export class Ring extends WebObject {
         if (!A) return true                     // no exclusive zone, nothing to check
 
         // check A <= B <= C
-        if (A && A >= C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${A} >= ${C}`)
-        if (A && A >= B) throw new Error(`exclusive ID-insert zone overlaps with forbidden zone: ${A} >= ${B}`)
-        if (B && B >= C) throw new Error(`forbidden zone overlaps with sharded zone: ${B} >= ${C}`)
+        if (A && A > B) throw new Error(`lower bound of exclusive ID-insert zone exceeds the upper bound: ${A} > ${B}`)
+        if (B && B > C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${B} > ${C}`)
+        if (A && A > C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${A} > ${C}`)
 
         if (!this.lower_ring) return true       // no lower ring, nothing to check
 
