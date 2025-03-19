@@ -34,7 +34,8 @@ export class Ring extends WebObject {
     min_id_forbidden        // [min_id_forbidden, min_id_sharded-1] is the forbidden ID insert zone, no value from this range can be used for new records inserted in this ring
     min_id_sharded          // [min_id_sharded, +inf) is the sharded ID insert zone, where ID sharding is applied: only the ID that hashes to this ring's shard3.offset under modulo shard3.base can be inserted
                             // NOTE: updates are *not* affected by above rules! any ID from a lower ring can be saved here in this ring as an override of a lower-ring version of the record!
-    shard3
+
+    shard3                  // a Shard instance representing a base-3 shard of IDs that can be allocated to new objects in the sharded zone
 
 
     get stack() {
@@ -106,9 +107,9 @@ export class Ring extends WebObject {
     /***  Errors & internal checks  ***/
 
     valid_insert_id(id) {
-        /* Check that this `id` is a valid ID for inserts in this ring. Does NOT take block-level base-2 sharding into account. */
+        /* Check that `id` is a valid ID for inserts in this ring. Does NOT take block-level base-2 sharding into account. */
         let [A, B, C] = [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]     // C is always defined and positive; A, B can be undefined
-        if (id >= C) return true
+        if (id >= C) return this.shard3.includes(id)
         if (!A) return false
         return A <= id && id < (B || C)
     }
