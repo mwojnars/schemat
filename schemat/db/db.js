@@ -35,7 +35,7 @@ export class Ring extends WebObject {
     min_id_sharded          // [min_id_sharded, +inf) is the sharded ID insert zone, where ID sharding is applied: only the ID that hashes to this ring's shard3.offset under modulo shard3.base can be inserted
                             // NOTE: updates are *not* affected by above rules! any ID from a lower ring can be saved here in this ring as an override of a lower-ring version of the record!
 
-    shard3                  // a Shard instance representing a base-3 shard of IDs that can be allocated to new objects in the sharded zone
+    shard3                  // a Shard instance representing the base-3 shard of IDs that can be allocated to new objects in the sharded zone
 
 
     get stack() {
