@@ -263,7 +263,7 @@ export class Shard {
         return this.next_after(x - 1)
     }
 
-    static common_base(shards) {
+    static common_base(...shards) {
         /* Return the least common multiple of the bases of the provided shards. */
         return shards.reduce((a, b) => lcm(a, b.base), 1)
     }
@@ -272,18 +272,63 @@ export class Shard {
         /* Return true if this shard overlaps with `shard`. Calculated by first bringing both shards to the same base,
            and then comparing the sets of offsets occurring after the up-scaling.
          */
-        let base = Shard.common_base([this, shard])
-        let scale1 = base / this.base
-        let scale2 = base / shard.base
-
-        let offsets1 = [...Array(scale1).keys()].map(i => this.offset + i * this.base)
-        let offsets2 = [...Array(scale2).keys()].map(i => shard.offset + i * shard.base)
-
-        // find the intersection of the two sets
-        let common = offsets1.filter(o => offsets2.includes(o))
-        // if (common.length > 0) console.log(`shard ${this.label} overlaps with ${shard.label} at ${common[0]}/${base} slice`)
-
-        return common.length > 0
+        return !!Shard.intersection(this, shard)
     }
+
+    static intersection(shard1, shard2) {
+        /* Create a Shard that represents the set of numbers belonging to `shard1` and `shard2` at the same time,
+           or return null if the shards are disjoint and have no overlap.
+         */
+        let base = Shard.common_base(shard1, shard2)
+        let scale1 = base / shard1.base
+        let scale2 = base / shard2.base
+
+        let offsets1 = [...Array(scale1).keys()].map(i => shard1.offset + i * shard1.base)
+        let offsets2 = [...Array(scale2).keys()].map(i => shard2.offset + i * shard2.base)
+
+        // find the intersection of the two sets, it should contain no more than one element
+        let common = offsets1.filter(o => offsets2.includes(o))
+        if (common.length > 0) console.log(`shard ${shard1.label} overlaps with ${shard2.label} at ${common[0]}/${base} slice`)
+        if (common.length > 1) console.warn(`shard ${shard1.label} overlaps with ${shard2.label} at multiple offsets: ${common}`)
+
+        return common.length ? new Shard(common[0], base) : null
+    }
+
+    // intersect(shard) {
+    //     /* Create a Shard that represents the set of numbers belonging to `shard1` and `shard2` at the same time,
+    //        or return null if the shards are disjoint and have no overlap.
+    //      */
+    //     let base = Shard.common_base(this, shard)
+    //     let scale1 = base / this.base
+    //     let scale2 = base / shard.base
+    //
+    //     let offsets1 = [...Array(scale1).keys()].map(i => this.offset + i * this.base)
+    //     let offsets2 = [...Array(scale2).keys()].map(i => shard.offset + i * shard.base)
+    //
+    //     // find the intersection of the two sets
+    //     let common = offsets1.filter(o => offsets2.includes(o))
+    //     // if (common.length > 0) console.log(`shard ${this.label} overlaps with ${shard.label} at ${common[0]}/${base} slice`)
+    //
+    //     return common.length > 0
+    // }
+    //
+    // static intersection(shard1, shard2) {
+    //     /* Create a Shard that represents the set of numbers belonging to `shard1` _and_ `shard2` at the same time. */
+    //     // check that the bases are coprime
+    //     let [base1, base2] = [shard1.base, shard2.base]
+    //     // assert(gcd(base1, base2) === 1, `bases of input shards must be coprime: ${shard1.label}, ${shard2.label}`)
+    //
+    //     // find the least common multiple of the bases
+    //     let base = base1 * base2
+    //
+    //     // find the intersection of the two sets of offsets
+    //     let offsets1 = [...Array(base2).keys()].map(i => shard1.offset + i * base1)
+    //     let offsets2 = [...Array(base1).keys()].map(i => shard2.offset + i * base2)
+    //
+    //     let common = offsets1.filter(o => offsets2.includes(o))
+    //     assert(common.length === 1, `intersection of shards ${shard1.label} and ${shard2.label} is not a single offset: ${common}`)
+    //
+    //     return new Shard(common[0], base)
+    // }
 }
 
