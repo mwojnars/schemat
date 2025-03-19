@@ -29,11 +29,14 @@ export class Ring extends WebObject {
     lower_ring              // reference to the base Ring (lower ring) of this one
     lower_ring_writable     // if true, the requests going down through this ring are allowed to save their updates in lower ring(s)
 
-    // validity range [start, stop) for IDs of NEWLY-INSERTED objects in this ring;
-    // UPDATED objects (re-inserted here from lower rings) can still have IDs from outside this range (!)
-    min_id_exclusive = 0
-    min_id_forbidden
+    // ID insert zones:
+    min_id_exclusive = 0    // [min_id_exclusive, min_id_forbidden-1] is the exclusive ID insert zone, every value from this range can be used for new records inserted in this ring
+    min_id_forbidden        // [min_id_forbidden, min_id_sharded-1] is the forbidden ID insert zone, no value from this range can be used for new records inserted in this ring
+    min_id_sharded          // [min_id_sharded, +inf) is the sharded ID insert zone, where ID sharding is applied: only the ID that hashes to this ring's shard3.offset under modulo shard3.base can be inserted
+                            // NOTE: updates are *not* affected by above rules! any ID from a lower ring can be saved here in this ring as an override of a lower-ring version of the record!
+    shard3
 
+    
     get stack() {
         /* Array of all rings in the stack, starting from the innermost ring (bottom of the stack) up to this one, included. */
         let stack = this.lower_ring?.stack || []
@@ -99,6 +102,22 @@ export class Ring extends WebObject {
 
     writable(id)    { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be inserted here (only when inserting a new object, not updating an existing one from a lower ring)
     valid_id(id)    { return this.min_id_exclusive <= id && (!this.min_id_forbidden || id < this.min_id_forbidden) }
+
+    validate_zones() {
+        /* Check that the ID-insert zones of this ring and all lower rings do not overlap. Call validate_zones() recursively
+           on each lower ring. */
+        if (!this.lower_ring) return true
+        this.lower_ring.validate_zones()        // may raise an error
+
+        let [A, B, C] = [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]
+
+        let stack = this.lower_ring.stack
+        for (let ring of stack) {
+            if (ring.min_id_exclusive <= this.min_id_forbidden)
+                throw new Error(`overlapping ID-insert zones: ${ring.min_id_exclusive} <= ${this.min_id_forbidden}`)
+        }
+        return true
+    }
 
 
     /***  Data access & modification  ***/
