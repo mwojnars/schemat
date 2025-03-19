@@ -59,7 +59,7 @@ async function create_demo_01() {
 
     // insert AuthorCategory and BookCategory references in [site.global]; insert URL routes
     db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 2002\n    BookCategory:\n      "@": 2001`)
-    db = db.replaceAll(`entries:\n    ""`, `entries:\n    authors:\n      "@": 2002\n    books:\n      "@": 2001\n    book:\n      "@": 5014\n    ""`)
+    db = db.replaceAll(`entries:\n    ""`, `entries:\n    authors:\n      "@": 2002\n    books:\n      "@": 2001\n    book:\n      "@": 2015\n    ""`)
 
     // save as 01_site.data.yaml in the demo folder
     fs.writeFileSync(`${demo_dir}/_data/01_site.data.yaml`, db, 'utf8')

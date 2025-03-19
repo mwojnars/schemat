@@ -102,7 +102,7 @@
   name: /apps
   entries:
     demo:
-      "@": 5010
+      "@": 2011
     "@": schemat:Catalog
   __category:
     "@": 5
@@ -132,13 +132,13 @@
     "@": 4
   __container:
     "@": 2008
-- __id: 5010
+- __id: 2011
   name: /demo
   __category:
     "@": 5
   __container:
     "@": 2007
-- __id: 5011
+- __id: 2012
   name: main-space
   spaces:
     sys.category:
@@ -146,7 +146,7 @@
     "@": schemat:Catalog
   __category:
     "@": 9
-- __id: 5012
+- __id: 2013
   name: varia_01
   info: xxxxxxxxxxxxxxxxxx
   __category:

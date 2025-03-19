@@ -161,7 +161,7 @@
   author:
     "@": 2010
   author/2:
-    "@": 5010
+    "@": 2011
   genre: Fantasy, Comedy
   published_year: 1990
   isbn: "9780060853976"
@@ -193,7 +193,7 @@
     mythology.
   __category:
     "@": 2002
-- __id: 5010
+- __id: 2011
   name: Terry Pratchett
   birth_year: 1948
   death_year: 2015
@@ -209,7 +209,7 @@
     fantasy novels, best known for his Discworld series of 41 novels.
   __category:
     "@": 2002
-- __id: 5011
+- __id: 2012
   title: The Silmarillion
   author:
     "@": 2006
@@ -226,7 +226,7 @@
   cover_image: https://dummyimage.com/200x300/1abc9c/ffffff.png&text=The+Silmarillion
   __category:
     "@": 2001
-- __id: 5012
+- __id: 2013
   title: The Children of Húrin
   author:
     "@": 2006
@@ -243,7 +243,7 @@
   cover_image: https://dummyimage.com/200x300/d35400/ffffff.png&text=The+Children+of+Húrin
   __category:
     "@": 2001
-- __id: 5013
+- __id: 2014
   title: Unfinished Tales of Númenor and Middle-earth
   author:
     "@": 2006
@@ -259,17 +259,17 @@
   cover_image: https://dummyimage.com/200x300/2980b9/ffffff.png&text=Unfinished+Tales
   __category:
     "@": 2001
-- __id: 5014
+- __id: 2015
   name: book
   info: All objects of the Book category accessible via /book/<ID> URL paths.
   category:
     "@": 2001
   __category:
     "@": 8
-- __id: 5015
+- __id: 2016
   title: Animal Farm
   author:
-    "@": 5016
+    "@": 2017
   genre: Satire
   published_year: 1945
   isbn: "9780451526342"
@@ -282,7 +282,7 @@
   cover_image: https://dummyimage.com/200x300/27ae60/ffffff.png&text=Animal+Farm
   __category:
     "@": 2001
-- __id: 5016
+- __id: 2017
   name: George Orwell
   birth_year: 1903
   death_year: 1950
