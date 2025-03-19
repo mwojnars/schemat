@@ -49,9 +49,11 @@ export class Ring extends WebObject {
         return new Map(this.sequences.map(seq => [seq.operator.name, seq]))
     }
 
-    get id_zones() {
-        // `min_id_sharded` is always defined and positive; A, B can be undefined
-        return [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]
+    get id_insert_zones() {
+        /* [min_id_exclusive, min_id_forbidden, min_id_sharded] grouped into an array, with the 2nd one imputed if missing. */
+        // `min_id_sharded` is always defined and positive; `min_id_exclusive` and `min_id_sharded` can be undefined
+        let [A, B, C] = [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]
+        return [A, B || C, C]
     }
 
 
@@ -113,17 +115,16 @@ export class Ring extends WebObject {
 
     valid_insert_id(id) {
         /* Check that `id` is a valid ID for inserts in this ring. Does NOT take block-level base-2 sharding into account. */
-        let [A, B, C] = [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]     // C is always defined and positive; A, B can be undefined
+        let [A, B, C] = this.id_insert_zones        // B and C are always defined and positive; A can be undefined
         if (id >= C) return this.shard3.includes(id)
-        if (!A) return false
-        return A <= id && id < (B || C)
+        return A && A <= id && id < B
     }
 
     validate_zones() {
-        /* Check that the ID-insert zones of this ring and all lower rings do not overlap. */
+        /* Check that the ID-insert zones of this ring do not overlap with the zones of lower rings. */
         // this.lower_ring.validate_zones()        // may raise an error
 
-        let [A, B, C] = [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]
+        let [A, B, C] = this.id_insert_zones
         if (!A) return true                     // no exclusive zone, nothing to check
 
         // check A <= B <= C
@@ -135,7 +136,6 @@ export class Ring extends WebObject {
 
         // exclusive zone = [A, B) must NOT overlap with exclusive or sharded zone of any lower ring
         let stack = this.lower_ring.stack
-        B ??= C
 
         // for sharded zones, must hold:  B <= c_min := min(min_id_sharded) across lower rings
         let c_min = Math.min(...stack.map(r => r.min_id_sharded))
