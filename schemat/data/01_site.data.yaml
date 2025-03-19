@@ -34,6 +34,7 @@
   readonly: false
   min_id_exclusive: 1
   min_id_forbidden: 1000
+  min_id_sharded: 5001
   shard3:
     =:
       - 0
@@ -52,7 +53,8 @@
     - "@": 1028
   readonly: false
   min_id_exclusive: 1001
-  min_id_forbidden: 5000
+  min_id_forbidden: 2000
+  min_id_sharded: 5001
   shard3:
     =:
       - 3
