@@ -105,7 +105,6 @@ export class Ring extends WebObject {
 
     /***  Errors & internal checks  ***/
 
-    writable(id)    { return !this.readonly && (id === undefined || this.valid_id(id)) }    // true if `id` is allowed to be inserted here (only when inserting a new object, not updating an existing one from a lower ring)
     valid_id(id)    { return this.min_id_exclusive <= id && (!this.min_id_forbidden || id < this.min_id_forbidden) }
 
     validate_zones() {
@@ -313,12 +312,11 @@ export class Database extends WebObject {
             // if (!ring) return req.error_access(`target ring not found: '${name}'`)
         }
         if (!ring) {
-            ring = this.rings_reversed.find(r => r.writable())      // find the first writable ring
+            ring = this.rings_reversed.find(r => !r.readonly)       // find the first writable ring
             if (!ring) throw new DataAccessError("all ring(s) are read-only")
             // if (!ring) return req.error_access("all ring(s) are read-only")
         }
-        if (!ring.writable()) throw new DataAccessError("the ring is read-only")
-        // if (!ring.writable()) return req.error_access("the ring is read-only")
+        if (ring.readonly) throw new DataAccessError("the ring is read-only")
 
         return ring.insert(data)
     }
