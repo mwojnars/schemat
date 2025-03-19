@@ -134,13 +134,15 @@ export class Ring extends WebObject {
             if (B > C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${B} > ${C}`)
             if (A > C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${A} > ${C}`)
         }
+
         if (!this.lower_ring) return true       // no lower ring, nothing more to check
+        let stack = this.lower_ring.stack
 
         // sharded zones of different rings must not overlap
-        let stack = this.lower_ring.stack
-        for (let ring of stack)
-            if (this.shard3.overlaps(ring.shard3))
-                throw new Error(`base-3 shard [${this.shard3.label}] of ring ${this.__label} overlaps with shard [${ring.shard3.label}] of ${ring.__label}`)
+        if (this.shard3)                        // shard3 is missing in bootstrap DB
+            for (let ring of stack)
+                if (this.shard3.overlaps(ring.shard3))
+                    throw new Error(`base-3 shard [${this.shard3.label}] of ring ${this.__label} overlaps with shard [${ring.shard3.label}] of ${ring.__label}`)
 
         if (!A) return true                     // no exclusive zone, nothing more to check
 
