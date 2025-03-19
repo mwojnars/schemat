@@ -18,14 +18,14 @@
   title/2: drugi tytuł...
   __category:
     "@": 2001
-- __id: 5002
+- __id: 2003
   title: ąłęÓŁŻŹŚ
-- __id: 5003
+- __id: 2004
   name: Post A
   text: Ala ma kota
   __category:
-    "@": 5005
-- __id: 5004
+    "@": 2006
+- __id: 2005
   name: MysqlDB
   schema:
     host:
@@ -54,7 +54,7 @@
   class: schemat/db/mysql.js:MySQL
   __category:
     "@": 1
-- __id: 5005
+- __id: 2006
   name: TwitterPost
   schema:
     text:

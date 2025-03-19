@@ -314,7 +314,7 @@ describe('Schemat Tests', function () {
         })
 
         it('uncategorized object', async function () {
-            await test_page(page, `${DOMAIN}/$/id/5002`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
+            await test_page(page, `${DOMAIN}/$/id/2003`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
         })
 
         it('static html page', async function () {
@@ -375,7 +375,7 @@ describe('Schemat Tests', function () {
             await test_page(page, `${DOMAIN}/books`, null, ['9780743273565', 'Pratchett', '1945'])
         })
         it('demo01/book (Hobbit)', async function () {
-            await test_page(page, `${DOMAIN}/book/5004`, null, ['Hobbit', '9780547928227'])
+            await test_page(page, `${DOMAIN}/book/2005`, null, ['Hobbit', '9780547928227'])
         })
     })
 

@@ -58,10 +58,10 @@
     "@": schemat:Catalog
   __category:
     "@": 1
-- __id: 5002
+- __id: 2003
   title: The Great Gatsby
   author:
-    "@": 5003
+    "@": 2004
   genre: Classic
   published_year: 1925
   isbn: "9780743273565"
@@ -74,7 +74,7 @@
   cover_image: https://dummyimage.com/200x300/3498db/ffffff.png&text=The+Great+Gatsby
   __category:
     "@": 2001
-- __id: 5003
+- __id: 2004
   name: F. Scott Fitzgerald
   birth_year: 1896
   death_year: 1940
@@ -91,10 +91,10 @@
     century.
   __category:
     "@": 2002
-- __id: 5004
+- __id: 2005
   title: The Hobbit
   author:
-    "@": 5005
+    "@": 2006
   genre: Fantasy
   published_year: 1937
   isbn: "9780547928227"
@@ -108,7 +108,7 @@
   cover_image: https://dummyimage.com/200x300/16a085/ffffff.png&text=The+Hobbit
   __category:
     "@": 2001
-- __id: 5005
+- __id: 2006
   name: J.R.R. Tolkien
   birth_year: 1892
   death_year: 1973
@@ -212,7 +212,7 @@
 - __id: 5011
   title: The Silmarillion
   author:
-    "@": 5005
+    "@": 2006
   genre: Fantasy
   published_year: 1977
   isbn: "9780261102736"
@@ -229,7 +229,7 @@
 - __id: 5012
   title: The Children of Húrin
   author:
-    "@": 5005
+    "@": 2006
   genre: Fantasy
   published_year: 2007
   isbn: "9780618894642"
@@ -246,7 +246,7 @@
 - __id: 5013
   title: Unfinished Tales of Númenor and Middle-earth
   author:
-    "@": 5005
+    "@": 2006
   genre: Fantasy
   published_year: 1980
   isbn: "9780261102163"
