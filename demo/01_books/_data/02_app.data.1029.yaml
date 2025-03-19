@@ -126,10 +126,10 @@
     Rings.
   __category:
     "@": 2002
-- __id: 5006
+- __id: 2007
   title: Pride and Prejudice
   author:
-    "@": 5007
+    "@": 2008
   genre: Romance
   published_year: 1813
   isbn: "9780141439518"
@@ -142,7 +142,7 @@
   cover_image: https://dummyimage.com/200x300/9b59b6/ffffff.png&text=Pride+and+Prejudice
   __category:
     "@": 2001
-- __id: 5007
+- __id: 2008
   name: Jane Austen
   birth_year: 1775
   death_year: 1817
@@ -156,10 +156,10 @@
     at the end of the 18th century.
   __category:
     "@": 2002
-- __id: 5008
+- __id: 2009
   title: Good Omens
   author:
-    "@": 5009
+    "@": 2010
   author/2:
     "@": 5010
   genre: Fantasy, Comedy
@@ -174,7 +174,7 @@
   cover_image: https://dummyimage.com/200x300/f39c12/ffffff.png&text=Good+Omens
   __category:
     "@": 2001
-- __id: 5009
+- __id: 2010
   name: Neil Gaiman
   birth_year: 1960
   nationality: British

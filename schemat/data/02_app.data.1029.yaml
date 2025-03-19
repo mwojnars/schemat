@@ -98,7 +98,7 @@
     }
   __category:
     "@": 1
-- __id: 5006
+- __id: 2007
   name: /apps
   entries:
     demo:
@@ -106,23 +106,23 @@
     "@": schemat:Catalog
   __category:
     "@": 5
-- __id: 5007
+- __id: 2008
   name: /site
   entries:
     utils.js:
-      "@": 5008
+      "@": 2009
     widgets.js:
-      "@": 5009
+      "@": 2010
     "@": schemat:Catalog
   __category:
     "@": 5
-- __id: 5008
+- __id: 2009
   content: export let print = console.log
   __category:
     "@": 4
   __container:
-    "@": 5007
-- __id: 5009
+    "@": 2008
+- __id: 2010
   content: |-
     import {print} from '../site/utils.js'
     export function check() { print('called widgets.js:check()') } 
@@ -131,13 +131,13 @@
   __category:
     "@": 4
   __container:
-    "@": 5007
+    "@": 2008
 - __id: 5010
   name: /demo
   __category:
     "@": 5
   __container:
-    "@": 5006
+    "@": 2007
 - __id: 5011
   name: main-space
   spaces:
