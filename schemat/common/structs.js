@@ -258,8 +258,8 @@ export class Shard {
         return x + (this.base - (x % this.base))
     }
 
-    next(x) {
-        /* Return the smallest number >= `x` that belongs to the shard. */
+    fix_upwards(x) {
+        /* Return `x` if it belongs to the shard, or the smallest number greater than `x` that belongs to the shard. */
         return this.next_after(x - 1)
     }
 
