@@ -420,7 +420,9 @@
     "@": 1041
   sequences:
     - "@": 1044
-  min_id_exclusive: 10000
+  min_id_exclusive: 3001
+  min_id_forbidden: 4000
+  min_id_sharded: 5001
   shard3:
     =:
       - 6
