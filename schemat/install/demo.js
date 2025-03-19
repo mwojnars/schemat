@@ -58,8 +58,8 @@ async function create_demo_01() {
     db = db.replaceAll('tcp_port: 5829', `tcp_port: 5821`)
 
     // insert AuthorCategory and BookCategory references in [site.global]; insert URL routes
-    db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 5001\n    BookCategory:\n      "@": 5000`)
-    db = db.replaceAll(`entries:\n    ""`, `entries:\n    authors:\n      "@": 5001\n    books:\n      "@": 5000\n    book:\n      "@": 5014\n    ""`)
+    db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 5001\n    BookCategory:\n      "@": 2001`)
+    db = db.replaceAll(`entries:\n    ""`, `entries:\n    authors:\n      "@": 5001\n    books:\n      "@": 2001\n    book:\n      "@": 5014\n    ""`)
 
     // save as 01_site.data.yaml in the demo folder
     fs.writeFileSync(`${demo_dir}/_data/01_site.data.yaml`, db, 'utf8')
@@ -93,7 +93,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     // await new AdminProcess().start(null, {demo_id, config: `${root_dir}/demo/${demo_name}/config.yaml`})
     //
     // // drop unneeded objects
-    // let ids = [5000, 5001, 5002, 5003, 5004, 5005]    // 1005, 1006  ??
+    // let ids = [2001, 5001, 5002, 5003, 5004, 5005]    // 1005, 1006  ??
     // for (let id of ids) await schemat.db.delete(id)
     //
     // schemat.is_closing = true

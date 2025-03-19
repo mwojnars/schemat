@@ -9,7 +9,7 @@
     AuthorCategory:
       "@": 5001
     BookCategory:
-      "@": 5000
+      "@": 2001
     "@": schemat:Catalog
   default_path: /$/id
   webserver:
@@ -89,7 +89,7 @@
     authors:
       "@": 5001
     books:
-      "@": 5000
+      "@": 2001
     book:
       "@": 5014
     "":

@@ -1,4 +1,4 @@
-- __id: 5000
+- __id: 2001
   name: Varia
   info: Category of items that do not belong to any specific category.
   class_body: >-
@@ -17,7 +17,7 @@
   title: Ala ma kota Sierściucha i psa Kłapoucha.
   title/2: drugi tytuł...
   __category:
-    "@": 5000
+    "@": 2001
 - __id: 5002
   title: ąłęÓŁŻŹŚ
 - __id: 5003
@@ -150,4 +150,4 @@
   name: varia_01
   info: xxxxxxxxxxxxxxxxxx
   __category:
-    "@": 5000
+    "@": 2001

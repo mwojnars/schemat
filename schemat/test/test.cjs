@@ -251,7 +251,7 @@ describe('Schemat Tests', function () {
 
         it('Varia: load/insert/delete', async function () {
             // navigate to the Varia category page
-            await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main',
+            await test_page(page, `${DOMAIN}/$/id/2001`, '#page-main',
                 ['Varia', 'Category', 'name', '__category', 'schema', 'Varia:5001', 'Create'])
 
             // these strings are only available after client-side rendering, not in HTML source:
@@ -293,7 +293,7 @@ describe('Schemat Tests', function () {
         })
 
         it('rebuild_indexes', async function () {
-            await test_page(page, `${DOMAIN}/$/id/5000`, '#page-main')
+            await test_page(page, `${DOMAIN}/$/id/2001`, '#page-main')
             await delay(200)
             // let done = await page.evaluate(async () => {
             //     let db = await schemat.db.load()

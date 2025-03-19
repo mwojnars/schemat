@@ -1,4 +1,4 @@
-- __id: 5000
+- __id: 2001
   name: Book
   class: demo/01_books/books/books.js:Book
   schema:
@@ -73,7 +73,7 @@
   average_rating: 4.2
   cover_image: https://dummyimage.com/200x300/3498db/ffffff.png&text=The+Great+Gatsby
   __category:
-    "@": 5000
+    "@": 2001
 - __id: 5003
   name: F. Scott Fitzgerald
   birth_year: 1896
@@ -107,7 +107,7 @@
   average_rating: 4.6
   cover_image: https://dummyimage.com/200x300/16a085/ffffff.png&text=The+Hobbit
   __category:
-    "@": 5000
+    "@": 2001
 - __id: 5005
   name: J.R.R. Tolkien
   birth_year: 1892
@@ -141,7 +141,7 @@
   average_rating: 4.4
   cover_image: https://dummyimage.com/200x300/9b59b6/ffffff.png&text=Pride+and+Prejudice
   __category:
-    "@": 5000
+    "@": 2001
 - __id: 5007
   name: Jane Austen
   birth_year: 1775
@@ -173,7 +173,7 @@
   average_rating: 4.5
   cover_image: https://dummyimage.com/200x300/f39c12/ffffff.png&text=Good+Omens
   __category:
-    "@": 5000
+    "@": 2001
 - __id: 5009
   name: Neil Gaiman
   birth_year: 1960
@@ -225,7 +225,7 @@
   average_rating: 4.2
   cover_image: https://dummyimage.com/200x300/1abc9c/ffffff.png&text=The+Silmarillion
   __category:
-    "@": 5000
+    "@": 2001
 - __id: 5012
   title: The Children of Húrin
   author:
@@ -242,7 +242,7 @@
   average_rating: 4
   cover_image: https://dummyimage.com/200x300/d35400/ffffff.png&text=The+Children+of+Húrin
   __category:
-    "@": 5000
+    "@": 2001
 - __id: 5013
   title: Unfinished Tales of Númenor and Middle-earth
   author:
@@ -258,12 +258,12 @@
   average_rating: 4.1
   cover_image: https://dummyimage.com/200x300/2980b9/ffffff.png&text=Unfinished+Tales
   __category:
-    "@": 5000
+    "@": 2001
 - __id: 5014
   name: book
   info: All objects of the Book category accessible via /book/<ID> URL paths.
   category:
-    "@": 5000
+    "@": 2001
   __category:
     "@": 8
 - __id: 5015
@@ -281,7 +281,7 @@
   average_rating: 4.1
   cover_image: https://dummyimage.com/200x300/27ae60/ffffff.png&text=Animal+Farm
   __category:
-    "@": 5000
+    "@": 2001
 - __id: 5016
   name: George Orwell
   birth_year: 1903
