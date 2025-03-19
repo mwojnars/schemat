@@ -127,18 +127,24 @@ export class Ring extends WebObject {
         // this.lower_ring.validate_zones()        // may raise an error
 
         let [A, B, C] = this.id_insert_zones
-        if (!A) return true                     // no exclusive zone, nothing to check
 
-        // check A <= B <= C
-        if (A && A > B) throw new Error(`lower bound of exclusive ID-insert zone exceeds the upper bound: ${A} > ${B}`)
-        if (B && B > C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${B} > ${C}`)
-        if (A && A > C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${A} > ${C}`)
+        // if exclusive zone is defined, check A <= B <= C
+        if (A) {
+            if (A > B) throw new Error(`lower bound of exclusive ID-insert zone exceeds the upper bound: ${A} > ${B}`)
+            if (B > C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${B} > ${C}`)
+            if (A > C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${A} > ${C}`)
+        }
+        if (!this.lower_ring) return true       // no lower ring, nothing more to check
 
-        if (!this.lower_ring) return true       // no lower ring, nothing to check
-
-        // exclusive zone = [A, B) must NOT overlap with exclusive or sharded zone of any lower ring
+        // sharded zones of different rings must not overlap
         let stack = this.lower_ring.stack
+        for (let ring of stack)
+            if (this.shard3.overlaps(ring.shard3))
+                throw new Error(`base-3 shard [${this.shard3.label}] of ring ${this.__label} overlaps with shard [${ring.shard3.label}] of ${ring.__label}`)
 
+        if (!A) return true                     // no exclusive zone, nothing more to check
+
+        // exclusive zone = [A, B) must NOT overlap with exclusive or sharded zone of any lower ring...
         // for sharded zones, must hold:  B <= c_min := min(min_id_sharded) across lower rings
         let c_min = Math.min(...stack.map(r => r.min_id_sharded))
         if (B >= c_min) throw new Error(`exclusive ID-insert zone [${A},${B}) of ${this.__label} overlaps with sharded zone [${c_min},+inf) of some lower ring`)
