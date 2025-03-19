@@ -7,7 +7,7 @@
     "@": 1007
   global:
     AuthorCategory:
-      "@": 5001
+      "@": 2002
     BookCategory:
       "@": 2001
     "@": schemat:Catalog
@@ -87,7 +87,7 @@
   info: Root of the container hierarchy exposed at URL path = /
   entries:
     authors:
-      "@": 5001
+      "@": 2002
     books:
       "@": 2001
     book:

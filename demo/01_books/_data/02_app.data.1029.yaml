@@ -8,7 +8,7 @@
       info: Repeat this field to enter multiple authors.
       repeated: true
       category:
-        "@": 5001
+        "@": 2002
       "@": schemat/types/type.js:REF
     genre:
       "@": schemat/types/type.js:STRING
@@ -31,7 +31,7 @@
     "@": schemat:Catalog
   __category:
     "@": 1
-- __id: 5001
+- __id: 2002
   name: Author
   class: demo/01_books/authors/author.js:Author
   schema:
@@ -90,7 +90,7 @@
     writer, widely regarded as one of the greatest American writers of the 20th
     century.
   __category:
-    "@": 5001
+    "@": 2002
 - __id: 5004
   title: The Hobbit
   author:
@@ -125,7 +125,7 @@
     known as the author of the high fantasy works The Hobbit and The Lord of the
     Rings.
   __category:
-    "@": 5001
+    "@": 2002
 - __id: 5006
   title: Pride and Prejudice
   author:
@@ -155,7 +155,7 @@
     novels, which interpret, critique and comment upon the British landed gentry
     at the end of the 18th century.
   __category:
-    "@": 5001
+    "@": 2002
 - __id: 5008
   title: Good Omens
   author:
@@ -192,7 +192,7 @@
     novels, and screenplays. His works blend elements of fantasy, horror, and
     mythology.
   __category:
-    "@": 5001
+    "@": 2002
 - __id: 5010
   name: Terry Pratchett
   birth_year: 1948
@@ -208,7 +208,7 @@
   bio: Sir Terry Pratchett was an English humorist, satirist, and author of
     fantasy novels, best known for his Discworld series of 41 novels.
   __category:
-    "@": 5001
+    "@": 2002
 - __id: 5011
   title: The Silmarillion
   author:
@@ -298,4 +298,4 @@
     His work is characterized by lucid prose, social criticism, opposition to
     totalitarianism, and support of democracy.
   __category:
-    "@": 5001
+    "@": 2002
