@@ -50,7 +50,9 @@ export class Ring extends WebObject {
     }
 
     get id_insert_zones() {
-        /* [min_id_exclusive, min_id_forbidden, min_id_sharded] grouped into an array, with the 2nd one imputed if missing. */
+        /* [min_id_exclusive, min_id_forbidden, min_id_sharded] grouped into an array, with the 2nd one imputed if missing.
+           The lack of `min_id_exclusive` indicates there's NO exclusive zone.
+         */
         // `min_id_sharded` is always defined and positive; `min_id_exclusive` and `min_id_sharded` can be undefined
         let [A, B, C] = [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]
         return [A, B || C, C]

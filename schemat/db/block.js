@@ -63,14 +63,19 @@ export class Block extends Agent {
     }
 
     async __init__() {
-        if (CLIENT) return                                          // don't initialize internals when on client
+        if (CLIENT) return              // don't initialize internals when on client
+
         if (!this.sequence.is_loaded() && !this.sequence.__meta.loading)
-            await this.sequence.load()
-        // if (!this.sequence.is_loaded()) this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block;
-        //     // assert(this.sequence.__meta.loading)                    // it's assumed that .sequence gets fully loaded before any CRUD operation (ins/upd/del) is executed
+            this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block (!);
+                                        // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
 
         let storage_class = this._detect_storage_class()
         this._storage = new storage_class(this.filename, this)
+
+        // magic trick to allow sequence loading complete before _storage is opened; NO, we can't await sequence.load() here,
+        // because this creates deadlocks in some edge cases, like when opening [Block] category's ::inspect page in browser
+        if (!this.sequence.is_loaded()) await sleep()
+
         return this._reopen(this._storage)
     }
 
@@ -103,6 +108,7 @@ export class Block extends Agent {
 
     async _reopen(storage) {
         /* Temporary solution for reloading block data to pull changes written by another worker. */
+        // if (!this.sequence.is_loaded()) await this.sequence.__meta.loading
         if (!storage.dirty) return storage.open()
         let ref = schemat.registry.get_object(this.id)
         if (!ref || this === ref)
@@ -318,7 +324,18 @@ export class DataBlock extends Block {
     }
 
     _assign_id_incremental() {
-        return Math.max(this._autoincrement + 1, this.ring.min_id_exclusive)
+        let [A, B, C] = this.ring.id_insert_zones       // [min_id_exclusive, min_id_forbidden, min_id_sharded]
+
+        // try allocating an ID from the exclusive zone if present
+        let auto = this._autoincrement + 1
+        let id = Math.max(auto, A || 1)
+        if (A && id < B) return id
+
+        // otherwise, allocate from the sharded zone; take care to honor base-2 (block-level) and base-3 (ring-level) sharding rules
+        id = Math.max(auto, C)
+        id = this.ring.shard3.fix_upwards(id)
+
+        return id
     }
 
     _assign_id_compact() {
