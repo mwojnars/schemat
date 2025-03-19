@@ -194,8 +194,9 @@
   sequences:
     - "@": 1018
   readonly: false
-  min_id_exclusive: 5000
-  min_id_forbidden: null
+  min_id_exclusive: 2001
+  min_id_forbidden: 3000
+  min_id_sharded: 5001
   shard3:
     =:
       - 1
