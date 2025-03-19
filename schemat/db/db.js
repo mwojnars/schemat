@@ -87,6 +87,9 @@ export class Ring extends WebObject {
         await this.lower_ring?.load()
         await this.data_sequence.load()
         for (let seq of this.sequences) await seq.load()
+
+        this.validate_zones()
+        this._print('ID insert zones successfully validated')
     }
 
     async erase(req) {
@@ -104,19 +107,18 @@ export class Ring extends WebObject {
     valid_id(id)    { return this.min_id_exclusive <= id && (!this.min_id_forbidden || id < this.min_id_forbidden) }
 
     validate_zones() {
-        /* Check that the ID-insert zones of this ring and all lower rings do not overlap. Call validate_zones() recursively
-           on each lower ring. */
-        if (!this.lower_ring) return true
-        this.lower_ring.validate_zones()        // may raise an error
+        /* Check that the ID-insert zones of this ring and all lower rings do not overlap. */
+        // this.lower_ring.validate_zones()        // may raise an error
 
         let [A, B, C] = [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]
+        if (!A) return true                     // no exclusive zone, nothing to check
 
         // check A <= B <= C
         if (A && A >= C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${A} >= ${C}`)
         if (A && A >= B) throw new Error(`exclusive ID-insert zone overlaps with forbidden zone: ${A} >= ${B}`)
         if (B && B >= C) throw new Error(`forbidden zone overlaps with sharded zone: ${B} >= ${C}`)
 
-        if (!A) return true     // no exclusive zone, nothing to check
+        if (!this.lower_ring) return true       // no lower ring, nothing to check
 
         // exclusive zone = [A, B) must NOT overlap with exclusive or sharded zone of any lower ring
         let stack = this.lower_ring.stack
