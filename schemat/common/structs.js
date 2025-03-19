@@ -284,47 +284,12 @@ export class Shard {
 
         // find the intersection of the two sets, it should contain no more than one element
         let common = offsets1.filter(o => offsets2.includes(o))
-        if (common.length > 0) console.log(`shard ${shard1.label} overlaps with ${shard2.label} at ${common[0]}/${base} slice`)
-        if (common.length > 1) console.warn(`shard ${shard1.label} overlaps with ${shard2.label} at multiple offsets: ${common}`)
+
+        // if (common.length > 0) console.log(`shard ${shard1.label} overlaps with ${shard2.label} at ${common[0]}/${base} slice`)
+        // if (common.length > 1) console.warn(`shard ${shard1.label} overlaps with ${shard2.label} at multiple offsets: ${common}`)
+        assert(common.length <= 1)
 
         return common.length ? new Shard(common[0], base) : null
     }
-
-    // intersect(shard) {
-    //     /* Create a Shard that represents the set of numbers belonging to `shard1` and `shard2` at the same time,
-    //        or return null if the shards are disjoint and have no overlap.
-    //      */
-    //     let base = Shard.common_base(this, shard)
-    //     let scale1 = base / this.base
-    //     let scale2 = base / shard.base
-    //
-    //     let offsets1 = [...Array(scale1).keys()].map(i => this.offset + i * this.base)
-    //     let offsets2 = [...Array(scale2).keys()].map(i => shard.offset + i * shard.base)
-    //
-    //     // find the intersection of the two sets
-    //     let common = offsets1.filter(o => offsets2.includes(o))
-    //     // if (common.length > 0) console.log(`shard ${this.label} overlaps with ${shard.label} at ${common[0]}/${base} slice`)
-    //
-    //     return common.length > 0
-    // }
-    //
-    // static intersection(shard1, shard2) {
-    //     /* Create a Shard that represents the set of numbers belonging to `shard1` _and_ `shard2` at the same time. */
-    //     // check that the bases are coprime
-    //     let [base1, base2] = [shard1.base, shard2.base]
-    //     // assert(gcd(base1, base2) === 1, `bases of input shards must be coprime: ${shard1.label}, ${shard2.label}`)
-    //
-    //     // find the least common multiple of the bases
-    //     let base = base1 * base2
-    //
-    //     // find the intersection of the two sets of offsets
-    //     let offsets1 = [...Array(base2).keys()].map(i => shard1.offset + i * base1)
-    //     let offsets2 = [...Array(base1).keys()].map(i => shard2.offset + i * base2)
-    //
-    //     let common = offsets1.filter(o => offsets2.includes(o))
-    //     assert(common.length === 1, `intersection of shards ${shard1.label} and ${shard2.label} is not a single offset: ${common}`)
-    //
-    //     return new Shard(common[0], base)
-    // }
 }
 
