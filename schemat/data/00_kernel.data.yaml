@@ -514,6 +514,7 @@
       info: Lower bound of the (right-unbounded) range where ID sharding is applied to
         inserts. In this range, inserts can only assign an ID that hashes to
         this ring's `shard3.offset` under modulo `shard3.base`.
+      default: 1
       "@": schemat/types/type.js:INTEGER
     shard3:
       info: Base-3 (3**k) shard that defines the valid set of IDs for objects inserted
