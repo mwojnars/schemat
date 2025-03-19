@@ -313,7 +313,7 @@ export class DataBlock extends Block {
                     ? this._assign_id_compact()
                     : Math.max(this._autoincrement + 1, ring.min_id_exclusive)
 
-        if (!ring.valid_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
+        if (!ring.valid_insert_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
 
         this._reserved.add(id)
         this._autoincrement = Math.max(id, this._autoincrement)

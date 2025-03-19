@@ -105,10 +105,9 @@ export class Ring extends WebObject {
 
     /***  Errors & internal checks  ***/
 
-    valid_id(id) {
+    valid_insert_id(id) {
         /* Check that this `id` is a valid ID for inserts in this ring. Does NOT take block-level base-2 sharding into account. */
-        // C is always defined and positive; A, B can be undefined
-        let [A, B, C] = [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]
+        let [A, B, C] = [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]     // C is always defined and positive; A, B can be undefined
         if (id >= C) return true
         if (!A) return false
         return A <= id && id < (B || C)
