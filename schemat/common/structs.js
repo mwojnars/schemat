@@ -263,21 +263,17 @@ export class Shard {
         return this.next_after(x - 1)
     }
 
+    overlaps(shard) { return !!Shard.intersection(this, shard) }
+
     static common_base(...shards) {
         /* Return the least common multiple of the bases of the provided shards. */
         return shards.reduce((a, b) => lcm(a, b.base), 1)
     }
 
-    overlaps(shard) {
-        /* Return true if this shard overlaps with `shard`. Calculated by first bringing both shards to the same base,
-           and then comparing the sets of offsets occurring after the up-scaling.
-         */
-        return !!Shard.intersection(this, shard)
-    }
-
     static intersection(shard1, shard2) {
-        /* Create a Shard that represents the set of numbers belonging to `shard1` and `shard2` at the same time,
-           or return null if the shards are disjoint and have no overlap.
+        /* Create a Shard that represents the set of numbers belonging to `shard1` _and_ `shard2` at the same time,
+           or return null if the shards are disjoint and have no overlap. Calculated by first bringing both shards
+           to the same base, and then comparing the sets of offsets occurring after the up-scaling.
          */
         let base = Shard.common_base(shard1, shard2)
         let scale1 = base / shard1.base
