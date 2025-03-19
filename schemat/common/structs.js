@@ -258,6 +258,11 @@ export class Shard {
         return x + (this.base - (x % this.base))
     }
 
+    next(x) {
+        /* Return the smallest number >= `x` that belongs to the shard. */
+        return this.next_after(x - 1)
+    }
+
     static common_base(shards) {
         /* Return the least common multiple of the bases of the provided shards. */
         return shards.reduce((a, b) => lcm(a, b.base), 1)
