@@ -308,12 +308,11 @@ export class DataBlock extends Block {
     _assign_id() {
         /* Calculate a new `id` to be assigned to the record being inserted. */
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
-        let ring = this.ring
         let id = (this.insert_mode === 'compact') ? this._assign_id_compact() : this._assign_id_incremental()
 
-        if (!ring.valid_insert_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
+        if (!this.ring.valid_insert_id(id))
+            throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid set for the ring ${this.ring.__label}`)
 
-        // this._reserved.add(id)
         this._autoincrement = Math.max(id, this._autoincrement)
 
         // print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
