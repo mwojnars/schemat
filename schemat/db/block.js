@@ -309,23 +309,29 @@ export class DataBlock extends Block {
         /* Calculate a new `id` to be assigned to the record being inserted. */
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         let ring = this.ring
-        let id = (this.insert_mode === 'compact' && !this._reserved.has(this._autoincrement))
-                    ? this._assign_id_compact()
-                    : Math.max(this._autoincrement + 1, ring.min_id_exclusive)
+        let id = (this.insert_mode === 'compact') ? this._assign_id_compact() : this._assign_id_incremental()
 
         if (!ring.valid_insert_id(id)) throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid range(s) for the ring [${ring.id}]`)
 
-        this._reserved.add(id)
+        // this._reserved.add(id)
         this._autoincrement = Math.max(id, this._autoincrement)
 
         // print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
         return id
     }
 
+    _assign_id_incremental() {
+        return Math.max(this._autoincrement + 1, this.ring.min_id_exclusive)
+    }
+
     _assign_id_compact() {
         /* Scan this._storage to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
            This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
+        // if all empty slots below _autoincrement were already allocated, use the incremental algorithm
+        // (this may still leave empty slots if a record was removed in the meantime, but such slot may be reused after next reload of the block)
+        if (this._reserved.has(this._autoincrement)) return this._assign_id_incremental()
+
         if (!(this._storage instanceof MemoryStorage))
             throw new Error('Compact insert mode is only supported with MemoryStorage')
 
