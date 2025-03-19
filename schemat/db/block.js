@@ -25,7 +25,6 @@ export class Block extends Agent {
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
     get ring()      { return this.sequence.ring }
-    get stream()    { return this.sequence.stream }
 
     __new__(sequence, {filename, format, node} = {}) {
         sequence.assert_active()
@@ -39,7 +38,6 @@ export class Block extends Agent {
         print('Block.__setup__() ...')
         if (!this.sequence.is_loaded()) await this.sequence.load()
         if (!this.ring.is_loaded()) await this.ring.load()
-        // if (this.stream && !this.stream?.is_loaded()) await this.stream.load()
 
         this.__node ??= schemat.node
         this.filename ??= this._create_filename()
