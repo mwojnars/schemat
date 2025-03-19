@@ -49,7 +49,7 @@ export class Ring extends WebObject {
     }
 
 
-    __new__({name, lower_ring, file_prefix, file, min_id_exclusive = 0, min_id_forbidden, readonly = false} = {}) {
+    __new__({name, lower_ring, file_prefix, file, min_id_exclusive, min_id_forbidden, min_id_sharded, readonly = false} = {}) {
         this.name = name || (file && fileBaseName(file))
         this.lower_ring = lower_ring
 
@@ -62,12 +62,15 @@ export class Ring extends WebObject {
         this.readonly = readonly
         this.min_id_exclusive = min_id_exclusive
         this.min_id_forbidden = min_id_forbidden
+        this.min_id_sharded = min_id_sharded
     }
 
     async __setup__({}) {
         /* Create `data_sequence`. Re-create all indexes from the lower ring. */
 
         let lower = await this.lower_ring?.load()
+
+        this.min_id_sharded ??= this.lower_ring.min_id_sharded
 
         let DataSequence = await schemat.import('/$/sys/DataSequence')
         this.data_sequence = DataSequence.new(this, lower?.data_sequence.operator)
