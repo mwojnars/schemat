@@ -89,7 +89,6 @@ export class Ring extends WebObject {
         for (let seq of this.sequences) await seq.load()
 
         this.validate_zones()
-        this._print('ID insert zones successfully validated')
     }
 
     async erase(req) {
