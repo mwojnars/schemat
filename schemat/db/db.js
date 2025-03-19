@@ -36,7 +36,7 @@ export class Ring extends WebObject {
                             // NOTE: updates are *not* affected by above rules! any ID from a lower ring can be saved here in this ring as an override of a lower-ring version of the record!
     shard3
 
-    
+
     get stack() {
         /* Array of all rings in the stack, starting from the innermost ring (bottom of the stack) up to this one, included. */
         let stack = this.lower_ring?.stack || []
@@ -111,10 +111,26 @@ export class Ring extends WebObject {
 
         let [A, B, C] = [this.min_id_exclusive, this.min_id_forbidden, this.min_id_sharded]
 
+        // check A <= B <= C
+        if (A && A >= C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${A} >= ${C}`)
+        if (A && A >= B) throw new Error(`exclusive ID-insert zone overlaps with forbidden zone: ${A} >= ${B}`)
+        if (B && B >= C) throw new Error(`forbidden zone overlaps with sharded zone: ${B} >= ${C}`)
+
+        if (!A) return true     // no exclusive zone, nothing to check
+
+        // exclusive zone = [A, B) must NOT overlap with exclusive or sharded zone of any lower ring
         let stack = this.lower_ring.stack
+        B ??= C
+
+        // for sharded zones, must hold:  B <= c_min := min(min_id_sharded) across lower rings
+        let c_min = Math.min(...stack.map(r => r.min_id_sharded))
+        if (B >= c_min) throw new Error(`exclusive ID-insert zone [${A},${B}) of ${this.__label} overlaps with sharded zone [${c_min},+inf) of some lower ring`)
+
+        // for exclusive zones of every lower ring, must hold:  B <= min_id_exclusive || A >= min_id_forbidden
         for (let ring of stack) {
-            if (ring.min_id_exclusive <= this.min_id_forbidden)
-                throw new Error(`overlapping ID-insert zones: ${ring.min_id_exclusive} <= ${this.min_id_forbidden}`)
+            let [a, b] = [ring.min_id_exclusive, ring.min_id_forbidden ?? ring.min_id_sharded]
+            if (a && B > a && A < b)
+                throw new Error(`exclusive ID-insert zone [${A},${B}) of ${this.__label} overlaps with exclusive zone [${a},${b}) of ${ring.__label}`)
         }
         return true
     }
