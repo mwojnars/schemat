@@ -316,12 +316,6 @@ export class Database extends WebObject {
         await this.top_ring?.load()
     }
 
-    locate_ring(ring_or_id) {
-        /* Return the position [0,1,...] in `rings` of the top-most ring with a given ID. */
-        let id = Number.isInteger(ring_or_id) ? ring_or_id : ring_or_id.id
-        return this.rings.findLastIndex(ring => ring.id === id)
-    }
-
     get_ring(ring) {
         /* Return the top-most ring with a given name or ID, or undefined if not found; `ring` can also be a Ring object,
            in which case it is replaced with the same-ID object from the ring stack.
@@ -336,7 +330,7 @@ export class Database extends WebObject {
         if (top_ring) {
             top_ring = this.get_ring(top_ring)      // check that top_ring occurs in the stack and replace it with the database's instance
             if (!top_ring) throw new DataAccessError(`target ring not found in the database`)
-            // print(`loading from custom top_ring:`, top_ring.__label || top_ring)
+            // print(`selecting [${id}] from custom top_ring:`, top_ring.__label || top_ring)
         }
         return (top_ring || this.top_ring).select(id)
     }
