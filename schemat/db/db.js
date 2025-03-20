@@ -334,9 +334,9 @@ export class Database extends WebObject {
 
     async select(id, {top_ring} = {}) {
         if (top_ring) {
-            print(`loading from custom top_ring:`, top_ring.__label || top_ring)
-            top_ring = this.locate_ring(top_ring)       // check that top_ring occurs in the stack and replace it with the database's instance
+            top_ring = this.get_ring(top_ring)      // check that top_ring occurs in the stack and replace it with the database's instance
             if (!top_ring) throw new DataAccessError(`target ring not found in the database`)
+            // print(`loading from custom top_ring:`, top_ring.__label || top_ring)
         }
         return (top_ring || this.top_ring).select(id)
     }
