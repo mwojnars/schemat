@@ -967,6 +967,6 @@
   name: Logger
   class: schemat/server/logger.js:Logger
   __prototype:
-    "@": 32
+    "@": 29
   __category:
     "@": 1
