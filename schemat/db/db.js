@@ -23,7 +23,7 @@ export class Ring extends WebObject {
     data_sequence           // DataSequence containing all primary data of this ring
     sequences = []          // array of derived sequences (Sequence objects)
 
-    name                    // human-readable name of this ring for find_ring()
+    name                    // human-readable name of this ring for get_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
     insert_mode             // if `compact`, new objects are inserted at the lowest possible ID in data blocks, possibly below autoincrement; requires MemoryStorage for data blocks
 
@@ -322,7 +322,7 @@ export class Database extends WebObject {
         return this.rings.findLastIndex(ring => ring.id === id)
     }
 
-    find_ring(ring) {
+    get_ring(ring) {
         /* Return the top-most ring with a given name or ID, or undefined if not found; `ring` can also be a Ring object,
            in which case it is replaced with the same-ID object from the ring stack.
          */
