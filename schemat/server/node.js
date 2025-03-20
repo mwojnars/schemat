@@ -245,7 +245,8 @@ export class Node extends Agent {
 
         if (type === 'RPC') {
             // this._print(`from_worker():`, JSON.stringify(msg))
-            let [target_id] = msg
+            let [target_id, method, args] = msg
+            // print(`from_worker():`, `target_id=${target_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(msg))
 
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
@@ -260,7 +261,7 @@ export class Node extends Agent {
             if (!node)
                 throw new Error(`missing host node for RPC target ${target.__label}`)
             if (node.is(schemat.node)) {
-                this._print(`from_worker(): redirecting to self`)
+                // this._print(`from_worker(): redirecting to self`)
                 return this.recv_tcp([type, ...msg])     // target agent is deployed on the current node
             }
 
