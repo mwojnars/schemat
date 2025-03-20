@@ -52,7 +52,7 @@ export class Sequence extends WebObject {
         // doing block.load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
         // doing the same later may cause infinite recursion, because the load() request for a block may be directed
         // to the current sequence (which has an unloaded block!), and cause another block.load(), and so on...
-        return Promise.all(this.blocks.map(b => b.load()))
+        return Promise.all(this.blocks.map(b => b.load()))  //{top_ring: this.__ring}
     }
 
     // add_derived(sequence) {
