@@ -254,7 +254,7 @@ export class Shard {
     includes(x) { return (x % this.base) === this.offset }
 
     fix_upwards(x) {
-        /* Return `x` if it belongs to the shard, or the smallest number greater than `x` that belongs to the shard. */
+        /* Return `x` or the smallest number greater than `x` that belongs to the shard. */
         let offset = x % this.base
         let y = x - offset + this.offset
         return y >= x ? y : y + this.base
