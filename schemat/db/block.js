@@ -1,5 +1,6 @@
 import {assert, print, T, zip, amap, sleep, utc, joinPath} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
+import {Shard} from "../common/structs.js";
 import {WebObject} from '../core/object.js'
 import {Struct} from "../core/catalog.js";
 import {MemoryStorage, JsonIndexStorage, YamlDataStorage} from "./storage.js";
@@ -184,6 +185,11 @@ export class DataBlock extends Block {
 
     _autoincrement = 1      // current maximum ID of records in this block; a new record is assigned id=_autoincrement+1 unless insert_mode='compact';
                             // transient field: NOT saved in the block's configuration in DB but re-initialized during block instantiation
+
+    get shard_combined() {
+        if (this.shard && this.ring.shard3) return Shard.intersection(this.shard, this.ring.shard3)
+        return this.shard || this.ring.shard3
+    }
 
 
     async __init__() {
