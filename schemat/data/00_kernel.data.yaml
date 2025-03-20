@@ -526,6 +526,11 @@
         its specification should never be modified after the ring has been
         created.
       "@": schemat/types/type.js:SHARD
+    insert_mode:
+      info: If 'compact', data blocks in this ring try to reuse free ID slots _below_
+        autoincrement if possible; using this mode has performance implications,
+        so it should only be used with small rings.
+      "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   class: schemat/db/db.js:Ring
   __category:
