@@ -326,13 +326,25 @@ export class Database extends WebObject {
         return this.ring_names.get(name)
     }
 
+    async select(id, {top_ring} = {}) {
+        if (top_ring) {
+            print(`loading from custom top_ring:`, top_ring.__label)
+
+            // check that top_ring.id occurs in the ring stack and replace `top_ring` with the loaded ring from stack
+            let pos = this.locate_ring(top_ring)
+            if (pos < 0) throw new DataAccessError(`target ring not found in the database: ${top_ring.__label}`)
+            top_ring = this.rings[pos]
+        }
+        return (top_ring || this.top_ring).select(id)
+    }
+
     async insert(data, {ring} = {}) {
         /* Find the top-most writable ring and insert `data` as a new entry there. Return {id, data} record.
            `ring` is an optional name of a ring to use.
          */
         if (typeof ring === 'string') {                             // find the ring by name
             let name = ring
-            ring = this.find_ring(name)
+            ring = this.ring_names.get(name)
             if (!ring) throw new DataAccessError(`target ring not found: '${name}'`)
             // if (!ring) return req.error_access(`target ring not found: '${name}'`)
         }
@@ -385,7 +397,7 @@ export class Database extends WebObject {
         if (!Array.isArray(key) || key.length === 0) throw new Error(`index key must be an array with at least one element: ${key}`)
         if (payload && !Array.isArray(payload)) throw new Error(`index payload must be an array: ${payload}`)
 
-        if (typeof ring === 'string') ring = this.find_ring(ring)
+        if (typeof ring === 'string') ring = this.ring_names.get(name)
 
         let pos = this.locate_ring(ring)
         if (pos < 0) throw new Error(`ring not found in the database: ${ring}`)

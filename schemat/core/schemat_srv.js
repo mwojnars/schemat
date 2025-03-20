@@ -78,10 +78,7 @@ export class ServerSchemat extends Schemat {
         return `import {Client} from "/$/local/schemat/web/client.js"; await new Client("#${id_context}").boot();`
     }
 
-    _db_select(id, {top_ring} = {}) {
-        if (top_ring) print(`loading from custom top_ring:`, top_ring.__label)
-        return (top_ring || this.db.top_ring).select(id)
-    }
+    _db_select(id, opts) { return this.db.select(id, opts) }
 
     async _purge_registry(generation = 0, ERASE_TIMEOUT = 100) {
         /* Purge the objects cache in the registry. Schedule periodical re-run: the interval is configured
