@@ -650,6 +650,14 @@
   schema:
     insert_mode:
       "@": schemat/types/type.js:STRING
+    shard:
+      info: Base-2 (2**k) shard that defines the valid set of IDs for objects inserted
+        into this block in the 'sharded' zone. For actual inserts, the shard
+        gets intersected with the parent ring's `shard3`. Shards of all blocks
+        in the ring must *not* overlap and, together, they must cover the full
+        set of possible IDs. Shard specification should never change after the
+        block has been created.
+      "@": schemat/types/type.js:SHARD
     "@": schemat:Catalog
   class: schemat/db/block.js:DataBlock
   __prototype:
