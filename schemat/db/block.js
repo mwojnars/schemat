@@ -181,7 +181,6 @@ export class DataBlock extends Block {
 
     // properties
     shard
-    insert_mode             // if `compact`, new objects are inserted at the lowest possible ID in the block, possibly below _autoincrement; requires MemoryStorage
 
     _autoincrement = 1      // current maximum ID of records in this block; a new record is assigned id=_autoincrement+1 unless insert_mode='compact';
                             // transient field: NOT saved in the block's configuration in DB but re-initialized during block instantiation
@@ -323,7 +322,7 @@ export class DataBlock extends Block {
     _assign_id() {
         /* Calculate a new `id` to be assigned to the record being inserted. */
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
-        let id = (this.insert_mode === 'compact') ? this._assign_id_compact() : this._assign_id_incremental()
+        let id = (this.ring.insert_mode === 'compact') ? this._assign_id_compact() : this._assign_id_incremental()
 
         if (!this.ring.valid_insert_id(id))
             throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid set for the ring ${this.ring.__label}`)
