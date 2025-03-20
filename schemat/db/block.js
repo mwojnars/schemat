@@ -376,19 +376,6 @@ export class DataBlock extends Block {
                 return id
             }
         }
-
-        // let ring = this.ring
-        // let gap  = ring.min_id_exclusive
-        //
-        // for (let [key, value] of this._storage.scan()) {
-        //     let id = this.decode_id(key)
-        //     if (id + 1 < ring.min_id_exclusive) continue    // skip records outside the ring's validity range
-        //     while (gap < id)                                // found a gap before `id`? return it unless already reserved
-        //         if (this._reserved.has(gap)) gap++
-        //         else return gap
-        //     gap = id + 1
-        // }
-        // return this._autoincrement + 1          // no gaps found, return the next ID after the last record
     }
 
     // _reclaim_id(...ids)
