@@ -507,7 +507,7 @@ export class WebObject {
         return loading
     }
 
-    async _load({sealed = true, activate = true} = {}) {
+    async _load({sealed = true, activate = true, ...opts} = {}) {
         /* Load this.__data from DB if missing. Initialize this object: set up the class and prototypes, run __init__() etc. */
 
         schemat.before_data_loading(this)
@@ -515,7 +515,7 @@ export class WebObject {
 
         try {
             if (!this.__data) {
-                let rec = schemat.load_record(this.id)
+                let rec = schemat.load_record(this.id, opts)
                 if (rec instanceof Promise) rec = await rec
                 let {json, loaded_at} = rec
                 this._set_data(json, loaded_at)

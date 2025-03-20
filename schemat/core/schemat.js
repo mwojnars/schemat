@@ -294,8 +294,8 @@ export class Schemat {
         return stub.load()      // here, this._loading gets updated
     }
 
-    load_record(id, fast = true) {
-        /* Read object's raw data (JSON string) from DB, or from the registry (if present there and fast=true).
+    load_record(id, opts = {}) {
+        /* Read object's raw data (JSON string) from DB, or from the registry (if present there).
            In the former case, the newly retrieved data is saved in the registry for future use. Return {json, loaded_at}.
          */
         assert(id !== undefined)
@@ -304,7 +304,7 @@ export class Schemat {
         let rec = this.get_record(id)
         if (rec) return rec
 
-        return this._db_select(id).then(json => {
+        return this._db_select(id, opts).then(json => {
             this.register_record({id, data: json})
             return {json, loaded_at: Date.now()}
         })

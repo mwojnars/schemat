@@ -79,6 +79,7 @@ export class ServerSchemat extends Schemat {
     }
 
     _db_select(id, {top_ring} = {}) {
+        if (top_ring) print(`loading from custom top_ring:`, top_ring.__label)
         return (top_ring || this.db.top_ring).select(id)
     }
 
