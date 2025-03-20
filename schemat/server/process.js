@@ -152,8 +152,8 @@ export class Process {
 
     async start() {
         schemat.process = this
-        if (this.is_master()) await sleep(1.0)      // master waits for workers to start their IPC before sending requests
-        else await sleep(2.0)                       // worker waits for master to provide an initial list of agents
+        if (this.is_master()) await sleep(2.0)      // master waits for workers to start their IPC before sending requests
+        else await sleep(3.0)                       // worker waits for master to provide an initial list of agents
         this._promise = this.main()
     }
 

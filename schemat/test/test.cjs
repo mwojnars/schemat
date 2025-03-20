@@ -153,7 +153,7 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
         }
         server = servers[0]
 
-        await delay(2500)                                       // wait for server to start
+        await delay(3000)                                       // wait for server to start
         browser = await puppeteer.launch({headless: "new"})
         page = await browser.newPage()
 
@@ -240,6 +240,7 @@ describe('Schemat Tests', function () {
 
         it('/$/sys', async function () {
             /* Test of React rendering around system-level bootstrap objects. Must be run first, otherwise the error doesn't show up. */
+            await delay(500)
             await test_page(page, `${DOMAIN}/$/id/1009`, '#page-main',
                 ['/$/sys', 'system objects', 'Container', 'Site', 'Revision'])
         })
