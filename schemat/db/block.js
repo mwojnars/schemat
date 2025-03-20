@@ -199,7 +199,7 @@ export class DataBlock extends Block {
 
     async __init__() {
         this._autoincrement = await super.__init__() || 1
-        this._reserved = new Set()      // IDs that were already assigned during insert(), for proper "compact" insertion of multiple objects
+        this._reserved = new Set()      // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
     }
 
     async assert_unique(id, msg) {
@@ -328,7 +328,7 @@ export class DataBlock extends Block {
         if (!this.ring.valid_insert_id(id))
             throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid set for the ring ${this.ring.__label}`)
 
-        this._reserved.add(id)
+        // this._reserved.add(id)
         this._autoincrement = Math.max(id, this._autoincrement)
 
         // print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
@@ -355,33 +355,37 @@ export class DataBlock extends Block {
            This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
         // if all empty slots below _autoincrement were already allocated, use the incremental algorithm
-        // (this may still leave empty slots if a record was removed in the meantime, but such slot may be reused after next reload of the block)
+        // (this may still leave empty slots if a record was removed in the meantime, but such slot is reused after next reload of the block)
         if (this._reserved.has(this._autoincrement)) return this._assign_id_incremental()
 
         if (!(this._storage instanceof MemoryStorage))
             throw new Error('compact insert mode is only supported with MemoryStorage')
 
-        // let [A, B, C] = this.ring.id_insert_zones       // [min_id_exclusive, min_id_forbidden, min_id_sharded]
-        // let gap = A                 // candidate ID value
+        let [A, B, C] = this.ring.id_insert_zones       // [min_id_exclusive, min_id_forbidden, min_id_sharded]
 
-        // // find the first unallocated ID slot in the exclusive zone [A,B)
-        // for (let id = A; id < B; id++) {
-        //     let key = this.encode_id(id)
-        //     if (this._storage.get(key)) continue
-        // }
-
-        let ring = this.ring
-        let gap  = ring.min_id_exclusive
-
-        for (let [key, value] of this._storage.scan()) {
-            let id = this.decode_id(key)
-            if (id + 1 < ring.min_id_exclusive) continue    // skip records outside the ring's validity range
-            while (gap < id)                                // found a gap before `id`? return it unless already reserved
-                if (this._reserved.has(gap)) gap++
-                else return gap
-            gap = id + 1
+        // find the first unallocated ID slot in the exclusive zone [A,B) or the sharded zone [C,∞)
+        for (let id = A || C; ; id++) {
+            if (id < C && id >= B) id = C
+            if (id >= C) id = this.shard_combined.fix_upwards(id)
+            let key = this.encode_id(id)
+            if (!this._reserved.has(id) && !this._storage.get(key)) {       // found an unallocated slot?
+                this._reserved.add(id)
+                return id
+            }
         }
-        return this._autoincrement + 1          // no gaps found, return the next ID after the last record
+
+        // let ring = this.ring
+        // let gap  = ring.min_id_exclusive
+        //
+        // for (let [key, value] of this._storage.scan()) {
+        //     let id = this.decode_id(key)
+        //     if (id + 1 < ring.min_id_exclusive) continue    // skip records outside the ring's validity range
+        //     while (gap < id)                                // found a gap before `id`? return it unless already reserved
+        //         if (this._reserved.has(gap)) gap++
+        //         else return gap
+        //     gap = id + 1
+        // }
+        // return this._autoincrement + 1          // no gaps found, return the next ID after the last record
     }
 
     // _reclaim_id(...ids)
