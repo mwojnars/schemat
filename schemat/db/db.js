@@ -326,9 +326,10 @@ export class Database extends WebObject {
         /* Return the top-most ring with a given name or ID, or undefined if not found; `ring` can also be a Ring object,
            in which case it is replaced with the same-ID object from the ring stack.
          */
+        if (!ring) return
         if (typeof ring === 'string') return this.ring_names.get(ring)
         if (typeof ring === 'number') return this.ring_ids.get(ring)
-        return ring
+        return this.ring_ids.get(ring.id)
     }
 
     async select(id, {top_ring} = {}) {
@@ -347,19 +348,15 @@ export class Database extends WebObject {
         /* Find the top-most writable ring and insert `data` as a new entry there. Return {id, data} record.
            `ring` is an optional name of a ring to use.
          */
-        if (typeof ring === 'string') {                             // find the ring by name
-            let name = ring
-            ring = this.ring_names.get(name)
-            if (!ring) throw new DataAccessError(`target ring not found: '${name}'`)
-            // if (!ring) return req.error_access(`target ring not found: '${name}'`)
+        if (ring) {
+            ring = this.get_ring(ring)                              // find the ring by name or ID
+            if (!ring) throw new DataAccessError(`target ring not found in the database`)
+            if (ring.readonly) throw new DataAccessError(`target ring is read-only`)
         }
-        if (!ring) {
+        else {
             ring = this.rings_reversed.find(r => !r.readonly)       // find the first writable ring
             if (!ring) throw new DataAccessError("all ring(s) are read-only")
-            // if (!ring) return req.error_access("all ring(s) are read-only")
         }
-        if (ring.readonly) throw new DataAccessError("the ring is read-only")
-
         return ring.insert(data)
     }
 
@@ -395,17 +392,18 @@ export class Database extends WebObject {
     //     yield* merge(WebObject.compare, ...streams)
     // }
 
-    async 'action.create_index'(name, key, payload = undefined, {ring = this.bottom_ring} = {}) {
+    async 'action.create_index'(name, key, payload = undefined, {ring} = {}) {
         /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (the kernel).
            Schema of the new index is defined by `key` and `payload` (arrays of property names).
          */
         if (!Array.isArray(key) || key.length === 0) throw new Error(`index key must be an array with at least one element: ${key}`)
         if (payload && !Array.isArray(payload)) throw new Error(`index payload must be an array: ${payload}`)
 
-        if (typeof ring === 'string') ring = this.ring_names.get(name)
-
-        let pos = this.locate_ring(ring)
-        if (pos < 0) throw new Error(`ring not found in the database: ${ring}`)
+        if (ring) {
+            ring = this.get_ring(ring)
+            if (!ring) throw new Error(`target ring not found in the database`)
+        }
+        else ring = this.bottom_ring
 
         // create index specification
         let ObjectIndexOperator = await schemat.import('/$/sys/ObjectIndexOperator')
