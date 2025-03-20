@@ -661,8 +661,6 @@
         set of possible IDs. Shard specification should never change after the
         block has been created.
       "@": schemat/types/type.js:SHARD
-    insert_mode:
-      "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   class: schemat/db/block.js:DataBlock
   __prototype:
