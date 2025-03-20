@@ -328,7 +328,6 @@ export class DataBlock extends Block {
         if (!this.ring.valid_insert_id(id))
             throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid set for the ring ${this.ring.__label}`)
 
-        // this._reserved.add(id)
         this._autoincrement = Math.max(id, this._autoincrement)
 
         // print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
@@ -356,7 +355,11 @@ export class DataBlock extends Block {
          */
         // if all empty slots below _autoincrement were already allocated, use the incremental algorithm
         // (this may still leave empty slots if a record was removed in the meantime, but such slot is reused after next reload of the block)
-        if (this._reserved.has(this._autoincrement)) return this._assign_id_incremental()
+        if (this._reserved.has(this._autoincrement)) {
+            let id = this._assign_id_incremental()
+            this._reserved.add(id)
+            return id
+        }
 
         if (!(this._storage instanceof MemoryStorage))
             throw new Error('compact insert mode is only supported with MemoryStorage')
