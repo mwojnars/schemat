@@ -199,7 +199,7 @@ export class DataBlock extends Block {
 
     async __init__() {
         this._autoincrement = await super.__init__() || 1
-        this._reserved = new Set()      // IDs that were already assigned during insert(), for proper handling of "compact" insertion
+        this._reserved = new Set()      // IDs that were already assigned during insert(), for proper "compact" insertion of multiple objects
     }
 
     async assert_unique(id, msg) {
@@ -328,6 +328,7 @@ export class DataBlock extends Block {
         if (!this.ring.valid_insert_id(id))
             throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid set for the ring ${this.ring.__label}`)
 
+        this._reserved.add(id)
         this._autoincrement = Math.max(id, this._autoincrement)
 
         // print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
@@ -358,7 +359,16 @@ export class DataBlock extends Block {
         if (this._reserved.has(this._autoincrement)) return this._assign_id_incremental()
 
         if (!(this._storage instanceof MemoryStorage))
-            throw new Error('Compact insert mode is only supported with MemoryStorage')
+            throw new Error('compact insert mode is only supported with MemoryStorage')
+
+        // let [A, B, C] = this.ring.id_insert_zones       // [min_id_exclusive, min_id_forbidden, min_id_sharded]
+        // let gap = A                 // candidate ID value
+
+        // // find the first unallocated ID slot in the exclusive zone [A,B)
+        // for (let id = A; id < B; id++) {
+        //     let key = this.encode_id(id)
+        //     if (this._storage.get(key)) continue
+        // }
 
         let ring = this.ring
         let gap  = ring.min_id_exclusive
