@@ -306,6 +306,7 @@ export class Database extends WebObject {
     get rings_reversed()    { return this.rings.toReversed() }
     get bottom_ring()       { return this.rings[0] }
     get ring_names()        { return new Map(this.rings.map(r => [r.name, r])) }    // may not be unique
+    get ring_ids()          { return new Map(this.rings.map(r => [r.id, r])) }      // should be unique
 
 
     async __init__() {
@@ -321,9 +322,13 @@ export class Database extends WebObject {
         return this.rings.findLastIndex(ring => ring.id === id)
     }
 
-    find_ring(name) {
-        /* Return the top-most ring with a given `name`, or undefined if not found. */
-        return this.ring_names.get(name)
+    find_ring(ring) {
+        /* Return the top-most ring with a given name or ID, or undefined if not found; `ring` can also be a Ring object,
+           in which case it is replaced with the same-ID object from the ring stack.
+         */
+        if (typeof ring === 'string') return this.ring_names.get(ring)
+        if (typeof ring === 'number') return this.ring_ids.get(ring)
+        return ring
     }
 
     async select(id, {top_ring} = {}) {
