@@ -305,6 +305,8 @@ export class Database extends WebObject {
     get rings()             { return this.top_ring.stack }      // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
     get rings_reversed()    { return this.rings.toReversed() }
     get bottom_ring()       { return this.rings[0] }
+    get ring_names()        { return new Map(this.rings.map(r => [r.name, r])) }    // may not be unique
+
 
     async __init__() {
         if (CLIENT) return
@@ -320,8 +322,8 @@ export class Database extends WebObject {
     }
 
     find_ring(name) {
-        /* Return the top-most ring with a given `name`, or undefined if not found. Can be called to check if a ring name exists. */
-        return this.rings_reversed.find(ring => ring.name === name)
+        /* Return the top-most ring with a given `name`, or undefined if not found. */
+        return this.ring_names.get(name)
     }
 
     async insert(data, {ring} = {}) {
