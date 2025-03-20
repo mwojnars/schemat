@@ -253,14 +253,11 @@ export class Shard {
     get label() { return `${this.offset}/${this.base}` }
     includes(x) { return (x % this.base) === this.offset }
 
-    next_after(x) {
-        /* Return the smallest number greater than `x` that belongs to the shard. */
-        return x + (this.base - (x % this.base))
-    }
-
     fix_upwards(x) {
         /* Return `x` if it belongs to the shard, or the smallest number greater than `x` that belongs to the shard. */
-        return this.next_after(x - 1)
+        let offset = x % this.base
+        let y = x - offset + this.offset
+        return y >= x ? y : y + this.base
     }
 
     overlaps(shard) { return !!Shard.intersection(this, shard) }
