@@ -163,7 +163,7 @@ export class Node extends Agent {
 
     _allocate_agents() {
         /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running of this process.
-           Return an array of arrays, where index [p][i] is the i-th agent at the p-th process.
+           Notify each sublist to a corresponding process. Return an inverted Map: agent ID -> array of process IDs.
          */
         let N = schemat.process.workers.length
         assert(N >= 1)
