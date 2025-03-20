@@ -337,9 +337,9 @@ export class DataBlock extends Block {
         let id = Math.max(auto, A || 1)
         if (A && id < B) return id
 
-        // otherwise, allocate from the sharded zone; take care to honor base-2 (block-level) and base-3 (ring-level) sharding rules
+        // otherwise, allocate from the sharded zone; pick an ID that honors the block-level (base-2) and ring-level (base-3) sharding rules at the same time
         id = Math.max(auto, C)
-        id = this.ring.shard3.fix_upwards(id)
+        id = this.shard_combined.fix_upwards(id)
 
         return id
     }
