@@ -192,6 +192,11 @@ export class DataBlock extends Block {
     }
 
 
+    __new__(sequence, {shard, ...opts} = {}) {
+        super.__new__(sequence, opts)
+        this.shard = shard || new Shard(0, 1)       // shard 0/1 represents the full set of ID numbers: x===0 (mod 1)
+    }
+
     async __init__() {
         this._autoincrement = await super.__init__() || 1
         this._reserved = new Set()      // IDs that were already assigned during insert(), for proper handling of "compact" insertion
