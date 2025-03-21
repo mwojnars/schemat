@@ -228,12 +228,12 @@ export class Ring extends WebObject {
         yield* seq.scan({start, stop, limit, reverse, batch_size})
     }
 
-    async* scan_all() {
-        /* Yield all objects in this ring as {id, data} records. For rebuilding indexes from scratch. */
-        let data = DataOperator.new()
-        for await (let record of data.scan(this.data_sequence))
-            yield record.decode_object()
-    }
+    // async* scan_all() {
+    //     /* Yield all objects in this ring as {id, data} records. For rebuilding indexes from scratch. */
+    //     let data = DataOperator.new()
+    //     for await (let record of data.scan(this.data_sequence))
+    //         yield record.decode_object()
+    // }
 
     async 'action.create_sequence'(operator) {
         // TODO SEC: check permissions
@@ -249,8 +249,8 @@ export class Ring extends WebObject {
         /* Rebuild all derived sequences by making a full scan of the data sequence. */
         await Promise.all(this.sequences.map(seq => seq.erase()))
 
-        // for await (let {id, data} of this.data_sequence.scan_objects()) {
-        for await (let {id, data} of this.scan_all()) {
+        // for await (let {id, data} of this.scan_all()) {
+        for await (let {id, data} of this.data_sequence.scan_objects()) {
             let key = data_schema.encode_key([id])
             let obj = await WebObject.from_data(id, data, {activate: false})
             await Promise.all(this.sequences.map(seq => seq.apply_change(key, null, obj)))

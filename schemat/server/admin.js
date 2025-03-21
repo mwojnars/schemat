@@ -125,7 +125,7 @@ export class AdminProcess {
         let transform = (obj => obj?.__id === old_id ? target : undefined)
 
         for (let ring of schemat.db.rings)
-            for await (let {id, data} of ring.scan_all()) {         // search for references to `old_id` in all records
+            for await (let {id, data} of ring.data_sequence.scan_objects()) {       // search for references to `old_id` in all records
                 let new_data = Struct.transform(data, transform)
                 if (new_data.dump() === data.dump()) continue       // no changes? don't update the record
 

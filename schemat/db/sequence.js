@@ -171,6 +171,15 @@ export class DataSequence extends Sequence {
         let key = this.encode_id(id)
         return this.find_block(key)
     }
+
+    async* scan_objects() {
+        /* Scanning a data sequence differs from an index scan because the key space is sharded (by low bits),
+           not segmented (by high bits/bytes), hence the result stream is not monotonic, OR it will require a merge-sort
+           to become monotonic. Plus, the function outputs objects (decoded) instead of records.
+         */
+        for await (let record of this.scan())
+            yield record.decode_object()
+    }
 }
 
 
@@ -219,6 +228,6 @@ export class Operator extends WebObject {
 export class DataOperator extends Operator {
     /* Special type of Operator that has no source and represents the main data sequence. */
 
-    record_schema = data_schema
+    get record_schema() { return data_schema }
 }
 
