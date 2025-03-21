@@ -106,7 +106,19 @@ export class Sequence extends WebObject {
         yield* block_start.scan({start, stop})
     }
 
-    async* scan(opts)       { yield* this.operator.scan(this, opts) }
+    // async* scan(opts)   { yield* this.operator.scan(this, opts) }
+
+    async* scan(opts = {}) {
+        /* Scan this sequence in the [`start`, `stop`) range and yield BinaryRecords. */
+        let {start, stop} = opts
+        let rschema = this.operator.record_schema
+
+        start = start && rschema.encode_key(start)          // convert `start` and `stop` to binary keys (Uint8Array)
+        stop = stop && rschema.encode_key(stop)
+
+        for await (let [key, value] of this.scan_binary({...opts, start, stop}))
+            yield Record.binary(rschema, key, value)
+    }
 
     async erase()   { return Promise.all(this.blocks.map(b => b.erase())) }
     async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
@@ -210,17 +222,17 @@ export class Operator extends WebObject {
         return this.record_schema.decode_key(bin)
     }
 
-    async* scan(sequence, opts = {}) {
-        /* Scan this operator's output in the [`start`, `stop`) range and yield BinaryRecords. See Sequence.scan() for details. */
-        let {start, stop} = opts
-        let rschema = this.record_schema
-
-        start = start && rschema.encode_key(start)          // convert `start` and `stop` to binary keys (Uint8Array)
-        stop = stop && rschema.encode_key(stop)
-
-        for await (let [key, value] of sequence.scan_binary({...opts, start, stop}))
-            yield Record.binary(rschema, key, value)
-    }
+    // async* scan(sequence, opts = {}) {
+    //     /* Scan this operator's output in the [`start`, `stop`) range and yield BinaryRecords. See Sequence.scan() for details. */
+    //     let {start, stop} = opts
+    //     let rschema = this.record_schema
+    //
+    //     start = start && rschema.encode_key(start)          // convert `start` and `stop` to binary keys (Uint8Array)
+    //     stop = stop && rschema.encode_key(stop)
+    //
+    //     for await (let [key, value] of sequence.scan_binary({...opts, start, stop}))
+    //         yield Record.binary(rschema, key, value)
+    // }
 
     // async min(seq)
     // async max(seq)
