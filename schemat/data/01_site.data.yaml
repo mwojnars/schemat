@@ -47,7 +47,7 @@
   name: ring-site
   base_ring:
     "@": 1003
-  lower_ring_writable: true
+  base_ring_readonly: false
   data_sequence:
     "@": 1027
   sequences:
@@ -194,7 +194,7 @@
   name: ring-app
   base_ring:
     "@": 1004
-  lower_ring_writable: true
+  base_ring_readonly: false
   data_sequence:
     "@": 1017
   sequences:

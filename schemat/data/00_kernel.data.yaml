@@ -481,12 +481,12 @@
       category:
         "@": 12
       "@": schemat/types/type.js:REF
-    lower_ring_writable:
+    base_ring_readonly:
       default: false
       info: If true, read-write requests that originate in this ring and need to be
-        forwarded down to the base_ring (and deeper) for the 'read' part, can
-        write their updates over there instead of being forwarded back up to
-        this ring for the 'write` part of the operation.
+        forwarded down to the base_ring (and deeper) for the 'read' part, cannot
+        write their updates there but must be forwarded back up to this ring for the
+        'write` part of the operation.
       "@": schemat/types/type.js:BOOLEAN
     readonly:
       "@": schemat/types/type.js:BOOLEAN

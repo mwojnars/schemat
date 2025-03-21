@@ -27,7 +27,7 @@ export class Ring extends WebObject {
     insert_mode             // if `compact`, new objects are inserted at the lowest possible ID in data blocks, possibly below autoincrement; requires MemoryStorage for data blocks
 
     base_ring               // reference to the base Ring (lower ring) of this one
-    lower_ring_writable     // if true, the requests going down through this ring are allowed to save their updates in lower ring(s)
+    base_ring_readonly      // if true, requests going down to `base_ring` are not allowed to save their updates there but must come back to an upper ring
 
     // ID insert zones:
     min_id_exclusive = 0    // [min_id_exclusive, min_id_forbidden-1] is the exclusive ID insert zone, every value from this range can be used for new records inserted in this ring
