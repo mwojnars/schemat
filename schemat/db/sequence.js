@@ -52,10 +52,10 @@ export class Sequence extends WebObject {
         // 1) Doing block.load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
         // doing the same later may cause infinite recursion, because the load() request for a block may be directed
         // to the current sequence (which has an unloaded block!), and cause another block.load(), and so on...
-        // 2) Setting a custom top_ring is needed to enable distributed storage, so that searching for the block object
+        // 2) Setting a custom {ring} is needed to enable distributed storage, so that searching for the block object
         // over the cluster does NOT evoke an infinite chain of cyclic load attempts. Here, it's assumed that
         // this.__ring is a special type of system-level ring whose data is readily available on every cluster node.
-        return Promise.all(this.blocks.map(b => b.load({top_ring: this.__ring})))
+        return Promise.all(this.blocks.map(b => b.load({ring: this.__ring})))
     }
 
     // add_derived(sequence) {

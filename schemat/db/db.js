@@ -318,13 +318,13 @@ export class Database extends WebObject {
         return this.ring_ids.get(ring.id)
     }
 
-    async select(id, {top_ring} = {}) {
-        if (top_ring) {
-            top_ring = this.get_ring(top_ring)      // check that top_ring occurs in the stack and replace it with the database's instance
-            if (!top_ring) throw new DataAccessError(`target ring not found in the database`)
-            // print(`selecting [${id}] from custom top_ring:`, top_ring.__label || top_ring)
+    async select(id, {ring} = {}) {
+        if (ring) {
+            ring = this.get_ring(ring)      // check that `ring` occurs in the stack and replace it with the database's instance
+            if (!ring) throw new DataAccessError(`target ring not found in the database`)
+            // print(`selecting [${id}] from a custom top ring:`, ring.__label || ring)
         }
-        return (top_ring || this.top_ring).select(id)
+        return (ring || this.top_ring).select(id)
     }
 
     async insert(data, {ring} = {}) {
