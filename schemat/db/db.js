@@ -26,7 +26,7 @@ export class Ring extends WebObject {
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
     insert_mode             // if `compact`, new objects are inserted at the lowest possible ID in data blocks, possibly below autoincrement; requires MemoryStorage for data blocks
 
-    lower_ring              // reference to the base Ring (lower ring) of this one
+    base_ring               // reference to the base Ring (lower ring) of this one
     lower_ring_writable     // if true, the requests going down through this ring are allowed to save their updates in lower ring(s)
 
     // ID insert zones:
@@ -40,7 +40,7 @@ export class Ring extends WebObject {
 
     get stack() {
         /* Array of all rings in the stack, starting from the innermost ring (bottom of the stack) up to this one, included. */
-        let stack = this.lower_ring?.stack || []
+        let stack = this.base_ring?.stack || []
         return [...stack, this]
     }
 
@@ -59,9 +59,9 @@ export class Ring extends WebObject {
     }
 
 
-    __new__({name, lower_ring, file_prefix, file, min_id_exclusive, min_id_forbidden, min_id_sharded, readonly = false} = {}) {
+    __new__({name, base_ring, file_prefix, file, min_id_exclusive, min_id_forbidden, min_id_sharded, readonly = false} = {}) {
         this.name = name || (file && fileBaseName(file))
-        this.lower_ring = lower_ring
+        this.base_ring = base_ring
 
         // if (!name && file)
         //     this.name = file.replace(/^.*\/|\.[^.]*$/g, '')         // extract the name from the file path (no directory, no extension)
@@ -78,9 +78,9 @@ export class Ring extends WebObject {
     async __setup__({}) {
         /* Create `data_sequence`. Re-create all indexes from the lower ring. */
 
-        let lower = await this.lower_ring?.load()
+        let lower = await this.base_ring?.load()
 
-        this.min_id_sharded ??= this.lower_ring.min_id_sharded
+        this.min_id_sharded ??= this.base_ring.min_id_sharded
 
         let DataSequence = await schemat.import('/$/sys/DataSequence')
         this.data_sequence = DataSequence.new(this, lower?.data_sequence.operator)
@@ -97,7 +97,7 @@ export class Ring extends WebObject {
         if (CLIENT) return
         // print(`... ring [${this.__id || '---'}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
 
-        await this.lower_ring?.load()
+        await this.base_ring?.load()
         await this.data_sequence.load()
         for (let seq of this.sequences) await seq.load()
 
@@ -124,7 +124,7 @@ export class Ring extends WebObject {
 
     validate_zones() {
         /* Check that the ID-insert zones of this ring do not overlap with the zones of lower rings. */
-        // this.lower_ring.validate_zones()        // may raise an error
+        // this.base_ring.validate_zones()         // may raise an error
 
         let [A, B, C] = this.id_insert_zones
 
@@ -135,8 +135,8 @@ export class Ring extends WebObject {
             if (A > C) throw new Error(`exclusive ID-insert zone overlaps with sharded zone: ${A} > ${C}`)
         }
 
-        if (!this.lower_ring) return true       // no lower ring, nothing more to check
-        let stack = this.lower_ring.stack
+        if (!this.base_ring) return true        // no base ring, nothing more to check
+        let stack = this.base_ring.stack
 
         // sharded zones of different rings must not overlap
         if (this.shard3)                        // shard3 is missing in bootstrap DB
@@ -417,7 +417,7 @@ export class BootDatabase extends Database {
         print(`creating bootstrap database...`)
         let top
         for (let spec of ring_specs)
-            top = await BootRing.new({...spec, lower_ring: top}).load()
+            top = await BootRing.new({...spec, base_ring: top}).load()
         this.top_ring = top
     }
 

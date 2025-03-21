@@ -220,7 +220,7 @@ export class DataBlock extends Block {
     _move_down(id, req) {
         /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring. */
         let ring = this.ring
-        let lower = ring.lower_ring
+        let lower = ring.base_ring
         if (!lower) throw new ObjectNotFound(null, {id})
         req.push_ring(ring)
         return lower

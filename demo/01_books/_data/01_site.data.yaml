@@ -48,7 +48,7 @@
     "@": 12
 - __id: 1004
   name: ring-site
-  lower_ring:
+  base_ring:
     "@": 1003
   lower_ring_writable: true
   data_sequence:
@@ -196,7 +196,7 @@
     "@": 19
 - __id: 1016
   name: ring-app
-  lower_ring:
+  base_ring:
     "@": 1004
   lower_ring_writable: true
   data_sequence:
@@ -422,7 +422,7 @@
     "@": 11
 - __id: 1040
   name: ring-test
-  lower_ring:
+  base_ring:
     "@": 1016
   file_prefix: 03_test
   readonly: false
