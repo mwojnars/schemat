@@ -107,10 +107,15 @@ export class Sequence extends WebObject {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is defined, yield items in batches of `batch_size` items.
          */
-        let block = this.find_block(start)
-        block.assert_active()
+        assert(!reverse)
+
+        let block_start = this.find_block(start)
+        let block_stop = this.find_block(stop)
+        assert(block_start === block_stop)
+
+        block_start.assert_active()
         // if (!block.is_loaded()) block = await block.load()
-        yield* block.scan({start, stop})
+        yield* block_start.scan({start, stop})
     }
 
     async* scan(opts)       { yield* this.operator.scan(this, opts) }
