@@ -173,9 +173,10 @@ export class DataSequence extends Sequence {
     }
 
     async* scan_objects() {
-        /* Scanning a data sequence differs from an index scan because the key space is sharded (by low bits),
+        /* Yield all objects in this sequence as {id, data} pairs.
+           Scanning a data sequence differs from an index scan because the key space is sharded (by low bits),
            not segmented (by high bits/bytes), hence the result stream is not monotonic, OR it will require a merge-sort
-           to become monotonic. Plus, the function outputs objects (decoded) instead of records.
+           to become monotonic. Plus, the function outputs {id, data} pairs (decoded) instead of binary records.
          */
         for await (let record of this.scan())
             yield record.decode_object()
