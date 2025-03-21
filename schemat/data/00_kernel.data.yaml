@@ -441,7 +441,7 @@
   schema:
     top_ring:
       info: Reference to the top-most Ring of this database. Other rings are found by
-        following the `lower_ring` property.
+        following the `lower_ring` chain of references.
       category:
         "@": 12
       "@": schemat/types/type.js:REF
