@@ -171,6 +171,19 @@ export function hex_to_bin(str) {
 // const arr = Uint8Array.from({ length: 256 }, (_, i) => i)
 // ascii_to_bin(bin_to_ascii(arr)) is equal `arr`
 
+export function reverse_bits(num, width = 64) {
+    /* Possibly costly way to reverse the order of all bits in `num` (a BigInt). Example:
+       reverseBits64(0b101n).toString(2)   // "1010000000000000000000000000000000000000000000000000000000000000"
+     */
+    let result = 0n
+    for (let i = 0; i < width; i++) {
+        result = (result << 1n) | (num & 1n)
+        num >>= 1n
+    }
+    return result
+}
+
+
 
 /**********************************************************************************************************************/
 
