@@ -89,18 +89,6 @@ export class Sequence extends WebObject {
     encode_key(key) { return this.operator.encode_key(key) }    // app > binary representation
     decode_key(bin) { return this.operator.decode_key(bin) }    // binary > app representation
 
-    async put(key, value) {
-        let block = this.find_block(key)
-        if (!block.is_loaded()) block = await block.load()
-        return block.remote.put(key, value)
-    }
-
-    async del(key, value) {
-        let block = this.find_block(key)
-        if (!block.is_loaded()) block = await block.load()
-        return block.remote.del(key, value)
-    }
-
     async* scan_binary({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
         /* Scan this sequence in the [`start`, `stop`) range and yield [key, value] pairs.
            If `limit` is defined, yield at most `limit` items.
@@ -120,8 +108,6 @@ export class Sequence extends WebObject {
 
     async* scan(opts)       { yield* this.operator.scan(this, opts) }
 
-    apply_change(key, prev, next) { return this.operator.apply_change(this, key, prev, next) }
-
     async erase()   { return Promise.all(this.blocks.map(b => b.erase())) }
     async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
 }
@@ -138,6 +124,20 @@ export class IndexSequence extends Sequence {
         let Block = await schemat.import('/$/sys/Block')
         this.blocks = [Block.new(this, {format: 'index-jl'})]
     }
+
+    async put(key, value) {
+        let block = this.find_block(key)
+        if (!block.is_loaded()) block = await block.load()
+        return block.remote.put(key, value)
+    }
+
+    async del(key, value) {
+        let block = this.find_block(key)
+        if (!block.is_loaded()) block = await block.load()
+        return block.remote.del(key, value)
+    }
+
+    apply_change(key, prev, next) { return this.operator.apply_change(this, key, prev, next) }
 }
 
 /**********************************************************************************************************************/
