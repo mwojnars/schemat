@@ -329,7 +329,7 @@ export class Database extends WebObject {
 
     async insert(data, {ring} = {}) {
         /* Find the top-most writable ring and insert `data` as a new entry there. Return {id, data} record.
-           `ring` is an optional name of a ring to use.
+           If `ring` is given (name/object/ID), the entry is inserted to this particular ring, or error is raised if read-only.
          */
         if (ring) {
             ring = this.get_ring(ring)                              // find the ring by name or ID
