@@ -219,10 +219,10 @@ export class Ring extends WebObject {
     /***  Indexes and Transforms  ***/
 
     async *scan(name, {start, stop, limit=null, reverse=false, batch_size=100} = {}) {
-        /* Scan a given data stream, `name`, in the range [`start`, `stop`) and yield the results.
+        /* Scan a given sequence, `name`, in the binary range [`start`, `stop`) and yield the records.
            If `limit` is not null, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.
-           If `batch_size` is not null, yield items in batches of `batch_size` items.
+           If `batch_size` is not null, yield records in batches of `batch_size` items.
          */
         let seq = this.sequence_names.get(name)
         yield* seq.scan({start, stop, limit, reverse, batch_size})
@@ -249,6 +249,7 @@ export class Ring extends WebObject {
         /* Rebuild all derived sequences by making a full scan of the data sequence. */
         await Promise.all(this.sequences.map(seq => seq.erase()))
 
+        // for await (let {id, data} of this.data_sequence.scan_objects()) {
         for await (let {id, data} of this.scan_all()) {
             let key = data_schema.encode_key([id])
             let obj = await WebObject.from_data(id, data, {activate: false})
