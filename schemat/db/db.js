@@ -95,7 +95,7 @@ export class Ring extends WebObject {
     async __init__() {
         /* Initialize the ring after it's been loaded from DB. */
         if (CLIENT) return
-        // print(`... ring [${this.__id || '---'}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
+        // print(`... ring [${this.id || '---'}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
 
         await this.base_ring?.load()
         await this.data_sequence.load()
@@ -303,7 +303,7 @@ export class Database extends WebObject {
 
     async __init__() {
         if (CLIENT) return
-        // print(`initializing database [${this.__id}] ...`)
+        // print(`initializing database [${this.id}] ...`)
         // assert(this.top_ring, 'missing rings in the database')
         await this.top_ring?.load()
     }

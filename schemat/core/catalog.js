@@ -782,7 +782,7 @@ export class Catalog {
            Properties defined by getters are ignored.
            TODO: this method is temporary, it likely needs to be discarded in the future.
          */
-        assert(!obj.__id)
+        assert(!obj.id)
 
         const KEEP = ['__class', '__category']
         const DROP = ['GET', 'POST', 'LOCAL']

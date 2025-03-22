@@ -333,7 +333,7 @@ export class WebObject {
 
     // static compare(obj1, obj2) {
     //     /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
-    //     return obj1.__id - obj2.__id
+    //     return obj1.id - obj2.id
     // }
 
 
@@ -375,7 +375,7 @@ export class WebObject {
 
     /***  Object status  ***/
 
-    is_newborn()    { return !this.__id }       // object is a "newborn" when it hasn't been saved to DB yet, so it has no ID assigned
+    is_newborn()    { return !this.id }         // object is a "newborn" when it hasn't been saved to DB yet, so it has no ID assigned
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     is_mutable()    { return this.__meta.mutable }
     is_category()   { return false }
@@ -389,7 +389,7 @@ export class WebObject {
            AND may contain different data (!), for example, if one of them contains more recent updates than the other.
            If `other` is undefined or any of the objects has a missing ID, they are considered NOT equivalent.
          */
-        return this.__id !== undefined && this.__id === other?.__id
+        return this.id !== undefined && this.id === other?.id
     }
 
 
@@ -611,7 +611,7 @@ export class WebObject {
         for (let i = 0; i < locs.length; i++) {
             let ref = refs[i], loc = locs[i], ver = vers[i]
             if (ref !== this && (!ref.is_loaded() || ref.__ver !== ver))
-                data.set(loc, await schemat.get_version(ref.__id, ver))
+                data.set(loc, await schemat.get_version(ref.id, ver))
         }
     }
 
@@ -634,7 +634,7 @@ export class WebObject {
 
     _load_class() {
         /* Load or import this object's ultimate class. */
-        if (this.__id === ROOT_ID) return RootCategory
+        if (this.id === ROOT_ID) return RootCategory
         let path = this.__class || this.__category?.class
         if (path) return schemat.import(path)                   // the path can be missing, for no-category objects
     }

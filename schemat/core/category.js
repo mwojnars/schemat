@@ -117,7 +117,7 @@ export class Category extends WebObject {
     //     /* Combine all code snippets of this category, including inherited ones, into a module source code.
     //        Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
     //      */
-    //     let name = this.class_name || `Class_${this.__id}`
+    //     let name = this.class_name || `Class_${this.id}`
     //     let base = this._codeBaseClass()
     //     let init = this._codeInit()
     //     let code = this._codeClass(name)

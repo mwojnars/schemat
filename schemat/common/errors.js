@@ -86,6 +86,6 @@ export class NotImplemented extends InternalError {
 }
 
 export class NotLoaded extends InternalError {
-    constructor(obj) { super(`object is not loaded yet, run 'await obj.load()', id=${obj.__id}`) }
+    constructor(obj) { super(`object is not loaded yet, run 'await obj.load()', id=${obj.id}`) }
 }
 
