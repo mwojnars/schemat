@@ -14,7 +14,7 @@ const WORKERS =  1 //Math.floor(os.cpus().length / 2)
 
 await (async function run() {
     process.on("unhandledRejection", (reason, promise) => {
-        console.error("\nUNHANDLED PROMISE REJECTION! A promise is created somewhere in the call stack that has NO .catch() handler and is NOT immediately awaited. This needs to be fixed!")
+        console.error("\nUNHANDLED PROMISE REJECTION! A promise is created somewhere in the call stack that has NO .catch() handler and is NOT immediately awaited (possibly stored in a variable for future awaiting):")
         console.error(reason, '\n')
     })
 
