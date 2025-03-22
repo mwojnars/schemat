@@ -53,6 +53,7 @@ export class Site extends WebObject {
             // this._vm = await import('node:vm')
             if (this.default_path) this._check_default_container()      // no await to avoid blocking the site's startup
         }
+        await this.load_globals()
     }
 
     async _check_default_container() {
@@ -71,7 +72,7 @@ export class Site extends WebObject {
         for (let [name, object] of this.global || [])
             try { globalThis[name] = await object.load() }
             catch (e) {
-                print(`Site: failed to load global object '${name}'`)
+                console.warn(`Site: failed to load global object '${name}'`)
             }
     }
 
