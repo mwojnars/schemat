@@ -13,6 +13,11 @@ const WORKERS =  1 //Math.floor(os.cpus().length / 2)
 /**********************************************************************************************************************/
 
 await (async function run() {
+    process.on("unhandledRejection", (reason, promise) => {
+        console.error("\nUNHANDLED PROMISE REJECTION! A promise is created somewhere in the call stack that has NO .catch() handler and is NOT immediately awaited. This needs to be fixed!")
+        console.error(reason, '\n')
+    })
+
     let opts = yargs(hideBin(process.argv))
         .option('config',    {type: 'string', default: './schemat/config.yaml'})
         .option('node-file', {type: 'string', default: './schemat/node.id'})
