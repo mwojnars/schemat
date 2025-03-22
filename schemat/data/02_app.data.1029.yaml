@@ -1,4 +1,4 @@
-- __id: 2001
+- id: 2001
   name: Varia
   info: Category of items that do not belong to any specific category.
   class_body: >-
@@ -13,19 +13,19 @@
     "@": schemat:Catalog
   __category:
     "@": 1
-- __id: 2002
+- id: 2002
   title: Ala ma kota Sierściucha i psa Kłapoucha.
   title/2: drugi tytuł...
   __category:
     "@": 2001
-- __id: 2003
+- id: 2003
   title: ąłęÓŁŻŹŚ
-- __id: 2004
+- id: 2004
   name: Post A
   text: Ala ma kota
   __category:
     "@": 2006
-- __id: 2005
+- id: 2005
   name: MysqlDB
   schema:
     host:
@@ -54,7 +54,7 @@
   class: schemat/db/mysql.js:MySQL
   __category:
     "@": 1
-- __id: 2006
+- id: 2006
   name: TwitterPost
   schema:
     text:
@@ -98,7 +98,7 @@
     }
   __category:
     "@": 1
-- __id: 2007
+- id: 2007
   name: /apps
   entries:
     demo:
@@ -106,7 +106,7 @@
     "@": schemat:Catalog
   __category:
     "@": 5
-- __id: 2008
+- id: 2008
   name: /site
   entries:
     utils.js:
@@ -116,13 +116,13 @@
     "@": schemat:Catalog
   __category:
     "@": 5
-- __id: 2009
+- id: 2009
   content: export let print = console.log
   __category:
     "@": 4
   __container:
     "@": 2008
-- __id: 2010
+- id: 2010
   content: |-
     import {print} from '../site/utils.js'
     export function check() { print('called widgets.js:check()') } 
@@ -132,13 +132,13 @@
     "@": 4
   __container:
     "@": 2008
-- __id: 2011
+- id: 2011
   name: /demo
   __category:
     "@": 5
   __container:
     "@": 2007
-- __id: 2012
+- id: 2012
   name: main-space
   spaces:
     sys.category:
@@ -146,7 +146,7 @@
     "@": schemat:Catalog
   __category:
     "@": 9
-- __id: 2013
+- id: 2013
   name: varia_01
   info: xxxxxxxxxxxxxxxxxx
   __category:

@@ -1,4 +1,4 @@
-- __id: 1024
+- id: 1024
   agents_installed:
     - "@": 1010
     - "@": 1015
@@ -18,7 +18,7 @@
   tcp_port: 5820
   __category:
     "@": 21
-- __id: 1036
+- id: 1036
   agents_installed:
     - "@": 1037
     - "@": 1026

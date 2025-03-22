@@ -287,7 +287,7 @@ export class DataBlock extends Block {
 
         for (let pos = 0; pos < objects.length; pos++) {
             let obj = objects[pos]
-            obj.__id ??= this._assign_id()
+            obj.id ??= this._assign_id()
 
             let setup = obj.__setup__({ring: this.ring, block: this})
             if (setup instanceof Promise) await setup

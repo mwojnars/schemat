@@ -1,4 +1,4 @@
-- __id: 1
+- id: 1
   name: Category
   info: Root category. Category of objects that represent categories. Is a
     category for itself and for other categories.
@@ -232,7 +232,7 @@
   seal_dependencies: false
   cache_timeout: 60
   class: schemat:Category
-- __id: 2
+- id: 2
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
     startup.
@@ -288,7 +288,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 3
+- id: 3
   name: Container
   __category:
     "@": 1
@@ -297,7 +297,7 @@
       default: true
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
-- __id: 4
+- id: 4
   name: File
   info: File with a text content.
   schema:
@@ -317,7 +317,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 5
+- id: 5
   name: Directory
   info: >-
     A container that keeps an explicit list of named `entries`: regular objects
@@ -337,7 +337,7 @@
     "@": 3
   __category:
     "@": 1
-- __id: 6
+- id: 6
   name: LocalDirectory
   info: A Directory whose content is located on a local disk, in the folder
     identified by `local_path`. Translates all URL requests to file paths inside
@@ -376,7 +376,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 7
+- id: 7
   name: Namespace
   info: "Unbounded collection of objects: each object that satisfies the criteria
     of the namespace is accepted and can receive a (dynamically created) unique
@@ -390,7 +390,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 8
+- id: 8
   name: ObjectSpace
   info: Namespace that maps all objects to URLs of the form /<ID>. Optionally
     restricted to a specific category(ies) of objects.
@@ -410,7 +410,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 9
+- id: 9
   name: Category_IID_Namespace
   info: "Namespace for accessing public data through verbose paths of the form:
     .../SPACE:ID, where SPACE is a text identifier assigned to a category in
@@ -428,13 +428,13 @@
     "@": 7
   __category:
     "@": 1
-- __id: 10
+- id: 10
   name: Cluster
   __category:
     "@": 1
   schema:
     "@": schemat:Catalog
-- __id: 11
+- id: 11
   name: Database
   info: Internal database. An array of data Rings stacked on top of each other,
     represented by a reference to the top ring.
@@ -453,7 +453,7 @@
   class: schemat/db/db.js:Database
   __category:
     "@": 1
-- __id: 12
+- id: 12
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
@@ -535,7 +535,7 @@
   class: schemat/db/db.js:Ring
   __category:
     "@": 1
-- __id: 13
+- id: 13
   name: Sequence
   info: Base category for sequences of key-value records, either data or indexes.
   schema:
@@ -575,7 +575,7 @@
     "@": schemat:Catalog
   __category:
     "@": 1
-- __id: 14
+- id: 14
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
   class: schemat/db/sequence.js:DataSequence
@@ -585,7 +585,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 15
+- id: 15
   name: IndexOperator
   info: Base category for indexes over the data sequence.
   __prototype:
@@ -594,7 +594,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 16
+- id: 16
   name: ObjectIndexOperator
   info: An index that receives record updates from the main data sequence, so
     input records represent objects.
@@ -618,7 +618,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 17
+- id: 17
   name: DataOperator
   class: schemat/db/sequence.js:DataOperator
   __prototype:
@@ -627,7 +627,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 18
+- id: 18
   name: Block
   info: A continuous subrange of records of a data/index sequence, physically
     located on a single machine.
@@ -649,7 +649,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 19
+- id: 19
   name: DataBlock
   info: Block of a DataSequence.
   schema:
@@ -669,12 +669,12 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 20
+- id: 20
   name: data
   file_prefix: data
   __category:
     "@": 17
-- __id: 21
+- id: 21
   name: Node
   class: schemat/server/node.js:Node
   info: Node of a Schemat cluster. Technically, each node is a local (master)
@@ -758,7 +758,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 22
+- id: 22
   name: IndexSequence
   info: Category for sequences of index records.
   class: schemat/db/sequence.js:IndexSequence
@@ -768,7 +768,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 23
+- id: 23
   name: idx_category
   info: "Index of all objects by their category: the key is [category ID, item
     ID], no payload."
@@ -777,7 +777,7 @@
     - id
   __category:
     "@": 16
-- __id: 24
+- id: 24
   name: Operator
   schema:
     source:
@@ -806,7 +806,7 @@
     "@": schemat:Catalog
   __category:
     "@": 1
-- __id: 25
+- id: 25
   name: Page
   info: >-
     A standalone HTML page that is not strictly related to any specific object
@@ -830,7 +830,7 @@
     "@": schemat:Catalog
   __category:
     "@": 1
-- __id: 26
+- id: 26
   name: Revision
   info: Immutable snapshot of past content of the `target` object at a particular
     version number.
@@ -849,7 +849,7 @@
   immutable: true
   __category:
     "@": 1
-- __id: 27
+- id: 27
   name: LocalFile
   info: File located on a local disk, identified by its local file path.
   __prototype:
@@ -863,7 +863,7 @@
     "@": 1
   __container:
     "@": 1009
-- __id: 29
+- id: 29
   name: Agent
   info: "Base category for web objects that are deployed permanently on a
     particular node in the cluster and perform there a perpetual computation
@@ -897,7 +897,7 @@
     "@": schemat:Catalog
   __category:
     "@": 1
-- __id: 30
+- id: 30
   name: WebServer
   info: "An agent that implements a web server: a perpetual event loop
     (microservice) that receives web requests from external clients, processes
@@ -927,14 +927,14 @@
     "@": 29
   __category:
     "@": 1
-- __id: 31
+- id: 31
   name: KafkaBroker
   class: schemat/server/kafka.js:KafkaBroker
   __prototype:
     "@": 29
   __category:
     "@": 1
-- __id: 32
+- id: 32
   name: KafkaAgent
   info: An agent that - depending on the settings - creates a shared Kafka client,
     a permanently-connected Kafka producer, and/or a Kafka consumer that
@@ -966,7 +966,7 @@
     "@": 29
   __category:
     "@": 1
-- __id: 33
+- id: 33
   name: Logger
   class: schemat/server/logger.js:Logger
   __prototype:

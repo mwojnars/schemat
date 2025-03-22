@@ -438,7 +438,7 @@ export class Schemat {
         let ids = await this.site.action.insert_objects(data, opts)
         ids.map((id, i) => {
             delete objects[i].__self.__provisional_id   // replace provisional IDs with final IDs
-            objects[i].__id = id
+            objects[i].id = id
         })
         objects = objects.slice(0, size)                // return only the original list of objects, not the whole array of references
         if (reload) {

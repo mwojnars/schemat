@@ -114,7 +114,7 @@ export class YamlDataStorage extends MemoryStorage {
         this._records.clear()
 
         for (let record of records) {
-            let id = T.pop(record, '__id')
+            let id = T.pop(record, 'id')
             let key = data_schema.encode_key([id])
 
             // ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
@@ -134,9 +134,9 @@ export class YamlDataStorage extends MemoryStorage {
         /* Save the entire database (this.records) to a file. */
         print(`YamlDataStorage flushing ${this._records.size} items to ${this.filename}...`)
         let recs = [...this.scan()].map(([key, data_json]) => {
-            let __id = data_schema.decode_key(key)[0]
+            let id = data_schema.decode_key(key)[0]
             let data = JSON.parse(data_json)
-            return T.isPOJO(data) ? {__id, ...data} : {__id, __data: data}
+            return T.isPOJO(data) ? {id, ...data} : {id, __data: data}
         })
         let out = yaml.stringify(recs)
         fs.writeFileSync(this.filename, out, 'utf8')

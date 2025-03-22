@@ -32,12 +32,12 @@ function _load_data_init() {
 
 // function _delete_object(db, id) {
 //     /* In a yaml string `db`, delete the block that starts with:
-//          - __id: <id>
+//          - id: <id>
 //            ...
-//         up until the next `- __id:` line.
+//         up until the next `- id:` line.
 //         FIXME: this approach is incorrect, because references to the objects still stay in indexes.
 //      */
-//     let re = new RegExp(`- __id: ${id}(.*?)\n(?=- __id:|$)`, 's')
+//     let re = new RegExp(`- id: ${id}(.*?)\n(?=- id:|$)`, 's')
 //     return db.replaceAll(re, '')
 // }
 

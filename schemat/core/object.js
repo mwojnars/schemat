@@ -48,7 +48,7 @@ class Intercept {
     // these special props are always read from regular POJO attributes and NEVER from object's __data;
     // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
     // defining a custom `then` prop is unsafe, hence we disallow it
-    static SPECIAL = new Set(['then', '__id', '__meta', '__data', '__self', '__ring', '__refresh'])
+    static SPECIAL = new Set(['then', 'id', '__meta', '__data', '__self', '__ring', '__refresh'])
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
@@ -195,9 +195,9 @@ export class WebObject {
     /***
     SYSTEM properties (POJO attributes or getters; not in DB or stored outside __data):
 
-    __id                    database ID of the object, globally unique; undefined in a newly created item; must never be changed for an existing item;
-                            it is assumed that if __id exists, the object is ALREADY stored in the DB; for newly-created objects,
-                            __provisional_id is used instead to keep a temporary ID of a batch of interconnected objects being saved to DB
+    id                      database ID of the object, globally unique; undefined in a newly created object; must never change;
+                            it is assumed that if id exists, the object is ALREADY stored in the DB; for newly-created objects,
+                            __provisional_id is used instead to keep temporary IDs for multiple interconnected objects being saved to DB
 
     __data                  own properties of this object in their raw form (before imputation etc.), as a Catalog object created during .load()
     __object                JS object representation of __data, NOT encoded; for repeated fields, only the first value is included; may still contain nested Catalogs
@@ -244,13 +244,13 @@ export class WebObject {
 
     */
 
-    set __id(id) {
-        let prev = this.__id
+    set id(id) {
+        let prev = this.id
         if (prev !== undefined && prev !== id) throw new Error(`object ID is read-only and can't be changed from ${prev} to ${id}`)
-        if (id !== undefined) Object.defineProperty(this, '__id', {value: id, writable: false})
+        if (id !== undefined) Object.defineProperty(this, 'id', {value: id, writable: false})
     }
 
-    get id() { return this.__id }           // alias for __id
+    // get id() { return this.id }           // alias for id
 
     get __cid()  { return this.__category?.id }
     get __cid$() { return this.__category$.map(c => c.id) }
@@ -403,7 +403,7 @@ export class WebObject {
          */
         if(_fail) throw new Error('web objects should be instantiated with CLASS._create() or category.create() instead of new CLASS()')
 
-        if (id) this.__id = id
+        if (id) this.id = id
 
         this.__self = this              // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
         this.__hash = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
@@ -585,7 +585,7 @@ export class WebObject {
         let container = this.__container
         if (container && !container.is_loaded())
             await container.load()          // [Category], [Container], [Directory] have no __container set up despite being placed in /$/sys just to avoid deadlocks here!
-            // if (this.__id <= 5) container.load(); else await container.load()   // __container of [Container] must not be awaited
+            // if (this.id <= 5) container.load(); else await container.load()   // __container of [Container] must not be awaited
 
         if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
 
@@ -808,7 +808,7 @@ export class WebObject {
     }
 
     validate() {
-        // TODO SECURITY: make sure that __data does NOT contain special props: __meta, __self, __proxy, __id etc!
+        // TODO SECURITY: make sure that __data does NOT contain special props: __meta, __self, __proxy, id etc!
 
         let data = this.__data
 

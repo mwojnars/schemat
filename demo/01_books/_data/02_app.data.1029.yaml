@@ -1,4 +1,4 @@
-- __id: 2001
+- id: 2001
   name: Book
   class: demo/01_books/books/books.js:Book
   schema:
@@ -31,7 +31,7 @@
     "@": schemat:Catalog
   __category:
     "@": 1
-- __id: 2002
+- id: 2002
   name: Author
   class: demo/01_books/authors/author.js:Author
   schema:
@@ -58,7 +58,7 @@
     "@": schemat:Catalog
   __category:
     "@": 1
-- __id: 2003
+- id: 2003
   title: The Great Gatsby
   author:
     "@": 2004
@@ -74,7 +74,7 @@
   cover_image: https://dummyimage.com/200x300/3498db/ffffff.png&text=The+Great+Gatsby
   __category:
     "@": 2001
-- __id: 2004
+- id: 2004
   name: F. Scott Fitzgerald
   birth_year: 1896
   death_year: 1940
@@ -91,7 +91,7 @@
     century.
   __category:
     "@": 2002
-- __id: 2005
+- id: 2005
   title: The Hobbit
   author:
     "@": 2006
@@ -108,7 +108,7 @@
   cover_image: https://dummyimage.com/200x300/16a085/ffffff.png&text=The+Hobbit
   __category:
     "@": 2001
-- __id: 2006
+- id: 2006
   name: J.R.R. Tolkien
   birth_year: 1892
   death_year: 1973
@@ -126,7 +126,7 @@
     Rings.
   __category:
     "@": 2002
-- __id: 2007
+- id: 2007
   title: Pride and Prejudice
   author:
     "@": 2008
@@ -142,7 +142,7 @@
   cover_image: https://dummyimage.com/200x300/9b59b6/ffffff.png&text=Pride+and+Prejudice
   __category:
     "@": 2001
-- __id: 2008
+- id: 2008
   name: Jane Austen
   birth_year: 1775
   death_year: 1817
@@ -156,7 +156,7 @@
     at the end of the 18th century.
   __category:
     "@": 2002
-- __id: 2009
+- id: 2009
   title: Good Omens
   author:
     "@": 2010
@@ -174,7 +174,7 @@
   cover_image: https://dummyimage.com/200x300/f39c12/ffffff.png&text=Good+Omens
   __category:
     "@": 2001
-- __id: 2010
+- id: 2010
   name: Neil Gaiman
   birth_year: 1960
   nationality: British
@@ -193,7 +193,7 @@
     mythology.
   __category:
     "@": 2002
-- __id: 2011
+- id: 2011
   name: Terry Pratchett
   birth_year: 1948
   death_year: 2015
@@ -209,7 +209,7 @@
     fantasy novels, best known for his Discworld series of 41 novels.
   __category:
     "@": 2002
-- __id: 2012
+- id: 2012
   title: The Silmarillion
   author:
     "@": 2006
@@ -226,7 +226,7 @@
   cover_image: https://dummyimage.com/200x300/1abc9c/ffffff.png&text=The+Silmarillion
   __category:
     "@": 2001
-- __id: 2013
+- id: 2013
   title: The Children of Húrin
   author:
     "@": 2006
@@ -243,7 +243,7 @@
   cover_image: https://dummyimage.com/200x300/d35400/ffffff.png&text=The+Children+of+Húrin
   __category:
     "@": 2001
-- __id: 2014
+- id: 2014
   title: Unfinished Tales of Númenor and Middle-earth
   author:
     "@": 2006
@@ -259,14 +259,14 @@
   cover_image: https://dummyimage.com/200x300/2980b9/ffffff.png&text=Unfinished+Tales
   __category:
     "@": 2001
-- __id: 2015
+- id: 2015
   name: book
   info: All objects of the Book category accessible via /book/<ID> URL paths.
   category:
     "@": 2001
   __category:
     "@": 8
-- __id: 2016
+- id: 2016
   title: Animal Farm
   author:
     "@": 2017
@@ -282,7 +282,7 @@
   cover_image: https://dummyimage.com/200x300/27ae60/ffffff.png&text=Animal+Farm
   __category:
     "@": 2001
-- __id: 2017
+- id: 2017
   name: George Orwell
   birth_year: 1903
   death_year: 1950
