@@ -82,10 +82,11 @@ export class Ring extends WebObject {
 
         this.min_id_sharded ??= this.base_ring.min_id_sharded
 
-        // TODO: import() depends now on a particular `site` configuration (URLs & containers) which may differ
+        // TODO: schemat.import() depends on a particular `site` configuration (URLs & containers) which may differ
         //       if multiple sites run on the same cluster; instead use a builtin category list:
         //       - schemat.categories.DataSequence.load()  -->  schemat.root_category.categories.*  ([Category].categories)
         //       - schemat.kernel.DataSequence  -- all objects from [ring-kernel] indexed by their name? accessible via getter/proxy to allow reloads
+        //       - this.__category.import.DataSequence
         let DataSequence = await schemat.import('/$/sys/DataSequence')
         this.data_sequence = DataSequence.new(this, base?.data_sequence.operator)
         this.sequences = []
@@ -179,7 +180,7 @@ export class Ring extends WebObject {
 
     async select(id, req) {
         // return this._find_block(id).remote.select(id, req || new DataRequest())
-        return this._find_block(id)._select(id, req || new DataRequest())
+        return await this._find_block(id)._select(id, req || new DataRequest())
     }
 
     async delete(id, req) {

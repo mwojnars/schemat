@@ -243,7 +243,7 @@ export class DataBlock extends Block {
         let key = this.encode_id(id)
         let data = await this._storage.get(key)         // JSON string
         if (data) return this._annotate(data)
-        return this._move_down(id, req).select(id, req)
+        return await this._move_down(id, req).select(id, req)
     }
 
     async cmd_insert(id, data) {
