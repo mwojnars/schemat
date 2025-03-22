@@ -496,7 +496,9 @@ export class WebObject {
         if (active || loading) return loading || this
 
         // keep and return a Promise that will eventually load the data; this is needed to avoid race conditions
-        this.__meta.loading = loading = this._load(opts)
+        this.__meta.loading = loading = this._load(opts).catch(err => {
+            console.warn(`failed to load object [${this.id}]:`, err)
+        })
 
         let id = this.id
         if (id && schemat.registry.get_object(id) === this)
