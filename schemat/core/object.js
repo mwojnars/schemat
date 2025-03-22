@@ -1069,7 +1069,7 @@ export class WebObject {
             let url = this.__category?.url()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO SEC: {url} should be URL-encoded or injected in a different way
         }
-        let stamp = cat ? `${cat}:${this.__id}` : `${this.__id}`
+        let stamp = cat ? `${cat}:${this.id}` : `${this.id}`
         return brackets ? `[${stamp}]` : stamp
     }
 
@@ -1099,7 +1099,7 @@ export class WebObject {
 
     async delete() {
         /* Delete this object from the database. No need to use save(). */
-        return schemat.site.action.delete_object(this.__id)
+        return schemat.site.action.delete_object(this.id)
     }
 
     _bump_version() {

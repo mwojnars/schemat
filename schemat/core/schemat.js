@@ -107,14 +107,14 @@ export class Schemat {
         debug = false
 
         _head(obj) {
-            let id   = `[${obj.__id}]`.padEnd(6)
+            let id   = `[${obj.id}]`.padEnd(6)
             let name = this._name(obj).padEnd(15)
             return `${id} ${name}`
         }
         _tail() {
             // IDs and names of all objects currently being loaded
-            let ids = this.map(obj => obj.__id)
-            let names = this.map(obj => this._name(obj) || obj.__id)
+            let ids = this.map(obj => obj.id)
+            let names = this.map(obj => this._name(obj) || obj.id)
             return `[${ids}]  --  [${names.join(', ')}]`
         }
         _name(obj) {
@@ -151,7 +151,7 @@ export class Schemat {
         // if (cluster_id) {
         //     print(`Loading cluster ${cluster_id}...`)
         //     let cluster = await this.get_loaded(cluster_id)
-        //     site_id = cluster.site.__id
+        //     site_id = cluster.site.id
         //     print(`Cluster ${cluster_id} loaded, site ID: ${site_id}`)
         // }
 
@@ -242,7 +242,7 @@ export class Schemat {
     }
 
     get_provisional(id) {
-        /* Create a stub for a newborn object before its insertion to DB; it only has __provisional_id, not __id. */
+        /* Create a stub for a newborn object before its insertion to DB; it only has __provisional_id, not id. */
         let obj = WebObject.stub()
         obj.__self.__provisional_id = id
         return obj
@@ -407,7 +407,7 @@ export class Schemat {
         /* Insert 1+ related objects all at once to the same DB block. The objects may reference each other.
            The links will be properly replaced in the DB with newly assigned object IDs even if the references are cyclic.
            All the `objects` must be newborns (no ID assigned yet). After this call completes, the objects & references
-           get their __id values assigned. The returned array either contains the original `objects`,
+           get their id values assigned. The returned array either contains the original `objects`,
            or their new instances in the same order (reloaded objects), depending on the `reload` flag.
            `objects` can be either an Array of web objects, or a single web object. In the latter case, this single
            object (original or reloaded) is returned, not an array.

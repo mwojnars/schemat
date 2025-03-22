@@ -601,7 +601,7 @@ export class REF extends Type {
         if (!(obj instanceof schemat.WebObject)) throw new ValueError(`expected a WebObject, got ${obj} instead`)
         if (!obj.id) throw new ValueError(`found a reference to a newborn object (no ID): ${obj}`)
         if (obj.id < 0) throw new ValueError(`found a reference to an object with provisional ID=${obj.id} (${obj})`)
-        // TODO: check that options.category.__id is present in the list of object's ancestors, obj.__ancestor_ids
+        // TODO: check that options.category.id is present in the list of object's ancestors, obj.__ancestor_ids
         return obj
     }
 }

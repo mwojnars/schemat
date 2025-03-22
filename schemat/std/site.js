@@ -63,7 +63,7 @@ export class Site extends WebObject {
         assert(default_container?._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
 
         // ...and that this container is an ObjectSpace, so it is compatible with the URL generation on the client
-        assert(default_container.__category.name === 'ObjectSpace', `container [${this.__id}] at the default path ('${this.default_path}') must be an ObjectSpace`)
+        assert(default_container.__category.name === 'ObjectSpace', `container [${this.id}] at the default path ('${this.default_path}') must be an ObjectSpace`)
     }
 
     async load_globals() {
@@ -83,7 +83,7 @@ export class Site extends WebObject {
            This function assumes that the container pointed to by the `default_path` is an ObjectSpace,
            otherwise the URL returned may be incorrect (!). See _check_default_container().
          */
-        let id = typeof object_or_id === 'number' ? object_or_id : object_or_id.__id
+        let id = typeof object_or_id === 'number' ? object_or_id : object_or_id.id
         return this.default_path + `/${id}`
     }
 

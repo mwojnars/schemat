@@ -95,9 +95,9 @@ export class Registry {
 
     set_object(obj) {
         /* Put `obj` in the cache. This may override an existing instance with the same ID. */
-        if (obj.__id === undefined) throw new Error(`cannot register an object without an ID`)
+        if (obj.id === undefined) throw new Error(`cannot register an object without an ID`)
         if (SERVER && obj.__meta.mutable) throw new Error(`cannot register a mutable object, [${obj.id}]`)
-        this.objects.set(obj.__id, obj)
+        this.objects.set(obj.id, obj)
         return obj
     }
     delete_object(id) { return this.objects.delete(id) }

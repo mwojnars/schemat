@@ -104,8 +104,8 @@ export class RequestContext {
         items = [...items]
 
         ctx.objects = items.map(obj => obj.__record)
-        ctx.site = site.__id
-        ctx.target = target.__id
+        ctx.site = site.id
+        ctx.target = target.id
         ctx.endpoint = request.endpoint
         return ctx
     }

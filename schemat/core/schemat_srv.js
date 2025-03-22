@@ -132,7 +132,7 @@ export class ServerSchemat extends Schemat {
            `category_or_id` should be a Category object (not necessarily loaded), or an ID.
          */
         let full_scan = (category_or_id === null)
-        let target = (typeof category_or_id === 'number') ? category_or_id : category_or_id?.__id       // ID of the target category, or undefined (all categories)
+        let target = (typeof category_or_id === 'number') ? category_or_id : category_or_id?.id     // ID of the target category, or undefined (all categories)
         let start = !full_scan && [target]                                              // [target] is a 1-element record compatible with the index schema
         let stop  = !full_scan && [target + 1]
         let records = this.db.scan('idx_category', {start, stop, ...opts})   // stream of plain Records

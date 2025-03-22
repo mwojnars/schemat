@@ -122,7 +122,7 @@ export class AdminProcess {
         let target = WebObject.stub(new_id)
 
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
-        let transform = (obj => obj?.__id === old_id ? target : undefined)
+        let transform = (obj => obj?.id === old_id ? target : undefined)
 
         for (let ring of schemat.db.rings)
             for await (let {id, data} of ring.data_sequence.scan_objects()) {       // search for references to `old_id` in all records

@@ -48,13 +48,13 @@ export class Container extends WebObject {
         /* Return an access path to `member` that starts at the domain root.
            The access path is like a URL path, but with explicit blank segments: /*BLANK
          */
-        assert(this.__path, `__path of container [${this.__id}] is not initialized (${this.name}) when initializing object [${member.__id}]`)
+        assert(this.__path, `__path of container [${this.id}] is not initialized (${this.name}) when initializing object [${member.id}]`)
         assert(this.__path[0] === '/', `container's __path must start with '/'`)
 
         let ident = this.identify(member)
         if (ident === null || ident === undefined) {
             // here, null is returned instead of throwing an error because the mismatch between member's and container's settings may happen temporarily while moving an object from one container to another
-            print(`WARNING: container [${this.__id}] does NOT include object [${member.__id}]`)
+            print(`WARNING: container [${this.id}] does NOT include object [${member.id}]`)
             return null
         }
 
@@ -78,7 +78,7 @@ export class Directory extends Container {
          */
         let rev = new Map()
         for (let [name, object] of this.entries || [])
-            rev.set(object.__id, name)
+            rev.set(object.id, name)
         return rev
     }
 
@@ -128,8 +128,8 @@ export class Directory extends Container {
     }
 
     identify(obj) {
-        assert(obj.__id)
-        return this._entries_rev.get(obj.__id)
+        assert(obj.id)
+        return this._entries_rev.get(obj.id)
     }
 
     has_entry(key, obj = null) {
@@ -174,8 +174,8 @@ export class ObjectSpace extends Namespace {
     }
 
     identify(obj) {
-        assert(obj.__id)
-        return this._is_allowed(obj) ? `${obj.__id}` : null
+        assert(obj.id)
+        return this._is_allowed(obj) ? `${obj.id}` : null
     }
 
     _is_allowed(obj) {
@@ -209,14 +209,14 @@ export class Category_IID_Namespace extends Namespace {
     identify(obj) {
         let sep = Category_IID_Namespace.ID_SEPARATOR
         let spaces_rev = this.spaces_rev
-        let space = spaces_rev.get(obj.__category?.__id)
-        if (space) return `${space}${sep}${obj.__id}`
+        let space = spaces_rev.get(obj.__category?.id)
+        if (space) return `${space}${sep}${obj.id}`
     }
 
     get spaces_rev() {
         /* A reverse mapping of category identifiers to space names. Cached. */
         let catalog = this.spaces
-        return new Map(catalog.map(({key, value:obj}) => [obj.__id, key]))
+        return new Map(catalog.map(({key, value:obj}) => [obj.id, key]))
     }
 }
 

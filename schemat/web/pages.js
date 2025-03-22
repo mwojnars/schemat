@@ -193,7 +193,7 @@ export class ReactPage extends RenderedPage {
     static View = class extends RenderedPage.View {
 
         async prepare(side) {
-            // print(`prepare() called for [${this.__id}], ${this.__category}`)
+            // print(`prepare() called for [${this.id}], ${this.__category}`)
             await this.load()
             await this.__category?.load()
             return {}
@@ -201,7 +201,7 @@ export class ReactPage extends RenderedPage {
 
         render_server({request, ...props}) {
             this.assert_loaded()
-            print(`SSR render('${request.endpoint}') of ID=${this.__id}`)
+            print(`SSR render('${request.endpoint}') of ID=${this.id}`)
 
             // print('React tree:\n', ReactDOM.renderToStaticMarkup(e(this.Page, props)))
             // printReactTree(this.Page())
@@ -330,7 +330,7 @@ export class CategoryInspectView extends ItemInspectView {
         let name = item.name || item.get_stamp({html:false})
         let url  = item.system_url
         return TR(
-            TD(`${item.__id} ${NBSP}`),
+            TD(`${item.id} ${NBSP}`),
             TD(url !== null ? A({href: url + '::inspect'}, name) : `${name} (no URL)`, ' ', NBSP),
             TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
         )
