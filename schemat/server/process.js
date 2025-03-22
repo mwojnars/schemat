@@ -351,9 +351,10 @@ export class MasterProcess extends Process {
         cluster.on('exit', (worker) => {
             if (schemat.is_closing) return
             let id = this.worker_pids.get(worker.process.pid)               // retrieve WORKER_ID using PID
-            print(`worker #${id} (PID=${worker.process.pid}) exited`)
-            worker = this._start_worker(id)
-            print(`worker #${id} (PID=${worker.process.pid}) restarted`)
+            throw new Error(`worker #${id} (PID=${worker.process.pid}) exited`)
+            // print(`worker #${id} (PID=${worker.process.pid}) exited`)
+            // worker = this._start_worker(id)
+            // print(`worker #${id} (PID=${worker.process.pid}) restarted`)
         })
     }
 
