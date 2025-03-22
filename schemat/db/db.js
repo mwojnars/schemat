@@ -329,24 +329,23 @@ export class Database extends WebObject {
         /* Find the top-most writable ring and insert `data` as a new entry there. Return {id, data} record.
            If `ring` is given (name/object/ID), the entry is inserted to this particular ring, or error is raised if read-only.
          */
-        if (ring) {
-            ring = this.get_ring(ring)                              // find the ring by name or ID
-            if (!ring) throw new DataAccessError(`target ring not found in the database`)
-            if (ring.readonly) throw new DataAccessError(`target ring is read-only`)
-        }
-        else {
+        ring &&= this.get_ring(ring)
+        if (!ring) {
             ring = this.rings_reversed.find(r => !r.readonly)       // find the first writable ring
             if (!ring) throw new DataAccessError("all ring(s) are read-only")
         }
+        if (ring.readonly) throw new DataAccessError(`target ring is read-only`)
         return ring.insert(data)
     }
 
     async update(id, edits, {ring} = {}) {
-        return this.top_ring.update(id, edits)
+        ring &&= this.get_ring(ring)
+        return (ring || this.top_ring).update(id, edits)
     }
 
     delete(id, {ring} = {}) {
-        return this.top_ring.delete(id)
+        ring &&= this.get_ring(ring)
+        return (ring || this.top_ring).delete(id)
     }
 
 
