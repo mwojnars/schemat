@@ -343,6 +343,14 @@ export class Database extends WebObject {
         return ring.insert(data)
     }
 
+    async update(id, edits) {
+        return this.top_ring.update(id, edits)
+    }
+
+    delete(id) {
+        return this.top_ring.delete(id)
+    }
+
 
     /***  Indexes  ***/
 
