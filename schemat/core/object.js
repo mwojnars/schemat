@@ -196,8 +196,8 @@ export class WebObject {
     SYSTEM properties (POJO attributes or getters; not in DB or stored outside __data):
 
     id                      database ID of the object, globally unique; undefined in a newly created object; must never change;
-                            it is assumed that if id exists, the object is ALREADY stored in the DB; for newly-created objects,
-                            __provisional_id is used instead to keep temporary IDs for multiple interconnected objects being saved to DB
+                            it is assumed that `id` only exists for objects that are ALREADY stored in the DB; for newly-created objects,
+                            __provisional_id is used to identify multiple interconnected objects while they're being saved to DB
 
     __data                  own properties of this object in their raw form (before imputation etc.), as a Catalog object created during .load()
     __object                JS object representation of __data, NOT encoded; for repeated fields, only the first value is included; may still contain nested Catalogs
@@ -249,8 +249,6 @@ export class WebObject {
         if (prev !== undefined && prev !== id) throw new Error(`object ID is read-only and can't be changed from ${prev} to ${id}`)
         if (id !== undefined) Object.defineProperty(this, 'id', {value: id, writable: false})
     }
-
-    // get id() { return this.id }           // alias for id
 
     get __cid()  { return this.__category?.id }
     get __cid$() { return this.__category$.map(c => c.id) }
