@@ -36,6 +36,7 @@
   sequences:
     - "@": 1013
   readonly: false
+  insert_mode: compact
   min_id_exclusive: 1
   min_id_forbidden: 1000
   min_id_sharded: 5001
@@ -56,6 +57,7 @@
   sequences:
     - "@": 1028
   readonly: false
+  insert_mode: compact
   min_id_exclusive: 1001
   min_id_forbidden: 2000
   min_id_sharded: 5001
@@ -189,7 +191,11 @@
     "@": 1012
   filename: ./schemat/data/00_kernel.data.yaml
   format: data-yaml
-  insert_mode: compact
+  shard:
+    =:
+      - 0
+      - 1
+    "@": schemat/common/structs.js:Shard
   __node:
     "@": 1024
   __category:
@@ -323,6 +329,11 @@
   sequence:
     "@": 1017
   filename: ./demo/01_books/_data/02_app.data.1029.yaml
+  shard:
+    =:
+      - 0
+      - 1
+    "@": schemat/common/structs.js:Shard
   __node:
     "@": 1024
   __category:
@@ -345,7 +356,11 @@
     "@": 1027
   filename: ./demo/01_books/_data/01_site.data.yaml
   format: data-yaml
-  insert_mode: compact
+  shard:
+    =:
+      - 0
+      - 1
+    "@": schemat/common/structs.js:Shard
   __node:
     "@": 1024
   __category:
@@ -454,6 +469,11 @@
     "@": 1041
   filename: ./schemat/data/03_test.data.1043.yaml
   format: data-yaml
+  shard:
+    =:
+      - 0
+      - 1
+    "@": schemat/common/structs.js:Shard
   __node:
     "@": 1024
   __category:
