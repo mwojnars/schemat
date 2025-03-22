@@ -485,8 +485,8 @@
       default: false
       info: If true, read-write requests that originate in this ring and need to be
         forwarded down to the base_ring (and deeper) for the 'read' part, cannot
-        write their updates there but must be forwarded back up to this ring for the
-        'write` part of the operation.
+        write their updates there but must be forwarded back up to this ring for
+        the 'write` part of the operation.
       "@": schemat/types/type.js:BOOLEAN
     readonly:
       "@": schemat/types/type.js:BOOLEAN
@@ -527,9 +527,9 @@
         created.
       "@": schemat/types/type.js:SHARD
     insert_mode:
-      info: If 'compact', data blocks in this ring try to reuse free ID slots _below_
-        autoincrement if possible; using this mode has performance implications,
-        so it should only be used with small rings.
+      info: If 'compact', data blocks in this ring try to find free ID slots _below_
+        autoincrement when inserting objects; using this mode has performance
+        implications, so it should only be used with small rings.
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   class: schemat/db/db.js:Ring
