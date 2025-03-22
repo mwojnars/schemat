@@ -309,21 +309,19 @@ export class Database extends WebObject {
     }
 
     get_ring(ring) {
-        /* Return the top-most ring with a given name or ID, or undefined if not found; `ring` can also be a Ring object,
+        /* Return the top-most ring with a given name or ID, throw an error if not found; `ring` can also be a Ring object,
            in which case it is replaced with the same-ID object from the ring stack.
          */
-        if (!ring) return
-        if (typeof ring === 'string') return this.ring_names.get(ring)
-        if (typeof ring === 'number') return this.ring_ids.get(ring)
-        return this.ring_ids.get(ring.id)
+        if (typeof ring === 'string') ring = this.ring_names.get(ring)
+        else if (typeof ring === 'number') ring = this.ring_ids.get(ring)
+        else ring = this.ring_ids.get(ring?.id)
+        if (!ring) throw new DataAccessError(`target ring not found in the database`)
+        return ring
     }
 
     async select(id, {ring} = {}) {
-        if (ring) {
-            ring = this.get_ring(ring)      // check that `ring` occurs in the stack and replace it with the database's instance
-            if (!ring) throw new DataAccessError(`target ring not found in the database`)
-            // print(`selecting [${id}] from a custom top ring:`, ring.__label || ring)
-        }
+        ring &&= this.get_ring(ring)        // check that `ring` occurs in the stack and replace it with the database's instance
+        // if (ring) print(`selecting [${id}] from a custom top ring:`, ring.__label || ring)
         return (ring || this.top_ring).select(id)
     }
 
@@ -343,11 +341,11 @@ export class Database extends WebObject {
         return ring.insert(data)
     }
 
-    async update(id, edits) {
+    async update(id, edits, {ring} = {}) {
         return this.top_ring.update(id, edits)
     }
 
-    delete(id) {
+    delete(id, {ring} = {}) {
         return this.top_ring.delete(id)
     }
 
