@@ -467,13 +467,13 @@ export class Schemat {
 
     before_data_loading(obj, MAX_LOADING = 10) {
         /* Called at the beginning of data loading in an object, obj._load(). */
-        this._loading_stack.push(obj)
+        this._loading_stack?.push(obj)
         // if (count > MAX_LOADING) throw new Error(`Too many objects loading at once: ${count}`)
     }
 
     after_data_loading(obj) {
         /* Called at the end of data loading in an object, obj._load(). */
-        this._loading_stack.pop(obj)
+        this._loading_stack?.pop(obj)
     }
 
 
