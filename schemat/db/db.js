@@ -78,17 +78,17 @@ export class Ring extends WebObject {
     async __setup__({}) {
         /* Create `data_sequence`. Re-create all indexes from the lower ring. */
 
-        let lower = await this.base_ring?.load()
+        let base = await this.base_ring?.load()
 
         this.min_id_sharded ??= this.base_ring.min_id_sharded
 
         let DataSequence = await schemat.import('/$/sys/DataSequence')
-        this.data_sequence = DataSequence.new(this, lower?.data_sequence.operator)
+        this.data_sequence = DataSequence.new(this, base?.data_sequence.operator)
         this.sequences = []
-        if (!lower) return
+        if (!base) return
 
         let IndexSequence = await schemat.import('/$/sys/IndexSequence')
-        for (let seq of lower.sequences)
+        for (let seq of base.sequences)
             this.sequences.push(IndexSequence.new(this, seq.operator))
     }
 
