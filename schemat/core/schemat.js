@@ -77,7 +77,7 @@ class Classpath {
  */
 
 export class Schemat {
-    /* Global object that exposes Schemat internal API for use by the application code:
+    /* Global context for execution of web objects accessible via `globalThis.schemat`. Exposes Schemat's internal API:
        loading and caching of web objects, dynamic module import, classpath management, session management etc.
      */
 
