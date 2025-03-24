@@ -69,8 +69,10 @@ export class Site extends WebObject {
 
     async load_globals() {
         /* Load objects listed in [global] property and make them globally available for application code. */
+        this._global = {}
         for (let [name, object] of this.global || [])
-            try { globalThis[name] = await object.load() }
+            // try { globalThis[name] = await object.load() }
+            try { this._global[name] = await object.load() }
             catch (e) {
                 console.warn(`Site: failed to load global object '${name}'`)
             }

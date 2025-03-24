@@ -8,8 +8,8 @@ function select_random(array, count) {
 
 
 export async function homepage() {
-    let authors = await AuthorCategory.list_objects({load: true})
-    let books = await BookCategory.list_objects({load: true})
+    let authors = await schemat.global.AuthorCategory.list_objects({load: true})
+    let books = await schemat.global.BookCategory.list_objects({load: true})
 
     let featured_authors = select_random(authors, 6)
     let featured_books = select_random(books, 6)

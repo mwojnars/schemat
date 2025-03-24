@@ -93,6 +93,7 @@ export class Schemat {
     get root_category() { return this.get_object(ROOT_ID) }
     get site()          { return this.registry.get_object(this.site_id) || this._site }
     get db()            { return this.site?.database }      // a stub when on client, fully loaded when on server
+    get global()        { return this.site?._global }
 
     // defined on server only:
     process
