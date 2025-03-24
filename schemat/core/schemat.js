@@ -162,8 +162,6 @@ export class Schemat {
         await this.reload(site_id, true)
         assert(this.site?.is_loaded())
 
-        await this.site.load_globals()
-
         if (SERVER) {
             await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
             await this.reload(site_id, true)    // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
@@ -285,9 +283,10 @@ export class Schemat {
 
         if (strict || prev?.is_loaded()) {      // create a new instance, but don't replace the existing one in the cache until loading is finished
             let stub = WebObject.stub(id)
-            loading = stub.load().then(() => {this.registry.set_object(stub); this._loading.delete(id); return stub}).catch(err => {
-                console.warn(`failed to reload object [${id}]:`, err)
-            })
+            loading = stub.load().then(() => {this.registry.set_object(stub); this._loading.delete(id); return stub})
+            // loading = stub.load().then(() => {this.registry.set_object(stub); this._loading.delete(id); return stub}).catch(err => {
+            //     console.warn(`failed to reload object [${id}]:`, err)
+            // })
             this._loading.set(id, loading)
             return loading
         }
