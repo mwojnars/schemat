@@ -496,13 +496,15 @@ export class WebObject {
         if (active || loading) return loading || this
 
         // keep and return a Promise that will eventually load the data; this is needed to avoid race conditions
-        this.__meta.loading = loading = this._load(opts).catch(err => {
-            console.warn(`failed to load object [${this.id}]:`, err)
-        })
+        this.__meta.loading = loading = this._load(opts)
+            // .catch(err => {
+            //     console.warn(`failed to load object [${this.id}]:`, err)
+            //     throw err
+            // })
 
         let id = this.id
         if (id && schemat.registry.get_object(id) === this)
-            schemat._loading.set(id, loading.then(() => {schemat._loading.delete(id); return this}))
+            schemat._loading.set(id, loading.catch(() => {}).then(() => {schemat._loading.delete(id); return this}))
 
         return loading
     }
