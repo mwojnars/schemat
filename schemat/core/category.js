@@ -23,25 +23,29 @@ export class Category extends WebObject {
        also acts as a manager that controls access to and creation of new items within category.
      */
 
-    /***  Special properties:
-      __child_class         imported JS class of objects in this category
-      __child_schema        schema of objects in this category, as a SCHEMA instance; NOT the schema of self (.__schema)
-      __source              module source code of this category: all code snippets combined, including inherited ones
-    */
+    // properties:
+
+    // class
+    // import
 
     get __child_schema() {
+        /* Schema of objects in this category, as a SCHEMA instance. NOT the schema of self (.__schema). */
         let fields = this.schema.object()
         let custom = this.allow_custom_fields
         return new SCHEMA({fields, strict: custom !== true})
     }
 
-    get __child_class() { return schemat.import(this.class) }
+    get __child_class() {
+        /* Imported JS class of objects in this category. */
+        return schemat.import(this.class)
+    }
 
 
     is_category()   { return true }
 
     async __init__() {
         await this.__child_class            // from now on, __child_class is a regular value not a promise
+        // if (this.import)
         return this._init_schema()
     }
 
