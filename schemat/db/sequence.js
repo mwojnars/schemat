@@ -159,8 +159,8 @@ export class DataSequence extends Sequence {
 
     get file_prefix() { return 'data' }
 
-    __new__(ring, {boot_file} = {}) {
-        super.__new__(ring)
+    __new__(ring, operator, {boot_file} = {}) {
+        super.__new__(ring, operator)
         if (boot_file) this.blocks = [DataBlock._draft(this, {filename: boot_file})]
     }
 
