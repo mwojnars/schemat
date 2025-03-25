@@ -82,13 +82,12 @@ export class Ring extends WebObject {
 
         this.min_id_sharded ??= this.base_ring.min_id_sharded
 
-        // let DataSequence = await schemat.import('/$/sys/DataSequence')
         let DataSequence = this.__category.lib.DataSequence
         this.data_sequence = DataSequence.new(this, base?.data_sequence.operator)
         this.sequences = []
         if (!base) return
 
-        let IndexSequence = await schemat.import('/$/sys/IndexSequence')
+        let IndexSequence = this.__category.lib.IndexSequence
         for (let seq of base.sequences)
             this.sequences.push(IndexSequence.new(this, seq.operator))
     }
