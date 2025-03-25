@@ -43,8 +43,9 @@ export class Type {
                                     // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object;
                                     // repeated fields of type CATALOG provide special behavior: they get merged altogether during the property's value computation
 
-        inherit  : true,            // if false, inheritance is disabled for this field (applied to certain system fields)
-        merged   : undefined,       // if true in a compound non-repeated type, the inherited objects are merged (TODO) rather than being replaced with the youngest one
+        inherited: true,            // if false, inheritance is disabled for this field (applied to certain system fields)
+        merged   : undefined,       // if true or undefined in a compound non-repeated type, the inherited objects are merged (TODO) rather than being replaced with the youngest one;
+                                    // ... merged=false turns off this default behavior
 
         impute   : undefined,       // name of function to be used for imputation of missing values; inside the function, `this` references the containing object;
                                     // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
@@ -60,7 +61,7 @@ export class Type {
         alias    : undefined,       // name of a property that this one is an alias for; all reads and writes are redirected to the aliased property; only for top-level properties of web objects
 
         // virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
-        //                             // when virtual=true, inheritance is skipped during property calculation like if inherit=false
+        //                             // when virtual=true, inheritance is skipped during property calculation like if inherited=false
 
         // impute_on_write / explicit / persistent: false  // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
         // required : undefined,   // if true, the field described by this type must be present in the record or object's data during insert/update
@@ -151,7 +152,7 @@ export class Type {
            In the latter case, the default value (if present) is also included in the merge.
            `obj` is an argument to downstream impute().
          */
-        if (this.is_repeated()) return concat(arrays)
+        if (this.is_repeated() || this.options.merged === false) return concat(arrays)
         let value = this.merge_inherited(arrays, obj, prop)
         return value !== undefined ? [value] : []
     }

@@ -188,7 +188,7 @@
           subcategories inherit individual field schemas from base categories,
           and may add their own fields to the existing ones.
         repeated: true
-        inherit: false
+        inherited: false
         "@": schemat/types/type.js:REF
       __container:
         info: Parent URL container of this object. The chain of containers leading from
@@ -210,7 +210,7 @@
         info: Contains "DELETED" if the corresponding record was deleted from the
           database (a "tombstone" record; not saved in the data block, but used
           elsewhere to propagate the information about the object removal).
-        inherit: false
+        inherited: false
         "@": schemat/types/type.js:STRING
       __ttl:
         info: Time To Live (TTL) of the object, in seconds. Determines for how long the
@@ -227,12 +227,12 @@
         info: Version number of the object's content, automatically incremented on every
           update.
         min: 1
-        inherit: false
+        inherited: false
         "@": schemat/types/type.js:INTEGER
       __prev:
         info: The most recent Revision created for the object. Contains the previous
           state of this object (from before the last update).
-        inherit: false
+        inherited: false
         "@": schemat/types/type.js:REF
       "@": schemat:Catalog
     "@": schemat:Catalog

@@ -752,7 +752,7 @@ export class WebObject {
 
         let type =
             prop === '__category'  ? new REF() :
-            prop === '__prototype' ? new REF({inherit: false}) :
+            prop === '__prototype' ? new REF({inherited: false}) :
                                      proxy.__schema.get(prop)
 
         if (!type) {
@@ -767,10 +767,10 @@ export class WebObject {
             return [values[0]]
         }
 
-        let {alias, getter, inherit} = type.options
+        let {alias, getter, inherited} = type.options
         if (alias) return this[alias]
 
-        let ancestors = inherit && !getter ? proxy.__ancestors : [proxy]                // `this` included as the first ancestor
+        let ancestors = inherited && !getter ? proxy.__ancestors : [proxy]              // `this` included as the first ancestor
         let streams = getter ? [] : ancestors.map(proto => proto._own_values(prop))     // for virtual property, __data[prop] is not used even if present
 
         // read `defaults` from the category and combine them with the `streams`
