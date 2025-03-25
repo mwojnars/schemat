@@ -688,12 +688,20 @@ export class MAP extends Type {
 
 
 export class OBJECT extends GENERIC {
-    /* Accept plain JavaScript objects used as data containers. The objects must *not* belong to any class other than Object.
-       This type can be used as a replacement for MAP or CATALOG, when a simpler data structure is needed for holding
-       a collection of named attributes. During inheritance, OBJECT-type objects can be merged, with younger attributes
-       overriding the older ones in case of name conflict.
+    /* Accept plain JavaScript objects (POJO or null-prototype objects) used as data containers (dictionaries).
+       The objects must *not* belong to any class other than Object.
+       This type can be used as a replacement for MAP or CATALOG when a simpler data structure is needed for holding
+       collections of named attributes. During inheritance of single-valued properties, OBJECT-type objects are merged,
+       with younger same-named attributes overriding the older ones.
      */
+    _validate(obj) {
+        obj = super._validate(obj)
+        if (!T.isPlain(obj)) throw new ValueError(`expected a plain object, got ${obj} instead`)
+        return obj
+    }
 }
+
+export let DICT = OBJECT        // name alias
 
 
 export class RECORD extends Type {
