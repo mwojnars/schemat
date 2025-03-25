@@ -224,6 +224,7 @@ export class WebObject {
 
     __prototype             direct ancestor (prototype) of this object; there can be multiple __prototype$ for an object
     __ancestors             array of all ancestors, deduplicated and linearized, with `this` at the first position
+    __lib                   shortcut for __category.lib: related objects (categories) that might be needed in __new__(), __setup__() etc
 
     __class                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
     __category              category of this item, as a Category object; there can be multiple __category$; they can be inherited from __prototype$
@@ -279,6 +280,8 @@ export class WebObject {
         this.__schema.collect(assets)
         return assets
     }
+
+    get __lib()    { return this.__category.lib }
 
     get __object() { return this.__data.object() }
 
