@@ -43,7 +43,9 @@ export class Type {
                                     // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object;
                                     // repeated fields of type CATALOG provide special behavior: they get merged altogether during the property's value computation
 
-        inherit  : true,            // if false, inheritance is disabled for this field; used for certain system fields
+        inherit  : true,            // if false, inheritance is disabled for this field (applied to certain system fields)
+        merged   : undefined,       // if true in a compound non-repeated type, the inherited objects are merged (TODO) rather than being replaced with the youngest one
+
         impute   : undefined,       // name of function to be used for imputation of missing values; inside the function, `this` references the containing object;
                                     // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
                                     // the function must be *synchronous* and cannot return a Promise; if the property value is present in DB, no imputation is done (!),
@@ -60,7 +62,7 @@ export class Type {
         // virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
         //                             // when virtual=true, inheritance is skipped during property calculation like if inherit=false
 
-        // explicit / persistent: false  // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
+        // impute_on_write / explicit / persistent: false  // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
         // required : undefined,   // if true, the field described by this type must be present in the record or object's data during insert/update
 
         // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
