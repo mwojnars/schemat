@@ -18,8 +18,8 @@
       info: Objects that should be loaded automatically when this category is
         initialized in the base class __init__(). Typically, these are related
         categories that are needed for creating new objects in __new__() and
-        __setup__() - listing them here removes the need for async import() from
-        a SUN path.
+        __setup__() -- listing them here removes the need for async import()
+        from a SUN path later on.
       "@": schemat/types/catalog_type.js:CATALOG
     defaults:
       value_type:
