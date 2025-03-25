@@ -40,14 +40,13 @@ export class Type {
 
         repeated : undefined,       // if true, the field described by this type can have multiple occurrences, typically inside a CATALOG/RECORD/SCHEMA
                                     // - all the values (incl. inherited ones) can be retrieved via .field$ then; note that setting repeated=true has performance impact,
-                                    // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object;
-                                    // repeated fields of type CATALOG provide special behavior: they get merged altogether during the property's value computation
+                                    // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object
 
         inherited: true,            // if false, inheritance is disabled for this field (applied to certain system fields)
         merged   : undefined,       // if true or undefined in a compound non-repeated type, the inherited objects are merged (TODO) rather than being replaced with the youngest one;
                                     // ... merged=false turns off this default behavior
 
-        impute   : undefined,       // name of function to be used for imputation of missing values; inside the function, `this` references the containing object;
+        impute   : undefined,       // function object, or a name of method, that should be used to impute the property value if missing; inside the function, `this` references the containing object;
                                     // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
                                     // the function must be *synchronous* and cannot return a Promise; if the property value is present in DB, no imputation is done (!),
                                     // unlike with a getter method (getter=true) which overshadows all in-DB values simply because the getter uses the same JS attribute name
@@ -147,12 +146,20 @@ export class Type {
     }
 
     combine_inherited(arrays, obj, prop) {
-        /* Combine arrays of inherited values that match this type. Return an array of values.
+        /* Combine arrays of inherited values that match this type. Return an array of values (possibly a singleton array).
            The arrays are either concatenated, or the values are merged into one, depending on `prop.repeated`.
            In the latter case, the default value (if present) is also included in the merge.
            `obj` is an argument to downstream impute().
          */
-        if (this.is_repeated() || this.options.merged === false) return concat(arrays)
+        let flat = arrays.flat()                // concatenate the arrays
+        if (this.is_repeated()) return flat
+
+        // if no value in `arrays`, use impute/getter/default to impute one
+        let missing = !flat.length
+        let imputed = missing && this._impute(obj, prop)
+
+        if (this.options.merged === false) return [missing ? imputed : flat[0]]
+
         let value = this.merge_inherited(arrays, obj, prop)
         return value !== undefined ? [value] : []
     }
@@ -166,7 +173,6 @@ export class Type {
            Only the CATALOG and its subclasses provide a different implementation that performs a merge of catalogs
            across all prototypes of a given object.
          */
-        assert(!this.is_repeated())
         for (let values of arrays) {
             if (values.length) return values[0]
             // if (values.length > 1) throw new Error("multiple values present for a key in a single-valued type")
