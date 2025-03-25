@@ -102,6 +102,7 @@ export class Ring extends WebObject {
         if (CLIENT) return
         // print(`... ring [${this.id || '---'}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
 
+        await super.__init__()
         await this.base_ring?.load()
         await this.data_sequence.load()
         for (let seq of this.sequences) await seq.load()
