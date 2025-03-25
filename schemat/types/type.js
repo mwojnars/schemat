@@ -701,7 +701,7 @@ export class OBJECT extends GENERIC {
     }
 }
 
-export let DICT = OBJECT        // name alias
+// export let DICT = OBJECT        // name alias
 
 
 export class RECORD extends Type {
