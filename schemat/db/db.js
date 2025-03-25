@@ -232,7 +232,7 @@ export class Ring extends WebObject {
         // TODO SEC: check permissions
         if (this.readonly) throw new Error("the ring is read-only")
         let opts = {ring: this.__ring, broadcast: true}
-        let IndexSequence = await schemat.import('/$/sys/IndexSequence')
+        let IndexSequence = this.__category.lib.IndexSequence
         let seq = await IndexSequence.new(this).save(opts)
         this.sequences.push(seq)
         await this.save(opts)
