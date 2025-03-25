@@ -31,7 +31,7 @@ export class CATALOG extends Type {
     - keys not allowed (what about labels then?)
      */
 
-    isCATALOG() { return true }
+    is_CATALOG() { return true }
 
     static get Widget() { return CatalogTable }
 
@@ -71,7 +71,7 @@ export class CATALOG extends Type {
            if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
          */
         return Path.find(this, path, (type, key) => {
-            if (!type.isCATALOG()) throw new Error(`data type path not found: ${path}`)
+            if (!type.is_CATALOG()) throw new Error(`data type path not found: ${path}`)
             return [type.subtype(key)]
         })
     }
@@ -84,7 +84,7 @@ export class CATALOG extends Type {
         let default_ = this.options.default
         let catalogs = (default_ !== undefined) ? [...values, default_] : values
 
-        return Catalog.merge(catalogs, !this.isRepeated())          // merge all values (catalogs) into a single catalog
+        return Catalog.merge(catalogs, !this.is_repeated())         // merge all values (catalogs) into a single catalog
 
         // TODO: inside Catalog.merge(), if repeated=false, overlapping values should be merged recursively
         //       through combine() of options.value_type type
@@ -144,7 +144,7 @@ export class SCHEMA extends CATALOG {
 
     getValidKeys() {
         let fields = Object.getOwnPropertyNames(this.options.fields)
-        fields = fields.filter(f => this.options.fields[f].isEditable())      // only keep user-editable fields
+        fields = fields.filter(f => this.options.fields[f].is_editable())       // only keep user-editable fields
         return fields.sort()
     }
 }
@@ -423,7 +423,7 @@ export class CatalogTable extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (type.isCATALOG()) item.edit.insert(path, pos, key, value).save()
+                if (type.is_CATALOG()) item.edit.insert(path, pos, key, value).save()
                 else prev[pos].saveNew = (value) =>
                     item.edit.insert(path, pos, key, value).save().then(() => unnew())
 
@@ -442,7 +442,7 @@ export class CatalogTable extends Component {
         /* If `start_color` is undefined, the same `color` is used for all rows. */
 
         assert(catalog instanceof Catalog)
-        assert(type?.isCATALOG(), `type ${type} is not a CATALOG`)
+        assert(type?.is_CATALOG(), `type ${type} is not a CATALOG`)
 
         let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
 
@@ -471,7 +471,7 @@ export class CatalogTable extends Component {
             ops.updateValue = val => run.updateValue(pos, val, vschema)
 
             let props   = {item, path: [...path, pos], entry, type: vschema, color, ops}
-            let row     = e(vschema?.isCATALOG() ? this.EntrySubcat : this.EntryAtomic, props)
+            let row     = e(vschema?.is_CATALOG() ? this.EntrySubcat : this.EntryAtomic, props)
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
         })
 

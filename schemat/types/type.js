@@ -23,10 +23,11 @@ export function is_valid_field_name(name) {
 
 export class Type {
 
-    isCATALOG()     { return false }
-    // isCompound() { return this.isCATALOG() }     // "compound" type implements a custom mergeEntries(), which prevents some optimizations
-    isRepeated()    { return this.options.repeated }
-    isEditable()    { return this.options.editable }
+    is_CATALOG()     { return false }
+    // is_compound() { return this.is_CATALOG() }     // "compound" types implement a custom merge_inherited(), which prevents some optimizations
+
+    is_repeated()    { return this.options.repeated }
+    is_editable()    { return this.options.editable }
 
     static options = {              // configuration options shared by all types...
         info     : undefined,       // human-readable description of this type: what values are accepted and how they are interpreted
@@ -42,7 +43,7 @@ export class Type {
                                     // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object;
                                     // repeated fields of type CATALOG provide special behavior: they get merged altogether during the property's value computation
 
-        inherit  : true,            // if false, inheritance is disabled for this field; used especially for some system fields
+        inherit  : true,            // if false, inheritance is disabled for this field; used for certain system fields
         impute   : undefined,       // name of function to be used for imputation of missing values; inside the function, `this` references the containing object;
                                     // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
                                     // the function must be *synchronous* and cannot return a Promise; if the property value is present in DB, no imputation is done (!),
@@ -148,7 +149,7 @@ export class Type {
            In the latter case, the default value (if present) is also included in the merge.
            `obj` is an argument to downstream impute().
          */
-        if (this.isRepeated()) return concat(arrays)
+        if (this.is_repeated()) return concat(arrays)
         let value = this.merge_inherited(arrays, obj, prop)
         return value !== undefined ? [value] : []
     }
@@ -162,7 +163,7 @@ export class Type {
            Only the CATALOG and its subclasses provide a different implementation that performs a merge of catalogs
            across all prototypes of a given object.
          */
-        assert(!this.isRepeated())
+        assert(!this.is_repeated())
         for (let values of arrays) {
             if (values.length) return values[0]
             // if (values.length > 1) throw new Error("multiple values present for a key in a single-valued type")
