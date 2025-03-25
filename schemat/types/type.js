@@ -46,8 +46,8 @@ export class Type {
         merged   : undefined,       // if true or undefined in a compound non-repeated type, the inherited objects are merged (TODO) rather than being replaced with the youngest one;
                                     // ... merged=false turns off this default behavior
 
-        impute   : undefined,       // function object, or a name of method, that should be used to impute the property value if missing; inside the function, `this` references the containing object;
-                                    // only called for non-repeated properties, when `default`==undefined and there are no inherited values;
+        impute   : undefined,       // function object, or a name of method, that should be used to impute the value if missing; inside the function, `this` references the containing object;
+                                    // only called for non-repeated properties, when `default` is undefined and there are no inherited values;
                                     // the function must be *synchronous* and cannot return a Promise; if the property value is present in DB, no imputation is done (!),
                                     // unlike with a getter method (getter=true) which overshadows all in-DB values simply because the getter uses the same JS attribute name
 
@@ -62,7 +62,7 @@ export class Type {
         // virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
         //                             // when virtual=true, inheritance is skipped during property calculation like if inherited=false
 
-        // impute_on_write / explicit / persistent: false  // if true, the imputed value of the field (virtual or regular) is being stored in the DB to avoid future recalculation or facilitate indexing
+        // save_imputed / impute_on_write / explicit / persistent: false  // if true, the imputed value of the field (virtual or regular) is saved to DB to avoid future recalculation or to facilitate indexing
         // required : undefined,   // if true, the field described by this type must be present in the record or object's data during insert/update
 
         // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
@@ -158,28 +158,22 @@ export class Type {
         // if no value in `arrays`, use impute/getter/default to impute one
         if (!flat.length) value = this._impute(obj, prop)
 
-        // if multiple objects found and merging is allowed, try merging; otherwise return the first object found
-        else if (flat.length >= 2 && this.options.merged !== false)
-            value = this.merge_inherited(arrays, obj, prop)
-
-        else value = flat[0]
+        // try merging if allowed; otherwise return the first object found
+        else if (this.options.merged === false) value = flat[0]
+        else value = this.merge_inherited(flat, obj, prop)
 
         return value !== undefined ? [value] : []
     }
 
-    merge_inherited(arrays, obj, prop) {
-        /* Only used for single-valued schemas (when prop.repeated == false).
-           Merge multiple inherited arrays of values matching this type (TODO: check against incompatible inheritance).
-           Return the merged value, or undefined if it cannot be determined.
-           The merged value may include or consist of the type's imputed value (options.impute()) or default (options.default).
-           Base class implementation returns the first value of `arrays`, or the default value, or impute()
-           Only the CATALOG and its subclasses provide a different implementation that performs a merge of catalogs
-           across all prototypes of a given object.
+    merge_inherited(objects, obj, prop) {
+        /* Merge 1+ inherited `objects` matching this type (TODO: check against incompatible inheritance).
+           The result may also incorporate the type's imputed value (options.impute()) or default (options.default).
          */
-        for (let values of arrays) {
-            if (values.length) return values[0]
-            // if (values.length > 1) throw new Error("multiple values present for a key in a single-valued type")
-        }
+        return objects[0]      // no actual merging by default; override in subclasses
+        // for (let values of arrays) {
+        //     if (values.length) return values[0]
+        //     // if (values.length > 1) throw new Error("multiple values present for a key in a single-valued type")
+        // }
         // return this._impute(obj, prop)                      // if no value found, use impute/getter/default to impute one
     }
 
