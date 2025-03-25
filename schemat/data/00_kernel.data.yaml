@@ -780,6 +780,9 @@
   name: IndexSequence
   info: Category for sequences of index records.
   class: schemat/db/sequence.js:IndexSequence
+  lib:
+    Block:
+      "@": 18
   __prototype:
     "@": 13
   __category:
