@@ -151,16 +151,19 @@ export class Type {
            In the latter case, the default value (if present) is also included in the merge.
            `obj` is an argument to downstream impute().
          */
+        let value
         let flat = arrays.flat()                // concatenate the arrays
-        if (this.is_repeated()) return flat
+        if (this.is_repeated()) return flat     // no imputation/merge for repeated types: empty array [] is a valid set of values
 
         // if no value in `arrays`, use impute/getter/default to impute one
-        let missing = !flat.length
-        let imputed = missing && this._impute(obj, prop)
+        if (!flat.length) value = this._impute(obj, prop)
 
-        if (this.options.merged === false) return [missing ? imputed : flat[0]]
+        // if multiple objects found and merging is allowed, try merging; otherwise return the first object found
+        else if (flat.length >= 2 && this.options.merged !== false)
+            value = this.merge_inherited(arrays, obj, prop)
 
-        let value = this.merge_inherited(arrays, obj, prop)
+        else value = flat[0]
+
         return value !== undefined ? [value] : []
     }
 
@@ -177,7 +180,7 @@ export class Type {
             if (values.length) return values[0]
             // if (values.length > 1) throw new Error("multiple values present for a key in a single-valued type")
         }
-        return this._impute(obj, prop)                      // if no value found, use impute/getter/default to impute one
+        // return this._impute(obj, prop)                      // if no value found, use impute/getter/default to impute one
     }
 
     _impute(obj, prop) {
