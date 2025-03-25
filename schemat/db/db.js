@@ -395,7 +395,7 @@ export class Database extends WebObject {
         else ring = this.bottom_ring
 
         // create index specification
-        let ObjectIndexOperator = await schemat.import('/$/sys/ObjectIndexOperator')
+        let ObjectIndexOperator = this.__category.lib.ObjectIndexOperator
         let index = ObjectIndexOperator.new(name, key, payload)
         index = await index.save({ring})
         // schemat._transaction.getStore()?.log_modified(index)

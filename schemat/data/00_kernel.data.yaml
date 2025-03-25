@@ -237,9 +237,6 @@
         "@": schemat/types/type.js:REF
       "@": schemat:Catalog
     "@": schemat:Catalog
-  lib:
-    ObjectIndexOperator:
-      "@": 16
   set_version: false
   save_revisions: false
   seal_dependencies: false
@@ -463,6 +460,9 @@
       info: If true, write access to the database is allowed, otherwise it is not.
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
+  lib:
+    ObjectIndexOperator:
+      "@": 16
   class: schemat/db/db.js:Database
   __category:
     "@": 1
