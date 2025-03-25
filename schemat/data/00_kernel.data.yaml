@@ -466,6 +466,11 @@
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
+  import:
+    DataSequence:
+      "@": 14
+    IndexSequence:
+      "@": 22
   schema:
     data_sequence:
       info: DataSequence that keeps all primary objects of this ring
