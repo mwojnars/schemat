@@ -26,7 +26,7 @@ export class Category extends WebObject {
     // properties:
 
     // class
-    // import
+    // lib
 
     get __child_schema() {
         /* Schema of objects in this category, as a SCHEMA instance. NOT the schema of self (.__schema). */
@@ -45,7 +45,7 @@ export class Category extends WebObject {
 
     async __init__() {
         await this.__child_class            // from now on, __child_class is a regular value not a promise
-        if (this.import) await Promise.all(Object.values(this.import).map(obj => obj.load()))
+        if (this.lib) await Promise.all(Object.values(this.lib).map(obj => obj.load()))
         return this._init_schema()
     }
 

@@ -12,14 +12,14 @@
         not instances.'
       default: schemat:WebObject
       "@": schemat/types/type.js:STRING
-    import:
+    lib:
       value_type:
         "@": schemat/types/type.js:REF
-      info: Objects that should be loaded automatically when this category is
-        initialized in the base class __init__(). Typically, these are related
-        categories that are needed for creating new objects in __new__() and
-        __setup__() -- listing them here removes the need for async import()
-        from a web path later on.
+      info: Collection of related objects (categories) that should be loaded automatically 
+        when this category is initialized during __init__(). Typically, these objects
+        are other categories that are necessary for creating new objects of the current category 
+        (__new__(), __setup__()) -- listing them here removes the need for async
+        schemat.import() from a web path later on.
       "@": schemat/types/type.js:OBJECT
     defaults:
       value_type:
@@ -466,7 +466,7 @@
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
-  import:
+  lib:
     DataSequence:
       "@": 14
     IndexSequence:
