@@ -15,11 +15,12 @@
     lib:
       value_type:
         "@": schemat/types/type.js:REF
-      info: Collection of related objects (categories) that should be loaded automatically 
-        when this category is initialized during __init__(). Typically, these objects
-        are other categories that are necessary for creating new objects of the current category 
-        (__new__(), __setup__()) -- listing them here removes the need for async
-        schemat.import() from a web path later on.
+      info: Collection of related objects (categories) that should be loaded
+        automatically when this category is initialized during __init__().
+        Typically, these objects are other categories that are necessary for
+        creating new objects of the current category (__new__(), __setup__()) --
+        listing them here removes the need for async schemat.import() from a web
+        path later on.
       "@": schemat/types/type.js:OBJECT
     defaults:
       value_type:
@@ -236,6 +237,9 @@
         "@": schemat/types/type.js:REF
       "@": schemat:Catalog
     "@": schemat:Catalog
+  lib:
+    ObjectIndexOperator:
+      "@": 16
   set_version: false
   save_revisions: false
   seal_dependencies: false
