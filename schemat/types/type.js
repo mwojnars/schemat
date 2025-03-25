@@ -170,11 +170,6 @@ export class Type {
            The result may also incorporate the type's imputed value (options.impute()) or default (options.default).
          */
         return objects[0]      // no actual merging by default; override in subclasses
-        // for (let values of arrays) {
-        //     if (values.length) return values[0]
-        //     // if (values.length > 1) throw new Error("multiple values present for a key in a single-valued type")
-        // }
-        // return this._impute(obj, prop)                      // if no value found, use impute/getter/default to impute one
     }
 
     _impute(obj, prop) {

@@ -76,15 +76,10 @@ export class CATALOG extends Type {
         })
     }
 
-    merge_inherited(values, obj, prop) {
-        // let values = concat(arrays)
-        // if (!values.length) return this._impute(obj, prop)
-
-        // include the default value in the merge, if present
-        let default_ = this.options.default
-        let catalogs = (default_ !== undefined) ? [...values, default_] : values
-
-        return Catalog.merge(catalogs, !this.is_repeated())         // merge all values (catalogs) into a single catalog
+    merge_inherited(catalogs, obj, prop) {
+        let default_ = this.options.default                     // include the default value in the merge, if present
+        if (default_) catalogs.push(default_)
+        return Catalog.merge(catalogs, !this.is_repeated())     // merge all input catalogs into a single catalog
 
         // TODO: inside Catalog.merge(), if repeated=false, overlapping values should be merged recursively
         //       through combine() of options.value_type type
