@@ -691,8 +691,8 @@ export class OBJECT extends GENERIC {
     /* Accept plain JavaScript objects (POJO or null-prototype objects) used as data containers (dictionaries).
        The objects must *not* belong to any class other than Object.
        This type can be used as a replacement for MAP or CATALOG when a simpler data structure is needed for holding
-       collections of named attributes. During inheritance of single-valued properties, OBJECT-type objects are merged,
-       with younger same-named attributes overriding the older ones.
+       collections of named attributes. During inheritance of single-valued properties, OBJECT-type objects are merged (TODO),
+       with younger attributes overriding the same-named older ones.
      */
     _validate(obj) {
         obj = super._validate(obj)
@@ -700,8 +700,6 @@ export class OBJECT extends GENERIC {
         return obj
     }
 }
-
-// export let DICT = OBJECT        // name alias
 
 
 export class RECORD extends Type {
