@@ -131,7 +131,7 @@ export class IndexSequence extends Sequence {
 
     async __setup__() {
         print('IndexSequence.__setup__() creating a block')
-        let Block = this.__category.lib.Block
+        let Block = this.__lib.Block
         this.blocks = [Block.new(this, {format: 'index-jl'})]
     }
 
@@ -165,7 +165,7 @@ export class DataSequence extends Sequence {
     }
 
     async __setup__() {
-        let DataBlock = this.__category.lib.DataBlock
+        let DataBlock = this.__lib.DataBlock
         this.blocks = [DataBlock.new(this, {format: 'data-yaml'})]
     }
 
