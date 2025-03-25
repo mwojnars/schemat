@@ -45,7 +45,7 @@ export class Category extends WebObject {
 
     async __init__() {
         await this.__child_class            // from now on, __child_class is a regular value not a promise
-        // if (this.import)
+        if (this.import?.size) await Promise.all(this.import.values().map(obj => obj.load()))
         return this._init_schema()
     }
 

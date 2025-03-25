@@ -541,7 +541,7 @@ export class TYPE extends GENERIC {
     static Widget = widgets.TYPE_Widget
 }
 
-export class OBJECT extends GENERIC {
+export class CUSTOM_OBJECT extends GENERIC {
     /* Accept objects of a given `class` (Object by default), with optional validation of their attributes. */
     static options = {
         class:  Object,
@@ -562,7 +562,7 @@ export class OBJECT extends GENERIC {
     }
 }
 
-export class SHARD extends OBJECT {
+export class SHARD extends CUSTOM_OBJECT {
     /* Accept objects of the Shard class. */
     static options = {
         class: Shard,
@@ -685,6 +685,16 @@ export class MAP extends Type {
         return `${name}(${this.options.values}, ${this.options.keys})`
     }
 }
+
+
+export class OBJECT extends GENERIC {
+    /* Accept plain JavaScript objects used as data containers. The objects must *not* belong to any class other than Object.
+       This type can be used as a replacement for MAP or CATALOG, when a simpler data structure is needed for holding
+       a collection of named attributes. During inheritance, OBJECT-type objects can be merged, with younger attributes
+       overriding the older ones in case of name conflict.
+     */
+}
+
 
 export class RECORD extends Type {
     /*
