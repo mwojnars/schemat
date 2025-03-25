@@ -76,7 +76,7 @@ export class CATALOG extends Type {
         })
     }
 
-    merge_inherited(catalogs, obj, prop) {
+    merge_inherited(catalogs) {
         let default_ = this.options.default                     // include the default value in the merge, if present
         if (default_) catalogs.push(default_)
         return Catalog.merge(catalogs, !this.is_repeated())     // merge all input catalogs into a single catalog

@@ -146,10 +146,10 @@ export class Type {
     }
 
     combine_inherited(arrays, obj, prop) {
-        /* Combine arrays of inherited values that match this type. Return an array of values (possibly a singleton array).
-           The arrays are either concatenated, or the values are merged into one, depending on `prop.repeated`.
-           In the latter case, the default value (if present) is also included in the merge.
-           `obj` is an argument to downstream impute().
+        /* Combine arrays of inherited values that match this type, with the youngest value at the *first* position.
+           Return an array of values (possibly a singleton array). The arrays are either concatenated, or the values are merged
+           into one, depending on options (repeated, merged). In the latter case, the default value (if present)
+           is also included in the merge. `obj` is an argument to downstream impute().
          */
         let value
         let flat = arrays.flat()                // concatenate the arrays
@@ -693,13 +693,17 @@ export class OBJECT extends GENERIC {
     /* Accept plain JavaScript objects (POJO or null-prototype objects) used as data containers (dictionaries).
        The objects must *not* belong to any class other than Object.
        This type can be used as a replacement for MAP or CATALOG when a simpler data structure is needed for holding
-       collections of named attributes. During inheritance of single-valued properties, OBJECT-type objects are merged (TODO),
-       with younger attributes overriding the same-named older ones.
+       collections of named attributes. During inheritance of single-valued properties, OBJECT-type objects are merged
+       by default, with younger attributes overriding the same-named older ones.
      */
     _validate(obj) {
         obj = super._validate(obj)
         if (!T.isPlain(obj)) throw new ValueError(`expected a plain object, got ${obj} instead`)
         return obj
+    }
+
+    merge_inherited(objects) {
+        return Object.assign({}, ...objects.toReversed())
     }
 }
 
