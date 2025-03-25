@@ -166,7 +166,8 @@ export class DataSequence extends Sequence {
     }
 
     async __setup__() {
-        let DataBlock = await schemat.import('/$/sys/DataBlock')
+        // let DataBlock = await schemat.import('/$/sys/DataBlock')
+        let DataBlock = this.__category.lib.DataBlock
         this.blocks = [DataBlock.new(this, {format: 'data-yaml'})]
     }
 

@@ -596,6 +596,9 @@
 - id: 14
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
+  lib:
+    DataBlock:
+      "@": 19
   class: schemat/db/sequence.js:DataSequence
   __prototype:
     "@": 13
