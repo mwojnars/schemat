@@ -145,9 +145,9 @@ export class Schemat {
         /* Initialize built-in objects, site_id, site, bootstrap DB. `config` is either the contents
            of a config file (on server), or a RequestContext (on client) -- both should contain the `site` attribute.
          */
-        await this._init_classpath()
-
-        this._db = await boot_db?.()        // bootstrap DB; the ultimate DB is opened later: on the first access to this.db
+        // await this._init_classpath()
+        //
+        // this._db = await boot_db?.()        // bootstrap DB; the ultimate DB is opened later: on the first access to this.db
 
         // if (cluster_id) {
         //     print(`Loading cluster ${cluster_id}...`)
@@ -163,10 +163,10 @@ export class Schemat {
         await this.reload(site_id, true)
         assert(this.site?.is_loaded())
 
-        if (SERVER) {
-            await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
-            await this.reload(site_id, true)    // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
-        }
+        // if (SERVER) {
+        //     await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
+        //     await this.reload(site_id, true)    // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
+        // }
         // else setInterval(() => this._report_memory(), 10000)
         // await this._reset_class()
     }

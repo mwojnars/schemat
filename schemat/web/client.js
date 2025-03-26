@@ -24,6 +24,7 @@ export class Client extends Schemat {
 
         ctx.objects.map(rec => schemat.register_record(rec))    // register {id,data} records of bootstrap objects
 
+        await this._init_classpath()
         await super.boot()
 
         for (let rec of ctx.objects)                            // preload bootstrap objects

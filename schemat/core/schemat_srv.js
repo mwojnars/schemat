@@ -36,7 +36,7 @@ export class ServerSchemat extends Schemat {
     //                             // new requests wait until the current session completes, see Session.start()
 
     process         // Process instance that runs the main Schemat loop of the current master/worker process
-    cluster         // Cluster
+    cluster         // Cluster object
 
     _db             // bootstrap DB; regular server-side DB is taken from site.database
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
@@ -56,6 +56,34 @@ export class ServerSchemat extends Schemat {
 
         this._transaction = new AsyncLocalStorage()
         // this.loader = new Loader(import.meta.url)
+    }
+
+    async boot(boot_db) {
+        /* Initialize built-in objects, site_id, site, bootstrap DB. `config` is either the contents
+           of a config file (on server), or a RequestContext (on client) -- both should contain the `site` attribute.
+         */
+        await this._init_classpath()
+
+        this._db = await boot_db?.()        // bootstrap DB; the ultimate DB is opened later: on the first access to this.db
+
+        // if (cluster_id) {
+        //     print(`Loading cluster ${cluster_id}...`)
+        //     let cluster = await this.get_loaded(cluster_id)
+        //     site_id = cluster.site.id
+        //     print(`Cluster ${cluster_id} loaded, site ID: ${site_id}`)
+        // }
+
+        await super.boot()
+
+        let site_id = this.config.site
+        // assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
+        // this.site_id = site_id
+        //
+        // await this.reload(site_id, true)
+        // assert(this.site?.is_loaded())
+
+        await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
+        await this.reload(site_id, true)    // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
     }
 
     client_block(request, id_context, ...objects) {
