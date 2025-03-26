@@ -10,8 +10,6 @@
   default_path: /$/id
   webserver:
     "@": 1023
-  cluster:
-    "@": 1025
   database:
     "@": 1002
   logger:

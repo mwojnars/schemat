@@ -36,6 +36,7 @@ export class ServerSchemat extends Schemat {
     //                             // new requests wait until the current session completes, see Session.start()
 
     process         // Process instance that runs the main Schemat loop of the current master/worker process
+    cluster         // Cluster
 
     _db             // bootstrap DB; regular server-side DB is taken from site.database
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
