@@ -440,6 +440,9 @@
   __category:
     "@": 1
   schema:
+    database:
+      info: Database instance to be used by the kernel (master/worker processes).
+      "@": schemat/types/type.js:REF
     "@": schemat:Catalog
 - id: 11
   name: Database
