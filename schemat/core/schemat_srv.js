@@ -59,11 +59,8 @@ export class ServerSchemat extends Schemat {
     }
 
     async boot(boot_db) {
-        /* Initialize built-in objects, site_id, site, bootstrap DB. `config` is either the contents
-           of a config file (on server), or a RequestContext (on client) -- both should contain the `site` attribute.
-         */
+        /* Initialize built-in objects, site_id, site, bootstrap DB. */
         await this._init_classpath()
-
         this._db = await boot_db?.()        // bootstrap DB; the ultimate DB is opened later: on the first access to this.db
 
         // if (cluster_id) {
@@ -75,15 +72,8 @@ export class ServerSchemat extends Schemat {
 
         await super.boot()
 
-        let site_id = this.config.site
-        // assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
-        // this.site_id = site_id
-        //
-        // await this.reload(site_id, true)
-        // assert(this.site?.is_loaded())
-
-        await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
-        await this.reload(site_id, true)    // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
+        await this._purge_registry()            // purge the cache of bootstrap objects and schedule periodical re-run
+        await this.reload(this.site.id, true)   // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
     }
 
     client_block(request, id_context, ...objects) {
