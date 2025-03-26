@@ -143,7 +143,7 @@ export class Schemat {
         this.registry = new Registry(this._on_evict.bind(this))
     }
 
-    async boot() {
+    async _load_site() {
         /* Initialize this.site. */
 
         let site_id = this.config.site

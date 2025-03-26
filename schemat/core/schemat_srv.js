@@ -70,10 +70,10 @@ export class ServerSchemat extends Schemat {
         //     print(`Cluster ${cluster_id} loaded, site ID: ${site_id}`)
         // }
 
-        await super.boot()
+        await super._load_site()
 
         await this._purge_registry()            // purge the cache of bootstrap objects and schedule periodical re-run
-        await this.reload(this.site.id, true)   // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
+        await this.reload(this.site_id, true)   // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
     }
 
     client_block(request, id_context, ...objects) {
