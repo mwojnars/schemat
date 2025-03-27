@@ -95,7 +95,7 @@ export class Schemat {
     get site()          { return this.registry.get_object(this.site_id) || this._site }
     get db()            { return this.site?.database }              // a stub when on client, fully loaded when on server
     get global()        { return this.site?._global }
-    get system()        { return this.site || this.cluster }        // user mode || kernel mode
+    get system()        { return this.site || this.cluster }        // user mode | kernel mode
 
     // defined on server only:
     cluster

@@ -903,6 +903,13 @@
       category:
         "@": 21
       "@": schemat/types/type.js:REF
+    __site:
+      info: Site object that represents the context (database, web domain, URLs etc.)
+        in which this agent should execute ('user mode'). If missing, the agent
+        executes in the context of the cluster database ('kernel mode').
+      category:
+        "@": 2
+      "@": schemat/types/type.js:REF
     num_workers:
       default: 1
       info: The number of concurrent worker processes on the host node that should
