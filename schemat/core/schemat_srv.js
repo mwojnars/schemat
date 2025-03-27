@@ -36,7 +36,7 @@ export class ServerSchemat extends Schemat {
     //                             // new requests wait until the current session completes, see Session.start()
 
     process         // Process instance that runs the main Schemat loop of the current master/worker process
-    cluster         // Cluster object
+    _cluster        // Cluster object of the previous generation, always present but not always the most recent one
 
     _db             // bootstrap DB; regular server-side DB is taken from site.database
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
@@ -45,6 +45,7 @@ export class ServerSchemat extends Schemat {
     get db()     { return this.site?.database || this._db }
     get tx()     { return this._transaction.getStore() }
     get node()   { return this.process?.node }      // host Node (web object) of the current process; initialized and periodically reloaded in Server
+    get cluster(){ return this.registry.get_object(this._cluster.id) || this._cluster }
 
     constructor(config) {
         super(config)
@@ -68,10 +69,7 @@ export class ServerSchemat extends Schemat {
         if (cluster_id) {
             print(`loading cluster ${cluster_id} ...`)
             this._essential.push(cluster_id)
-
-            // await this.reload(cluster_id, true)
             this._cluster = await this.get_loaded(cluster_id)
-
             print(`loading cluster ${cluster_id} done`)
         }
 
@@ -130,6 +128,7 @@ export class ServerSchemat extends Schemat {
          */
         // print(`erasure of registry (${this.registry.objects.size} objects)`)
         this.registry.erase()
+        this._cluster = this.cluster
         this._site = this.site
         this.reload(this.site_id, true)     // not awaited
     }
