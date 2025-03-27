@@ -156,6 +156,12 @@
     "@": 1024
   __category:
     "@": 19
+- id: 1011
+  name: cluster-db
+  top_ring:
+    "@": 1004
+  __category:
+    "@": 11
 - id: 1012
   ring:
     "@": 1003
