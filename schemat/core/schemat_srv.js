@@ -42,7 +42,7 @@ export class ServerSchemat extends Schemat {
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
 
-    get db()     { return this.site?.database || this._db }   // || this.cluster?.database
+    get db()     { return this.system?.database || this._db }
     get tx()     { return this._transaction.getStore() }
     get node()   { return this.process?.node }      // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster(){ return this.registry.get_object(this._cluster?.id) || this._cluster }
