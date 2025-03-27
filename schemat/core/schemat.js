@@ -165,10 +165,10 @@ export class Schemat {
         await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:WebObject"
         await builtin.fetch("../server/logger.js")
         await builtin.fetch("../server/agent.js")
-        // await builtin.fetch("../server/kafka.js")   // TODO: drop
         await builtin.fetch("../server/node.js")
-        await builtin.fetch("../std/files.js")
+        await builtin.fetch("../server/cluster.js")
         await builtin.fetch("../std/site.js")
+        await builtin.fetch("../std/files.js")
         await builtin.fetch("../std/containers.js")
         await builtin.fetch("../db/data_request.js")
         await builtin.fetch("../db/records.js")
