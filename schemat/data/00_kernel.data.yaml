@@ -442,6 +442,7 @@
       info: Database instance to be used by the kernel (master/worker processes).
       "@": schemat/types/type.js:REF
     "@": schemat:Catalog
+  class: schemat/server/cluster.js:Cluster
   __category:
     "@": 1
 - id: 11
