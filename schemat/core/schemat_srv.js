@@ -41,6 +41,7 @@ export class ServerSchemat extends Schemat {
     _db             // bootstrap DB; regular server-side DB is taken from site.database
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
+
     get db()     { return this.site?.database || this._db }
     get tx()     { return this._transaction.getStore() }
     get node()   { return this.process?.node }      // host Node (web object) of the current process; initialized and periodically reloaded in Server
@@ -63,12 +64,16 @@ export class ServerSchemat extends Schemat {
         await this._init_classpath()
         this._db = await boot_db?.()        // bootstrap DB; the ultimate DB is opened later: on the first access to this.db
 
-        // if (cluster_id) {
-        //     print(`Loading cluster ${cluster_id}...`)
-        //     let cluster = await this.get_loaded(cluster_id)
-        //     site_id = cluster.site.id
-        //     print(`Cluster ${cluster_id} loaded, site ID: ${site_id}`)
-        // }
+        let cluster_id = this.config.cluster
+        if (cluster_id) {
+            print(`loading cluster ${cluster_id} ...`)
+            this._essential.push(cluster_id)
+
+            // await this.reload(cluster_id, true)
+            this._cluster = await this.get_loaded(cluster_id)
+
+            print(`loading cluster ${cluster_id} done`)
+        }
 
         await super._load_site()
 

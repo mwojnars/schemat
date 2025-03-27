@@ -3,7 +3,7 @@
 #
 
 # ID of the Cluster that this node is, or should be, a part of
-cluster: 2015
+cluster: 1025
 
 # ID of the Site object to be loaded at startup
 site: 1001
