@@ -88,6 +88,7 @@ export class Schemat {
     builtin                 // a Classpath containing built-in classes and their paths
     is_closing = false      // true if the Schemat node is in the process of shutting down
 
+    _essential = [ROOT_ID]  // IDs of web objects that must be always present (fully loaded) in the Registry, so eviction must reload not delete them
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
 
     get root_category() { return this.get_object(ROOT_ID) }
@@ -148,7 +149,9 @@ export class Schemat {
 
         let site_id = this.config.site
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
+
         this.site_id = site_id
+        this._essential.push(site_id)
 
         await this.reload(site_id, true)
         assert(this.site?.is_loaded())
@@ -378,8 +381,8 @@ export class Schemat {
     }
 
     _on_evict({id}) {
-        /* Special handling for system objects during registry purge. */
-        if (id === ROOT_ID || id === this.site_id) {
+        /* Special handling for essential system objects during registry purge: they are reloaded rather than deleted. */
+        if (this._essential.includes(id)) {
             this.reload(id)         // scheduling an async reload *instead* of eviction so that the object is *always* present in registry
             return true
         }
