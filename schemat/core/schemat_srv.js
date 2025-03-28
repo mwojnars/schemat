@@ -61,7 +61,10 @@ export class ServerSchemat extends Schemat {
     }
 
     with_context(handler) {
-        /* Wrap up the `handler` function in async context that sets global schemat = this (via _schemat async store). */
+        /* Wrap up the `handler` function in async context that sets global schemat = this (via _schemat async store).
+           This should be applied to all event handlers when registering them on TCP/HTTP sockets, IPC channels etc.,
+           because Node.js does NOT recreate async context from the point of registration when calling these handlers.
+         */
         return (...args) => _schemat.run(this, () => handler(...args))
     }
 

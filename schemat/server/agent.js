@@ -114,9 +114,7 @@ export class WebServer extends Agent {
         app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
         app.use(bodyParser.text({type: '*/*', limit: '10MB'}))  // for setting req.body string from plain-text body (if not json MIME-type)
 
-        let ctx = _schemat.getStore()
-        app.all('*', (req, res) => _schemat.run(ctx, () => this._handle(req, res)))
-        // app.all('*', (req, res) => this._handle(req, res))
+        app.all('*', schemat.with_context((req, res) => this._handle(req, res)))
 
         let host = schemat.config.host || this.host || schemat.node.http_host
         let port = schemat.config.port || this.port || schemat.node.http_port

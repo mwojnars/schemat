@@ -94,14 +94,7 @@ export class IPC_Mailbox extends Mailbox {
         this._listen()
     }
     
-    _listen() {
-        this.peer.on("message", schemat.with_context(message => this._handle_message(message)))
-
-        // capture the current AsyncLocalStorage context (schemat object) and recreate this async context when calling the handler
-        // let ctx = _schemat.getStore()
-        // this.peer.on("message", (message) => _schemat.run(ctx, () => this._handle_message(message)))
-    }
-    
+    _listen()       { this.peer.on("message", schemat.with_context(message => this._handle_message(message))) }
     _send(message)  { return this.peer.send(message) }
 }
 
