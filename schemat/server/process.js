@@ -17,6 +17,19 @@ import {IPC_Mailbox} from "./node.js";
 
 /**********************************************************************************************************************/
 
+export async function run_with_schemat(opts, callback) {
+
+    // global `schemat` is a getter that reads the current Schemat object from the async store `_schemat`
+    Object.defineProperty(globalThis, 'schemat', {
+        get() { return this._schemat.getStore() },
+        enumerable: true
+    })
+
+    globalThis._schemat = new AsyncLocalStorage()
+    globalThis._schemat.run(new ServerSchemat(config), callback)
+
+}
+
 export async function boot_schemat(opts, callback) {
     /* Create the global `schemat` object and initialize its database. */
 
@@ -24,14 +37,6 @@ export async function boot_schemat(opts, callback) {
     let config = await _load_config(opts.config)
     config = {...config, ...opts}
     // print('config:', config)
-
-    // // globalThis.schemat is a getter that reads the current Schemat object from the async store `_schemat`
-    // Object.defineProperty(globalThis, 'schemat', {
-    //     get() { return this._schemat.getStore() },
-    //     enumerable: true
-    // })
-    // globalThis._schemat = new AsyncLocalStorage()
-    // globalThis._schemat.run(new ServerSchemat(config), callback)
 
     globalThis.schemat = new ServerSchemat(config)
     await schemat.boot(() => _open_bootstrap_db())
@@ -141,6 +146,7 @@ export class KernelProcess {
         // let {WebServer} = await schemat.import('/$/local/schemat/server/agent.js')
 
         await boot_schemat(opts)
+        schemat.process = this
 
         let node_file = opts['node-file']
         let node_id = opts.node || this._read_node_id(node_file)
@@ -164,9 +170,6 @@ export class KernelProcess {
     }
 
     async start() {
-        schemat.process = this
-        if (this.is_master()) await sleep(2.0)      // master waits for workers to start their IPC before sending requests
-        else await sleep(3.0)                       // worker waits for master to provide an initial list of agents
         return this._promise = this.main()
     }
 
@@ -348,6 +351,7 @@ export class MasterProcess extends KernelProcess {
     async start() {
         print(`starting node:`, this.node.id)
         this._start_workers()
+        await sleep(2.0)            // wait for workers to start their IPC before sending requests
         await super.start()
     }
 
@@ -387,6 +391,7 @@ export class WorkerProcess extends KernelProcess {
     async start() {
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.from_master(msg))    // messages to/from master
+        await sleep(3.0)            // wait for master to provide an initial list of agents
         await super.start()
     }
 }
