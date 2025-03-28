@@ -60,6 +60,11 @@ export class ServerSchemat extends Schemat {
         // this.loader = new Loader(import.meta.url)
     }
 
+    with_context(handler) {
+        /* Wrap up the `handler` function in async context that sets global schemat = this (via _schemat async store). */
+        return (...args) => _schemat.run(this, () => handler(...args))
+    }
+
     async boot(boot_db) {
         /* Initialize built-in objects, site_id, site, bootstrap DB. */
         await this._init_classpath()
@@ -99,6 +104,7 @@ export class ServerSchemat extends Schemat {
     init_client(id_context) {
         return `import {Client} from "/$/local/schemat/web/client.js"; globalThis.schemat = new Client("#${id_context}"); await schemat.boot();`
     }
+
 
     _db_select(id, opts) { return this.db.select(id, opts) }
 
