@@ -99,7 +99,7 @@ class Frame {
 
 export class KernelProcess {
     /* Kernel process (master or worker) that executes message loops of Agents assigned to the current node
-       and brokers TCP messages sent/received between nodes.
+       and brokers TCP messages sent to / received from other nodes.
      */
 
     node                    // Node web object that represents the Schemat cluster node this process is running
@@ -181,7 +181,7 @@ export class KernelProcess {
     }
 
     async main() {
-        /* Start/stop loop of active agents. */
+        /* Start/stop agents. Refresh agent objects and the `node` object itself. */
         while (true) {
             let beginning = Date.now()
             // this.node = this.node.refresh()
