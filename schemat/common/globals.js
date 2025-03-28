@@ -1,11 +1,18 @@
 /*
     Global variables accessible to all application code. Declared here for clarity and consistency.
-    The variables are initialized elsewhere with calls to `set_global()`, which is a preferred way
-    over direct assignments to globalThis.
  */
 
 
-// global flags ...
+// global Schemat object on the server:
+//
+//   globalThis._schemat  -- AsyncLocalStorage holding a Schemat instance for the current async thread
+//   globalThis.schemat   -- getter that gives easy access to the current content of `_schemat` async-store
+//
+// on clients, globalThis.schemat holds the actual Schemat object, while _schemat is not used at all
+//
+
+
+// global flags:
 globalThis.SERVER = (typeof window === 'undefined')
 globalThis.CLIENT = !globalThis.SERVER
 

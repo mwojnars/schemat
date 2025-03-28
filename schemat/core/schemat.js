@@ -134,8 +134,8 @@ export class Schemat {
     /***  Initialization  ***/
 
     constructor(config) {
-        /* Create a new Schemat instance as a global object. `config` is either the contents of a config file
-        (on server), or a RequestContext (on client) -- both should contain the `site` attribute.
+        /* Create a new Schemat instance. `config` is either the contents of a config file (on server),
+           or a RequestContext (on client) -- both should contain the `site` attribute.
          */
         assert(!globalThis.schemat, `global Schemat instance already exists`)
 
