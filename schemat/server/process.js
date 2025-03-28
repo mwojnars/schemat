@@ -262,8 +262,9 @@ export class KernelProcess {
 
             let state, custom_schemat
             let agent_site = agent.__site
-            if (agent_site && !agent_site.is(schemat.site)) {
+            if (agent_site) { // && !agent_site.is(schemat.site)) {
                 // execute the agent in "user mode" with a custom `site` that gives access to data rings above the kernel+cluster
+                this._print(`forking async context with site = ${agent_site.__label}`);
                 [state, custom_schemat] = await schemat.fork(agent_site, () => agent.__start__())
             }
             else state = await agent.__start__()
