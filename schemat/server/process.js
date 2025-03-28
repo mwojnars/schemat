@@ -258,6 +258,8 @@ export class KernelProcess {
             assert(agent instanceof Agent)
             this._print(`starting agent ${agent.__label} ...`)
 
+            let context_site = agent.__site
+
             let state = await agent.__start__()
             this.frames.set(agent.id, new Frame(agent, state))
             this._print(`starting agent ${agent.__label} done`)
