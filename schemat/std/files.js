@@ -40,20 +40,21 @@ export class File extends WebObject {
     content
     mimetype
 
-    process(content) {
-        /* Optional processing (e.g., transpiling, compaction) of this file before it gets sent to a client/caller.
-           Can be overriden by subclasses.
-         */
-        return content
-    }
     _content() {
         /* Initial raw content of this file before any processing. */
         return this.content
     }
 
-    get content_processed() {
-        return this.process(this._content())
-    }
+    // get content_processed() {
+    //     return this.process(this._content())
+    // }
+    //
+    // process(content) {
+    //     /* Optional processing (e.g., transpiling, compaction) of this file before it gets sent to a client/caller.
+    //        Can be overriden by subclasses.
+    //      */
+    //     return content
+    // }
 
     // async LOCAL_import({request}) {
     //     /* Parse the file as a JS module. Return the module, or a selected symbol if request.path is non-empty.
