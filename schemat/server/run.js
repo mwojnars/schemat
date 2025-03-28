@@ -38,5 +38,5 @@ await (async function run() {
 
     let node_process = cluster.isPrimary ? new MasterProcess() : new WorkerProcess()
     await node_process.init(opts)
-    return node_process.start()
+    await node_process.start()
 })()

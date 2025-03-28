@@ -107,8 +107,8 @@ class Frame {
 }
 
 export class KernelProcess {
-    /* Kernel process (master or worker) that executes message loops of Agents assigned to the current node
-       and brokers TCP messages sent to / received from other nodes.
+    /* Wrapper class around the kernel process. Executes message loops of Agents assigned to the current node
+       and performs TCP communication between nodes.
      */
 
     node                    // Node web object that represents the Schemat cluster node this process is running
@@ -127,7 +127,7 @@ export class KernelProcess {
 
 
     constructor() {
-        print('KernelProcess.start() WORKER_ID:', process.env.WORKER_ID || 0)
+        print('KernelProcess WORKER_ID:', process.env.WORKER_ID || 0)
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
     }
@@ -167,7 +167,7 @@ export class KernelProcess {
         schemat.process = this
         if (this.is_master()) await sleep(2.0)      // master waits for workers to start their IPC before sending requests
         else await sleep(3.0)                       // worker waits for master to provide an initial list of agents
-        this._promise = this.main()
+        return this._promise = this.main()
     }
 
     async stop() {
@@ -345,10 +345,10 @@ export class MasterProcess extends KernelProcess {
         return this.workers[process_id - 1]     // workers 1,2,3... stored under indices 0,1,2...
     }
 
-    start() {
+    async start() {
         print(`starting node:`, this.node.id)
         this._start_workers()
-        return super.start()
+        await super.start()
     }
 
     _start_workers(num_workers = 2) {
@@ -384,10 +384,10 @@ export class MasterProcess extends KernelProcess {
 export class WorkerProcess extends KernelProcess {
     mailbox     // IPC_Mailbox for communication with the master process
 
-    start() {
+    async start() {
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.from_master(msg))    // messages to/from master
-        return super.start()
+        await super.start()
     }
 }
 
