@@ -72,14 +72,21 @@ export class ServerSchemat extends Schemat {
             print(`loading cluster ${cluster_id} ...`)
             this._essential.push(cluster_id)
             this._cluster = await this.get_loaded(cluster_id)
-            print(`loading cluster ${cluster_id} done`)
         }
 
         await super._load_site()
+        await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
 
-        await this._purge_registry()            // purge the cache of bootstrap objects and schedule periodical re-run
-        await this.reload(this.site_id, true)   // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
-        delete this._db                         // allow garbage collection
+        // await this.site?.reload()        // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
+        // await this.reload(this.site_id, true)
+
+        delete this._db                     // allow garbage collection
+
+        // print(`boot() _cluster: `, this._cluster)
+        // print(`boot() cluster: `, this.cluster)
+        // print(`boot() database:`, this._cluster.database)
+        print(`boot() system:`, this.system)
+        print(`boot() this.db:`, this.db)
     }
 
     client_block(request, id_context, ...objects) {

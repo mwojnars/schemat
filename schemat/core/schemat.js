@@ -99,7 +99,7 @@ export class Schemat {
 
     // defined on server only:
     kernel
-    cluster
+    get cluster()   {}
     get tx()        {}
     get node()      {}
     get_frame()     {}
@@ -148,6 +148,7 @@ export class Schemat {
         /* Initialize this.site. */
 
         let site_id = this.config.site
+        if (!site_id) return
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
 
         this.site_id = site_id
