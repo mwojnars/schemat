@@ -17,7 +17,7 @@ import {IPC_Mailbox} from "./node.js";
 
 /**********************************************************************************************************************/
 
-export async function boot_schemat(opts) {
+export async function boot_schemat(opts, callback) {
     /* Create the global `schemat` object and initialize its database. */
 
     opts.config ??= './schemat/config.yaml'
@@ -31,7 +31,7 @@ export async function boot_schemat(opts) {
     //     enumerable: true
     // })
     // globalThis._schemat = new AsyncLocalStorage()
-    // globalThis._schemat.run(new ServerSchemat(config), func)
+    // globalThis._schemat.run(new ServerSchemat(config), callback)
 
     globalThis.schemat = new ServerSchemat(config)
     await schemat.boot(() => _open_bootstrap_db())
@@ -126,6 +126,12 @@ export class KernelProcess {
     _print(...args) { print(`${this.node?.id}/#${this.worker_id}`, ...args) }
 
 
+    constructor() {
+        print('KernelProcess.start() WORKER_ID:', process.env.WORKER_ID || 0)
+        process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
+        process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
+    }
+
     async init(opts) {
         // node = schemat.get_loaded(this_node_ID)
         // return node.activate()     // start the life-loop and all worker processes (servers)
@@ -134,11 +140,7 @@ export class KernelProcess {
         // print('loaded:', m)
         // let {WebServer} = await schemat.import('/$/local/schemat/server/agent.js')
 
-        print('KernelProcess.start() WORKER_ID:', process.env.WORKER_ID || 0)
         await boot_schemat(opts)
-
-        process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
-        process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
         let node_file = opts['node-file']
         let node_id = opts.node || this._read_node_id(node_file)
@@ -334,10 +336,7 @@ export class KernelProcess {
 
 export class MasterProcess extends KernelProcess {
     /* Top-level Schemat kernel process running on a given node. Spawns and manages worker processes that execute agents:
-       web server(s), data server(s), load balancer etc. On worker nodes, the MasterProcess object is STILL being
-       created, because run.js that creates MasterProcess is re-run for every child process, only the initialization
-       follows a different path and finally assigns a WorkerProcess to schemat.process - so there are actually two
-       KernelProcess instances (non-active MasterProcess + active WorkerProcess).
+       web server(s), data server(s), load balancer etc.
      */
     workers         // array of Node.js Worker instances (child processes); each item has .mailbox (IPC_Mailbox) for communication with this worker
     worker_pids     // PID to WORKER_ID association
