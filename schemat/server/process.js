@@ -25,19 +25,24 @@ export async function boot_schemat(opts, callback) {
     config = {...config, ...opts}
     // print('config:', config)
 
-    // // global `schemat` is a getter that reads the current Schemat object from the async store `_schemat`
-    // Object.defineProperty(globalThis, 'schemat', {
-    //     get() { return this._schemat.getStore() },
-    //     enumerable: true
-    // })
-    //
-    // globalThis._schemat = new AsyncLocalStorage()
-    // globalThis._schemat.run(new ServerSchemat(config), callback)
+    if (!globalThis._schemat) {
+        // global `schemat` is a getter that reads the current Schemat object from the async store `_schemat`
+        Object.defineProperty(globalThis, 'schemat', {
+            get() { return this._schemat.getStore() },
+            enumerable: true
+        })
+        globalThis._schemat = new AsyncLocalStorage()
+    }
 
-    globalThis.schemat = new ServerSchemat(config)
-    await schemat.boot(() => _open_bootstrap_db())
+    await globalThis._schemat.run(new ServerSchemat(config), async () => {
+        print(`before schemat.boot()...`)
+        await schemat.boot(() => _open_bootstrap_db())
+        await callback()
+    })
 
-    return callback()
+    // globalThis.schemat = new ServerSchemat(config)
+    // await schemat.boot(() => _open_bootstrap_db())
+    // return callback()
 
     async function _load_config(filename) {
         let fs = await import('node:fs')
@@ -130,13 +135,9 @@ export class KernelProcess {
     _print(...args) { print(`${this.node?.id}/#${this.worker_id}`, ...args) }
 
 
-    constructor() {
-        print('KernelProcess WORKER_ID:', process.env.WORKER_ID || 0)
-        process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
-        process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
-    }
-
     async init(opts) {
+        print('KernelProcess WORKER_ID:', process.env.WORKER_ID || 0)
+
         // node = schemat.get_loaded(this_node_ID)
         // return node.activate()     // start the life-loop and all worker processes (servers)
 
@@ -146,6 +147,9 @@ export class KernelProcess {
 
         // await boot_schemat(opts)
         schemat.process = this
+
+        process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
+        process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
         let node_file = opts['node-file']
         let node_id = opts.node || this._read_node_id(node_file)
