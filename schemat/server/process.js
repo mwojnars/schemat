@@ -17,7 +17,8 @@ import {IPC_Mailbox} from "./node.js";
 
 /**********************************************************************************************************************/
 
-export async function run_with_schemat(opts, callback) {
+export async function boot_schemat(opts, callback) {
+    /* Create global (async local) `schemat` object, load the initial database, and run `callback`. */
 
     opts.config ??= './schemat/config.yaml'
     let config = await _load_config(opts.config)
@@ -55,33 +56,6 @@ export async function run_with_schemat(opts, callback) {
     }
 }
 
-// export async function boot_schemat(opts, callback) {
-//     /* Create the global `schemat` object and initialize its database. */
-//
-//     opts.config ??= './schemat/config.yaml'
-//     let config = await _load_config(opts.config)
-//     config = {...config, ...opts}
-//     // print('config:', config)
-//
-//     globalThis.schemat = new ServerSchemat(config)
-//     await schemat.boot(() => _open_bootstrap_db())
-//
-//     async function _load_config(filename) {
-//         let fs = await import('node:fs')
-//         let yaml = (await import('yaml')).default
-//         let content = fs.readFileSync(filename, 'utf8')
-//         return yaml.parse(content)
-//     }
-//
-//     async function _open_bootstrap_db() {
-//         let db = BootDatabase.new()
-//         let rings = config.bootstrap_rings
-//         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
-//         await db.open(rings)
-//         await db.load()             // run __init__() and activate the database object
-//         return db
-//     }
-// }
 
 /**********************************************************************************************************************/
 

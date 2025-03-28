@@ -50,5 +50,4 @@ await (async function main() {
     // let loader = new Loader(import.meta.url)
 
     await new AdminProcess().start(cmd, {...argv})
-    schemat.is_closing = true
 })()

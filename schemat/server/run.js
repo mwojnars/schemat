@@ -1,7 +1,7 @@
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
-import {run_with_schemat, MasterProcess, WorkerProcess} from "./process.js"
+import {boot_schemat, MasterProcess, WorkerProcess} from "./process.js"
 import cluster from "node:cluster";
 
 
@@ -37,6 +37,6 @@ await (async function run() {
     // let {WorkerProcess} = await loader.import('/$/local/schemat/server/process.js')
 
     let kernel_process = cluster.isPrimary ? new MasterProcess() : new WorkerProcess()
-    await run_with_schemat(opts, () => kernel_process.start(opts))
+    await boot_schemat(opts, () => kernel_process.start(opts))
     // await kernel_process.start(opts)
 })()

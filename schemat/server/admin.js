@@ -16,14 +16,14 @@ export class AdminProcess {
 
     async start(cmd, opts = {}) {
         /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
-
-        await boot_schemat(opts)
-
         if (!cmd) return
         let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
         assert(this[method], `unknown command: ${cmd}`)
 
-        await this[method](opts)
+        await boot_schemat(opts, async () => {
+            await this[method](opts)
+            schemat.is_closing = true
+        })
     }
 
     // async CLI_move({id, newid, bottom, ring: ring_name}) {
