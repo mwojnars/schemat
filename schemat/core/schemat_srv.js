@@ -36,9 +36,10 @@ export class ServerSchemat extends Schemat {
     //                             // new requests wait until the current session completes, see Session.start()
 
     kernel          // KernelProcess that runs the main Schemat loop of the current master/worker process
-    _cluster        // Cluster object of the previous generation, always present but not always the most recent one (Registry may hold a more recent version)
+    parent          // parent ServerSchemat that created this one via .fork() below
 
     _db             // bootstrap DB; regular server-side DB is taken from site.database
+    _cluster        // Cluster object of the previous generation, always present but not always the most recent one (Registry may hold a more recent version)
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
 
@@ -50,6 +51,7 @@ export class ServerSchemat extends Schemat {
     constructor(config, parent) {
         super(config)
 
+        this.parent = parent
         this.ROOT_DIRECTORY = process.cwd()                 // initialize ROOT_DIRECTORY from the current working dir
         // this.SCHEMAT_DIRECTORY = this.ROOT_DIRECTORY + '/schemat'
 
@@ -63,7 +65,7 @@ export class ServerSchemat extends Schemat {
     async boot(boot_db) {
         /* Initialize built-in objects, site_id, site, bootstrap DB. */
         await this._init_classpath()
-        this._db = await boot_db?.() || this.parent.db      // bootstrap DB, created anew or taken from parent Schemat; the ultimate DB is opened later: on the first access to this.db
+        this._db = await boot_db?.() || this.parent.db      // bootstrap DB, created anew or taken from parent; the ultimate DB is opened later: on the first access to this.db
 
         let cluster_id = this.config.cluster
         if (cluster_id) {
@@ -149,9 +151,11 @@ export class ServerSchemat extends Schemat {
     async fork(site, callback) {
         /* Run `callback` function inside a new async context (_schemat) cloned from this one but having a different schemat.site. */
         let new_schemat = new ServerSchemat({...this.config, site: site.id}, this)
-        // print(`before schemat.boot()...`)
-        await new_schemat.boot()
-        let result = await _schemat.run(new_schemat, callback)
+        let result = await _schemat.run(new_schemat, async () => {
+            print(`ServerSchemat.fork() ...`)
+            await new_schemat.boot()
+            return callback()
+        })
         return [result, new_schemat]
     }
 
