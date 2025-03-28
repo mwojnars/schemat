@@ -130,7 +130,7 @@ export class TCP_Receiver {
                 // } catch (e) { console.error('Error while processing TCP message:', e) }
             })
 
-            socket.on('data', data => msg_parser.feed(data))
+            socket.on('data', schemat.with_context(data => msg_parser.feed(data)))
             socket.on('error', () => socket.destroy())
         })
 
