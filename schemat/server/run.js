@@ -36,7 +36,7 @@ await (async function run() {
     // TODO: this line must be uncommented if dynamic code loading is needed (!!!); however, currently the dynamic loading causes errors for unknown reasons
     // let {WorkerProcess} = await loader.import('/$/local/schemat/server/process.js')
 
-    let node_process = cluster.isPrimary ? new MasterProcess() : new WorkerProcess()
-    await node_process.init(opts)
-    await node_process.start()
+    let kernel_process = cluster.isPrimary ? new MasterProcess() : new WorkerProcess()
+    // await kernel_process.init(opts)
+    await kernel_process.start(opts)
 })()

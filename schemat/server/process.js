@@ -169,9 +169,7 @@ export class KernelProcess {
         return node
     }
 
-    async start() {
-        return this._promise = this.main()
-    }
+    async start(opts) {}    // implemented in subclasses
 
     async stop() {
         if (schemat.is_closing) return
@@ -348,11 +346,14 @@ export class MasterProcess extends KernelProcess {
         return this.workers[process_id - 1]     // workers 1,2,3... stored under indices 0,1,2...
     }
 
-    async start() {
+    async start(opts) {
+        await this.init(opts)
+
         print(`starting node:`, this.node.id)
         this._start_workers()
         await sleep(2.0)            // wait for workers to start their IPC before sending requests
-        await super.start()
+
+        await (this._promise = this.main())
     }
 
     _start_workers(num_workers = 2) {
@@ -388,11 +389,14 @@ export class MasterProcess extends KernelProcess {
 export class WorkerProcess extends KernelProcess {
     mailbox     // IPC_Mailbox for communication with the master process
 
-    async start() {
+    async start(opts) {
+        await this.init(opts)
+
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.from_master(msg))    // messages to/from master
-        await sleep(3.0)            // wait for master to provide an initial list of agents
-        await super.start()
+        await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in MasterProcess.start()
+
+        await (this._promise = this.main())
     }
 }
 
