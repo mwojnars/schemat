@@ -47,7 +47,7 @@ export class ServerSchemat extends Schemat {
     get node()   { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster(){ return this.registry.get_object(this._cluster?.id) || this._cluster }
 
-    constructor(config) {
+    constructor(config, parent) {
         super(config)
 
         this.ROOT_DIRECTORY = process.cwd()                 // initialize ROOT_DIRECTORY from the current working dir
@@ -63,7 +63,7 @@ export class ServerSchemat extends Schemat {
     async boot(boot_db) {
         /* Initialize built-in objects, site_id, site, bootstrap DB. */
         await this._init_classpath()
-        this._db = await boot_db?.()        // bootstrap DB; the ultimate DB is opened later: on the first access to this.db
+        this._db = await boot_db?.() || this.parent.db      // bootstrap DB, created anew or taken from parent Schemat; the ultimate DB is opened later: on the first access to this.db
 
         let cluster_id = this.config.cluster
         if (cluster_id) {
@@ -77,6 +77,7 @@ export class ServerSchemat extends Schemat {
 
         await this._purge_registry()            // purge the cache of bootstrap objects and schedule periodical re-run
         await this.reload(this.site_id, true)   // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
+        delete this._db                         // allow garbage collection
     }
 
     client_block(request, id_context, ...objects) {
@@ -145,9 +146,13 @@ export class ServerSchemat extends Schemat {
         return (...args) => _schemat.run(this, () => handler(...args))
     }
 
-    fork(site, callback) {
-        /* Run `callback` function inside a new async context (_schemat) cloned from this one, but with a different schemat.site. */
-
+    async fork(site, callback) {
+        /* Run `callback` function inside a new async context (_schemat) cloned from this one but having a different schemat.site. */
+        let new_schemat = new ServerSchemat({...this.config, site: site.id}, this)
+        // print(`before schemat.boot()...`)
+        await new_schemat.boot()
+        let result = await _schemat.run(new_schemat, callback)
+        return [result, new_schemat]
     }
 
     /***  Agents  ***/
