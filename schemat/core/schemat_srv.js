@@ -60,14 +60,6 @@ export class ServerSchemat extends Schemat {
         // this.loader = new Loader(import.meta.url)
     }
 
-    with_context(handler) {
-        /* Wrap up the `handler` function in async context that sets global schemat = this (via _schemat async store).
-           This should be applied to all event handlers when registering them on TCP/HTTP sockets, IPC channels etc.,
-           because Node.js does NOT recreate async context from the point of registration when calling these handlers.
-         */
-        return (...args) => _schemat.run(this, () => handler(...args))
-    }
-
     async boot(boot_db) {
         /* Initialize built-in objects, site_id, site, bootstrap DB. */
         await this._init_classpath()
@@ -141,6 +133,18 @@ export class ServerSchemat extends Schemat {
         this._site = this.site
         this.reload(this.site_id, true)     // not awaited
     }
+
+
+    /***  Life cycle  ***/
+
+    with_context(handler) {
+        /* Wrap up the `handler` function in async context that sets global schemat = this (via _schemat async store).
+           This should be applied to all event handlers when registering them on TCP/HTTP sockets, IPC channels etc.,
+           because Node.js does NOT recreate async context from the point of registration when calling these handlers.
+         */
+        return (...args) => _schemat.run(this, () => handler(...args))
+    }
+
 
 
     /***  Agents  ***/
