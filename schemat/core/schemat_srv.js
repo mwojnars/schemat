@@ -145,7 +145,10 @@ export class ServerSchemat extends Schemat {
         return (...args) => _schemat.run(this, () => handler(...args))
     }
 
+    fork(site, callback) {
+        /* Run `callback` function inside a new async context (_schemat) cloned from this one, but with a different schemat.site. */
 
+    }
 
     /***  Agents  ***/
 

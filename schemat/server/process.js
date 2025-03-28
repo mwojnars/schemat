@@ -71,10 +71,12 @@ class Frame {
     raw_state           // original unproxied state object returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
     stopping = false    // if true, no more RPC calls can be started
+    custom_schemat      // optional Schemat object that was created as an async context (_schemat) for the agent
 
-    constructor(agent, state = null) {
+    constructor(agent, state, custom_schemat) {
         this.agent = agent
         this.set_state(state)
+        this.custom_schemat = custom_schemat
     }
     
     set_state(state) {
@@ -258,10 +260,15 @@ export class KernelProcess {
             assert(agent instanceof Agent)
             this._print(`starting agent ${agent.__label} ...`)
 
-            let context_site = agent.__site
+            let state, custom_schemat
+            let agent_site = agent.__site
+            if (agent_site) {
+                // execute the agent in "user mode" with a custom `site` that gives access to data rings above the kernel+cluster
+                [state, custom_schemat] = schemat.fork(agent_site, () => agent.__start__())
+            }
+            else state = await agent.__start__()
 
-            let state = await agent.__start__()
-            this.frames.set(agent.id, new Frame(agent, state))
+            this.frames.set(agent.id, new Frame(agent, state, custom_schemat))
             this._print(`starting agent ${agent.__label} done`)
         }
 
