@@ -97,7 +97,7 @@ export class ServerSchemat extends Schemat {
     }
 
     init_client(id_context) {
-        return `import {Client} from "/$/local/schemat/web/client.js"; await new Client("#${id_context}").boot();`
+        return `import {Client} from "/$/local/schemat/web/client.js"; globalThis.schemat = new Client("#${id_context}"); await schemat.boot();`
     }
 
     _db_select(id, opts) { return this.db.select(id, opts) }

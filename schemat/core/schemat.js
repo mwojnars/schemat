@@ -138,7 +138,6 @@ export class Schemat {
         (on server), or a RequestContext (on client) -- both should contain the `site` attribute.
          */
         assert(!globalThis.schemat, `global Schemat instance already exists`)
-        globalThis.schemat = this
 
         this.config = config
         this.WebObject = WebObject          // schemat.WebObject is globally available for application code

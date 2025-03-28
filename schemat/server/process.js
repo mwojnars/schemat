@@ -1,5 +1,6 @@
 import cluster from 'node:cluster'
 import fs from 'node:fs'
+import {AsyncLocalStorage} from 'node:async_hooks'
 
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
@@ -24,8 +25,8 @@ export async function boot_schemat(opts) {
     config = {...config, ...opts}
     // print('config:', config)
 
-    await new ServerSchemat(config).boot(() => _open_bootstrap_db())
-    // await schemat.db.insert_self()
+    globalThis.schemat = new ServerSchemat(config)
+    await schemat.boot(() => _open_bootstrap_db())
 
     async function _load_config(filename) {
         let fs = await import('node:fs')
@@ -213,7 +214,9 @@ export class KernelProcess {
     }
 
     async _start_stop() {
-        /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now. */
+        /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now.
+           Update `this.frames` accordingly.
+         */
         let current_agents = Array.from(this.frames.values(), frame => frame.agent)     // currently running agents
         let desired_agents = this.is_master() ? [this.node] : [...this.agents_running]  // agents that should be running when this method completes; master process runs the node agent and nothing else
 
