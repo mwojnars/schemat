@@ -35,7 +35,7 @@ export class ServerSchemat extends Schemat {
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
-    process         // KernelProcess instance that runs the main Schemat loop of the current master/worker process
+    kernel          // KernelProcess that runs the main Schemat loop of the current master/worker process
     _cluster        // Cluster object of the previous generation, always present but not always the most recent one (Registry may hold a more recent version)
 
     _db             // bootstrap DB; regular server-side DB is taken from site.database
@@ -44,7 +44,7 @@ export class ServerSchemat extends Schemat {
 
     get db()     { return this.system?.database || this._db }
     get tx()     { return this._transaction.getStore() }
-    get node()   { return this.process?.node }      // host Node (web object) of the current process; initialized and periodically reloaded in Server
+    get node()   { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster(){ return this.registry.get_object(this._cluster?.id) || this._cluster }
 
     constructor(config) {
@@ -152,7 +152,7 @@ export class ServerSchemat extends Schemat {
     get_frame(id_or_obj) {
         /* Find and return the current execution frame of an agent. */
         let id = (typeof id_or_obj === 'object') ? id_or_obj.id : id_or_obj
-        return this.process.frames.get(id)
+        return this.kernel.frames.get(id)
     }
 
     get_state(id_or_obj) {

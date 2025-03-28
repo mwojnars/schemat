@@ -145,8 +145,7 @@ export class KernelProcess {
         // print('loaded:', m)
         // let {WebServer} = await schemat.import('/$/local/schemat/server/agent.js')
 
-        // await boot_schemat(opts)
-        schemat.process = this
+        schemat.kernel = this
 
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C

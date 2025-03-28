@@ -125,7 +125,7 @@ export class WebServer extends Agent {
 
     async __stop__({server}) {
         if (server) await new Promise(resolve => server.close(resolve))
-        print(`#${schemat.process.worker_id} WebServer closed`)
+        print(`#${schemat.kernel.worker_id} WebServer closed`)
     }
 
     async _handle(req, res) {

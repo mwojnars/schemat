@@ -126,8 +126,8 @@ export class Node extends Agent {
     // node as an agent is deployed on itself and runs on master process
     get __node() { return this }
 
-    get worker_id() { return schemat.process.worker_id }
-    is_master()     { return schemat.process.is_master() }
+    get worker_id() { return schemat.kernel.worker_id }
+    is_master()     { return schemat.kernel.is_master() }
     _print(...args) { print(`${this.id}/#${this.worker_id}`, ...args) }
 
     get _tcp_port() { return schemat.config['tcp-port'] || this.tcp_port }      // FIXME: workaround
@@ -166,7 +166,7 @@ export class Node extends Agent {
         /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
            Notify each sublist to a corresponding process. Return an inverted Map: agent ID -> array of process IDs.
          */
-        let N = schemat.process.workers.length
+        let N = schemat.kernel.workers.length
         assert(N >= 1)
 
         let current_worker = 1
@@ -186,9 +186,9 @@ export class Node extends Agent {
         this._print(`agents allocation:`, plan)
 
         // notify the plan to every process
-        schemat.process.set_agents_running(plan[0])
+        schemat.kernel.set_agents_running(plan[0])
         for (let i = 1; i <= N; i++) {
-            let worker = schemat.process.get_worker(i)
+            let worker = schemat.kernel.get_worker(i)
             worker.mailbox.notify(['SYS', 'sys_agents_running', [plan[i]]])
         }
 
@@ -203,7 +203,7 @@ export class Node extends Agent {
         return locations
     }
 
-    sys_agents_running(agents) { schemat.process.set_agents_running(agents) }
+    sys_agents_running(agents) { schemat.kernel.set_agents_running(agents) }
 
 
     /* RPC calls to other processes or nodes */
@@ -221,7 +221,7 @@ export class Node extends Agent {
         let frame = schemat.get_frame(target_id)
         if (frame) return this.execute_rpc(...msg)
 
-        return this.is_master() ? this.from_worker(message) : schemat.process.mailbox.send(message)
+        return this.is_master() ? this.from_worker(message) : schemat.kernel.mailbox.send(message)
     }
 
     execute_rpc(target_id, method, args) {
@@ -316,7 +316,7 @@ export class Node extends Agent {
             }
             if (process_id !== this.worker_id) {
                 assert(process_id > 0)
-                let worker = schemat.process.get_worker(process_id)
+                let worker = schemat.kernel.get_worker(process_id)
                 return worker.mailbox.send([type, ...msg])          // forward the message down to a worker process, to its from_master()
             }
             return this.execute_rpc(...msg)                         // process the message here in the master process

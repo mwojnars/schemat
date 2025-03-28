@@ -98,8 +98,8 @@ export class Schemat {
     get system()        { return this.site || this.cluster }        // user mode | kernel mode
 
     // defined on server only:
+    kernel
     cluster
-    process
     get tx()        {}
     get node()      {}
     get_frame()     {}
