@@ -97,8 +97,10 @@ class Frame {
     }
 }
 
-export class Process {
-    /* Master or worker process that executes message loops of Agents assigned to the current node. */
+export class KernelProcess {
+    /* Kernel process (master or worker) that executes message loops of Agents assigned to the current node
+       and brokers TCP messages sent/received between nodes.
+     */
 
     node                    // Node web object that represents the Schemat cluster node this process is running
     frames = new Map()      // Frame objects of currently running agents, keyed by agent IDs
@@ -123,7 +125,7 @@ export class Process {
         // print('loaded:', m)
         // let {WebServer} = await schemat.import('/$/local/schemat/server/agent.js')
 
-        print('Process.start() WORKER_ID:', process.env.WORKER_ID || 0)
+        print('KernelProcess.start() WORKER_ID:', process.env.WORKER_ID || 0)
         await boot_schemat(opts)
 
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
@@ -319,12 +321,12 @@ export class Process {
 
 /**********************************************************************************************************************/
 
-export class MasterProcess extends Process {
-    /* Top-level Schemat process running on a given node. Spawns and manages worker processes that execute agents:
+export class MasterProcess extends KernelProcess {
+    /* Top-level Schemat kernel process running on a given node. Spawns and manages worker processes that execute agents:
        web server(s), data server(s), load balancer etc. On worker nodes, the MasterProcess object is STILL being
        created, because run.js that creates MasterProcess is re-run for every child process, only the initialization
        follows a different path and finally assigns a WorkerProcess to schemat.process - so there are actually two
-       Process instances (non-active MasterProcess + active WorkerProcess).
+       KernelProcess instances (non-active MasterProcess + active WorkerProcess).
      */
     workers         // array of Node.js Worker instances (child processes); each item has .mailbox (IPC_Mailbox) for communication with this worker
     worker_pids     // PID to WORKER_ID association
@@ -369,7 +371,7 @@ export class MasterProcess extends Process {
 
 /**********************************************************************************************************************/
 
-export class WorkerProcess extends Process {
+export class WorkerProcess extends KernelProcess {
     mailbox     // IPC_Mailbox for communication with the master process
 
     start() {

@@ -108,7 +108,7 @@ export class Node extends Agent {
        The node, as an Agent, must NOT have any __install__() or __uninstall__() method, because these methods will never
        be launched: the node is assumed to be installed on itself without any installation procedure and without
        being included in `agents_installed`. The node is added implicitly to the list of currently
-       running agents in Process._get_agents_running().
+       running agents in KernelProcess._get_agents_running().
      */
 
     data_directory
@@ -162,7 +162,7 @@ export class Node extends Agent {
     }
 
     _allocate_agents() {
-        /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running of this process.
+        /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
            Notify each sublist to a corresponding process. Return an inverted Map: agent ID -> array of process IDs.
          */
         let N = schemat.process.workers.length
