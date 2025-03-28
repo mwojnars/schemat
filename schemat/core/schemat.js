@@ -137,12 +137,11 @@ export class Schemat {
         /* Create a new Schemat instance. `config` is either the contents of a config file (on server),
            or a RequestContext (on client) -- both should contain the `site` attribute.
          */
-        assert(!globalThis.schemat, `global Schemat instance already exists`)
-
         this.config = config
         this.WebObject = WebObject          // schemat.WebObject is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
         this.registry = new Registry(this._on_evict.bind(this))
+        // this.parent_schemat = globalThis.schemat
     }
 
     async _load_site() {
