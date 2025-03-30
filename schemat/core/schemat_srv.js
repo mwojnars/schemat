@@ -85,8 +85,8 @@ export class ServerSchemat extends Schemat {
         // print(`boot() _cluster: `, this._cluster)
         // print(`boot() cluster: `, this.cluster)
         // print(`boot() database:`, this._cluster.database)
-        print(`boot() system:`, this.system)
-        print(`boot() this.db:`, this.db)
+        print(`boot() system:`, this.system.__label)
+        print(`boot() this.db:`, this.db.__label)
     }
 
     client_block(request, id_context, ...objects) {
