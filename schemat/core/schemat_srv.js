@@ -113,7 +113,7 @@ export class ServerSchemat extends Schemat {
 
     _db_select(id, opts) { return this.db.select(id, opts) }
 
-    async _purge_registry(generation = 0, ERASE_TIMEOUT = 2) {
+    async _purge_registry(generation = 0, ERASE_TIMEOUT = 20) {
         /* Purge the objects cache in the registry. Schedule periodical re-run: the interval is configured
            in site.cache_purge_interval and may change over time.
          */
