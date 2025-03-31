@@ -428,7 +428,7 @@
   __category:
     "@": 2
 - id: 1039
-  name: test-database
+  name: test-db
   top_ring:
     "@": 1040
   __category:
