@@ -5,9 +5,6 @@
 # ID of the Cluster that this node is, or should be, a part of
 cluster: 1025
 
-# ID of the Site object to be loaded at startup
-site: 1001
-
 
 # bootstrap_rings:
 # Configuration of a temporary database from which the Site, the Cluster, and the main Database are loaded during startup.
