@@ -422,17 +422,6 @@
     "@": 1036
   __category:
     "@": 33
-- id: 1038
-  name: test-site
-  info: Test site object for unit tests. Inherits most properties from
-    [main-site], but extends the database with the [test-ring] to override some
-    system configuration like TCP port numbers.
-  database:
-    "@": 1039
-  __prototype:
-    "@": 1001
-  __category:
-    "@": 2
 - id: 1039
   name: test-db
   top_ring:
