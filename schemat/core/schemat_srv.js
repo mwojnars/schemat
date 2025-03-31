@@ -46,7 +46,7 @@ export class ServerSchemat extends Schemat {
     get db()     { return this.system?.database || this._db }
     get tx()     { return this._transaction.getStore() }
     get node()   { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
-    get cluster(){ return this.registry.get_object(this._cluster?.id) || this._cluster }
+    get cluster(){ return this.get_if_loaded(this._cluster?.id) || this._cluster }
 
     constructor(config, parent) {
         super(config)
@@ -113,10 +113,11 @@ export class ServerSchemat extends Schemat {
 
     _db_select(id, opts) { return this.db.select(id, opts) }
 
-    async _purge_registry(generation = 0, ERASE_TIMEOUT = 100) {
+    async _purge_registry(generation = 0, ERASE_TIMEOUT = 2) {
         /* Purge the objects cache in the registry. Schedule periodical re-run: the interval is configured
            in site.cache_purge_interval and may change over time.
          */
+        // print(`Schemat._purge_registry() generation ${generation}`)
         if (this.is_closing) return
 
         try {
@@ -128,20 +129,28 @@ export class ServerSchemat extends Schemat {
             return this.registry.purge()
         }
         finally {
-            let interval = (this.site?.cache_purge_interval || 1) * 1000        // [ms]
+            let interval = (this.site?.cache_purge_interval || 10) * 1000        // [ms]  ... TODO: move cache_purge_interval to cluster
             setTimeout(() => this._purge_registry(generation + 1), interval)
         }
     }
 
-    _erase_registry() {
+    async _erase_registry() {
         /* Once in a while, clear the object cache entirely (except `site` and `root category`!) to cut links between subsequent
            generations of instances and allow efficient garbage-collection in presence of cyclic links between different web objects.
          */
-        // print(`erasure of registry (${this.registry.objects.size} objects)`)
-        this.registry.erase()
+        print(`Schemat._erase_registry(), ${this.registry.objects.size} objects ...`)
         this._cluster = this.cluster
         this._site = this.site
-        this.reload(this.site_id, true)     // not awaited
+
+        assert(this._cluster.is_loaded() && (!this._site || this._site.is_loaded()))
+
+        this.registry.erase()
+
+        if (this._cluster) await this.reload(this._cluster.id, true)
+        if (this._site) await this.reload(this._site.id, true)
+
+        // print(`_erase_registry() site:`, this.site?.__label, this.site?.__hash)
+        // print(`_erase_registry() this.db:`, this.db.__label, this.db.__hash)
     }
 
 
