@@ -234,6 +234,10 @@ export class Schemat {
         return obj
     }
 
+    get_if_present(id) {
+        return this.registry.get_object(id)
+    }
+
     async get_mutable(...objects_or_ids) {
         /* Return an array of mutable, fully-loaded instances of given objects. Like WebObject.get_mutable(),
            but executed for multiple objects (IDs) at once, and preceded by object loading when needed.
@@ -267,7 +271,7 @@ export class Schemat {
         let loading = this._loading.get(id)
         if (loading && !strict) return loading
 
-        let prev = this.get_object(id)
+        let prev = this.get_if_present(id)
 
         if (strict || prev?.is_loaded()) {      // create a new instance, but don't replace the existing one in the cache until loading is finished
             let stub = WebObject.stub(id)
