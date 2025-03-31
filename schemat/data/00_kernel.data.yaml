@@ -274,9 +274,9 @@
     global:
       value_type:
         "@": schemat/types/type.js:REF
-      info: A catalog of essential application objects - typically categories - that
-        will be loaded and made globally available to the application code via
-        `globalThis.XXX` right after initialization of `schemat.site` object.
+      info: Essential application objects - typically categories - that will be loaded
+        and made globally available to the application code via
+        `schemat.global.XXX` right after initialization of the site object.
       "@": schemat/types/catalog_type.js:CATALOG
     cache_purge_interval:
       default: 10
