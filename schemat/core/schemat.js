@@ -92,7 +92,7 @@ export class Schemat {
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
 
     get root_category() { return this.get_object(ROOT_ID) }
-    get site()          { return this.registry.get_object(this.site_id) || this._site }
+    get site()          { return this.get_if_loaded(this.site_id) || this._site }
     get db()            { return this.site?.database }              // a stub when on client, fully loaded when on server
     get global()        { return this.site?._global }
     get system()        { return this.site || this.cluster }        // user mode | kernel mode
@@ -368,11 +368,11 @@ export class Schemat {
         let json = this.registry.set_record(id, data)       // save `data` in the record registry
 
         // if a fully-loaded instance of this object exists in the cache, keep `json` in obj.__refresh for easy recreation of an updated instance
-        let obj = this.registry.get_object(id)
+        let obj = this.get_if_present(id)
         if (obj?.__json_source) obj.__self.__refresh = {json, loaded_at: Date.now()}
 
         // // remove the cached loaded instance of the object, if present, to allow its reload on the next .get_object().load()
-        // let obj = this.registry.get_object(id)
+        // let obj = this.get_if_present(id)
         // if (obj?.__data && (!json || json !== obj.__json_source))
         //     this._on_evict(obj) || this.registry.delete_object(id)
 
