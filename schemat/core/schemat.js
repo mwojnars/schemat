@@ -234,8 +234,11 @@ export class Schemat {
         return obj
     }
 
-    get_if_present(id) {
-        return this.registry.get_object(id)
+    get_if_present(id) { return this.registry.get_object(id) }
+
+    get_if_loaded(id) {
+        let obj = this.registry.get_object(id)
+        if (obj?.is_loaded()) return obj
     }
 
     async get_mutable(...objects_or_ids) {
