@@ -1,9 +1,6 @@
 # ID of the Cluster that this node is, or should be, a part of
 cluster: 1014
 
-# [test-site] is used for integration tests
-site: 1038
-
 bootstrap_rings:
   - name: boot_kernel
     file: ./schemat/data/00_kernel.data.yaml                    # core categories; practically immutable (very rarely changed)
