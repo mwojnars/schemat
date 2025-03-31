@@ -180,6 +180,10 @@
     - "@": 1026
   __category:
     "@": 22
+- id: 1014
+  name: test-cluster
+  __category:
+    "@": 10
 - id: 1015
   sequence:
     "@": 1012
