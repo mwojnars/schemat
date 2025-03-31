@@ -77,16 +77,13 @@ export class ServerSchemat extends Schemat {
         await super._load_site()
         await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
 
-        // await this.site?.reload()        // repeated site reload is needed to get rid of linked bootstrap objects, they sometimes have bad __container
-        // await this.reload(this.site_id, true)
+        await this.site?.reload()           // repeated site reload is needed for site.global initialization which fails on first attempt during bootstrap
+        // if (this.site) await this.reload(this.site_id, true)
 
         delete this._db                     // allow garbage collection
 
-        // print(`boot() _cluster: `, this._cluster)
-        // print(`boot() cluster: `, this.cluster)
-        // print(`boot() database:`, this._cluster.database)
-        print(`boot() system:`, this.system.__label)
-        print(`boot() this.db:`, this.db.__label)
+        // print(`boot() system:`, this.system.__label)
+        // print(`boot() this.db:`, this.db.__label)
     }
 
     client_block(request, id_context, ...objects) {

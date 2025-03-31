@@ -71,9 +71,9 @@ export class Site extends WebObject {
         /* Load objects listed in [global] property and make them globally available for application code. */
         this._global = {}
         for (let [name, object] of this.global || [])
-            // try { globalThis[name] = await object.load() }
             try { this._global[name] = await object.load() }
             catch (e) {
+                // this failure happens during ServerSchemat boot due to incomplete system initialization and must be ignored then
                 console.warn(`Site: failed to load global object '${name}'`)
             }
     }
