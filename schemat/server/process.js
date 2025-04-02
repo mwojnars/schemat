@@ -177,7 +177,7 @@ export class KernelProcess {
 
     async stop() {
         if (schemat.is_closing) return
-        schemat.is_closing = true
+        schemat.set_closing()
 
         let node = await this.node.reload()
         let delay = node.agent_refresh_interval

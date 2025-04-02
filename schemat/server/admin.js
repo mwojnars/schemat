@@ -22,7 +22,7 @@ export class AdminProcess {
 
         await boot_schemat(opts, async () => {
             await this[method](opts)
-            schemat.is_closing = true
+            schemat.set_closing()
         })
     }
 

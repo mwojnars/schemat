@@ -185,6 +185,8 @@ export class Schemat {
         await builtin.fetch("../types/catalog_type.js", {accept})
     }
 
+    set_closing() { this.is_closing = true }
+
 
     /***  Object <> classpath mapping (for de/serialization)  ***/
 

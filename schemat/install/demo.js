@@ -96,5 +96,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     // let ids = [2001, 2002, 2003, 2004, 2005, 2006]    // 1005, 1006  ??
     // for (let id of ids) await schemat.db.delete(id)
     //
-    // schemat.is_closing = true
+    // schemat.set_closing()
 }
