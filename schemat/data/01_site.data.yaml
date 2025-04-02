@@ -40,7 +40,7 @@
   __category:
     "@": 12
 - id: 1004
-  name: ring-site
+  name: ring-cluster
   base_ring:
     "@": 1003
   base_ring_readonly: false
