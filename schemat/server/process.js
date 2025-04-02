@@ -35,14 +35,9 @@ export async function boot_schemat(opts, callback) {
     }
 
     await globalThis._schemat.run(new ServerSchemat(config), async () => {
-        print(`before schemat.boot()...`)
         await schemat.boot(() => _open_bootstrap_db())
         await callback()
     })
-
-    // globalThis.schemat = new ServerSchemat(config)
-    // await schemat.boot(() => _open_bootstrap_db())
-    // return callback()
 
     async function _load_config(filename) {
         let fs = await import('node:fs')
