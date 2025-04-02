@@ -8,8 +8,6 @@
   global:
     "@": schemat:Catalog
   default_path: /$/id
-  webserver:
-    "@": 1023
   database:
     "@": 1002
   logger:
