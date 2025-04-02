@@ -1,8 +1,24 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {JSONx} from "../common/jsonx.js";
+import {Catalog} from "../core/catalog.js";
+import {WebObject} from "../core/object.js";
 import {Agent} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";
 
+
+/**********************************************************************************************************************/
+
+class Config extends WebObject {
+    /* Global server-side configuration that can be defined separately at cluster/node/site/command-line level
+       and then combined in a particular Schemat process to control high-level behaviour of the node.
+     */
+    merge(...others) {
+        /* The expected order of `others` is from least to most specific: [node config, site config, command-line config]. */
+        let configs = [...others.reverse(), this]
+        let catalogs = configs.map(obj => obj.__data || new Catalog(obj))
+        return Catalog.merge(configs)
+    }
+}
 
 /**********************************************************************************************************************/
 

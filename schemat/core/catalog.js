@@ -399,8 +399,8 @@ export class Catalog {
 
 
     constructor(entries) {
-        /* Constructor takes a single optional argument that is iterable and yields [key, value] pairs,
-           matching the Map constructor interface.
+        /* Optional `entries` is an iterable that yields [key, value] pairs, or a Catalog, or a plain object (POJO)
+           whose own attributes are to be extracted.
          */
         if (entries == null) return this.init()
         if (entries instanceof Catalog) return this.init(entries._entries)

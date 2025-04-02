@@ -136,7 +136,7 @@ export class ServerSchemat extends Schemat {
             return this.registry.purge()
         }
         finally {
-            let interval = (this.site?.cache_purge_interval || 10) * 1000        // [ms]  ... TODO: move cache_purge_interval to cluster
+            let interval = (this.site?.cache_purge_interval || 10) * 1000        // [ms]  ... TODO: move cache_purge_interval to cluster/node/config
             setTimeout(() => this._purge_registry(generation + 1), interval)
         }
     }
