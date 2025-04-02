@@ -16,7 +16,7 @@ class Config extends WebObject {
         /* The expected order of `others` is from least to most specific: [node config, site config, command-line config]. */
         let configs = [...others.reverse(), this]
         let catalogs = configs.map(obj => obj.__data || new Catalog(obj))
-        return Catalog.merge(configs)
+        return Catalog.merge(catalogs)
     }
 }
 
