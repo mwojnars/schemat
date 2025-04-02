@@ -83,7 +83,7 @@ class Frame {
         /* Store the raw state and create a proxied version of it for tracking calls */
         this.raw_state = state
         if (!state) return this.state = state
-        if (!T.isPlain(state)) throw new Error(`state of ${this.agent.__label} agent must be a plain object`)
+        if (!T.isPlain(state)) throw new Error(`state of ${this.agent.__label} agent must be a plain object, got ${state}`)
         
         let frame = this
         this.state = new Proxy(state, {
@@ -279,9 +279,13 @@ export class KernelProcess {
             let agent = frame.agent.refresh()
             if (agent.__ttl_left() < 0) agent = await agent.reload()
             if (agent === frame.agent) continue
-
             this._print(`restarting agent ${agent.__label} ...`)
-            frame.set_state(await agent.__restart__(frame.raw_state, frame.agent))
+
+            let {custom_schemat} = frame
+            let restart = () => agent.__restart__(frame.raw_state, frame.agent)
+            let state = custom_schemat ? await _schemat.run(custom_schemat, restart) : await restart()
+
+            frame.set_state(state)
             frame.agent = agent
             this._print(`restarting agent ${agent.__label} done`)
 
