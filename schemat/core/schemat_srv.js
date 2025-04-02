@@ -50,8 +50,8 @@ export class ServerSchemat extends Schemat {
 
     constructor(config, parent) {
         super(config)
+        if (parent) this._clone(parent)
 
-        this.parent = parent
         this.ROOT_DIRECTORY = process.cwd()                 // initialize ROOT_DIRECTORY from the current working dir
         // this.SCHEMAT_DIRECTORY = this.ROOT_DIRECTORY + '/schemat'
 
@@ -60,6 +60,11 @@ export class ServerSchemat extends Schemat {
 
         this._transaction = new AsyncLocalStorage()
         // this.loader = new Loader(import.meta.url)
+    }
+
+    _clone(parent) {
+        this.parent = parent
+        this.kernel = parent.kernel
     }
 
     async boot(boot_db) {
