@@ -115,6 +115,8 @@ export class ServerSchemat extends Schemat {
         return `import {Client} from "/$/local/schemat/web/client.js"; globalThis.schemat = new Client("#${id_context}"); await schemat.boot();`
     }
 
+    set_kernel(kernel) { this.kernel = kernel }
+
 
     /***  Registry  ***/
 
