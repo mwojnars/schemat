@@ -358,7 +358,7 @@
 - id: 1032
   sequence:
     "@": 1027
-  filename: ./schemat/data/01_site.data.yaml
+  filename: ./schemat/data/01_cluster.data.yaml
   format: data-yaml
   shard:
     =:
@@ -372,7 +372,7 @@
 - id: 1033
   sequence:
     "@": 1028
-  filename: ./schemat/data/01_site.index.jl
+  filename: ./schemat/data/01_cluster.index.jl
   format: index-jl
   __node:
     "@": 1036

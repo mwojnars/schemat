@@ -1,5 +1,5 @@
 /*
-    Generate demo DB files in ../../demo/XXX by copying 01_site.* ring and replacing file paths, names etc.
+    Generate demo DB files in ../../demo/XXX by copying 01_cluster.* ring and replacing file paths, names etc.
     The other ring, 02_app, is left *untouched*, so any app-specific data is preserved (!).
  */
 
@@ -22,9 +22,9 @@ let demo_names = [null, '01_books', '02_blog', '03_chatter']
 
 
 function _load_data_init() {
-    /* Read 01_site.data.yaml and return its plain-text content. Drop unneeded objects. */
+    /* Read 01_cluster.data.yaml and return its plain-text content. Drop unneeded objects. */
 
-    let path = `${root_dir}/schemat/data/01_site.data.yaml`
+    let path = `${root_dir}/schemat/data/01_cluster.data.yaml`
     let db = fs.readFileSync(path, 'utf8')
     // let data = yaml.load(db)
     return db
@@ -44,14 +44,14 @@ function _load_data_init() {
 /**********************************************************************************************************************/
 
 async function create_demo_01() {
-    // load initial `db` from 01_site.data.yaml
+    // load initial `db` from 01_cluster.data.yaml
     let demo_name = demo_names[1]
     let demo_dir = `${root_dir}/demo/${demo_name}`
     let db = _load_data_init()
     
     // replace file paths, object names and port numbers in `db`
     db = db.replaceAll('main-site', `Bookstore (demo site)`)
-    db = db.replaceAll('/schemat/data/01', `/demo/${demo_name}/_data/01`)       // 01_site.*
+    db = db.replaceAll('/schemat/data/01', `/demo/${demo_name}/_data/01`)       // 01_cluster.*
     db = db.replaceAll('/schemat/data/02', `/demo/${demo_name}/_data/02`)       // 02_app.*
     db = db.replaceAll('/app', `/demo/${demo_name}`)
     db = db.replaceAll('tcp_port: 5828', `tcp_port: 5820`)
@@ -61,11 +61,11 @@ async function create_demo_01() {
     db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 2002\n    BookCategory:\n      "@": 2001`)
     db = db.replaceAll(`entries:\n    ""`, `entries:\n    authors:\n      "@": 2002\n    books:\n      "@": 2001\n    book:\n      "@": 2015\n    ""`)
 
-    // save as 01_site.data.yaml in the demo folder
-    fs.writeFileSync(`${demo_dir}/_data/01_site.data.yaml`, db, 'utf8')
+    // save as 01_cluster.data.yaml in the demo folder
+    fs.writeFileSync(`${demo_dir}/_data/01_cluster.data.yaml`, db, 'utf8')
     
     // copy the index file
-    fs.copyFileSync(`${root_dir}/schemat/data/01_site.index.jl`, `${demo_dir}/_data/01_site.index.jl`)
+    fs.copyFileSync(`${root_dir}/schemat/data/01_cluster.index.jl`, `${demo_dir}/_data/01_cluster.index.jl`)
 }
 
 async function create_demo(demo_id) {

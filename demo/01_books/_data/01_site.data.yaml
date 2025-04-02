@@ -370,7 +370,7 @@
 - id: 1032
   sequence:
     "@": 1027
-  filename: ./demo/01_books/_data/01_site.data.yaml
+  filename: ./demo/01_books/_data/01_cluster.data.yaml
   format: data-yaml
   shard:
     =:
@@ -384,7 +384,7 @@
 - id: 1033
   sequence:
     "@": 1028
-  filename: ./demo/01_books/_data/01_site.index.jl
+  filename: ./demo/01_books/_data/01_cluster.index.jl
   format: index-jl
   __node:
     "@": 1036
