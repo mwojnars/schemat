@@ -888,6 +888,11 @@
     "@": 1
   __container:
     "@": 1009
+- id: 28
+  name: Config
+  class: schemat/server/node.js:Config
+  __category:
+    "@": 1
 - id: 29
   name: Agent
   info: "Base category for web objects that are deployed permanently on a
