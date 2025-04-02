@@ -303,9 +303,13 @@ export class KernelProcess {
                 this._print(`waiting for ${calls.length} pending calls to agent ${agent.__label} to complete`)
                 await Promise.all(calls)
             }
-
             this._print(`stopping agent ${agent.__label} ...`)
-            await agent.__stop__(frame.raw_state)
+           
+            let {custom_schemat} = frame
+            let stop = () => agent.__stop__(frame.raw_state)
+            custom_schemat ? await _schemat.run(custom_schemat, stop) : await stop()
+            // await agent.__stop__(frame.raw_state)
+
             this.frames.delete(agent.id)
             this._print(`stopping agent ${agent.__label} done`)
         }
