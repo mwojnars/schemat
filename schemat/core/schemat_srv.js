@@ -48,6 +48,9 @@ export class ServerSchemat extends Schemat {
     get node()   { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster(){ return this.get_if_loaded(this._cluster?.id) || this._cluster }
 
+
+    /***  Initialization  ***/
+
     constructor(config, parent) {
         super(config)
         if (parent) this._clone(parent)
@@ -113,7 +116,7 @@ export class ServerSchemat extends Schemat {
     }
 
 
-    _db_select(id, opts) { return this.db.select(id, opts) }
+    /***  Registry  ***/
 
     async _purge_registry(generation = 0, ERASE_TIMEOUT = 20) {
         /* Purge the objects cache in the registry. Schedule periodical re-run: the interval is configured
@@ -191,7 +194,9 @@ export class ServerSchemat extends Schemat {
     }
 
 
-    /***  Indexes  ***/
+    /***  Database  ***/
+
+    _db_select(id, opts) { return this.db.select(id, opts) }
 
     async *scan_category(category_or_id = null, {load=false, ...opts} = {}) {
         /* Generate a stream of objects found in a given category, or all objects if no first argument is given.
