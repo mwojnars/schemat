@@ -708,7 +708,7 @@ export class WebObject {
     // async _init_url() {
     //     while (!schemat.site) {                                     // wait until the site is created; important for bootstrap objects
     //         await sleep()
-    //         if (schemat.is_closing) return                          // site is closing? no need to wait any longer
+    //         if (schemat.terminating) return                          // site is closing? no need to wait any longer
     //     }
     //
     //     let container = this.__container

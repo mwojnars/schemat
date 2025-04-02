@@ -212,7 +212,7 @@ export class KernelProcess {
             this.node = new_node
             await this._start_stop()
 
-            if (schemat.is_closing)
+            if (schemat.terminating)
                 if (this.frames.size) continue; else break          // let the currently-running agents gently stop
 
             let passed = (Date.now() - beginning) / 1000
@@ -236,7 +236,7 @@ export class KernelProcess {
         let current_agents = Array.from(this.frames.values(), frame => frame.agent)     // currently running agents
         let desired_agents = this.is_master() ? [this.node] : [...this.agents_running]  // agents that should be running when this method completes; master process runs the node agent and nothing else
 
-        if (schemat.is_closing) {
+        if (schemat.terminating) {
             desired_agents = []                                 // enforce clean shutdown by stopping all agents
             this._print(`closing and stopping all agents`)
         }
@@ -329,7 +329,7 @@ export class KernelProcess {
 
     // async main() {
     //     for (let {prev, agent, oper, migrate} of actions) {
-    //         if (schemat.is_closing) return
+    //         if (schemat.terminating) return
     //         if (!oper) continue                     // no action if the agent instance hasn't changed
     //
     //         let state = prev?.__state
@@ -387,7 +387,7 @@ export class MasterProcess extends KernelProcess {
             this._start_worker(i + 1)
 
         cluster.on('exit', (worker) => {
-            if (schemat.is_closing) return
+            if (schemat.terminating) return
             let id = this.worker_pids.get(worker.process.pid)               // retrieve WORKER_ID using PID
             throw new Error(`worker #${id} (PID=${worker.process.pid}) exited`)
             // print(`worker #${id} (PID=${worker.process.pid}) exited`)

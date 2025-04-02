@@ -125,7 +125,7 @@ export class ServerSchemat extends Schemat {
            in site.cache_purge_interval and may change over time.
          */
         // print(`Schemat._purge_registry() generation ${generation}`)
-        if (this.is_closing) return
+        if (this.terminating) return
 
         try {
             // this._report_memory()

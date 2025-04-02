@@ -146,7 +146,7 @@ export class KafkaBroker extends Agent {
 
         server.on('close', code => {
             let msg = `Kafka server process exited with code=${code}`
-            if (code && !schemat.is_closing) throw new Error(msg); else print(msg)
+            if (code && !schemat.terminating) throw new Error(msg); else print(msg)
         })
         server.unref()      // don't let parent process wait for this child
 
