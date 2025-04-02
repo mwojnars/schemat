@@ -86,7 +86,7 @@ export class Schemat {
     _site                   // `site` of the previous generation, remembered here during complete cache erasure to keep the .site() getter operational
     registry                // cache of web objects, records and indexes loaded from DB
     builtin                 // a Classpath containing built-in classes and their paths
-    is_closing = false      // true if the Schemat node is in the process of shutting down
+    // is_closing = false      // true if the Schemat node is in the process of shutting down
 
     _essential = [ROOT_ID]  // IDs of web objects that must be always present (fully loaded) in the Registry, so eviction must reload not delete them
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
@@ -96,6 +96,7 @@ export class Schemat {
     get db()            { return this.site?.database }              // a stub when on client, fully loaded when on server
     get global()        { return this.site?._global }
     get system()        { return this.site || this.cluster }        // user mode | kernel mode
+    get is_closing()    { return this.kernel?._closing }
 
     // defined on server only:
     kernel
@@ -184,8 +185,6 @@ export class Schemat {
         await builtin.fetch("../types/type.js", {accept})
         await builtin.fetch("../types/catalog_type.js", {accept})
     }
-
-    set_closing() { this.is_closing = true }
 
 
     /***  Object <> classpath mapping (for de/serialization)  ***/

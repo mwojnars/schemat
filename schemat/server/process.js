@@ -126,6 +126,7 @@ export class KernelProcess {
     frames = new Map()      // Frame objects of currently running agents, keyed by agent IDs
     agents_running = []     // web objects that should be running now as agents
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
+    _closing                // true if .stop() was called and the process is shutting down right now
 
     get worker_id() {
         /* Numeric ID (1, 2, 3, ...) of the current worker process of the node; 0 for the master process. */
@@ -176,8 +177,8 @@ export class KernelProcess {
     async start(opts) {}    // implemented in subclasses
 
     async stop() {
-        if (schemat.is_closing) return
-        schemat.set_closing()
+        if (this._closing) return
+        this._closing = true
 
         let node = await this.node.reload()
         let delay = node.agent_refresh_interval
