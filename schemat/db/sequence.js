@@ -138,13 +138,13 @@ export class IndexSequence extends Sequence {
     async put(key, value) {
         let block = this.find_block(key)
         if (!block.is_loaded()) block = await block.load()
-        return block.remote.put(key, value)
+        return block.$agent.put(key, value)
     }
 
     async del(key, value) {
         let block = this.find_block(key)
         if (!block.is_loaded()) block = await block.load()
-        return block.remote.del(key, value)
+        return block.$agent.del(key, value)
     }
 
     apply_change(key, prev, next) { return this.operator.apply_change(this, key, prev, next) }

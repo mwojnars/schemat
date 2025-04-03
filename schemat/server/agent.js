@@ -32,7 +32,7 @@ export class Agent extends WebObject {
            The execution state, if present, should be a plain JS object. If the microservice allows local direct
            function calls to the microservice, these functions should be top-level elements of the returned state
            (state.fun()) - all calls to these functions will be automatically protected and monitored, so that
-           the microservice termination awaits the graceful completion of such calls; same for RPC (obj.remote.X()) calls.
+           the microservice termination awaits the graceful completion of such calls; same for RPC (obj.$agent.X()) calls.
          */
     }
     async __stop__(state) {
@@ -54,13 +54,13 @@ export class Agent extends WebObject {
 
     // defined already in WebObject:
     //
-    // get remote()
-    // get local()
+    // get $agent()
+    // get $local()
 
 
     /***  Triggers  ***/
 
-    'remote.ping'(state, msg) {
+    '$agent.ping'(state, msg) {
         /* Default RPC endpoint for testing intra-cluster communication. */
         let response = `[${utc()}]  PING: agent [${this.id}], ${msg}`
         print(response)

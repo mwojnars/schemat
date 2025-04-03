@@ -227,7 +227,7 @@ export class Node extends Agent {
 
     request_rpc(target_id, method, args) {
         /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node
-           and then to the `target_id` object (agent) where it should invoke its 'remote.<method>'(...args).
+           and then to the `target_id` object (agent) where it should invoke its '$agent.<method>'(...args).
            Return a response from the remote target.
          */
         let msg = [target_id, method, JSONx.encode(args)]
@@ -250,7 +250,7 @@ export class Node extends Agent {
         // locate an agent by its `target_id`, should be running here in this process
         let frame = schemat.get_frame(target_id)
         if (!frame) throw new Error(`agent [${target_id}] not found on this node process`)
-        return frame.call_agent(`remote.${method}`, JSONx.decode(args))
+        return frame.call_agent(`$agent.${method}`, JSONx.decode(args))
     }
 
 
@@ -393,7 +393,7 @@ export class Node extends Agent {
     }
 
 
-    async 'remote.install'(name, agent, {start = true, workers = true, master = false} = {}) {
+    async '$agent.install'(name, agent, {start = true, workers = true, master = false} = {}) {
         /* Call agent.__install__() on this node and add the agent to `agents_installed`. If start=true, the agent
            is also added to `agents_running` and is started on the next iteration of the host process's life loop.
          */
@@ -408,7 +408,7 @@ export class Node extends Agent {
         await node.save()
     }
 
-    async 'remote.uninstall'(agent) {
+    async '$agent.uninstall'(agent) {
         await agent.load()
 
         let node = this.get_mutable()

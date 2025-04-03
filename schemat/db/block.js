@@ -118,8 +118,8 @@ export class Block extends Agent {
 
     // async get({key})   { return this._storage.get(key) }
 
-    'remote.put'(ctx, key, value) { return this.put(key, value) }
-    'remote.del'(ctx, key, value) { return this.del(key, value) }
+    '$agent.put'(ctx, key, value) { return this.put(key, value) }
+    '$agent.del'(ctx, key, value) { return this.del(key, value) }
 
     async put(key, value) {
         /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
@@ -237,8 +237,7 @@ export class DataBlock extends Block {
         return ring
     }
 
-    // async '$agent.select'(_, id, req) { return this._select(id, req) }
-    async 'remote.select'(_, id, req) { return this._select(id, req) }
+    async '$agent.select'(_, id, req) { return this._select(id, req) }
 
     async _select(id, req) {
         let key = this.encode_id(id)

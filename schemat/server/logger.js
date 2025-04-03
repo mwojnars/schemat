@@ -18,7 +18,7 @@ export class Logger extends Agent {
         print(`[${utc()}] ${level.padStart(5)}: ${msg}`)
     }
 
-    'remote.log'(ctx, msg, args = null, level = 'INFO') {
+    '$agent.log'(ctx, msg, args = null, level = 'INFO') {
         return this.log(msg, args, level)
     }
 }
