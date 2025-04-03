@@ -237,6 +237,7 @@ export class DataBlock extends Block {
         return ring
     }
 
+    // async '$agent.select'(_, id, req) { return this._select(id, req) }
     async 'remote.select'(_, id, req) { return this._select(id, req) }
 
     async _select(id, req) {

@@ -175,7 +175,7 @@ export class Ring extends WebObject {
     }
 
     async select(id, req) {
-        // return this._find_block(id).remote.select(id, req || new DataRequest())
+        // return this._find_block(id).$agent.select(id, req || new DataRequest())
         return await this._find_block(id)._select(id, req || new DataRequest())
     }
 

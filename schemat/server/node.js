@@ -158,13 +158,14 @@ export class Node extends Agent {
     }
 
     async __start__() {
+        /* On master only. */
         let tcp_sender = new TCP_Sender()
         let tcp_receiver = new TCP_Receiver()
 
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this._tcp_port)
 
-        let agent_locations = this._allocate_agents()
+        let agent_locations = this._allocate_agents()       // Map<agent ID, array of process IDs>
         return {tcp_sender, tcp_receiver, agent_locations}
     }
 
