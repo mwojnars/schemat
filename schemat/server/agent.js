@@ -24,7 +24,7 @@ export class Agent extends WebObject {
     async __install__(node) {}  // ideally, this method should be idempotent in case of failure and subsequent re-launch
     async __uninstall__(node) {}
 
-    async __start__()   {
+    async __start__(role) {
         /* Start the microservice implemented by this agent. Return an "execution state" which will be accessible
            to external calls addressed to the running agent (RPC calls or direct function calls)
            and will be passed to __stop__() upon microservice termination. Typically, the state object contains
@@ -62,7 +62,9 @@ export class Agent extends WebObject {
 
     'remote.ping'(state, msg) {
         /* Default RPC endpoint for testing intra-cluster communication. */
-        print(`[${utc()}]  PING: agent [${this.id}], ${msg}`)
+        let response = `[${utc()}]  PING: agent [${this.id}], ${msg}`
+        print(response)
+        return response
     }
 }
 
