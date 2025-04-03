@@ -857,7 +857,7 @@ export class WebObject {
         /* Server-side distributed logging of debug messages, warnings, errors.
            On client, the message is printed to the console with object ID prepended.
          */
-        if (SERVER) return schemat.site.logger.KAFKA.log(msg, args, level)
+        if (SERVER) return schemat.site.logger.$agent.log(msg, args, level)
 
         if (args) {
             let list = Object.entries(args).map(([k, v]) => k + `=${JSON.stringify(v)}`).join(', ')
@@ -967,7 +967,6 @@ export class WebObject {
     get GET()   { return this._web_triggers('GET') }        // triggers for HTTP GET endpoints of this object
     get POST()  { return this._web_triggers('POST') }       // triggers for HTTP POST endpoints
     get LOCAL() { return this._web_triggers('LOCAL') }      // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
-    get KAFKA() { return this._web_triggers('KAFKA') }
 
     _web_triggers(protocol, SEP = '.') {
         /* Triggers of web endpoints on a given protocol: obj.<protocol>.<endpoint>() redirects to obj['<protocol>.<endpoint>']().
@@ -986,7 +985,7 @@ export class WebObject {
         })
     }
 
-    // static _collect_methods(protocols = ['LOCAL', 'GET', 'POST', 'KAFKA'], SEP = '.') {
+    // static _collect_methods(protocols = ['LOCAL', 'GET', 'POST'], SEP = '.') {
     //     /* Collect all special methods of this class: web handlers + actions + edit operators. */
     //     let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
     //     let proto = this.prototype

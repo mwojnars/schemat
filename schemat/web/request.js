@@ -7,7 +7,7 @@ export class Request {
 
     target          // target web object (recipient of the request)
     endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
-    protocol        // endpoint type: LOCAL, GET, POST, KAFKA, ... (SOCK in the future)
+    protocol        // endpoint type: LOCAL, GET, POST, ... (SOCK in the future)
 
     set_target(target) { this.target = target }
     set_endpoint(endpoint) { this.endpoint = endpoint }
