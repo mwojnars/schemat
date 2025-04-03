@@ -955,7 +955,7 @@ export class WebObject {
         })
     }
 
-    get local() {
+    get $local() {
         /* Current local execution state of the agent represented by this web object, as returned by __start__()
            - see the Agent class. NOT cached.
          */

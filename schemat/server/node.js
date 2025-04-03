@@ -268,7 +268,7 @@ export class Node extends Agent {
 
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
-            let locs = this.local.agent_locations.get(target_id)
+            let locs = this.$local.agent_locations.get(target_id)
             if (locs?.length) node = this
             else {
                 // load the object and check its __node to locate the destination where it is deployed
@@ -307,7 +307,7 @@ export class Node extends Agent {
         /* On master process, send a message to another node via TCP. */
         assert(this.is_master())
         if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
-        return this.local.tcp_sender.send(msg, node.tcp_address)
+        return this.$local.tcp_sender.send(msg, node.tcp_address)
     }
 
     recv_tcp([type, ...msg]) {
@@ -321,14 +321,14 @@ export class Node extends Agent {
             let [target_id] = msg
 
             // find out which process (worker >= 1 or master = 0), has the `target_id` agent deployed
-            let locs = this.local.agent_locations.get(target_id)
+            let locs = this.$local.agent_locations.get(target_id)
             if (locs.length > 1) throw new Error(`TCP target agent [${target_id}] is deployed multiple times on ${this.__label}`)
 
             let process_id = locs[0]
             // print("recv_tcp(): process", process_id)
 
             if (process_id === undefined) {
-                this._print(`agent locations:`, [...this.local.agent_locations.entries()])
+                this._print(`agent locations:`, [...this.$local.agent_locations.entries()])
                 throw new Error(`${this.id}/#${this.worker_id}: agent [${target_id}] not found on this node`)
             }
             if (process_id !== this.worker_id) {
