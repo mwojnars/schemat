@@ -143,7 +143,7 @@ export class TCP_Receiver {
     }
 
     _handle_message(message) {
-        return schemat.node.recv_tcp(message)
+        return schemat.node.tcp_recv(message)
     }
 
     _respond(socket, id, result) {
@@ -271,7 +271,7 @@ export class TCP_Receiver {
 //     }
 //
 //     _handle_message(message) {
-//         return schemat.node.recv_tcp(message)
+//         return schemat.node.tcp_recv(message)
 //     }
 //
 //     _respond(socket, id, result) {

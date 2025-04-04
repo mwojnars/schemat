@@ -225,7 +225,7 @@ export class Node extends Agent {
 
     /* RPC calls to other processes or nodes */
 
-    request_rpc(target_id, method, args) {
+    rpc_send(target_id, method, args) {
         /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node
            and then to the `target_id` object (agent) where it should invoke its '$agent.<method>'(...args).
            Return a response from the remote target.
@@ -236,16 +236,16 @@ export class Node extends Agent {
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
         let frame = schemat.get_frame(target_id)
-        if (frame) return this.execute_rpc(...msg)
+        if (frame) return this.rpc_recv(...msg)
 
         return this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message)
     }
 
-    execute_rpc(target_id, method, args) {
+    rpc_recv(target_id, method, args) {
         /* Execute an RPC message that's addressed to the agent `target_id` running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        // print("execute_rpc():", [target_id, method, args])
+        // print("rpc_recv():", [target_id, method, args])
 
         // locate an agent by its `target_id`, should be running here in this process
         let frame = schemat.get_frame(target_id)
@@ -280,20 +280,20 @@ export class Node extends Agent {
                 throw new Error(`missing host node for RPC target ${agent.__label}`)
             if (node.is(schemat.node)) {
                 // this._print(`ipc_master(): redirecting to self`)
-                return this.recv_tcp([type, ...msg])     // target agent is deployed on the current node
+                return this.tcp_recv([type, ...msg])     // target agent is deployed on the current node
             }
 
             await node.load()
             // this._print(`ipc_master(): sending to ${node.id} at ${node.tcp_address}`)
 
-            return this.send_tcp(node, [type, ...msg])
+            return this.tcp_send(node, [type, ...msg])
         }
         else throw new Error(`unknown worker-to-master message type: ${type}`)
     }
 
     ipc_worker([type, ...msg]) {
         // this._print(`ipc_worker(${type}):`, JSON.stringify(msg))
-        if (type === 'RPC') return this.execute_rpc(...msg)
+        if (type === 'RPC') return this.rpc_recv(...msg)
         if (type === 'SYS') {
             let [method, args] = msg
             return this[method](...args)
@@ -307,19 +307,19 @@ export class Node extends Agent {
 
     /* TCP: horizontal communication between nodes */
 
-    async send_tcp(node, msg) {
+    async tcp_send(node, msg) {
         /* On master process, send a message to another node via TCP. */
         assert(this.is_master())
         if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
         return this.$local.tcp_sender.send(msg, node.tcp_address)
     }
 
-    recv_tcp([type, ...msg]) {
+    tcp_recv([type, ...msg]) {
         /* On master process, handle a message received via TCP from another node or directly from this node via a shortcut.
            `msg` is a plain object/array whose elements may still need to be JSONx-decoded.
          */
         assert(this.is_master())
-        // this._print(`recv_tcp():`, JSON.stringify(msg))
+        // this._print(`tcp_recv():`, JSON.stringify(msg))
 
         if (type === 'RPC') {
             let [agent_id] = msg
@@ -329,7 +329,7 @@ export class Node extends Agent {
             if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this.__label}`)
 
             let process_id = locs[0]
-            // print("recv_tcp(): process", process_id)
+            // print("tcp_recv(): process", process_id)
 
             if (process_id === undefined) {
                 // this._print(`agent locations:`, [...this.$local.agent_locations.entries()])
@@ -340,7 +340,7 @@ export class Node extends Agent {
                 let worker = schemat.kernel.get_worker(process_id)
                 return worker.mailbox.send([type, ...msg])          // forward the message down to a worker process, to its ipc_worker()
             }
-            return this.execute_rpc(...msg)                         // process the message here in the master process
+            return this.rpc_recv(...msg)                            // process the message here in the master process
         }
         else throw new Error(`unknown node-to-node message type: ${type}`)
     }
