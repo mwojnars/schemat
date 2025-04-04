@@ -259,7 +259,7 @@ export class Node extends Agent {
     async ipc_master([type, ...msg]) {
         /* On master process, handle an IPC message received from a worker process or directly from itself. */
         assert(this.is_master())
-        let node, agent
+        let agent
 
         if (type === 'RPC') {
             // this._print(`ipc_master():`, JSON.stringify(msg))
@@ -268,16 +268,17 @@ export class Node extends Agent {
 
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
-            let locs = this.locate_processes(agent_id)
-            if (locs?.length) node = this
-            else {
-                // load the object and check its __node to locate the destination where it is deployed
-                agent = await schemat.get_loaded(agent_id)
-                node = schemat.cluster.locate_node(agent)  //,role
-            }
 
-            if (!node)
-                throw new Error(`missing host node for RPC target ${agent.__label}`)
+            // let locs = this.locate_processes(agent_id)
+            // if (locs?.length) node = this
+            // else {
+            //     // load the object and check its __node to locate the destination where it is deployed
+            //     agent = await schemat.get_loaded(agent_id)
+            //     node = schemat.cluster.locate_node(agent)  //,role
+            // }
+            let node = await this.locate_node(agent_id)
+
+            if (!node) throw new Error(`missing host node for RPC target ${agent.__label}`)
             if (node.is(schemat.node)) {
                 // this._print(`ipc_master(): redirecting to self`)
                 return this.tcp_recv([type, ...msg])     // target agent is deployed on the current node
@@ -300,6 +301,18 @@ export class Node extends Agent {
         }
     }
 
+    async locate_node(agent_id, role) {
+        // if (this.locate_process(agent_id) != null) return this
+        let locs = this.locate_processes(agent_id)
+        if (locs?.length) return this
+
+        // load the object and check its __node to locate the destination where it is deployed
+        let agent = await schemat.get_loaded(agent_id)
+        return schemat.cluster.locate_node(agent)  //,role
+    }
+    locate_process(agent_id, role) {
+        return this.$local.agent_locations.get(agent_id)?.[0]
+    }
     locate_processes(agent_id, role) {
         return this.$local.agent_locations.get(agent_id)
     }
