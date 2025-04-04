@@ -269,13 +269,6 @@ export class Node extends Agent {
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
 
-            // let locs = this.locate_processes(agent_id)
-            // if (locs?.length) node = this
-            // else {
-            //     // load the object and check its __node to locate the destination where it is deployed
-            //     agent = await schemat.get_loaded(agent_id)
-            //     node = schemat.cluster.locate_node(agent)  //,role
-            // }
             let node = await this.locate_node(agent_id)
 
             if (!node) throw new Error(`missing host node for RPC target ${agent.__label}`)
@@ -284,7 +277,7 @@ export class Node extends Agent {
                 return this.tcp_recv([type, ...msg])     // target agent is deployed on the current node
             }
 
-            await node.load()
+            // await node.load()
             // this._print(`ipc_master(): sending to ${node.id} at ${node.tcp_address}`)
 
             return this.tcp_send(node, [type, ...msg])
@@ -302,14 +295,14 @@ export class Node extends Agent {
     }
 
     async locate_node(agent_id, role) {
-        // if (this.locate_process(agent_id) != null) return this
-        let locs = this.locate_processes(agent_id)
-        if (locs?.length) return this
+        // if agent is deployed on one of local processes, return this node
+        if (this.locate_process(agent_id) != null) return this
 
-        // load the object and check its __node to locate the destination where it is deployed
+        // load the object and check its __node to find a remote destination
         let agent = await schemat.get_loaded(agent_id)
         return schemat.cluster.locate_node(agent)  //,role
     }
+
     locate_process(agent_id, role) {
         return this.$local.agent_locations.get(agent_id)?.[0]
     }
