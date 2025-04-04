@@ -179,6 +179,9 @@ export class Node extends Agent {
         await tcp_sender.stop()
     }
 
+
+    /* Agents */
+
     _allocate_agents() {
         /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
            Notify each sublist to a corresponding process. Return an inverted Map: agent ID -> array of process IDs.
@@ -221,6 +224,19 @@ export class Node extends Agent {
     }
 
     sys_agents_running(agents) { schemat.kernel.set_agents_running(agents) }
+
+    async locate_node(agent_id, role) {
+        // if agent is deployed on one of local processes, return this node
+        if (this.locate_process(agent_id) != null) return this
+
+        // load the object and check its __node to find a remote destination
+        let agent = await schemat.get_loaded(agent_id)
+        return schemat.cluster.locate_node(agent)  //,role
+    }
+
+    locate_process(agent_id, role) {
+        return this.$local.agent_locations.get(agent_id)?.[0]
+    }
 
 
     /* RPC calls to other processes or nodes */
@@ -294,22 +310,6 @@ export class Node extends Agent {
         }
     }
 
-    async locate_node(agent_id, role) {
-        // if agent is deployed on one of local processes, return this node
-        if (this.locate_process(agent_id) != null) return this
-
-        // load the object and check its __node to find a remote destination
-        let agent = await schemat.get_loaded(agent_id)
-        return schemat.cluster.locate_node(agent)  //,role
-    }
-
-    locate_process(agent_id, role) {
-        return this.$local.agent_locations.get(agent_id)?.[0]
-    }
-    locate_processes(agent_id, role) {
-        return this.$local.agent_locations.get(agent_id)
-    }
-
 
     /* TCP: horizontal communication between nodes */
 
@@ -330,20 +330,22 @@ export class Node extends Agent {
         if (type === 'RPC') {
             let [agent_id] = msg
 
-            // find out which process (worker >= 1 or master = 0), has the `target_id` agent deployed
-            let locs = this.locate_processes(agent_id)
-            if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this.__label}`)
+            // find out which process (worker >= 1 or master = 0), has the `agent_id` agent deployed
 
-            let process_id = locs[0]
-            // print("tcp_recv(): process", process_id)
+            // let locs = this.locate_processes(agent_id)
+            // if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this.__label}`)
+            // let proc = locs[0]
 
-            if (process_id === undefined) {
+            let proc = this.locate_process(agent_id)
+            // print("tcp_recv(): process", proc)
+
+            if (proc === undefined) {
                 // this._print(`agent locations:`, [...this.$local.agent_locations.entries()])
                 throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)
             }
-            if (process_id !== this.worker_id) {
-                assert(process_id > 0)
-                let worker = schemat.kernel.get_worker(process_id)
+            if (proc !== this.worker_id) {
+                assert(proc > 0)
+                let worker = schemat.kernel.get_worker(proc)
                 return worker.mailbox.send([type, ...msg])          // forward the message down to a worker process, to its ipc_worker()
             }
             return this.rpc_recv(...msg)                            // process the message here in the master process
