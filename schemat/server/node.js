@@ -273,7 +273,8 @@ export class Node extends Agent {
             else {
                 // load the object and check its __node to locate the destination where it is deployed
                 target = await schemat.get_loaded(target_id)
-                node = target.__node
+                node = schemat.cluster.locate(target)  // role
+                // node = target.__node
             }
 
             if (!node)
