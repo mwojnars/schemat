@@ -238,7 +238,7 @@ export class Node extends Agent {
         let frame = schemat.get_frame(target_id)
         if (frame) return this.execute_rpc(...msg)
 
-        return this.is_master() ? this.from_worker(message) : schemat.kernel.mailbox.send(message)
+        return this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message)
     }
 
     execute_rpc(target_id, method, args) {
@@ -256,15 +256,15 @@ export class Node extends Agent {
 
     /* IPC: vertical communication between master/worker processes */
 
-    async from_worker([type, ...msg]) {
-        /* On master process, handle an IPC message received from a worker process, or directly from itself. */
+    async ipc_master([type, ...msg]) {
+        /* On master process, handle an IPC message received from a worker process or directly from itself. */
         assert(this.is_master())
         let node, agent
 
         if (type === 'RPC') {
-            // this._print(`from_worker():`, JSON.stringify(msg))
+            // this._print(`ipc_master():`, JSON.stringify(msg))
             let [agent_id, method, args] = msg
-            // print(`from_worker():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(msg))
+            // print(`ipc_master():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(msg))
 
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
@@ -279,20 +279,20 @@ export class Node extends Agent {
             if (!node)
                 throw new Error(`missing host node for RPC target ${agent.__label}`)
             if (node.is(schemat.node)) {
-                // this._print(`from_worker(): redirecting to self`)
+                // this._print(`ipc_master(): redirecting to self`)
                 return this.recv_tcp([type, ...msg])     // target agent is deployed on the current node
             }
 
             await node.load()
-            // this._print(`from_worker(): sending to ${node.id} at ${node.tcp_address}`)
+            // this._print(`ipc_master(): sending to ${node.id} at ${node.tcp_address}`)
 
             return this.send_tcp(node, [type, ...msg])
         }
         else throw new Error(`unknown worker-to-master message type: ${type}`)
     }
 
-    from_master([type, ...msg]) {
-        // this._print(`from_master(${type}):`, JSON.stringify(msg))
+    ipc_worker([type, ...msg]) {
+        // this._print(`ipc_worker(${type}):`, JSON.stringify(msg))
         if (type === 'RPC') return this.execute_rpc(...msg)
         if (type === 'SYS') {
             let [method, args] = msg
@@ -338,7 +338,7 @@ export class Node extends Agent {
             if (process_id !== this.worker_id) {
                 assert(process_id > 0)
                 let worker = schemat.kernel.get_worker(process_id)
-                return worker.mailbox.send([type, ...msg])          // forward the message down to a worker process, to its from_master()
+                return worker.mailbox.send([type, ...msg])          // forward the message down to a worker process, to its ipc_worker()
             }
             return this.execute_rpc(...msg)                         // process the message here in the master process
         }

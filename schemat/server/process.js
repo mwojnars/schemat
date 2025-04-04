@@ -394,8 +394,8 @@ export class MasterProcess extends KernelProcess {
     _start_worker(id) {
         /* Start or restart a worker process. */
         let worker = this.workers[id-1] = cluster.fork({WORKER_ID: id})
-        this.worker_pids.set(worker.process.pid, id)                        // remember PID-to-ID mapping
-        worker.mailbox = new IPC_Mailbox(worker, msg => this.node.from_worker(msg))     // messages to/from `worker`
+        this.worker_pids.set(worker.process.pid, id)                                // remember PID-to-ID mapping
+        worker.mailbox = new IPC_Mailbox(worker, msg => this.node.ipc_master(msg))  // IPC messages to/from `worker`
         return worker
     }
 }
@@ -409,7 +409,7 @@ export class WorkerProcess extends KernelProcess {
         await this.init(opts)
 
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-        this.mailbox = new IPC_Mailbox(process, msg => this.node.from_master(msg))    // messages to/from master
+        this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC messages to/from master
         await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in MasterProcess.start()
 
         await (this._promise = this.main())
