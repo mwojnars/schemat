@@ -225,31 +225,31 @@ export class Node extends Agent {
 
     /* RPC calls to other processes or nodes */
 
-    rpc_send(target_id, method, args) {
+    rpc_send(agent_id, method, args) {
         /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node
-           and then to the `target_id` object (agent) where it should invoke its '$agent.<method>'(...args).
+           and then to the `agent_id` object (agent) where it should invoke its '$agent.<method>'(...args).
            Return a response from the remote target.
          */
-        let msg = [target_id, method, JSONx.encode(args)]
+        let msg = [agent_id, method, JSONx.encode(args)]
         let message = ['RPC', ...msg]       // , schemat.tx
 
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
-        let frame = schemat.get_frame(target_id)
+        let frame = schemat.get_frame(agent_id)
         if (frame) return this.rpc_recv(...msg)
 
         return this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message)
     }
 
-    rpc_recv(target_id, method, args) {
-        /* Execute an RPC message that's addressed to the agent `target_id` running on this process.
+    rpc_recv(agent_id, method, args) {
+        /* Execute an RPC message that's addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        // print("rpc_recv():", [target_id, method, args])
+        // print("rpc_recv():", [agent_id, method, args])
 
-        // locate an agent by its `target_id`, should be running here in this process
-        let frame = schemat.get_frame(target_id)
-        if (!frame) throw new Error(`agent [${target_id}] not found on this node process`)
+        // locate an agent by its `agent_id`, should be running here in this process
+        let frame = schemat.get_frame(agent_id)
+        if (!frame) throw new Error(`agent [${agent_id}] not found on this node process`)
         return frame.call_agent(`$agent.${method}`, JSONx.decode(args))
     }
 
