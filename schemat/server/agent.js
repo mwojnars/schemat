@@ -25,7 +25,7 @@ export class Agent extends WebObject {
     async __uninstall__(node) {}
 
     async __start__(role) {
-        /* Start the microservice implemented by this agent. Return an "execution state" which will be accessible
+        /* Start the microservice implemented by this agent. Return an "execution state" ("workspace") which will be accessible
            to external calls addressed to the running agent (RPC calls or direct function calls)
            and will be passed to __stop__() upon microservice termination. Typically, the state object contains
            handlers to all the resources that were opened during __start__() and must be released in __stop__().

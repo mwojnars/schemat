@@ -259,26 +259,25 @@ export class Node extends Agent {
     async from_worker([type, ...msg]) {
         /* On master process, handle an IPC message received from a worker process, or directly from itself. */
         assert(this.is_master())
-        let node, target
+        let node, agent
 
         if (type === 'RPC') {
             // this._print(`from_worker():`, JSON.stringify(msg))
-            let [target_id, method, args] = msg
-            // print(`from_worker():`, `target_id=${target_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(msg))
+            let [agent_id, method, args] = msg
+            // print(`from_worker():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(msg))
 
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
-            let locs = this.$local.agent_locations.get(target_id)
+            let locs = this.locate_processes(agent_id)
             if (locs?.length) node = this
             else {
                 // load the object and check its __node to locate the destination where it is deployed
-                target = await schemat.get_loaded(target_id)
-                node = schemat.cluster.locate(target)  // role
-                // node = target.__node
+                agent = await schemat.get_loaded(agent_id)
+                node = schemat.cluster.locate_node(agent)  //,role
             }
 
             if (!node)
-                throw new Error(`missing host node for RPC target ${target.__label}`)
+                throw new Error(`missing host node for RPC target ${agent.__label}`)
             if (node.is(schemat.node)) {
                 // this._print(`from_worker(): redirecting to self`)
                 return this.recv_tcp([type, ...msg])     // target agent is deployed on the current node
@@ -301,6 +300,10 @@ export class Node extends Agent {
         }
     }
 
+    locate_processes(agent_id, role) {
+        return this.$local.agent_locations.get(agent_id)
+    }
+
 
     /* TCP: horizontal communication between nodes */
 
@@ -319,18 +322,18 @@ export class Node extends Agent {
         // this._print(`recv_tcp():`, JSON.stringify(msg))
 
         if (type === 'RPC') {
-            let [target_id] = msg
+            let [agent_id] = msg
 
             // find out which process (worker >= 1 or master = 0), has the `target_id` agent deployed
-            let locs = this.$local.agent_locations.get(target_id)
-            if (locs.length > 1) throw new Error(`TCP target agent [${target_id}] is deployed multiple times on ${this.__label}`)
+            let locs = this.this.locate_processes(agent_id)
+            if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this.__label}`)
 
             let process_id = locs[0]
             // print("recv_tcp(): process", process_id)
 
             if (process_id === undefined) {
-                this._print(`agent locations:`, [...this.$local.agent_locations.entries()])
-                throw new Error(`${this.id}/#${this.worker_id}: agent [${target_id}] not found on this node`)
+                // this._print(`agent locations:`, [...this.$local.agent_locations.entries()])
+                throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)
             }
             if (process_id !== this.worker_id) {
                 assert(process_id > 0)
