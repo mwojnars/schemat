@@ -119,7 +119,7 @@ export class KernelProcess {
 
     node                    // Node web object that represents the Schemat cluster node this process is running
     frames = new Map()      // Frame objects of currently running agents, keyed by agent IDs
-    agents_running = []     // web objects that should be running now as agents
+    agents_running = []     // web objects that should be running now as agents on this process; multiple runs (frames) of the same object ID are not supported
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
     _closing                // true if .stop() was called and the process is shutting down right now
 

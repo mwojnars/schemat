@@ -165,12 +165,12 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this._tcp_port)
 
-        let agent_locations = this._allocate_agents()       // Map<agent ID, array of process IDs>
-        return {tcp_sender, tcp_receiver, agent_locations}
+        let placements = this._place_agents()           // Map<agent ID, array of process IDs>
+        return {tcp_sender, tcp_receiver, placements}
     }
 
     async __restart__(state, prev) {
-        state.agent_locations = this._allocate_agents()     // re-allocate agents in case their configuration changed
+        state.placements = this._place_agents()         // re-allocate agents in case their configuration changed
         return state
     }
 
@@ -182,7 +182,7 @@ export class Node extends Agent {
 
     /* Agents */
 
-    _allocate_agents() {
+    _place_agents() {
         /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
            Notify each sublist to a corresponding process. Return an inverted Map: agent ID -> array of process IDs.
          */
@@ -235,7 +235,7 @@ export class Node extends Agent {
     }
 
     locate_process(agent_id, role) {
-        return this.$local.agent_locations.get(agent_id)?.[0]
+        return this.$local.placements.get(agent_id)?.[0]
     }
 
 
@@ -339,7 +339,7 @@ export class Node extends Agent {
             // print("tcp_recv(): process", proc)
 
             if (proc === undefined) {
-                // this._print(`agent locations:`, [...this.$local.agent_locations.entries()])
+                // this._print(`agent locations:`, [...this.$local.placements.entries()])
                 throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)
             }
             if (proc !== this.worker_id) {

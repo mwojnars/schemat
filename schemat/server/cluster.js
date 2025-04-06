@@ -19,6 +19,6 @@ export class Cluster extends WebObject {
     }
 
     locate_nodes(agent, role) {
-        /* Return an array of all locations of `agent`. */
+        /* Array of all nodes where `agent` is currently deployed. */
     }
 }
