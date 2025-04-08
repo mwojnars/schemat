@@ -190,7 +190,7 @@ export class Node extends Agent {
         assert(N >= 1)
 
         let current_worker = 1
-        let plan = Array.from({length: N + 1}, () => [])
+        let plan = Array.from({length: N + 1}, () => [])    // plan[k] is an array of agent IDs that should be running on worker `k`
 
         // distribute agents uniformly across worker processes
         for (let agent of this.agents_installed) {
@@ -225,16 +225,16 @@ export class Node extends Agent {
 
     sys_agents_running(agents) { schemat.kernel.set_agents_running(agents) }
 
-    async locate_node(agent_id, role) {
+    async find_node(agent_id, role) {
         // if agent is deployed on one of local processes, return this node
-        if (this.locate_process(agent_id) != null) return this
+        if (this.find_process(agent_id) != null) return this
 
         // load the object and check its __node to find a remote destination
         let agent = await schemat.get_loaded(agent_id)
-        return schemat.cluster.locate_node(agent)  //,role
+        return schemat.cluster.find_node(agent)  //,role
     }
 
-    locate_process(agent_id, role) {
+    find_process(agent_id, role) {
         return this.$local.placements.get(agent_id)?.[0]
     }
 
@@ -284,7 +284,7 @@ export class Node extends Agent {
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
 
-            let node = await this.locate_node(agent_id)
+            let node = await this.find_node(agent_id)
 
             if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
             if (node.is(schemat.node)) {
@@ -335,7 +335,7 @@ export class Node extends Agent {
             // if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this.__label}`)
             // let proc = locs[0]
 
-            let proc = this.locate_process(agent_id)
+            let proc = this.find_process(agent_id)
             // print("tcp_recv(): process", proc)
 
             if (proc === undefined) {

@@ -10,15 +10,15 @@ export class Cluster extends WebObject {
         if (SERVER) await this.database?.load()
     }
 
-    locate_node(agent, role) {
+    find_node(agent, role) {  // host_node() locate_node()
         /* Return the node where the `agent` running in a given `role` can be found. If `agent` is deployed
-           on multiple nodes, one of them is chosen at random, or by hashing (TODO), or in some other way...
+           on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
            If `agent` is deployed here, on the current node, this location is always returned.
          */
         return agent.__node
     }
 
-    locate_nodes(agent, role) {
+    find_nodes(agent, role) {
         /* Array of all nodes where `agent` is currently deployed. */
     }
 }
