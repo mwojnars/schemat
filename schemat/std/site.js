@@ -54,7 +54,6 @@ export class Site extends WebObject {
             if (this.default_path) this._check_default_container()      // no await to avoid blocking the site's startup
         }
         schemat.after_boot(() => this.load_globals())
-        // else await this.load_globals()
     }
 
     async _check_default_container() {
@@ -72,12 +71,7 @@ export class Site extends WebObject {
         /* Load objects listed in [global] property and make them globally available for application code. */
         this._global = {}
         for (let [name, object] of this.global || [])
-            try { this._global[name] = await object.load() }
-            catch (e) {
-                // this failure happens during ServerSchemat boot due to incomplete system initialization and must be ignored then
-                console.warn(`Site: failed to load global object '${name}'`)
-                throw e
-            }
+            this._global[name] = await object.load()
     }
 
 
