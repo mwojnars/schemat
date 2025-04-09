@@ -37,7 +37,6 @@ export class ServerSchemat extends Schemat {
 
     kernel          // KernelProcess that runs the main Schemat loop of the current master/worker process
     parent          // parent ServerSchemat that created this one via .fork() below
-    booting         // a Promise that resolves when this ServerSchemat is fully booted
 
     _boot_db        // boot Database, its presence indicates the boot phase is still going on; regular server-side DB is taken from site.database or cluster.database
     _cluster        // Cluster object of the previous generation, always present but not always the most recent one (Registry may hold a more recent version)
@@ -55,8 +54,6 @@ export class ServerSchemat extends Schemat {
 
     constructor(config, parent) {
         super(config)
-        this.booting = new Promise(resolve => this._booting_resolve = resolve)
-
         if (parent) this._clone(parent)
 
         this.ROOT_DIRECTORY = process.cwd()                 // initialize ROOT_DIRECTORY from the current working dir
@@ -100,13 +97,7 @@ export class ServerSchemat extends Schemat {
 
     async _boot_done() {
         delete this._boot_db        // mark the end of the boot phase; allow garbage collection of _boot_db
-        this._booting_resolve()     // resolve this.booting Promise
-        await this.booting
-    }
-
-    after_boot(callback) {
-        /* Run `callback` function at the end of the boot phase, when the boot DB is already replaced by the regular DB. */
-        this.booting = this.booting.then(callback)
+        await super._boot_done()
     }
 
     client_block(request, id_context, ...objects) {

@@ -81,11 +81,12 @@ export class Schemat {
        loading and caching of web objects, dynamic module import, classpath management, session management etc.
      */
 
-    config                  // boot configuration (on server) or RequestContext (on client)
-    site_id                 // ID of the active Site object
-    _site                   // `site` of the previous generation, remembered here during complete cache erasure to keep the .site() getter operational
-    registry                // cache of web objects, records and indexes loaded from DB
-    builtin                 // a Classpath containing built-in classes and their paths
+    config          // boot configuration (on server) or RequestContext (on client)
+    site_id         // ID of the active Site object
+    _site           // `site` of the previous generation, remembered here during complete cache erasure to keep the .site() getter operational
+    registry        // cache of web objects, records and indexes loaded from DB
+    builtin         // a Classpath containing built-in classes and their paths
+    booting         // a Promise that resolves when this Schemat is fully booted
 
     _essential = [ROOT_ID]  // IDs of web objects that must be always present (fully loaded) in the Registry, so eviction must reload not delete them
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
@@ -137,6 +138,7 @@ export class Schemat {
         /* Create a new Schemat instance. `config` is either the contents of a config file (on server),
            or a RequestContext (on client) -- both should contain the `site` attribute.
          */
+        this.booting = new Promise(resolve => this._booting_resolve = resolve)
         this.config = config
         this.WebObject = WebObject          // schemat.WebObject is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
@@ -183,6 +185,16 @@ export class Schemat {
         let accept = (name) => name.toUpperCase() === name
         await builtin.fetch("../types/type.js", {accept})
         await builtin.fetch("../types/catalog_type.js", {accept})
+    }
+
+    async _boot_done() {
+        this._booting_resolve()     // resolve this.booting Promise
+        await this.booting          // await any other callbacks that were added with after_boot()
+    }
+
+    after_boot(callback) {
+        /* Run `callback` function at the end of the boot phase, when the boot DB is already replaced by the regular DB. */
+        this.booting = this.booting.then(callback)
     }
 
 

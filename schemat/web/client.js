@@ -28,6 +28,8 @@ export class Client extends Schemat {
         await super._load_site()
         // setInterval(() => this._report_memory(), 10000)
 
+        await this._boot_done()
+
         for (let rec of ctx.objects)                            // preload bootstrap objects
             await this.get_loaded(rec.id)
 
