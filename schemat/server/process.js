@@ -36,7 +36,7 @@ export async function boot_schemat(opts, callback) {
 
     await globalThis._schemat.run(new ServerSchemat(config), async () => {
         await schemat.boot(() => _open_bootstrap_db(), false)
-        schemat._boot_done()
+        await schemat._boot_done()
         await callback()
     })
 

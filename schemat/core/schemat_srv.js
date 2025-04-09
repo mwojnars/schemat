@@ -37,12 +37,14 @@ export class ServerSchemat extends Schemat {
 
     kernel          // KernelProcess that runs the main Schemat loop of the current master/worker process
     parent          // parent ServerSchemat that created this one via .fork() below
+    booting         // a Promise that resolves when this ServerSchemat is fully booted
 
     _boot_db        // boot Database, its presence indicates the boot phase is still going on; regular server-side DB is taken from site.database or cluster.database
     _cluster        // Cluster object of the previous generation, always present but not always the most recent one (Registry may hold a more recent version)
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
 
+    // get db()     { return this.system?.database || this._boot_db }
     get db()     { return this._boot_db || this.system?.database }
     get tx()     { return this._transaction.getStore() }
     get node()   { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
@@ -53,6 +55,8 @@ export class ServerSchemat extends Schemat {
 
     constructor(config, parent) {
         super(config)
+        this.booting = new Promise(resolve => this._booting_resolve = resolve)
+
         if (parent) this._clone(parent)
 
         this.ROOT_DIRECTORY = process.cwd()                 // initialize ROOT_DIRECTORY from the current working dir
@@ -94,8 +98,10 @@ export class ServerSchemat extends Schemat {
         // print(`boot() this.db:`, this.db.__label)
     }
 
-    _boot_done() {
-        delete this._boot_db        // mark the end of boot phase; allow garbage collection
+    async _boot_done() {
+        delete this._boot_db        // mark the end of the boot phase; allow garbage collection of _boot_db
+        this._booting_resolve()     // resolve this.booting Promise
+        await this.booting
     }
 
     client_block(request, id_context, ...objects) {
