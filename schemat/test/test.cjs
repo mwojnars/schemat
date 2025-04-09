@@ -368,6 +368,7 @@ describe('Schemat Tests', function () {
         before(async function () {({server, browser, page, messages} = setup())})
 
         it('demo01/Home', async function () {
+            await delay(500)
             await test_page(page, `${DOMAIN}`, '#page-main', ['home', 'Properties'])
         })
         it('demo01/Authors', async function () {
