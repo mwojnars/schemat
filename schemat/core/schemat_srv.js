@@ -104,6 +104,11 @@ export class ServerSchemat extends Schemat {
         await this.booting
     }
 
+    after_boot(callback) {
+        /* Run `callback` function at the end of the boot phase, when the boot DB is already replaced by the regular DB. */
+        this.booting = this.booting.then(callback)
+    }
+
     client_block(request, id_context, ...objects) {
         /* HTML code to be placed in an HTML page by the server, to load `schemat` on the client side upon page load.
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
