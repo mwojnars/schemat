@@ -37,14 +37,13 @@ export class ServerSchemat extends Schemat {
 
     kernel          // KernelProcess that runs the main Schemat loop of the current master/worker process
     parent          // parent ServerSchemat that created this one via .fork() below
-    booting = true  // true during boot of this process when the bootstrap DB (_db) should be used
 
-    _db             // bootstrap DB; regular server-side DB is taken from site.database
+    _boot_db        // boot Database, its presence indicates the boot phase is still going on; regular server-side DB is taken from site.database or cluster.database
     _cluster        // Cluster object of the previous generation, always present but not always the most recent one (Registry may hold a more recent version)
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
 
-    get db()     { return this._db || this.system?.database }
+    get db()     { return this._boot_db || this.system?.database }
     get tx()     { return this._transaction.getStore() }
     get node()   { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster(){ return this.get_if_loaded(this._cluster?.id) || this._cluster }
@@ -71,10 +70,10 @@ export class ServerSchemat extends Schemat {
         this.kernel = parent.kernel
     }
 
-    async boot(boot_db) {
+    async boot(boot_db, auto = true) {
         /* Initialize built-in objects, site_id, site, bootstrap DB. */
         await this._init_classpath()
-        this._db = await boot_db?.() || this.parent.db      // bootstrap DB, created anew or taken from parent; the ultimate DB is opened later: on the first access to this.db
+        this._boot_db = await boot_db?.() || this.parent.db     // bootstrap DB, created anew or taken from parent; the ultimate DB is opened later: on the first access to this.db
 
         let cluster_id = this.config.cluster
         if (cluster_id) {
@@ -89,15 +88,14 @@ export class ServerSchemat extends Schemat {
         await this.site?.reload()           // repeated site reload is needed for site.global initialization which fails on first attempt during bootstrap
         // if (this.site) await this.reload(this.site_id, true)
 
-        this._boot_done()
+        if (auto) this._boot_done()
 
         // print(`boot() system:`, this.system.__label)
         // print(`boot() this.db:`, this.db.__label)
     }
 
     _boot_done() {
-        this.booting = false
-        delete this._db                     // allow garbage collection
+        delete this._boot_db        // mark the end of boot phase; allow garbage collection
     }
 
     client_block(request, id_context, ...objects) {
