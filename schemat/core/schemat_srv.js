@@ -37,13 +37,14 @@ export class ServerSchemat extends Schemat {
 
     kernel          // KernelProcess that runs the main Schemat loop of the current master/worker process
     parent          // parent ServerSchemat that created this one via .fork() below
+    booting = true  // true during boot of this process when the bootstrap DB (_db) should be used
 
     _db             // bootstrap DB; regular server-side DB is taken from site.database
     _cluster        // Cluster object of the previous generation, always present but not always the most recent one (Registry may hold a more recent version)
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
 
-    get db()     { return this.system?.database || this._db }
+    get db()     { return this._db || this.system?.database }
     get tx()     { return this._transaction.getStore() }
     get node()   { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster(){ return this.get_if_loaded(this._cluster?.id) || this._cluster }
@@ -88,10 +89,15 @@ export class ServerSchemat extends Schemat {
         await this.site?.reload()           // repeated site reload is needed for site.global initialization which fails on first attempt during bootstrap
         // if (this.site) await this.reload(this.site_id, true)
 
-        delete this._db                     // allow garbage collection
+        this._boot_done()
 
         // print(`boot() system:`, this.system.__label)
         // print(`boot() this.db:`, this.db.__label)
+    }
+
+    _boot_done() {
+        this.booting = false
+        delete this._db                     // allow garbage collection
     }
 
     client_block(request, id_context, ...objects) {
