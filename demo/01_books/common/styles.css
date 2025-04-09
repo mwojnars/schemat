@@ -157,7 +157,7 @@ h3 {
 .book-item {
     display: flex;
     align-items: flex-start;
-    background-color: #95baed;   /*#bbb;*/
+    background-color: #2569c6;   /*#bbb;*/
     /*background-color: #3c8af1; !* Dark blue background *!*/
     color: #ffffff; /* White text */
     padding: 15px;
@@ -167,7 +167,7 @@ h3 {
 }
 
 .book-item:hover {
-    background-color: #2569c6; /* Slightly darker blue on hover */
+    background-color: #467ecd; /* Slightly lighter blue on hover */
     transform: translateY(-3px);
     box-shadow: 0 6px 8px rgba(0,0,0,0.15);
 }
