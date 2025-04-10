@@ -247,22 +247,7 @@ export class DataBlock extends Block {
         return await this._move_down(id, req).select(id, req)
     }
 
-    get $_wrap() {
-        let id = this.id
-        let obj = this
-        return new Proxy({}, {
-            get(target, name) {
-                if (typeof name === 'string') return (state, ...args) => obj.__self[`$agent.${name}`].call(obj, state, ...args)
-            }
-        })
-    }
-
     async select(id, req) { return this.$_wrap.select({storage: this._storage}, id, req) }
-
-    // async select(id, req) {
-    //     let method = this.__self['$agent.select']
-    //     return method.call(this, {storage: this._storage}, id, req)
-    // }
 
     async cmd_insert(id, data) {
         /* `data` can be an array if multiple objects are to be inserted. */

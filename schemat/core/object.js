@@ -962,6 +962,18 @@ export class WebObject {
         return {value: schemat.get_state(this.id), [Intercept.NO_CACHING]: true}
     }
 
+    get $_wrap() {
+        /* For internal use. Call $agent.*() like a plain method with `state` explicitly supplied. */
+        let id = this.id
+        let obj = this
+        return new Proxy({}, {
+            get(target, name) {
+                if (typeof name === 'string') return (state, ...args) => obj.__self[`$agent.${name}`].call(obj, state, ...args)
+            }
+        })
+    }
+
+
     // GET/POST/LOCAL.*() are isomorphic triggers ({name: trigger_function}) for this object's web endpoints ...
 
     get GET()   { return this._web_triggers('GET') }        // triggers for HTTP GET endpoints of this object
