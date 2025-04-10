@@ -240,14 +240,26 @@ export class DataBlock extends Block {
         return ring
     }
 
-    async '$agent.select'(_, id, req) { return this.select(id, req) }
-
-    async select(id, req) {
+    async '$agent.select'({storage}, id, req) {
         let key = this.encode_id(id)
-        let data = await this._storage.get(key)         // JSON string
+        let data = await storage.get(key)         // JSON string
         if (data) return this._annotate(data)
         return await this._move_down(id, req).select(id, req)
     }
+
+    async select(id, req) {
+        let method = this.__self['$agent.select']
+        return method.call(this, {storage: this._storage}, id, req)
+    }
+
+    // async '$agent.select'(_, id, req) { return this.select(id, req) }
+    //
+    // async select(id, req) {
+    //     let key = this.encode_id(id)
+    //     let data = await this._storage.get(key)         // JSON string
+    //     if (data) return this._annotate(data)
+    //     return await this._move_down(id, req).select(id, req)
+    // }
 
     async cmd_insert(id, data) {
         /* `data` can be an array if multiple objects are to be inserted. */
