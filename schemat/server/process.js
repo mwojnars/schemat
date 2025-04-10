@@ -36,7 +36,7 @@ export async function boot_schemat(opts, callback) {
 
     await globalThis._schemat.run(new ServerSchemat(config), async () => {
         await schemat.boot(() => _open_bootstrap_db(), false)
-        await schemat._boot_done()
+        // await schemat._boot_done()
         await callback()
     })
 
@@ -369,7 +369,7 @@ export class MasterProcess extends KernelProcess {
         print(`starting node:`, this.node.id)
         this._start_workers()
         await sleep(2.0)            // wait for workers to start their IPC before sending requests
-        // await schemat._boot_done()
+        await schemat._boot_done()
 
         await (this._promise = this.main())
     }
@@ -413,7 +413,7 @@ export class WorkerProcess extends KernelProcess {
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC messages to/from master
         await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in MasterProcess.start()
-        // await schemat._boot_done()
+        await schemat._boot_done()
 
         await (this._promise = this.main())
     }
