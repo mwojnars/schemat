@@ -1,9 +1,7 @@
 import {Record, data_schema, RecordSchema} from "./records.js";
 import {assert, print} from "../common/utils.js";
-import {Block, DataBlock} from "./block.js";
+import {BootDataBlock} from "./block.js";
 import {WebObject} from "../core/object.js";
-import {BinaryInput} from "../common/binary.js";
-import {INTEGER} from "../types/type.js";
 
 
 /**********************************************************************************************************************
@@ -162,7 +160,7 @@ export class DataSequence extends Sequence {
 
     __new__(ring, operator, {boot_file} = {}) {
         super.__new__(ring, operator)
-        if (boot_file) this.blocks = [DataBlock._draft(this, {filename: boot_file})]
+        if (boot_file) this.blocks = [BootDataBlock._draft(this, {filename: boot_file})]
     }
 
     async __setup__() {

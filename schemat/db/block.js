@@ -483,6 +483,15 @@ export class DataBlock extends Block {
 }
 
 
+/**********************************************************************************************************************/
+
+export class BootDataBlock extends DataBlock {
+
+    async select(id, req) { return this.$_wrap.select({storage: this._storage}, id, req) }
+
+}
+
+
 /**********************************************************************************************************************
  **
  **  Physical DB implementation. (Draft)
