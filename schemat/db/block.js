@@ -105,9 +105,9 @@ export class Block extends Agent {
     async __start__() {
         let storage_class = this._detect_storage_class()
         let storage = new storage_class(this.filename, this)
-        await this._reopen(storage)
+        let autoincrement = await this._reopen(storage)
         // return storage.open()
-        return {storage}
+        return {storage, autoincrement}
     }
 
     async _reopen(storage) {
@@ -121,8 +121,8 @@ export class Block extends Agent {
 
     // async get({key})   { return this._storage.get(key) }
 
-    '$agent.put'(ctx, key, value) { return this.put(key, value) }
-    '$agent.del'(ctx, key, value) { return this.del(key, value) }
+    '$agent.put'(_, key, value) { return this.put(key, value) }
+    '$agent.del'(_, key, value) { return this.del(key, value) }
 
     async put(key, value) {
         /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
@@ -240,9 +240,9 @@ export class DataBlock extends Block {
         return ring
     }
 
-    async '$agent.select'(_, id, req) { return this._select(id, req) }
+    async '$agent.select'(_, id, req) { return this.select(id, req) }
 
-    async _select(id, req) {
+    async select(id, req) {
         let key = this.encode_id(id)
         let data = await this._storage.get(key)         // JSON string
         if (data) return this._annotate(data)
