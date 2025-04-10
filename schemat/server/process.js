@@ -120,7 +120,7 @@ export class KernelProcess {
 
     node                    // Node web object that represents the Schemat cluster node this process is running
     frames = new Map()      // Frame objects of currently running agents, keyed by agent IDs
-    agents_running = []     // web objects that should be running now as agents on this process; multiple runs (frames) of the same object ID are not supported
+    agents_running          // array of web objects that should be running now as agents on this process; multiple runs (frames) of the same object ID are not supported
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
     _closing                // true if .stop() was called and the process is shutting down right now
 
@@ -369,6 +369,7 @@ export class MasterProcess extends KernelProcess {
         print(`starting node:`, this.node.id)
         this._start_workers()
         await sleep(2.0)            // wait for workers to start their IPC before sending requests
+        // await schemat._boot_done()
 
         await (this._promise = this.main())
     }
@@ -412,6 +413,7 @@ export class WorkerProcess extends KernelProcess {
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC messages to/from master
         await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in MasterProcess.start()
+        // await schemat._boot_done()
 
         await (this._promise = this.main())
     }
