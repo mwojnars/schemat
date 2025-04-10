@@ -264,10 +264,10 @@ export class BootRing extends Ring {
         this.data_sequence = DataSequence._draft(this, undefined, {boot_file: file})
     }
 
-    // select(id, req)  {
-    //     print('boot ring select()')
-    //     return this._find_block(id)._select(id, req || new DataRequest())
-    // }
+    select(id, req)  {
+        // print('boot ring select()')
+        return this._find_block(id).select(id, req || new DataRequest())
+    }
 
     insert() {assert(false)}
     update() {assert(false)}
