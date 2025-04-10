@@ -66,9 +66,12 @@ export class Block extends Agent {
     async __init__() {
         if (CLIENT) return              // don't initialize internals when on client
 
-        if (!this.sequence.is_loaded() && !this.sequence.__meta.loading)
-            this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block (!);
-                                        // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
+        if (!this.sequence.is_loaded())
+            if (schemat.booting) {this.sequence.load(); await sleep()} else await this.sequence.load()
+
+        // if (!this.sequence.is_loaded() && !this.sequence.__meta.loading)
+        //     this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block (!);
+        //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
 
         let storage_class = this._detect_storage_class()
         this._storage = new storage_class(this.filename, this)
