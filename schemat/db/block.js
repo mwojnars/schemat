@@ -251,6 +251,15 @@ export class DataBlock extends Block {
     async select(id, req) { return this.$_wrap.select({storage: this._storage}, id, req) }
 
     async cmd_insert(id, data) {
+        let obj = this
+        return this.$_wrap.cmd_insert({
+            storage: this._storage,
+            get autoincrement()  {return obj._autoincrement},
+            set autoincrement(a) {obj._autoincrement = a},
+        }, id, data)
+    }
+
+    async '$agent.cmd_insert'(state, id, data) {
         /* `data` can be an array if multiple objects are to be inserted. */
 
         let ring = this.ring
@@ -274,7 +283,7 @@ export class DataBlock extends Block {
         // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
         for (let rec of records) {
             let {id, data} = rec
-            let obj = await WebObject.from_data(id || this._assign_id(), data, {mutable: true, activate: false})
+            let obj = await WebObject.from_data(id || this._assign_id(state), data, {mutable: true, activate: false})
             objects.push(obj)
         }
         let unique = new Set(objects)
@@ -291,7 +300,7 @@ export class DataBlock extends Block {
 
         for (let pos = 0; pos < objects.length; pos++) {
             let obj = objects[pos]
-            obj.id ??= this._assign_id()
+            obj.id ??= this._assign_id(state)
 
             let setup = obj.__setup__({ring: this.ring, block: this})
             if (setup instanceof Promise) await setup
@@ -323,25 +332,26 @@ export class DataBlock extends Block {
         obj._seal_dependencies()            // set __seal
     }
 
-    _assign_id() {
+    _assign_id(state) {
         /* Calculate a new `id` to be assigned to the record being inserted. */
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
-        let id = (this.ring.insert_mode === 'compact') ? this._assign_id_compact() : this._assign_id_incremental()
+        let id = (this.ring.insert_mode === 'compact') ? this._assign_id_compact(state) : this._assign_id_incremental(state)
 
         if (!this.ring.valid_insert_id(id))
             throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid set for the ring ${this.ring.__label}`)
 
-        this._autoincrement = Math.max(id, this._autoincrement)
+        state.autoincrement = Math.max(id, state.autoincrement)
+        // this._autoincrement = Math.max(id, this._autoincrement)
 
         // print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
         return id
     }
 
-    _assign_id_incremental() {
+    _assign_id_incremental({autoincrement}) {
         let [A, B, C] = this.ring.id_insert_zones       // [min_id_exclusive, min_id_forbidden, min_id_sharded]
 
         // try allocating an ID from the exclusive zone if present
-        let auto = this._autoincrement + 1
+        let auto = autoincrement + 1  //this._autoincrement + 1
         let id = Math.max(auto, A || 1)
         if (A && id < B) return id
 
@@ -352,14 +362,14 @@ export class DataBlock extends Block {
         return id
     }
 
-    _assign_id_compact() {
+    _assign_id_compact({autoincrement}) {
         /* Scan this._storage to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
            This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
         // if all empty slots below _autoincrement were already allocated, use the incremental algorithm
         // (this may still leave empty slots if a record was removed in the meantime, but such slot is reused after next reload of the block)
-        if (this._reserved.has(this._autoincrement)) {
-            let id = this._assign_id_incremental()
+        if (this._reserved.has(autoincrement)) { //this._autoincrement
+            let id = this._assign_id_incremental({autoincrement})
             this._reserved.add(id)
             return id
         }
