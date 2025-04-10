@@ -15,7 +15,7 @@
     - block_1043
     - block_1045
     - webserver
-  tcp_port: 5820
+#  tcp_port: 5820
   __category:
     "@": 21
 - id: 1036
@@ -31,6 +31,6 @@
     - block_1033
     - webserver
     - logger
-  tcp_port: 5821
+#  tcp_port: 5821
   __category:
     "@": 21
