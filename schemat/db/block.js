@@ -201,6 +201,7 @@ export class DataBlock extends Block {
 
     async __init__() {
         this._autoincrement = await super.__init__() || 1
+        // await super.__init__()
         this._reserved = new Set()      // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
     }
 
@@ -486,6 +487,11 @@ export class DataBlock extends Block {
 /**********************************************************************************************************************/
 
 export class BootDataBlock extends DataBlock {
+
+    async __init__() {
+        await super.__init__()
+        this._autoincrement = await this._reopen(this._storage) || 1
+    }
 
     async select(id, req) { return this.$_wrap.select({storage: this._storage}, id, req) }
 
