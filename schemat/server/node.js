@@ -235,7 +235,7 @@ export class Node extends Agent {
     }
 
     find_process(agent_id, role) {
-        assert(this.$local.placements, `placements not yet initialized`)
+        assert(this.$local?.placements, `placements not yet initialized`)
         return this.$local.placements.get(agent_id)?.[0]
     }
 
