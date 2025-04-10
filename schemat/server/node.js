@@ -235,6 +235,7 @@ export class Node extends Agent {
     }
 
     find_process(agent_id, role) {
+        assert(this.$local.placements, `placements not yet initialized`)
         return this.$local.placements.get(agent_id)?.[0]
     }
 
@@ -248,6 +249,8 @@ export class Node extends Agent {
          */
         let msg = [agent_id, method, JSONx.encode(args)]
         let message = ['RPC', ...msg]       // , schemat.tx
+
+        assert(schemat.kernel.agents_running, `kernel not yet initialized`)
 
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
@@ -265,7 +268,7 @@ export class Node extends Agent {
 
         // locate an agent by its `agent_id`, should be running here in this process
         let frame = schemat.get_frame(agent_id)
-        if (!frame) throw new Error(`agent [${agent_id}] not found on this node process`)
+        if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
         return frame.call_agent(`$agent.${method}`, JSONx.decode(args))
     }
 
