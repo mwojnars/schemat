@@ -184,6 +184,7 @@ export class Ring extends WebObject {
     }
 
     async insert(data, req) {
+        // return this._random_block().$agent.cmd_insert(null, data)
         return this._random_block().cmd_insert(null, data)
     }
 

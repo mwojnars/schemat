@@ -451,12 +451,14 @@ export class DataBlock extends Block {
         schemat.register_modification({id, data})
     }
 
-    async cmd_delete(id, req) {
+    async cmd_delete(id, req) { return this.$_wrap.cmd_delete({storage: this._storage}, id, req) }
+
+    async '$agent.cmd_delete'({storage}, id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
         let key = this.encode_id(id)
-        let data = await this._storage.get(key)
+        let data = await storage.get(key)
         if (data === undefined) return this._move_down(id, req).delete(id, req)
 
         if (this.ring.readonly)
@@ -465,7 +467,7 @@ export class DataBlock extends Block {
             // return req.error_access("cannot remove the item, the ring is read-only")
 
         let obj = await WebObject.from_data(id, data, {activate: false})
-        let deleted = this._storage.del(key)
+        let deleted = storage.del(key)
         if (!deleted) return 0
 
         this._flush()
