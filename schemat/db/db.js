@@ -269,10 +269,10 @@ export class BootRing extends Ring {
         return this._find_block(id).select(id, req || new DataRequest())
     }
 
-    insert() {assert(false)}
-    update() {assert(false)}
-    delete() {assert(false)}
-    scan()   {assert(false)}
+    insert() {assert(false, `inserts not supported in BootRing`)}
+    update() {assert(false, `updates not supported in BootRing`)}
+    delete() {assert(false, `deletes not supported in BootRing`)}
+    scan()   {assert(false, `scans not supported in BootRing`)}
 }
 
 
