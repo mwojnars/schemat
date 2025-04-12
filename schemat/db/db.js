@@ -180,6 +180,7 @@ export class Ring extends WebObject {
     }
 
     async delete(id, req) {
+        // return this._find_block(id).$agent.cmd_delete(id, req || new DataRequest())
         return this._find_block(id).cmd_delete(id, req || new DataRequest())
     }
 
@@ -200,6 +201,7 @@ export class Ring extends WebObject {
                    even without changing the record's data.
          */
         assert(edits.length, 'missing edits')
+        // return this._find_block(id).$agent.cmd_update(id, edits, req || new DataRequest())
         return this._find_block(id).cmd_update(id, edits, req || new DataRequest())
     }
 

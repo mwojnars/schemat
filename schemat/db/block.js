@@ -224,6 +224,7 @@ export class DataBlock extends Block {
     _move_down(id, req) {
         /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring. */
         let ring = this.ring
+        assert(ring.is_loaded())
         let base = ring.base_ring
         if (!base) throw new ObjectNotFound(null, {id})
         req.push_ring(ring)
@@ -236,6 +237,7 @@ export class DataBlock extends Block {
            No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
          */
         let ring = this.ring
+        assert(ring.is_loaded())
         while (ring?.readonly) ring = req.pop_ring()        // go upwards to find the first writable ring
         if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: req.id})
         return ring
@@ -314,7 +316,7 @@ export class DataBlock extends Block {
 
         for (let obj of objects) {
             this._prepare_for_insert(obj)       // validate obj.__data
-            await this._save(obj)
+            await this._save(state.storage, obj)
         }
 
         // await Promise.all(objects.map(obj => {}))
@@ -393,13 +395,15 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async cmd_update(id, edits, req) {
+    async cmd_update(id, edits, req) { return this.$_wrap.cmd_update({storage: this._storage}, id, edits, req) }
+
+    async '$agent.cmd_update'({storage}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring. Return {id, data}.
          */
         let key = this.encode_id(id)
-        let data = await this._storage.get(key)
+        let data = await storage.get(key)
         if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
         let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
@@ -422,7 +426,7 @@ export class DataBlock extends Block {
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-        return this._save(obj, prev)                // save changes and perform change propagation
+        return this._save(storage, obj, prev)       // save changes and perform change propagation
     }
 
     async cmd_upsave(id, data, req) {
@@ -436,10 +440,10 @@ export class DataBlock extends Block {
         // if (await this._storage.get(key)) return this.cmd_update(req)
 
         let obj = await WebObject.from_data(id, data, {activate: false})
-        return this._save(obj)
+        return this._save(this._storage, obj)
     }
 
-    async _save(obj, prev = null) {
+    async _save(storage, obj, prev = null) {
         let id = obj.id
         let data = obj.__json
         let key = this.encode_id(id)
