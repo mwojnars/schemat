@@ -121,24 +121,24 @@ export class Block extends Agent {
 
     // async get({key})   { return this._storage.get(key) }
 
-    '$agent.put'(_, key, value) { return this.put(key, value) }
-    '$agent.del'(_, key, value) { return this.del(key, value) }
+    '$agent.put'({storage}, key, value) { return this.put(storage, key, value) }
+    '$agent.del'({storage}, key, value) { return this.del(storage, key, value) }
 
-    async put(key, value) {
+    async put(storage, key, value) {
         /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
            No forward of the request to another ring.
          */
-        // let value_old = await this._storage.get(key) || null
-        await this._storage.put(key, value)
+        // let value_old = await storage.get(key) || null
+        await storage.put(key, value)
         this._flush()
         // await this.propagate(key, value_old, value)
     }
 
-    async del(key, value) {
-        if (value === undefined) value = await this._storage.get(key)
+    async del(storage, key, value) {
+        if (value === undefined) value = await storage.get(key)
         if (value === undefined) return false           // TODO: notify about data inconsistency (there should no missing records)
 
-        let deleted = this._storage.del(key)
+        let deleted = storage.del(key)
         this._flush()
         // await this.propagate(key, value)
 
@@ -445,7 +445,7 @@ export class DataBlock extends Block {
         let data = obj.__json
         let key = this.encode_id(id)
 
-        await this.put(key, data)   //FIXME
+        await this.put(storage, key, data)
         await this.propagate_change(key, prev, obj)
 
         data = this._annotate(data)
