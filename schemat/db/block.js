@@ -149,7 +149,7 @@ export class Block extends Agent {
     //     // assert(id)
     //     return new Proxy({}, {
     //         get(target, name) {
-    //             if (typeof name === 'string') return (...args) => (id && schemat.node) ? schemat.node.rpc_send(id, name, args)
+    //             if (typeof name === 'string') return (fake_state, ...args) => (id && schemat.node) ? schemat.node.rpc_send(id, name, args)
     //                 : obj.__self[`$agent.${name}`].call(obj, undefined, ...args)
     //         }
     //     })
@@ -498,11 +498,10 @@ export class DataBlock extends Block {
         return Number(deleted)
     }
 
-    async erase() {
-        /* Remove all records from this sequence; open() should be called first. */
+    async '$agent.erase'({storage}) {
         this._autoincrement = 1
         this._reserved = new Set()
-        return super.erase()
+        return super['$agent.erase']({storage})
     }
 
     async propagate_change(key, obj_old = null, obj_new = null) {
