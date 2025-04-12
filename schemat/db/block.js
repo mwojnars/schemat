@@ -140,14 +140,29 @@ export class Block extends Agent {
         return deleted
     }
 
-    async scan(...args) { return this.$_wrap.scan({storage: this._storage}, ...args) }
+    get $_wrap2() { return this.$_wrap }
+
+    // get $_wrap2() {
+    //     // temporary redefinition that behaves like $agent
+    //     let id = this.id
+    //     let obj = this
+    //     // assert(id)
+    //     return new Proxy({}, {
+    //         get(target, name) {
+    //             if (typeof name === 'string') return (...args) => (id && schemat.node) ? schemat.node.rpc_send(id, name, args)
+    //                 : obj.__self[`$agent.${name}`].call(obj, undefined, ...args)
+    //         }
+    //     })
+    // }
+
+    async scan(...args) { return this.$_wrap2.scan({storage: this._storage}, ...args) }
 
     async '$agent.scan'({storage}, opts = {}) {
         return arrayFromAsync(storage.scan(opts))       // TODO: return batches with a hard upper limit on their size
     }
     // async *scan(opts = {}) { yield* this._storage.scan(opts) }
 
-    async erase(...args) { return this.$_wrap.erase({storage: this._storage}, ...args) }
+    async erase(...args) { return this.$_wrap2.erase({storage: this._storage}, ...args) }
 
     async '$agent.erase'({storage}) {
         /* Remove all records from this block. */
@@ -239,7 +254,7 @@ export class DataBlock extends Block {
         return ring
     }
 
-    async select(...args) { return this.$_wrap.select({storage: this._storage}, ...args) }
+    async select(...args) { return this.$_wrap2.select({storage: this._storage}, ...args) }
 
     async '$agent.select'({storage}, id, req) {
         let key = this.encode_id(id)
@@ -250,7 +265,7 @@ export class DataBlock extends Block {
 
     async cmd_insert(...args) {
         let obj = this
-        return this.$_wrap.cmd_insert({
+        return this.$_wrap2.cmd_insert({
             storage: this._storage,
             get autoincrement()  {return obj._autoincrement},
             set autoincrement(a) {obj._autoincrement = a},
@@ -392,7 +407,7 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async cmd_update(...args) { return this.$_wrap.cmd_update({storage: this._storage}, ...args) }
+    async cmd_update(...args) { return this.$_wrap2.cmd_update({storage: this._storage}, ...args) }
 
     async '$agent.cmd_update'({storage}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
@@ -426,7 +441,7 @@ export class DataBlock extends Block {
         return this._save(storage, obj, prev)       // save changes and perform change propagation
     }
 
-    async cmd_upsave(...args) { return this.$_wrap.cmd_upsave({storage: this._storage}, ...args) }
+    async cmd_upsave(...args) { return this.$_wrap2.cmd_upsave({storage: this._storage}, ...args) }
 
     async '$agent.cmd_upsave'({storage}, id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
@@ -454,7 +469,7 @@ export class DataBlock extends Block {
         schemat.register_modification({id, data})
     }
 
-    async cmd_delete(...args) { return this.$_wrap.cmd_delete({storage: this._storage}, ...args) }
+    async cmd_delete(...args) { return this.$_wrap2.cmd_delete({storage: this._storage}, ...args) }
 
     async '$agent.cmd_delete'({storage}, id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
@@ -505,6 +520,9 @@ export class BootDataBlock extends DataBlock {
 
     async __init__() {
         await super.__init__()
+
+        let storage_class = this._detect_storage_class()
+        this._storage = new storage_class(this.filename, this)
         this._autoincrement = await this._reopen(this._storage) || 1
     }
 
