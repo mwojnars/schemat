@@ -260,17 +260,26 @@ export class Node extends Agent {
         return this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message)
     }
 
-    rpc_recv(agent_id, method, args) {
+    async rpc_recv(agent_id, method, args) {
         /* Execute an RPC message that's addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
         // print("rpc_recv():", [agent_id, method, args])
 
         // locate an agent by its `agent_id`, should be running here in this process
-        let frame = schemat.get_frame(agent_id)
+        let frame = schemat.get_frame(agent_id)   //await this._find_frame(agent_id)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
         return frame.call_agent(`$agent.${method}`, JSONx.decode(args))
     }
+
+    // async _find_frame(agent_id, attempts = 3, delay = 200) {
+    //     /* Find an agent by its ID in the current process. Retry `attempts` times with a delay to allow the agent start during bootstrap. */
+    //     for (let i = 0; i < attempts; i++) {
+    //         let frame = schemat.get_frame(agent_id)
+    //         if (frame) return frame
+    //         await sleep(delay)
+    //     }
+    // }
 
 
     /* IPC: vertical communication between master/worker processes */
