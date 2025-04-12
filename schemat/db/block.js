@@ -205,12 +205,6 @@ export class DataBlock extends Block {
         this._reserved = new Set()      // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
     }
 
-    async assert_unique(id, msg) {
-        let key = this.encode_id(id)
-        if (await this._storage.get(key))
-            throw new DataConsistencyError(msg || "record with this ID already exists", {id})
-    }
-
     encode_id(id)  { return this.sequence.encode_id(id) }
     decode_id(key) { return this.sequence.decode_id(key) }
 
@@ -277,7 +271,8 @@ export class DataBlock extends Block {
 
         if (batch) assert(!id)
         else if (id) {
-            await this.assert_unique(id)                // fixed ID provided by the caller? check for uniqueness
+            let key = this.encode_id(id)                // fixed ID provided by the caller? check for uniqueness
+            if (await state.storage.get(key)) throw new DataConsistencyError(`record with this ID already exists`, {id})
             records[0].id = id
         }
 
