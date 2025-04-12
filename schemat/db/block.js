@@ -128,7 +128,7 @@ export class Block extends Agent {
            No forward of the request to another ring.
          */
         await storage.put(key, value)
-        this._flush()
+        this._flush(storage)
     }
 
     async '$agent.del'({storage}, key, value) {
@@ -136,7 +136,7 @@ export class Block extends Agent {
         if (value === undefined) return false           // TODO: notify about data inconsistency (there should be no missing records)
 
         let deleted = storage.del(key)
-        this._flush()
+        this._flush(storage)
         return deleted
     }
 
@@ -145,12 +145,12 @@ export class Block extends Agent {
     async erase() {
         /* Remove all records from this block. */
         await this._storage.erase()
-        return this._flush()
+        return this._flush(this._storage)
     }
 
-    async flush() { return this._flush(false) }
+    async flush() { return this._flush(this._storage, false) }
 
-    _flush(with_delay = true) {
+    _flush(storage, with_delay = true) {
         /* Flush all unsaved modifications to disk. If with_delay=true, the operation is delayed by `flush_delay`
            seconds (configured in the parent sequence) to combine multiple consecutive updates in one write
            - in such case you do NOT want to await the result.
@@ -160,10 +160,10 @@ export class Block extends Agent {
         if (with_delay && delay) {
             if (this.__meta.pending_flush) return
             this.__meta.pending_flush = true
-            return setTimeout(() => this._flush(false), delay * 1000)
+            return setTimeout(() => this._flush(storage, false), delay * 1000)
         }
         this.__meta.pending_flush = false
-        return this._storage.flush()
+        return storage.flush()
     }
 
     // propagate() {
@@ -466,7 +466,7 @@ export class DataBlock extends Block {
         let deleted = storage.del(key)
         if (!deleted) return 0
 
-        this._flush()
+        this._flush(storage)
         await this.propagate_change(key, obj)
 
         // data.set('__status', 'DELETED')
