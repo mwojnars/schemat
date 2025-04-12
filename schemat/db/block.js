@@ -127,10 +127,8 @@ export class Block extends Agent {
         /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
            No forward of the request to another ring.
          */
-        // let value_old = await storage.get(key) || null
         await storage.put(key, value)
         this._flush()
-        // await this.propagate(key, value_old, value)
     }
 
     async '$agent.del'({storage}, key, value) {
@@ -139,8 +137,6 @@ export class Block extends Agent {
 
         let deleted = storage.del(key)
         this._flush()
-        // await this.propagate(key, value)
-
         return deleted
     }
 
