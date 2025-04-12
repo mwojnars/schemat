@@ -142,13 +142,13 @@ export class Block extends Agent {
 
     async *scan(opts = {}) { yield* this._storage.scan(opts) }
 
-    async erase() {
+    async 'erase'({storage = this._storage} = {}) {
         /* Remove all records from this block. */
-        await this._storage.erase()
-        return this._flush(this._storage)
+        await storage.erase()
+        return this._flush(storage)
     }
 
-    async flush() { return this._flush(this._storage, false) }
+    async '$agent.flush'({storage}) { return this._flush(storage, false) }
 
     _flush(storage, with_delay = true) {
         /* Flush all unsaved modifications to disk. If with_delay=true, the operation is delayed by `flush_delay`

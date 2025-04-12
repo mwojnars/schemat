@@ -118,7 +118,7 @@ export class Sequence extends WebObject {
     }
 
     async erase()   { return Promise.all(this.blocks.map(b => b.erase())) }
-    async flush()   { return Promise.all(this.blocks.map(b => b.flush())) }
+    async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 }
 
 
