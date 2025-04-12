@@ -249,7 +249,7 @@ export class DataBlock extends Block {
         let key = this.encode_id(id)
         let data = await storage.get(key)         // JSON string
         if (data) return this._annotate(data)
-        return await this._move_down(id, req).select(id, req)   //FIXME
+        return await this._move_down(id, req).select(id, req)
     }
 
     async cmd_insert(...args) {
@@ -404,7 +404,7 @@ export class DataBlock extends Block {
          */
         let key = this.encode_id(id)
         let data = await storage.get(key)
-        if (data === undefined) return this._move_down(id, req).update(id, edits, req)  //FIXME
+        if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
         let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
         let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev.clone() to avoid repeated async initialization
@@ -420,7 +420,7 @@ export class DataBlock extends Block {
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
         if (this.ring.readonly)                     // can't write the update here in this ring? forward to the first higher ring that's writable
-            return this._move_up(req).upsave(id, obj.__json, req)   //FIXME
+            return this._move_up(req).upsave(id, obj.__json, req)
 
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
@@ -465,7 +465,7 @@ export class DataBlock extends Block {
          */
         let key = this.encode_id(id)
         let data = await storage.get(key)
-        if (data === undefined) return this._move_down(id, req).delete(id, req)     //FIXME
+        if (data === undefined) return this._move_down(id, req).delete(id, req)
 
         if (this.ring.readonly)
             // TODO: find the first writable ring upwards from this one and write a tombstone for `id` there
