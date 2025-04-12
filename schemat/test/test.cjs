@@ -202,10 +202,8 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
             const server_exit = new Promise(resolve => {
                 server.on('exit', () => resolve())
             })
-            // await delay(500)
             server.kill()                           // send SIGTERM to the server
             await server_exit                       // wait for the process to actually exit
-            // await delay(500)
             server.removeAllListeners()
             server = null
         }
