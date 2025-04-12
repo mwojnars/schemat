@@ -97,8 +97,8 @@ export class Record {
         if (binary) {
             this._binary_key = binary.key
             this._string_value = binary.value
-            assert(this._binary_key instanceof Uint8Array, `invalid binary key: ${this._binary_key}`)
-            assert(typeof this._string_value === 'string', `invalid string value: ${this._string_value}`)
+            assert(this._binary_key instanceof Uint8Array, `expected a binary key in record, got ${this._binary_key}`)
+            assert(typeof this._string_value === 'string', `expected a string value in record, got: ${this._string_value}`)
         }
     }
 
