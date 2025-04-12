@@ -122,13 +122,13 @@ export class WebServer extends Agent {
         let host = schemat.config.host || this.host || schemat.node.http_host
         let port = schemat.config.port || this.port || schemat.node.http_port
 
-        let server = app.listen(port, host, () => this._print(`worker ${process.pid} listening at http://${host}:${port}`))
+        let server = app.listen(port, host, schemat.with_context(() => this._print(`listening at http://${host}:${port}`)))
         return {server}
     }
 
     async __stop__({server}) {
         if (server) await new Promise(resolve => server.close(resolve))
-        this._print(`#${schemat.kernel.worker_id} WebServer closed`)
+        this._print(`WebServer closed`)
     }
 
     async _handle(req, res) {
