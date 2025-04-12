@@ -137,6 +137,14 @@ export class KernelProcess {
     async init(opts) {
         print('KernelProcess WORKER_ID:', process.env.WORKER_ID || 0)
 
+        process.on("unhandledRejection", (reason, promise) => {
+            console.error(`\n${this.node?.id}/#${this.worker_id} UNHANDLED PROMISE REJECTION! A promise is created somewhere in the call stack that has NO .catch() handler and is NOT immediately awaited (possibly stored in a variable for future awaiting):`)
+            console.error(reason, '\n')
+        })
+
+        process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
+        process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
+
         // node = schemat.get_loaded(this_node_ID)
         // return node.activate()     // start the life-loop and all worker processes (servers)
 
@@ -145,9 +153,6 @@ export class KernelProcess {
         // let {WebServer} = await schemat.import('/$/local/schemat/server/agent.js')
 
         schemat.set_kernel(this)
-
-        process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
-        process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
         let node_file = opts['node-file']
         let node_id = opts.node || this._read_node_id(node_file)
