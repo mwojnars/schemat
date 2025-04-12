@@ -140,7 +140,11 @@ export class Block extends Agent {
         return deleted
     }
 
-    async scan(opts = {}) { return arrayFromAsync(this._storage.scan(opts)) }   // TODO: return batches with a hard upper limit on their size
+    async scan(...args) { return this.$_wrap.scan({storage: this._storage}, ...args) }
+
+    async '$agent.scan'({storage}, opts = {}) {
+        return arrayFromAsync(storage.scan(opts))       // TODO: return batches with a hard upper limit on their size
+    }
     // async *scan(opts = {}) { yield* this._storage.scan(opts) }
 
     async 'erase'({storage = this._storage} = {}) {
