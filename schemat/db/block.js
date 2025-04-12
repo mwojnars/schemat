@@ -147,7 +147,9 @@ export class Block extends Agent {
     }
     // async *scan(opts = {}) { yield* this._storage.scan(opts) }
 
-    async 'erase'({storage = this._storage} = {}) {
+    async erase(...args) { return this.$_wrap.erase({storage: this._storage}, ...args) }
+
+    async '$agent.erase'({storage}) {
         /* Remove all records from this block. */
         await storage.erase()
         return this._flush(storage)
