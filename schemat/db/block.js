@@ -121,8 +121,7 @@ export class Block extends Agent {
 
     // async get({key})   { return this._storage.get(key) }
 
-    '$agent.put'({storage}, key, value) { return this.put(storage, key, value) }
-    '$agent.del'({storage}, key, value) { return this.del(storage, key, value) }
+    async '$agent.put'({storage}, key, value) { return this.put(storage, key, value) }
 
     async put(storage, key, value) {
         /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
@@ -134,9 +133,9 @@ export class Block extends Agent {
         // await this.propagate(key, value_old, value)
     }
 
-    async del(storage, key, value) {
+    async '$agent.del'({storage}, key, value) {
         if (value === undefined) value = await storage.get(key)
-        if (value === undefined) return false           // TODO: notify about data inconsistency (there should no missing records)
+        if (value === undefined) return false           // TODO: notify about data inconsistency (there should be no missing records)
 
         let deleted = storage.del(key)
         this._flush()
