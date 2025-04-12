@@ -243,22 +243,22 @@ export class DataBlock extends Block {
         return ring
     }
 
+    async select(...args) { return this.$_wrap.select({storage: this._storage}, ...args) }
+
     async '$agent.select'({storage}, id, req) {
         let key = this.encode_id(id)
         let data = await storage.get(key)         // JSON string
         if (data) return this._annotate(data)
-        return await this._move_down(id, req).select(id, req)
+        return await this._move_down(id, req).select(id, req)   //FIXME
     }
 
-    async select(id, req) { return this.$_wrap.select({storage: this._storage}, id, req) }
-
-    async cmd_insert(id, data) {
+    async cmd_insert(...args) {
         let obj = this
         return this.$_wrap.cmd_insert({
             storage: this._storage,
             get autoincrement()  {return obj._autoincrement},
             set autoincrement(a) {obj._autoincrement = a},
-        }, id, data)
+        }, ...args)
     }
 
     async '$agent.cmd_insert'(state, id, data) {
@@ -364,8 +364,8 @@ export class DataBlock extends Block {
         return id
     }
 
-    _assign_id_compact({autoincrement}) {
-        /* Scan this._storage to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
+    _assign_id_compact({storage, autoincrement}) {
+        /* Scan `storage` to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
            This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
         // if all empty slots below _autoincrement were already allocated, use the incremental algorithm
@@ -376,7 +376,7 @@ export class DataBlock extends Block {
             return id
         }
 
-        if (!(this._storage instanceof MemoryStorage))
+        if (!(storage instanceof MemoryStorage))
             throw new Error('compact insert mode is only supported with MemoryStorage')
 
         let [A, B, C] = this.ring.id_insert_zones       // [min_id_exclusive, min_id_forbidden, min_id_sharded]
@@ -386,7 +386,7 @@ export class DataBlock extends Block {
             if (id < C && id >= B) id = C
             if (id >= C) id = this.shard_combined.fix_upwards(id)
             let key = this.encode_id(id)
-            if (!this._reserved.has(id) && !this._storage.get(key)) {       // found an unallocated slot?
+            if (!this._reserved.has(id) && !storage.get(key)) {         // found an unallocated slot?
                 this._reserved.add(id)
                 return id
             }
@@ -395,7 +395,7 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async cmd_update(id, edits, req) { return this.$_wrap.cmd_update({storage: this._storage}, id, edits, req) }
+    async cmd_update(...args) { return this.$_wrap.cmd_update({storage: this._storage}, ...args) }
 
     async '$agent.cmd_update'({storage}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
@@ -404,7 +404,7 @@ export class DataBlock extends Block {
          */
         let key = this.encode_id(id)
         let data = await storage.get(key)
-        if (data === undefined) return this._move_down(id, req).update(id, edits, req)
+        if (data === undefined) return this._move_down(id, req).update(id, edits, req)  //FIXME
 
         let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
         let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev.clone() to avoid repeated async initialization
@@ -420,7 +420,7 @@ export class DataBlock extends Block {
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
         if (this.ring.readonly)                     // can't write the update here in this ring? forward to the first higher ring that's writable
-            return this._move_up(req).upsave(id, obj.__json, req)
+            return this._move_up(req).upsave(id, obj.__json, req)   //FIXME
 
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
@@ -429,18 +429,20 @@ export class DataBlock extends Block {
         return this._save(storage, obj, prev)       // save changes and perform change propagation
     }
 
-    async cmd_upsave(id, data, req) {
+    async cmd_upsave(...args) { return this.$_wrap.cmd_upsave({storage: this._storage}, ...args) }
+
+    async '$agent.cmd_upsave'({storage}, id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
         let key = this.encode_id(id)
-        if (await this._storage.get(key))
+        if (await storage.get(key))
             throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
 
         // // if `id` is already present in this ring, redo the update (apply `edits` again) instead of overwriting
         // // the object with the `data` calculated in a previous ring
-        // if (await this._storage.get(key)) return this.cmd_update(req)
+        // if (await storage.get(key)) return this.cmd_update(req)
 
         let obj = await WebObject.from_data(id, data, {activate: false})
-        return this._save(this._storage, obj)
+        return this._save(storage, obj)
     }
 
     async _save(storage, obj, prev = null) {
@@ -448,14 +450,14 @@ export class DataBlock extends Block {
         let data = obj.__json
         let key = this.encode_id(id)
 
-        await this.put(key, data)
+        await this.put(key, data)   //FIXME
         await this.propagate_change(key, prev, obj)
 
         data = this._annotate(data)
         schemat.register_modification({id, data})
     }
 
-    async cmd_delete(id, req) { return this.$_wrap.cmd_delete({storage: this._storage}, id, req) }
+    async cmd_delete(...args) { return this.$_wrap.cmd_delete({storage: this._storage}, ...args) }
 
     async '$agent.cmd_delete'({storage}, id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
@@ -463,7 +465,7 @@ export class DataBlock extends Block {
          */
         let key = this.encode_id(id)
         let data = await storage.get(key)
-        if (data === undefined) return this._move_down(id, req).delete(id, req)
+        if (data === undefined) return this._move_down(id, req).delete(id, req)     //FIXME
 
         if (this.ring.readonly)
             // TODO: find the first writable ring upwards from this one and write a tombstone for `id` there
