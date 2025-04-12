@@ -28,7 +28,7 @@ export class Mailbox {
        The details of the channel are implemented in subclasses by overriding the `_listen()` and `_send()` methods.
      */
 
-    constructor(callback, timeout = null) { //10000) {
+    constructor(callback, timeout = 5000) {
         this.callback = callback        // processing function for incoming messages
         this.counter = 0                // no. of requests sent so far
         this.pending = new Map()        // requests sent awaiting a response
@@ -41,16 +41,14 @@ export class Mailbox {
     async send(msg) {
         /* Send `msg` to the peer and wait for the response. */
         return new Promise((resolve, reject) => {
-            const id = ++this.counter
+            let id = ++this.counter
+            if (id >= Number.MAX_SAFE_INTEGER) id = 1
+
             this.pending.set(id, resolve)
             this._send([id, msg])
 
-            if (this.timeout) {           // add timeout for safety
-                this.timestamps.set(id, {
-                    timestamp: Date.now(),
-                    reject: reject
-                })
-            }
+            if (this.timeout)           // add timeout for safety
+                this.timestamps.set(id, {timestamp: Date.now(), reject, msg})
         })
     }
 
@@ -61,11 +59,11 @@ export class Mailbox {
 
     _check_timeouts() {
         const now = Date.now()
-        for (const [id, {timestamp, reject}] of this.timestamps.entries()) {
+        for (const [id, {timestamp, reject, msg}] of this.timestamps.entries()) {
             if (now - timestamp > this.timeout) {
                 this.timestamps.delete(id)
                 this.pending.delete(id)
-                reject(new Error(`timeout for request ${id}`))
+                reject(new Error(`timeout for request #${id}, msg = ${JSON.stringify(msg)}`))
             }
         }
     }
@@ -273,11 +271,12 @@ export class Node extends Agent {
         return frame.call_agent(`$agent.${method}`, JSONx.decode(args))
     }
 
-    async _find_frame(agent_id, attempts = 10, delay = 200) {
+    async _find_frame(agent_id, attempts = 10, delay = 100) {
         /* Find an agent by its ID in the current process. Retry `attempts` times with a delay to allow the agent start during bootstrap. */
         for (let i = 0; i < attempts; i++) {
             let frame = schemat.get_frame(agent_id)
             if (frame) return frame
+            this._print(`_find_frame(): retry needed for agent_id=${agent_id}`)
             await sleep(delay)
         }
     }
