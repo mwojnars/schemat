@@ -157,6 +157,9 @@ export class Node extends Agent {
         await Promise.all(this.agents_installed.map(agent => agent.load()))
     }
 
+
+    /* This node as agent (on master only!) */
+
     async __start__() {
         /* On master only. */
         let tcp_sender = new TCP_Sender()
@@ -178,9 +181,6 @@ export class Node extends Agent {
         await tcp_receiver.stop()
         await tcp_sender.stop()
     }
-
-
-    /* Agents */
 
     _place_agents() {
         /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
@@ -209,7 +209,7 @@ export class Node extends Agent {
         schemat.kernel.set_agents_running(plan[0])
         for (let i = 1; i <= N; i++) {
             let worker = schemat.kernel.get_worker(i)
-            worker.mailbox.notify(['SYS', 'sys_agents_running', [plan[i]]])
+            worker.mailbox.notify(['SYS', 'AGENTS_RUNNING', [plan[i]]])
         }
 
         // convert the plan to a Map<agent ID, array of process IDs>
@@ -223,7 +223,8 @@ export class Node extends Agent {
         return locations
     }
 
-    sys_agents_running(agents) { schemat.kernel.set_agents_running(agents) }
+
+    /* Agent routing */
 
     async find_node(agent_id, role) {
         // if agent is deployed on one of local processes, return this node
@@ -362,6 +363,14 @@ export class Node extends Agent {
             return this.rpc_recv(...msg)                            // process the message here in the master process
         }
         else throw new Error(`unknown node-to-node message type: ${type}`)
+    }
+
+
+    /* SYS: control signals between master <> worker processes */
+
+    AGENTS_RUNNING(agents) {
+        /* Set the list of agents that should be running now on this process. Received from master. */
+        schemat.kernel.set_agents_running(agents)
     }
 
 
