@@ -271,12 +271,12 @@ export class Node extends Agent {
         return frame.call_agent(`$agent.${method}`, JSONx.decode(args))
     }
 
-    async _find_frame(agent_id, attempts = 10, delay = 100) {
+    async _find_frame(agent_id, attempts = 5, delay = 0.2) {
         /* Find an agent by its ID in the current process. Retry `attempts` times with a delay to allow the agent start during bootstrap. */
         for (let i = 0; i < attempts; i++) {
             let frame = schemat.get_frame(agent_id)
             if (frame) return frame
-            this._print(`_find_frame(): retry needed for agent_id=${agent_id}`)
+            this._print(`_find_frame(): retrying agent_id=${agent_id}`)
             await sleep(delay)
         }
     }
