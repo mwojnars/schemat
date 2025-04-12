@@ -1,4 +1,4 @@
-import {assert, print, T, zip, amap, sleep, utc, joinPath} from '../common/utils.js'
+import {assert, print, T, zip, amap, sleep, utc, joinPath, arrayFromAsync} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard} from "../common/structs.js";
 import {WebObject} from '../core/object.js'
@@ -140,7 +140,8 @@ export class Block extends Agent {
         return deleted
     }
 
-    async *scan(opts = {}) { yield* this._storage.scan(opts) }
+    async scan(opts = {}) { return arrayFromAsync(this._storage.scan(opts)) }   // TODO: return batches with a hard upper limit on their size
+    // async *scan(opts = {}) { yield* this._storage.scan(opts) }
 
     async 'erase'({storage = this._storage} = {}) {
         /* Remove all records from this block. */
