@@ -63,7 +63,7 @@ export class Mailbox {
             if (now - timestamp > this.timeout) {
                 this.timestamps.delete(id)
                 this.pending.delete(id)
-                reject(new Error(`timeout for request #${id}, msg = ${JSON.stringify(msg)}`))
+                reject(new Error(`response timeout for message no. ${id}, msg = ${JSON.stringify(msg)}`))
             }
         }
     }
