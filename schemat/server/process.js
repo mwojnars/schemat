@@ -179,8 +179,10 @@ export class KernelProcess {
         let node = await this.node.reload()
         let delay = node.agent_refresh_interval
 
-        if (cluster.isPrimary) print(`\nReceived kill signal, shutting down gracefully in approx. ${delay} seconds...`)
-        setTimeout(() => process.exit(1), 2 * delay * 1000)
+        if (cluster.isPrimary) this._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
+
+        let timeout = 2 * delay         // exceeding this timeout may indicate a deadlock in one of child processes
+        setTimeout(() => {throw new Error(`exceeded timeout of ${timeout} seconds for shutting down`)}, timeout * 1000)
 
         if (cluster.isPrimary)
             await Promise.all(this.workers.map(worker => new Promise((resolve, reject) => {
