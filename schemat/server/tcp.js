@@ -3,6 +3,12 @@ import {assert, print} from '../common/utils.js';
 let net = await server_import('node:net')
 
 
+function _json(msg) {
+    if (typeof msg === 'string') return msg
+    if (msg === undefined) return ''
+    return JSON.stringify(msg)
+}
+
 /**********************************************************************************************************************/
 
 class ChunkParser {
@@ -145,7 +151,7 @@ export class TCP_Sender {
 
         let response_parser = new BinaryParser(({id, msg}) => {
             try {
-                schemat.node._print(`TCP client response ${id} recv:`, typeof msg === 'string' ? msg : JSON.stringify(msg))
+                schemat.node._print(`TCP client response ${id} recv:`, _json(msg))
                 let entry = this.pending.get(id)
                 if (entry) {
                     entry.resolve(msg)
@@ -178,18 +184,15 @@ export class TCP_Receiver {
             let processed_offset = 0
             let msg_parser = new BinaryParser(async ({id, msg}) => {
                 try {
-                    schemat.node._print(`TCP server message  ${id} recv:`, typeof msg === 'string' ? msg : JSON.stringify(msg))
-
+                    schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
                     let result
                     if (id > processed_offset) {
                         processed_offset = id
                         result = this._handle_message(msg)
                         if (result instanceof Promise) result = await result
                     }
-
-                    let response = (result !== undefined) ? JSON.stringify(result) : ''
-                    socket.write(BinaryParser.create_message(id, response))
-                    schemat.node._print(`TCP server response ${id} sent:`, response)
+                    socket.write(BinaryParser.create_message(id, result))
+                    schemat.node._print(`TCP server response ${id} sent:`, _json(result))
 
                 } catch (e) { throw e }
                 // } catch (e) { console.error('Error while processing TCP message:', e) }
