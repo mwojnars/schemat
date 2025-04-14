@@ -379,6 +379,10 @@ export class Node extends Agent {
         schemat.kernel.set_agents_running(agents)
     }
 
+    // START_AGENT()
+    // STOP_AGENT()
+    // CACHE_RECORD() / REGISTER_RECORD()
+
 
     /*************/
 
