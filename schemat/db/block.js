@@ -1,4 +1,4 @@
-import {assert, print, T, zip, amap, sleep, utc, joinPath, arrayFromAsync} from '../common/utils.js'
+import {assert, print, T, zip, amap, sleep, utc, joinPath, arrayFromAsync, isPromise} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard} from "../common/structs.js";
 import {WebObject} from '../core/object.js'
@@ -73,6 +73,8 @@ export class Block extends Agent {
         //     this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block (!);
         //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
 
+        this._storage = null
+
         let storage_class = this._detect_storage_class()
         this._storage = new storage_class(this.filename, this)
 
@@ -145,12 +147,10 @@ export class Block extends Agent {
     // get $_wrap2() {
     //     // temporary redefinition that behaves like $agent
     //     let id = this.id
-    //     let obj = this
     //     // assert(id)
     //     return new Proxy({}, {
     //         get(target, name) {
-    //             if (typeof name === 'string') return (fake_state, ...args) => (id && schemat.node) ? schemat.node.rpc_send(id, name, args)
-    //                 : obj.__self[`$agent.${name}`].call(obj, undefined, ...args)
+    //             if (typeof name === 'string') return (fake_state, ...args) => schemat.node.rpc_send(id, name, args)
     //         }
     //     })
     // }
@@ -234,6 +234,7 @@ export class DataBlock extends Block {
 
     _move_down(id, req) {
         /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring. */
+        // this._print(`_move_down() id=${id}`)
         let ring = this.ring
         assert(ring.is_loaded())
         let base = ring.base_ring
@@ -255,6 +256,7 @@ export class DataBlock extends Block {
     }
 
     async select(...args) { return this.$_wrap2.select({storage: this._storage}, ...args) }
+    // async select(...args) { return this.$agent.select(...args) }
 
     async '$agent.select'({storage}, id, req) {
         let key = this.encode_id(id)
@@ -274,6 +276,7 @@ export class DataBlock extends Block {
 
     async '$agent.cmd_insert'(state, id, data) {
         /* `data` can be an array if multiple objects are to be inserted. */
+        // this._print(`$agent.cmd_insert() id=${id}`)
 
         let ring = this.ring
         assert(ring?.is_loaded())
