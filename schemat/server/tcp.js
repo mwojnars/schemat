@@ -38,7 +38,7 @@ class ChunkParser {
 }
 
 class BinaryParser {
-    /* Binary message parser that handles messages in format [msg_id, content_length, json_flag, content_binary]. */
+    /* Parser of binary messages in format [msg_id, content_length, json_flag, content_binary]. */
     constructor(callback) {
         this.buffer = Buffer.alloc(0)
         this.callback = callback    // can be async, but the returned promise is not awaited
@@ -48,15 +48,17 @@ class BinaryParser {
 
     static create_message(msg_id, msg) {
         /* Create a binary message in format [msg_id, content_length, json_flag, content_binary]. */
-        let json_flag = typeof msg !== 'string'
-        let content = Buffer.from(json_flag ? JSON.stringify(msg) : msg)
+        let is_json = typeof msg !== 'string'
+        let content = Buffer.from(is_json ? JSON.stringify(msg) : msg)
         if (content.length > 0xFFFFFFFF) throw new Error(`content length is too large (${content.length})`)
         if (msg_id > 0xFFFFFFFF) throw new Error(`msg_id is too large (${msg_id})`)
 
         let buffer = Buffer.alloc(9 + content.length)
+        let json_flag = is_json ? 'J'.charCodeAt(0) : ' '.charCodeAt(0)
+
         buffer.writeUInt32BE(msg_id, 0)         // write msg_id
         buffer.writeUInt32BE(content.length, 4) // write content_length
-        buffer.writeUInt8(json_flag ? 1 : 0, 8) // write json_flag
+        buffer.writeUInt8(json_flag, 8)         // write json_flag ('J' or space)
         content.copy(buffer, 9)                 // copy content
         return buffer
     }
@@ -74,9 +76,9 @@ class BinaryParser {
             
             // check if we have complete message
             if (this.buffer.length >= 9 + this.expected_length) {
-                let json_flag = this.buffer.readUInt8(8) === 1
+                let is_json = this.buffer.readUInt8(8) === 'J'.charCodeAt(0)
                 let content = this.buffer.slice(9, 9 + this.expected_length)
-                let decoded_content = json_flag ? JSON.parse(content.toString()) : content.toString()
+                let decoded_content = is_json ? JSON.parse(content.toString()) : content.toString()
                 this.callback({id: this.current_id, content: decoded_content})
                 
                 // remove processed message from buffer
