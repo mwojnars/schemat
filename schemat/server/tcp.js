@@ -115,11 +115,12 @@ export class TCP_Sender {
         return new Promise((resolve, reject) => {
             let socket = this.sockets.get(address) || this._connect(address)
             let id = this.message_id++
-            let json = JSON.stringify({id, msg}) + '\n'     // '\n' is a delimiter for ChunkParser
+            let json = JSON.stringify(msg)
+            let message = BinaryParser.create_message(id, json)
 
-            this.pending.set(id, {message: json, retries: 0, address, resolve, reject})
-            socket.write(json)
-            schemat.node._print(`TCP message sent:`, json.trim())
+            this.pending.set(id, {message, retries: 0, address, resolve, reject})
+            socket.write(message)
+            schemat.node._print(`TCP client message  ${id} sent:`, json)
         })
     }
 
@@ -129,17 +130,18 @@ export class TCP_Sender {
         let socket = net.createConnection({host, port})
         socket.setNoDelay(false)
 
-        let response_parser = new ChunkParser(msg => {
+        let response_parser = new BinaryParser(({id, content}) => {
             try {
-                schemat.node._print(`TCP response rcv:`, msg)
-                let {id, result} = JSON.parse(msg)
+                let json = content.toString()
+                let result = json ? JSON.parse(json) : undefined
+                schemat.node._print(`TCP client response ${id} recv:`, json)
                 let entry = this.pending.get(id)
                 if (entry) {
                     entry.resolve(result)
                     this.pending.delete(id)
                 } else console.warn('Response received for unknown request:', id)
             }
-            catch (e) { console.error('Invalid response:', msg) }
+            catch (e) { console.error('Invalid response:', e) }
         })
 
         socket.on('data', data => response_parser.feed(data))
@@ -163,17 +165,23 @@ export class TCP_Receiver {
         this.server = net.createServer(socket => {
             // per-connection state
             let processed_offset = 0
-            let msg_parser = new ChunkParser(async json => {
+            let msg_parser = new BinaryParser(async ({id, content}) => {
                 try {
-                    // print(`${schemat.node.id} TCP message received:`, json)
-                    let {id, msg} = JSON.parse(json)
+                    let json = content.toString()
+                    let msg = JSON.parse(json)
+                    schemat.node._print(`TCP server message  ${id} recv:`, json)
+
                     let result
                     if (id > processed_offset) {
                         processed_offset = id
                         result = this._handle_message(msg)
                         if (result instanceof Promise) result = await result
                     }
-                    this._respond(socket, id, result)
+
+                    let response = (result !== undefined) ? JSON.stringify(result) : ''
+                    socket.write(BinaryParser.create_message(id, response))
+                    schemat.node._print(`TCP server response ${id} sent: `, response)
+
                 } catch (e) { throw e }
                 // } catch (e) { console.error('Error while processing TCP message:', e) }
             })
@@ -192,12 +200,6 @@ export class TCP_Receiver {
 
     _handle_message(message) {
         return schemat.node.tcp_recv(message)
-    }
-
-    _respond(socket, id, result) {
-        let resp = {id}
-        if (result !== undefined) resp.result = result
-        socket.write(JSON.stringify(resp) + '\n')           // '\n' is a delimiter for ChunkParser
     }
 }
 
