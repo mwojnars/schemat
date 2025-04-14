@@ -1,5 +1,4 @@
 import {assert, print} from '../common/utils.js';
-import {JSONx} from '../common/jsonx.js';
 
 let net = await server_import('node:net')
 
@@ -68,7 +67,7 @@ export class TCP_Sender {
         return new Promise((resolve, reject) => {
             let socket = this.sockets.get(address) || this._connect(address)
             let id = this.message_id++
-            let json = JSON.stringify({id, msg}) + '\n'
+            let json = JSON.stringify({id, msg}) + '\n'     // '\n' is needed for proper parsing in ChunkParser
 
             this.pending.set(id, {message: json, retries: 0, address, resolve, reject})
             socket.write(json)
@@ -85,7 +84,7 @@ export class TCP_Sender {
         let ack_parser = new ChunkParser(msg => {
             try {
                 schemat.node._print(`TCP response rcv:`, msg)
-                let {id, result} = JSONx.parse(msg)
+                let {id, result} = JSON.parse(msg)
                 let entry = this.pending.get(id)
                 if (entry) {
                     entry.resolve(result)
@@ -150,7 +149,7 @@ export class TCP_Receiver {
     _respond(socket, id, result) {
         let resp = {id}
         if (result !== undefined) resp.result = result
-        socket.write(JSONx.stringify(resp) + '\n')          // '\n' is necessary for proper parsing in ChunkParser
+        socket.write(JSON.stringify(resp) + '\n')           // '\n' is needed for proper parsing in ChunkParser
     }
 }
 
