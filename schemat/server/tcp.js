@@ -48,6 +48,9 @@ class BinaryParser {
     static create_message(msg_id, msg) {
         /* Create a binary message in format [msg_id, content_length, content_binary]. */
         let content = Buffer.from(msg)
+        if (content.length > 0xFFFFFFFF) throw new Error(`content length is too large (${content.length})`)
+        if (msg_id > 0xFFFFFFFF) throw new Error(`msg_id is too large (${msg_id})`)
+
         let buffer = Buffer.alloc(8 + content.length)
         buffer.writeUInt32BE(msg_id, 0)         // write msg_id
         buffer.writeUInt32BE(content.length, 4) // write content_length
