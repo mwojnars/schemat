@@ -38,7 +38,7 @@ class ChunkParser {
 }
 
 class BinaryParser {
-    /* Binary message parser that handles messages in format [msg_id, content_length, content_binary]. */
+    /* Binary message parser that handles messages in format [msg_id, content_length, json_flag, content_binary]. */
     constructor(callback) {
         this.buffer = Buffer.alloc(0)
         this.callback = callback    // can be async, but the returned promise is not awaited
@@ -47,15 +47,17 @@ class BinaryParser {
     }
 
     static create_message(msg_id, msg) {
-        /* Create a binary message in format [msg_id, content_length, content_binary]. */
-        let content = Buffer.from(msg)
+        /* Create a binary message in format [msg_id, content_length, json_flag, content_binary]. */
+        let json_flag = typeof msg !== 'string'
+        let content = Buffer.from(json_flag ? JSON.stringify(msg) : msg)
         if (content.length > 0xFFFFFFFF) throw new Error(`content length is too large (${content.length})`)
         if (msg_id > 0xFFFFFFFF) throw new Error(`msg_id is too large (${msg_id})`)
 
-        let buffer = Buffer.alloc(8 + content.length)
+        let buffer = Buffer.alloc(9 + content.length)
         buffer.writeUInt32BE(msg_id, 0)         // write msg_id
         buffer.writeUInt32BE(content.length, 4) // write content_length
-        content.copy(buffer, 8)                 // copy content
+        buffer.writeUInt8(json_flag ? 1 : 0, 8) // write json_flag
+        content.copy(buffer, 9)                 // copy content
         return buffer
     }
 
@@ -63,7 +65,7 @@ class BinaryParser {
         /* Append new data to existing buffer. */
         this.buffer = Buffer.concat([this.buffer, data])
         
-        while (this.buffer.length >= 8) {  // minimum size for msg_id (4 bytes) + content_length (4 bytes)
+        while (this.buffer.length >= 9) {  // minimum size for msg_id (4 bytes) + content_length (4 bytes) + json_flag (1 byte)
             if (this.expected_length === 0) {
                 // start parsing new message
                 this.current_id = this.buffer.readUInt32BE(0)
@@ -71,12 +73,14 @@ class BinaryParser {
             }
             
             // check if we have complete message
-            if (this.buffer.length >= 8 + this.expected_length) {
-                let content = this.buffer.slice(8, 8 + this.expected_length)
-                this.callback({id: this.current_id, content})
+            if (this.buffer.length >= 9 + this.expected_length) {
+                let json_flag = this.buffer.readUInt8(8) === 1
+                let content = this.buffer.slice(9, 9 + this.expected_length)
+                let decoded_content = json_flag ? JSON.parse(content.toString()) : content.toString()
+                this.callback({id: this.current_id, content: decoded_content})
                 
                 // remove processed message from buffer
-                this.buffer = this.buffer.slice(8 + this.expected_length)
+                this.buffer = this.buffer.slice(9 + this.expected_length)
                 this.expected_length = 0
                 this.current_id = 0
             } 
@@ -183,7 +187,7 @@ export class TCP_Receiver {
 
                     let response = (result !== undefined) ? JSON.stringify(result) : ''
                     socket.write(BinaryParser.create_message(id, response))
-                    schemat.node._print(`TCP server response ${id} sent: `, response)
+                    schemat.node._print(`TCP server response ${id} sent:`, response)
 
                 } catch (e) { throw e }
                 // } catch (e) { console.error('Error while processing TCP message:', e) }
