@@ -33,8 +33,8 @@ export class Mailbox {
 
     constructor(callback, timeout = 5000) {
         this.callback = callback        // processing function for incoming messages
-        this.counter = 0                // no. of requests sent so far
         this.pending = new Map()        // requests sent awaiting a response
+        this.message_id = 0             // last message ID sent
 
         this.timeout = timeout          // timeout for waiting for a response
         this.timestamps = new Map()     // timestamps for pending requests
@@ -44,8 +44,8 @@ export class Mailbox {
     async send(msg) {
         /* Send `msg` to the peer and wait for the response. */
         return new Promise((resolve, reject) => {
-            let id = ++this.counter
-            if (id >= Number.MAX_SAFE_INTEGER) id = 1
+            let id = ++this.message_id
+            if (this.message_id >= Number.MAX_SAFE_INTEGER) this.message_id = 0
 
             this.pending.set(id, resolve)
             this._send([id, msg])

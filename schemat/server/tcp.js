@@ -6,8 +6,9 @@ let net = await server_import('node:net')
 /**********************************************************************************************************************/
 
 class ChunkParser {
-    // Generic chunk reassembly handler using newline delimiter
-    // Handles UTF-8 encoding properly when chunks might split across character boundaries
+    /* Generic message reassembly from chunks based on newline delimiter.
+       Handles UTF-8 encoding properly when chunks might split across character boundaries.
+     */
     constructor(callback) {
         this.buffer = Buffer.alloc(0)
         this.callback = callback    // can be async, but the returned promise is not awaited
@@ -91,9 +92,9 @@ export class TCP_Sender {
        for WRITE messages, process acknowledgements and resend un-acknowledged messages. */
 
     async start(retry_interval) {
-        this.sockets = new Map()         // Map<address, net.Socket>
-        this.pending = new Map()         // Map<id, {message, retries, address, resolve, reject}>
-        this.message_id = 1
+        this.sockets = new Map()        // Map<address, net.Socket>
+        this.pending = new Map()        // Map<id, {message, retries, address, resolve, reject}>
+        this.message_id = 0             // last message ID sent
 
         this.retry_timer = setInterval(() => {
             for (let [id, entry] of this.pending) {
@@ -114,7 +115,9 @@ export class TCP_Sender {
         /* `msg` is a plain object/array whose elements have to be JSONx-encoded already if needed. */
         return new Promise((resolve, reject) => {
             let socket = this.sockets.get(address) || this._connect(address)
-            let id = this.message_id++
+            let id = ++this.message_id
+            if (this.message_id >= 0xFFFFFFFF) this.message_id = 0      // check for 4-byte overflow
+            
             let json = JSON.stringify(msg)
             let message = BinaryParser.create_message(id, json)
 
