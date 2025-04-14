@@ -55,6 +55,9 @@ export class JSONx {
     static decode(state)    { return new JSONx().decode(state) }
     static deepcopy(obj)    { return JSONx.parse(JSONx.stringify(obj)) }
 
+    static encode_checked(obj)      { if (obj !== undefined) return new JSONx().encode(obj) }       // undefined is valid, encoded as undefined
+    static decode_checked(state)    { if (state !== undefined) return new JSONx().decode(state) }   // undefined is valid, decoded as undefined
+
     // static transform(json, transform) {
     //     /* Parse and decode a JSONx-encoded object, then encode and stringify it again while applying
     //        the `transform` function to all its (sub)objects. */
