@@ -254,11 +254,11 @@ export class Node extends Agent {
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
         let frame = schemat.get_frame(agent_id)
-        if (frame) return JSONx.decode(await this.rpc_recv(...msg))
+        if (frame) return JSONx.decode_checked(await this.rpc_recv(...msg))
 
         // print("rpc_send():", JSON.stringify(msg))
 
-        return JSONx.decode(this.is_master() ? await this.ipc_master(message) : await schemat.kernel.mailbox.send(message))
+        return JSONx.decode_checked(this.is_master() ? await this.ipc_master(message) : await schemat.kernel.mailbox.send(message))
     }
 
     async rpc_recv(agent_id, method, args) {
@@ -270,7 +270,7 @@ export class Node extends Agent {
         // locate an agent by its `agent_id`, should be running here in this process
         let frame = await this._find_frame(agent_id)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
-        return JSONx.encode(await frame.call_agent(`$agent.${method}`, JSONx.decode(args)))
+        return JSONx.encode_checked(await frame.call_agent(`$agent.${method}`, JSONx.decode(args)))
     }
 
     async _find_frame(agent_id, attempts = 5, delay = 0.2) {
