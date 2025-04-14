@@ -51,12 +51,12 @@ export class JSONx {
         return this.decode(state)
     }
 
-    static encode(obj)      { return new JSONx().encode(obj) }
-    static decode(state)    { return new JSONx().decode(state) }
+    static encode(obj)      { return jsonx.encode(obj) }
+    static decode(state)    { return jsonx.decode(state) }
     static deepcopy(obj)    { return JSONx.parse(JSONx.stringify(obj)) }
 
-    static encode_checked(obj)      { if (obj !== undefined) return new JSONx().encode(obj) }       // undefined is valid, encoded as undefined
-    static decode_checked(state)    { if (state !== undefined) return new JSONx().decode(state) }   // undefined is valid, decoded as undefined
+    static encode_checked(obj)      { if (obj !== undefined) return jsonx.encode(obj) }         // undefined is a valid value (encoded as undefined)
+    static decode_checked(state)    { if (state !== undefined) return jsonx.decode(state) }     // undefined is a valid value (decoded as undefined)
 
     // static transform(json, transform) {
     //     /* Parse and decode a JSONx-encoded object, then encode and stringify it again while applying
@@ -238,3 +238,6 @@ export class JSONx {
         return mapEntries(state, (k, v) => [k, this.decode(v)])
     }
 }
+
+
+const jsonx = new JSONx()
