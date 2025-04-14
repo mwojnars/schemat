@@ -145,15 +145,10 @@ export class TCP_Sender {
 
         let response_parser = new BinaryParser(({id, msg}) => {
             try {
-                // let json = msg.toString()
-                // let result = json ? JSON.parse(json) : undefined
-                let result = msg
-                let json = (typeof result === 'string') ? result : JSON.stringify(result)
-
-                schemat.node._print(`TCP client response ${id} recv:`, json)
+                schemat.node._print(`TCP client response ${id} recv:`, typeof msg === 'string' ? msg : JSON.stringify(msg))
                 let entry = this.pending.get(id)
                 if (entry) {
-                    entry.resolve(result)
+                    entry.resolve(msg)
                     this.pending.delete(id)
                 } else console.warn('Response received for unknown request:', id)
             }
@@ -183,16 +178,12 @@ export class TCP_Receiver {
             let processed_offset = 0
             let msg_parser = new BinaryParser(async ({id, msg}) => {
                 try {
-                    // let json = msg.toString()
-                    // let message = JSON.parse(json)
-                    let message = msg
-                    let json = (typeof message === 'string') ? message : JSON.stringify(message)
-                    schemat.node._print(`TCP server message  ${id} recv:`, json)
+                    schemat.node._print(`TCP server message  ${id} recv:`, typeof msg === 'string' ? msg : JSON.stringify(msg))
 
                     let result
                     if (id > processed_offset) {
                         processed_offset = id
-                        result = this._handle_message(message)
+                        result = this._handle_message(msg)
                         if (result instanceof Promise) result = await result
                     }
 
