@@ -241,7 +241,7 @@ export class Node extends Agent {
 
     /* RPC calls to other processes or nodes */
 
-    rpc_send(agent_id, method, args) {
+    async rpc_send(agent_id, method, args) {
         /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node
            and then to the `agent_id` object (agent) where it should invoke its '$agent.<method>'(...args).
            Return a response from the remote target.
@@ -254,21 +254,23 @@ export class Node extends Agent {
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
         let frame = schemat.get_frame(agent_id)
-        if (frame) return this.rpc_recv(...msg)
+        if (frame) return JSONx.decode(await this.rpc_recv(...msg))
 
-        return this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message)
+        // print("rpc_send():", JSON.stringify(msg))
+
+        return JSONx.decode(this.is_master() ? await this.ipc_master(message) : await schemat.kernel.mailbox.send(message))
     }
 
     async rpc_recv(agent_id, method, args) {
         /* Execute an RPC message that's addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        // print("rpc_recv():", [agent_id, method, args])
+        // print("rpc_recv():", JSON.stringify([agent_id, method, args]))
 
         // locate an agent by its `agent_id`, should be running here in this process
         let frame = await this._find_frame(agent_id)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
-        return frame.call_agent(`$agent.${method}`, JSONx.decode(args))
+        return JSONx.encode(await frame.call_agent(`$agent.${method}`, JSONx.decode(args)))
     }
 
     async _find_frame(agent_id, attempts = 5, delay = 0.2) {
@@ -326,6 +328,7 @@ export class Node extends Agent {
 
     async tcp_send(node, msg) {
         /* On master process, send a message to another node via TCP. */
+        // print("tcp_send():", JSON.stringify(msg))
         assert(this.is_master())
         if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
         return this.$local.tcp_sender.send(msg, node.tcp_address)
@@ -335,6 +338,7 @@ export class Node extends Agent {
         /* On master process, handle a message received via TCP from another node or directly from this node via a shortcut.
            `msg` is a plain object/array whose elements may still need to be JSONx-decoded.
          */
+        // print("tcp_recv():", JSON.stringify([type, ...msg]))
         assert(this.is_master())
         // this._print(`tcp_recv():`, JSON.stringify(msg))
 
