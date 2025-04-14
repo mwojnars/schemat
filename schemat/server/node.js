@@ -76,10 +76,10 @@ export class Mailbox {
         }
     }
 
-    _handle_response([id, response]) {
+    _handle_response([id, result]) {
         id = -id
         if (this.pending.has(id)) {
-            this.pending.get(id)(response)      // resolve the promise with the response
+            this.pending.get(id)(result)        // resolve the promise with the returned result (can be undefined)
             this.pending.delete(id)
             this.timestamps.delete(id)
         }
@@ -89,12 +89,14 @@ export class Mailbox {
     async _handle_message([id, msg]) {
         if (id < 0) return this._handle_response([id, msg])     // received a response from the peer
 
-        let response = this.callback(msg)                       // received a message: run the callback
+        let result = this.callback(msg)                         // received a message: run the callback, send back the result
         if (id === 0) return
 
         // send response to the peer, negative ID indicates this is a response not a message
-        if (response instanceof Promise) response = await response
-        return this._send([-id, response])
+        if (result instanceof Promise) result = await result
+        let response = (result === undefined) ? [-id] : [-id, result]   // this check is needed so undefined is not replaced with null during IPC
+
+        return this._send(response)
     }
 
     _listen()       { throw new Error('not implemented') }
