@@ -36,6 +36,60 @@ class ChunkParser {
     }
 }
 
+class BinaryParser {
+    // Binary message parser that handles messages in format [msg_id, content_length, content_binary]
+    constructor(callback) {
+        this.buffer = Buffer.alloc(0)
+        this.callback = callback    // can be async, but the returned promise is not awaited
+        this.expected_length = 0    // length of current message being parsed
+        this.current_id = 0         // id of current message being parsed
+    }
+
+    static create_message(msg_id, msg) {
+        // create a binary message in format [msg_id, content_length, content_binary]
+        let content = Buffer.from(msg)
+        let buffer = Buffer.alloc(8 + content.length)
+        buffer.writeUInt32BE(msg_id, 0)         // write msg_id
+        buffer.writeUInt32BE(content.length, 4) // write content_length
+        content.copy(buffer, 8)                 // copy content
+        return buffer
+    }
+
+    feed(data) {
+        // append new data to existing buffer
+        this.buffer = Buffer.concat([this.buffer, data])
+        
+        while (this.buffer.length >= 8) {  // minimum size for msg_id (4 bytes) + content_length (4 bytes)
+            if (this.expected_length === 0) {
+                // start parsing new message
+                this.current_id = this.buffer.readUInt32BE(0)
+                this.expected_length = this.buffer.readUInt32BE(4)
+                
+                if (this.expected_length === 0) {
+                    // empty message, just callback with id
+                    this.callback({id: this.current_id, content: Buffer.alloc(0)})
+                    this.buffer = this.buffer.slice(8)
+                    continue
+                }
+            }
+            
+            // check if we have complete message
+            if (this.buffer.length >= 8 + this.expected_length) {
+                let content = this.buffer.slice(8, 8 + this.expected_length)
+                this.callback({id: this.current_id, content})
+                
+                // remove processed message from buffer
+                this.buffer = this.buffer.slice(8 + this.expected_length)
+                this.expected_length = 0
+                this.current_id = 0
+            } else {
+                // incomplete message, wait for more data
+                break
+            }
+        }
+    }
+}
+
 /**********************************************************************************************************************/
 
 export class TCP_Sender {
