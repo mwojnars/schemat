@@ -67,7 +67,7 @@ export class TCP_Sender {
         return new Promise((resolve, reject) => {
             let socket = this.sockets.get(address) || this._connect(address)
             let id = this.message_id++
-            let json = JSON.stringify({id, msg}) + '\n'     // '\n' is needed for proper parsing in ChunkParser
+            let json = JSON.stringify({id, msg}) + '\n'     // '\n' is a delimiter for ChunkParser
 
             this.pending.set(id, {message: json, retries: 0, address, resolve, reject})
             socket.write(json)
@@ -149,7 +149,7 @@ export class TCP_Receiver {
     _respond(socket, id, result) {
         let resp = {id}
         if (result !== undefined) resp.result = result
-        socket.write(JSON.stringify(resp) + '\n')           // '\n' is needed for proper parsing in ChunkParser
+        socket.write(JSON.stringify(resp) + '\n')           // '\n' is a delimiter for ChunkParser
     }
 }
 
