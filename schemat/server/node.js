@@ -246,7 +246,8 @@ export class Node extends Agent {
     async rpc_send(agent_id, method, args) {
         /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node
            and then to the `agent_id` object (agent) where it should invoke its '$agent.<method>'(...args).
-           Return a response from the remote target.
+           Return a response from the remote target. RPC methods on sender/receiver automatically JSONx-encode/decode
+           the arguments and the result of the function.
          */
         let msg = [agent_id, method, JSONx.encode(args)]
         let message = ['RPC', ...msg]       // , schemat.tx
@@ -289,7 +290,10 @@ export class Node extends Agent {
     /* IPC: vertical communication between master/worker processes */
 
     async ipc_master([type, ...msg]) {
-        /* On master process, handle an IPC message received from a worker process or directly from itself. */
+        /* On master process, handle an IPC message received from a worker process or directly from itself.
+           IPC calls do NOT perform JSONx-encoding/decoding of arguments/result, so the latter must be
+           plain JSON-serializable objects, or already JSONx-encoded.
+         */
         assert(this.is_master())
 
         if (type === 'RPC') {
