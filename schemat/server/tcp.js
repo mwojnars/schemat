@@ -72,6 +72,7 @@ export class TCP_Sender {
 
             this.pending.set(id, {message: json, retries: 0, address, resolve, reject})
             socket.write(json)
+            schemat.node._print(`TCP message sent:`, json.trim())
         })
     }
 
@@ -83,7 +84,7 @@ export class TCP_Sender {
 
         let ack_parser = new ChunkParser(msg => {
             try {
-                // print(`${schemat.node.id} TCP response received:`, msg)
+                schemat.node._print(`TCP response rcv:`, msg)
                 let {id, result} = JSONx.parse(msg)
                 let entry = this.pending.get(id)
                 if (entry) {
@@ -149,7 +150,7 @@ export class TCP_Receiver {
     _respond(socket, id, result) {
         let resp = {id}
         if (result !== undefined) resp.result = result
-        socket.write(JSONx.stringify(resp) + '\n')
+        socket.write(JSONx.stringify(resp) + '\n')          // '\n' is necessary for proper parsing in ChunkParser
     }
 }
 
