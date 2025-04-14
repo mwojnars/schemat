@@ -46,7 +46,7 @@ class BinaryParser {
     }
 
     static create_message(msg_id, msg) {
-        // create a binary message in format [msg_id, content_length, content_binary]
+        /* Create a binary message in format [msg_id, content_length, content_binary]. */
         let content = Buffer.from(msg)
         let buffer = Buffer.alloc(8 + content.length)
         buffer.writeUInt32BE(msg_id, 0)         // write msg_id
@@ -56,7 +56,7 @@ class BinaryParser {
     }
 
     feed(data) {
-        // append new data to existing buffer
+        /* Append new data to existing buffer. */
         this.buffer = Buffer.concat([this.buffer, data])
         
         while (this.buffer.length >= 8) {  // minimum size for msg_id (4 bytes) + content_length (4 bytes)
@@ -64,13 +64,6 @@ class BinaryParser {
                 // start parsing new message
                 this.current_id = this.buffer.readUInt32BE(0)
                 this.expected_length = this.buffer.readUInt32BE(4)
-                
-                if (this.expected_length === 0) {
-                    // empty message, just callback with id
-                    this.callback({id: this.current_id, content: Buffer.alloc(0)})
-                    this.buffer = this.buffer.slice(8)
-                    continue
-                }
             }
             
             // check if we have complete message
@@ -82,10 +75,8 @@ class BinaryParser {
                 this.buffer = this.buffer.slice(8 + this.expected_length)
                 this.expected_length = 0
                 this.current_id = 0
-            } else {
-                // incomplete message, wait for more data
-                break
-            }
+            } 
+            else break      // incomplete message, wait for more data
         }
     }
 }
