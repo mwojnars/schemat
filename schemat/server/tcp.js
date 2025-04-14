@@ -37,7 +37,7 @@ class ChunkParser {
 }
 
 class BinaryParser {
-    // Binary message parser that handles messages in format [msg_id, content_length, content_binary]
+    /* Binary message parser that handles messages in format [msg_id, content_length, content_binary]. */
     constructor(callback) {
         this.buffer = Buffer.alloc(0)
         this.callback = callback    // can be async, but the returned promise is not awaited
@@ -135,7 +135,7 @@ export class TCP_Sender {
         let socket = net.createConnection({host, port})
         socket.setNoDelay(false)
 
-        let ack_parser = new ChunkParser(msg => {
+        let response_parser = new ChunkParser(msg => {
             try {
                 schemat.node._print(`TCP response rcv:`, msg)
                 let {id, result} = JSON.parse(msg)
@@ -145,10 +145,10 @@ export class TCP_Sender {
                     this.pending.delete(id)
                 } else console.warn('Response received for unknown request:', id)
             }
-            catch (e) { console.error('Invalid ACK:', msg) }
+            catch (e) { console.error('Invalid response:', msg) }
         })
 
-        socket.on('data', data => ack_parser.feed(data))
+        socket.on('data', data => response_parser.feed(data))
         socket.on('close', () => {
             socket.removeAllListeners()
             this.sockets.delete(address)
