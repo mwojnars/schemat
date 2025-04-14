@@ -46,20 +46,24 @@ class BinaryParser {
         this.current_id = 0         // id of current message being parsed
     }
 
-    static create_message(msg_id, msg) {
-        /* Create a binary message in format [msg_id, content_length, json_flag, content_binary]. */
-        let is_json = typeof msg !== 'string'
-        let content = Buffer.from(is_json ? JSON.stringify(msg) : msg)
-        if (content.length > 0xFFFFFFFF) throw new Error(`content length is too large (${content.length})`)
-        if (msg_id > 0xFFFFFFFF) throw new Error(`msg_id is too large (${msg_id})`)
+    static create_message(id, msg) {
+        /* Create a binary message in format [msg_id, content_length, json_flag, content_binary].
+           An undefined `msg` is represented as an empty content string with json_flag set to true ('J').
+         */
+        let to_json = typeof msg !== 'string'
+        let content = (!to_json) ? msg : ((msg === undefined) ? '' : JSON.stringify(msg))
+        let binary  = Buffer.from(content)
 
-        let buffer = Buffer.alloc(9 + content.length)
-        let json_flag = is_json ? 'J'.charCodeAt(0) : ' '.charCodeAt(0)
+        if (binary.length > 0xFFFFFFFF) throw new Error(`content length is too large (${binary.length})`)
+        if (id > 0xFFFFFFFF) throw new Error(`message id is too large (${id})`)
 
-        buffer.writeUInt32BE(msg_id, 0)         // write msg_id
-        buffer.writeUInt32BE(content.length, 4) // write content_length
+        let buffer = Buffer.alloc(9 + binary.length)
+        let json_flag = to_json ? 'J'.charCodeAt(0) : ' '.charCodeAt(0)
+
+        buffer.writeUInt32BE(id, 0)             // write message id
+        buffer.writeUInt32BE(binary.length, 4)  // write content_length
         buffer.writeUInt8(json_flag, 8)         // write json_flag ('J' or space)
-        content.copy(buffer, 9)                 // copy content
+        binary.copy(buffer, 9)                  // copy binary content into buffer
         return buffer
     }
 
@@ -77,9 +81,10 @@ class BinaryParser {
             // check if we have complete message
             if (this.buffer.length >= 9 + this.expected_length) {
                 let is_json = this.buffer.readUInt8(8) === 'J'.charCodeAt(0)
-                let content = this.buffer.slice(9, 9 + this.expected_length)
-                let decoded_content = is_json ? JSON.parse(content.toString()) : content.toString()
-                this.callback({id: this.current_id, content: decoded_content})
+                let binary  = this.buffer.slice(9, 9 + this.expected_length)
+                let content = binary.toString()
+                let msg     = (!is_json) ? content : (content ? JSON.parse(content) : undefined)
+                this.callback({id: this.current_id, msg})
                 
                 // remove processed message from buffer
                 this.buffer = this.buffer.slice(9 + this.expected_length)
@@ -124,12 +129,11 @@ export class TCP_Sender {
             let id = ++this.message_id
             if (this.message_id >= 0xFFFFFFFF) this.message_id = 0      // check for 4-byte overflow
             
-            let json = JSON.stringify(msg)
-            let message = BinaryParser.create_message(id, json)
-
+            let message = BinaryParser.create_message(id, msg)
             this.pending.set(id, {message, retries: 0, address, resolve, reject})
+
             socket.write(message)
-            schemat.node._print(`TCP client message  ${id} sent:`, json)
+            schemat.node._print(`TCP client message  ${id} sent:`, message.slice(9).toString())
         })
     }
 
@@ -139,10 +143,13 @@ export class TCP_Sender {
         let socket = net.createConnection({host, port})
         socket.setNoDelay(false)
 
-        let response_parser = new BinaryParser(({id, content}) => {
+        let response_parser = new BinaryParser(({id, msg}) => {
             try {
-                let json = content.toString()
-                let result = json ? JSON.parse(json) : undefined
+                // let json = msg.toString()
+                // let result = json ? JSON.parse(json) : undefined
+                let result = msg
+                let json = (typeof result === 'string') ? result : JSON.stringify(result)
+
                 schemat.node._print(`TCP client response ${id} recv:`, json)
                 let entry = this.pending.get(id)
                 if (entry) {
@@ -174,16 +181,18 @@ export class TCP_Receiver {
         this.server = net.createServer(socket => {
             // per-connection state
             let processed_offset = 0
-            let msg_parser = new BinaryParser(async ({id, content}) => {
+            let msg_parser = new BinaryParser(async ({id, msg}) => {
                 try {
-                    let json = content.toString()
-                    let msg = JSON.parse(json)
+                    // let json = msg.toString()
+                    // let message = JSON.parse(json)
+                    let message = msg
+                    let json = (typeof message === 'string') ? message : JSON.stringify(message)
                     schemat.node._print(`TCP server message  ${id} recv:`, json)
 
                     let result
                     if (id > processed_offset) {
                         processed_offset = id
-                        result = this._handle_message(msg)
+                        result = this._handle_message(message)
                         if (result instanceof Promise) result = await result
                     }
 
