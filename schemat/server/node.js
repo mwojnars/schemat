@@ -23,9 +23,12 @@ class Config extends WebObject {
 /**********************************************************************************************************************/
 
 export class Mailbox {
-    /* Send messages via a one-way communication channel and (optionally) wait for responses on another channel of the same type.
-       Here, "requests" are messages that are followed by a response, while "notifications" are fire-and-forget messages (no response).
-       The details of the channel are implemented in subclasses by overriding the `_listen()` and `_send()` methods.
+    /* Request-response communication channel from a sender to a receiver built on top of two one-way communication
+       channels represented by `_listen()` and `_send()` (to be implemented in subclasses).
+       By calling `send()` with a message, the caller gets a promise that will be resolved with the response.
+       The promise is rejected if the response is not received within the specified `timeout`.
+       Alternatively, the sender may call `notify()` to send a message without waiting for a response.
+       Here, "requests" are messages followed by a response, while "notifications" are fire-and-forget messages (no response).
      */
 
     constructor(callback, timeout = 5000) {
@@ -104,6 +107,8 @@ export class Mailbox {
 }
 
 export class IPC_Mailbox extends Mailbox {
+    /* Request-response IPC communication channel from this process to `peer`. */
+
     constructor(peer, on_message) {
         super(on_message)
         this.peer = peer
