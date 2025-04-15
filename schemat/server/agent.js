@@ -16,7 +16,7 @@ export class Agent extends WebObject {
 
     __node          // node(s) where this agent is installed & running as a leader
     __replica       // node(s) where this agent is installed & running as a replica
-    __site          // Site that defines the context of execution of this agent: database, web domain, URLs etc. ("user mode")
+    __site          // Site that defines the context of execution (database) of this agent ("user mode"); if missing, kernel's context (cluster) is used ("kernel mode")
 
     num_workers     // number of concurrent workers per node that should execute this agent's microservice at the same time; -1 = "all available"
     hard_restart

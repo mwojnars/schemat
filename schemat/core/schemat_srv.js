@@ -167,7 +167,7 @@ export class ServerSchemat extends Schemat {
     }
 
 
-    /***  Life cycle  ***/
+    /***  Context switching  ***/
 
     with_context(handler) {
         /* Wrap up the `handler` function in async context that sets global schemat = this (via _schemat async store).
