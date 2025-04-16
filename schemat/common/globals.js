@@ -5,8 +5,9 @@
 
 // global Schemat object on the server:
 //
-//   globalThis._schemat  -- AsyncLocalStorage holding a Schemat instance for the current async thread
 //   globalThis.schemat   -- getter that gives easy access to the current content of `_schemat` async-store
+//   globalThis._schemat  -- AsyncLocalStorage holding a Schemat instance for the current async thread
+//   globalThis._contexts -- map {site_id: schemat_instance}, for looking up a Schemat context based on Site it was created for
 //
 // on clients, globalThis.schemat holds the actual Schemat object, while _schemat is not used at all
 //

@@ -105,6 +105,7 @@ export class ServerSchemat extends Schemat {
 
         // print(`boot() system:`, this.system.__label)
         // print(`boot() this.db:`, this.db.__label)
+        return this
     }
 
     async _boot_done() {
@@ -189,7 +190,7 @@ export class ServerSchemat extends Schemat {
         return (...args) => _schemat.run(this, () => handler(...args))
     }
 
-    with_context__(handler, site = null) {
+    async with_context__(handler, site = null) {
         /* Wrap up the `handler` function in async context that sets global schemat (via _schemat async store)
            to the Schemat instance corresponding to the application `site`. If missing, this Schemat instance
            is created and saved in globalThis._contexts for reuse by other requests. If `site` is missing,
@@ -200,20 +201,25 @@ export class ServerSchemat extends Schemat {
            because Node.js does NOT recreate async context from the point of registration when calling these handlers.
            Also, this method (with `site`) is used to set a custom request-specific context for RPC calls to agent methods.
          */
-        let context = this
+        let context = site ? globalThis._contexts.get(site.id) : this
+
+        if (!context) {
+            context = new ServerSchemat({...this.config, site: site.id}, this)
+            let promise = _schemat.run(context, () => context.boot())
+            globalThis._contexts.set(site.id, promise)          // to avoid race condition
+            globalThis._contexts.set(site.id, await promise)
+        }
+        else if (context instanceof Promise) context = await context
+
         return (...args) => (schemat === context) ? handler(...args) : _schemat.run(context, () => handler(...args))
     }
 
-    // this._contexts
-
     async fork(site, callback) {
         /* Run `callback` function inside a new async context (_schemat) cloned from this one but having a different schemat.site. */
+        print(`ServerSchemat.fork() ...`)
         let new_schemat = new ServerSchemat({...this.config, site: site.id}, this)
-        let result = await _schemat.run(new_schemat, async () => {
-            print(`ServerSchemat.fork() ...`)
-            await new_schemat.boot()
-            return callback()
-        })
+        await _schemat.run(new_schemat, () => new_schemat.boot())
+        let result = await _schemat.run(new_schemat, callback)
         return [result, new_schemat]
     }
 
