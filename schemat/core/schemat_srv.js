@@ -42,7 +42,6 @@ export class ServerSchemat extends Schemat {
     _cluster        // Cluster object of the previous generation, always present but not always the most recent one (Registry may hold a more recent version)
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
-
     // get db()     { return this.system?.database || this._boot_db }
     get db()     { return this._boot_db || this.system?.database }
     get tx()     { return this._transaction.getStore() }
@@ -51,6 +50,19 @@ export class ServerSchemat extends Schemat {
 
 
     /***  Initialization  ***/
+
+    static global_init() {
+        /* Operations below are done once per node process, even if multiple Schemat instances (contexts) are created later. */
+        if (globalThis._schemat) return
+
+        // global `schemat` is a getter that reads the current Schemat object from the async store `_schemat`
+        Object.defineProperty(globalThis, 'schemat', {
+            get() { return this._schemat.getStore() },
+            enumerable: true
+        })
+        globalThis._schemat = new AsyncLocalStorage()
+        globalThis._contexts = new Map()
+    }
 
     constructor(config, parent) {
         super(config)
@@ -167,7 +179,7 @@ export class ServerSchemat extends Schemat {
     }
 
 
-    /***  Context switching  ***/
+    /***  Context management  ***/
 
     with_context(handler) {
         /* Wrap up the `handler` function in async context that sets global schemat = this (via _schemat async store).
@@ -176,6 +188,23 @@ export class ServerSchemat extends Schemat {
          */
         return (...args) => _schemat.run(this, () => handler(...args))
     }
+
+    with_context__(handler, site = null) {
+        /* Wrap up the `handler` function in async context that sets global schemat (via _schemat async store)
+           to the Schemat instance corresponding to the application `site`. If missing, this Schemat instance
+           is created and saved in globalThis._contexts for reuse by other requests. If `site` is missing,
+           the current instance (`this`) is used as context. If the current context (`schemat`) during `handler`
+           execution is already the target one, the handler is executed directly without forking a new async context.
+
+           This wrapper (without `site`) should be applied to all event handlers when registering them on TCP/HTTP sockets, IPC channels etc.,
+           because Node.js does NOT recreate async context from the point of registration when calling these handlers.
+           Also, this method (with `site`) is used to set a custom request-specific context for RPC calls to agent methods.
+         */
+        let context = this
+        return (...args) => (schemat === context) ? handler(...args) : _schemat.run(context, () => handler(...args))
+    }
+
+    // this._contexts
 
     async fork(site, callback) {
         /* Run `callback` function inside a new async context (_schemat) cloned from this one but having a different schemat.site. */
