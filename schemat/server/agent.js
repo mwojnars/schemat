@@ -16,7 +16,8 @@ export class Agent extends WebObject {
 
     __node          // node(s) where this agent is installed & running as a leader
     __replica       // node(s) where this agent is installed & running as a replica
-    __site          // Site that defines context of execution (database) of this agent's __start__/__stop__ methods ("user mode");
+    __site          // Site that provides context of execution of this agent's __start__/__stop__ methods ("user mode"),
+                    // and a fallback context for $agent.*() methods if no request-specific RPC context was given;
                     // if missing, kernel's context (cluster) is used ("kernel mode")
 
     num_workers     // number of concurrent workers per node that should execute this agent's microservice at the same time; -1 = "all available"
