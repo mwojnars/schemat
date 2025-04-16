@@ -25,14 +25,16 @@ export async function boot_schemat(opts, callback) {
     config = {...config, ...opts}
     // print('config:', config)
 
-    if (!globalThis._schemat) {
-        // global `schemat` is a getter that reads the current Schemat object from the async store `_schemat`
-        Object.defineProperty(globalThis, 'schemat', {
-            get() { return this._schemat.getStore() },
-            enumerable: true
-        })
-        globalThis._schemat = new AsyncLocalStorage()
-    }
+    ServerSchemat.global_init()
+
+    // if (!globalThis._schemat) {
+    //     // global `schemat` is a getter that reads the current Schemat object from the async store `_schemat`
+    //     Object.defineProperty(globalThis, 'schemat', {
+    //         get() { return this._schemat.getStore() },
+    //         enumerable: true
+    //     })
+    //     globalThis._schemat = new AsyncLocalStorage()
+    // }
 
     await globalThis._schemat.run(new ServerSchemat(config), async () => {
         await schemat.boot(() => _open_bootstrap_db(), false)
@@ -272,6 +274,8 @@ export class KernelProcess {
                 [state, custom_schemat] = await schemat.fork(agent_site, () => agent.__start__())
             }
             else state = await agent.__start__()
+
+            // state = await schemat.with_context(() => agent.__start__(), agent.__site)
 
             this.frames.set(agent.id, new Frame(agent, state, custom_schemat))
             this._print(`starting agent ${agent.__label} done`)
