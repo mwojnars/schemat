@@ -190,16 +190,14 @@ export class ServerSchemat extends Schemat {
         return (...args) => _schemat.run(this, () => handler(...args))
     }
 
-    async with_context__(handler, site = null) {
-        /* Wrap up the `handler` function in async context that sets global schemat (via _schemat async store)
-           to the Schemat instance corresponding to the application `site`. If missing, this Schemat instance
-           is created and saved in globalThis._contexts for reuse by other requests. If `site` is missing,
-           the current instance (`this`) is used as context. If the current context (`schemat`) during `handler`
-           execution is already the target one, the handler is executed directly without forking a new async context.
+    async in_context(callback, site = null) {
+        /* Run callback() in the Schemat async context (`_schemat`) built around `site`.
+           If not present yet, this context (as a ServerSchemat instance) is created and saved in
+           globalThis._contexts for reuse by other requests. If `site` is missing, `this` is used as the context.
+           If current `schemat` is already the target context, the callback is executed directly without
+           actually forking a new async context.
 
-           This wrapper (without `site`) should be applied to all event handlers when registering them on TCP/HTTP sockets, IPC channels etc.,
-           because Node.js does NOT recreate async context from the point of registration when calling these handlers.
-           Also, this method (with `site`) is used to set a custom request-specific context for RPC calls to agent methods.
+           This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
         let context = site ? globalThis._contexts.get(site.id) : this
 
@@ -211,7 +209,7 @@ export class ServerSchemat extends Schemat {
         }
         else if (context instanceof Promise) context = await context
 
-        return (...args) => (schemat === context) ? handler(...args) : _schemat.run(context, () => handler(...args))
+        return schemat === context ? callback() : _schemat.run(context, callback)
     }
 
     async fork(site, callback) {
