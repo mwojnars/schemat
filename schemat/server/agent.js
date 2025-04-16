@@ -16,7 +16,8 @@ export class Agent extends WebObject {
 
     __node          // node(s) where this agent is installed & running as a leader
     __replica       // node(s) where this agent is installed & running as a replica
-    __site          // Site that defines the context of execution (database) of this agent ("user mode"); if missing, kernel's context (cluster) is used ("kernel mode")
+    __site          // Site that defines context of execution (database) of this agent's __start__/__stop__ methods ("user mode");
+                    // if missing, kernel's context (cluster) is used ("kernel mode")
 
     num_workers     // number of concurrent workers per node that should execute this agent's microservice at the same time; -1 = "all available"
     hard_restart
@@ -99,7 +100,7 @@ export class WebServer extends Agent {
         let express = (await import('express')).default
         let bodyParser = (await import('body-parser')).default
 
-        let app = express()
+        let xapp = express()
 
         // for official middleware see: https://expressjs.com/en/resources/middleware.html
         // for receiving files:
@@ -107,22 +108,22 @@ export class WebServer extends Agent {
         //  - fileupload:  https://www.npmjs.com/package/express-fileupload & https://stackoverflow.com/a/50243907/1202674 (newer one, possibly easier)
 
         // // set CORS headers in all responses to allow cross-origin requests
-        // app.use((req, res, next) => {
+        // xapp.use((req, res, next) => {
         //     res.header('Access-Control-Allow-Origin', '*')      // or the specific origin of your client app
         //     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
         //     next()
         // })
 
-        // app.use(express.json())                                 // for parsing application/json to req.body object
-        app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
-        app.use(bodyParser.text({type: '*/*', limit: '10MB'}))  // for setting req.body string from plain-text body (if not json MIME-type)
+        // xapp.use(express.json())                                 // for parsing application/json to req.body object
+        xapp.use(express.urlencoded({extended: false}))             // for parsing application/x-www-form-urlencoded
+        xapp.use(bodyParser.text({type: '*/*', limit: '10MB'}))     // for setting req.body string from plain-text body (if not json MIME-type)
 
-        app.all('*', schemat.with_context((req, res) => this._handle(req, res)))
+        xapp.all('*', schemat.with_context((req, res) => this._handle(req, res)))
 
         let host = schemat.config.host || this.host || schemat.node.http_host
         let port = schemat.config.port || this.port || schemat.node.http_port
 
-        let server = app.listen(port, host, schemat.with_context(() => this._print(`listening at http://${host}:${port}`)))
+        let server = xapp.listen(port, host, schemat.with_context(() => this._print(`listening at http://${host}:${port}`)))
         return {server}
     }
 
