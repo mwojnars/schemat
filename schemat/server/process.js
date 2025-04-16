@@ -27,18 +27,8 @@ export async function boot_schemat(opts, callback) {
 
     ServerSchemat.global_init()
 
-    // if (!globalThis._schemat) {
-    //     // global `schemat` is a getter that reads the current Schemat object from the async store `_schemat`
-    //     Object.defineProperty(globalThis, 'schemat', {
-    //         get() { return this._schemat.getStore() },
-    //         enumerable: true
-    //     })
-    //     globalThis._schemat = new AsyncLocalStorage()
-    // }
-
     await globalThis._schemat.run(new ServerSchemat(config), async () => {
         await schemat.boot(() => _open_bootstrap_db(), false)
-        // await schemat._boot_done()
         await callback()
     })
 
