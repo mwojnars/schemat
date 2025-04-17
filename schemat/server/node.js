@@ -31,6 +31,7 @@ export class Mailbox {
        Here, "requests" are messages followed by a response, while "notifications" are fire-and-forget messages (no response).
      */
 
+    // constructor(callback, timeout = null) {
     constructor(callback, timeout = 5000) {
         this.callback = callback        // processing function for incoming messages
         this.pending = new Map()        // requests sent awaiting a response
@@ -295,13 +296,16 @@ export class Node extends Agent {
         /* Execute an RPC message that's addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        let {agent_id, method, args} = Node._rpc_parse(message)
-        // print("rpc_recv():", JSON.stringify(message))
+        let {agent_id, method, args, site_id} = Node._rpc_parse(message)
+        // if (site_id) this._print("rpc_recv():", JSON.stringify(message))
 
-        // locate an agent by its `agent_id`, should be running here in this process
+        // locate the agent by its `agent_id`, should be running here in this process
         let frame = await this._find_frame(agent_id)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
-        return JSONx.encode_checked(await frame.call_agent(`$agent.${method}`, args))
+
+        // let result = await frame.call_agent(`$agent.${method}`, args)
+        let result = await schemat.in_context(site_id, () => frame.call_agent(`$agent.${method}`, args))
+        return JSONx.encode_checked(result)
     }
 
     async _find_frame(agent_id, attempts = 5, delay = 0.2) {
