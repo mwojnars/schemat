@@ -246,6 +246,26 @@ export class Node extends Agent {
     }
 
 
+    /* Message formation & parsing */
+
+    static _rpc_create(agent_id, method, args = []) {
+        return ['RPC', agent_id, method, JSONx.encode(args)]
+    }
+    static _rpc_parse(message) {
+        let [type, agent_id, method, args] = message
+        assert(type === 'RPC', `incorrect message type, expected RPC`)
+        return {type, agent_id, method, args}
+    }
+
+    static _sys_create(command, args = []) {
+        return ['SYS', command, args]
+    }
+    static _sys_parse(message) {
+        let [type, command, args] = message
+        assert(type === 'SYS', `incorrect message type, expected SYS`)
+        return {type, command, args}
+    }
+
     /* RPC calls to other processes or nodes */
 
     async rpc_send(agent_id, method, args) {
