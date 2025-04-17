@@ -190,22 +190,22 @@ export class ServerSchemat extends Schemat {
         return (...args) => _schemat.run(this, () => handler(...args))
     }
 
-    async in_context(callback, site = null) {
-        /* Run callback() in the Schemat async context (`_schemat`) built around `site`.
-           If not present yet, this context (ServerSchemat instance) is created and saved in
-           globalThis._contexts for reuse by other requests. If `site` is missing, `this` is used as the context.
+    async in_context(callback, site_id = null) {
+        /* Run callback() in the Schemat async context (`_schemat`) that is built around a specific site.
+           If not yet created, this context (ServerSchemat instance) is created now and saved in
+           globalThis._contexts for reuse by other requests. If `site_id` is missing, `this` is used as the context.
            If current `schemat` is already the target context, the callback is executed directly without
-           actually forking a new async context.
+           starting a new async context.
 
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
-        let context = site ? globalThis._contexts.get(site.id) : this
+        let context = site_id ? globalThis._contexts.get(site_id) : this
 
         if (!context) {
-            context = new ServerSchemat({...this.config, site: site.id}, this)
+            context = new ServerSchemat({...this.config, site: site_id}, this)
             let promise = _schemat.run(context, () => context.boot())
-            globalThis._contexts.set(site.id, promise)          // to avoid race condition
-            globalThis._contexts.set(site.id, await promise)
+            globalThis._contexts.set(site_id, promise)          // to avoid race condition
+            globalThis._contexts.set(site_id, await promise)
         }
         else if (context instanceof Promise) context = await context
 
