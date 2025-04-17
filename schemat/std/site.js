@@ -53,7 +53,7 @@ export class Site extends WebObject {
             // this._vm = await import('node:vm')
             if (this.default_path) this._check_default_container()      // no await to avoid blocking the site's startup
         }
-        schemat.after_boot(() => this.load_globals())
+        await schemat.after_boot(() => this.load_globals())
     }
 
     async _check_default_container() {
