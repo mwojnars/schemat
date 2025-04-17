@@ -481,7 +481,7 @@ export class WebObject {
         return obj.load({sealed, activate})
     }
 
-    _print(...args) { print(`${schemat.node?.id}/#${schemat.kernel?.worker_id} in ${this.__label}`, ...args) }
+    _print(...args) { print(`${schemat.node?.id}/#${schemat.kernel?.worker_id} ${this.__label}`, ...args) }
 
 
     /***  Loading & initialization  ***/
