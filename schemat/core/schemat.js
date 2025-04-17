@@ -86,7 +86,7 @@ export class Schemat {
     _site           // `site` of the previous generation, remembered here during complete cache erasure to keep the .site() getter operational
     registry        // cache of web objects, records and indexes loaded from DB
     builtin         // a Classpath containing built-in classes and their paths
-    booting         // a Promise that resolves when this Schemat is fully booted
+    booting         // a Promise that resolves when this Schemat is fully booted; false after that
 
     _essential = [ROOT_ID]  // IDs of web objects that must be always present (fully loaded) in the Registry, so eviction must reload not delete them
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
@@ -140,6 +140,7 @@ export class Schemat {
          */
         this.booting = new Promise(resolve => this._booting_resolve = resolve)
         this.config = config
+        this.site_id = config.site
         this.WebObject = WebObject          // schemat.WebObject is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
         this.registry = new Registry(this._on_evict.bind(this))
@@ -149,7 +150,7 @@ export class Schemat {
     async _load_site() {
         /* Initialize this.site. */
 
-        let site_id = this.config.site
+        let site_id = this.site_id
         if (!site_id) return
         assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
 
@@ -190,10 +191,12 @@ export class Schemat {
     async _boot_done() {
         this._booting_resolve()     // resolve this.booting Promise
         await this.booting          // await any other callbacks that were added with after_boot()
+        this.booting = false
     }
 
     after_boot(callback) {
         /* Run `callback` function at the end of the boot phase, when the boot DB is already replaced by the regular DB. */
+        if (!this.booting) return callback()
         this.booting = this.booting.then(callback)
     }
 
