@@ -208,7 +208,7 @@ export class ServerSchemat extends Schemat {
         let context = site_id ? globalThis._contexts.get(site_id) : this
 
         if (!context) {
-            // this.kernel._print(`ServerSchemat.in_context() creating context for [${site_id}]`)
+            this.kernel._print(`ServerSchemat.in_context() creating context for [${site_id}]`)
             context = new ServerSchemat({...this.config, site: site_id}, this)
 
             // globalThis._contexts.set(site_id, context)

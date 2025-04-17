@@ -261,13 +261,8 @@ export class KernelProcess {
             if (agent_site) { // && !agent_site.is(schemat.site)) {
                 // execute the agent in "user mode" with a custom `site` that gives access to data rings above the kernel+cluster
                 state = await schemat.in_context(agent_site.id, () => agent.__start__())
-
-                // this._print(`forking async context with site = ${agent_site.__label}`);
-                // [state, custom_schemat] = await schemat.fork(agent_site, () => agent.__start__())
             }
             else state = await agent.__start__()
-
-            // state = await schemat.with_context(() => agent.__start__(), agent.__site)
 
             this.frames.set(agent.id, new Frame(agent, state, custom_schemat))
             this._print(`starting agent ${agent.__label} done`)
