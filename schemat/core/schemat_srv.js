@@ -68,6 +68,9 @@ export class ServerSchemat extends Schemat {
         super(config)
         if (parent) this._clone(parent)
 
+        assert(globalThis._contexts.get(this.site_id) === undefined, `ServerSchemat context for site_id=${this.site_id} is already registered`)
+        globalThis._contexts.set(this.site_id, this)
+
         this.ROOT_DIRECTORY = process.cwd()                 // initialize ROOT_DIRECTORY from the current working dir
         // this.SCHEMAT_DIRECTORY = this.ROOT_DIRECTORY + '/schemat'
 
@@ -190,8 +193,8 @@ export class ServerSchemat extends Schemat {
         return (...args) => _schemat.run(this, () => handler(...args))
     }
 
-    async in_context(callback, site_id = null) {
-        /* Run callback() in the Schemat async context (`_schemat`) that is built around a specific site.
+    async in_context(site_id, callback) {
+        /* Run callback() in the Schemat async context (`_schemat`) built around a specific site.
            If not yet created, this context (ServerSchemat instance) is created now and saved in
            globalThis._contexts for reuse by other requests. If `site_id` is missing, `this` is used as the context.
            If current `schemat` is already the target context, the callback is executed directly without
@@ -199,27 +202,37 @@ export class ServerSchemat extends Schemat {
 
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
+        if (site_id === schemat.site_id) return callback()
+
+        // this.kernel._print(`ServerSchemat.in_context() this.site_id = ${this.site_id} ...`)
         let context = site_id ? globalThis._contexts.get(site_id) : this
 
         if (!context) {
+            // this.kernel._print(`ServerSchemat.in_context() creating context for [${site_id}]`)
             context = new ServerSchemat({...this.config, site: site_id}, this)
-            let promise = _schemat.run(context, () => context.boot())
-            globalThis._contexts.set(site_id, promise)          // to avoid race condition
-            globalThis._contexts.set(site_id, await promise)
+
+            // globalThis._contexts.set(site_id, context)
+            await _schemat.run(context, () => context.boot())
+
+            // let promise = _schemat.run(context, () => context.boot())
+            // globalThis._contexts.set(site_id, promise)          // to avoid race condition
+            // globalThis._contexts.set(site_id, await promise)
         }
-        else if (context instanceof Promise) context = await context
+        // else if (context.booting) await context.booting
+        // else if (context instanceof Promise) context = await context
 
-        return schemat === context ? callback() : _schemat.run(context, callback)
+        // this.kernel._print(`ServerSchemat.in_context() executing callback`)
+        return schemat === context ? callback() : await _schemat.run(context, callback)
     }
 
-    async fork(site, callback) {
-        /* Run `callback` function inside a new async context (_schemat) cloned from this one but having a different schemat.site. */
-        print(`ServerSchemat.fork() ...`)
-        let new_schemat = new ServerSchemat({...this.config, site: site.id}, this)
-        await _schemat.run(new_schemat, () => new_schemat.boot())
-        let result = await _schemat.run(new_schemat, callback)
-        return [result, new_schemat]
-    }
+    // async fork(site, callback) {
+    //     /* Run `callback` function inside a new async context (_schemat) cloned from this one but having a different schemat.site. */
+    //     print(`ServerSchemat.fork() ...`)
+    //     let new_schemat = new ServerSchemat({...this.config, site: site.id}, this)
+    //     await _schemat.run(new_schemat, () => new_schemat.boot())
+    //     let result = await _schemat.run(new_schemat, callback)
+    //     return [result, new_schemat]
+    // }
 
     /***  Agents  ***/
 
