@@ -214,7 +214,7 @@ export class Node extends Agent {
         schemat.kernel.set_agents_running(plan[0])
         for (let i = 1; i <= N; i++) {
             let worker = schemat.kernel.get_worker(i)
-            let message = Node._sys_message('AGENTS_RUNNING', [plan[i]])
+            let message = Node._sys_message('AGENTS_RUNNING', plan[i])
             worker.mailbox.notify(message)
         }
 
@@ -258,7 +258,7 @@ export class Node extends Agent {
         return {type, agent_id, method, args: JSONx.decode(args)}
     }
 
-    static _sys_message(command, args = []) {
+    static _sys_message(command, ...args) {
         return ['SYS', command, args]
     }
     static _sys_parse(message) {
