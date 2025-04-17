@@ -254,7 +254,7 @@ export class Node extends Agent {
     static _rpc_parse(message) {
         let [type, agent_id, method, args] = message
         assert(type === 'RPC', `incorrect message type, expected RPC`)
-        return {type, agent_id, method, args}
+        return {type, agent_id, method, args: JSONx.decode(args)}
     }
 
     static _sys_message(command, args = []) {
@@ -283,7 +283,7 @@ export class Node extends Agent {
         let frame = schemat.get_frame(agent_id)
         if (frame) return JSONx.decode_checked(await this.rpc_recv(message))
 
-        // print("rpc_send():", JSON.stringify(msg))
+        // print("rpc_send():", JSON.stringify(message))
 
         return JSONx.decode_checked(this.is_master() ? await this.ipc_master(message) : await schemat.kernel.mailbox.send(message))
     }
@@ -298,7 +298,7 @@ export class Node extends Agent {
         // locate an agent by its `agent_id`, should be running here in this process
         let frame = await this._find_frame(agent_id)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
-        return JSONx.encode_checked(await frame.call_agent(`$agent.${method}`, JSONx.decode(args)))
+        return JSONx.encode_checked(await frame.call_agent(`$agent.${method}`, args))
     }
 
     async _find_frame(agent_id, attempts = 5, delay = 0.2) {
@@ -314,17 +314,18 @@ export class Node extends Agent {
 
     /* IPC: vertical communication between master/worker processes */
 
-    async ipc_master([type, ...msg]) {
+    async ipc_master(message) {
         /* On master process, handle an IPC message received from a worker process or directly from itself.
            IPC calls do NOT perform JSONx-encoding/decoding of arguments/result, so the latter must be
            plain JSON-serializable objects, or already JSONx-encoded.
          */
         assert(this.is_master())
+        let [type, ...msg] = message
 
         if (type === 'RPC') {
             // this._print(`ipc_master():`, JSON.stringify(msg))
-            let [agent_id, method, args] = msg
-            // print(`ipc_master():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(msg))
+            let {agent_id} = Node._rpc_parse(message)
+            // print(`ipc_master():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(message))
 
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
@@ -334,13 +335,13 @@ export class Node extends Agent {
             if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
             if (node.is(schemat.node)) {
                 // this._print(`ipc_master(): redirecting to self`)
-                return this.tcp_recv([type, ...msg])     // target agent is deployed on the current node
+                return this.tcp_recv(message)       // target agent is deployed on the current node
             }
 
             // await node.load()
             // this._print(`ipc_master(): sending to ${node.id} at ${node.tcp_address}`)
 
-            return this.tcp_send(node, [type, ...msg])
+            return this.tcp_send(node, message)
         }
         else throw new Error(`unknown worker-to-master message type: ${type}`)
     }
