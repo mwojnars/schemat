@@ -192,7 +192,7 @@ export class ServerSchemat extends Schemat {
 
     async in_context(callback, site = null) {
         /* Run callback() in the Schemat async context (`_schemat`) built around `site`.
-           If not present yet, this context (as a ServerSchemat instance) is created and saved in
+           If not present yet, this context (ServerSchemat instance) is created and saved in
            globalThis._contexts for reuse by other requests. If `site` is missing, `this` is used as the context.
            If current `schemat` is already the target context, the callback is executed directly without
            actually forking a new async context.
