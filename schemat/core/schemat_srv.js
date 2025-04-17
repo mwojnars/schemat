@@ -228,15 +228,6 @@ export class ServerSchemat extends Schemat {
         // return schemat === context ? callback() : await _schemat.run(context, callback)
     }
 
-    // async fork(site, callback) {
-    //     /* Run `callback` function inside a new async context (_schemat) cloned from this one but having a different schemat.site. */
-    //     print(`ServerSchemat.fork() ...`)
-    //     let new_schemat = new ServerSchemat({...this.config, site: site.id}, this)
-    //     await _schemat.run(new_schemat, () => new_schemat.boot())
-    //     let result = await _schemat.run(new_schemat, callback)
-    //     return [result, new_schemat]
-    // }
-
     /***  Agents  ***/
 
     get_frame(id_or_obj) {
