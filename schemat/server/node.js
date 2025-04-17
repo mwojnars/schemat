@@ -250,12 +250,14 @@ export class Node extends Agent {
     /* Message formation & parsing */
 
     static _rpc_message(agent_id, method, args = []) {
-        return ['RPC', agent_id, method, JSONx.encode(args)]
+        let message = ['RPC', agent_id, method, JSONx.encode(args)]
+        if (schemat.site_id) message.push(schemat.site_id)
+        return message
     }
     static _rpc_parse(message) {
-        let [type, agent_id, method, args] = message
+        let [type, agent_id, method, args, site_id] = message
         assert(type === 'RPC', `incorrect message type, expected RPC`)
-        return {type, agent_id, method, args: JSONx.decode(args)}
+        return {type, agent_id, method, args: JSONx.decode(args), site_id}
     }
 
     static _sys_message(command, ...args) {
