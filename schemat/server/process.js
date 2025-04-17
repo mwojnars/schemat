@@ -256,14 +256,6 @@ export class KernelProcess {
             assert(agent instanceof Agent)
             this._print(`starting agent ${agent.__label} ...`)
 
-            // let state, custom_schemat
-            // let agent_site = agent.__site
-            // if (agent_site) { // && !agent_site.is(schemat.site)) {
-            //     // execute the agent in "user mode" with a custom `site` that gives access to data rings above the kernel+cluster
-            //     state = await schemat.in_context(agent_site.id, () => agent.__start__())
-            // }
-            // else state = await agent.__start__()
-
             let state = await schemat.in_context(agent.__site?.id, () => agent.__start__())
             this.frames.set(agent.id, new Frame(agent, state))
             this._print(`starting agent ${agent.__label} done`)
@@ -277,9 +269,11 @@ export class KernelProcess {
             if (agent === frame.agent) continue
             this._print(`restarting agent ${agent.__label} ...`)
 
-            let {custom_schemat} = frame
+            // let {custom_schemat} = frame
+            // let state = custom_schemat ? await _schemat.run(custom_schemat, restart) : await restart()
+
             let restart = () => agent.__restart__(frame.raw_state, frame.agent)
-            let state = custom_schemat ? await _schemat.run(custom_schemat, restart) : await restart()
+            let state = await schemat.in_context(agent.__site?.id, restart)
 
             frame.set_state(state)
             frame.agent = agent
@@ -301,10 +295,11 @@ export class KernelProcess {
             }
             this._print(`stopping agent ${agent.__label} ...`)
            
-            let {custom_schemat} = frame
+            // let {custom_schemat} = frame
+            // custom_schemat ? await _schemat.run(custom_schemat, stop) : await stop()
+
             let stop = () => agent.__stop__(frame.raw_state)
-            custom_schemat ? await _schemat.run(custom_schemat, stop) : await stop()
-            // await agent.__stop__(frame.raw_state)
+            await schemat.in_context(agent.__site?.id, stop)
 
             this.frames.delete(agent.id)
             this._print(`stopping agent ${agent.__label} done`)
