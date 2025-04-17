@@ -59,12 +59,10 @@ class Frame {
     raw_state           // original unproxied state object returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
     stopping = false    // if true, no more RPC calls can be started
-    custom_schemat      // optional Schemat object that was created as an async context (_schemat) for the agent
 
-    constructor(agent, state, custom_schemat) {
+    constructor(agent, state) {
         this.agent = agent
         this.set_state(state)
-        this.custom_schemat = custom_schemat
     }
     
     set_state(state) {
@@ -269,9 +267,6 @@ export class KernelProcess {
             if (agent === frame.agent) continue
             this._print(`restarting agent ${agent.__label} ...`)
 
-            // let {custom_schemat} = frame
-            // let state = custom_schemat ? await _schemat.run(custom_schemat, restart) : await restart()
-
             let restart = () => agent.__restart__(frame.raw_state, frame.agent)
             let state = await schemat.in_context(agent.__site?.id, restart)
 
@@ -295,9 +290,6 @@ export class KernelProcess {
             }
             this._print(`stopping agent ${agent.__label} ...`)
            
-            // let {custom_schemat} = frame
-            // custom_schemat ? await _schemat.run(custom_schemat, stop) : await stop()
-
             let stop = () => agent.__stop__(frame.raw_state)
             await schemat.in_context(agent.__site?.id, stop)
 
