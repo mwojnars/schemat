@@ -321,10 +321,10 @@ export class Node extends Agent {
            plain JSON-serializable objects, or already JSONx-encoded.
          */
         assert(this.is_master())
-        let [type, ...msg] = message
+        let [type] = message
 
         if (type === 'RPC') {
-            // this._print(`ipc_master():`, JSON.stringify(msg))
+            // this._print(`ipc_master():`, JSON.stringify(message))
             let {agent_id} = Node._rpc_parse(message)
             // print(`ipc_master():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(message))
 
@@ -374,11 +374,11 @@ export class Node extends Agent {
          */
         // print("tcp_recv():", JSON.stringify(message))
         assert(this.is_master())
-        let [type, ...msg] = message
-        // this._print(`tcp_recv():`, JSON.stringify(msg))
+        let [type] = message
+        // this._print(`tcp_recv():`, JSON.stringify(message))
 
         if (type === 'RPC') {
-            let [agent_id] = msg
+            let {agent_id} = Node._rpc_parse(message)
 
             // find out which process (worker >= 1 or master = 0), has the `agent_id` agent deployed
 
@@ -396,9 +396,9 @@ export class Node extends Agent {
             if (proc !== this.worker_id) {
                 assert(proc > 0)
                 let worker = schemat.kernel.get_worker(proc)
-                return worker.mailbox.send([type, ...msg])          // forward the message down to a worker process, to its ipc_worker()
+                return worker.mailbox.send(message)             // forward the message down to a worker process, to its ipc_worker()
             }
-            return this.rpc_recv(message)                           // process the message here in the master process
+            return this.rpc_recv(message)                       // process the message here in the master process
         }
         else throw new Error(`unknown node-to-node message type: ${type}`)
     }
