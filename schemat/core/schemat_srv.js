@@ -202,6 +202,7 @@ export class ServerSchemat extends Schemat {
 
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
+        site_id ??= undefined
         if (site_id === schemat.site_id) return callback()
 
         // this.kernel._print(`ServerSchemat.in_context() this.site_id = ${this.site_id} ...`)
@@ -222,7 +223,9 @@ export class ServerSchemat extends Schemat {
         // else if (context instanceof Promise) context = await context
 
         // this.kernel._print(`ServerSchemat.in_context() executing callback`)
-        return schemat === context ? callback() : await _schemat.run(context, callback)
+        return _schemat.run(context, callback)
+
+        // return schemat === context ? callback() : await _schemat.run(context, callback)
     }
 
     // async fork(site, callback) {
