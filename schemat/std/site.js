@@ -202,7 +202,7 @@ export class Site extends WebObject {
                 let exec = () => obj.get_mutable()._execute_action(action, ...args)
                 let [tx, result] = schemat.tx_run(exec)
                 if (result instanceof Promise) result = await result
-                return [tx, result]
+                return [tx, result]     // `tx` is used internally by mActionResult (below) and then dropped
             },
             output: mActionResult,
         })
