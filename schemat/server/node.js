@@ -214,7 +214,8 @@ export class Node extends Agent {
         schemat.kernel.set_agents_running(plan[0])
         for (let i = 1; i <= N; i++) {
             let worker = schemat.kernel.get_worker(i)
-            worker.mailbox.notify(['SYS', 'AGENTS_RUNNING', [plan[i]]])
+            let message = Node._sys_message('AGENTS_RUNNING', [plan[i]])
+            worker.mailbox.notify(message)
         }
 
         // convert the plan to a Map<agent ID, array of process IDs>
@@ -348,11 +349,11 @@ export class Node extends Agent {
 
     ipc_worker(message) {
         // this._print(`ipc_worker(${type}):`, JSON.stringify(msg))
-        let [type, ...msg] = message
+        let [type] = message
         if (type === 'RPC') return this.rpc_recv(message)
         if (type === 'SYS') {
-            let [method, args] = msg
-            return this[method](...args)
+            let {command, args} = Node._sys_parse(message)
+            return this[command](...args)
         }
     }
 
