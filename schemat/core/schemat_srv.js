@@ -310,16 +310,11 @@ export class ServerSchemat extends Schemat {
         return [this._transaction.run(tx, action), tx]
     }
 
-    in_transaction(action, tx = null) {
-        /* Execute the action() function in the context of a Transaction object: tx, or this.tx, or a newly-created one.
-           Return a pair: [transaction-object, result-of-action], where the latter can be a Promise if action() is async.
-           After the action() is executed (awaited), the transaction object contains info about the execution, like a list of objects modified.
+    in_transaction(tx, action) {
+        /* Execute the action() function in the context of a Transaction object: this.tx === tx.
+           After that, the transaction object contains info about the execution, like a list of objects modified.
          */
-        tx ??= this.tx
-        if (tx && tx === this.tx) return action()
-
-        tx = new Transaction()
-        return this._transaction.run(tx, action)
+        return (tx === this.tx) ? action() : this._transaction.run(tx, action)
     }
 
 

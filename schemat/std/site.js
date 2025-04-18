@@ -198,16 +198,14 @@ export class Site extends WebObject {
         /* Submit a server-side action that performs edit operations on a number of objects. */
         return new JsonPOST({
             server: async (id, action, ...args) => {
-                let tx, obj = await schemat.get_loaded(id)
-                let run = () => {
-                    tx = schemat.tx
-                    return obj.get_mutable()._execute_action(action, ...args)
-                }
-                // let [result, tx] = schemat.with_transaction(exec)
-                let result = schemat.in_transaction(run)
-                assert(tx)
+                let {Transaction} = await import("../core/schemat_srv.js")
+                let obj = await schemat.get_loaded(id)
+                let tx = schemat.tx || new Transaction()
+                let run = () => obj.get_mutable()._execute_action(action, ...args)
 
+                let result = schemat.in_transaction(tx, run)
                 if (result instanceof Promise) result = await result
+
                 this._print(`POST.action() result=${result} tx.records=${tx.records}`)
                 return [result, tx]     // `tx` is used internally by mActionResult (below) and then dropped
             },
