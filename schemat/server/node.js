@@ -325,7 +325,7 @@ export class Node extends Agent {
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
         let {agent_id, method, args, site_id, tx} = this._rpc_request_parse(message)
-        if (tx?.debug) this._print("rpc_recv():", JSON.stringify(message), `tx=${JSON.stringify(tx)}`)
+        if (tx?.debug) this._print("rpc_recv():", JSON.stringify(message))
 
         // locate the agent by its `agent_id`, should be running here in this process
         let frame = await this._find_frame(agent_id)

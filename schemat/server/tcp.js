@@ -192,7 +192,7 @@ export class TCP_Receiver {
                         if (result instanceof Promise) result = await result
                     }
                     socket.write(BinaryParser.create_message(id, result))
-                    schemat.node._print(`TCP server response ${id} sent:`, _json(result))
+                    // schemat.node._print(`TCP server response ${id} sent:`, _json(result))
 
                 } catch (e) { throw e }
                 // } catch (e) { console.error('Error while processing TCP message:', e) }
