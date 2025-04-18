@@ -200,7 +200,7 @@ export class Site extends WebObject {
             server: async (id, action, ...args) => {
                 let obj = await schemat.get_loaded(id)
                 let exec = () => obj.get_mutable()._execute_action(action, ...args)
-                let [result, tx] = schemat.run_tx(exec)
+                let [result, tx] = schemat.with_transaction(exec)
                 if (result instanceof Promise) result = await result
                 this._print(`POST.action() result=${result} tx.records=${tx.records}`)
                 return [result, tx]     // `tx` is used internally by mActionResult (below) and then dropped

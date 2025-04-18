@@ -297,13 +297,13 @@ export class ServerSchemat extends Schemat {
 
     /***  Actions / Transactions  ***/
 
-    run_tx(action) {
-        /* Execute the action() function in the context of a Transaction object: this.tx (if present) or a newly-created one.
+    with_transaction(action, tx = null) {
+        /* Execute the action() function in the context of a Transaction object: tx, or this.tx, or a newly-created one.
            Return a pair: [transaction-object, result-of-action], where the latter can be a Promise if action() is async.
            After the action() is executed (awaited), the transaction object contains info about the execution, like a list of objects modified.
          */
-        let tx = this.tx
-        if (tx) return [action(), tx]
+        tx ??= this.tx
+        if (tx && tx === this.tx) return [action(), tx]
 
         tx = new Transaction()
         return [this._transaction.run(tx, action), tx]
