@@ -322,15 +322,17 @@ export class Node extends Agent {
         /* Execute an RPC message that's addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        let {agent_id, method, args, site_id} = this._rpc_request_parse(message)
+        let {agent_id, method, args, site_id, tx} = this._rpc_request_parse(message)
         // if (site_id) this._print("rpc_recv():", JSON.stringify(message))
 
         // locate the agent by its `agent_id`, should be running here in this process
         let frame = await this._find_frame(agent_id)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
 
+        let call = () => frame.call_agent(`$agent.${method}`, args)
+        let result = await schemat.in_tx_context(site_id, tx, call)
         // let result = await frame.call_agent(`$agent.${method}`, args)
-        let result = await schemat.in_context(site_id, () => frame.call_agent(`$agent.${method}`, args))
+
         return this._rpc_response(result)
     }
 
