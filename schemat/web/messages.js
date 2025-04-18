@@ -122,11 +122,7 @@ export class mActionResult extends MessageEncoder {
        automatically put in the caller's registry and registered with the local Transaction, if present.
      */
     array = true
-    encode(tx, result) {
-        // let records = records.map(({id, data}) => ({id, data:
-        //         (typeof data === 'string') ? JSON.parse(data) :
-        //         (data instanceof Catalog) ? data.encode() : data
-        // }))
+    encode(result, tx) {
         let records = tx.dump_records()
         assert(records?.length, 'no object got modified during a database action')
         return JSON.stringify({status: 'success', result, records})
