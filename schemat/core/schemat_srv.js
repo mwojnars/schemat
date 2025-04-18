@@ -30,6 +30,16 @@ export class Transaction {
                 (data instanceof Catalog) ? data.encode() : data
         }))
     }
+
+    dump() {
+        return {records: this.dump_records()}
+    }
+
+    static load(dump) {
+        let tx = new Transaction()
+        tx.records = dump.records
+        return tx
+    }
 }
 
 
@@ -302,6 +312,8 @@ export class ServerSchemat extends Schemat {
         /* Return the current Transaction object or create a new one. */
         return this.tx || new Transaction()
     }
+
+    load_transaction(dump) { return Transaction.load(dump) }
 
     with_transaction(action, tx = null) {
         /* Execute the action() function in the context of a Transaction object: tx, or this.tx, or a newly-created one.
