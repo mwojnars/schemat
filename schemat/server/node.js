@@ -250,16 +250,25 @@ export class Node extends Agent {
 
     /* Message formation & parsing */
 
-    _rpc_message(agent_id, method, args = []) {
-        let message = ['RPC', agent_id, method, JSONx.encode(args)]
-        if (schemat.site_id) message.push(schemat.site_id)
-        return message
+    _rpc_request(agent_id, method, args = []) {
+        let request = ['RPC', agent_id, method, JSONx.encode(args)]
+        if (schemat.site_id) request.push(schemat.site_id)
+        return request
     }
 
-    _rpc_parse(message) {
-        let [type, agent_id, method, args, site_id] = message
+    _rpc_request_parse(request) {
+        let [type, agent_id, method, args, site_id] = request
         assert(type === 'RPC', `incorrect message type, expected RPC`)
         return {type, agent_id, method, args: JSONx.decode(args), site_id}
+    }
+
+    _rpc_response(result) {
+        /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response. */
+        return JSONx.encode_checked(result)     // TODO: add schemat.tx.records
+    }
+
+    _rpc_response_parse(response) {
+        return JSONx.decode_checked(response)
     }
 
     _sys_message(command, ...args) {
@@ -272,15 +281,6 @@ export class Node extends Agent {
         return {type, command, args}
     }
 
-    _rpc_result(result) {
-        /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response. */
-        return JSONx.encode_checked(result)     // TODO: add schemat.tx.records
-    }
-
-    _rpc_result_parse(response) {
-        return JSONx.decode_checked(response)
-    }
-
     /* RPC calls to other processes or nodes */
 
     async rpc_send(agent_id, method, args) {
@@ -289,26 +289,26 @@ export class Node extends Agent {
            Return a response from the remote target. RPC methods on sender/receiver automatically JSONx-encode/decode
            the arguments and the result of the function.
          */
-        let message = this._rpc_message(agent_id, method, args)
+        let message = this._rpc_request(agent_id, method, args)
 
         assert(schemat.kernel.agents_running, `kernel not yet initialized`)
 
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
         let frame = schemat.get_frame(agent_id)
-        if (frame) return this._rpc_result_parse(await this.rpc_recv(message))
+        if (frame) return this._rpc_response_parse(await this.rpc_recv(message))
 
         // print("rpc_send():", JSON.stringify(message))
 
         let result = await (this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message))
-        return this._rpc_result_parse(result)
+        return this._rpc_response_parse(result)
     }
 
     async rpc_recv(message) {
         /* Execute an RPC message that's addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        let {agent_id, method, args, site_id} = this._rpc_parse(message)
+        let {agent_id, method, args, site_id} = this._rpc_request_parse(message)
         // if (site_id) this._print("rpc_recv():", JSON.stringify(message))
 
         // locate the agent by its `agent_id`, should be running here in this process
@@ -317,7 +317,7 @@ export class Node extends Agent {
 
         // let result = await frame.call_agent(`$agent.${method}`, args)
         let result = await schemat.in_context(site_id, () => frame.call_agent(`$agent.${method}`, args))
-        return this._rpc_result(result)
+        return this._rpc_response(result)
     }
 
     async _find_frame(agent_id, attempts = 5, delay = 0.2) {
@@ -343,7 +343,7 @@ export class Node extends Agent {
 
         if (type === 'RPC') {
             // this._print(`ipc_master():`, JSON.stringify(message))
-            let {agent_id} = this._rpc_parse(message)
+            let {agent_id} = this._rpc_request_parse(message)
             // print(`ipc_master():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(message))
 
             // check if the target object is deployed here on this node, then no need to look any further
@@ -396,7 +396,7 @@ export class Node extends Agent {
         // this._print(`tcp_recv():`, JSON.stringify(message))
 
         if (type === 'RPC') {
-            let {agent_id} = this._rpc_parse(message)
+            let {agent_id} = this._rpc_request_parse(message)
 
             // find out which process (worker >= 1 or master = 0), has the `agent_id` agent deployed
 
