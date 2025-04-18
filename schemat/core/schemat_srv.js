@@ -18,8 +18,9 @@ export class Transaction {
 
     records = []        // array of {id, data} records of modified objects
 
-    register_modification(rec) {
-        this.records.push(rec)
+    register_changes(...records) {
+        for (let rec of records)
+            this.records.push(rec)
         // TODO: detect duplicates, restrict the size of `records`
     }
 

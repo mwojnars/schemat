@@ -470,7 +470,7 @@ export class DataBlock extends Block {
         await this.propagate_change(key, prev, obj)
 
         data = this._annotate(data)
-        schemat.register_modification({id, data})
+        schemat.register_changes({id, data})
     }
 
     async cmd_delete(...args) { return this.$_wrap2.cmd_delete({storage: this._storage}, ...args) }
@@ -496,7 +496,7 @@ export class DataBlock extends Block {
         await this.propagate_change(key, obj)
 
         // data.set('__status', 'DELETED')
-        schemat.register_modification({id, data: {'__status': 'DELETED'}})
+        schemat.register_changes({id, data: {'__status': 'DELETED'}})
 
         assert(Number(deleted) === 1)
         return Number(deleted)

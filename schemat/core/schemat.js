@@ -366,8 +366,8 @@ export class Schemat {
 
     /***  Registry management  ***/
 
-    register_modification(rec) {
-        this.tx?.register_modification(rec)
+    register_changes(rec) {
+        this.tx?.register_changes(rec)
         if (rec.data.__status === 'DELETED') {
             this.registry.delete_record(rec.id)
             this.registry.delete_object(rec.id)
