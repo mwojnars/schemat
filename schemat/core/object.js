@@ -7,7 +7,7 @@
  */
 
 import {ROOT_ID, PLURAL, SUBFIELD} from '../common/globals.js'
-import {print, assert, T, escape_html, concat, unique, sleep} from '../common/utils.js'
+import {print, assert, T, escape_html, concat, unique, sleep, randint} from '../common/utils.js'
 import {NotLoaded, URLNotFound, ValidationError} from '../common/errors.js'
 
 import {Catalog, Struct} from './catalog.js'
@@ -407,7 +407,7 @@ export class WebObject {
         if (id) this.id = id
 
         this.__self = this              // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
-        this.__hash = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+        this.__hash = randint()
 
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
         // only on the client this flag can be changed after object creation

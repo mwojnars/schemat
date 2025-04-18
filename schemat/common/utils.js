@@ -459,6 +459,11 @@ export function min(arr, order) {
     return arr[pos]
 }
 
+export function randint(stop = Number.MAX_SAFE_INTEGER) {
+    /* Random integer from 0 to stop-1. */
+  return Math.floor(Math.random() * stop)
+}
+
 export function gcd(a, b) {
     /* Calculate the greatest common divisor using the Euclidean algorithm. */
     a = Math.abs(a)
