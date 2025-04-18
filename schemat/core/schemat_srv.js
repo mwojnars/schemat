@@ -3,7 +3,7 @@
 import fs from 'node:fs'
 import {AsyncLocalStorage} from 'node:async_hooks'
 
-import {assert, print, T} from '../common/utils.js'
+import {assert, print, randint} from '../common/utils.js'
 import {Schemat} from './schemat.js'
 import {RequestContext} from "../web/request.js";
 import {Catalog} from "./catalog.js";
@@ -16,7 +16,9 @@ export class Transaction {
        IMPORTANT: at the moment, actions (transactions) are NOT atomic!
      */
 
-    records = []        // array of {id, data} records of modified objects
+    tid = randint()
+    debug               // if true, debug info should be printed/collected while executing this transaction
+    records = []        // array of {id, data} records of objects that were created/modified during this transaction
 
     register_changes(...records) {
         for (let rec of records)
@@ -32,12 +34,14 @@ export class Transaction {
     }
 
     dump() {
-        return {records: this.dump_records()}
+        return {...this, records: this.dump_records()}
     }
 
-    static load(dump) {
+    static load({tid, records, debug}) {
         let tx = new Transaction()
-        tx.records = dump.records
+        tx.tid = tid
+        tx.debug = debug
+        tx.records = records
         return tx
     }
 }
