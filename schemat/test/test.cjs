@@ -195,7 +195,7 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
     })
 
     after(async function () {
-        this.timeout(30000)
+        this.timeout(40000)
         await browser?.close()
 
         for (let server of servers.toReversed()) {
