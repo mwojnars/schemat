@@ -90,7 +90,7 @@ class BinaryParser {
                 let binary  = this.buffer.slice(9, 9 + this.expected_length)
                 let content = binary.toString()
                 let msg     = (!is_json) ? content : (content ? JSON.parse(content) : undefined)
-                this.callback({id: this.current_id, msg})
+                this.callback(this.current_id, msg)
                 
                 // remove processed message from buffer
                 this.buffer = this.buffer.slice(9 + this.expected_length)
@@ -149,12 +149,12 @@ export class TCP_Sender {
         let socket = net.createConnection({host, port})
         socket.setNoDelay(false)
 
-        let response_parser = new BinaryParser(({id, msg}) => {
+        let response_parser = new BinaryParser((id, resp) => {
             try {
-                schemat.node._print(`TCP client response ${id} recv:`, _json(msg))
+                schemat.node._print(`TCP client response ${id} recv:`, _json(resp))
                 let entry = this.pending.get(id)
                 if (entry) {
-                    entry.resolve(msg)
+                    entry.resolve(resp)
                     this.pending.delete(id)
                 } else console.warn('Response received for unknown request:', id)
             }
@@ -182,7 +182,7 @@ export class TCP_Receiver {
         this.server = net.createServer(socket => {
             // per-connection state
             let processed_offset = 0
-            let msg_parser = new BinaryParser(async ({id, msg}) => {
+            let msg_parser = new BinaryParser(async (id, msg) => {
                 try {
                     schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
                     let result
