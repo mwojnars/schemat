@@ -6,6 +6,7 @@ import {AsyncLocalStorage} from 'node:async_hooks'
 import {assert, print, T} from '../common/utils.js'
 import {Schemat} from './schemat.js'
 import {RequestContext} from "../web/request.js";
+import {Catalog} from "./catalog.js";
 
 
 /**********************************************************************************************************************/
@@ -20,6 +21,13 @@ export class Transaction {
     register_modification(rec) {
         this.records.push(rec)
         // TODO: detect duplicates, restrict the size of `records`
+    }
+
+    dump_records() {
+        return this.records.map(({id, data}) => ({id, data:
+                (typeof data === 'string') ? JSON.parse(data) :
+                (data instanceof Catalog) ? data.encode() : data
+        }))
     }
 }
 
