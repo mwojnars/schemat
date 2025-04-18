@@ -198,9 +198,8 @@ export class Site extends WebObject {
         /* Submit a server-side action that performs edit operations on a number of objects. */
         return new JsonPOST({
             server: async (id, action, ...args) => {
-                let {Transaction} = await import("../core/schemat_srv.js")
                 let obj = await schemat.get_loaded(id)
-                let tx = schemat.tx || new Transaction()
+                let tx = schemat.get_transaction()
                 let run = () => obj.get_mutable()._execute_action(action, ...args)
 
                 let result = schemat.in_transaction(tx, run)
