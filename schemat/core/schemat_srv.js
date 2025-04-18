@@ -16,7 +16,7 @@ export class Transaction {
        IMPORTANT: at the moment, actions (transactions) are NOT atomic!
      */
 
-    tid = randint()
+    tid = randint(10000)
     debug               // if true, debug info should be printed/collected while executing this transaction
     records = []        // array of {id, data} records of objects that were created/modified during this transaction
 
