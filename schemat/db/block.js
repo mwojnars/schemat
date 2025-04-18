@@ -277,7 +277,7 @@ export class DataBlock extends Block {
 
     async '$agent.cmd_insert'(state, id, data) {
         /* `data` can be an array if multiple objects are to be inserted. */
-        // this._print(`$agent.cmd_insert() id=${id}`)
+        // this._print(`before $agent.cmd_insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
 
         let ring = this.ring
         assert(ring?.is_loaded())
@@ -339,6 +339,7 @@ export class DataBlock extends Block {
 
         let ids = objects.map(obj => obj.id)
         // print(`[${this.id}].cmd_insert() saved IDs:`, ids)
+        // this._print(`after $agent.cmd_insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
 
         return batch ? ids.slice(0, data.length) : ids[0]
     }
