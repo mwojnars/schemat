@@ -262,13 +262,20 @@ export class Node extends Agent {
         return {type, agent_id, method, args: JSONx.decode(args), site_id}
     }
 
-    _rpc_response(result) {
+    _rpc_response(result, error) {
         /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response. */
-        return JSONx.encode_checked(result)     // TODO: add schemat.tx.records
+        if (error) return JSONx.encode({error})
+        let response = {}
+        if (result !== undefined) response.result = result
+        return JSONx.encode(response)     // TODO: add schemat.tx.records
+        // return JSONx.encode_checked(result)
     }
 
     _rpc_response_parse(response) {
-        return JSONx.decode_checked(response)
+        let {result, error} = JSONx.decode(response)
+        if (error) throw error
+        return result
+        // return JSONx.decode_checked(response)
     }
 
     _sys_message(command, ...args) {
