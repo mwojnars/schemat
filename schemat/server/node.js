@@ -251,15 +251,17 @@ export class Node extends Agent {
     /* Message formation & parsing */
 
     _rpc_request(agent_id, method, args = []) {
-        let request = ['RPC', agent_id, method, JSONx.encode(args)]
+        /* RPC message format: [type, agent_id, method, args, tx, site_id?] */
+        let request = ['RPC', agent_id, method, JSONx.encode(args), schemat.tx?.dump() || null]
         if (schemat.site_id) request.push(schemat.site_id)
         return request
     }
 
     _rpc_request_parse(request) {
-        let [type, agent_id, method, args, site_id] = request
+        let [type, agent_id, method, args, tx, site_id] = request
         assert(type === 'RPC', `incorrect message type, expected RPC`)
-        return {type, agent_id, method, args: JSONx.decode(args), site_id}
+        if (tx) tx = schemat.load_transaction(tx)
+        return {type, agent_id, method, args: JSONx.decode(args), tx, site_id}
     }
 
     _rpc_response(result, error) {
@@ -280,7 +282,7 @@ export class Node extends Agent {
     _rpc_response_parse(response) {
         let {result, error, records} = JSONx.decode(response)
         if (error) throw error
-        // if (records?.length) schemat.tx.register_changes(...records)
+        if (records?.length) schemat.tx?.register_changes(...records)
         return result
         // return JSONx.decode_checked(response)
     }
@@ -323,17 +325,21 @@ export class Node extends Agent {
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
         let {agent_id, method, args, site_id, tx} = this._rpc_request_parse(message)
-        // if (site_id) this._print("rpc_recv():", JSON.stringify(message))
+        if (tx?.debug) this._print("rpc_recv():", JSON.stringify(message), `tx=${JSON.stringify(tx)}`)
 
         // locate the agent by its `agent_id`, should be running here in this process
         let frame = await this._find_frame(agent_id)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
 
-        let call = () => frame.call_agent(`$agent.${method}`, args)
-        let result = await schemat.in_tx_context(site_id, tx, call)
-        // let result = await frame.call_agent(`$agent.${method}`, args)
+        // let call = () => frame.call_agent(`$agent.${method}`, args)
+        // let result = await schemat.in_tx_context(site_id, tx, call)
+        // return this._rpc_response(result)
 
-        return this._rpc_response(result)
+        let call = async () => {
+            let result = await frame.call_agent(`$agent.${method}`, args)
+            return this._rpc_response(result)
+        }
+        return schemat.in_tx_context(site_id, tx, call)
     }
 
     async _find_frame(agent_id, attempts = 5, delay = 0.2) {
