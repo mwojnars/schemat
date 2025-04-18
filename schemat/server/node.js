@@ -273,7 +273,7 @@ export class Node extends Agent {
     /* RPC calls to other processes or nodes */
 
     async rpc_send(agent_id, method, args) {
-        /* Send an RPC message to the master process via IPC channel, for it to be sent over the network to another node
+        /* Send an RPC message to the master process via IPC channel, so it gets sent over TCP to another node
            and then to the `agent_id` object (agent) where it should invoke its '$agent.<method>'(...args).
            Return a response from the remote target. RPC methods on sender/receiver automatically JSONx-encode/decode
            the arguments and the result of the function.
@@ -285,11 +285,12 @@ export class Node extends Agent {
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
         let frame = schemat.get_frame(agent_id)
-        if (frame) return JSONx.decode_checked(await this.rpc_recv(message))
+        if (frame) return this._rpc_result_parse(await this.rpc_recv(message))
 
         // print("rpc_send():", JSON.stringify(message))
 
-        return JSONx.decode_checked(this.is_master() ? await this.ipc_master(message) : await schemat.kernel.mailbox.send(message))
+        let result = await (this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message))
+        return this._rpc_result_parse(result)
     }
 
     async rpc_recv(message) {
@@ -305,7 +306,15 @@ export class Node extends Agent {
 
         // let result = await frame.call_agent(`$agent.${method}`, args)
         let result = await schemat.in_context(site_id, () => frame.call_agent(`$agent.${method}`, args))
-        return JSONx.encode_checked(result)
+        return this._rpc_result(result)
+    }
+
+    _rpc_result(result) {
+        /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added. */
+        return JSONx.encode_checked(result)     // TODO: add schemat.tx.records
+    }
+    _rpc_result_parse(message) {
+        return JSONx.decode_checked(message)
     }
 
     async _find_frame(agent_id, attempts = 5, delay = 0.2) {
