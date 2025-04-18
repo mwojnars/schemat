@@ -319,18 +319,6 @@ export class ServerSchemat extends Schemat {
 
     load_transaction(dump) { return Transaction.load(dump) }
 
-    with_transaction(action, tx = null) {
-        /* Execute the action() function in the context of a Transaction object: tx, or this.tx, or a newly-created one.
-           Return a pair: [transaction-object, result-of-action], where the latter can be a Promise if action() is async.
-           After the action() is executed (awaited), the transaction object contains info about the execution, like a list of objects modified.
-         */
-        tx ??= this.tx
-        if (tx && tx === this.tx) return [action(), tx]
-
-        tx = new Transaction()
-        return [this._transaction.run(tx, action), tx]
-    }
-
     in_transaction(tx, action) {
         /* Execute action() in the context of a Transaction object: this.tx === tx.
            After that, the transaction object contains info about the execution, like a list of objects modified.
@@ -345,6 +333,18 @@ export class ServerSchemat extends Schemat {
          */
         return this.in_context(site_id, tx ? () => schemat.in_transaction(tx, callback) : callback)
     }
+
+    // with_transaction(action, tx = null) {
+    //     /* Execute the action() function in the context of a Transaction object: tx, or this.tx, or a newly-created one.
+    //        Return a pair: [transaction-object, result-of-action], where the latter can be a Promise if action() is async.
+    //        After the action() is executed (awaited), the transaction object contains info about the execution, like a list of objects modified.
+    //      */
+    //     tx ??= this.tx
+    //     if (tx && tx === this.tx) return [action(), tx]
+    //
+    //     tx = new Transaction()
+    //     return [this._transaction.run(tx, action), tx]
+    // }
 
 
     // async _reset_class(ServerSchemat) {
