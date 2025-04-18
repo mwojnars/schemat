@@ -158,7 +158,7 @@ export class WebServer extends Agent {
             if (typeof result === 'string') res.send(result)
         }
         catch (ex) {
-            print(ex)
+            this._print(ex)
             if (!res.headersSent)
                 if (ex.code === 'ENOENT')                           // file not found error
                     res.status(404).send('File not found')
