@@ -339,8 +339,7 @@ export class ServerSchemat extends Schemat {
            to the context built around `site_id`, and then setting schemat.tx to `tx`.
            Both arguments (site_id, tx) are optional.
          */
-        if (tx) callback = () => schemat.in_transaction(tx, callback)
-        return this.in_context(site_id, callback)
+        return this.in_context(site_id, tx ? () => schemat.in_transaction(tx, callback) : callback)
     }
 
 
