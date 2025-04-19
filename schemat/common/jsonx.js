@@ -36,6 +36,8 @@ export class JSONx {
     static ATTR_CLASS = "@"         // special attribute appended to object state to store a class name (with package) of the object being encoded
     static ATTR_STATE = "="         // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
 
+    #references = new Set()          // track object references to detect cycles
+
     // constructor(transform) {
     //     // for now, this constructor is only used internally in static encode() & static decode()
     //     this.transform = transform      // optional preprocessing function applied to every nested object before it gets encoded;
@@ -51,11 +53,11 @@ export class JSONx {
         return this.decode(state)
     }
 
-    static encode(obj)      { return jsonx.encode(obj) }
+    static encode(obj)      { return new JSONx().encode(obj) }
     static decode(state)    { return jsonx.decode(state) }
     static deepcopy(obj)    { return JSONx.parse(JSONx.stringify(obj)) }
 
-    static encode_checked(obj)      { if (obj !== undefined) return jsonx.encode(obj) }         // undefined is a valid value (encoded as undefined)
+    static encode_checked(obj)      { if (obj !== undefined) return new JSONx().encode(obj) }   // undefined is a valid value (encoded as undefined)
     static decode_checked(state)    { if (state !== undefined) return jsonx.decode(state) }     // undefined is a valid value (decoded as undefined)
 
     // static transform(json, transform) {
@@ -85,51 +87,59 @@ export class JSONx {
 
         if (obj === undefined)   throw new Error("can't encode an undefined value")
         if (T.isPrimitive(obj))  return obj
-        if (T.isArray(obj))      return this.encode_array(obj)
 
-        if (T.isPlain(obj)) {
-            obj = this.encode_object(obj)
-            if (!(JSONx.ATTR_CLASS in obj)) return obj
-            return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
+        // check for cyclic references
+        if (this.#references.has(obj))
+            throw new Error(`cyclic reference detected while encoding object: ${obj}`)
+        this.#references.add(obj)
+
+        try {
+            if (T.isArray(obj)) return this.encode_array(obj)
+
+            if (T.isPlain(obj)) {
+                obj = this.encode_object(obj)
+                if (!(JSONx.ATTR_CLASS in obj)) return obj
+                return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
+            }
+
+            if (obj instanceof schemat.WebObject) {
+                if (obj.id || obj.__provisional_id)
+                    return {[JSONx.ATTR_CLASS]: obj.id || -obj.__provisional_id}    // ref to newly-created object encoded by negated __provisional_id
+                throw new Error(`can't encode a reference to a newly-created object (no ID): ${obj}`)
+            }
+
+            if (obj instanceof Uint8Array) {
+                let state = bin_to_hex(obj)
+                return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_BIN}
+            }
+            
+            if (typeof obj === 'bigint')    // handle BigInt values
+                return {[JSONx.ATTR_STATE]: obj.toString(), [JSONx.ATTR_CLASS]: JSONx.FLAG_BIGINT}
+
+            if (T.isClass(obj)) {
+                let state = schemat.get_classpath(obj)
+                return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
+            }
+
+            let state
+            if (obj instanceof Map)
+                state = this.encode_object(Object.fromEntries(obj.entries()))
+            else {
+                state = getstate(obj)
+                state = (obj !== state) ? this.encode(state) : this.encode_object(state)
+            }
+
+            // wrap up the state in a dict, if needed, and append class designator
+            if (!state || typeof state !== 'object' || Array.isArray(state) || JSONx.ATTR_CLASS in state)
+                state = {[JSONx.ATTR_STATE]: state}
+
+            let t = T.getPrototype(obj)
+            state[JSONx.ATTR_CLASS] = schemat.get_classpath(t)
+
+            return state
+        } finally {
+            this.#references.delete(obj)  // cleanup after encoding is done
         }
-
-        if (obj instanceof schemat.WebObject) {
-            if (obj.id || obj.__provisional_id)
-                return {[JSONx.ATTR_CLASS]: obj.id || -obj.__provisional_id}    // ref to newly-created object encoded by negated __provisional_id
-            throw new Error(`can't encode a reference to a newly-created object (no ID): ${obj}`)
-        }
-
-        if (obj instanceof Uint8Array) {
-            let state = bin_to_hex(obj)
-            return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_BIN}
-        }
-        
-        if (typeof obj === 'bigint')    // handle BigInt values
-            return {[JSONx.ATTR_STATE]: obj.toString(), [JSONx.ATTR_CLASS]: JSONx.FLAG_BIGINT}
-
-        if (T.isClass(obj)) {
-            let state = schemat.get_classpath(obj)
-            return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
-        }
-        // else if (obj instanceof Set)
-        //     state = this.encode_array(Array.from(obj))
-
-        let state
-        if (obj instanceof Map)
-            state = this.encode_object(Object.fromEntries(obj.entries()))
-        else {
-            state = getstate(obj)
-            state = (obj !== state) ? this.encode(state) : this.encode_object(state)
-        }
-
-        // wrap up the state in a dict, if needed, and append class designator
-        if (!state || typeof state !== 'object' || Array.isArray(state) || JSONx.ATTR_CLASS in state)
-            state = {[JSONx.ATTR_STATE]: state}
-
-        let t = T.getPrototype(obj)
-        state[JSONx.ATTR_CLASS] = schemat.get_classpath(t)
-
-        return state
     }
 
     decode(state) {
