@@ -168,7 +168,7 @@ export class Block extends Agent {
     async '$agent.erase'({storage}) {
         /* Remove all records from this block. */
         await storage.erase()
-        return this._flush(storage)
+        this._flush(storage)
     }
 
     async '$agent.flush'({storage}) { return this._flush(storage, false) }
