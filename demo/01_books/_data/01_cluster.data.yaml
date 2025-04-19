@@ -294,16 +294,11 @@
   agents_installed:
     - "@": 1010
     - "@": 1015
+    - "@": 1026
     - "@": 1029
     - "@": 1032
     - "@": 1033
     - "@": 1023
-  agents_running:
-    - block_1010
-    - block_1015
-    - block_1029
-    - block_1032
-    - webserver
   tcp_port: 5820
   __category:
     "@": 21
@@ -413,18 +408,13 @@
     "@": 32
 - id: 1036
   agents_installed:
+    - "@": 1015
     - "@": 1026
     - "@": 1030
     - "@": 1032
     - "@": 1033
     - "@": 1023
     - "@": 1037
-  agents_running:
-    - block_1026
-    - block_1030
-    - block_1033
-    - webserver
-    - logger
   tcp_port: 5821
   __category:
     "@": 21
