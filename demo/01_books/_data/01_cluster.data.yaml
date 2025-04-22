@@ -165,7 +165,7 @@
   __category:
     "@": 19
 - id: 1011
-  name: cluster-db
+  name: db-cluster
   top_ring:
     "@": 1004
   __category:
@@ -425,7 +425,7 @@
   __category:
     "@": 33
 - id: 1039
-  name: test-db
+  name: db-test
   top_ring:
     "@": 1040
   __category:
