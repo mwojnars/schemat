@@ -51,11 +51,16 @@ async function create_demo_01() {
     
     // replace file paths, object names and port numbers in `db`
     db = db.replaceAll('main-site', `Bookstore (demo site)`)
+    db = db.replaceAll('name: home', `name: home\n  view_endpoint: demo/01_books/home/home.js:homepage`)
+
     db = db.replaceAll('/schemat/data/01', `/demo/${demo_name}/_data/01`)       // 01_cluster.*
     db = db.replaceAll('/schemat/data/02', `/demo/${demo_name}/_data/02`)       // 02_app.*
     db = db.replaceAll('/app', `/demo/${demo_name}`)
+
     db = db.replaceAll('tcp_port: 5828', `tcp_port: 5820`)
     db = db.replaceAll('tcp_port: 5829', `tcp_port: 5821`)
+
+    db = db.replaceAll('tcp_port: 5820', `  - "@": 1030\n  tcp_port: 5820`)     // add 02_app.index block [1030] to agents_installed
 
     // insert AuthorCategory and BookCategory references in [site.global]; insert URL routes
     db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 2002\n    BookCategory:\n      "@": 2001`)
