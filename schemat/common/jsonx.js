@@ -195,7 +195,7 @@ export class JSONx {
         }
         else cls = Object
 
-        console.assert(cls !== undefined, {msg: "`cls` is undefined", state})
+        if (cls === undefined) throw new Error(`can't detect the class of object during decoding`)
 
         // instantiate the output object; special handling for standard JSON types
         if (T.isPrimitiveClass(cls))  return state
