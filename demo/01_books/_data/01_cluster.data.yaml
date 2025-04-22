@@ -106,6 +106,7 @@
     "@": 5
 - id: 1008
   name: home
+  view_endpoint: demo/01_books/home/home.js:homepage
   __container:
     "@": 1007
   __category:
@@ -299,6 +300,7 @@
     - "@": 1032
     - "@": 1033
     - "@": 1023
+    - "@": 1030
   tcp_port: 5820
   __category:
     "@": 21
