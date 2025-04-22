@@ -367,9 +367,12 @@ describe('Schemat Tests', function () {
 
         before(async function () {({server, browser, page, messages} = setup())})
 
-        it('demo01/Home', async function () {
+        it('demo01/Home::inspect', async function () {
             await delay(500)
-            await test_page(page, `${DOMAIN}`, '#page-main', ['home', 'Properties'])
+            await test_page(page, `${DOMAIN}/::inspect`, '#page-main', ['home', 'Properties'])
+        })
+        it('demo01/Home', async function () {
+            await test_page(page, `${DOMAIN}`, null, ['Welcome', 'Tolkien', 'View All Authors'])
         })
         it('demo01/Authors', async function () {
             await test_page(page, `${DOMAIN}/authors`, null, ['Fitzgerald', 'Gatsby', 'Tolkien', 'Commander'])
