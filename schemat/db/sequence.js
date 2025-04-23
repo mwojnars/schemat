@@ -102,7 +102,7 @@ export class Sequence extends WebObject {
 
         block_start.assert_active()
         // if (!block.is_loaded()) block = await block.load()
-        yield* await block_start.scan({start, stop})
+        yield* await block_start.$agent.scan({start, stop})
     }
 
     async* scan(opts = {}) {
