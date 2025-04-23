@@ -175,18 +175,18 @@ export class Ring extends WebObject {
     }
 
     async select(id, req) {
-        // return this._find_block(id).$agent.select(id, req || new DataRequest())
-        return await this._find_block(id).select(id, req || new DataRequest())
+        return this._find_block(id).$agent.select(id, req || new DataRequest())
+        // return await this._find_block(id).select(id, req || new DataRequest())
     }
 
     async delete(id, req) {
-        // return this._find_block(id).$agent.cmd_delete(id, req || new DataRequest())
-        return this._find_block(id).cmd_delete(id, req || new DataRequest())
+        return this._find_block(id).$agent.cmd_delete(id, req || new DataRequest())
+        // return this._find_block(id).cmd_delete(id, req || new DataRequest())
     }
 
     async insert(data, req) {
-        // return this._random_block().$agent.cmd_insert(null, data)
-        return this._random_block().cmd_insert(null, data)
+        return this._random_block().$agent.cmd_insert(null, data)
+        // return this._random_block().cmd_insert(null, data)
     }
 
     async insert_at(id, data) {
@@ -201,8 +201,8 @@ export class Ring extends WebObject {
                    even without changing the record's data.
          */
         assert(edits.length, 'missing edits')
-        // return this._find_block(id).$agent.cmd_update(id, edits, req || new DataRequest())
-        return this._find_block(id).cmd_update(id, edits, req || new DataRequest())
+        return this._find_block(id).$agent.cmd_update(id, edits, req || new DataRequest())
+        // return this._find_block(id).cmd_update(id, edits, req || new DataRequest())
     }
 
     async update_full(id_or_obj, data = null, req = null) {

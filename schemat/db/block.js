@@ -76,14 +76,14 @@ export class Block extends Agent {
 
         this._storage = null
 
-        let storage_class = this._detect_storage_class()
-        this._storage = new storage_class(this.filename, this)
-
-        // magic trick to allow sequence loading complete before _storage is opened; NO, we can't await sequence.load() here,
-        // because this creates deadlocks in some edge cases, like when opening [Block] category's ::inspect page in browser
-        if (!this.sequence.is_loaded()) await sleep()
-
-        return this._reopen(this._storage)
+        // let storage_class = this._detect_storage_class()
+        // this._storage = new storage_class(this.filename, this)
+        //
+        // // magic trick to allow sequence loading complete before _storage is opened; NO, we can't await sequence.load() here,
+        // // because this creates deadlocks in some edge cases, like when opening [Block] category's ::inspect page in browser
+        // if (!this.sequence.is_loaded()) await sleep()
+        //
+        // return this._reopen(this._storage)
     }
 
     _detect_storage_class() {
@@ -143,18 +143,18 @@ export class Block extends Agent {
         return deleted
     }
 
-    get $_wrap2() { return this.$_wrap }
+    // get $_wrap2() { return this.$_wrap }
 
-    // get $_wrap2() {
-    //     // temporary redefinition that behaves like $agent
-    //     let id = this.id
-    //     // assert(id)
-    //     return new Proxy({}, {
-    //         get(target, name) {
-    //             if (typeof name === 'string') return (fake_state, ...args) => schemat.node.rpc_send(id, name, args)
-    //         }
-    //     })
-    // }
+    get $_wrap2() {
+        // temporary redefinition that behaves like $agent
+        let id = this.id
+        // assert(id)
+        return new Proxy({}, {
+            get(target, name) {
+                if (typeof name === 'string') return (fake_state, ...args) => schemat.node.rpc_send(id, name, args)
+            }
+        })
+    }
 
     async scan(...args) { return this.$_wrap2.scan({storage: this._storage}, ...args) }
 
@@ -256,8 +256,8 @@ export class DataBlock extends Block {
         return ring
     }
 
-    async select(...args) { return this.$_wrap2.select({storage: this._storage}, ...args) }
-    // async select(...args) { return this.$agent.select(...args) }
+    // async select(...args) { return this.$_wrap2.select({storage: this._storage}, ...args) }
+    async select(...args) { return this.$agent.select(...args) }
 
     async '$agent.select'({storage}, id, req) {
         let key = this.encode_id(id)
