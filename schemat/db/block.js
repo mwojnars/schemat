@@ -22,7 +22,6 @@ export class Block extends Agent {
     filename                // path to a local file or folder on the worker node where this block is stored
     format                  // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
 
-    _storage                // Storage for this block's records
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
     get ring()      { return this.sequence.ring }
@@ -73,17 +72,6 @@ export class Block extends Agent {
         // if (!this.sequence.is_loaded() && !this.sequence.__meta.loading)
         //     this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block (!);
         //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
-
-        this._storage = null
-
-        // let storage_class = this._detect_storage_class()
-        // this._storage = new storage_class(this.filename, this)
-        //
-        // // magic trick to allow sequence loading complete before _storage is opened; NO, we can't await sequence.load() here,
-        // // because this creates deadlocks in some edge cases, like when opening [Block] category's ::inspect page in browser
-        // if (!this.sequence.is_loaded()) await sleep()
-        //
-        // return this._reopen(this._storage)
     }
 
     _detect_storage_class() {
@@ -122,8 +110,6 @@ export class Block extends Agent {
             return sleep(1000).then(() => this._reopen(storage))
     }
 
-    // async get({key})   { return this._storage.get(key) }
-
     async '$agent.put'({storage}, key, value) { return this.put(storage, key, value) }
 
     async put(storage, key, value) {
@@ -146,7 +132,6 @@ export class Block extends Agent {
     async '$agent.scan'({storage}, opts = {}) {
         return arrayFromAsync(storage.scan(opts))       // TODO: return batches with a hard upper limit on their size
     }
-    // async *scan(opts = {}) { yield* this._storage.scan(opts) }
 
     async '$agent.erase'({storage}) {
         /* Remove all records from this block. */
@@ -486,6 +471,8 @@ export class DataBlock extends Block {
 /**********************************************************************************************************************/
 
 export class BootDataBlock extends DataBlock {
+
+    _storage        // Storage for this block's records
 
     async __init__() {
         await super.__init__()
