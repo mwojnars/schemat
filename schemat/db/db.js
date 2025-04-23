@@ -263,9 +263,11 @@ export class BootRing extends Ring {
         this.data_sequence = DataSequence._draft(this, undefined, {boot_file: file})
     }
 
-    select(id, req)  {
+    async select(id, req)  {
         // print('boot ring select()')
-        return this._find_block(id).select(id, req || new DataRequest())
+        let block = this._find_block(id)
+        await block.load()
+        return block.select(id, req || new DataRequest())
     }
 
     insert() {assert(false, `inserts not supported in BootRing`)}

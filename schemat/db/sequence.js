@@ -53,7 +53,8 @@ export class Sequence extends WebObject {
         // 2) Setting a custom {ring} is needed to enable distributed storage, so that searching for the block object
         // over the cluster does NOT evoke an infinite chain of cyclic load attempts. Here, it's assumed that
         // this.__ring is a special type of system-level ring whose data is readily available on every cluster node.
-        return Promise.all(this.blocks.map(b => b.load({ring: this.__ring})))
+        // ...
+        // return Promise.all(this.blocks.map(b => b.load({ring: this.__ring})))
     }
 
     // add_derived(sequence) {
@@ -100,7 +101,7 @@ export class Sequence extends WebObject {
         let block_stop = this.find_block(stop)
         assert(block_start === block_stop)
 
-        block_start.assert_active()
+        // block_start.assert_active()
         // if (!block.is_loaded()) block = await block.load()
         yield* await block_start.$agent.scan({start, stop})
     }
@@ -136,13 +137,13 @@ export class IndexSequence extends Sequence {
 
     async put(key, value) {
         let block = this.find_block(key)
-        if (!block.is_loaded()) block = await block.load()
+        // if (!block.is_loaded()) block = await block.load()
         return block.$agent.put(key, value)
     }
 
     async del(key, value) {
         let block = this.find_block(key)
-        if (!block.is_loaded()) block = await block.load()
+        // if (!block.is_loaded()) block = await block.load()
         return block.$agent.del(key, value)
     }
 
