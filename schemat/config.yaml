@@ -3,7 +3,7 @@
 #
 
 # ID of the Cluster that this node is, or should be, a part of
-cluster: 1025  #1014
+cluster: 1025
 
 
 # bootstrap_rings:
