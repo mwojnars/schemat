@@ -238,6 +238,7 @@ export class Node extends Agent {
         if (this.find_process(agent_id) != null) return this
 
         // load the object and check its __node to find a remote destination
+        // TODO: do NOT load the target agent, as this may cause infinite loop when targeting data blocks!
         let agent = await schemat.get_loaded(agent_id)
         return schemat.cluster.find_node(agent)  //,role
     }
@@ -314,7 +315,7 @@ export class Node extends Agent {
         let frame = schemat.get_frame(agent_id)
         if (frame) return this._rpc_response_parse(await this.rpc_recv(message))
 
-        // print("rpc_send():", JSON.stringify(message))
+        // this._print("rpc_send():", JSON.stringify(message))
 
         let result = await (this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message))
         return this._rpc_response_parse(result)
