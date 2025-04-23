@@ -190,7 +190,7 @@ export class Ring extends WebObject {
     }
 
     async insert_at(id, data) {
-        return this._find_block(id).cmd_insert(id, data)
+        return this._find_block(id).$agent.cmd_insert(id, data)
     }
 
     async update(id, edits, req) {
@@ -211,11 +211,11 @@ export class Ring extends WebObject {
         data ??= obj.__data //__json
         let edits = [['overwrite', data]]
 
-        return this._find_block(id).cmd_update(id, edits, req || new DataRequest())
+        return this._find_block(id).$agent.cmd_update(id, edits, req || new DataRequest())
     }
 
     async upsave(id, data, req) {
-        return this._find_block(id).cmd_upsave(id, data, req || new DataRequest())
+        return this._find_block(id).$agent.cmd_upsave(id, data, req || new DataRequest())
     }
 
 

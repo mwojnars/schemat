@@ -117,7 +117,7 @@ export class Sequence extends WebObject {
             yield Record.binary(rschema, key, value)
     }
 
-    async erase()   { return Promise.all(this.blocks.map(b => b.erase())) }
+    async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
     async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 }
 
