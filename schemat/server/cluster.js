@@ -32,6 +32,7 @@ export class Cluster extends WebObject {
            on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
            If `agent` is deployed here, on the current node, this location is always returned.
          */
+        if (typeof agent === 'number') agent = schemat.get_object(agent)
         let nodes = this.agent_placements[agent.id]
         if (!nodes?.length) throw new Error(`agent ${agent.__label} not deployed on any node`)
         if (nodes.some(node => node.id === this.id)) return this

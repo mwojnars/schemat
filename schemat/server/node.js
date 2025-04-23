@@ -236,11 +236,7 @@ export class Node extends Agent {
     async find_node(agent_id, role) {
         // if agent is deployed on one of local processes, return this node
         if (this.find_process(agent_id) != null) return this
-
-        // load the object and check its __node to find a remote destination
-        // TODO: do NOT load the target agent, as this may cause infinite loop when targeting data blocks!
-        let agent = await schemat.get_object(agent_id)
-        return schemat.cluster.find_node(agent)  //,role
+        return schemat.cluster.find_node(agent_id)  //,role
     }
 
     find_process(agent_id, role) {
