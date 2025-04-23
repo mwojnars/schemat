@@ -7,7 +7,10 @@ import {WebObject} from "../core/object.js";
 export class Cluster extends WebObject {
 
     async __init__()  {
-        if (SERVER) await this.database?.load()
+        if (SERVER) {
+            await this.database?.load()
+            await Promise.all(this.nodes.map(node => node.load()))
+        }
     }
 
     find_node(agent, role) {  // host_node() locate_node()
