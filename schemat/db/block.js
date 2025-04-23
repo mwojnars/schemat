@@ -26,12 +26,12 @@ export class Block extends Agent {
 
     get ring()      { return this.sequence.ring }
 
-    __new__(sequence, {filename, format, node} = {}) {
+    __new__(sequence, {filename, format} = {}) {
         sequence.assert_active()
         this.sequence = sequence
         this.filename = filename
         this.format = format
-        this.__node = node
+        // this.__node = node
     }
 
     async __setup__() {
@@ -39,7 +39,7 @@ export class Block extends Agent {
         if (!this.sequence.is_loaded()) await this.sequence.load()
         if (!this.ring.is_loaded()) await this.ring.load()
 
-        this.__node ??= schemat.node
+        // this.__node ??= schemat.node
         this.filename ??= this._create_filename()
 
         print('Block.__setup__() done, filename', this.filename)
@@ -52,7 +52,8 @@ export class Block extends Agent {
             `${this.id}`,
             this._file_extension()
         ]
-        return joinPath(this.__node.data_directory, parts.filter(Boolean).join('.'))
+        // TODO: below, replace `schemat.node` with the current node where the block is being installed/deployed
+        return joinPath(schemat.node.data_directory, parts.filter(Boolean).join('.'))
     }
 
     _file_extension() {
