@@ -161,8 +161,6 @@
   sequence:
     "@": 1017
   filename: ./demo/01_books/_data/02_app.data.1010.yaml
-  __node:
-    "@": 1024
   __category:
     "@": 19
 - id: 1011
@@ -195,6 +193,8 @@
     [test-ring] to override some system configuration like TCP port numbers.
   database:
     "@": 1039
+  __prototype:
+    "@": 1025
   __category:
     "@": 10
 - id: 1015
@@ -207,8 +207,6 @@
       - 0
       - 1
     "@": schemat/common/structs.js:Shard
-  __node:
-    "@": 1024
   __category:
     "@": 19
 - id: 1016
@@ -299,6 +297,8 @@
     - "@": 1029
     - "@": 1032
     - "@": 1033
+    - "@": 1043
+    - "@": 1045
     - "@": 1023
     - "@": 1030
   tcp_port: 5820
@@ -308,6 +308,9 @@
   name: cluster
   database:
     "@": 1011
+  nodes:
+    - "@": 1024
+    - "@": 1036
   __category:
     "@": 10
 - id: 1026
@@ -315,8 +318,6 @@
     "@": 1013
   filename: ./schemat/data/00_kernel.index.jl
   format: index-jl
-  __node:
-    "@": 1036
   __category:
     "@": 18
 - id: 1027
@@ -346,8 +347,6 @@
       - 0
       - 1
     "@": schemat/common/structs.js:Shard
-  __node:
-    "@": 1024
   __category:
     "@": 19
 - id: 1030
@@ -355,8 +354,6 @@
     "@": 1018
   filename: ./demo/01_books/_data/02_app.index.jl
   format: index-jl
-  __node:
-    "@": 1036
   __category:
     "@": 18
 - id: 1031
@@ -373,8 +370,6 @@
       - 0
       - 1
     "@": schemat/common/structs.js:Shard
-  __node:
-    "@": 1024
   __category:
     "@": 19
 - id: 1033
@@ -382,8 +377,6 @@
     "@": 1028
   filename: ./demo/01_books/_data/01_cluster.index.jl
   format: index-jl
-  __node:
-    "@": 1036
   __category:
     "@": 18
 - id: 1034
@@ -422,8 +415,6 @@
     "@": 21
 - id: 1037
   name: logger
-  __node:
-    "@": 1036
   __category:
     "@": 33
 - id: 1039
@@ -471,8 +462,6 @@
       - 0
       - 1
     "@": schemat/common/structs.js:Shard
-  __node:
-    "@": 1024
   __category:
     "@": 19
 - id: 1044
@@ -489,7 +478,5 @@
     "@": 1044
   filename: ./schemat/data/03_test.idx_category.1045.jl
   format: index-jl
-  __node:
-    "@": 1024
   __category:
     "@": 18
