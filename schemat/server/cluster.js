@@ -20,8 +20,8 @@ export class Cluster extends WebObject {
         let placements = {}
         for (let node of this.nodes) {
             for (let agent of node.agents_installed) {
-                placements[agent] ??= []
-                placements[agent].push(node)
+                placements[agent.id] ??= []
+                placements[agent.id].push(node)
             }
         }
         return placements
@@ -32,7 +32,13 @@ export class Cluster extends WebObject {
            on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
            If `agent` is deployed here, on the current node, this location is always returned.
          */
-        return agent.__node
+        let nodes = this.agent_placements[agent.id]
+        if (!nodes?.length) throw new Error(`agent ${agent.__label} not deployed on any node`)
+        if (nodes.some(node => node.id === this.id)) return this
+        return nodes[0]
+        // return nodes.random()
+
+        // return agent.__node
     }
 
     find_nodes(agent, role) {
