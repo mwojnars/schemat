@@ -362,9 +362,9 @@ export class Node extends Agent {
          */
         assert(this.is_master())
         let [type] = message
+        // this._print(`ipc_master():`, JSON.stringify(message))
 
         if (type === 'RPC') {
-            // this._print(`ipc_master():`, JSON.stringify(message))
             let {agent_id} = this._rpc_request_parse(message)
             // print(`ipc_master():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(message))
 
