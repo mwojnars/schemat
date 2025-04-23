@@ -441,6 +441,14 @@
     database:
       info: Database instance to be used by the kernel (master/worker processes).
       "@": schemat/types/type.js:REF
+    nodes:
+      info: Array of Node objects representing nodes of this cluster.
+      default: []
+      type:
+        category:
+          "@": 21
+        "@": schemat/types/type.js:REF
+      "@": schemat/types/type.js:ARRAY
     "@": schemat:Catalog
   class: schemat/server/cluster.js:Cluster
   __category:
