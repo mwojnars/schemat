@@ -145,9 +145,6 @@ export class Node extends Agent {
     tcp_port
     tcp_retry_interval
 
-    // node as an agent is deployed on itself and runs on master process
-    get __node() { return this }
-
     get worker_id() { return schemat.kernel.worker_id }
     is_master()     { return schemat.kernel.is_master() }
     _print(...args) { print(`${this.id}/#${this.worker_id}`, ...args) }

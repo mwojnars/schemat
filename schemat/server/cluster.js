@@ -38,8 +38,6 @@ export class Cluster extends WebObject {
         if (nodes.some(node => node.id === this.id)) return this
         return nodes[0]
         // return nodes.random()
-
-        // return agent.__node
     }
 
     find_nodes(agent, role) {

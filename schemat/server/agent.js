@@ -14,8 +14,6 @@ export class Agent extends WebObject {
        being allocated/deallocated in __install__/__uninstall__(), while some others (e.g., sockets) in __start__/__stop__().
     */
 
-    __node          // node(s) where this agent is installed & running as a leader
-    __replica       // node(s) where this agent is installed & running as a replica
     __site          // Site that provides context of execution of this agent's __start__/__stop__ methods ("user mode"),
                     // and a fallback context for $agent.*() methods if no request-specific RPC context was given;
                     // if missing, kernel's context (cluster) is used ("kernel mode")

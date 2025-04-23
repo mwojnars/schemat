@@ -32,11 +32,12 @@ export class KafkaRequest extends Request {
 export class KafkaService extends Service {
 
     _is_local(target) {
-        assert(target.is_loaded())
-        // return target.id === schemat.node.id     // this should be used inside KafkaNode agents
-        assert(target.__node, 'not an agent or not deployed anywhere')
-        return target.__node.id === schemat.node.id
-        // return target.__node$.some(node => node.id === schemat.node.id)
+        assert(false)
+        // assert(target.is_loaded())
+        // // return target.id === schemat.node.id     // this should be used inside KafkaNode agents
+        // assert(target.__node, 'not an agent or not deployed anywhere')
+        // return target.__node.id === schemat.node.id
+        // // return target.__node$.some(node => node.id === schemat.node.id)
     }
 
     async _submit(target, value) {
