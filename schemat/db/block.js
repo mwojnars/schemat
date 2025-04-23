@@ -66,7 +66,8 @@ export class Block extends Agent {
         if (CLIENT) return              // don't initialize internals when on client
 
         if (!this.sequence.is_loaded())
-            {this.sequence.load(); await sleep()}
+            await this.sequence.load()
+            // {this.sequence.load(); await sleep()}
             // if (schemat.booting) {this.sequence.load(); await sleep()} else await this.sequence.load()
 
         // if (!this.sequence.is_loaded() && !this.sequence.__meta.loading)
