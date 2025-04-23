@@ -239,7 +239,7 @@ export class Node extends Agent {
 
         // load the object and check its __node to find a remote destination
         // TODO: do NOT load the target agent, as this may cause infinite loop when targeting data blocks!
-        let agent = await schemat.get_loaded(agent_id)
+        let agent = await schemat.get_object(agent_id)
         return schemat.cluster.find_node(agent)  //,role
     }
 
