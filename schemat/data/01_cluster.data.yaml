@@ -300,6 +300,9 @@
   name: cluster
   database:
     "@": 1011
+  nodes:
+    - "@": 1024
+    - "@": 1036
   __category:
     "@": 10
 - id: 1026
