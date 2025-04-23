@@ -13,6 +13,20 @@ export class Cluster extends WebObject {
         }
     }
 
+    get agent_placements() {
+        /* Map of agent_id --> array of nodes where this agent is deployed.
+           TODO: keys are strings of the form `agent_role`.
+         */
+        let placements = {}
+        for (let node of this.nodes) {
+            for (let agent of node.agents_installed) {
+                placements[agent] ??= []
+                placements[agent].push(node)
+            }
+        }
+        return placements
+    }
+
     find_node(agent, role) {  // host_node() locate_node()
         /* Return the node where the `agent` running in a given `role` can be found. If `agent` is deployed
            on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
