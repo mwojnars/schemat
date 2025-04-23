@@ -157,7 +157,7 @@ export class Block extends Agent {
     // }
 
     // async scan(...args) { return this.$_wrap2.scan({storage: this._storage}, ...args) }
-    async scan(...args) { return this.$agent.scan(...args) }
+    // async scan(...args) { return this.$agent.scan(...args) }
 
     async '$agent.scan'({storage}, opts = {}) {
         return arrayFromAsync(storage.scan(opts))       // TODO: return batches with a hard upper limit on their size
@@ -165,7 +165,7 @@ export class Block extends Agent {
     // async *scan(opts = {}) { yield* this._storage.scan(opts) }
 
     // async erase(...args) { return this.$_wrap2.erase({storage: this._storage}, ...args) }
-    async erase() { return this.$agent.erase() }
+    // async erase() { return this.$agent.erase() }
 
     async '$agent.erase'({storage}) {
         /* Remove all records from this block. */
@@ -259,7 +259,7 @@ export class DataBlock extends Block {
     }
 
     // async select(...args) { return this.$_wrap2.select({storage: this._storage}, ...args) }
-    async select(...args) { return this.$agent.select(...args) }
+    // async select(...args) { return this.$agent.select(...args) }
 
     async '$agent.select'({storage}, id, req) {
         let key = this.encode_id(id)
@@ -268,7 +268,7 @@ export class DataBlock extends Block {
         return await this._move_down(id, req).select(id, req)
     }
 
-    async cmd_insert(...args) { return this.$agent.cmd_insert(...args)}
+    // async cmd_insert(...args) { return this.$agent.cmd_insert(...args)}
     // async cmd_insert(...args) {
     //     let obj = this
     //     return this.$_wrap2.cmd_insert({
@@ -416,7 +416,7 @@ export class DataBlock extends Block {
     // _reclaim_id(...ids)
 
     // async cmd_update(...args) { return this.$_wrap2.cmd_update({storage: this._storage}, ...args) }
-    async cmd_update(...args) { return this.$agent.cmd_update(...args) }
+    // async cmd_update(...args) { return this.$agent.cmd_update(...args) }
 
     async '$agent.cmd_update'({storage}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
@@ -451,7 +451,7 @@ export class DataBlock extends Block {
     }
 
     // async cmd_upsave(...args) { return this.$_wrap2.cmd_upsave({storage: this._storage}, ...args) }
-    async cmd_upsave(...args) { return this.$agent.cmd_upsave(...args) }
+    // async cmd_upsave(...args) { return this.$agent.cmd_upsave(...args) }
 
     async '$agent.cmd_upsave'({storage}, id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
@@ -480,7 +480,7 @@ export class DataBlock extends Block {
     }
 
     // async cmd_delete(...args) { return this.$_wrap2.cmd_delete({storage: this._storage}, ...args) }
-    async cmd_delete(...args) { return this.$agent.cmd_delete(...args) }
+    // async cmd_delete(...args) { return this.$agent.cmd_delete(...args) }
 
     async '$agent.cmd_delete'({storage}, id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
