@@ -909,13 +909,6 @@
     generate responses, manage local resources. The agent's clients can be
     located in the cluster or outside of it, depending on the type of agent."
   schema:
-    __node:
-      info: The node in the cluster where this agent is deployed. Multiple __node
-        values can be present.
-      repeated: true
-      category:
-        "@": 21
-      "@": schemat/types/type.js:REF
     __site:
       info: Site object that represents the context (database, web domain, URLs etc.)
         in which this agent should execute ('user mode'). If missing, the agent
