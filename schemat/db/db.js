@@ -326,7 +326,10 @@ export class Database extends WebObject {
     async select(id, {ring} = {}) {
         ring &&= this.get_ring(ring)        // check that `ring` occurs in the stack and replace it with the database's instance
         // if (ring) print(`selecting [${id}] from a custom top ring:`, ring.__label || ring)
-        return (ring || this.top_ring).select(id)
+        ring ??= this.top_ring
+        // if (id === 2001) this._print(`db.select(2001) site_id = ${schemat.site_id}`)
+        // if (id === 2001) this._print(`db.select(2001) from ring ${ring.__label}`)
+        return ring.select(id)
     }
 
     async insert(data, {ring} = {}) {
