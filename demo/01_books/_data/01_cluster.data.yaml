@@ -285,7 +285,7 @@
 - id: 1023
   name: webserver
   num_workers: -1
-  __site:
+  __app:
     "@": 1001
   __category:
     "@": 30

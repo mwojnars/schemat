@@ -254,7 +254,7 @@ export class KernelProcess {
             assert(agent instanceof Agent)
             this._print(`starting agent ${agent.__label} ...`)
 
-            let state = await schemat.in_context(agent.__site?.id, () => agent.__start__())
+            let state = await schemat.in_context(agent.__app?.id, () => agent.__start__())
             this.frames.set(agent.id, new Frame(agent, state))
             this._print(`starting agent ${agent.__label} done`)
         }
@@ -268,7 +268,7 @@ export class KernelProcess {
             this._print(`restarting agent ${agent.__label} ...`)
 
             let restart = () => agent.__restart__(frame.raw_state, frame.agent)
-            let state = await schemat.in_context(agent.__site?.id, restart)
+            let state = await schemat.in_context(agent.__app?.id, restart)
 
             frame.set_state(state)
             frame.agent = agent
@@ -291,7 +291,7 @@ export class KernelProcess {
             this._print(`stopping agent ${agent.__label} ...`)
            
             let stop = () => agent.__stop__(frame.raw_state)
-            await schemat.in_context(agent.__site?.id, stop)
+            await schemat.in_context(agent.__app?.id, stop)
 
             this.frames.delete(agent.id)
             this._print(`stopping agent ${agent.__label} done`)
