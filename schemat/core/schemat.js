@@ -171,7 +171,7 @@ export class Schemat {
         await builtin.fetch("../server/agent.js")
         await builtin.fetch("../server/node.js")
         await builtin.fetch("../server/cluster.js")
-        await builtin.fetch("../std/site.js")
+        await builtin.fetch("../std/app.js")
         await builtin.fetch("../std/files.js")
         await builtin.fetch("../std/containers.js")
         await builtin.fetch("../db/data_request.js")
