@@ -1,8 +1,7 @@
 import {print, assert, T, sleep, splitLast, normalizePath} from '../common/utils.js'
 import {URLNotFound} from "../common/errors.js"
 import {WebRequest} from '../web/request.js'
-import {WebObject} from '../core/object.js'
-import {ObjectSpace} from "./containers.js";
+import {WebObject} from './object.js'
 import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
 

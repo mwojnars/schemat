@@ -245,7 +245,7 @@
 - id: 2
   name: Application
   info: Top-level URL routing + global configuration of the application.
-  class: schemat/std/app.js:Application
+  class: schemat/core/app.js:Application
   schema:
     database:
       info: Database instance that contains all data of this site

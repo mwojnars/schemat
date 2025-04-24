@@ -167,11 +167,11 @@ export class Schemat {
         builtin.set(":Map", Map)                                    // standard JS classes have an empty file part of the path
 
         await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:WebObject"
+        await builtin.fetch("./app.js")
         await builtin.fetch("../server/logger.js")
         await builtin.fetch("../server/agent.js")
         await builtin.fetch("../server/node.js")
         await builtin.fetch("../server/cluster.js")
-        await builtin.fetch("../std/app.js")
         await builtin.fetch("../std/files.js")
         await builtin.fetch("../std/containers.js")
         await builtin.fetch("../db/data_request.js")
