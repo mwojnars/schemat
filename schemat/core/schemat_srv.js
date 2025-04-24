@@ -91,8 +91,8 @@ export class ServerSchemat extends Schemat {
         super(config)
         if (parent) this._clone(parent)
 
-        assert(globalThis._contexts.get(this.site_id) === undefined, `ServerSchemat context for site_id=${this.site_id} is already registered`)
-        globalThis._contexts.set(this.site_id, this)
+        assert(globalThis._contexts.get(this.app_id) === undefined, `ServerSchemat context for app_id=${this.app_id} is already registered`)
+        globalThis._contexts.set(this.app_id, this)
 
         this.ROOT_DIRECTORY = process.cwd()                 // initialize ROOT_DIRECTORY from the current working dir
         // this.SCHEMAT_DIRECTORY = this.ROOT_DIRECTORY + '/schemat'
@@ -110,7 +110,7 @@ export class ServerSchemat extends Schemat {
     }
 
     async boot(boot_db, auto = true) {
-        /* Initialize built-in objects, site_id, site, bootstrap DB. */
+        /* Initialize built-in objects, app_id, site, bootstrap DB. */
         await this._init_classpath()
         this._boot_db = await boot_db?.() || this.parent.db     // bootstrap DB, created anew or taken from parent; the ultimate DB is opened later: on the first access to this.db
 
@@ -125,7 +125,7 @@ export class ServerSchemat extends Schemat {
         await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
 
         await this.site?.reload()           // repeated site reload is needed for site.global initialization which fails on first attempt during bootstrap
-        // if (this.site) await this.reload(this.site_id, true)
+        // if (this.site) await this.reload(this.app_id, true)
 
         if (auto) this._boot_done()
 
@@ -216,31 +216,31 @@ export class ServerSchemat extends Schemat {
         return (...args) => _schemat.run(this, () => handler(...args))
     }
 
-    async in_context(site_id, callback) {
+    async in_context(app_id, callback) {
         /* Run callback() in the Schemat async context (`_schemat`) built around a specific site.
            If not yet created, this context (ServerSchemat instance) is created now and saved in
-           globalThis._contexts for reuse by other requests. If `site_id` is missing, `this` is used as the context.
+           globalThis._contexts for reuse by other requests. If `app_id` is missing, `this` is used as the context.
            If current `schemat` is already the target context, the callback is executed directly without
            starting a new async context.
 
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
-        site_id ??= undefined
-        if (site_id === schemat.site_id) return callback()
+        app_id ??= undefined
+        if (app_id === schemat.app_id) return callback()
 
-        // this.kernel._print(`ServerSchemat.in_context() this.site_id = ${this.site_id} ...`)
-        let context = site_id ? globalThis._contexts.get(site_id) : this
+        // this.kernel._print(`ServerSchemat.in_context() this.app_id = ${this.app_id} ...`)
+        let context = app_id ? globalThis._contexts.get(app_id) : this
 
         if (!context) {
-            this.kernel._print(`ServerSchemat.in_context() creating context for [${site_id}]`)
-            context = new ServerSchemat({...this.config, site: site_id}, this)
+            this.kernel._print(`ServerSchemat.in_context() creating context for [${app_id}]`)
+            context = new ServerSchemat({...this.config, site: app_id}, this)
 
-            // globalThis._contexts.set(site_id, context)
+            // globalThis._contexts.set(app_id, context)
             await _schemat.run(context, () => context.boot())
 
             // let promise = _schemat.run(context, () => context.boot())
-            // globalThis._contexts.set(site_id, promise)          // to avoid race condition
-            // globalThis._contexts.set(site_id, await promise)
+            // globalThis._contexts.set(app_id, promise)          // to avoid race condition
+            // globalThis._contexts.set(app_id, await promise)
         }
         // else if (context.booting) await context.booting
         // else if (context instanceof Promise) context = await context
@@ -326,12 +326,12 @@ export class ServerSchemat extends Schemat {
         return (tx === this.tx) ? action() : this._transaction.run(tx, action)
     }
 
-    in_tx_context(site_id, tx, callback) {
+    in_tx_context(app_id, tx, callback) {
         /* Run callback() inside a double async context created by first setting the global `schemat`
-           to the context built around `site_id`, and then setting schemat.tx to `tx`.
-           Both arguments (site_id, tx) are optional.
+           to the context built around `app_id`, and then setting schemat.tx to `tx`.
+           Both arguments (app_id, tx) are optional.
          */
-        return this.in_context(site_id, tx ? () => schemat.in_transaction(tx, callback) : callback)
+        return this.in_context(app_id, tx ? () => schemat.in_transaction(tx, callback) : callback)
     }
 
     // with_transaction(action, tx = null) {
@@ -355,7 +355,7 @@ export class ServerSchemat extends Schemat {
     //     // let {ServerSchemat} = await this.import('/$/local/schemat/core/schemat_srv.js')
     //     T.setClass(this, ServerSchemat)
     //     await this._init_classpath()
-    //     // await this.reload(this.site_id)
+    //     // await this.reload(this.app_id)
     //     print('ServerSchemat class reloaded')
     // }
 

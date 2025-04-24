@@ -325,7 +325,7 @@ export class Database extends WebObject {
         ring &&= this.get_ring(ring)        // check that `ring` occurs in the stack and replace it with the database's instance
         // if (ring) print(`selecting [${id}] from a custom top ring:`, ring.__label || ring)
         ring ??= this.top_ring
-        // if (id === 2001) this._print(`db.select(2001) site_id = ${schemat.site_id}`)
+        // if (id === 2001) this._print(`db.select(2001) app_id = ${schemat.app_id}`)
         // if (id === 2001) this._print(`db.select(2001) from ring ${ring.__label}`)
         return ring.select(id)
     }

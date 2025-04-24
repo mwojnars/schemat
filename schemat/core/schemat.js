@@ -82,7 +82,7 @@ export class Schemat {
      */
 
     config          // boot configuration (on server) or RequestContext (on client)
-    site_id         // ID of the active Application object
+    app_id          // ID of the active Application object
     _site           // `site` of the previous generation, remembered here during complete cache erasure to keep the .site() getter operational
     registry        // cache of web objects, records and indexes loaded from DB
     builtin         // a Classpath containing built-in classes and their paths
@@ -92,7 +92,7 @@ export class Schemat {
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
 
     get root_category() { return this.get_object(ROOT_ID) }
-    get site()          { return this.get_if_loaded(this.site_id) || this._site }
+    get site()          { return this.get_if_loaded(this.app_id) || this._site }
     get db()            { return this.site?.database }              // a stub when on client, fully loaded when on server
     get global()        { return this.site?._global }
     get system()        { return this.site || this.cluster }        // user mode | kernel mode
@@ -140,7 +140,7 @@ export class Schemat {
          */
         this.booting = new Promise(resolve => this._booting_resolve = resolve)
         this.config = config
-        this.site_id = config.site || undefined
+        this.app_id = config.site || undefined
         this.WebObject = WebObject          // schemat.WebObject is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
         this.registry = new Registry(this._on_evict.bind(this))
@@ -150,14 +150,14 @@ export class Schemat {
     async _load_site() {
         /* Initialize this.site. */
 
-        let site_id = this.site_id
-        if (!site_id) return
-        assert(T.isNumber(site_id), `Invalid site ID: ${site_id}`)
+        let app_id = this.app_id
+        if (!app_id) return
+        assert(T.isNumber(app_id), `Invalid site ID: ${app_id}`)
 
-        this.site_id = site_id
-        this._essential.push(site_id)
+        this.app_id = app_id
+        this._essential.push(app_id)
 
-        await this.reload(site_id, true)
+        await this.reload(app_id, true)
         assert(this.site?.is_loaded())
     }
 
