@@ -244,8 +244,7 @@
   class: schemat:Category
 - id: 2
   name: Site
-  info: Top-level URL routing + global configuration of applications, servers,
-    startup.
+  info: Top-level URL routing + global configuration of the application.
   class: schemat/std/site.js:Site
   schema:
     database:
