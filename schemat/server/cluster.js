@@ -1,3 +1,4 @@
+import {assert} from "../common/utils.js";
 import {WebObject} from "../core/object.js";
 
 
@@ -18,12 +19,16 @@ export class Cluster extends WebObject {
            TODO: keys are strings of the form `agent_role`.
          */
         let placements = {}
+
+        for (let node of this.nodes)
+            for (let agent of node.agents_installed)
+                (placements[agent.id] ??= []).push(node)
+
         for (let node of this.nodes) {
-            for (let agent of node.agents_installed) {
-                placements[agent.id] ??= []
-                placements[agent.id].push(node)
-            }
+            assert(placements[node.id] === undefined)
+            placements[node.id] = [node]        // node as an agent is deployed on itself and nowhere else
         }
+
         return placements
     }
 
