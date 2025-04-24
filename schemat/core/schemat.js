@@ -83,7 +83,7 @@ export class Schemat {
 
     config          // boot configuration (on server) or RequestContext (on client)
     app_id          // ID of the active Application object
-    _site           // `site` of the previous generation, remembered here during complete cache erasure to keep the .site() getter operational
+    _app            // `site` of the previous generation, remembered here during complete cache erasure to keep the .site() getter operational
     registry        // cache of web objects, records and indexes loaded from DB
     builtin         // a Classpath containing built-in classes and their paths
     booting         // a Promise that resolves when this Schemat is fully booted; false after that
@@ -92,7 +92,7 @@ export class Schemat {
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
 
     get root_category() { return this.get_object(ROOT_ID) }
-    get site()          { return this.get_if_loaded(this.app_id) || this._site }
+    get site()          { return this.get_if_loaded(this.app_id) || this._app }
     get db()            { return this.site?.database }              // a stub when on client, fully loaded when on server
     get global()        { return this.site?._global }
     get system()        { return this.site || this.cluster }        // user mode | kernel mode

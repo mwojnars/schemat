@@ -192,14 +192,14 @@ export class ServerSchemat extends Schemat {
          */
         print(`Schemat._erase_registry(), ${this.registry.objects.size} objects ...`)
         this._cluster = this.cluster
-        this._site = this.site
+        this._app = this.site
 
-        assert(this._cluster.is_loaded() && (!this._site || this._site.is_loaded()))
+        assert(this._cluster.is_loaded() && (!this._app || this._app.is_loaded()))
 
         this.registry.erase()
 
         if (this._cluster) await this.reload(this._cluster.id, true)
-        if (this._site) await this.reload(this._site.id, true)
+        if (this._app) await this.reload(this._app.id, true)
 
         // print(`_erase_registry() site:`, this.site?.__label, this.site?.__hash)
         // print(`_erase_registry() this.db:`, this.db.__label, this.db.__hash)
