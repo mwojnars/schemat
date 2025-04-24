@@ -180,28 +180,3 @@ export class WebServer extends Agent {
         // await session.stop()
     }
 }
-
-
-/**********************************************************************************************************************/
-
-// async function serve_express() {
-//     let app = express()
-//     let server = new Server()
-//     await server.boot()
-//
-//     // for official middleware see: https://expressjs.com/en/resources/middleware.html
-//     // for receiving files:
-//     //  - multer:      https://www.npmjs.com/package/multer and https://expressjs.com/en/5x/api.html#req.body
-//     //  - fileupload:  https://www.npmjs.com/package/express-fileupload & https://stackoverflow.com/a/50243907/1202674 (newer one, possibly easier)
-//
-//     app.use(express.json())                                 // for parsing application/json
-//     app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
-//
-//     app.all('*', (req, res) => server.handle(req, res))
-//     // web.get('*', async (req, res) => {
-//     //     res.send(`URL path: ${req.path}`)
-//     //     res.send('Hello World!')
-//     // })
-//
-//     app.listen(PORT, HOSTNAME, () => print(`worker ${process.pid} listening at http://${HOSTNAME}:${PORT}`))
-// }
