@@ -94,7 +94,7 @@ export class WebServer extends Agent {
         // await schemat._reset_class(ServerSchemat)
 
         // schemat.registry.objects.clear()
-        // await schemat._init_site()
+        // await schemat._init_app()
 
         let express = (await import('express')).default
         let bodyParser = (await import('body-parser')).default
