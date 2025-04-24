@@ -1015,7 +1015,7 @@ export class WebObject {
            Query parameters are passed in `req.query`, as:
            - a string if there's one occurrence of PARAM in a query string,
            - an array [val1, val2, ...] if PARAM occurs multiple times.
-           TODO: move this method to Site.handle_web(request)
+           TODO: move this method to Application.handle_web(request)
         */
         assert(this.is_loaded)
 

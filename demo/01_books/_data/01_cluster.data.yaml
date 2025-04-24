@@ -120,7 +120,7 @@
       "@": 1
     Container:
       "@": 3
-    Site:
+    Application:
       "@": 2
     Directory:
       "@": 5

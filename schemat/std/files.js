@@ -72,7 +72,7 @@ export class File extends WebObject {
     //
     // static 'LOCAL/text' = new InternalService(function (request)
     // {
-    //     /* Plain text of this File for Site.import() etc. */
+    //     /* Plain text of this File for Application.import() etc. */
     //     assert(false, 'NOT USED: File.LOCAL/text')
     //     let txt = this.content_processed
     //     if (txt === undefined) request.throwNotFound()

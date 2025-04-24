@@ -242,7 +242,7 @@ describe('Schemat Tests', function () {
             /* Test of React rendering around system-level bootstrap objects. Must be run first, otherwise the error doesn't show up. */
             await delay(500)
             await test_page(page, `${DOMAIN}/$/id/1009`, '#page-main',
-                ['/$/sys', 'system objects', 'Container', 'Site', 'Revision'])
+                ['/$/sys', 'system objects', 'Container', 'Application', 'Revision'])
         })
 
         it('Category', async function () {

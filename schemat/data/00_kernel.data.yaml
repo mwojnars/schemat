@@ -243,9 +243,9 @@
   cache_timeout: 60
   class: schemat:Category
 - id: 2
-  name: Site
+  name: Application
   info: Top-level URL routing + global configuration of the application.
-  class: schemat/std/site.js:Site
+  class: schemat/std/site.js:Application
   schema:
     database:
       info: Database instance that contains all data of this site
@@ -909,7 +909,7 @@
     located in the cluster or outside of it, depending on the type of agent."
   schema:
     __site:
-      info: Site object that represents the context (database, web domain, URLs etc.)
+      info: Application object that represents the context (database, web domain, URLs etc.)
         in which this agent should execute ('user mode'). If missing, the agent
         executes in the context of the cluster database ('kernel mode').
       category:

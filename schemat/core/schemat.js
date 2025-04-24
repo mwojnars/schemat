@@ -82,7 +82,7 @@ export class Schemat {
      */
 
     config          // boot configuration (on server) or RequestContext (on client)
-    site_id         // ID of the active Site object
+    site_id         // ID of the active Application object
     _site           // `site` of the previous generation, remembered here during complete cache erasure to keep the .site() getter operational
     registry        // cache of web objects, records and indexes loaded from DB
     builtin         // a Classpath containing built-in classes and their paths

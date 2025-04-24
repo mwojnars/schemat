@@ -7,9 +7,9 @@ cluster: 1025
 
 
 # bootstrap_rings:
-# Configuration of a temporary database from which the Site, the Cluster, and the main Database are loaded during startup.
-# One of the rings should contain the target Site object together with its immediate dependencies (e.g., database).
-# After the Site and its ultimate Database are loaded, the bootstrap database is discarded.
+# Configuration of a temporary database from which the Application, the Cluster, and the main Database are loaded during startup.
+# One of the rings should contain the target Application object together with its immediate dependencies (e.g., database).
+# After the Application and its ultimate Database are loaded, the bootstrap database is discarded.
 # Each bootstrap ring is read-only if not declared otherwise (`readonly: false`), but this declaration is temporary
 # and only affects the bootstrap phase. The final configuration of rings is read from the ultimate database, and for
 # this reason, the bootstrap database typically consists of just the kernel ring and the cluster/site configuration ring.

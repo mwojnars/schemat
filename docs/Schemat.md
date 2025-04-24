@@ -28,7 +28,7 @@
 - Category
   - `schema` 
   - data types
-- Site
+- Application
     - database
       - rings
       - main sequence

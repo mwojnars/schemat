@@ -34,7 +34,7 @@ export class WebRequest extends Request {
         this.res = res
 
         this.protocol =
-            !this.req                   ? "LOCAL" :         // LOCAL = internal call through Site.route_local()
+            !this.req                   ? "LOCAL" :         // LOCAL = internal call through Application.route_local()
             this.req.method === 'GET'   ? "GET"  :          // GET  = read access through HTTP GET
                                           "POST"            // POST = write access through HTTP POST
 

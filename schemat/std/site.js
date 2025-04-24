@@ -7,20 +7,16 @@ import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
 
 
-// Currently, vm.Module (Site.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
+// Currently, vm.Module (Application.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
 // For this reason, importLocal() is added to the global context, so that the modules imported from DB can use it
 // as an alias for standard (non-VM) import(). Adding this function in a call to vm.createContext() instead of here raises errors.
 
 // set_global({importLocal: (p) => import(p)})
 
 
-/**********************************************************************************************************************
- **
- **  ROUTER & SITE items
- **
- */
+/**********************************************************************************************************************/
 
-export class Site extends WebObject {
+export class Application extends WebObject {
     /* Global configuration of all applications that comprise this website, with URL routing etc.
        A route whose name starts with asterisk (*NAME) is treated as blank.
      */
@@ -91,13 +87,13 @@ export class Site extends WebObject {
         if (path.startsWith('file://')) path = path.slice(7)                // trim leading 'file://' if present
         let root = schemat.ROOT_DIRECTORY
         if (!path.startsWith(root + '/')) throw new Error(`path is not accessible via URL: ${path}`)
-        return path.replace(root, Site.URL_LOCAL)
+        return path.replace(root, Application.URL_LOCAL)
     }
 
     get_module_url(path) {
         /* Convert a local import path, like "schemat/.../file.js" to a URL-path that can be used with import() on the client. */
         if (path[0] === '/') throw new Error(`cannot make an import URL-path for an absolute local path: ${path}`)
-        return `${Site.URL_LOCAL}/${path}::import`          // ::import is sometimes needed to get the proper MIME header, esp. if target is a web object not a local file
+        return `${Application.URL_LOCAL}/${path}::import`          // ::import is sometimes needed to get the proper MIME header, esp. if target is a web object not a local file
     }
 
     import_local(path) {
@@ -106,7 +102,7 @@ export class Site extends WebObject {
            This method can be called both on the server and on the client (!). In the latter case, the import path
            is converted to a URL of the form "/$/local/.../file.js::import". May return a Promise.
          */
-        // print(`Site.import():  ${path}`)
+        // print(`Application.import():  ${path}`)
         let [file_path, symbol] = splitLast(path || '', ':')
         let import_path = CLIENT ? this.get_module_url(file_path) : schemat.ROOT_DIRECTORY + '/' + file_path
 
@@ -227,7 +223,7 @@ export class Site extends WebObject {
 
     // async import_module(path, referrer) {
     //     /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
-    //     // TODO: cache module objects, parameter Site:cache_modules_ttl
+    //     // TODO: cache module objects, parameter Application:cache_modules_ttl
     //     // TODO: for circular dependency return an unfinished module (use cache for this)
     //
     //     print(`import_module():  ${path}  (ref: ${referrer?.identifier})`)    //, ${referrer?.schemat_import}, ${referrer?.referrer}
@@ -260,7 +256,7 @@ export class Site extends WebObject {
     //     //     return this._import_synthetic(this._js_import_file(path))
     //
     //     let source = await this.route_local(path + '::text')
-    //     if (!source) throw new Error(`Site.import_module(), path not found: ${path}`)
+    //     if (!source) throw new Error(`Application.import_module(), path not found: ${path}`)
     //
     //     module = await this._parse_module(source, path)
     //     print(`...from source:  ${path}`)
@@ -277,7 +273,7 @@ export class Site extends WebObject {
     //     let module  = new vm.SyntheticModule(
     //         Object.keys(mod_js),
     //         function() { Object.entries(mod_js).forEach(([k, v]) => this.setExport(k, v)) },
-    //         {context, identifier: Site.DOMAIN_LOCAL + path}
+    //         {context, identifier: Application.DOMAIN_LOCAL + path}
     //     )
     //     await module.link(() => {})
     //     await module.evaluate()
@@ -291,7 +287,7 @@ export class Site extends WebObject {
     //     // let context = referrer?.context || vm.createContext({...globalThis, importLocal: p => import(p)})
     //     // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
     //
-    //     let identifier = Site.DOMAIN_SCHEMAT + path
+    //     let identifier = Application.DOMAIN_SCHEMAT + path
     //     let linker = async (specifier, ref, extra) => (print(specifier, ref) || await this.import_module(specifier, ref)).__vmModule__
     //     let initializeImportMeta = (meta) => {meta.url = identifier}   // also: meta.resolve = ... ??
     //
