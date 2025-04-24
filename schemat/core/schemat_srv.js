@@ -121,7 +121,7 @@ export class ServerSchemat extends Schemat {
             this._cluster = await this.get_loaded(cluster_id)
         }
 
-        await super._load_site()
+        await super._load_app()
         await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
 
         await this.app?.reload()            // repeated app reload is needed for app.global initialization which fails on first attempt during bootstrap

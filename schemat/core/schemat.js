@@ -147,7 +147,7 @@ export class Schemat {
         // this.parent_schemat = globalThis.schemat
     }
 
-    async _load_site() {
+    async _load_app() {
         /* Initialize this.app. */
 
         let app_id = this.app_id

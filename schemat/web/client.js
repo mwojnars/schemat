@@ -25,7 +25,7 @@ export class Client extends Schemat {
         ctx.objects.map(rec => schemat.register_record(rec))    // register {id,data} records of bootstrap objects
 
         await this._init_classpath()
-        await super._load_site()
+        await super._load_app()
         // setInterval(() => this._report_memory(), 10000)
 
         await this._boot_done()
