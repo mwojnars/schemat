@@ -61,7 +61,7 @@ export class ServerSchemat extends Schemat {
     kernel          // KernelProcess that runs the main Schemat loop of the current master/worker process
     parent          // parent ServerSchemat that created this one via .fork() below
 
-    _boot_db        // boot Database, its presence indicates the boot phase is still going on; regular server-side DB is taken from site.database or cluster.database
+    _boot_db        // boot Database, its presence indicates the boot phase is still going on; regular server-side DB is taken from app.database or cluster.database
     _cluster        // Cluster object of the previous generation, always present but not always the most recent one (Registry may hold a more recent version)
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
@@ -110,7 +110,7 @@ export class ServerSchemat extends Schemat {
     }
 
     async boot(boot_db, auto = true) {
-        /* Initialize built-in objects, app_id, site, bootstrap DB. */
+        /* Initialize built-in objects, app_id, app, bootstrap DB. */
         await this._init_classpath()
         this._boot_db = await boot_db?.() || this.parent.db     // bootstrap DB, created anew or taken from parent; the ultimate DB is opened later: on the first access to this.db
 
@@ -124,8 +124,8 @@ export class ServerSchemat extends Schemat {
         await super._load_site()
         await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
 
-        await this.site?.reload()           // repeated site reload is needed for site.global initialization which fails on first attempt during bootstrap
-        // if (this.site) await this.reload(this.app_id, true)
+        await this.app?.reload()            // repeated app reload is needed for app.global initialization which fails on first attempt during bootstrap
+        // if (this.app) await this.reload(this.app_id, true)
 
         if (auto) this._boot_done()
 
@@ -167,7 +167,7 @@ export class ServerSchemat extends Schemat {
 
     async _purge_registry(generation = 0, ERASE_TIMEOUT = 20) {
         /* Purge the objects cache in the registry. Schedule periodical re-run: the interval is configured
-           in site.cache_purge_interval and may change over time.
+           in app.cache_purge_interval and may change over time.
          */
         // print(`Schemat._purge_registry() generation ${generation}`)
         if (this.terminating) return
@@ -181,18 +181,18 @@ export class ServerSchemat extends Schemat {
             return this.registry.purge()
         }
         finally {
-            let interval = (this.site?.cache_purge_interval || 10) * 1000        // [ms]  ... TODO: move cache_purge_interval to cluster/node/config
+            let interval = (this.app?.cache_purge_interval || 10) * 1000        // [ms]  ... TODO: move cache_purge_interval to cluster/node/config
             setTimeout(() => this._purge_registry(generation + 1), interval)
         }
     }
 
     async _erase_registry() {
-        /* Once in a while, clear the object cache entirely (except `site` and `root category`!) to cut links between subsequent
+        /* Once in a while, clear the object cache entirely (except `app` and `root category`!) to cut links between subsequent
            generations of instances and allow efficient garbage-collection in presence of cyclic links between different web objects.
          */
         print(`Schemat._erase_registry(), ${this.registry.objects.size} objects ...`)
         this._cluster = this.cluster
-        this._app = this.site
+        this._app = this.app
 
         assert(this._cluster.is_loaded() && (!this._app || this._app.is_loaded()))
 
@@ -201,7 +201,7 @@ export class ServerSchemat extends Schemat {
         if (this._cluster) await this.reload(this._cluster.id, true)
         if (this._app) await this.reload(this._app.id, true)
 
-        // print(`_erase_registry() site:`, this.site?.__label, this.site?.__hash)
+        // print(`_erase_registry() app:`, this.app?.__label, this.app?.__hash)
         // print(`_erase_registry() this.db:`, this.db.__label, this.db.__hash)
     }
 
@@ -217,7 +217,7 @@ export class ServerSchemat extends Schemat {
     }
 
     async in_context(app_id, callback) {
-        /* Run callback() in the Schemat async context (`_schemat`) built around a specific site.
+        /* Run callback() in the Schemat async context (`_schemat`) built around a specific app.
            If not yet created, this context (ServerSchemat instance) is created now and saved in
            globalThis._contexts for reuse by other requests. If `app_id` is missing, `this` is used as the context.
            If current `schemat` is already the target context, the callback is executed directly without
@@ -233,7 +233,7 @@ export class ServerSchemat extends Schemat {
 
         if (!context) {
             this.kernel._print(`ServerSchemat.in_context() creating context for [${app_id}]`)
-            context = new ServerSchemat({...this.config, site: app_id}, this)
+            context = new ServerSchemat({...this.config, app: app_id}, this)
 
             // globalThis._contexts.set(app_id, context)
             await _schemat.run(context, () => context.boot())

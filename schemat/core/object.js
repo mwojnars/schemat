@@ -683,7 +683,7 @@ export class WebObject {
 
     get system_url() {
         /* The internal URL of this object, typically /$/id/<ID> */
-        return schemat.site.default_path_of(this)
+        return schemat.app.default_path_of(this)
     }
 
     _impute__path() {
@@ -706,9 +706,9 @@ export class WebObject {
     }
 
     // async _init_url() {
-    //     while (!schemat.site) {                                      // wait until the site is created; important for bootstrap objects
+    //     while (!schemat.app) {                                      // wait until the app is created; important for bootstrap objects
     //         await sleep()
-    //         if (schemat.terminating) return                         // site is closing? no need to wait any longer
+    //         if (schemat.terminating) return                         // app is closing? no need to wait any longer
     //     }
     //
     //     let container = this.__container
@@ -857,7 +857,7 @@ export class WebObject {
         /* Server-side distributed logging of debug messages, warnings, errors.
            On client, the message is printed to the console with object ID prepended.
          */
-        if (SERVER) return schemat.site.logger.$agent.log(msg, args, level)
+        if (SERVER) return schemat.app.logger.$agent.log(msg, args, level)
 
         if (args) {
             let list = Object.entries(args).map(([k, v]) => k + `=${JSON.stringify(v)}`).join(', ')
@@ -924,7 +924,7 @@ export class WebObject {
     }
 
     get action() {
-        /* Triggers of server-side actions: obj.action.X(...args) invokes site.POST.action(id, 'X', ...args),
+        /* Triggers of server-side actions: obj.action.X(...args) invokes app.POST.action(id, 'X', ...args),
            which forwards the call to obj['action.X'](...args) on server.
            Triggers can be called on stubs, without fully loading the target object.
          */
@@ -932,7 +932,7 @@ export class WebObject {
         assert(id)
         return new Proxy({}, {
             get(target, name) {
-                if (typeof name === 'string') return (...args) => schemat.site.POST.action(id, name, ...args)
+                if (typeof name === 'string') return (...args) => schemat.app.POST.action(id, name, ...args)
             }
         })
     }
@@ -1090,7 +1090,7 @@ export class WebObject {
     }
 
     get_breadcrumb(max_len = 10) {
-        /* Return an array of containers that lead from the site's root to this object.
+        /* Return an array of containers that lead from the app's root to this object.
            The array contains pairs [segment, container] where `segment` is a string that identifies `container`
            inside its parent; the last pair is [segment, this] (the object itself).
            If containers are correctly configured, the first pair is [undefined, site_object] (the root).
@@ -1115,7 +1115,7 @@ export class WebObject {
 
     async delete() {
         /* Delete this object from the database. No need to use save(). */
-        return schemat.site.action.delete_object(this.id)
+        return schemat.app.action.delete_object(this.id)
     }
 
     _bump_version() {
@@ -1226,7 +1226,7 @@ export class WebObject {
 
         let edits = this.__meta.edits           // otherwise, save updates of an existing object...
         if (edits?.length) {
-            let submit = schemat.site.action.submit_edits(this.id, ...edits)
+            let submit = schemat.app.action.submit_edits(this.id, ...edits)
             edits.length = 0
             return reload ? submit.then(() => this.reload()) : submit
         }
@@ -1366,7 +1366,7 @@ export class WebObject {
     //     let url = this.sourceURL('class')
     //     let import_ = (path) => {
     //         if (path[0] === '.') throw Error(`relative import not allowed in dynamic code of a category (${url}), path='${path}'`)
-    //         return schemat.site.import(path)
+    //         return schemat.app.import(path)
     //     }
     //     let source = `return class extends base {${body}}` + `\n//# sourceURL=${url}`
     //     return new Function('base', 'import_', source) (base, import_)

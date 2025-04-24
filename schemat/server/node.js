@@ -9,11 +9,11 @@ import {TCP_Receiver, TCP_Sender} from "./tcp.js";
 /**********************************************************************************************************************/
 
 class Config extends WebObject {
-    /* Global server-side configuration that can be defined separately at cluster/node/site/command-line level
+    /* Global server-side configuration that can be defined separately at cluster/node/app/command-line level
        and then combined in a particular Schemat process to control high-level behaviour of the node.
      */
     merge(...others) {
-        /* The expected order of `others` is from least to most specific: [node config, site config, command-line config]. */
+        /* The expected order of `others` is from least to most specific: [node config, app config, command-line config]. */
         let configs = [...others.reverse(), this]
         let catalogs = configs.map(obj => obj.__data || new Catalog(obj))
         return Catalog.merge(catalogs)
@@ -506,7 +506,7 @@ export class Node extends Agent {
         /* Call agent.__install__() on this node and add the agent to `agents_installed`. If start=true, the agent
            is also added to `agents_running` and is started on the next iteration of the host process's life loop.
          */
-        // process.chdir(this.local_root || schemat.site.local_root)
+        // process.chdir(this.local_root || schemat.app.local_root)
         await agent.load()
         await agent.__install__(this)       // can modify the local environment of the host node
 

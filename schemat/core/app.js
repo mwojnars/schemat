@@ -46,13 +46,13 @@ export class Application extends WebObject {
             await this.database?.load()
             await this.logger?.load()
             // this._vm = await import('node:vm')
-            if (this.default_path) this._check_default_container()      // no await to avoid blocking the site's startup
+            if (this.default_path) this._check_default_container()      // no await to avoid blocking the app's startup
         }
         await schemat.after_boot(() => this.load_globals())
     }
 
     async _check_default_container() {
-        while (!schemat.site) await sleep()
+        while (!schemat.app) await sleep()
         let default_container = await this.resolve(this.default_path.slice(1))
 
         // check that default_path maps to a container...

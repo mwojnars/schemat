@@ -50,7 +50,7 @@ async function create_demo_01() {
     let db = _load_data_init()
     
     // replace file paths, object names and port numbers in `db`
-    db = db.replaceAll('main-site', `Bookstore (demo site)`)
+    db = db.replaceAll('main-app', `Bookstore (demo app)`)
     db = db.replaceAll('name: home', `name: home\n  view_endpoint: demo/01_books/home/home.js:homepage`)
 
     db = db.replaceAll('/schemat/data/01', `/demo/${demo_name}/_data/01`)       // 01_cluster.*
@@ -62,7 +62,7 @@ async function create_demo_01() {
 
     db = db.replaceAll('tcp_port: 5820', `  - "@": 1030\n  tcp_port: 5820`)     // add 02_app.index block [1030] to agents_installed
 
-    // insert AuthorCategory and BookCategory references in [site.global]; insert URL routes
+    // insert AuthorCategory and BookCategory references in [app.global]; insert URL routes
     db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 2002\n    BookCategory:\n      "@": 2001`)
     db = db.replaceAll(`entries:\n    ""`, `entries:\n    authors:\n      "@": 2002\n    books:\n      "@": 2001\n    book:\n      "@": 2015\n    ""`)
 

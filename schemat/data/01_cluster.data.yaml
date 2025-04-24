@@ -1,6 +1,6 @@
 - id: 1001
-  name: main-site
-  info: The "site" object is the main entry point to the entire application. It
+  name: main-app
+  info: The "app" object is the main entry point to the entire application. It
     contains top-level configuration of the website, cluster, database, URL
     routes etc.
   root:

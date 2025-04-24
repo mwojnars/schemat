@@ -40,7 +40,7 @@
       - (dynamic imports?)
 - Schemat (global instance)
   - cache of objects
-  - site
+  - app
   - db
 - UI:
   - Component:

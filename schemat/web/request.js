@@ -73,23 +73,23 @@ export class RequestContext {
     /* Seed web objects and request-related context information to be embedded in HTML response and then unpacked on the client
        to enable boot up of a client-side Schemat. The objects are flattened (state-encoded), but not yet stringified.
      */
-    site            // ID of the application object
+    app             // ID of the application object
     target          // ID of the requested object (target of the web request)
     objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
     endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
 
     static from_request(request, ...objects) {
         /* For use on the server. Optional `objects` are included in the context as seed objects together
-           with `target`, `site` and `site.global` objects.
+           with `target`, `app` and `app.global` objects.
          */
         let ctx = new RequestContext()
-        let site = schemat.site
+        let app = schemat.app
         let target = request.target
 
         let items = new Objects()
-        let queue = [target, site, ...site.global?.values() || [], ...objects].filter(Boolean)
+        let queue = [target, app, ...app.global?.values() || [], ...objects].filter(Boolean)
         
-        // extend the `items` set with all objects that are referenced from the `target` and `site` via __category, __extend or __container
+        // extend the `items` set with all objects that are referenced from the `target` and `app` via __category, __extend or __container
         // TODO: deduplicate IDs when repeated by different object instances (e.g., this happens for the root category)
         while (queue.length) {
             let obj = queue.pop()
@@ -104,7 +104,7 @@ export class RequestContext {
         items = [...items]
 
         ctx.objects = items.map(obj => obj.__record)
-        ctx.site = site.id
+        ctx.app = app.id
         ctx.target = target.id
         ctx.endpoint = request.endpoint
         return ctx

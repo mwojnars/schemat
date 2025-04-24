@@ -62,11 +62,11 @@
     "@": schemat:Catalog
   class_init: |
     // DRAFT...
-    // import {print} from '/site/utils.js'
+    // import {print} from '/app/utils.js'
     // console.log('print:', print)
     // console.log('TwitterPost/code executed')
 
-    // import {check} from '/site/widgets.js'
+    // import {check} from '/app/widgets.js'
     // import {WebObject} from '/$/local/schemat/core/object.js'
     // import vm from 'vm'
     // check()
@@ -83,7 +83,7 @@
     // this method works OK (no await import)
     init_OK() {
         console.log('this.utils #1: started...')
-        return import('/site/utils.js').then(utils => {
+        return import('/app/utils.js').then(utils => {
             this.utils = utils
             console.log('this.utils #1:', this.utils)
         })
@@ -92,7 +92,7 @@
     // the method waits on await import below (!?)
     async init_ERR() {
         console.log('this.utils #1: started...')
-        let utils = await import('/site/utils.js')
+        let utils = await import('/app/utils.js')
         this.utils = utils
         console.log('this.utils #1:', this.utils)
     }
@@ -107,7 +107,7 @@
   __category:
     "@": 5
 - id: 2008
-  name: /site
+  name: /app
   entries:
     utils.js:
       "@": 2009
@@ -124,7 +124,7 @@
     "@": 2008
 - id: 2010
   content: |-
-    import {print} from '../site/utils.js'
+    import {print} from '../app/utils.js'
     export function check() { print('called widgets.js:check()') } 
     //let fs = await import('fs')
     //print('fs:',fs)

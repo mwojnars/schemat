@@ -83,7 +83,7 @@ export class Schemat {
 
     config          // boot configuration (on server) or RequestContext (on client)
     app_id          // ID of the active Application object
-    _app            // `site` of the previous generation, remembered here during complete cache erasure to keep the .site() getter operational
+    _app            // `app` of the previous generation, remembered here during complete cache erasure to keep the .app() getter operational
     registry        // cache of web objects, records and indexes loaded from DB
     builtin         // a Classpath containing built-in classes and their paths
     booting         // a Promise that resolves when this Schemat is fully booted; false after that
@@ -92,10 +92,10 @@ export class Schemat {
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
 
     get root_category() { return this.get_object(ROOT_ID) }
-    get site()          { return this.get_if_loaded(this.app_id) || this._app }
-    get db()            { return this.site?.database }              // a stub when on client, fully loaded when on server
-    get global()        { return this.site?._global }
-    get system()        { return this.site || this.cluster }        // user mode | kernel mode
+    get app()           { return this.get_if_loaded(this.app_id) || this._app }
+    get db()            { return this.app?.database }           // a stub when on client, fully loaded when on server
+    get global()        { return this.app?._global }
+    get system()        { return this.app || this.cluster }     // user mode | kernel mode
     get terminating()   { return this.kernel?._closing }
 
     // defined on server only:
@@ -136,11 +136,11 @@ export class Schemat {
 
     constructor(config) {
         /* Create a new Schemat instance. `config` is either the contents of a config file (on server),
-           or a RequestContext (on client) -- both should contain the `site` attribute.
+           or a RequestContext (on client) -- both should contain the `app` attribute.
          */
         this.booting = new Promise(resolve => this._booting_resolve = resolve)
         this.config = config
-        this.app_id = config.site || undefined
+        this.app_id = config.app || undefined
         this.WebObject = WebObject          // schemat.WebObject is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
         this.registry = new Registry(this._on_evict.bind(this))
@@ -148,7 +148,7 @@ export class Schemat {
     }
 
     async _load_site() {
-        /* Initialize this.site. */
+        /* Initialize this.app. */
 
         let app_id = this.app_id
         if (!app_id) return
@@ -158,7 +158,7 @@ export class Schemat {
         this._essential.push(app_id)
 
         await this.reload(app_id, true)
-        assert(this.site?.is_loaded())
+        assert(this.app?.is_loaded())
     }
 
     async _init_classpath() {
@@ -221,10 +221,10 @@ export class Schemat {
 
     import(path) {
         /* May return a Promise. */
-        if (path.startsWith('schemat:') || !this.site?.is_loaded())
+        if (path.startsWith('schemat:') || !this.app?.is_loaded())
             return this.get_builtin(path)
-        if (path[0] === '/') return this.site.import_global(path)
-        return this.site.import_local(path)
+        if (path[0] === '/') return this.app.import_global(path)
+        return this.app.import_local(path)
     }
 
 
@@ -446,7 +446,7 @@ export class Schemat {
 
         let {reload = true, ...opts} = opts_
         let data = objects.map(obj => obj.__data.__getstate__())
-        let ids = await this.site.action.insert_objects(data, opts)
+        let ids = await this.app.action.insert_objects(data, opts)
         ids.map((id, i) => {
             delete objects[i].__self.__provisional_id   // replace provisional IDs with final IDs
             objects[i].id = id
@@ -471,7 +471,7 @@ export class Schemat {
 
     async eval(code) {
         /* Run eval(code) on the server and return the result; `code` is a string. Can be called on the client or the server. */
-        return this.site.POST.eval(code)
+        return this.app.POST.eval(code)
     }
 
     /***  Events & Debugging  ***/
@@ -492,7 +492,7 @@ export class Schemat {
 
     // async import(path, name) {
     //     /* Import a module and (optionally) its element, `name`, from a SUN path, or from a regular JS path.
-    //        Uses the site's routing mechanism to locate the `path` anywhere across the SUN namespace.
+    //        Uses the app's routing mechanism to locate the `path` anywhere across the SUN namespace.
     //        Can be called client-side and server-side alike.
     //        IMPORTANT: a new global context is created every time a module is imported using this method,
     //                   so this method should be called only ONCE when the process is starting.

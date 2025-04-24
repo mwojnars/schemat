@@ -6,13 +6,13 @@ Objectives:
 - static HTML
 - templates (EJS)
 - assets (CSS, pics)
-- site configuration
+- app configuration
 - web objects & categories
 - layout of application folder: flexible & organized around functionalities (unlike MVC)
 - URLs
 
 What's new (as compared to traditional web frameworks):
-- site configuration is fully stored in DB (see 01_cluster.data.yaml)
+- app configuration is fully stored in DB (see 01_cluster.data.yaml)
 - schema of application objects is fully stored in DB (Category objects, see 02_app.*.yaml)
   - web interface for schema editing (todo: improve)
   - smooth modifications of the schema in the future; incremental migrations

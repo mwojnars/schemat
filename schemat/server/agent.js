@@ -146,7 +146,7 @@ export class WebServer extends Agent {
         try {
             // await sleep(3)
             let request = new WebRequest({req, res})
-            let handler = schemat.site.route(request)
+            let handler = schemat.app.route(request)
 
             if (this.request_timeout) {
                 let deadline = timeout(this.request_timeout * 1000, new ServerTimeoutError())
@@ -169,7 +169,7 @@ export class WebServer extends Agent {
         }
 
         // // TODO: a temporary check to make sure that dynamic imports work fine; drop this in the future
-        // let {check} = await schemat.site.import_module("/site/widgets.js")
+        // let {check} = await schemat.app.import_module("/app/widgets.js")
         // check()
 
         // await schemat.after_request()

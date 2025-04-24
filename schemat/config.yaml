@@ -12,7 +12,7 @@ cluster: 1025
 # After the Application and its ultimate Database are loaded, the bootstrap database is discarded.
 # Each bootstrap ring is read-only if not declared otherwise (`readonly: false`), but this declaration is temporary
 # and only affects the bootstrap phase. The final configuration of rings is read from the ultimate database, and for
-# this reason, the bootstrap database typically consists of just the kernel ring and the cluster/site configuration ring.
+# this reason, the bootstrap database typically consists of just the kernel ring and the cluster/app configuration ring.
 
 bootstrap_rings:
   - name: boot_kernel
