@@ -73,7 +73,7 @@ export class RequestContext {
     /* Seed web objects and request-related context information to be embedded in HTML response and then unpacked on the client
        to enable boot up of a client-side Schemat. The objects are flattened (state-encoded), but not yet stringified.
      */
-    site            // ID of the site object
+    site            // ID of the application object
     target          // ID of the requested object (target of the web request)
     objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
     endpoint        // full name of the target's endpoint that was requested, like "GET.admin"

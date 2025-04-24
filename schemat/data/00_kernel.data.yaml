@@ -248,7 +248,7 @@
   class: schemat/core/app.js:Application
   schema:
     database:
-      info: Database instance that contains all data of this site
+      info: Database instance that contains all data of this application.
       "@": schemat/types/type.js:REF
     webserver:
       info: A WebServer that handles all web requests.
@@ -275,7 +275,7 @@
         "@": schemat/types/type.js:REF
       info: Essential application objects - typically categories - that will be loaded
         and made globally available to the application code via
-        `schemat.global.XXX` right after initialization of the site object.
+        `schemat.global.XXX` right after initialization of the application.
       "@": schemat/types/catalog_type.js:CATALOG
     cache_purge_interval:
       default: 10
