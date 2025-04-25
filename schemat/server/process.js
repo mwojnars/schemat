@@ -246,19 +246,8 @@ export class KernelProcess {
         let to_refresh = current_ids.filter(id => desired_set.has(id))      // find agents to refresh (running and still desired)
 
         // start new agents
-        for (let id of to_start) {
-            let agent = schemat.get_object(id)
-            if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
-
-            // print(`_start_stop():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
-            assert(agent.is_loaded())
-            assert(agent instanceof Agent)
-            this._print(`starting agent ${agent} ...`)
-
-            let state = await schemat.in_context(agent.__app?.id, () => agent.__start__())
-            this.frames.set(agent.id, new Frame(agent, state))
-            this._print(`starting agent ${agent} done`)
-        }
+        for (let id of to_start)
+            await this._start_agent(id)
 
         // refresh agents
         for (let id of to_refresh)
@@ -267,6 +256,20 @@ export class KernelProcess {
         // stop agents; use reverse order as some agents may depend on previous ones
         for (let id of to_stop.reverse())
             await this._stop_agent(id)
+    }
+
+    async _start_agent(id) {
+        let agent = schemat.get_object(id)
+        if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
+
+        // print(`_start_agent():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
+        assert(agent.is_loaded())
+        assert(agent instanceof Agent)
+        this._print(`starting agent ${agent} ...`)
+
+        let state = await schemat.in_context(agent.__app?.id, () => agent.__start__())
+        this.frames.set(agent.id, new Frame(agent, state))
+        this._print(`starting agent ${agent} done`)
     }
 
     async _refresh_agent(id) {
