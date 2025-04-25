@@ -738,7 +738,7 @@
         "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
     agent_refresh_interval:
-      default: 20
+      default: 11
       info: Duration [in seconds] of a single iteration of the agent execution loop in
         run(). After each iteration, agent refresh is attempted, which may
         trigger agent restart as a consequence.
