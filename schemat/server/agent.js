@@ -14,9 +14,10 @@ export class AgentState {
     __paused        // if true, the agent should not execute right now, until resumed
     __stopped       // if true, the agent should be stopping now, no more requests/calls are accepted
 
-    // custom fields can be added here by subclasses, or copy-pasted to a virgin AgentState
-    // whenever a plain custom object {...} is returned from __start__()
+    // custom fields can be added here by subclasses:
     // ...
+    // alternatively, custom fields are copy-pasted into a vanilla AgentState whenever
+    // a plain custom object {...} is returned from __start__()
 }
 
 
@@ -27,7 +28,7 @@ export class Agent extends WebObject {
        being allocated/deallocated in __install__/__uninstall__(), while some others (e.g., sockets) in __start__/__stop__().
     */
 
-    __app           // Application that provides context of execution of this agent's __start__/__stop__ methods ("user mode"),
+    __app           // Application that provides context of execution for this agent's __start__/__stop__ methods ("user mode"),
                     // and a fallback context for $agent.*() methods if no request-specific RPC context was given;
                     // if missing, kernel's context (cluster) is used ("kernel mode")
 
