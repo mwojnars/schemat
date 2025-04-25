@@ -151,7 +151,7 @@ export class TCP_Sender {
 
         let response_parser = new BinaryParser((id, resp) => {
             try {
-                schemat.node._print(`TCP client response ${id} recv:`, _json(resp))
+                // schemat.node._print(`TCP client response ${id} recv:`, _json(resp))
                 let entry = this.pending.get(id)
                 if (entry) {
                     entry.resolve(resp)
