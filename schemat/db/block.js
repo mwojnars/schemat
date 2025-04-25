@@ -315,7 +315,7 @@ export class DataBlock extends Block {
         let id = (this.ring.insert_mode === 'compact') ? this._assign_id_compact(state) : this._assign_id_incremental(state)
 
         if (!this.ring.valid_insert_id(id))
-            throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid set for the ring ${this.ring.__label}`)
+            throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid set for the ring ${this.ring}`)
 
         state.autoincrement = Math.max(id, state.autoincrement)
         // this._autoincrement = Math.max(id, this._autoincrement)

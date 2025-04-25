@@ -39,7 +39,7 @@ export class Cluster extends WebObject {
          */
         if (typeof agent === 'number') agent = schemat.get_object(agent)
         let nodes = this.agent_placements[agent.id]
-        if (!nodes?.length) throw new Error(`agent ${agent.__label} not deployed on any node`)
+        if (!nodes?.length) throw new Error(`agent ${agent} not deployed on any node`)
         if (nodes.some(node => node.id === this.id)) return this
         return nodes[0]
         // return nodes.random()

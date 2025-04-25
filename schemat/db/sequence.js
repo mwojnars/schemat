@@ -85,7 +85,7 @@ export class Sequence extends WebObject {
     }
 
 
-    // if (!this.operator.is_loaded()) this._print(`UNLOADED operator ${this.operator.__label}, __meta=${this.operator.__meta}, __data=${this.operator.__data}`)
+    // if (!this.operator.is_loaded()) this._print(`UNLOADED operator ${this.operator}, __meta=${this.operator.__meta}, __data=${this.operator.__data}`)
     encode_key(key) { return this.operator.encode_key(key) }    // app > binary representation
     decode_key(bin) { return this.operator.decode_key(bin) }    // binary > app representation
 

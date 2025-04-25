@@ -416,7 +416,7 @@ export class Node extends Agent {
             // find out which process (worker >= 1 or master = 0), has the `agent_id` agent deployed
 
             // let locs = this.locate_processes(agent_id)
-            // if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this.__label}`)
+            // if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this}`)
             // let proc = locs[0]
 
             let proc = this.find_process(agent_id)

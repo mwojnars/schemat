@@ -143,20 +143,20 @@ export class Ring extends WebObject {
         if (this.shard3)                        // shard3 is missing in bootstrap DB
             for (let ring of stack)
                 if (this.shard3.overlaps(ring.shard3))
-                    throw new Error(`base-3 shard [${this.shard3.label}] of ring ${this.__label} overlaps with shard [${ring.shard3.label}] of ${ring.__label}`)
+                    throw new Error(`base-3 shard [${this.shard3.label}] of ring ${this} overlaps with shard [${ring.shard3.label}] of ${ring.__label}`)
 
         if (!A) return true                     // no exclusive zone, nothing more to check
 
         // exclusive zone = [A, B) must NOT overlap with exclusive or sharded zone of any lower ring...
         // for sharded zones, must hold:  B <= c_min := min(min_id_sharded) across lower rings
         let c_min = Math.min(...stack.map(r => r.min_id_sharded))
-        if (B >= c_min) throw new Error(`exclusive ID-insert zone [${A},${B}) of ${this.__label} overlaps with sharded zone [${c_min},+inf) of some lower ring`)
+        if (B >= c_min) throw new Error(`exclusive ID-insert zone [${A},${B}) of ${this} overlaps with sharded zone [${c_min},+inf) of some lower ring`)
 
         // for exclusive zones of every lower ring, must hold:  B <= min_id_exclusive || A >= min_id_forbidden
         for (let ring of stack) {
             let [a, b] = [ring.min_id_exclusive, ring.min_id_forbidden ?? ring.min_id_sharded]
             if (a && B > a && A < b)
-                throw new Error(`exclusive ID-insert zone [${A},${B}) of ${this.__label} overlaps with exclusive zone [${a},${b}) of ${ring.__label}`)
+                throw new Error(`exclusive ID-insert zone [${A},${B}) of ${this} overlaps with exclusive zone [${a},${b}) of ${ring.__label}`)
         }
         return true
     }
@@ -326,7 +326,7 @@ export class Database extends WebObject {
         // if (ring) print(`selecting [${id}] from a custom top ring:`, ring.__label || ring)
         ring ??= this.top_ring
         // if (id === 2001) this._print(`db.select(2001) app_id = ${schemat.app_id}`)
-        // if (id === 2001) this._print(`db.select(2001) from ring ${ring.__label}`)
+        // if (id === 2001) this._print(`db.select(2001) from ring ${ring}`)
         return ring.select(id)
     }
 

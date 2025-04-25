@@ -69,15 +69,15 @@ class Frame {
         // wrap state in AgentState if needed
         if (T.isPlain(state)) state = Object.assign(new AgentState(), state)
         else if (!(state instanceof AgentState))
-            throw new Error(`state of ${this.agent.__label} agent must be an AgentState instance or a plain object (no class), got ${state}`)
+            throw new Error(`state of ${this.agent} agent must be an AgentState instance or a plain object (no class), got ${state}`)
         
         this.state = state
 
         // this.state = new Proxy(state, {
         //     // whenever a function from state (state.fun()) is called, wrap it up with _track_call()
         //     get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
-        //         if (frame.stopping) throw new Error(`agent ${frame.agent.__label} is in the process of stopping`)
-        //         print(`calling agent ${frame.agent.__label}.state.${prop}() in tracked mode`)
+        //         if (frame.stopping) throw new Error(`agent ${frame.agent} is in the process of stopping`)
+        //         print(`calling agent ${frame.agent}.state.${prop}() in tracked mode`)
         //         return frame._track_call(state[prop].apply(state, args))
         //     }
         // })
@@ -86,11 +86,11 @@ class Frame {
     call_agent(method, args) {
         /* Call agent's method in tracked mode and pass `state` as an extra argument. */
         let {agent, state} = this
-        if (state.__stopped) throw new Error(`agent ${agent.__label} is in the process of stopping`)
+        if (state.__stopped) throw new Error(`agent ${agent} is in the process of stopping`)
 
         let func = agent.__self[method]
-        if (!func) throw new Error(`agent ${agent.__label} has no RPC endpoint "${method}"`)
-        // print(`calling agent ${agent.__label}.${method}() in tracked mode`)
+        if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
+        // print(`calling agent ${agent}.${method}() in tracked mode`)
 
         let result = func.call(agent, state, ...args)
         if (!(result instanceof Promise)) return result
@@ -253,11 +253,11 @@ export class KernelProcess {
             // print(`_start_stop():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
             assert(agent.is_loaded())
             assert(agent instanceof Agent)
-            this._print(`starting agent ${agent.__label} ...`)
+            this._print(`starting agent ${agent} ...`)
 
             let state = await schemat.in_context(agent.__app?.id, () => agent.__start__())
             this.frames.set(agent.id, new Frame(agent, state))
-            this._print(`starting agent ${agent.__label} done`)
+            this._print(`starting agent ${agent} done`)
         }
 
         // refresh agents
@@ -266,14 +266,14 @@ export class KernelProcess {
             let agent = frame.agent.refresh()
             if (agent.__ttl_left() < 0) agent = await agent.reload()
             if (agent === frame.agent) continue
-            this._print(`restarting agent ${agent.__label} ...`)
+            this._print(`restarting agent ${agent} ...`)
 
             let restart = () => agent.__restart__(frame.state, frame.agent)
             let state = await schemat.in_context(agent.__app?.id, restart)
 
             frame.set_state(state)
             frame.agent = agent
-            this._print(`restarting agent ${agent.__label} done`)
+            this._print(`restarting agent ${agent} done`)
 
             // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
             //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
@@ -286,16 +286,16 @@ export class KernelProcess {
             frame.state.__stopped = true            // prevent new calls from being executed on the agent
 
             if (calls.length > 0) {                 // wait for pending calls to complete before stopping
-                this._print(`waiting for ${calls.length} pending calls to agent ${agent.__label} to complete`)
+                this._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
                 await Promise.all(calls)
             }
-            this._print(`stopping agent ${agent.__label} ...`)
+            this._print(`stopping agent ${agent} ...`)
            
             let stop = () => agent.__stop__(frame.state)
             await schemat.in_context(agent.__app?.id, stop)
 
             this.frames.delete(agent.id)
-            this._print(`stopping agent ${agent.__label} done`)
+            this._print(`stopping agent ${agent} done`)
         }
     }
 
