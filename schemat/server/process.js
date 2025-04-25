@@ -193,6 +193,11 @@ export class KernelProcess {
 
     async main() {
         /* Start/stop agents. Refresh agent objects and the `node` object itself. */
+
+        let initial_agents = this.is_master() ? [this.node] : this.agents_running
+        for (let agent of initial_agents)
+            await this.start_agent(agent.id)
+
         while (true) {
             let beginning = Date.now()
             // this.node = this.node.refresh()
@@ -204,10 +209,17 @@ export class KernelProcess {
             // else print(`worker ${this.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
 
             this.node = new_node
-            await this._start_stop()
 
-            if (schemat.terminating)
-                if (this.frames.size) continue; else break          // let the currently-running agents gently stop
+            if (schemat.terminating) {
+                for (let id of [...this.frames.keys()].reverse())
+                    await this.stop_agent(id)
+                break
+            }
+            await this._refresh_agents()
+
+            // await this._start_stop()
+            // if (schemat.terminating)
+            //     if (this.frames.size) continue; else break          // let the currently-running agents gently stop
 
             let passed = (Date.now() - beginning) / 1000
             let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
@@ -251,6 +263,11 @@ export class KernelProcess {
 
         // stop agents; use reverse order as some agents may depend on previous ones
         for (let id of to_stop.reverse()) await this.stop_agent(id)
+    }
+
+    async _refresh_agents() {
+        for (let frame of this.frames.values())
+            await this.refresh_agent(frame.agent.id)
     }
 
     async start_agent(id) {
