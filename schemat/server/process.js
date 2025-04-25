@@ -54,8 +54,8 @@ export async function boot_schemat(opts, callback) {
 class Frame {
     /* Information about a running agent. */
     agent               // web object that created this frame
-    state               // proxied state object that tracks calls
-    raw_state           // original unproxied state object returned by agent.__start__()
+    state               // AgentState object wrapped around or returned by agent.__start__()
+    // raw_state        // original unproxied state object returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
     stopping = false    // if true, no more RPC calls can be started
 
@@ -73,17 +73,19 @@ class Frame {
         else if (!(state instanceof AgentState))
             throw new Error(`state of ${this.agent.__label} agent must be an AgentState instance or a plain object (no class), got ${state}`)
         
-        let frame = this
+        this.state = state
 
-        this.raw_state = state
-        this.state = new Proxy(state, {
-            // whenever a function from state (state.fun()) is called, wrap it up with _track_call()
-            get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
-                if (frame.stopping) throw new Error(`agent ${frame.agent.__label} is in the process of stopping`)
-                print(`calling agent ${frame.agent.__label}.state.${prop}() in tracked mode`)
-                return frame._track_call(state[prop].apply(state, args))
-            }
-        })
+        // let frame = this
+        // this.raw_state = state
+        // this.state = new Proxy(state, {
+        //     // whenever a function from state (state.fun()) is called, wrap it up with _track_call()
+        //     get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
+        //         assert(false, `in agent's state proxy`)
+        //         if (frame.stopping) throw new Error(`agent ${frame.agent.__label} is in the process of stopping`)
+        //         print(`calling agent ${frame.agent.__label}.state.${prop}() in tracked mode`)
+        //         return frame._track_call(state[prop].apply(state, args))
+        //     }
+        // })
     }
 
     call_agent(method, args) {
@@ -271,7 +273,7 @@ export class KernelProcess {
             if (agent === frame.agent) continue
             this._print(`restarting agent ${agent.__label} ...`)
 
-            let restart = () => agent.__restart__(frame.raw_state, frame.agent)
+            let restart = () => agent.__restart__(frame.state, frame.agent)
             let state = await schemat.in_context(agent.__app?.id, restart)
 
             frame.set_state(state)
@@ -294,7 +296,7 @@ export class KernelProcess {
             }
             this._print(`stopping agent ${agent.__label} ...`)
            
-            let stop = () => agent.__stop__(frame.raw_state)
+            let stop = () => agent.__stop__(frame.state)
             await schemat.in_context(agent.__app?.id, stop)
 
             this.frames.delete(agent.id)
