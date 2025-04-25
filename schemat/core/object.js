@@ -376,7 +376,7 @@ export class WebObject {
 
     /***  Object status  ***/
 
-    is_newborn()    { return !this.id }         // object is a "newborn" when it hasn't been saved to DB yet, so it has no ID assigned
+    is_newborn()    { return !this.id }         // object is "newborn" ("virgin") when it hasn't been saved to DB, yet, and has no ID assigned
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     is_mutable()    { return this.__meta.mutable }
     is_category()   { return false }

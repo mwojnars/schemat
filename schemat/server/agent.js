@@ -13,6 +13,7 @@ export class AgentState {
      */
     __paused        // if true, the agent should not execute until resumed
     __stopped       // if true, the agent should be stopping now and no more requests/calls are accepted
+    __migrating_to  // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
     // custom fields can be added here by subclasses:
     // ...
