@@ -533,13 +533,15 @@ export class Node extends Agent {
     /*************/
 
     async '$agent.start_agent'(state, agent, {params, role, workers = 1} = {}) {
+        /* `agent` is a web object or ID. */
         let {agents} = state
-        if (agents.has(agent)) throw new Error(`agent ${agent.__label} is already running on node ${this.__label}`)
+        if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         agents.set(agent, {params, role, workers})
         state.placements = this._place_agents(agents)
     }
 
     async '$agent.stop_agent'(state, agent) {
+        /* `agent` is a web object or ID. */
         state.agents.delete(agent)
         state.placements = this._place_agents(state.agents)
     }
