@@ -2,7 +2,7 @@ import {A} from '../web/react-utils.js'
 import {assert, concat, print, T} from '../common/utils.js'
 import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
 import {bytes_uint} from "../common/binary.js";
-import {Shard} from "../common/structs.js";
+import {ObjectsMap, Shard} from "../common/structs.js";
 import * as widgets from './widgets.js'
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
@@ -683,8 +683,32 @@ export class MAP extends Type {
     }
 
     toString() {
-        let name   = this.constructor.name
+        let name = this.constructor.name
         return `${name}(${this.options.values}, ${this.options.keys})`
+    }
+}
+
+
+export class OBJECTS_MAP extends GENERIC {
+    /* Accepts instances of ObjectsMap class. */
+    static options = {
+        class:  ObjectsMap,
+        values: generic_type,
+    }
+
+    collect(assets) {
+        this.options.values.collect(assets)
+    }
+
+    _validate(map) {
+        map = super._validate(map)
+        let schema = this.options.values
+        return new ObjectsMap([...map.entries_encoded()].map(([k, v]) => [k, schema.validate(v)]))
+    }
+
+    toString() {
+        let name = this.constructor.name
+        return `${name}(${this.options.values})`
     }
 }
 
