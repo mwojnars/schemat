@@ -536,16 +536,21 @@ export class Node extends Agent {
 
     /*************/
 
-    async '$agent.add_agent'(agent, opts = {}) {
-        // TODO: confirm that agents are installed and stopped...
-        // this.agents_running.push(agent)
-        this.edit.add_running(agent, opts)
-        await this.save()
+    async '$agent.start_agent'(state, agent, {params, role, workers = 1} = {}) {
+        let {agents} = state
+        if (agents.has(agent)) throw new Error(`agent ${agent.__label} is already running on node ${this.__label}`)
+        agents.set(agent, {params, role, workers})
     }
 
-    async 'action.stop'(agent) {
-        this.edit.delete_running(agent)
-        await this.save()
-    }
+    // async 'action.start'(agent, opts = {}) {
+    //     // TODO: confirm that agents are installed and stopped...
+    //     // this.agents_running.push(agent)
+    //     this.edit.add_running(agent, opts)
+    //     await this.save()
+    // }
+    // async 'action.stop'(agent) {
+    //     this.edit.delete_running(agent)
+    //     await this.save()
+    // }
 }
 
