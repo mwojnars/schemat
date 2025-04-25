@@ -1,13 +1,12 @@
 import cluster from 'node:cluster'
 import fs from 'node:fs'
-import {AsyncLocalStorage} from 'node:async_hooks'
 
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {print, assert, T, sleep} from "../common/utils.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
-import {Database, BootDatabase} from "../db/db.js";
-import {Agent} from "./agent.js";
+import {BootDatabase} from "../db/db.js";
+import {Agent, AgentState} from "./agent.js";
 import {IPC_Mailbox} from "./node.js";
 
 
@@ -67,11 +66,16 @@ class Frame {
     
     set_state(state) {
         /* Store the raw state and create a proxied version of it for tracking calls */
-        this.raw_state = state
-        if (!state) return this.state = state
-        if (!T.isPlain(state)) throw new Error(`state of ${this.agent.__label} agent must be a plain object, got ${state}`)
+        state ??= new AgentState()
+        
+        // wrap state in AgentState if needed
+        if (T.isPlain(state)) state = Object.assign(new AgentState(), state)
+        else if (!(state instanceof AgentState))
+            throw new Error(`state of ${this.agent.__label} agent must be an AgentState instance or a plain object (no class), got ${state}`)
         
         let frame = this
+
+        this.raw_state = state
         this.state = new Proxy(state, {
             // whenever a function from state (state.fun()) is called, wrap it up with _track_call()
             get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
