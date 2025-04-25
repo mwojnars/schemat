@@ -536,6 +536,12 @@ export class Node extends Agent {
         let {agents} = state
         if (agents.has(agent)) throw new Error(`agent ${agent.__label} is already running on node ${this.__label}`)
         agents.set(agent, {params, role, workers})
+        state.placements = this._place_agents(agents)
+    }
+
+    async '$agent.stop_agent'(state, agent) {
+        state.agents.delete(agent)
+        state.placements = this._place_agents(state.agents)
     }
 
     // async 'action.start'(agent, opts = {}) {
