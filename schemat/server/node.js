@@ -171,12 +171,15 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this._tcp_port)
 
-        let placements = this._place_agents()           // Map<agent ID, array of process IDs>
-        return {tcp_sender, tcp_receiver, placements}
+        let agents = this.agents_installed
+
+        let placements = this._place_agents(agents)     // Map<agent ID, array of process IDs>
+        return {tcp_sender, tcp_receiver, agents, placements}
     }
 
     async __restart__(state, prev) {
-        state.placements = this._place_agents()         // re-allocate agents in case their configuration changed
+        state.agents = this.agents_installed
+        state.placements = this._place_agents(state.agents)     // re-allocate agents in case their configuration changed
         return state
     }
 
@@ -185,7 +188,7 @@ export class Node extends Agent {
         await tcp_sender.stop()
     }
 
-    _place_agents() {
+    _place_agents(agents) {
         /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
            Notify each sublist to a corresponding process. Return an inverted Map: agent ID -> array of process IDs.
          */
@@ -196,7 +199,7 @@ export class Node extends Agent {
         let plan = Array.from({length: N + 1}, () => [])    // plan[k] is an array of agent IDs that should be running on worker `k`
 
         // distribute agents uniformly across worker processes
-        for (let agent of this.agents_installed) {
+        for (let agent of agents) {
             // assert(agent.is_loaded())
             let num_workers = agent.num_workers
             if (num_workers === -1) num_workers = N
@@ -531,7 +534,9 @@ export class Node extends Agent {
         await agent.__uninstall__(this)             // clean up any node-specific resources
     }
 
-    async 'action.start'(agent, opts = {}) {
+    /*************/
+
+    async '$agent.add_agent'(agent, opts = {}) {
         // TODO: confirm that agents are installed and stopped...
         // this.agents_running.push(agent)
         this.edit.add_running(agent, opts)
