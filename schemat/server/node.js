@@ -328,10 +328,6 @@ export class Node extends Agent {
         let frame = await this._find_frame(agent_id)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
 
-        // let call = () => frame.call_agent(`$agent.${method}`, args)
-        // let result = await schemat.in_tx_context(app_id, tx, call)
-        // return this._rpc_response(result)
-
         let call = async () => {
             let result = await frame.call_agent(`$agent.${method}`, args)
             return this._rpc_response(result)
