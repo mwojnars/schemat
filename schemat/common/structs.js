@@ -38,6 +38,13 @@ export class CustomMap extends Map {
     *entries_encoded()  { yield* super.entries() }
 }
 
+export class ObjectsMap extends CustomMap {
+    /* A Map where keys are WebObject instances, converted to their IDs for underlying storage. */
+
+    convert(obj) { return typeof obj === 'number' ? obj : obj.id }
+    reverse(id)  { return schemat.get_object(id) }
+}
+
 
 /**********************************************************************************************************************/
 
