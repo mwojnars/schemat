@@ -261,43 +261,31 @@ export class KernelProcess {
         }
 
         // refresh agents
-        for (let id of to_refresh) {
-            let frame = this.frames.get(id)
-            let agent = frame.agent.refresh()
-            if (agent.__ttl_left() < 0) agent = await agent.reload()
-            if (agent === frame.agent) continue
-            this._print(`restarting agent ${agent} ...`)
+        for (let id of to_refresh)
+            await this._refresh_agent(id)
 
-            let restart = () => agent.__restart__(frame.state, frame.agent)
-            let state = await schemat.in_context(agent.__app?.id, restart)
-
-            frame.set_state(state)
-            frame.agent = agent
-            this._print(`restarting agent ${agent} done`)
-
-            // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
-            //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
-        }
-
-        // stop agents - still use reverse order as some agents may depend on previous ones
-        for (let id of to_stop.reverse()) {
+        // stop agents; use reverse order as some agents may depend on previous ones
+        for (let id of to_stop.reverse())
             await this._stop_agent(id)
-            // let frame = this.frames.get(id)
-            // let {agent, calls} = frame
-            // frame.state.__stopped = true            // prevent new calls from being executed on the agent
-            //
-            // if (calls.length > 0) {                 // wait for pending calls to complete before stopping
-            //     this._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
-            //     await Promise.all(calls)
-            // }
-            // this._print(`stopping agent ${agent} ...`)
-            //
-            // let stop = () => agent.__stop__(frame.state)
-            // await schemat.in_context(agent.__app?.id, stop)
-            //
-            // this.frames.delete(agent.id)
-            // this._print(`stopping agent ${agent} done`)
-        }
+    }
+
+    async _refresh_agent(id) {
+        let frame = this.frames.get(id)
+        let agent = frame.agent.refresh()
+
+        if (agent.__ttl_left() < 0) agent = await agent.reload()
+        if (agent === frame.agent) return
+
+        this._print(`restarting agent ${agent} ...`)
+        let restart = () => agent.__restart__(frame.state, frame.agent)
+        let state = await schemat.in_context(agent.__app?.id, restart)
+
+        frame.set_state(state)
+        frame.agent = agent
+        this._print(`restarting agent ${agent} done`)
+
+        // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
+        //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
     }
 
     async _stop_agent(id) {
