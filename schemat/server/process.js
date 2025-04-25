@@ -110,7 +110,7 @@ export class KernelProcess {
      */
 
     node                    // Node web object that represents the Schemat cluster node this process is running
-    frames = new Map()      // Frame objects of currently running agents, keyed by agent IDs
+    frames = new Map()      // Frames of currently running agents, keyed by agent IDs
     agents_running          // array of web objects that should be running now as agents on this process; multiple runs (frames) of the same object ID are not supported
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
     _closing                // true if .stop() was called and the process is shutting down right now
@@ -281,22 +281,41 @@ export class KernelProcess {
 
         // stop agents - still use reverse order as some agents may depend on previous ones
         for (let id of to_stop.reverse()) {
-            let frame = this.frames.get(id)
-            let {agent, calls} = frame
-            frame.state.__stopped = true            // prevent new calls from being executed on the agent
-
-            if (calls.length > 0) {                 // wait for pending calls to complete before stopping
-                this._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
-                await Promise.all(calls)
-            }
-            this._print(`stopping agent ${agent} ...`)
-           
-            let stop = () => agent.__stop__(frame.state)
-            await schemat.in_context(agent.__app?.id, stop)
-
-            this.frames.delete(agent.id)
-            this._print(`stopping agent ${agent} done`)
+            await this._stop_agent(id)
+            // let frame = this.frames.get(id)
+            // let {agent, calls} = frame
+            // frame.state.__stopped = true            // prevent new calls from being executed on the agent
+            //
+            // if (calls.length > 0) {                 // wait for pending calls to complete before stopping
+            //     this._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
+            //     await Promise.all(calls)
+            // }
+            // this._print(`stopping agent ${agent} ...`)
+            //
+            // let stop = () => agent.__stop__(frame.state)
+            // await schemat.in_context(agent.__app?.id, stop)
+            //
+            // this.frames.delete(agent.id)
+            // this._print(`stopping agent ${agent} done`)
         }
+    }
+
+    async _stop_agent(id) {
+        let frame = this.frames.get(id)
+        let {agent, calls} = frame
+        frame.state.__stopped = true            // prevent new calls from being executed on the agent
+
+        if (calls.length > 0) {                 // wait for pending calls to complete before stopping
+            this._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
+            await Promise.all(calls)
+        }
+        this._print(`stopping agent ${agent} ...`)
+
+        let stop = () => agent.__stop__(frame.state)
+        await schemat.in_context(agent.__app?.id, stop)
+
+        this.frames.delete(agent.id)
+        this._print(`stopping agent ${agent} done`)
     }
 
     set_agents_running(agents) {
