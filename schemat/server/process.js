@@ -55,9 +55,7 @@ class Frame {
     /* Information about a running agent. */
     agent               // web object that created this frame
     state               // AgentState object wrapped around or returned by agent.__start__()
-    // raw_state        // original unproxied state object returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
-    stopping = false    // if true, no more RPC calls can be started
 
     constructor(agent, state) {
         this.agent = agent
@@ -75,8 +73,6 @@ class Frame {
         
         this.state = state
 
-        // let frame = this
-        // this.raw_state = state
         // this.state = new Proxy(state, {
         //     // whenever a function from state (state.fun()) is called, wrap it up with _track_call()
         //     get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
@@ -90,7 +86,7 @@ class Frame {
     call_agent(method, args) {
         /* Call agent's method in tracked mode and pass `state` as an extra argument. */
         let {agent, state} = this
-        if (this.stopping) throw new Error(`agent ${agent.__label} is in the process of stopping`)
+        if (state.__stopped) throw new Error(`agent ${agent.__label} is in the process of stopping`)
 
         let func = agent.__self[method]
         if (!func) throw new Error(`agent ${agent.__label} has no RPC endpoint "${method}"`)
@@ -287,9 +283,9 @@ export class KernelProcess {
         for (let id of to_stop.reverse()) {
             let frame = this.frames.get(id)
             let {agent, calls} = frame
-            frame.stopping = true                       // mark agent as stopping to prevent new calls
+            frame.state.__stopped = true            // prevent new calls from being executed on the agent
 
-            if (calls.length > 0) {                     // wait for pending calls to complete before stopping
+            if (calls.length > 0) {                 // wait for pending calls to complete before stopping
                 this._print(`waiting for ${calls.length} pending calls to agent ${agent.__label} to complete`)
                 await Promise.all(calls)
             }

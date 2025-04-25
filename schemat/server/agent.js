@@ -11,8 +11,8 @@ export class AgentState {
     /* Execution state of a running agent. Created in agent.__start__() and __restart__(), and passed
        to all agent methods: control methods (__stop__() etc.), as well as user methods ($agent.*()).
      */
-    __paused        // if true, the agent should not execute right now, until resumed
-    __stopped       // if true, the agent should be stopping now, no more requests/calls are accepted
+    __paused        // if true, the agent should not execute until resumed
+    __stopped       // if true, the agent should be stopping now and no more requests/calls are accepted
 
     // custom fields can be added here by subclasses:
     // ...
