@@ -245,20 +245,15 @@ export class KernelProcess {
         let to_start = desired_ids.filter(id => !current_set.has(id))       // find agents to start (desired but not running)
         let to_refresh = current_ids.filter(id => desired_set.has(id))      // find agents to refresh (running and still desired)
 
-        // start new agents
-        for (let id of to_start)
-            await this._start_agent(id)
-
-        // refresh agents
-        for (let id of to_refresh)
-            await this._refresh_agent(id)
+        // start/refresh agents ...
+        for (let id of to_start) await this.start_agent(id)
+        for (let id of to_refresh) await this.refresh_agent(id)
 
         // stop agents; use reverse order as some agents may depend on previous ones
-        for (let id of to_stop.reverse())
-            await this._stop_agent(id)
+        for (let id of to_stop.reverse()) await this.stop_agent(id)
     }
 
-    async _start_agent(id) {
+    async start_agent(id) {
         let agent = schemat.get_object(id)
         if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
 
@@ -272,7 +267,7 @@ export class KernelProcess {
         this._print(`starting agent ${agent} done`)
     }
 
-    async _refresh_agent(id) {
+    async refresh_agent(id) {
         let frame = this.frames.get(id)
         let agent = frame.agent.refresh()
 
@@ -291,7 +286,7 @@ export class KernelProcess {
         //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
     }
 
-    async _stop_agent(id) {
+    async stop_agent(id) {
         let frame = this.frames.get(id)
         let {agent, calls} = frame
         frame.state.__stopped = true            // prevent new calls from being executed on the agent
