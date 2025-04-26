@@ -286,7 +286,7 @@ export class DataBlock extends Block {
                 if (ref.is_newborn() && !unique.has(ref)) { objects.push(ref); unique.add(ref) }
             })
         }
-        // print(`[${this.id}].cmd_insert() saving ${objects.length} object(s)`)
+        // print(`${this}.$agent.cmd_insert() saving ${objects.length} object(s)`)
 
         for (let obj of objects) {
             this._prepare_for_insert(obj)       // validate obj.__data
@@ -296,7 +296,7 @@ export class DataBlock extends Block {
         // await Promise.all(objects.map(obj => {}))
 
         let ids = objects.map(obj => obj.id)
-        // print(`[${this.id}].cmd_insert() saved IDs:`, ids)
+        // print(`${this}.$agent.cmd_insert() saved IDs:`, ids)
         // this._print(`after $agent.cmd_insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
 
         return batch ? ids.slice(0, data.length) : ids[0]
