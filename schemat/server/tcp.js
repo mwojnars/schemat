@@ -139,7 +139,7 @@ export class TCP_Sender {
             this.pending.set(id, {message, retries: 0, address, resolve, reject})
 
             socket.write(message)
-            schemat.node._print(`TCP client message  ${id} sent:`, message.slice(9).toString())
+            // schemat.node._print(`TCP client message  ${id} sent:`, message.slice(9).toString())
         })
     }
 
@@ -184,7 +184,7 @@ export class TCP_Receiver {
             let processed_offset = 0
             let msg_parser = new BinaryParser(async (id, msg) => {
                 try {
-                    schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
+                    // schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
                     let result
                     if (id > processed_offset) {
                         processed_offset = id
