@@ -56,7 +56,6 @@ class Frame {
     agent               // web object that created this frame
     state               // AgentState object wrapped around or returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
-    exclusive           // if true, any new call to this agent will wait until existing `calls` terminate
 
     constructor(agent, state) {
         this.agent = agent
@@ -76,7 +75,7 @@ class Frame {
         this.state = state
     }
 
-    call_agent(method, args) {
+    async call_agent(method, args) {
         /* Call agent's method in tracked mode and pass `state` as an extra argument. */
         let {agent, state} = this
         if (state.__stopped) throw new Error(`agent ${agent} is in the process of stopping`)
@@ -84,6 +83,9 @@ class Frame {
         let func = agent.__self[method]
         if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
         // print(`calling agent ${agent}.${method}() in tracked mode`)
+
+        while (state.__exclusive && this.calls.length > 0)
+            await Promise.all(this.calls)
 
         let result = func.call(agent, state, ...args)
         if (!(result instanceof Promise)) return result
