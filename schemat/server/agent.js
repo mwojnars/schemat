@@ -28,7 +28,10 @@ export class AgentState {
                 await state.lock()
                 ...
                 state.unlock()
-           Note that lock() must NOT be preceded by any asynchronous instruction.
+
+           Note that lock() must NOT be preceded by any asynchronous instruction (await);
+           ideally, it should be the first instruction in the function body.
+           lock() must NOT be used in recursive RPC methods, as this will cause a deadlock.
          */
         let {__frame, __exclusive} = this
         this.__exclusive = true
@@ -36,7 +39,7 @@ export class AgentState {
         while (__frame.calls.length > 0)
             await Promise.all(__frame.calls)
 
-        assert(this.__exclusive_restore === undefined)
+        assert(this.__exclusive_restore === undefined)      // (not sure if this always holds)
         this.__exclusive_restore = __exclusive
     }
 
