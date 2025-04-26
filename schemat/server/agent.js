@@ -21,6 +21,30 @@ export class AgentState {
     // ...
     // alternatively, custom fields are copy-pasted into a vanilla AgentState whenever
     // a plain custom object {...} is returned from __start__()
+
+    async lock() {
+        /* Set exclusive mode and wait until all calls to this agent are completed. 
+           Can be used inside $agent.*() methods to prevent concurrent calls:
+                await state.lock()
+                ...
+                state.unlock()
+           Note that lock() must NOT be preceded by any asynchronous instruction.
+         */
+        let {__frame, __exclusive} = this
+        this.__exclusive = true
+
+        while (__frame.calls.length > 0)
+            await Promise.all(__frame.calls)
+
+        assert(this.__exclusive_restore === undefined)
+        this.__exclusive_restore = __exclusive
+    }
+
+    unlock() {
+        /* Release the exclusive mode. */
+        this.__exclusive = this.__exclusive_restore
+        delete this.__exclusive_restore
+    }
 }
 
 
