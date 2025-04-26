@@ -226,6 +226,7 @@ export class ServerSchemat extends Schemat {
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
         app_id ??= undefined
+        if (typeof app_id === 'object') app_id = app_id.id
         if (app_id === schemat.app_id) return callback()
 
         // this.kernel._print(`ServerSchemat.in_context() this.app_id = ${this.app_id} ...`)
