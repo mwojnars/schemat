@@ -56,6 +56,7 @@ class Frame {
     agent               // web object that created this frame
     state               // AgentState object wrapped around or returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
+    exclusive           // if true, any new call to this agent will wait until existing `calls` terminate
 
     constructor(agent, state) {
         this.agent = agent
@@ -73,15 +74,6 @@ class Frame {
 
         state.__frame = this
         this.state = state
-
-        // this.state = new Proxy(state, {
-        //     // whenever a function from state (state.fun()) is called, wrap it up with _track_call()
-        //     get: (state, prop) => (typeof state[prop] !== 'function') ? state[prop] : function(...args) {
-        //         if (frame.stopping) throw new Error(`agent ${frame.agent} is in the process of stopping`)
-        //         print(`calling agent ${frame.agent}.state.${prop}() in tracked mode`)
-        //         return frame._track_call(state[prop].apply(state, args))
-        //     }
-        // })
     }
 
     call_agent(method, args) {
