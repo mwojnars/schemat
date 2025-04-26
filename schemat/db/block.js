@@ -370,7 +370,7 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async '$agent.cmd_update'({storage}, id, edits, req) {
+    async '$agent.update'({storage}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring. Return {id, data}.

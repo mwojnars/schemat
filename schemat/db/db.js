@@ -198,7 +198,7 @@ export class Ring extends WebObject {
                    even without changing the record's data.
          */
         assert(edits.length, 'missing edits')
-        return this._find_block(id).$agent.cmd_update(id, edits, req || new DataRequest())
+        return this._find_block(id).$agent.update(id, edits, req || new DataRequest())
     }
 
     async update_full(id_or_obj, data = null, req = null) {
@@ -207,7 +207,7 @@ export class Ring extends WebObject {
         data ??= obj.__data //__json
         let edits = [['overwrite', data]]
 
-        return this._find_block(id).$agent.cmd_update(id, edits, req || new DataRequest())
+        return this._find_block(id).$agent.update(id, edits, req || new DataRequest())
     }
 
     async upsave(id, data, req) {
