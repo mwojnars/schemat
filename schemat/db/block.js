@@ -109,7 +109,7 @@ export class Block extends Agent {
         if (!storage.dirty) return storage.open()
         let ref = schemat.registry.get_object(this.id)
         if (!ref || this === ref)
-            return sleep(1000).then(() => this._reopen(storage))
+            return sleep(1.0).then(() => this._reopen(storage))
     }
 
     async '$agent.put'({storage}, key, value) { return this.put(storage, key, value) }
