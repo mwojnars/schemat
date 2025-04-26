@@ -233,9 +233,9 @@ export class DataBlock extends Block {
         return await this._move_down(id, req).select(id, req)
     }
 
-    async '$agent.cmd_insert'(state, id, data) {
+    async '$agent.insert'(state, id, data) {
         /* `data` can be an array if multiple objects are to be inserted. */
-        // this._print(`before $agent.cmd_insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
+        // this._print(`before $agent.insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
 
         let ring = this.ring
         assert(ring?.is_loaded())
@@ -286,7 +286,7 @@ export class DataBlock extends Block {
                 if (ref.is_newborn() && !unique.has(ref)) { objects.push(ref); unique.add(ref) }
             })
         }
-        // print(`${this}.$agent.cmd_insert() saving ${objects.length} object(s)`)
+        // print(`${this}.$agent.insert() saving ${objects.length} object(s)`)
 
         for (let obj of objects) {
             this._prepare_for_insert(obj)       // validate obj.__data
@@ -296,8 +296,8 @@ export class DataBlock extends Block {
         // await Promise.all(objects.map(obj => {}))
 
         let ids = objects.map(obj => obj.id)
-        // print(`${this}.$agent.cmd_insert() saved IDs:`, ids)
-        // this._print(`after $agent.cmd_insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
+        // print(`${this}.$agent.insert() saved IDs:`, ids)
+        // this._print(`after $agent.insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
 
         return batch ? ids.slice(0, data.length) : ids[0]
     }
@@ -402,15 +402,11 @@ export class DataBlock extends Block {
         return this._save(storage, obj, prev)       // save changes and perform change propagation
     }
 
-    async '$agent.cmd_upsave'({storage}, id, data, req) {
+    async '$agent.upsave'({storage}, id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
         let key = this.encode_id(id)
         if (await storage.get(key))
             throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
-
-        // // if `id` is already present in this ring, redo the update (apply `edits` again) instead of overwriting
-        // // the object with the `data` calculated in a previous ring
-        // if (await storage.get(key)) return this.cmd_update(req)
 
         let obj = await WebObject.from_data(id, data, {activate: false})
         return this._save(storage, obj)
@@ -428,7 +424,7 @@ export class DataBlock extends Block {
         schemat.register_changes({id, data})
     }
 
-    async '$agent.cmd_delete'({storage}, id, req) {
+    async '$agent.delete'({storage}, id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */

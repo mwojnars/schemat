@@ -179,15 +179,15 @@ export class Ring extends WebObject {
     }
 
     async delete(id, req) {
-        return this._find_block(id).$agent.cmd_delete(id, req || new DataRequest())
+        return this._find_block(id).$agent.delete(id, req || new DataRequest())
     }
 
     async insert(data, req) {
-        return this._random_block().$agent.cmd_insert(null, data)
+        return this._random_block().$agent.insert(null, data)
     }
 
     async insert_at(id, data) {
-        return this._find_block(id).$agent.cmd_insert(id, data)
+        return this._find_block(id).$agent.insert(id, data)
     }
 
     async update(id, edits, req) {
@@ -211,7 +211,7 @@ export class Ring extends WebObject {
     }
 
     async upsave(id, data, req) {
-        return this._find_block(id).$agent.cmd_upsave(id, data, req || new DataRequest())
+        return this._find_block(id).$agent.upsave(id, data, req || new DataRequest())
     }
 
 
