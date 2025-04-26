@@ -301,7 +301,7 @@ describe('Schemat Tests', function () {
             //     let db = await schemat.db.load()
             //     return db.action.rebuild_indexes()
             // })
-            let done = await page.evaluate(() => schemat.eval('schemat.db.rebuild_indexes()'))
+            let done = await page.evaluate(() => schemat.server('schemat.db.rebuild_indexes()'))
             expect(done).to.be.true
         })
 

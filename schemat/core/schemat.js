@@ -468,7 +468,7 @@ export class Schemat {
         // }))
     }
 
-    async eval(code) {
+    async server(code) {
         /* Run eval(code) on the server and return the result; `code` is a string. Can be called on the client or the server. */
         return this.app.POST.eval(code)
     }
