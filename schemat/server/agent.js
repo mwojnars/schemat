@@ -91,8 +91,8 @@ export class Agent extends WebObject {
         return response
     }
 
-    '$agent.pause'() {}
-    '$agent.resume'() {}
+    '$agent.pause'(state)  { state.__paused = true }
+    '$agent.resume'(state) { state.__paused = false }
 }
 
 
