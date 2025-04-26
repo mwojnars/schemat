@@ -102,7 +102,7 @@ export class Agent extends WebObject {
     // defined already in WebObject:
     //
     // get $agent()
-    // get $local()
+    // get $state()
 
 
     /***  Triggers  ***/

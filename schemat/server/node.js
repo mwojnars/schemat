@@ -240,8 +240,8 @@ export class Node extends Agent {
     }
 
     find_process(agent_id, role) {
-        assert(this.$local?.placements, `placements not yet initialized`)
-        return this.$local.placements.get(agent_id)?.[0]
+        assert(this.$state?.placements, `placements not yet initialized`)
+        return this.$state.placements.get(agent_id)?.[0]
     }
 
 
@@ -398,7 +398,7 @@ export class Node extends Agent {
         // print("tcp_send():", JSON.stringify(msg))
         assert(this.is_master())
         if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
-        return this.$local.tcp_sender.send(msg, node.tcp_address)
+        return this.$state.tcp_sender.send(msg, node.tcp_address)
     }
 
     tcp_recv(message) {
@@ -423,7 +423,7 @@ export class Node extends Agent {
             // print("tcp_recv(): process", proc)
 
             if (proc === undefined) {
-                // this._print(`agent locations:`, [...this.$local.placements.entries()])
+                // this._print(`agent locations:`, [...this.$state.placements.entries()])
                 throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)
             }
             if (proc !== this.worker_id) {
