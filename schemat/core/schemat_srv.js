@@ -260,11 +260,6 @@ export class ServerSchemat extends Schemat {
         return this.kernel.frames.get(id)
     }
 
-    get_state(id_or_obj) {
-        /* Find and return the current execution state of an agent. */
-        return this.get_frame(id_or_obj)?.state
-    }
-
 
     /***  Database  ***/
 

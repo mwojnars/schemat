@@ -961,7 +961,7 @@ export class WebObject {
         /* Current local execution state of the agent represented by this web object, as returned by __start__()
            - see the Agent class. NOT cached.
          */
-        return {value: schemat.get_state(this.id), [Intercept.NO_CACHING]: true}
+        return {value: schemat.get_frame(this.id)?.state, [Intercept.NO_CACHING]: true}
     }
 
     get $_wrap() {

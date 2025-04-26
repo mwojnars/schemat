@@ -104,7 +104,6 @@ export class Schemat {
     get tx()        {}
     get node()      {}
     get_frame()     {}
-    get_state()     {}
 
 
     // web objects currently being loaded/initialized with a call to .load()
