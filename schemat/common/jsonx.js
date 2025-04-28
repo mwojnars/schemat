@@ -219,15 +219,15 @@ export class JSONx {
     // static decenc(state) { return this.encode(this.decode(state)) }       // for testing purposes
 
     encode_array(values) {
-        /* Encode recursively all non-primitive objects inside an array. */
+        /* Recursively encode all non-primitive objects inside an array. */
         return values.map(v => this.encode(v))
     }
     decode_array(state) {
-        /* Decode recursively all non-primitive objects inside an array. */
+        /* Recursively decode all non-primitive objects inside an array. */
         return state.map(v => this.decode(v))
     }
     encode_object(obj) {
-        /* Encode recursively all properties of a plain object and return as a new object (`obj` stays untouched).
+        /* Recursively encode all properties of a plain object and return as a new object (`obj` stays untouched).
            Skip properties with `undefined` value.
          */
         let out = {...obj}
@@ -244,7 +244,7 @@ export class JSONx {
         // return mapEntries(obj, (k, v) => [k, this.encode(v)])
     }
     decode_object(state) {
-        /* Decode recursively all non-primitive objects inside `state` dictionary. */
+        /* Recursively decode all non-primitive objects inside `state` dictionary. */
         return mapEntries(state, (k, v) => [k, this.decode(v)])
     }
 }

@@ -15,7 +15,7 @@ export class AgentState {
     role            // name of the agent's role, e.g. "$leader"; empty/undefined means a generic role ($agent)
     options         // startup options provided by the creator of this agent
 
-    __frame         // Frame of the current run; assigned by kernel after the state object is created
+    __frame         // Frame of the current run, assigned by kernel
     __exclusive     // if true, any new call to this agent will wait until existing __frame.calls terminate
     __paused        // if true, the agent should not execute until resumed
     __stopped       // if true, the agent should be stopping now and no more requests/calls are accepted
