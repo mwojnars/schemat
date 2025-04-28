@@ -299,7 +299,7 @@ export class Node extends Agent {
     async rpc(...args) { return this.rpc_send(...args) }    // alias for app-level use
 
     async rpc_send(agent_id, method, args, {role, worker} = {}) {
-        /* Send an RPC message to the master process via IPC channel, so it gets sent over TCP to another node
+        /* Send an RPC message to the master process via an IPC channel, so it gets sent over TCP to another node
            and then to the `agent_id` object (agent) where it should invoke its '$agent.<method>'(...args).
            Return a response from the remote target. RPC methods on sender/receiver automatically JSONx-encode/decode
            the arguments and the result of the function.

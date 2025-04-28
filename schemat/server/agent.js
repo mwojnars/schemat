@@ -11,13 +11,17 @@ export class AgentState {
     /* Execution state of a running agent. Created in agent.__start__() and __restart__(), and passed
        to all agent methods: control methods (__stop__() etc.), as well as user methods ($agent.*()).
      */
+
+    role            // name of the agent's role, e.g. "$leader"; empty/undefined means a generic role ($agent)
+    options         // startup options provided by the creator of this agent
+
     __frame         // Frame of the current run; assigned by kernel after the state object is created
     __exclusive     // if true, any new call to this agent will wait until existing __frame.calls terminate
     __paused        // if true, the agent should not execute until resumed
     __stopped       // if true, the agent should be stopping now and no more requests/calls are accepted
     __migrating_to  // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
-    // custom fields can be added here by subclasses:
+    // subclasses can add custom fields here:
     // ...
     // alternatively, custom fields are copy-pasted into a vanilla AgentState whenever
     // a plain custom object {...} is returned from __start__()
@@ -68,7 +72,7 @@ export class Agent extends WebObject {
     async __install__(node) {}  // ideally, this method should be idempotent in case of failure and subsequent re-launch
     async __uninstall__(node) {}
 
-    async __start__(role, options = {}, error /*callback*/) {
+    async __start__(state) {
         /* Start the microservice implemented by this agent. Return an "execution state" which will be accessible
            to external calls addressed to the running agent (RPC calls or direct function calls)
            and will be passed to __stop__() upon microservice termination. Typically, the state object contains
