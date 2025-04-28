@@ -10,12 +10,14 @@ import {WebObject} from "../core/object.js"
 export class AgentState {
     /* Execution state of a running agent. Created in agent.__start__() and __restart__(), and passed
        to all agent methods: control methods (__stop__() etc.), as well as user methods ($agent.*()).
+       Selected fields of this object undergo serialization to allow agent restart after node reboot thanks to (partial) state persistence.
      */
 
     role            // name of the agent's role, e.g. "$leader"; empty/undefined means a generic role ($agent)
     options         // startup options provided by the creator of this agent
 
     __frame         // Frame of the current run, assigned by kernel
+    __worker        // worker process ID of the current run, only needed for persistence of the state
     __exclusive     // if true, any new call to this agent will wait until existing __frame.calls terminate
     __paused        // if true, the agent should not execute until resumed
     __stopped       // if true, the agent should be stopping now and no more requests/calls are accepted
@@ -51,6 +53,17 @@ export class AgentState {
         /* Release the exclusive mode. */
         this.__exclusive = this.__exclusive_restore
         delete this.__exclusive_restore
+    }
+
+    /*** Serialization ***/
+
+    __getstate__() {
+        return {
+            role: this.role,
+            options: this.options,
+            __worker: this.__worker,
+            __migrating_to: this.__migrating_to,
+        }
     }
 }
 
