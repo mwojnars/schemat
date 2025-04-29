@@ -369,4 +369,9 @@ export class ServerSchemat extends Schemat {
     //     await this.evict_cache()
     //     releaseMutex()
     // }
+
+    /***  RPC/RMI  ***/
+
+    async rpc(...args) { return this.node.rpc_send(...args) }    // alias for node.rpc_send(), for direct in-app usage when fine-grained targeting of RPC is needed
+
 }
