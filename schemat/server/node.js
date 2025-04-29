@@ -294,7 +294,7 @@ export class Node extends Agent {
         return {type, command, args}
     }
 
-    /* RPC calls to other processes or nodes */
+    /* RPC: remote calls to agents */
 
     async rpc_send(agent_id, method, args, {node, worker, role} = {}) {
         /* Send an RPC message to the master process via an IPC channel, so it gets sent over TCP to another node
@@ -318,7 +318,7 @@ export class Node extends Agent {
     }
 
     async rpc_recv(message) {
-        /* Execute an RPC message that's addressed to an agent running on this process.
+        /* Execute an RPC message addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
         let {agent_id, method, args, app_id, tx} = this._rpc_request_parse(message)
