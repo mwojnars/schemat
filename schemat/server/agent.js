@@ -15,10 +15,11 @@ export class AgentState {
 
     role            // name of the agent's role, e.g. "$leader"; empty/undefined means a generic role ($agent)
     options         // startup options provided by the creator of this agent
+    exclusive       // if set to true by __start__(), all calls to agent methods will be executed in a mutually exclusive lock (no concurrency)
 
     __frame         // Frame of the current run, assigned by kernel
     __worker        // worker process ID of the current run, only needed for persistence of the state
-    __exclusive     // if true, any new call to this agent will wait until existing __frame.calls terminate
+    __exclusive     // if true in a given moment, any new call to this agent will wait until existing __frame.calls terminate; configured by lock() on per-call basis
     __paused        // if true, the agent should not execute until resumed
     __stopped       // if true, the agent should be stopping now and no more requests/calls are accepted
     __migrating_to  // node ID where this agent is migrating to right now; all new requests are forwarded to that node
@@ -39,20 +40,21 @@ export class AgentState {
            ideally, it should be the first instruction in the function body.
            lock() must NOT be used in recursive RPC methods, as this will cause a deadlock.
          */
-        let {__frame, __exclusive} = this
         this.__exclusive = true
+        let {__frame} = this
 
         while (__frame.calls.length > 0)
             await Promise.all(__frame.calls)
 
-        assert(this.__exclusive_restore === undefined)      // (not sure if this always holds)
-        this.__exclusive_restore = __exclusive
+        // assert(this.__exclusive_restore === undefined)      // (not sure if this always holds)
+        // this.__exclusive_restore = __exclusive
     }
 
     unlock() {
         /* Release the exclusive mode. */
-        this.__exclusive = this.__exclusive_restore
-        delete this.__exclusive_restore
+        this.__exclusive = this.exclusive
+        // this.__exclusive = this.__exclusive_restore
+        // delete this.__exclusive_restore
     }
 
     /*** Serialization ***/
