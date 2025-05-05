@@ -57,6 +57,7 @@ class Frame {
     state               // AgentState object wrapped around or returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
 
+    __paused        // if true, the agent should not execute until resumed
     stopping            // if true, the agent should be stopping now and no more requests/calls are accepted
     stopped             // if true, the agent is *permanently* stopped and should not be restarted unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
@@ -84,7 +85,7 @@ class Frame {
         let {agent, state} = this
 
         if (this.stopping) throw new Error(`agent ${agent} is in the process of stopping`)
-        while (state.__paused && !method.endsWith('.resume')) await sleep(pause_delay)
+        while (this.__paused && !method.endsWith('.resume')) await sleep(pause_delay)
 
         let func = agent.__self[method]
         if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)

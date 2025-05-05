@@ -19,7 +19,6 @@ export class AgentState {   // AgentData, AgentVariables, Registers
 
     __frame         // Frame of the current run, assigned by kernel
     __exclusive     // if true in a given moment, any new call to this agent will wait until existing __frame.calls terminate; configured by lock() on per-call basis
-    __paused        // if true, the agent should not execute until resumed
 
     // subclasses can add custom fields here:
     // ...
@@ -123,13 +122,13 @@ export class Agent extends WebObject {
         /* Pause the execution of this agent: execution of new requests is suspended, scheduled events should be
            rescheduled for a later date, until __resume__() is called. Particularly useful for debugging.
          */
-        state.__paused = true
+        state.__frame.__paused = true
         await this.__pause__(state)
     }
 
     async '$agent.resume'(state) {
         await this.__resume__(state)
-        state.__paused = false
+        state.__frame.__paused = false
     }
 }
 
