@@ -59,6 +59,7 @@ class Frame {
 
     stopping            // if true, the agent should be stopping now and no more requests/calls are accepted
     stopped             // if true, the agent is *permanently* stopped and should not be restarted unless explicitly requested by its creator/supervisor [UNUSED]
+    migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
     constructor(agent, state) {
         this.agent = agent

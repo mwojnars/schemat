@@ -18,10 +18,8 @@ export class AgentState {   // AgentData, AgentVariables, Registers
     exclusive       // if set to true by __start__(), all calls to agent methods will be executed in a mutually exclusive lock (no concurrency)
 
     __frame         // Frame of the current run, assigned by kernel
-    __agent         // ID of the agent, only needed for persistence of state to DB
     __exclusive     // if true in a given moment, any new call to this agent will wait until existing __frame.calls terminate; configured by lock() on per-call basis
     __paused        // if true, the agent should not execute until resumed
-    __migrating_to  // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
     // subclasses can add custom fields here:
     // ...
@@ -54,17 +52,6 @@ export class AgentState {   // AgentData, AgentVariables, Registers
         this.__exclusive = this.exclusive
         // this.__exclusive = this.__exclusive_restore
         // delete this.__exclusive_restore
-    }
-
-    /*** Serialization ***/
-
-    __getstate__() {
-        return {
-            __agent: this.__agent,
-            role: this.role,
-            options: this.options,
-            __migrating_to: this.__migrating_to,
-        }
     }
 }
 
