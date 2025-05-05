@@ -93,7 +93,7 @@ class Frame {
         if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
         // print(`calling agent ${agent}.${method}() in tracked mode`)
 
-        while ((this.exclusive || state.exclusive) && this.calls.length > 0)
+        while ((this.exclusive || state.__exclusive) && this.calls.length > 0)
             await Promise.all(this.calls)
 
         let result = func.call(agent, state, ...args)
@@ -124,8 +124,8 @@ class Frame {
     get_status() {
         return {
             agent:          this.agent.id,
-            role:           this.state.role,
-            options:        this.state.options,
+            role:           this.state.__role,
+            options:        this.state.__options,
             migrating_to:   this.migrating_to,
         }
     }
