@@ -57,7 +57,7 @@ class Frame {
     state               // AgentState object wrapped around or returned by agent.__start__()
 
     calls = []          // promises for currently executing concurrent calls on this agent
-    __exclusive     // if true in a given moment, any new call to this agent will wait until existing calls terminate; configured by lock() on per-call basis
+    exclusive           // if true in a given moment, any new call to this agent will wait until existing calls terminate; configured by lock() on per-call basis
 
     paused              // if true, the agent should not execute now but can be resumed without restarting by $agent.resume()
     stopping            // if true, the agent should be stopping now and no more requests/calls are accepted
@@ -93,7 +93,7 @@ class Frame {
         if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
         // print(`calling agent ${agent}.${method}() in tracked mode`)
 
-        while ((this.__exclusive || state.exclusive) && this.calls.length > 0)
+        while ((this.exclusive || state.exclusive) && this.calls.length > 0)
             await Promise.all(this.calls)
 
         let result = func.call(agent, state, ...args)
@@ -109,24 +109,24 @@ class Frame {
 
     async lock() {
         /* Set per-call exclusive mode and wait until all calls to this agent are completed. */
-        this.__exclusive = true
+        this.exclusive = true
         while (this.calls.length > 0)
             await Promise.all(this.calls)
     }
 
     unlock() {
         /* Exit the per-call exclusive mode. */
-        delete this.__exclusive
+        delete this.exclusive
     }
 
     /*** Serialization ***/
 
-    dump_status() {
+    get_status() {
         return {
-            agent: this.agent.id,
-            role: this.state.role,
-            options: this.state.options,
-            migrating_to: this.migrating_to,
+            agent:          this.agent.id,
+            role:           this.state.role,
+            options:        this.state.options,
+            migrating_to:   this.migrating_to,
         }
     }
 }
