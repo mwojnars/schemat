@@ -122,13 +122,13 @@ export class Agent extends WebObject {
         /* Pause the execution of this agent: execution of new requests is suspended, scheduled events should be
            rescheduled for a later date, until __resume__() is called. Particularly useful for debugging.
          */
-        state.__frame.__paused = true
+        state.__frame.paused = true
         await this.__pause__(state)
     }
 
     async '$agent.resume'(state) {
         await this.__resume__(state)
-        state.__frame.__paused = false
+        state.__frame.paused = false
     }
 }
 
