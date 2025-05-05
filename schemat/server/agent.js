@@ -18,7 +18,7 @@ export class AgentState {
     exclusive       // if set to true by __start__(), all calls to agent methods will be executed in a mutually exclusive lock (no concurrency)
 
     __frame         // Frame of the current run, assigned by kernel
-    __worker        // worker process ID of the current run, only needed for persistence of the state
+    __agent         // ID of the agent, only needed for persistence of state to DB
     __exclusive     // if true in a given moment, any new call to this agent will wait until existing __frame.calls terminate; configured by lock() on per-call basis
     __paused        // if true, the agent should not execute until resumed
     __stopped       // if true, the agent should be stopping now and no more requests/calls are accepted
@@ -61,9 +61,9 @@ export class AgentState {
 
     __getstate__() {
         return {
+            __agent: this.__agent,
             role: this.role,
             options: this.options,
-            __worker: this.__worker,
             __migrating_to: this.__migrating_to,
         }
     }
