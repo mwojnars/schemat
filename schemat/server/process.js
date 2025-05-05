@@ -52,10 +52,12 @@ export async function boot_schemat(opts, callback) {
 /**********************************************************************************************************************/
 
 class Frame {
-    /* Information about a running agent. */
+    /* Status information about a running agent + its internal variables. */
     agent               // web object that created this frame
     state               // AgentState object wrapped around or returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
+
+    __stopped           // if true, the agent should be stopping now and no more requests/calls are accepted
 
     constructor(agent, state) {
         this.agent = agent
@@ -79,7 +81,7 @@ class Frame {
         /* Call agent's method in tracked mode and pass `state` as an extra argument. */
         let {agent, state} = this
 
-        if (state.__stopped) throw new Error(`agent ${agent} is in the process of stopping`)
+        if (this.__stopped) throw new Error(`agent ${agent} is in the process of stopping`)
         while (state.__paused && !method.endsWith('.resume')) await sleep(pause_delay)
 
         let func = agent.__self[method]
@@ -303,9 +305,9 @@ export class KernelProcess {
     async stop_agent(id) {
         let frame = this.frames.get(id)
         let {agent, calls} = frame
-        frame.state.__stopped = true            // prevent new calls from being executed on the agent
+        frame.__stopped = true              // prevent new calls from being executed on the agent
 
-        if (calls.length > 0) {                 // wait for pending calls to complete before stopping
+        if (calls.length > 0) {             // wait for pending calls to complete before stopping
             this._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
             await Promise.all(calls)
         }

@@ -7,7 +7,7 @@ import {WebObject} from "../core/object.js"
 
 /**********************************************************************************************************************/
 
-export class AgentState {
+export class AgentState {   // AgentData, AgentVariables, Registers
     /* Execution state of a running agent. Created in agent.__start__() and __restart__(), and passed
        to all agent methods: control methods (__stop__() etc.), as well as user methods ($agent.*()).
        Selected fields of this object undergo serialization to allow agent restart after node reboot thanks to (partial) state persistence.
@@ -21,7 +21,6 @@ export class AgentState {
     __agent         // ID of the agent, only needed for persistence of state to DB
     __exclusive     // if true in a given moment, any new call to this agent will wait until existing __frame.calls terminate; configured by lock() on per-call basis
     __paused        // if true, the agent should not execute until resumed
-    __stopped       // if true, the agent should be stopping now and no more requests/calls are accepted
     __migrating_to  // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
     // subclasses can add custom fields here:
