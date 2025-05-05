@@ -55,7 +55,9 @@ class Frame {
     /* Status of a running agent + its internal variables (state). */
     agent               // web object that created this frame
     state               // AgentState object wrapped around or returned by agent.__start__()
+
     calls = []          // promises for currently executing concurrent calls on this agent
+    __exclusive     // if true in a given moment, any new call to this agent will wait until existing calls terminate; configured by lock() on per-call basis
 
     paused              // if true, the agent should not execute now but can be resumed without restarting by $agent.resume()
     stopping            // if true, the agent should be stopping now and no more requests/calls are accepted
@@ -91,7 +93,7 @@ class Frame {
         if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
         // print(`calling agent ${agent}.${method}() in tracked mode`)
 
-        while (state.__exclusive && this.calls.length > 0)
+        while ((this.__exclusive || state.exclusive) && this.calls.length > 0)
             await Promise.all(this.calls)
 
         let result = func.call(agent, state, ...args)
@@ -103,6 +105,18 @@ class Frame {
         })
         this.calls.push(tracked)
         return tracked
+    }
+
+    async lock() {
+        /* Set per-call exclusive mode and wait until all calls to this agent are completed. */
+        this.__exclusive = true
+        while (this.calls.length > 0)
+            await Promise.all(this.calls)
+    }
+
+    unlock() {
+        /* Exit the per-call exclusive mode. */
+        delete this.__exclusive
     }
 
     /*** Serialization ***/

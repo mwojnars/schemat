@@ -18,7 +18,6 @@ export class AgentState {   // AgentData, AgentVariables, Registers
     exclusive       // if set to true by __start__(), all calls to agent methods will be executed in a mutually exclusive lock (no concurrency)
 
     __frame         // Frame of the current run, assigned by kernel
-    __exclusive     // if true in a given moment, any new call to this agent will wait until existing __frame.calls terminate; configured by lock() on per-call basis
 
     // subclasses can add custom fields here:
     // ...
@@ -26,7 +25,7 @@ export class AgentState {   // AgentData, AgentVariables, Registers
     // a plain custom object {...} is returned from __start__()
 
     async lock() {
-        /* Set exclusive mode and wait until all calls to this agent are completed. 
+        /* Set per-call exclusive mode and wait until all calls to this agent are completed.
            Can be used inside $agent.*() methods to prevent concurrent calls:
                 await state.lock()
                 ...
@@ -36,22 +35,10 @@ export class AgentState {   // AgentData, AgentVariables, Registers
            ideally, it should be the first instruction in the function body.
            lock() must NOT be used in recursive RPC methods, as this will cause a deadlock.
          */
-        this.__exclusive = true
-        let {__frame} = this
-
-        while (__frame.calls.length > 0)
-            await Promise.all(__frame.calls)
-
-        // assert(this.__exclusive_restore === undefined)      // (not sure if this always holds)
-        // this.__exclusive_restore = __exclusive
+        await this.__frame.lock()
     }
 
-    unlock() {
-        /* Release the exclusive mode. */
-        this.__exclusive = this.exclusive
-        // this.__exclusive = this.__exclusive_restore
-        // delete this.__exclusive_restore
-    }
+    unlock() { this.__frame.unlock() }
 }
 
 
