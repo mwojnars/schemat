@@ -8,7 +8,7 @@ import {WebObject} from "../core/object.js"
 /**********************************************************************************************************************/
 
 export class AgentState {   // AgentData, AgentVariables, Registers
-    /* Execution state of a running agent. Created in agent.__start__() and __restart__(), and passed
+    /* Internal variables (memory) of a running agent. Created in agent.__start__() and __restart__(), and passed
        to all agent methods: control methods (__stop__() etc.), as well as user methods ($agent.*()).
        Selected fields of this object undergo serialization to allow agent restart after node reboot thanks to (partial) state persistence.
      */

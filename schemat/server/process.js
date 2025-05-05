@@ -52,12 +52,13 @@ export async function boot_schemat(opts, callback) {
 /**********************************************************************************************************************/
 
 class Frame {
-    /* Status information about a running agent + its internal variables. */
+    /* Status of a running agent + its internal variables (state). */
     agent               // web object that created this frame
     state               // AgentState object wrapped around or returned by agent.__start__()
     calls = []          // promises for currently executing concurrent calls on this agent
 
     stopping            // if true, the agent should be stopping now and no more requests/calls are accepted
+    stopped             // if true, the agent is *permanently* stopped and should not be restarted unless explicitly requested by its creator/supervisor [UNUSED]
 
     constructor(agent, state) {
         this.agent = agent
@@ -100,6 +101,17 @@ class Frame {
         })
         this.calls.push(tracked)
         return tracked
+    }
+
+    /*** Serialization ***/
+
+    dump_status() {
+        return {
+            agent: this.agent.id,
+            role: this.state.role,
+            options: this.state.options,
+            migrating_to: this.migrating_to,
+        }
     }
 }
 
