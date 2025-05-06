@@ -134,10 +134,10 @@ export class Node extends Agent {
        running agents in KernelProcess._get_agents_running().
      */
 
-    data_directory
-    agents_installed
+    agents
     agents_running
     agent_refresh_interval
+    data_directory
     http_host
     http_port
     https_port
@@ -155,6 +155,14 @@ export class Node extends Agent {
     get tcp_address() {
         if (!this.tcp_host || !this._tcp_port) throw new Error(`TCP host and port must be configured`)
         return `${this.tcp_host}:${this._tcp_port}`
+    }
+
+    get agents_installed() {
+        // pull `agent` fields from this.agents, drop duplicates but preserve order
+        let ids = []
+        for (let status of this.agents)
+            if (!ids.includes(status.agent.id)) ids.push(status.agent.id)
+        return ids.map(id => schemat.get_object(id))
     }
 
     async __init__() {
@@ -458,83 +466,83 @@ export class Node extends Agent {
 
     /*************/
 
-    'edit.add_installed'(name, agent) {
-        /* Add the agent to `agents_installed` under the given `name`. Idempotent. */
-
-        // check that the name is not already taken
-        let current = this.agents_installed.get(name)
-        if (current && current.id !== agent.id) throw new Error(`an agent with the same name (${name}), id=${current.id}, is already installed on node [${this.id}]`)
-
-        // check that the agent is not already installed under a different name
-        let other_name = Array.from(this.agents_installed.entries()).find(([n, a]) => a.id === agent.id && n !== name)?.[0]
-        if (other_name) throw new Error(`agent [${agent.id}] is already installed on node [${this.id}] under a different name (${other_name})`)
-
-        this.agents_installed.set(name, agent)
-    }
-
-    'edit.delete_installed'(agent_or_name) {
-        /* Remove the agent from `agents_installed`; agent_or_name is either an Agent object or its name in `agents_installed`. Idempotent. */
-
-        if (typeof agent_or_name === 'string')
-            this.agents_installed.delete(agent_or_name)
-        else
-            // search for the agent ID in the map and remove it
-            for (let [name, agent] of this.agents_installed.entries())
-                if (agent.id === agent_or_name.id) {
-                    this.agents_installed.delete(name)
-                    break
-                }
-    }
-
-    'edit.add_running'(agent, {workers = true, master = false}) {
-        /* Check that the `agent` is installed and not yet on the list of running agents,
-           then add it to the corresponding array(s). Idempotent.
-         */
-        let agents = Array.from(this.agents_installed.values())
-        if (!agents.some(a => a.id === agent.id)) throw new Error(`agent [${agent.id}] is not installed on node [${this.id}]`)
-
-        if (workers && this.agents_running.every(a => a.id !== agent.id))
-            this.agents_running.push(agent)
-
-        if (master && this.master_agents_running.every(a => a.id !== agent.id))
-            this.master_agents_running.push(agent)
-    }
-
-    'edit.delete_running'(agent) {
-        /* Remove the `agent` from the list of agents_running and master_agents_running, if present. Idempotent. */
-        this.agents_running = this.agents_running.filter(a => a.id !== agent.id)
-        this.master_agents_running = this.master_agents_running.filter(a => a.id !== agent.id)
-    }
-
-
-    async '$agent.install'(name, agent, {start = true, workers = true, master = false} = {}) {
-        /* Call agent.__install__() on this node and add the agent to `agents_installed`. If start=true, the agent
-           is also added to `agents_running` and is started on the next iteration of the host process's life loop.
-         */
-        // process.chdir(this.local_root || schemat.app.local_root)
-        await agent.load()
-        await agent.__install__(this)       // can modify the local environment of the host node
-
-        let node = this.get_mutable()
-        node.edit.add_installed(name, agent)
-
-        if (start) node.edit.add_running(agent, {workers, master})
-        await node.save()
-    }
-
-    async '$agent.uninstall'(agent) {
-        await agent.load()
-
-        let node = this.get_mutable()
-        node.edit.delete_running(agent)             // let workers know that the agent should be stopped
-        await node.save()
-        await sleep(this.agent_refresh_interval * 2 + node.__ttl)     // TODO: wait for actual confirmation(s) that the agent is stopped on all processes
-
-        node.edit.delete_installed(agent)           // mark the agent as uninstalled
-        await node.save()
-
-        await agent.__uninstall__(this)             // clean up any node-specific resources
-    }
+    // 'edit.add_installed'(name, agent) {
+    //     /* Add the agent to `agents_installed` under the given `name`. Idempotent. */
+    //
+    //     // check that the name is not already taken
+    //     let current = this.agents_installed.get(name)
+    //     if (current && current.id !== agent.id) throw new Error(`an agent with the same name (${name}), id=${current.id}, is already installed on node [${this.id}]`)
+    //
+    //     // check that the agent is not already installed under a different name
+    //     let other_name = Array.from(this.agents_installed.entries()).find(([n, a]) => a.id === agent.id && n !== name)?.[0]
+    //     if (other_name) throw new Error(`agent [${agent.id}] is already installed on node [${this.id}] under a different name (${other_name})`)
+    //
+    //     this.agents_installed.set(name, agent)
+    // }
+    //
+    // 'edit.delete_installed'(agent_or_name) {
+    //     /* Remove the agent from `agents_installed`; agent_or_name is either an Agent object or its name in `agents_installed`. Idempotent. */
+    //
+    //     if (typeof agent_or_name === 'string')
+    //         this.agents_installed.delete(agent_or_name)
+    //     else
+    //         // search for the agent ID in the map and remove it
+    //         for (let [name, agent] of this.agents_installed.entries())
+    //             if (agent.id === agent_or_name.id) {
+    //                 this.agents_installed.delete(name)
+    //                 break
+    //             }
+    // }
+    //
+    // 'edit.add_running'(agent, {workers = true, master = false}) {
+    //     /* Check that the `agent` is installed and not yet on the list of running agents,
+    //        then add it to the corresponding array(s). Idempotent.
+    //      */
+    //     let agents = Array.from(this.agents_installed.values())
+    //     if (!agents.some(a => a.id === agent.id)) throw new Error(`agent [${agent.id}] is not installed on node [${this.id}]`)
+    //
+    //     if (workers && this.agents_running.every(a => a.id !== agent.id))
+    //         this.agents_running.push(agent)
+    //
+    //     if (master && this.master_agents_running.every(a => a.id !== agent.id))
+    //         this.master_agents_running.push(agent)
+    // }
+    //
+    // 'edit.delete_running'(agent) {
+    //     /* Remove the `agent` from the list of agents_running and master_agents_running, if present. Idempotent. */
+    //     this.agents_running = this.agents_running.filter(a => a.id !== agent.id)
+    //     this.master_agents_running = this.master_agents_running.filter(a => a.id !== agent.id)
+    // }
+    //
+    //
+    // async '$agent.install'(name, agent, {start = true, workers = true, master = false} = {}) {
+    //     /* Call agent.__install__() on this node and add the agent to `agents_installed`. If start=true, the agent
+    //        is also added to `agents_running` and is started on the next iteration of the host process's life loop.
+    //      */
+    //     // process.chdir(this.local_root || schemat.app.local_root)
+    //     await agent.load()
+    //     await agent.__install__(this)       // can modify the local environment of the host node
+    //
+    //     let node = this.get_mutable()
+    //     node.edit.add_installed(name, agent)
+    //
+    //     if (start) node.edit.add_running(agent, {workers, master})
+    //     await node.save()
+    // }
+    //
+    // async '$agent.uninstall'(agent) {
+    //     await agent.load()
+    //
+    //     let node = this.get_mutable()
+    //     node.edit.delete_running(agent)             // let workers know that the agent should be stopped
+    //     await node.save()
+    //     await sleep(this.agent_refresh_interval * 2 + node.__ttl)     // TODO: wait for actual confirmation(s) that the agent is stopped on all processes
+    //
+    //     node.edit.delete_installed(agent)           // mark the agent as uninstalled
+    //     await node.save()
+    //
+    //     await agent.__uninstall__(this)             // clean up any node-specific resources
+    // }
 
     /*************/
 
