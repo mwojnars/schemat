@@ -8,9 +8,9 @@ import {WebObject} from "../core/object.js"
 /**********************************************************************************************************************/
 
 export class AgentState {   // AgentData, AgentVariables, Registers
-    /* Internal variables (memory) of a running agent. Created in agent.__start__() and __restart__(), and passed
+    /* Internal variables and memory of a running agent. Created in agent.__start__() and __restart__(), and passed
        to all agent methods: control methods (__stop__() etc.), as well as user methods ($agent.*()).
-       Some of these variables are assigned by kernel: __role, __options, __frame.
+       Some of these variables are created by kernel: __role, __options, __frame.
      */
 
     __role          // name of the agent's role, e.g. "$leader"; empty/undefined means a generic role ($agent)
