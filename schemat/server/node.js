@@ -537,6 +537,21 @@ export class Node extends Agent {
 
     /*************/
 
+    async '$agent.flush_agents'({placements}) {
+        let node = this.get_mutable()
+
+        let N = schemat.kernel.workers.length
+        let agents = Array.from({length: N + 1}, () => [])    // agents[k] is an array of status objects of agents running on worker `k`
+
+        // revert the placement map to an array of arrays, where each subarray contains the status objects of agents running on a particular process
+        for (let [id, processes] of placements.entries())
+            for (let proc of processes)
+                agents[proc].push({id})
+
+        node.agents = agents
+        await node.save()
+    }
+
     async '$agent.start_agent'(state, agent, {params, role, workers = 1} = {}) {
         /* `agent` is a web object or ID. */
         let {agents} = state
