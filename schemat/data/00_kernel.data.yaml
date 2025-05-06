@@ -712,19 +712,16 @@
     and in this way they form a distributed compute & storage cluster.
   schema:
     agents:
-      info: Array of arrays of AgentState objects describing agents running on
-        different processes of this node. Specifically, `agents[p]` is an array
-        of agent states for p-th process, where 0 means the master process and
-        1..N are indexes of worker processes.
+      info: Array of arrays of agent status objects {id, role, options, ...}
+        describing agents running on different processes of this node.
+        Specifically, `agents[p]` is an array of agent statuses for p-th
+        process, where 0 means the master process and 1..N are indexes of worker
+        processes.
       type:
         type:
           "@": schemat/types/type.js:GENERIC
         "@": schemat/types/type.js:ARRAY
       "@": schemat/types/type.js:ARRAY
-    data_directory:
-      default: ./schemat/data
-      info: Local directory where data blocks should be kept.
-      "@": schemat/types/type.js:STRING
     agents_installed:
       info: Array of all Agent objects installed on this machine.
       default: []
@@ -753,6 +750,10 @@
         run(). After each iteration, agent refresh is attempted, which may
         trigger agent restart as a consequence.
       "@": schemat/types/type.js:NUMBER
+    data_directory:
+      default: ./schemat/data
+      info: Local directory where data blocks should be kept.
+      "@": schemat/types/type.js:STRING
     http_host:
       default: localhost
       info: Host name to be used by HTTP(S) servers running on this node.
