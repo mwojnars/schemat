@@ -246,6 +246,7 @@ export class Node extends Agent {
 
     find_process(agent_id, role) {
         assert(this.$state?.placements, `placements not yet initialized`)
+        if (agent_id === this.id) return 0      // the node agent itself is contacted at the master process
         return this.$state.placements.get(agent_id)?.[0]
     }
 
@@ -538,6 +539,8 @@ export class Node extends Agent {
     /*************/
 
     async '$agent.flush_agents'({placements}) {
+        this._print(`$agent.flush_agents() placements:`, placements)
+
         let node = this.get_mutable()
 
         let N = schemat.kernel.workers.length

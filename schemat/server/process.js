@@ -268,7 +268,7 @@ export class KernelProcess {
            Update `this.frames` accordingly.
          */
         let current_agents = Array.from(this.frames.values(), frame => frame.agent)     // currently running agents
-        let desired_agents = this.is_master() ? [this.node] : [...this.agents_running]  // agents that should be running when this method completes; master process runs the node agent and nothing else
+        let desired_agents = this.is_master() ? [this.node] : [this.node, ...this.agents_running]  // agents that should be running when this method completes; master process runs the node agent and nothing else
 
         if (schemat.terminating) {
             desired_agents = []                                 // enforce clean shutdown by stopping all agents
