@@ -292,6 +292,18 @@
   tcp_port: 5828
   __category:
     "@": 21
+  agents:
+    - []
+    - - id: 1010
+      - id: 1026
+      - id: 1032
+      - id: 1043
+      - id: 1023
+    - - id: 1023
+      - id: 1015
+      - id: 1029
+      - id: 1033
+      - id: 1045
 - id: 1025
   name: cluster
   database:
