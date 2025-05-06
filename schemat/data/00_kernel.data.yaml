@@ -712,15 +712,12 @@
     and in this way they form a distributed compute & storage cluster.
   schema:
     agents:
-      info: Array of arrays of agent status objects {id, role, options, ...}
-        describing agents running on different processes of this node.
-        Specifically, `agents[p]` is an array of agent statuses for p-th
-        process, where 0 means the master process and 1..N are indexes of worker
+      info: Array of agent status objects {worker, agent, role, options, ...}
+        describing agents running on different processes of this node. `worker`
+        = 0 means the master process and 1..N are indexes of actual worker
         processes.
       type:
-        type:
-          "@": schemat/types/type.js:GENERIC
-        "@": schemat/types/type.js:ARRAY
+        "@": schemat/types/type.js:GENERIC
       inline: false
       "@": schemat/types/type.js:ARRAY
     agents_installed:
