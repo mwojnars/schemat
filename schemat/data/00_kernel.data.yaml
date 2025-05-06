@@ -721,6 +721,7 @@
         type:
           "@": schemat/types/type.js:GENERIC
         "@": schemat/types/type.js:ARRAY
+      inline: false
       "@": schemat/types/type.js:ARRAY
     agents_installed:
       info: Array of all Agent objects installed on this machine.

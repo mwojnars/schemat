@@ -644,7 +644,8 @@ export class ARRAY extends GENERIC {
     /* Represents arrays of objects of a given `type` (generic_type by default). */
 
     static options = {
-        type: generic_type,         // type of all elements in the array, as a Type instance
+        type:   generic_type,       // type of all elements in the array, as a Type instance
+        inline: true,               // if true, items are listed on the same line; otherwise, they're separated by <br/>
     }
     static Widget = widgets.ARRAY_Widget
 

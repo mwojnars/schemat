@@ -1,7 +1,7 @@
 import {T, assert, print, truncate, comma} from '../common/utils.js'
 import {JSONx} from '../common/jsonx.js'
 
-import {e, cl, st, createRef, useState, ItemLoadingHOC} from '../web/react-utils.js'
+import {e, cl, st, createRef, useState, ItemLoadingHOC, BR} from '../web/react-utils.js'
 import {A, B, I, P, PRE, DIV, SPAN, INPUT, TEXTAREA, FLEX, FRAGMENT, HTML, NBSP} from '../web/react-utils.js'
 
 import {Component} from "../web/component.js"
@@ -335,8 +335,10 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
 export class ARRAY_Widget extends GENERIC_Widget {
     view(array) {
         let array_type = this.props.type
-        let type = array_type.options.type
-        let items = array.map(value => type.Widget.inline({value, type}))
-        return FRAGMENT(...comma(items))
+        let {type, inline} = array_type.options
+        // let items = array.map(value => type.Widget.inline({value, type}))
+        let items = array.map(value => e(type.Widget, {value, type, inline}))
+        let sep = inline ? ', ' : BR()
+        return FRAGMENT(...comma(items, sep))
     }
 }
