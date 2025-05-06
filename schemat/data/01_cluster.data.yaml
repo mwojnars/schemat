@@ -293,17 +293,36 @@
   __category:
     "@": 21
   agents:
-    - []
-    - - id: 1010
-      - id: 1026
-      - id: 1032
-      - id: 1043
-      - id: 1023
-    - - id: 1023
-      - id: 1015
-      - id: 1029
-      - id: 1033
-      - id: 1045
+    - worker: 1
+      agent:
+        "@": 1010
+    - worker: 2
+      agent:
+        "@": 1015
+    - worker: 1
+      agent:
+        "@": 1026
+    - worker: 2
+      agent:
+        "@": 1029
+    - worker: 1
+      agent:
+        "@": 1032
+    - worker: 2
+      agent:
+        "@": 1033
+    - worker: 1
+      agent:
+        "@": 1043
+    - worker: 2
+      agent:
+        "@": 1045
+    - worker: 1
+      agent:
+        "@": 1023
+    - worker: 2
+      agent:
+        "@": 1023
 - id: 1025
   name: cluster
   database:
