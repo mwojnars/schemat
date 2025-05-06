@@ -414,15 +414,30 @@
   __category:
     "@": 21
   agents:
-    - []
-    - - id: 1015
-      - id: 1030
-      - id: 1033
-      - id: 1023
-    - - id: 1023
-      - id: 1026
-      - id: 1032
-      - id: 1037
+    - worker: 1
+      agent:
+        "@": 1015
+    - worker: 2
+      agent:
+        "@": 1026
+    - worker: 1
+      agent:
+        "@": 1030
+    - worker: 2
+      agent:
+        "@": 1032
+    - worker: 1
+      agent:
+        "@": 1033
+    - worker: 2
+      agent:
+        "@": 1037
+    - worker: 1
+      agent:
+        "@": 1023
+    - worker: 2
+      agent:
+        "@": 1023
 - id: 1037
   name: logger
   __category:
