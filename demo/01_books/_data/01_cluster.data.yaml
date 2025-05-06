@@ -304,6 +304,37 @@
   tcp_port: 5820
   __category:
     "@": 21
+  agents:
+    - worker: 1
+      agent:
+        "@": 1010
+    - worker: 2
+      agent:
+        "@": 1015
+    - worker: 1
+      agent:
+        "@": 1026
+    - worker: 2
+      agent:
+        "@": 1029
+    - worker: 1
+      agent:
+        "@": 1032
+    - worker: 2
+      agent:
+        "@": 1033
+    - worker: 1
+      agent:
+        "@": 1043
+    - worker: 2
+      agent:
+        "@": 1045
+    - worker: 1
+      agent:
+        "@": 1023
+    - worker: 2
+      agent:
+        "@": 1023
 - id: 1025
   name: cluster
   database:
@@ -413,6 +444,31 @@
   tcp_port: 5821
   __category:
     "@": 21
+  agents:
+    - worker: 1
+      agent:
+        "@": 1015
+    - worker: 2
+      agent:
+        "@": 1026
+    - worker: 1
+      agent:
+        "@": 1030
+    - worker: 2
+      agent:
+        "@": 1032
+    - worker: 1
+      agent:
+        "@": 1033
+    - worker: 2
+      agent:
+        "@": 1037
+    - worker: 1
+      agent:
+        "@": 1023
+    - worker: 2
+      agent:
+        "@": 1023
 - id: 1037
   name: logger
   __category:
