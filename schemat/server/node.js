@@ -162,7 +162,7 @@ export class Node extends Agent {
     }
 
 
-    /* This node as agent (on master only!) */
+    /* This node as an agent (on master only!) */
 
     async __start__() {
         /* On master only. */

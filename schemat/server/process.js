@@ -144,7 +144,7 @@ export class KernelProcess {
     _closing                // true if .stop() was called and the process is shutting down right now
 
     get worker_id() {
-        /* Numeric ID (1, 2, 3, ...) of the current worker process of the node; 0 for the master process. */
+        /* Numeric ID (1, 2, 3, ...) of the node's current worker process; 0 for the master process. */
         return process.env.WORKER_ID || 0
     }
 
@@ -180,7 +180,7 @@ export class KernelProcess {
     }
 
     _read_node_id(path) {
-        /* Read from file the ID of the node object to be executed in this local installation. */
+        /* Read from a file the ID of the node object to be executed in this local installation. */
         try { return Number(fs.readFileSync(path, 'utf8').trim()) }
         catch (ex) { print('node ID not found in', path) }
     }
@@ -222,7 +222,7 @@ export class KernelProcess {
     async main() {
         /* Start/stop agents. Refresh agent objects and the `node` object itself. */
 
-        let initial_agents = this.is_master() ? [this.node] : this.agents_running
+        let initial_agents = this.is_master() ? [this.node] : [this.node, ...this.agents_running]
         for (let agent of initial_agents)
             await this.start_agent(agent.id)
 
