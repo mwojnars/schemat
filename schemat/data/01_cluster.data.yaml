@@ -413,6 +413,16 @@
   tcp_port: 5829
   __category:
     "@": 21
+  agents:
+    - []
+    - - id: 1015
+      - id: 1030
+      - id: 1033
+      - id: 1023
+    - - id: 1023
+      - id: 1026
+      - id: 1032
+      - id: 1037
 - id: 1037
   name: logger
   __category:
