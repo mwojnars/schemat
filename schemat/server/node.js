@@ -147,6 +147,7 @@ export class Node extends Agent {
 
     get worker_id() { return schemat.kernel.worker_id }
     is_master()     { return schemat.kernel.is_master() }
+    is_worker()     { return !this.is_master() }
     _print(...args) { print(`${this.id}/#${this.worker_id}`, ...args) }
 
     get _tcp_port() { return schemat.config['tcp-port'] || this.tcp_port }      // FIXME: workaround
@@ -165,6 +166,8 @@ export class Node extends Agent {
 
     async __start__() {
         /* On master only. */
+        if (this.is_worker()) return {}
+
         let tcp_sender = new TCP_Sender()
         let tcp_receiver = new TCP_Receiver()
 
@@ -178,12 +181,14 @@ export class Node extends Agent {
     }
 
     async __restart__(state, prev) {
+        if (this.is_worker()) return {}
         state.agents = this.agents_installed
         state.placements = this._place_agents(state.agents)     // re-allocate agents in case their configuration changed
         return state
     }
 
     async __stop__({tcp_sender, tcp_receiver}) {
+        if (this.is_worker()) return
         await tcp_receiver.stop()
         await tcp_sender.stop()
     }
@@ -219,7 +224,7 @@ export class Node extends Agent {
             worker.mailbox.notify(message)
         }
 
-        // convert the plan to a Map<agent ID, array of process IDs>
+        // convert the plan to a Map of: agent ID -> array of process IDs
         let locations = new Map()
         for (let i = 0; i <= N; i++)
             for (let agent of plan[i])
