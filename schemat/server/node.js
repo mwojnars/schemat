@@ -182,7 +182,7 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this._tcp_port)
 
-        let agents = this.agents_installed
+        let agents = this.agents
 
         let placements = this._place_agents(agents)     // Map<agent ID, array of process IDs>
         return {tcp_sender, tcp_receiver, agents, placements}
@@ -190,7 +190,7 @@ export class Node extends Agent {
 
     async __restart__(state, prev) {
         if (this.is_worker()) return {}
-        state.agents = this.agents_installed
+        state.agents = this.agents
         state.placements = this._place_agents(state.agents)     // re-allocate agents in case their configuration changed
         return state
     }
@@ -212,7 +212,7 @@ export class Node extends Agent {
         let plan = Array.from({length: N + 1}, () => [])    // plan[k] is an array of agent IDs that should be running on worker `k`
 
         // translate `agents` array of status objects to a plan per process
-        for (let status of this.agents) {
+        for (let status of agents) {
             let worker = status.worker
             assert(worker >= 0 && worker <= N)
             plan[worker].push(status.agent.id)
