@@ -166,7 +166,7 @@ export class Node extends Agent {
     }
 
     async __init__() {
-        await Promise.all(this.agents_installed.map(agent => agent.load()))
+        await Promise.all(this.agents.map(status => status.agent.load()))
     }
 
 
