@@ -211,18 +211,25 @@ export class Node extends Agent {
         let current_worker = 1
         let plan = Array.from({length: N + 1}, () => [])    // plan[k] is an array of agent IDs that should be running on worker `k`
 
-        // distribute agents uniformly across worker processes
-        for (let agent of agents) {
-            // assert(agent.is_loaded())
-            let num_workers = agent.num_workers
-            if (num_workers === -1) num_workers = N
-
-            for (let i = 0; i < num_workers; i++) {
-                plan[current_worker++].push(agent.id)
-                if (current_worker > N) current_worker = 1
-            }
+        // translate `agents` array of status objects to a plan per process
+        for (let status of this.agents) {
+            let worker = status.worker
+            assert(worker >= 0 && worker <= N)
+            plan[worker].push(status.agent.id)
         }
         this._print(`agents allocation:`, plan)
+
+        // // distribute agents uniformly across worker processes
+        // for (let agent of agents) {
+        //     // assert(agent.is_loaded())
+        //     let num_workers = agent.num_workers
+        //     if (num_workers === -1) num_workers = N
+        //
+        //     for (let i = 0; i < num_workers; i++) {
+        //         plan[current_worker++].push(agent.id)
+        //         if (current_worker > N) current_worker = 1
+        //     }
+        // }
 
         // notify the plan to every process
         schemat.kernel.set_agents_running(plan[0])
