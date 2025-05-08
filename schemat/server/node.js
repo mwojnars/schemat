@@ -573,15 +573,19 @@ export class Node extends Agent {
         await node.save()
     }
 
-    async '$agent.start_agent'(state, agent, {role, options, workers = 1} = {}) {
+    async '$agent.start_agent'(state, agent, {role, options, workers: num_workers = 1} = {}) {
         /* `agent` is a web object or ID. */
         let {agents} = state
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
         
-        if (workers === -1) workers = this.num_workers
-        for (let i = 0; i < workers; i++) {
-            let worker = this._allocate_worker(state)
+        let workers = this._rank_workers(state)
+
+        if (num_workers === -1) num_workers = this.num_workers
+        assert(num_workers <= this.num_workers, `num_workers (${num_workers}) must be <= ${this.num_workers}`)
+        
+        for (let i = 0; i < num_workers; i++) {
+            let worker = workers[i]
             agents.push({agent, role, options, worker})
         }
         state.placements = this._place_agents(agents)
@@ -591,6 +595,21 @@ export class Node extends Agent {
         /* `agent` is a web object or ID. */
         state.agents.delete(agent)
         state.placements = this._place_agents(state.agents)
+    }
+
+    _rank_workers(state) {
+        /* Order workers by utilization, from least to most loaded (least busy). */
+        let workers = state.agents.map(status => status.worker)
+
+        // count the number of agents running on each worker; start with count=0 for each worker in 1..num_workers
+        let worker_counts = workers.reduce((counts, worker) => {
+            counts[worker] = (counts[worker] || 0) + 1
+            return counts
+        }, Array.from({length: this.num_workers}, (_, i) => i + 1))
+
+        // sort workers by utilization, from least to most loaded
+        let sorted_workers = Object.entries(worker_counts).sort((a, b) => a[1] - b[1])
+        return sorted_workers.map(entry => entry[0])
     }
 
     // async 'action.start'(agent, opts = {}) {
