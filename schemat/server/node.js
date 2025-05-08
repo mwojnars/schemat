@@ -145,9 +145,12 @@ export class Node extends Agent {
     tcp_port
     tcp_retry_interval
 
-    get worker_id() { return schemat.kernel.worker_id }
+    get worker_id()   { return schemat.kernel.worker_id }
+    get num_workers() { assert(this.is_master()); return schemat.kernel.workers.length }
+
     is_master()     { return schemat.kernel.is_master() }
     is_worker()     { return !this.is_master() }
+
     _print(...args) { print(`${this.id}/#${this.worker_id}`, ...args) }
 
     get _tcp_port() { return schemat.config['tcp-port'] || this.tcp_port }      // FIXME: workaround
@@ -205,7 +208,7 @@ export class Node extends Agent {
         /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
            Notify each sublist to a corresponding process. Return an inverted Map: agent ID -> array of process IDs.
          */
-        let N = schemat.kernel.workers.length
+        let N = this.num_workers
         assert(N >= 1)
 
         let current_worker = 1
@@ -554,13 +557,11 @@ export class Node extends Agent {
     /*************/
 
     async '$agent.flush_agents'({placements}) {
+        /* Update the [node].agents array from the currentplacement map and save to DB. */
         this._print(`$agent.flush_agents() placements:`, placements)
 
-        let node = this.get_mutable()
-
-        // let N = schemat.kernel.workers.length
-        // let agents = Array.from({length: N + 1}, () => [])    // agents[k] is an array of status objects of agents running on worker `k`
         let agents = []
+        let node = this.get_mutable()
 
         // revert the placement map to an array of arrays, where each subarray contains the status objects of agents running on a particular process
         for (let [id, processes] of placements.entries())
@@ -572,11 +573,17 @@ export class Node extends Agent {
         await node.save()
     }
 
-    async '$agent.start_agent'(state, agent, {params, role, workers = 1} = {}) {
+    async '$agent.start_agent'(state, agent, {role, options, workers = 1} = {}) {
         /* `agent` is a web object or ID. */
         let {agents} = state
-        if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
-        agents.set(agent, {params, role, workers})
+        // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
+        // agents.set(agent, {params, role, workers})
+        
+        if (workers === -1) workers = this.num_workers
+        for (let i = 0; i < workers; i++) {
+            let worker = this._allocate_worker(state)
+            agents.push({agent, role, options, worker})
+        }
         state.placements = this._place_agents(agents)
     }
 
