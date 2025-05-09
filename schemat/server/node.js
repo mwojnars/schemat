@@ -242,7 +242,7 @@ export class Node extends Agent {
         // notify the plan to every process
         schemat.kernel.set_agents_running(plan[0])
         for (let i = 1; i <= N; i++)
-            this.ipc_notify(i, this._sys_message('AGENTS_RUNNING', plan[i]))
+            this.sys_notify(i, 'AGENTS_RUNNING', plan[i])
 
         // convert the plan to a Map of: agent ID -> array of process IDs
         let locations = new Map()
@@ -310,34 +310,31 @@ export class Node extends Agent {
         // return JSONx.decode_checked(response)
     }
 
-    _sys_message(command, ...args) {
-        /* Form a system message ('SYS' type). */
-        return ['SYS', command, args]
-    }
-
-    _sys_parse(message) {
-        let [type, command, args] = message
-        assert(type === 'SYS', `incorrect message type, expected SYS`)
-        return {type, command, args}
-    }
 
     /* RPC: remote calls to agents */
 
-    async rpc_send(agent_id, method, args, {node, role, worker, tx, wait} = {}) {
-        /* Send an RPC message to the master process via an IPC channel, so it gets sent over TCP to another node
-           and then to the `agent_id` object (agent) where it should invoke its '$agent.<method>'(...args).
-           Return a response from the remote target. RPC methods on sender/receiver automatically JSONx-encode/decode
-           the arguments and the result of the function.
+    async rpc_send(agent, method, args, {role, node, worker, tx, wait, wait_delegated, broadcast} = {}) {
+        /* Send an RPC message to a remote `agent`. If needed, the message is first sent over internal (IPC) and
+           external (TCP) communication channels to arrive at a proper node and worker process where the `agent` is running.
+           There, '$agent.<method>'(...args) of `agent` is invoked and the response is returned via the same path.
+           Arguments and the result of the call are JSONx-encoded/decoded.
+           If broadcast=true, all known deployments of the agent are targeted and an array of results is returned (TODO);
+           otherwise, only one arbitrary (random?) deployment is targeted in case of multiple deployments.
+           Additionally, `role`, `node` and `worker` can be used to restrict the set of target deployments to be considered.
+           TODO: wait_delegated=true if the caller waits for a response that may come from a different node,
+                 not the direct recipient of the initial request (delegated RPC request, multi-hop RPC, asymmetric routing)
          */
+        let agent_id = (typeof agent === 'object') ? agent.id : agent
         let message = this._rpc_request(agent_id, method, args)
 
         assert(schemat.kernel.agents_running, `kernel not yet initialized`)
 
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
-        let frame = schemat.get_frame(agent_id)
-        if (frame) return this._rpc_response_parse(await this.rpc_recv(message))
-
+        if (!broadcast) {
+            let frame = schemat.get_frame(agent_id)
+            if (frame) return this._rpc_response_parse(await this.rpc_recv(message))
+        }
         // this._print("rpc_send():", JSON.stringify(message))
 
         let result = await this.ipc_send(MASTER, message)
@@ -440,6 +437,26 @@ export class Node extends Agent {
         return this.ipc_send(process_id, message, {wait: false})
     }
 
+    sys_send(process_id, method, ...args) {
+        /* Send a system message (SYS) via IPC. */
+        return this.ipc_send(process_id, this._sys_message(method, ...args))
+    }
+
+    sys_notify(process_id, method, ...args) {
+        return this.ipc_notify(process_id, this._sys_message(method, ...args))
+    }
+
+    _sys_message(command, ...args) {
+        /* Form a system message ('SYS' type). */
+        return ['SYS', command, args]
+    }
+
+    _sys_parse(message) {
+        let [type, command, args] = message
+        assert(type === 'SYS', `incorrect message type, expected SYS`)
+        return {type, command, args}
+    }
+
 
     /* TCP: horizontal communication between nodes */
 
@@ -490,6 +507,10 @@ export class Node extends Agent {
         /* Set the list of agents that should be running now on this worker process. Sent by master. */
         // TODO: use START/STOP signals (per agent) instead of sending a list of all desired agents
         schemat.kernel.set_agents_running(agents)
+    }
+
+    async START_AGENT(agent_id, {role, options}) {
+        await schemat.kernel.start_agent(agent_id, {role, options})
     }
 
     // START_AGENT()
@@ -580,7 +601,7 @@ export class Node extends Agent {
     /*************/
 
     async '$agent.flush_agents'({placements}) {
-        /* Update the [node].agents array from the currentplacement map and save to DB. */
+        /* Update the [node].agents array from the current placement map and save to DB. */
         this._print(`$agent.flush_agents() placements:`, placements)
 
         let agents = []
@@ -612,7 +633,10 @@ export class Node extends Agent {
         
         for (let worker of workers) {
             agents.push({agent, role, options, worker})
-            // request the `worker` process to start the agent
+
+            // request the worker process to start the agent:
+            this.sys_send(worker, 'START_AGENT', agent, {role, options})
+            // this.$worker({node: this, worker: i}).start_agent(agent, {role, options})
         }
 
         state.placements = this._place_agents(agents)
