@@ -45,7 +45,7 @@ export class Mailbox {
         this.interval = timeout ? setInterval(() => this._check_timeouts(), timeout) : null
     }
 
-    async send(msg, {wait = true} = {}) {
+    send(msg, {wait = true} = {}) {
         /* Send `msg` to the peer. Wait for the response if wait=true. */
         if (!wait) this._send([0, msg])
         else return new Promise((resolve, reject) => {
@@ -436,9 +436,8 @@ export class Node extends Agent {
     }
 
     notify_ipc(process_id, message) {
-        /* Send an IPC message to another process and do not wait for a reply. */
-        let worker = this.get_worker(process_id)
-        worker.mailbox.notify(message)
+        /* Send an IPC message to another process and do NOT wait for a reply. */
+        return this.send_ipc(process_id, message, {wait: false})
     }
 
 
