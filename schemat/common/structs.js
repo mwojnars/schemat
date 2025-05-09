@@ -300,8 +300,8 @@ export class Shard {
 /**********************************************************************************************************************/
 
 export class LRU_Cache {
-    /* Least Recently Used (LRU) cache based on a Map with a fixed capacity. */
-    
+    /* Least Recently Used (LRU) cache based on a Map with a fixed capacity. Utilizes the fact that Map holds keys in insertion order. */
+
     constructor(capacity) {
         this._capacity = capacity
         this._cache = new Map()
