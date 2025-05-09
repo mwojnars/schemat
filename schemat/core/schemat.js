@@ -229,6 +229,11 @@ export class Schemat {
 
     /***  Access to web objects  ***/
 
+    as_object(obj_or_id) {
+        /* If the argument is an object ID, return an object/stub with this ID, otherwise return the argument unchanged. */
+        return (typeof obj_or_id === 'object') ? obj_or_id : this.get_object(obj_or_id)
+    }
+
     get_object(id, {version = null} = {}) {
         /* Create a stub of an object with a given ID, or return an existing instance (a stub or loaded), if present in the cache.
            If a stub is created anew, it is saved in cache for reuse by other callers.
