@@ -242,7 +242,7 @@ export class Node extends Agent {
         // notify the plan to every process
         schemat.kernel.set_agents_running(plan[0])
         for (let i = 1; i <= N; i++)
-            this.notify_ipc(i, this._sys_message('AGENTS_RUNNING', plan[i]))
+            this.ipc_notify(i, this._sys_message('AGENTS_RUNNING', plan[i]))
 
         // convert the plan to a Map of: agent ID -> array of process IDs
         let locations = new Map()
@@ -323,7 +323,7 @@ export class Node extends Agent {
 
     /* RPC: remote calls to agents */
 
-    async rpc_send(agent_id, method, args, {node, worker, role} = {}) {
+    async rpc_send(agent_id, method, args, {node, role, worker, tx, wait} = {}) {
         /* Send an RPC message to the master process via an IPC channel, so it gets sent over TCP to another node
            and then to the `agent_id` object (agent) where it should invoke its '$agent.<method>'(...args).
            Return a response from the remote target. RPC methods on sender/receiver automatically JSONx-encode/decode
@@ -340,7 +340,7 @@ export class Node extends Agent {
 
         // this._print("rpc_send():", JSON.stringify(message))
 
-        let result = await this.send_ipc(MASTER, message)
+        let result = await this.ipc_send(MASTER, message)
         return this._rpc_response_parse(result)
     }
 
@@ -417,7 +417,7 @@ export class Node extends Agent {
         }
     }
 
-    send_ipc(process_id = 0, message, opts = {}) {
+    ipc_send(process_id = 0, message, opts = {}) {
         /* Send an IPC message from master down to a worker process, or the other way round.
            Set opts.wait=false to avoid waiting for the response.
          */
@@ -435,9 +435,9 @@ export class Node extends Agent {
         }
     }
 
-    notify_ipc(process_id, message) {
+    ipc_notify(process_id, message) {
         /* Send an IPC message to another process and do NOT wait for a reply. */
-        return this.send_ipc(process_id, message, {wait: false})
+        return this.ipc_send(process_id, message, {wait: false})
     }
 
 
@@ -477,7 +477,7 @@ export class Node extends Agent {
                 throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)
             }
             if (proc !== this.worker_id)
-                return this.send_ipc(proc, message)             // forward the message down to a worker process, to its ipc_worker()
+                return this.ipc_send(proc, message)             // forward the message down to a worker process, to its ipc_worker()
             return this.rpc_recv(message)                       // process the message here in the master process
         }
         else throw new Error(`unknown node-to-node message type: ${type}`)
@@ -595,6 +595,9 @@ export class Node extends Agent {
         node.agents = agents
         await node.save()
     }
+
+    // async '$master.start_agent'()
+    // async '$worker.start_agent'()
 
     async '$agent.start_agent'(state, agent, {role, options, worker, num_workers = 1} = {}) {
         /* `agent` is a web object or ID. */
