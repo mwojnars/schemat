@@ -150,6 +150,7 @@ export class Node extends Agent {
 
     is_master()     { return schemat.kernel.is_master() }
     is_worker()     { return !this.is_master() }
+    get_worker(i)   { return schemat.kernel.get_worker(i) }     // i = 1,2,...,N
 
     _print(...args) { print(`${this.id}/#${this.worker_id}`, ...args) }
 
@@ -237,7 +238,7 @@ export class Node extends Agent {
         // notify the plan to every process
         schemat.kernel.set_agents_running(plan[0])
         for (let i = 1; i <= N; i++) {
-            let worker = schemat.kernel.get_worker(i)
+            let worker = this.get_worker(i)
             let message = this._sys_message('AGENTS_RUNNING', plan[i])
             worker.mailbox.notify(message)
         }
@@ -309,6 +310,7 @@ export class Node extends Agent {
     }
 
     _sys_message(command, ...args) {
+        /* Form a system message ('SYS' type). */
         return ['SYS', command, args]
     }
 
@@ -414,6 +416,12 @@ export class Node extends Agent {
         }
     }
 
+    send_ipc(process_id = 0, message) {
+        /* Send the message down to a worker process (to its ipc_worker()) if process_id > 0; or to the master process otherwise. */
+        let worker = this.get_worker(process_id)
+        return worker.mailbox.send(message)
+    }
+
 
     /* TCP: horizontal communication between nodes */
 
@@ -450,11 +458,8 @@ export class Node extends Agent {
                 // this._print(`agent locations:`, [...this.$state.placements.entries()])
                 throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)
             }
-            if (proc !== this.worker_id) {
-                assert(proc > 0)
-                let worker = schemat.kernel.get_worker(proc)
-                return worker.mailbox.send(message)             // forward the message down to a worker process, to its ipc_worker()
-            }
+            if (proc !== this.worker_id)
+                return this.send_ipc(proc, message)             // forward the message down to a worker process, to its ipc_worker()
             return this.rpc_recv(message)                       // process the message here in the master process
         }
         else throw new Error(`unknown node-to-node message type: ${type}`)
@@ -584,16 +589,19 @@ export class Node extends Agent {
 
         let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(state)
         
-        for (let worker of workers)
+        for (let worker of workers) {
             agents.push({agent, role, options, worker})
+            // request the `worker` process to start the agent
+        }
 
         state.placements = this._place_agents(agents)
     }
 
-    async '$agent.stop_agent'(state, agent, {}) {
+    async '$agent.stop_agent'(state, agent, {role, worker} = {}) {
         /* `agent` is a web object or ID. */
-        state.agents.delete(agent)
-        state.placements = this._place_agents(state.agents)
+        let {agents} = state
+        agents = agents.filter(status => status.agent !== agent)
+        state.placements = this._place_agents(agents)
     }
 
     _rank_workers(state) {

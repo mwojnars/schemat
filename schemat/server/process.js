@@ -397,6 +397,7 @@ export class MasterProcess extends KernelProcess {
     worker_pids     // PID to WORKER_ID association
 
     get_worker(process_id) {
+        assert(process_id >= 1)
         return this.workers[process_id - 1]     // workers 1,2,3... stored under indices 0,1,2...
     }
 
