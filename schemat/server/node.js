@@ -45,9 +45,10 @@ export class Mailbox {
         this.interval = timeout ? setInterval(() => this._check_timeouts(), timeout) : null
     }
 
-    async send(msg) {
-        /* Send `msg` to the peer and wait for the response. */
-        return new Promise((resolve, reject) => {
+    async send(msg, {wait = true} = {}) {
+        /* Send `msg` to the peer. Wait for the response if wait=true. */
+        if (!wait) this._send([0, msg])
+        else return new Promise((resolve, reject) => {
             let id = ++this.message_id
             if (this.message_id >= Number.MAX_SAFE_INTEGER) this.message_id = 0
 
@@ -416,25 +417,21 @@ export class Node extends Agent {
         }
     }
 
-    // send_ipc_master(message) {
-    //     /* Send an IPC message to the master process. Use a shortcut and call ipc_master() if on master already. */
-    //     return this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message)
-    // }
-
-    send_ipc(process_id = 0, message) {
-        /* Send an IPC message from master down to a worker process, or the other way round. */
-
+    send_ipc(process_id = 0, message, opts = {}) {
+        /* Send an IPC message from master down to a worker process, or the other way round.
+           Set opts.wait=false to avoid waiting for the response.
+         */
         if (process_id === this.worker_id)      // shortcut when sending to itself, on master or worker
             return process_id ? this.ipc_worker(message) : this.ipc_master(message)
 
         if (process_id) {
             assert(this.is_master())
             let worker = this.get_worker(process_id)
-            return worker.mailbox.send(message)
+            return worker.mailbox.send(message, opts)
         }
         else {
             assert(this.is_worker())
-            return schemat.kernel.mailbox.send(message)
+            return schemat.kernel.mailbox.send(message, opts)
         }
     }
 
