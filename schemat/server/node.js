@@ -336,7 +336,6 @@ export class Node extends Agent {
 
         // this._print("rpc_send():", JSON.stringify(message))
 
-        // let result = await (this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message))
         let result = await this.send_ipc_master(message)
         return this._rpc_response_parse(result)
     }
@@ -419,10 +418,21 @@ export class Node extends Agent {
         return this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message)
     }
 
-    send_ipc(process_id, message) {
-        /* Send an IPC message from master down to a worker process, to its ipc_worker(). */
-        let worker = this.get_worker(process_id)
-        return worker.mailbox.send(message)
+    send_ipc(process_id = 0, message) {
+        /* Send an IPC message from master down to a worker process, or the other way round. */
+
+        if (process_id === this.worker_id)      // shortcut when sending to itself, on master or worker
+            return process_id ? this.ipc_worker(message) : this.ipc_master(message)
+
+        if (process_id) {
+            assert(this.is_master())
+            let worker = this.get_worker(process_id)
+            return worker.mailbox.send(message)
+        }
+        else {
+            assert(this.is_worker())
+            return schemat.kernel.mailbox.send(message)
+        }
     }
 
     notify_ipc(process_id, message) {
