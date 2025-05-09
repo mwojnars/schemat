@@ -437,6 +437,7 @@ export class Node extends Agent {
         return this.ipc_send(process_id, message, {wait: false})
     }
 
+
     sys_send(process_id, method, ...args) {
         /* Send a system message (SYS) via IPC. */
         return this.ipc_send(process_id, this._sys_message(method, ...args))
@@ -623,6 +624,7 @@ export class Node extends Agent {
     async '$agent.start_agent'(state, agent, {role, options, worker, num_workers = 1} = {}) {
         /* `agent` is a web object or ID. */
         let {agents} = state
+        agent = schemat.as_object(agent)
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
         
@@ -635,8 +637,8 @@ export class Node extends Agent {
             agents.push({agent, role, options, worker})
 
             // request the worker process to start the agent:
-            this.sys_send(worker, 'START_AGENT', agent, {role, options})
-            // this.$worker({node: this, worker: i}).start_agent(agent, {role, options})
+            await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
+            // this.$worker({node: this, worker: i}).start_agent(agent.id, {role, options})
         }
 
         state.placements = this._place_agents(agents)
@@ -645,7 +647,15 @@ export class Node extends Agent {
     async '$agent.stop_agent'(state, agent, {role, worker} = {}) {
         /* `agent` is a web object or ID. */
         let {agents} = state
-        agents = agents.filter(status => status.agent !== agent)
+        agent = schemat.as_object(agent)
+
+        let stop = agents.filter(status => status.agent.is(agent))
+        agents = agents.filter(status => !status.agent.is(agent))
+
+        // stop every agent from `stop`, in reverse order
+        for (let status of stop.reverse())
+            await this.sys_send(status.worker, 'STOP_AGENT', status.agent.id, {role})
+
         state.placements = this._place_agents(agents)
     }
 
