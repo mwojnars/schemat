@@ -6,6 +6,9 @@ import {Agent} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";
 
 
+const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
+
+
 /**********************************************************************************************************************/
 
 class Config extends WebObject {
@@ -336,7 +339,7 @@ export class Node extends Agent {
 
         // this._print("rpc_send():", JSON.stringify(message))
 
-        let result = await this.send_ipc_master(message)
+        let result = await this.send_ipc(MASTER, message)
         return this._rpc_response_parse(result)
     }
 
@@ -413,10 +416,10 @@ export class Node extends Agent {
         }
     }
 
-    send_ipc_master(message) {
-        /* Send an IPC message to the master process. Use a shortcut and call ipc_master() directly if on master already. */
-        return this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message)
-    }
+    // send_ipc_master(message) {
+    //     /* Send an IPC message to the master process. Use a shortcut and call ipc_master() if on master already. */
+    //     return this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message)
+    // }
 
     send_ipc(process_id = 0, message) {
         /* Send an IPC message from master down to a worker process, or the other way round. */
