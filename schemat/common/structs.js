@@ -297,3 +297,36 @@ export class Shard {
     }
 }
 
+/**********************************************************************************************************************/
+
+export class LRU_Cache {
+    /* Least Recently Used (LRU) cache based on a Map with a fixed capacity. */
+    
+    constructor(capacity) {
+        this._capacity = capacity
+        this._cache = new Map()
+    }
+
+    _set_recent(key, value) {
+        this._cache.delete(key)
+        this._cache.set(key, value)
+    }
+
+    get(key) {
+        let value = this._cache.get(key)
+        if (value === undefined) return undefined
+        this._set_recent(key, value)
+        return value
+    }
+
+    set(key, value) {
+        this._set_recent(key, value)
+        if (this._cache.size > this._capacity) {
+            let oldest_key = this._cache.keys().next().value
+            if (oldest_key !== undefined) this._cache.delete(oldest_key)
+        }
+    }
+
+    delete(key) { this._cache.delete(key) }
+}
+
