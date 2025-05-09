@@ -237,11 +237,8 @@ export class Node extends Agent {
 
         // notify the plan to every process
         schemat.kernel.set_agents_running(plan[0])
-        for (let i = 1; i <= N; i++) {
-            let worker = this.get_worker(i)
-            let message = this._sys_message('AGENTS_RUNNING', plan[i])
-            worker.mailbox.notify(message)
-        }
+        for (let i = 1; i <= N; i++)
+            this.notify_ipc(i, this._sys_message('AGENTS_RUNNING', plan[i]))
 
         // convert the plan to a Map of: agent ID -> array of process IDs
         let locations = new Map()
@@ -339,7 +336,8 @@ export class Node extends Agent {
 
         // this._print("rpc_send():", JSON.stringify(message))
 
-        let result = await (this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message))
+        // let result = await (this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message))
+        let result = await this.send_ipc_master(message)
         return this._rpc_response_parse(result)
     }
 
@@ -416,10 +414,21 @@ export class Node extends Agent {
         }
     }
 
-    send_ipc(process_id = 0, message) {
-        /* Send the message down to a worker process (to its ipc_worker()) if process_id > 0; or to the master process otherwise. */
+    send_ipc_master(message) {
+        /* Send an IPC message to the master process. Use a shortcut and call ipc_master() directly if on master already. */
+        return this.is_master() ? this.ipc_master(message) : schemat.kernel.mailbox.send(message)
+    }
+
+    send_ipc(process_id, message) {
+        /* Send an IPC message from master down to a worker process, to its ipc_worker(). */
         let worker = this.get_worker(process_id)
         return worker.mailbox.send(message)
+    }
+
+    notify_ipc(process_id, message) {
+        /* Send an IPC message to another process and do not wait for a reply. */
+        let worker = this.get_worker(process_id)
+        worker.mailbox.notify(message)
     }
 
 
