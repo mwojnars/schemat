@@ -49,19 +49,46 @@ export class ObjectsMap extends CustomMap {
 /**********************************************************************************************************************/
 
 export class Counter extends Map {
-    /* A Map that holds counts of key occurrences. If a count drops to zero (or below), the key is removed. */
+    /* A Map that holds counts of key occurrences. Provides methods to increment/decrement counts
+       and to get items sorted by frequency. */
+
+    constructor(iterable = null) {
+        super()
+        if (iterable)
+            for (const key of iterable) this.increment(key)
+    }
+
     increment(key, increment = 1) {
         let count = (this.get(key) || 0) + increment
         this.set(key, count)
         return count
     }
+
     decrement(key, decrement = 1) {
         let count = this.increment(key, -decrement)
         if (count <= 0) this.delete(key)
         return count
     }
 
-    total()     { let t = 0; this.forEach(v => t += v); return t }
+    total() {
+        let t = 0
+        this.forEach(v => t += v)
+        return t
+    }
+
+    most_common(n = undefined) {
+        // return array of [key, count] pairs sorted by count in descending order
+        let items = Array.from(this.entries())
+        items.sort((a, b) => b[1] - a[1])
+        return n === undefined ? items : items.slice(0, n)
+    }
+
+    least_common(n = undefined) {
+        // return array of [key, count] pairs sorted by count in ascending order
+        let items = this.most_common()
+        items.reverse()
+        return n === undefined ? items : items.slice(0, n)
+    }
 }
 
 
