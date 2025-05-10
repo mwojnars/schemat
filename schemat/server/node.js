@@ -192,17 +192,16 @@ export class Node extends Agent {
         await tcp_receiver.start(this._tcp_port)
 
         let agents = this.agents
-
         let placements = this._place_agents(agents)     // Map<agent ID, array of process IDs>
         return {tcp_sender, tcp_receiver, agents, placements}
     }
 
-    async __restart__(state, prev) {
-        if (this.is_worker()) return {}
-        state.agents = this.agents
-        state.placements = this._place_agents(state.agents)     // re-allocate agents in case their configuration changed
-        return state
-    }
+    // async __restart__(state, prev) {
+    //     if (this.is_worker()) return {}
+    //     state.agents = this.agents
+    //     state.placements = this._place_agents(state.agents)     // re-allocate agents in case their configuration changed
+    //     return state
+    // }
 
     async __stop__({tcp_sender, tcp_receiver}) {
         if (this.is_worker()) return
@@ -648,7 +647,7 @@ export class Node extends Agent {
 
         // stop every agent from `stop`, in reverse order
         for (let status of stop.reverse())
-            await this.sys_send(status.worker, 'STOP_AGENT', status.agent.id, {role})
+            await this.sys_send(status.worker, 'STOP_AGENT', agent.id, {role})
 
         state.placements = this._place_agents(agents)
     }
@@ -676,7 +675,6 @@ export class Node extends Agent {
         let counts = new Counter(workers)
         let sorted = counts.least_common()
         let ranked = sorted.map(entry => entry[0])
-        this._print(`_rank_workers() ranked:`, ranked)
         return ranked
     }
 
