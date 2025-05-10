@@ -195,7 +195,6 @@ export class Node extends Agent {
         for (let p = 0; p <= this.num_workers; p++)
             this._notify_agents(p, agents)
 
-        // let placements = this._place_agents(agents)     // Map<agent ID, array of process IDs>
         return {tcp_sender, tcp_receiver, agents}
     }
 
@@ -212,51 +211,51 @@ export class Node extends Agent {
         this.sys_notify(process_id, 'AGENTS_RUNNING', plan)
     }
 
-    _place_agents(agents) {
-        /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
-           Notify each sublist to a corresponding process. Return an inverted Map: agent ID -> array of process IDs.
-         */
-        let N = this.num_workers
-        assert(N >= 1)
-
-        let current_worker = 1
-        let plan = Array.from({length: N + 1}, () => [])    // plan[k] is an array of agent IDs that should be running on worker `k`
-
-        // translate `agents` array of status objects to a plan per process
-        for (let status of agents) {
-            let worker = status.worker
-            assert(worker >= 0 && worker <= N)
-            plan[worker].push(status.agent.id)
-        }
-        this._print(`agents allocation:`, plan)
-
-        // // distribute agents uniformly across worker processes
-        // for (let agent of agents) {
-        //     // assert(agent.is_loaded())
-        //     let num_workers = agent.num_workers
-        //     if (num_workers === -1) num_workers = N
-        //
-        //     for (let i = 0; i < num_workers; i++) {
-        //         plan[current_worker++].push(agent.id)
-        //         if (current_worker > N) current_worker = 1
-        //     }
-        // }
-
-        // notify the plan to every process
-        schemat.kernel.set_agents_running(plan[0])
-        for (let i = 1; i <= N; i++)
-            this.sys_notify(i, 'AGENTS_RUNNING', plan[i])
-
-        // convert the plan to a Map of: agent ID -> array of process IDs
-        let locations = new Map()
-        for (let i = 0; i <= N; i++)
-            for (let agent of plan[i])
-                if (locations.has(agent)) locations.get(agent).push(i)
-                else locations.set(agent, [i])
-        // this._print(`agents locations:`, locations)
-
-        return locations
-    }
+    // _place_agents(agents) {
+    //     /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
+    //        Notify each sublist to a corresponding process. Return an inverted Map: agent ID -> array of process IDs.
+    //      */
+    //     let N = this.num_workers
+    //     assert(N >= 1)
+    //
+    //     let current_worker = 1
+    //     let plan = Array.from({length: N + 1}, () => [])    // plan[k] is an array of agent IDs that should be running on worker `k`
+    //
+    //     // translate `agents` array of status objects to a plan per process
+    //     for (let status of agents) {
+    //         let worker = status.worker
+    //         assert(worker >= 0 && worker <= N)
+    //         plan[worker].push(status.agent.id)
+    //     }
+    //     this._print(`agents allocation:`, plan)
+    //
+    //     // // distribute agents uniformly across worker processes
+    //     // for (let agent of agents) {
+    //     //     // assert(agent.is_loaded())
+    //     //     let num_workers = agent.num_workers
+    //     //     if (num_workers === -1) num_workers = N
+    //     //
+    //     //     for (let i = 0; i < num_workers; i++) {
+    //     //         plan[current_worker++].push(agent.id)
+    //     //         if (current_worker > N) current_worker = 1
+    //     //     }
+    //     // }
+    //
+    //     // notify the plan to every process
+    //     schemat.kernel.set_agents_running(plan[0])
+    //     for (let i = 1; i <= N; i++)
+    //         this.sys_notify(i, 'AGENTS_RUNNING', plan[i])
+    //
+    //     // convert the plan to a Map of: agent ID -> array of process IDs
+    //     let locations = new Map()
+    //     for (let i = 0; i <= N; i++)
+    //         for (let agent of plan[i])
+    //             if (locations.has(agent)) locations.get(agent).push(i)
+    //             else locations.set(agent, [i])
+    //     // this._print(`agents locations:`, locations)
+    //
+    //     return locations
+    // }
 
 
     /* Agent routing */
@@ -384,6 +383,7 @@ export class Node extends Agent {
         let [type] = message
         // this._print(`ipc_master():`, JSON.stringify(message))
 
+        if (type === 'SYS') return this.sys_recv(message)
         if (type === 'RPC') {
             let {agent_id} = this._rpc_request_parse(message)
             // print(`ipc_master():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(message))
@@ -410,13 +410,10 @@ export class Node extends Agent {
     ipc_worker(message) {
         // this._print(`ipc_worker(${type}):`, JSON.stringify(msg))
         let [type] = message
+        if (type === 'SYS') return this.sys_recv(message)
         if (type === 'RPC') return this.rpc_recv(message)
-        if (type === 'SYS') {
-            let {command, args} = this._sys_parse(message)
-            return this[command](...args)
-        }
     }
-
+    
     ipc_send(process_id = 0, message, opts = {}) {
         /* Send an IPC message from master down to a worker process, or the other way round.
            Set opts.wait=false to avoid waiting for the response.
@@ -449,6 +446,11 @@ export class Node extends Agent {
 
     sys_notify(process_id, method, ...args) {
         return this.ipc_notify(process_id, this._sys_message(method, ...args))
+    }
+
+    sys_recv(message) {
+        let {command, args} = this._sys_parse(message)
+        return this[command](...args)
     }
 
     _sys_message(command, ...args) {
