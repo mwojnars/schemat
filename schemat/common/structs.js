@@ -85,8 +85,8 @@ export class Counter extends Map {
 
     least_common(n = undefined) {
         // return array of [key, count] pairs sorted by count in ascending order
-        let items = this.most_common()
-        items.reverse()
+        let items = Array.from(this.entries())
+        items.sort((a, b) => a[1] - b[1])
         return n === undefined ? items : items.slice(0, n)
     }
 }
