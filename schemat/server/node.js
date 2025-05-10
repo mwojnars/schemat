@@ -642,28 +642,19 @@ export class Node extends Agent {
         agent = schemat.as_object(agent)
 
         let stop = agents.filter(status => status.agent.is(agent))
-        agents = agents.filter(status => !status.agent.is(agent))
+        state.agents = agents.filter(status => !status.agent.is(agent))
         if (!stop.length) return
 
         // stop every agent from `stop`, in reverse order
         for (let status of stop.reverse())
             await this.sys_send(status.worker, 'STOP_AGENT', agent.id, {role})
 
-        state.placements = this._place_agents(agents)
+        state.placements = this._place_agents(state.agents)
     }
 
-    async '$agent.flush_agents'({agents, placements}) {
-        /* Update the [node].agents array from the current placement map and save to DB. */
+    async '$agent.flush_agents'({agents}) {
+        /* Save the current {agents} state to DB. */
         let node = this.get_mutable()
-        // this._print(`$agent.flush_agents() placements:`, placements)
-        // let agents = []
-        //
-        // // revert the placement map to an array of arrays, where each subarray contains the status objects of agents running on a particular process
-        // for (let [id, processes] of placements.entries())
-        //     for (let proc of processes)
-        //         agents.push({worker: proc, agent: schemat.get_object(id)})
-        //         // agents[proc].push({id})
-
         node.agents = agents
         await node.save()
     }
@@ -676,16 +667,5 @@ export class Node extends Agent {
         let ranked = sorted.map(entry => entry[0])
         return ranked
     }
-
-    // async 'action.start'(agent, opts = {}) {
-    //     // TODO: confirm that agents are installed and stopped...
-    //     // this.agents_running.push(agent)
-    //     this.edit.add_running(agent, opts)
-    //     await this.save()
-    // }
-    // async 'action.stop'(agent) {
-    //     this.edit.delete_running(agent)
-    //     await this.save()
-    // }
 }
 
