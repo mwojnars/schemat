@@ -413,7 +413,7 @@ export class Node extends Agent {
         if (type === 'SYS') return this.sys_recv(message)
         if (type === 'RPC') return this.rpc_recv(message)
     }
-    
+
     ipc_send(process_id = 0, message, opts = {}) {
         /* Send an IPC message from master down to a worker process, or the other way round.
            Set opts.wait=false to avoid waiting for the response.
@@ -436,32 +436,6 @@ export class Node extends Agent {
     ipc_notify(process_id, message) {
         /* Send an IPC message to another process and do NOT wait for a reply. */
         return this.ipc_send(process_id, message, {wait: false})
-    }
-
-
-    sys_send(process_id, method, ...args) {
-        /* Send a system message (SYS) via IPC. */
-        return this.ipc_send(process_id, this._sys_message(method, ...args))
-    }
-
-    sys_notify(process_id, method, ...args) {
-        return this.ipc_notify(process_id, this._sys_message(method, ...args))
-    }
-
-    sys_recv(message) {
-        let {command, args} = this._sys_parse(message)
-        return this[command](...args)
-    }
-
-    _sys_message(command, ...args) {
-        /* Form a system message ('SYS' type). */
-        return ['SYS', command, args]
-    }
-
-    _sys_parse(message) {
-        let [type, command, args] = message
-        assert(type === 'SYS', `incorrect message type, expected SYS`)
-        return {type, command, args}
     }
 
 
@@ -509,6 +483,34 @@ export class Node extends Agent {
 
     /* SYS: control signals between master <> worker processes */
 
+    sys_send(process_id, method, ...args) {
+        /* Send a system message (SYS) via IPC. */
+        return this.ipc_send(process_id, this._sys_message(method, ...args))
+    }
+
+    sys_notify(process_id, method, ...args) {
+        return this.ipc_notify(process_id, this._sys_message(method, ...args))
+    }
+
+    sys_recv(message) {
+        let {command, args} = this._sys_parse(message)
+        return this[command](...args)
+    }
+
+    _sys_message(command, ...args) {
+        /* Form a system message ('SYS' type). */
+        return ['SYS', command, args]
+    }
+
+    _sys_parse(message) {
+        let [type, command, args] = message
+        assert(type === 'SYS', `incorrect message type, expected SYS`)
+        return {type, command, args}
+    }
+
+
+    /* list of SYS signals */
+
     AGENTS_RUNNING(agents) {
         /* Set the list of agents that should be running now on this worker process. Sent by master. */
         // TODO: use START/STOP signals (per agent) instead of sending a list of all desired agents
@@ -523,8 +525,6 @@ export class Node extends Agent {
         await schemat.kernel.stop_agent(agent_id, {role})
     }
 
-    // START_AGENT()
-    // STOP_AGENT()
     // CACHE_RECORD() / REGISTER_RECORD()
 
 
