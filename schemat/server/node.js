@@ -265,9 +265,10 @@ export class Node extends Agent {
     }
 
     find_process(agent_id, role) {
-        assert(this.$state?.placements, `placements not yet initialized`)
+        assert(this.$state?.agents, `list of running agents not yet initialized`)
         if (agent_id === this.id) return 0      // the node agent itself is contacted at the master process
-        return this.$state.placements.get(agent_id)?.[0]
+        return this.$state.agents.find(status => status.agent.id === agent_id)?.worker
+        // return this.$state.placements.get(agent_id)?.[0]
     }
 
 
@@ -664,8 +665,7 @@ export class Node extends Agent {
         let workers = state.agents.map(status => status.worker).filter(w => w >= 1)     // pull out worker IDs, skip the master process (0)
         let counts = new Counter(workers)
         let sorted = counts.least_common()
-        let ranked = sorted.map(entry => entry[0])
-        return ranked
+        return sorted.map(entry => entry[0])
     }
 }
 
