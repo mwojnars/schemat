@@ -192,7 +192,10 @@ export class Node extends Agent {
         await tcp_receiver.start(this._tcp_port)
 
         let agents = this.agents
-        let placements = this._place_agents(agents)     // Map<agent ID, array of process IDs>
+        for (let p = 0; p <= this.num_workers; p++)
+            this._notify_agents(p, agents)
+
+        // let placements = this._place_agents(agents)     // Map<agent ID, array of process IDs>
         return {tcp_sender, tcp_receiver, agents}
     }
 
@@ -200,6 +203,13 @@ export class Node extends Agent {
         if (this.is_worker()) return
         await tcp_receiver.stop()
         await tcp_sender.stop()
+    }
+
+    _notify_agents(process_id, agents) {
+        /* Build a list of agent IDs that should be running on a given process and notify it. */
+        let plan = agents.filter(status => status.worker === process_id).map(status => status.agent.id)
+        if (process_id === 0) return schemat.kernel.set_agents_running(plan)
+        this.sys_notify(process_id, 'AGENTS_RUNNING', plan)
     }
 
     _place_agents(agents) {
