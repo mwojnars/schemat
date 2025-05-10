@@ -300,6 +300,7 @@ export class KernelProcess {
 
     async start_agent(id) {
         let agent = schemat.get_object(id)
+        if (this.frames.has(agent.id)) throw new Error(`agent ${agent} is already running`)
         if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
 
         // print(`_start_agent():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
@@ -333,6 +334,8 @@ export class KernelProcess {
 
     async stop_agent(id) {
         let frame = this.frames.get(id)
+        if (!frame) throw new Error(`execution frame of agent [${id}] not found on this process`)
+
         let {agent, calls} = frame
         frame.stopping = true               // prevent new calls from being executed on the agent
 
