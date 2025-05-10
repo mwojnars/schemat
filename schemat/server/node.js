@@ -207,7 +207,6 @@ export class Node extends Agent {
     _notify_agents(process_id, agents) {
         /* Build a list of agent IDs that should be running on a given process and notify it. */
         let plan = agents.filter(status => status.worker === process_id).map(status => status.agent.id)
-        if (process_id === 0) return schemat.kernel.set_agents_running(plan)
         this.sys_notify(process_id, 'AGENTS_RUNNING', plan)
     }
 
