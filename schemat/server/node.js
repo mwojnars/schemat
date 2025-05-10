@@ -193,15 +193,8 @@ export class Node extends Agent {
 
         let agents = this.agents
         let placements = this._place_agents(agents)     // Map<agent ID, array of process IDs>
-        return {tcp_sender, tcp_receiver, agents, placements}
+        return {tcp_sender, tcp_receiver, agents}
     }
-
-    // async __restart__(state, prev) {
-    //     if (this.is_worker()) return {}
-    //     state.agents = this.agents
-    //     state.placements = this._place_agents(state.agents)     // re-allocate agents in case their configuration changed
-    //     return state
-    // }
 
     async __stop__({tcp_sender, tcp_receiver}) {
         if (this.is_worker()) return
@@ -268,7 +261,6 @@ export class Node extends Agent {
         assert(this.$state?.agents, `list of running agents not yet initialized`)
         if (agent_id === this.id) return 0      // the node agent itself is contacted at the master process
         return this.$state.agents.find(status => status.agent.id === agent_id)?.worker
-        // return this.$state.placements.get(agent_id)?.[0]
     }
 
 
@@ -492,10 +484,9 @@ export class Node extends Agent {
             let proc = this.find_process(agent_id)
             // print("tcp_recv(): process", proc)
 
-            if (proc === undefined) {
-                // this._print(`agent locations:`, [...this.$state.placements.entries()])
+            if (proc === undefined)
                 throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)
-            }
+
             if (proc !== this.worker_id)
                 return this.ipc_send(proc, message)             // forward the message down to a worker process, to its ipc_worker()
             return this.rpc_recv(message)                       // process the message here in the master process
@@ -613,7 +604,6 @@ export class Node extends Agent {
     async '$agent.start_agent'(state, agent, {role, options, worker, num_workers = 1} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$agent.start_agent() agent=${agent}`)
-        let {agents} = state
         agent = schemat.as_object(agent)
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
@@ -626,31 +616,26 @@ export class Node extends Agent {
         
         for (let worker of workers) {
             assert(worker >= 1 && worker <= this.num_workers)
-            agents.push({worker, agent, role, options})
+            state.agents.push({worker, agent, role, options})
 
             // request the worker process to start the agent:
             await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
             // this.$worker({node: this, worker: i}).start_agent(agent.id, {role, options})
         }
-
-        state.placements = this._place_agents(agents)
     }
 
     async '$agent.stop_agent'(state, agent, {role, worker} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$agent.stop_agent() agent=${agent}`)
-        let {agents} = state
         agent = schemat.as_object(agent)
 
-        let stop = agents.filter(status => status.agent.is(agent))
-        state.agents = agents.filter(status => !status.agent.is(agent))
+        let stop = state.agents.filter(status => status.agent.is(agent))
+        state.agents = state.agents.filter(status => !status.agent.is(agent))
         if (!stop.length) return
 
         // stop every agent from `stop`, in reverse order
         for (let status of stop.reverse())
             await this.sys_send(status.worker, 'STOP_AGENT', agent.id, {role})
-
-        state.placements = this._place_agents(state.agents)
     }
 
     async '$agent.flush_agents'({agents}) {
