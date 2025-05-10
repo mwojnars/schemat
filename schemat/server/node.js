@@ -601,23 +601,6 @@ export class Node extends Agent {
 
     /*************/
 
-    async '$agent.flush_agents'({placements}) {
-        /* Update the [node].agents array from the current placement map and save to DB. */
-        this._print(`$agent.flush_agents() placements:`, placements)
-
-        let agents = []
-        let node = this.get_mutable()
-
-        // revert the placement map to an array of arrays, where each subarray contains the status objects of agents running on a particular process
-        for (let [id, processes] of placements.entries())
-            for (let proc of processes)
-                agents.push({worker: proc, agent: schemat.get_object(id)})
-                // agents[proc].push({id})
-
-        node.agents = agents
-        await node.save()
-    }
-
     // async '$master.start_agent'()
     // async '$worker.start_agent'()
 
@@ -657,6 +640,23 @@ export class Node extends Agent {
             await this.sys_send(status.worker, 'STOP_AGENT', status.agent.id, {role})
 
         state.placements = this._place_agents(agents)
+    }
+
+    async '$agent.flush_agents'({placements}) {
+        /* Update the [node].agents array from the current placement map and save to DB. */
+        this._print(`$agent.flush_agents() placements:`, placements)
+
+        let agents = []
+        let node = this.get_mutable()
+
+        // revert the placement map to an array of arrays, where each subarray contains the status objects of agents running on a particular process
+        for (let [id, processes] of placements.entries())
+            for (let proc of processes)
+                agents.push({worker: proc, agent: schemat.get_object(id)})
+                // agents[proc].push({id})
+
+        node.agents = agents
+        await node.save()
     }
 
     _rank_workers(state) {
