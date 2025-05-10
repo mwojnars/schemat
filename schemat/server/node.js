@@ -4,6 +4,7 @@ import {Catalog} from "../core/catalog.js";
 import {WebObject} from "../core/object.js";
 import {Agent} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";
+import {Counter} from "../common/structs.js";
 
 
 const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
@@ -418,6 +419,7 @@ export class Node extends Agent {
         /* Send an IPC message from master down to a worker process, or the other way round.
            Set opts.wait=false to avoid waiting for the response.
          */
+        // this._print(`ipc_send() process_id=${process_id} worker_id=${this.worker_id} message=${message}`)
         if (process_id === this.worker_id)      // shortcut when sending to itself, on master or worker
             return process_id ? this.ipc_worker(message) : this.ipc_master(message)
 
@@ -620,8 +622,10 @@ export class Node extends Agent {
         assert(num_workers <= this.num_workers, `num_workers (${num_workers}) must be <= ${this.num_workers}`)
 
         let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(state)
+        workers = workers.slice(0, num_workers)
         
         for (let worker of workers) {
+            assert(worker >= 1 && worker <= this.num_workers)
             agents.push({agent, role, options, worker})
 
             // request the worker process to start the agent:
@@ -667,18 +671,13 @@ export class Node extends Agent {
     }
 
     _rank_workers(state) {
-        /* Order workers by utilization, from least to most loaded. */
-        let workers = state.agents.map(status => status.worker)
-
-        // count the number of agents running on each worker; start with count=0 for each worker in 1..num_workers
-        let worker_counts = workers.reduce((counts, worker) => {
-            counts[worker] = (counts[worker] || 0) + 1
-            return counts
-        }, Array.from({length: this.num_workers}, (_, i) => i + 1))
-
-        // sort workers by utilization, from least to most loaded
-        let sorted_workers = Object.entries(worker_counts).sort((a, b) => a[1] - b[1])
-        return sorted_workers.map(entry => entry[0])
+        /* Order workers by utilization, from least to most busy. */
+        let workers = state.agents.map(status => status.worker).filter(w => w >= 1)     // pull out worker IDs, skip the master process (0)
+        let counts = new Counter(workers)
+        let sorted = counts.least_common()
+        let ranked = sorted.map(entry => entry[0])
+        this._print(`_rank_workers() ranked:`, ranked)
+        return ranked
     }
 
     // async 'action.start'(agent, opts = {}) {
