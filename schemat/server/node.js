@@ -625,7 +625,7 @@ export class Node extends Agent {
         
         for (let worker of workers) {
             assert(worker >= 1 && worker <= this.num_workers)
-            agents.push({agent, role, options, worker})
+            agents.push({worker, agent, role, options})
 
             // request the worker process to start the agent:
             await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
@@ -652,18 +652,17 @@ export class Node extends Agent {
         state.placements = this._place_agents(agents)
     }
 
-    async '$agent.flush_agents'({placements}) {
+    async '$agent.flush_agents'({agents, placements}) {
         /* Update the [node].agents array from the current placement map and save to DB. */
-        this._print(`$agent.flush_agents() placements:`, placements)
-
-        let agents = []
         let node = this.get_mutable()
-
-        // revert the placement map to an array of arrays, where each subarray contains the status objects of agents running on a particular process
-        for (let [id, processes] of placements.entries())
-            for (let proc of processes)
-                agents.push({worker: proc, agent: schemat.get_object(id)})
-                // agents[proc].push({id})
+        // this._print(`$agent.flush_agents() placements:`, placements)
+        // let agents = []
+        //
+        // // revert the placement map to an array of arrays, where each subarray contains the status objects of agents running on a particular process
+        // for (let [id, processes] of placements.entries())
+        //     for (let proc of processes)
+        //         agents.push({worker: proc, agent: schemat.get_object(id)})
+        //         // agents[proc].push({id})
 
         node.agents = agents
         await node.save()
