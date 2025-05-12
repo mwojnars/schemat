@@ -222,7 +222,7 @@ export class KernelProcess {
         /* Start/stop agents. Refresh agent objects and the `node` object itself. */
 
         let {starting_agents} = await this.start_agent(this.node.id)    // start this node's own agent to enable internode communication
-        await starting_agents                                           // wait for other initial agents to start
+        await starting_agents                                           // wait for other agents to start
 
         while (true) {
             let beginning = Date.now()
@@ -237,15 +237,13 @@ export class KernelProcess {
             this.node = new_node
 
             if (schemat.terminating) {
-                for (let id of [...this.frames.keys()].reverse())
+                for (let id of [...this.frames.keys()].reverse())   // if closing, let the currently running agents gently stop
                     await this.stop_agent(id)
                 break
             }
-            await this._refresh_agents()
 
-            // await this._start_stop()
-            // if (schemat.terminating)
-            //     if (this.frames.size) continue; else break          // let the currently-running agents gently stop
+            for (let frame of this.frames.values())                 // refresh/reload agents if needed
+                await this.refresh_agent(frame.agent.id)
 
             let passed = (Date.now() - beginning) / 1000
             let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
@@ -261,40 +259,35 @@ export class KernelProcess {
         this._print(`process closed`)
     }
 
-    async _start_stop() {
-        /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now.
-           Update `this.frames` accordingly.
-         */
-        let current_agents = Array.from(this.frames.values(), frame => frame.agent)     // currently running agents
-        let desired_agents = this.is_master() ? [this.node] : [this.node, ...this.agents_running]  // agents that should be running when this method completes; master process runs the node agent and nothing else
-
-        if (schemat.terminating) {
-            desired_agents = []                                 // enforce clean shutdown by stopping all agents
-            this._print(`closing and stopping all agents`)
-        }
-
-        // sets of IDs for quick lookup
-        let current_ids = current_agents.map(agent => agent.id)
-        let desired_ids = desired_agents.map(agent => agent.id)
-        let current_set = new Set(current_ids)
-        let desired_set = new Set(desired_ids)
-        
-        let to_stop = current_ids.filter(id => !desired_set.has(id))        // find agents to stop (currently running but not desired)
-        let to_start = desired_ids.filter(id => !current_set.has(id))       // find agents to start (desired but not running)
-        let to_refresh = current_ids.filter(id => desired_set.has(id))      // find agents to refresh (running and still desired)
-
-        // start/refresh agents ...
-        for (let id of to_start) await this.start_agent(id)
-        for (let id of to_refresh) await this.refresh_agent(id)
-
-        // stop agents; use reverse order as some agents may depend on previous ones
-        for (let id of to_stop.reverse()) await this.stop_agent(id)
-    }
-
-    async _refresh_agents() {
-        for (let frame of this.frames.values())
-            await this.refresh_agent(frame.agent.id)
-    }
+    // async _start_stop() {
+    //     /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now.
+    //        Update `this.frames` accordingly.
+    //      */
+    //     let current_agents = Array.from(this.frames.values(), frame => frame.agent)     // currently running agents
+    //     let desired_agents = this.is_master() ? [this.node] : [this.node, ...this.agents_running]  // agents that should be running when this method completes; master process runs the node agent and nothing else
+    //
+    //     if (schemat.terminating) {
+    //         desired_agents = []                                 // enforce clean shutdown by stopping all agents
+    //         this._print(`closing and stopping all agents`)
+    //     }
+    //
+    //     // sets of IDs for quick lookup
+    //     let current_ids = current_agents.map(agent => agent.id)
+    //     let desired_ids = desired_agents.map(agent => agent.id)
+    //     let current_set = new Set(current_ids)
+    //     let desired_set = new Set(desired_ids)
+    //
+    //     let to_stop = current_ids.filter(id => !desired_set.has(id))        // find agents to stop (currently running but not desired)
+    //     let to_start = desired_ids.filter(id => !current_set.has(id))       // find agents to start (desired but not running)
+    //     let to_refresh = current_ids.filter(id => desired_set.has(id))      // find agents to refresh (running and still desired)
+    //
+    //     // start/refresh agents ...
+    //     for (let id of to_start) await this.start_agent(id)
+    //     for (let id of to_refresh) await this.refresh_agent(id)
+    //
+    //     // stop agents; use reverse order as some agents may depend on previous ones
+    //     for (let id of to_stop.reverse()) await this.stop_agent(id)
+    // }
 
     async start_agent(id) {
         let agent = schemat.get_object(id)
