@@ -16,7 +16,7 @@ import {SCHEMA_GENERIC} from "../types/catalog_type.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {WebRequest} from "../web/request.js"
-import {ReactPage, ItemInspectView} from "../web/pages.js"
+import {ReactPage, InspectView} from "../web/pages.js"
 import {JsonPOST, Service} from "../web/services.js";
 import {mWebObjects} from "../web/messages.js";
 
@@ -1343,13 +1343,13 @@ export class WebObject {
     'GET.test_html'()       { return html_page(import.meta.resolve('../test/views/page_02.html')) }
 
     'GET.json'({res})       { res.json(this.__record) }
-    'GET.inspect'()         { return new ReactPage(ItemInspectView) }
+    'GET.inspect'()         { return new ReactPage(InspectView) }
 
     'LOCAL.self'()          { return this }
 
-    // inspect()         { return react_page(ItemInspectView) }
-    // inspect()         { return ItemInspectView.page(this) }
-    // inspect()         { return ItemInspectView.page }
+    // inspect()         { return react_page(InspectView) }
+    // inspect()         { return InspectView.page(this) }
+    // inspect()         { return InspectView.page }
 
 
     /***  Dynamic loading of source code  ***/

@@ -175,7 +175,7 @@ export class ReactPage extends RenderedPage {
        By default, Page() is written to the #page-main element in the page body, and any additional
        (meta)data is written to the #page-data element. A <script> tag is added to the page to load
        the client-side JS code that will render the same component on the client side.
-       The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
+       The component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
      */
 
     async render_client(target) {
@@ -220,7 +220,7 @@ export class ReactPage extends RenderedPage {
 
 /**********************************************************************************************************************/
 
-export class ItemInspectView extends ReactPage.View {
+export class InspectView extends ReactPage.View {
     /* System-level view that displays raw properties of a web object. */
 
     html_title() {
@@ -243,7 +243,7 @@ export class ItemInspectView extends ReactPage.View {
     }
 
     Page({extra = null} = {}) {
-        /* Detailed (admin) view of an item. */
+        /* Detailed (admin) view of a web object. */
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
             // e(this._mui_test),
@@ -288,7 +288,7 @@ export class ItemInspectView extends ReactPage.View {
 
 /**********************************************************************************************************************/
 
-export class CategoryInspectView extends ItemInspectView {
+export class CategoryInspectView extends InspectView {
     /* System-level view that displays raw properties of a Category object and a list of its children (members of the category). */
 
     async prepare(side) {
