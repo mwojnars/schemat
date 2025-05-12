@@ -289,7 +289,7 @@ export class KernelProcess {
     //     for (let id of to_stop.reverse()) await this.stop_agent(id)
     // }
 
-    async start_agent(id) {
+    async start_agent(id, {role, options} = {}) {
         let agent = schemat.get_object(id)
         if (this.frames.has(agent.id)) throw new Error(`agent ${agent} is already running`)
         if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
@@ -299,9 +299,13 @@ export class KernelProcess {
         assert(agent instanceof Agent)
         this._print(`starting agent ${agent} ...`)
 
-        let state = await schemat.in_context(agent.__app, () => agent.__start__())
+        let state = await schemat.in_context(agent.__app, () => agent.__start__({role, options})) || {}
+        state.__role = role
+        state.__options = options
+
         this.frames.set(agent.id, new Frame(agent, state))
         this._print(`starting agent ${agent} done`)
+
         return state
     }
 
