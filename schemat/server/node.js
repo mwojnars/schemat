@@ -309,7 +309,7 @@ export class Node extends Agent {
     }
 
     _rpc_response_parse(response) {
-        if (response === undefined) return
+        if (response === undefined) throw new Error(`missing RPC response`)
         let {result, error, records} = JSONx.decode(response)
         if (error) throw error
         if (records?.length) schemat.tx?.register_changes(...records)
