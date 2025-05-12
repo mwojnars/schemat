@@ -242,6 +242,13 @@ export class InspectView extends ReactPage.View {
         return assets .filter(a => a?.trim()) .join('\n')
     }
 
+    async prepare(side) {
+        // TODO: on client, refs could be pulled from response data to avoid re-scanning on 1st render?
+        await super.prepare(side)
+        for (let ref of this.__references)
+            if (!ref.is_loaded()) await ref.load()      // preload all references to allow proper URL generation
+    }
+
     Page({extra = null} = {}) {
         /* Detailed (admin) view of a web object. */
         return DIV(
