@@ -317,8 +317,12 @@ export class KernelProcess {
         if (agent === frame.agent) return
 
         this._print(`restarting agent ${agent} ...`)
-        let restart = () => agent.__restart__(frame.state, frame.agent)
+        let prev = frame.state
+        let restart = () => agent.__restart__(prev, frame.agent)
+
         let state = await schemat.in_context(agent.__app, restart)
+        state.__role = prev.__role
+        state.__options = prev.__options
 
         frame.set_state(state)
         frame.agent = agent
