@@ -140,7 +140,6 @@ export class Node extends Agent {
      */
 
     agents
-    agents_running
     agent_refresh_interval
     data_directory
     http_host
@@ -192,10 +191,11 @@ export class Node extends Agent {
         await tcp_receiver.start(this._tcp_port)
 
         let agents = this.agents
-        for (let p = 0; p <= this.num_workers; p++)
-            this._notify_agents(p, agents)
+        // for (let p = 0; p <= this.num_workers; p++)
+        //     this._notify_agents(p, agents)
+        let starting_agents = this._start_agents(agents)
 
-        return {tcp_sender, tcp_receiver, agents}
+        return {tcp_sender, tcp_receiver, agents, starting_agents}
     }
 
     async __stop__({tcp_sender, tcp_receiver}) {
@@ -204,11 +204,16 @@ export class Node extends Agent {
         await tcp_sender.stop()
     }
 
-    _notify_agents(process_id, agents) {
-        /* Build a list of agent IDs that should be running on a given process and notify it. */
-        let plan = agents.filter(status => status.worker === process_id).map(status => status.agent.id)
-        this.sys_notify(process_id, 'AGENTS_RUNNING', plan)
+    async _start_agents(agents) {
+        for (let {worker, agent, role, options} of agents)
+            await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
     }
+
+    // _notify_agents(process_id, agents) {
+    //     /* Build a list of agent IDs that should be running on a given process and notify it. */
+    //     let plan = agents.filter(status => status.worker === process_id).map(status => status.agent.id)
+    //     this.sys_notify(process_id, 'AGENTS_RUNNING', plan)
+    // }
 
     // _place_agents(agents) {
     //     /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
@@ -328,7 +333,7 @@ export class Node extends Agent {
         let agent_id = (typeof agent === 'object') ? agent.id : agent
         let message = this._rpc_request(agent_id, method, args)
 
-        assert(schemat.kernel.agents_running, `kernel not yet initialized`)
+        assert(schemat.kernel.frames.size, `kernel not yet initialized`)
 
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap

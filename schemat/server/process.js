@@ -222,9 +222,12 @@ export class KernelProcess {
     async main() {
         /* Start/stop agents. Refresh agent objects and the `node` object itself. */
 
-        let initial_agents = this.is_master() ? [this.node] : [this.node, ...this.agents_running]
-        for (let agent of initial_agents)
-            await this.start_agent(agent.id)
+        let {starting_agents} = await this.start_agent(this.node.id)        // start this node's own agent to enable internode communication
+        await starting_agents
+
+        // let initial_agents = this.is_master() ? [this.node] : this.agents_running //[this.node, ...this.agents_running]
+        // for (let agent of initial_agents)
+        //     await this.start_agent(agent.id)
 
         while (true) {
             let beginning = Date.now()
@@ -311,6 +314,7 @@ export class KernelProcess {
         let state = await schemat.in_context(agent.__app, () => agent.__start__())
         this.frames.set(agent.id, new Frame(agent, state))
         this._print(`starting agent ${agent} done`)
+        return state
     }
 
     async refresh_agent(id) {
