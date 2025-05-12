@@ -508,12 +508,6 @@ export class Node extends Agent {
 
     /* list of SYS signals */
 
-    // AGENTS_RUNNING(agents) {
-    //     /* Set the list of agents that should be running now on this worker process. Sent by master. */
-    //     // TODO: use START/STOP signals (per agent) instead of sending a list of all desired agents
-    //     schemat.kernel.set_agents_running(agents)
-    // }
-
     async START_AGENT(agent_id, {role, options}) {
         await schemat.kernel.start_agent(agent_id, {role, options})
     }
@@ -607,8 +601,9 @@ export class Node extends Agent {
 
     /*************/
 
-    // async '$master.start_agent'()
     // async '$worker.start_agent'()
+
+    async '$master.start_agent'(...args) { return this['$agent.start_agent'](...args) }
 
     async '$agent.start_agent'(state, agent, {role, options, worker, num_workers = 1} = {}) {
         /* `agent` is a web object or ID. */
