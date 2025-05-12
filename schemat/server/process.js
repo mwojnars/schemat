@@ -139,7 +139,6 @@ export class KernelProcess {
 
     node                    // Node web object that represents the Schemat cluster node this process is running
     frames = new Map()      // Frames of currently running agents, keyed by agent IDs
-    agents_running          // array of web objects that should be running now as agents on this process; multiple runs (frames) of the same object ID are not supported
     _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
     _closing                // true if .stop() was called and the process is shutting down right now
 
@@ -222,12 +221,8 @@ export class KernelProcess {
     async main() {
         /* Start/stop agents. Refresh agent objects and the `node` object itself. */
 
-        let {starting_agents} = await this.start_agent(this.node.id)        // start this node's own agent to enable internode communication
-        await starting_agents
-
-        // let initial_agents = this.is_master() ? [this.node] : this.agents_running //[this.node, ...this.agents_running]
-        // for (let agent of initial_agents)
-        //     await this.start_agent(agent.id)
+        let {starting_agents} = await this.start_agent(this.node.id)    // start this node's own agent to enable internode communication
+        await starting_agents                                           // wait for other initial agents to start
 
         while (true) {
             let beginning = Date.now()
@@ -355,43 +350,6 @@ export class KernelProcess {
         this.frames.delete(agent.id)
         this._print(`stopping agent ${agent} done`)
     }
-
-    set_agents_running(agents) {
-        this.agents_running = agents.map(id => schemat.get_object(id))
-    }
-
-    // _get_agents_running() {
-    //     /* Array of agents that should be running now on this process. */
-    //     let master = this.is_master()
-    //     return master ? [this.node] : [...this.node.agents_installed]
-    //     // return master ? [this.node] : Array.from(this.node.agents_installed.values())
-    // }
-
-    // async main() {
-    //     for (let {prev, agent, oper, migrate} of actions) {
-    //         if (schemat.terminating) return
-    //         if (!oper) continue                     // no action if the agent instance hasn't changed
-    //
-    //         let state = prev?.__state
-    //         let external = (agent || prev)._external_props
-    //
-    //         // cases:
-    //         // 1) install new agent (from scratch):     status == pending_install_fresh   >   installed
-    //         // 2) install new agent (from migration):   status == pending_install_clone   >   installed
-    //         // 3) migrate agent to another machine:     status == pending_migration & destination   >   installed
-    //         // 3) uninstall agent:   status == 'pending_uninstall'
-    //         // 4)
-    //
-    //         if (oper === 'uninstall') {
-    //             if (prev.__meta.started) await prev.__stop__(state)
-    //             await prev.__uninstall__()
-    //
-    //             // tear down all external properties that represent/reflect the (desired) state (property) of the environment; every modification (edit)
-    //             // on such a property requires a corresponding update in the environment, on every machine where this object is deployed
-    //             for (let prop of external) if (prev[prop] !== undefined) prev._call_setup[prop](prev, prev[prop])
-    //         }
-    //     }
-    // }
 }
 
 /**********************************************************************************************************************/

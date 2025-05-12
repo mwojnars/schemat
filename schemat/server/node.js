@@ -191,9 +191,7 @@ export class Node extends Agent {
         await tcp_receiver.start(this._tcp_port)
 
         let agents = this.agents
-        // for (let p = 0; p <= this.num_workers; p++)
-        //     this._notify_agents(p, agents)
-        let starting_agents = this._start_agents(agents)
+        let starting_agents = this._start_agents(agents)    // a promise
 
         return {tcp_sender, tcp_receiver, agents, starting_agents}
     }
@@ -208,12 +206,6 @@ export class Node extends Agent {
         for (let {worker, agent, role, options} of agents)
             await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
     }
-
-    // _notify_agents(process_id, agents) {
-    //     /* Build a list of agent IDs that should be running on a given process and notify it. */
-    //     let plan = agents.filter(status => status.worker === process_id).map(status => status.agent.id)
-    //     this.sys_notify(process_id, 'AGENTS_RUNNING', plan)
-    // }
 
     // _place_agents(agents) {
     //     /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
@@ -516,11 +508,11 @@ export class Node extends Agent {
 
     /* list of SYS signals */
 
-    AGENTS_RUNNING(agents) {
-        /* Set the list of agents that should be running now on this worker process. Sent by master. */
-        // TODO: use START/STOP signals (per agent) instead of sending a list of all desired agents
-        schemat.kernel.set_agents_running(agents)
-    }
+    // AGENTS_RUNNING(agents) {
+    //     /* Set the list of agents that should be running now on this worker process. Sent by master. */
+    //     // TODO: use START/STOP signals (per agent) instead of sending a list of all desired agents
+    //     schemat.kernel.set_agents_running(agents)
+    // }
 
     async START_AGENT(agent_id, {role, options}) {
         await schemat.kernel.start_agent(agent_id, {role, options})
