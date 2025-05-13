@@ -55,7 +55,6 @@ class Intercept {
     static UNDEFINED    = Symbol.for('Intercept.UNDEFINED')
     static NO_CACHING   = Symbol.for('Intercept.NO_CACHING')   // marks a wrapper around a value (typically from a getter) that should not be cached
 
-
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
         return new Proxy(target, {get: this.proxy_get, set: this.proxy_set, deleteProperty: this.proxy_delete})
@@ -85,6 +84,13 @@ class Intercept {
         // return if the value was found in a regular JS attr (not a getter)
         if (val !== undefined) return val === Intercept.UNDEFINED ? undefined : val
 
+        // handle dynamic role getters (e.g. $agent, $leader, etc.)
+        if (typeof prop === 'string' && prop.startsWith('$') && prop.length > 1) {
+            val = Intercept._create_role_getter(target, prop)
+            if (cache) Intercept._cache_value(cache, prop, val)
+            return val
+        }
+
         // return if the object is not loaded yet, or the property is special in any way
         if (!target.__data
             || typeof prop !== 'string'                 // `prop` can be a symbol like [Symbol.toPrimitive] - should skip
@@ -101,6 +107,25 @@ class Intercept {
             Intercept._cache_values(cache, base + PLURAL, values)
         }
         return plural ? values : values[0]
+    }
+
+    static _create_role_getter(target, role) {
+        /* Create a dynamic getter for a role-based agent RPC proxy (e.g. $agent, $leader, etc.).
+           The getter returns a proxy that redirects calls to methods with the role prefix.
+         */
+        let id = target.id
+        let obj = target
+        return new Proxy({}, {
+            get(target, name) {
+                if (typeof name === 'string') return (...args) => {
+                    let method = `${role}.${name}`
+                    if (id && schemat.node)                             // RPC call if we're in a cluster environment
+                        return schemat.node.rpc_send(id, name, args, role)
+                    else                                                // direct call with empty state if a newborn object or booting now
+                        return obj.__self[method].call(obj, {}, ...args)
+                }
+            }
+        })
     }
 
     static _check_plural(prop) {
