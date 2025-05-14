@@ -271,7 +271,7 @@ export class Node extends Agent {
 
     /* Message formation & parsing */
 
-    _rpc_request(agent_id, method, args = []) {
+    _rpc_request(agent_id, method, args = [], opts) {
         /* RPC message format: [type, agent_id, method, args, tx, app_id?] */
         let request = ['RPC', agent_id, method, JSONx.encode(args), schemat.tx?.dump() || null]
         if (schemat.app_id) request.push(schemat.app_id)
@@ -286,7 +286,7 @@ export class Node extends Agent {
     }
 
     _rpc_response(result, error) {
-        /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response. 
+        /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response.
            Response format: {result, error, records}
          */
         if (error) return JSONx.encode({error})
@@ -312,7 +312,7 @@ export class Node extends Agent {
 
     /* RPC: remote calls to agents */
 
-    async rpc_send(agent, method, args, {role, node, worker, tx, wait, wait_delegated, broadcast} = {}) {
+    async rpc_send(agent, method, args, opts /*{role, node, worker, tx, wait, wait_delegated, broadcast}*/ = {}) {
         /* Send an RPC message to a remote `agent`. If needed, the message is first sent over internal (IPC) and
            external (TCP) communication channels to arrive at a proper node and worker process where the `agent` is running.
            There, '$agent.<method>'(...args) of `agent` is invoked and the response is returned via the same path.
@@ -324,17 +324,17 @@ export class Node extends Agent {
                  not the direct recipient of the initial request (delegated RPC request, multi-hop RPC, asymmetric routing)
          */
         let agent_id = (typeof agent === 'object') ? agent.id : agent
-        let message = this._rpc_request(agent_id, method, args)
+        let message = this._rpc_request(agent_id, method, args, opts)
+        // this._print("rpc_send():", JSON.stringify(message))
 
         assert(schemat.kernel.frames.size, `kernel not yet initialized`)
 
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
-        if (!broadcast) {
+        if (!opts.broadcast) {
             let frame = schemat.get_frame(agent_id)
             if (frame) return this._rpc_response_parse(await this.rpc_recv(message))
         }
-        // this._print("rpc_send():", JSON.stringify(message))
 
         let result = await this.ipc_send(MASTER, message)
         return this._rpc_response_parse(result)

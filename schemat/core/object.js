@@ -120,7 +120,7 @@ class Intercept {
                 if (typeof name === 'string') return (...args) => {
                     let method = `${role}.${name}`
                     if (id && schemat.node)                             // RPC call if we're in a cluster environment
-                        return schemat.node.rpc_send(id, name, args, role)
+                        return schemat.node.rpc_send(id, name, args, {role})
                     else                                                // direct call with empty state if a newborn object or booting now
                         return obj.__self[method].call(obj, {}, ...args)
                 }
