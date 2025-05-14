@@ -268,45 +268,14 @@ export class Node extends Agent {
         return this.$state.agents.find(status => status.agent.id === agent_id)?.worker
     }
 
-
-    /* Message formation & parsing */
-
-    _rpc_request(agent_id, method, args = [], opts) {
-        /* RPC message format: [type, agent_id, method, args, tx, app_id?] */
-        let request = ['RPC', agent_id, method, JSONx.encode(args), schemat.tx?.dump() || null]
-        if (schemat.app_id) request.push(schemat.app_id)
-        return request
-    }
-
-    _rpc_request_parse(request) {
-        let [type, agent_id, method, args, tx, app_id] = request
-        assert(type === 'RPC', `incorrect message type, expected RPC`)
-        if (tx) tx = schemat.load_transaction(tx)
-        return {type, agent_id, method, args: JSONx.decode(args), tx, app_id}
-    }
-
-    _rpc_response(result, error) {
-        /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response.
-           Response format: {result, error, records}
-         */
-        if (error) return JSONx.encode({error})
-        let response = {}
-        let records = schemat.tx?.dump_records()
-
-        if (result !== undefined) response.result = result
-        if (records?.length) response.records = records
-
-        return JSONx.encode(response)
-        // return JSONx.encode_checked(result)
-    }
-
-    _rpc_response_parse(response) {
-        if (response === undefined) throw new Error(`missing RPC response`)
-        let {result, error, records} = JSONx.decode(response)
-        if (error) throw error
-        if (records?.length) schemat.tx?.register_changes(...records)
-        return result
-        // return JSONx.decode_checked(response)
+    async _find_frame(agent_id, attempts = 5, delay = 0.2) {
+        /* Find an agent by its ID in the current process. Retry `attempts` times with a delay to allow the agent start during bootstrap. */
+        for (let i = 0; i < attempts; i++) {
+            let frame = schemat.get_frame(agent_id)
+            if (frame) return frame
+            this._print(`_find_frame(): retrying agent_id=${agent_id}`)
+            await sleep(delay)
+        }
     }
 
 
@@ -361,14 +330,42 @@ export class Node extends Agent {
         return schemat.in_tx_context(app_id, tx, call)
     }
 
-    async _find_frame(agent_id, attempts = 5, delay = 0.2) {
-        /* Find an agent by its ID in the current process. Retry `attempts` times with a delay to allow the agent start during bootstrap. */
-        for (let i = 0; i < attempts; i++) {
-            let frame = schemat.get_frame(agent_id)
-            if (frame) return frame
-            this._print(`_find_frame(): retrying agent_id=${agent_id}`)
-            await sleep(delay)
-        }
+    _rpc_request(agent_id, method, args = [], opts) {
+        /* RPC message format: [type, agent_id, method, args, tx, app_id?] */
+        let request = ['RPC', agent_id, method, JSONx.encode(args), schemat.tx?.dump() || null]
+        if (schemat.app_id) request.push(schemat.app_id)
+        return request
+    }
+
+    _rpc_request_parse(request) {
+        let [type, agent_id, method, args, tx, app_id] = request
+        assert(type === 'RPC', `incorrect message type, expected RPC`)
+        if (tx) tx = schemat.load_transaction(tx)
+        return {type, agent_id, method, args: JSONx.decode(args), tx, app_id}
+    }
+
+    _rpc_response(result, error) {
+        /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response.
+           Response format: {result, error, records}
+         */
+        if (error) return JSONx.encode({error})
+        let response = {}
+        let records = schemat.tx?.dump_records()
+
+        if (result !== undefined) response.result = result
+        if (records?.length) response.records = records
+
+        return JSONx.encode(response)
+        // return JSONx.encode_checked(result)
+    }
+
+    _rpc_response_parse(response) {
+        if (response === undefined) throw new Error(`missing RPC response`)
+        let {result, error, records} = JSONx.decode(response)
+        if (error) throw error
+        if (records?.length) schemat.tx?.register_changes(...records)
+        return result
+        // return JSONx.decode_checked(response)
     }
 
 
