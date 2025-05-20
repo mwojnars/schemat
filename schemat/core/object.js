@@ -84,7 +84,7 @@ class Intercept {
         // return if the value was found in a regular JS attr (not a getter)
         if (val !== undefined) return val === Intercept.UNDEFINED ? undefined : val
 
-        // handle dynamic role getters (e.g. $agent, $leader, etc.)
+        // handle role-based access to agent methods and state (e.g., $agent.f(), $leader.f(), etc.)
         if (typeof prop === 'string' && prop.startsWith('$') && prop.length > 1) {
             val = Intercept._create_role_getter(target, prop)
             if (cache) Intercept._cache_value(cache, prop, val)
@@ -99,7 +99,7 @@ class Intercept {
 
         let [base, plural] = Intercept._check_plural(prop)      // property name without the $ suffix
 
-        // fetch ALL repeated values of `prop` from __data, ancestors, imputation etc. (even if plural=false)...
+        // fetch ALL repeated values of `prop` from __data, ancestors, imputation, etc. (even if plural=false)...
         let values = target._compute_property(base)
 
         if (cache) {
@@ -110,14 +110,23 @@ class Intercept {
     }
 
     static _create_role_getter(target, role) {
-        /* Create a dynamic getter for a role-based agent RPC proxy (e.g. $agent, $leader, etc.).
+        /* Create a dynamic getter for a role-based agent RPC proxy ($agent, $leader, etc.).
            The getter returns a proxy that redirects calls to methods with the role prefix.
+         */
+        /* Triggers of intra-cluster RPC calls: obj.$ROLE.X(...args) sends a TCP message that
+           invokes obj['$ROLE.X'](...args) on the host node of this object. The object should be an Agent, because only
+           agents are deployed on specific nodes in the cluster, execute a perpetual event loop and accept RPC calls.
          */
         let id = target.id
         let obj = target
         return new Proxy({}, {
             get(target, name) {
-                if (typeof name === 'string') return (...args) => {
+                if (typeof name !== 'string') return
+                // find agent locally by ID+role
+                // if `name` exists in the local state, use it instead of doing RPC
+
+                // function wrapper for an RPC call...
+                return (...args) => {
                     let method = `${role}.${name}`
                     if (id && schemat.node)                             // RPC call if we're in a cluster environment
                         return schemat.node.rpc_send(id, name, args, {role})
