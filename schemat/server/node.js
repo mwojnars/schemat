@@ -136,7 +136,7 @@ export class Node extends Agent {
        The node, as an Agent, must NOT have any __install__() or __uninstall__() method, because these methods will never
        be launched: the node is assumed to be installed on itself without any installation procedure and without
        being included in `agents_installed`. The node is added implicitly to the list of currently
-       running agents in KernelProcess._get_agents_running().
+       running agents in Kernel._get_agents_running().
      */
 
     agents

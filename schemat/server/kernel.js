@@ -132,9 +132,10 @@ class Frame {
     }
 }
 
-export class KernelProcess {
-    /* Wrapper class around the kernel process. Executes message loops of Agents assigned to the current node
-       and performs TCP communication between nodes.
+export class Kernel {
+    /* An OS process (master or worker) of a cluster's node. Executes message loops of Agents assigned to the current node,
+       performs TCP communication between nodes (if master) and IPC communication with the related master/worker process(es).
+       Delegates some other duties to the Node class.
      */
 
     node                    // Node web object that represents the Schemat cluster node this process is running
@@ -153,7 +154,7 @@ export class KernelProcess {
 
 
     async init(opts) {
-        print('KernelProcess WORKER_ID:', process.env.WORKER_ID || 0)
+        print('Kernel WORKER_ID:', process.env.WORKER_ID || 0)
 
         process.on("unhandledRejection", (reason, promise) => {
             console.error(`\n${this.node?.id}/#${this.worker_id} UNHANDLED PROMISE REJECTION! A promise is created somewhere in the call stack that has NO .catch() handler and is NOT immediately awaited (possibly stored in a variable for future awaiting):`)
@@ -355,7 +356,7 @@ export class KernelProcess {
 
 /**********************************************************************************************************************/
 
-export class MasterProcess extends KernelProcess {
+export class MasterProcess extends Kernel {
     /* Top-level Schemat kernel process running on a given node. Spawns and manages worker processes that execute agents:
        web server(s), data server(s), load balancer etc.
      */
@@ -408,7 +409,7 @@ export class MasterProcess extends KernelProcess {
 
 /**********************************************************************************************************************/
 
-export class WorkerProcess extends KernelProcess {
+export class WorkerProcess extends Kernel {
     mailbox     // IPC_Mailbox for communication with the master process
 
     async start(opts) {
