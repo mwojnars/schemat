@@ -268,8 +268,8 @@ export class Node extends Agent {
         return this.$state.agents.find(status => status.agent.id === agent_id)?.worker
     }
 
-    async _find_frame(agent_id, attempts = 5, delay = 0.2) {
-        /* Find an agent by its ID in the current process. Retry `attempts` times with a delay to allow the agent start during bootstrap. */
+    async _find_frame(agent_id, role, attempts = 5, delay = 0.2) {
+        /* Find an agent by its ID in the current process. Retry `attempts` times with a delay to allow the agent to start during bootstrap. */
         for (let i = 0; i < attempts; i++) {
             let frame = schemat.get_frame(agent_id)
             if (frame) return frame
@@ -313,14 +313,14 @@ export class Node extends Agent {
         /* Execute an RPC message addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        let {agent_id, method, args, app_id, tx} = this._rpc_request_parse(message)
+        let {agent_id, agent_role, role, method, args, app_id, tx} = this._rpc_request_parse(message)
         if (tx?.debug) this._print("rpc_recv():", JSON.stringify(message))
 
         // locate the agent by its `agent_id`, should be running here in this process
-        let frame = await this._find_frame(agent_id)
+        let frame = await this._find_frame(agent_id, role)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
 
-        let role = frame.state.__role || '$agent'
+        role ??= frame.state.__role || '$agent'
         assert(role[0] === '$', `incorrect name of agent role (${role})`)
 
         let call = async () => {
@@ -384,7 +384,7 @@ export class Node extends Agent {
 
         if (type === 'SYS') return this.sys_recv(message)
         if (type === 'RPC') {
-            let {agent_id} = this._rpc_request_parse(message)
+            let {agent_id, agent_role, role} = this._rpc_request_parse(message)
             // print(`ipc_master():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(message))
 
             // check if the target object is deployed here on this node, then no need to look any further
@@ -458,7 +458,7 @@ export class Node extends Agent {
         // this._print(`tcp_recv():`, JSON.stringify(message))
 
         if (type === 'RPC') {
-            let {agent_id} = this._rpc_request_parse(message)
+            let {agent_id, agent_role, role} = this._rpc_request_parse(message)
 
             // find out which process (worker >= 1 or master = 0), has the `agent_id` agent deployed
 
