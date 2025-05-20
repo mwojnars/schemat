@@ -119,6 +119,10 @@ class Intercept {
          */
         let id = target.id
         let obj = target
+
+        assert(id, `trying to access an agent of a newborn web object`)
+        assert(schemat.node, `the node must be initialized before agents are accessed`)
+
         return new Proxy({}, {
             get(target, name) {
                 if (typeof name !== 'string') return
@@ -126,13 +130,15 @@ class Intercept {
                 // if `name` exists in the local state, use it instead of doing RPC
 
                 // function wrapper for an RPC call...
-                return (...args) => {
-                    let method = `${role}.${name}`
-                    if (id && schemat.node)                             // RPC call if we're in a cluster environment
-                        return schemat.node.rpc_send(id, name, args, {role})
-                    else                                                // direct call with empty state if a newborn object or booting now
-                        return obj.__self[method].call(obj, {}, ...args)
-                }
+                return (...args) => schemat.node.rpc_send(id, name, args, {role})
+
+                // return (...args) => {
+                //     let method = `${role}.${name}`
+                //     if (id && schemat.node)                             // RPC call if we're in a cluster environment
+                //         return schemat.node.rpc_send(id, name, args, {role})
+                //     else                                                // direct call with empty state if a newborn object or booting now
+                //         return obj.__self[method].call(obj, {}, ...args)
+                // }
             }
         })
     }
@@ -973,23 +979,23 @@ export class WebObject {
         })
     }
 
-    get $agent() {
-        /* Triggers of intra-cluster RPC calls: obj.$agent.X(...args) call makes the current node send a TCP message that
-           invokes obj['$agent.X'](...args) on the host node of this object. The object should be an Agent, because only
-           agents are deployed on specific nodes in the cluster, execute a perpetual event loop and accept RPC calls;
-           however, to avoid the necessity to load the object only to send an RPC call to it, $agent() is defined here
-           at the top WebObject level.
-         */
-        let id = this.id
-        let obj = this
-        // assert(id)
-        return new Proxy({}, {
-            get(target, name) {
-                if (typeof name === 'string') return (...args) => (id && schemat.node) ? schemat.node.rpc_send(id, name, args)
-                    : obj.__self[`$agent.${name}`].call(obj, undefined, ...args)
-            }
-        })
-    }
+    // get $agent() {
+    //     /* Triggers of intra-cluster RPC calls: obj.$agent.X(...args) call makes the current node send a TCP message that
+    //        invokes obj['$agent.X'](...args) on the host node of this object. The object should be an Agent, because only
+    //        agents are deployed on specific nodes in the cluster, execute a perpetual event loop and accept RPC calls;
+    //        however, to avoid the necessity to load the object only to send an RPC call to it, $agent() is defined here
+    //        at the top WebObject level.
+    //      */
+    //     let id = this.id
+    //     let obj = this
+    //     // assert(id)
+    //     return new Proxy({}, {
+    //         get(target, name) {
+    //             if (typeof name === 'string') return (...args) => (id && schemat.node) ? schemat.node.rpc_send(id, name, args)
+    //                 : obj.__self[`$agent.${name}`].call(obj, undefined, ...args)
+    //         }
+    //     })
+    // }
 
     get $state() {
         /* Current local execution state of the agent represented by this web object, as returned by __start__()
