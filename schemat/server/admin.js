@@ -2,7 +2,7 @@ import {assert, print} from "../common/utils.js";
 import {ObjectNotFound} from "../common/errors.js";
 import {WebObject} from "../core/object.js";
 import {Struct} from "../core/catalog.js";
-import {boot_schemat} from "./process.js";
+import {boot_schemat} from "./kernel.js";
 
 
 /**********************************************************************************************************************/

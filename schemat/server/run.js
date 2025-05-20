@@ -1,7 +1,7 @@
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
-import {boot_schemat, MasterProcess, WorkerProcess} from "./process.js"
+import {boot_schemat, MasterProcess, WorkerProcess} from "./kernel.js"
 import cluster from "node:cluster";
 
 
