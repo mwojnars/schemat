@@ -357,9 +357,8 @@ export class Kernel {
 /**********************************************************************************************************************/
 
 export class MasterProcess extends Kernel {
-    /* Top-level Schemat kernel process running on a given node. Spawns and manages worker processes that execute agents:
-       web server(s), data server(s), load balancer etc.
-     */
+    /* Top-level Schemat kernel process running on a given node. Spawns and manages worker processes. */
+
     workers         // array of Node.js Worker instances (child processes); each item has .mailbox (IPC_Mailbox) for communication with this worker
     worker_pids     // PID to WORKER_ID association
 
@@ -410,6 +409,8 @@ export class MasterProcess extends Kernel {
 /**********************************************************************************************************************/
 
 export class WorkerProcess extends Kernel {
+    /* Descendant Schemat kernel process that executes agents: web servers, data nodes (blocks), load balancers etc. */
+
     mailbox     // IPC_Mailbox for communication with the master process
 
     async start(opts) {
