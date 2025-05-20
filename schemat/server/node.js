@@ -331,9 +331,13 @@ export class Node extends Agent {
     }
 
     _rpc_request(agent_id, method, args = [], opts) {
-        /* RPC message format: [type, agent_id, method, args, tx, app_id?] */
-        let request = ['RPC', agent_id, method, JSONx.encode(args), schemat.tx?.dump() || null]
-        if (schemat.app_id) request.push(schemat.app_id)
+        /* RPC message format: [type, agent_id, method, args, opts]. Added here  */
+        let tx = schemat.tx?.dump() || null
+        let app_id = schemat.app_id
+
+        let request = ['RPC', agent_id, method, JSONx.encode(args), tx]
+        if (app_id) request.push(app_id)
+
         return request
     }
 
