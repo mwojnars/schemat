@@ -133,7 +133,7 @@ class Frame {
 }
 
 export class Kernel {
-    /* An OS process (master or worker) of a cluster's node. Executes message loops of Agents assigned to the current node,
+    /* OS process (master or worker) of a cluster's node. Executes message loops of Agents assigned to the current node,
        performs TCP communication between nodes (if master) and IPC communication with the related master/worker process(es).
        Delegates some other duties to the Node class.
      */
@@ -357,7 +357,7 @@ export class Kernel {
 /**********************************************************************************************************************/
 
 export class MasterProcess extends Kernel {
-    /* Top-level Schemat kernel process running on a given node. Spawns and manages worker processes. */
+    /* Top-level Schemat kernel process that manages a given node. Spawns and manages worker processes. */
 
     workers         // array of Node.js Worker instances (child processes); each item has .mailbox (IPC_Mailbox) for communication with this worker
     worker_pids     // PID to WORKER_ID association
