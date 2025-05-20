@@ -334,15 +334,17 @@ export class Node extends Agent {
         /* RPC message format: [type, agent_id, method, args, opts]. Added here  */
         let tx = schemat.tx?.dump() || null
         let app_id = schemat.app_id
+        opts = {...opts, tx: tx || undefined, app_id}
 
-        let request = ['RPC', agent_id, method, JSONx.encode(args), tx]
-        if (app_id) request.push(app_id)
+        let request = ['RPC', agent_id, method, JSONx.encode(args), opts]
+        // let request = ['RPC', agent_id, method, JSONx.encode(args), tx]
+        // if (app_id) request.push(app_id)
 
         return request
     }
 
     _rpc_request_parse(request) {
-        let [type, agent_id, method, args, tx, app_id] = request
+        let [type, agent_id, method, args, {tx, app_id}] = request
         assert(type === 'RPC', `incorrect message type, expected RPC`)
         if (tx) tx = schemat.load_transaction(tx)
         return {type, agent_id, method, args: JSONx.decode(args), tx, app_id}
