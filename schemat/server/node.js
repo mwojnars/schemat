@@ -2,7 +2,7 @@ import {assert, print, timeout, sleep} from '../common/utils.js'
 import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../core/catalog.js";
 import {WebObject} from "../core/object.js";
-import {Agent} from "./agent.js";
+import {Agent, make_agent_role} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";
 import {Counter} from "../common/structs.js";
 
@@ -339,10 +339,11 @@ export class Node extends Agent {
     }
 
     _rpc_request_parse(request) {
-        let [type, agent_id, method, args, {tx, app}] = request
+        let [type, agent_id, method, args, {role, tx, app}] = request
         assert(type === 'RPC', `incorrect message type, expected RPC`)
         if (tx) tx = schemat.load_transaction(tx)
-        return {type, agent_id, method, args: JSONx.decode(args), tx, app_id: app}
+        let agent_role = make_agent_role(agent_id, role)
+        return {type, agent_id, agent_role, method, args: JSONx.decode(args), tx, app_id: app}
     }
 
     _rpc_response(result, error) {
