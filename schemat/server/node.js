@@ -281,7 +281,7 @@ export class Node extends Agent {
 
     /* RPC: remote calls to agents */
 
-    async rpc_send(agent, method, args, opts /*{role, node, worker, tx, wait, wait_delegated, broadcast}*/ = {}) {
+    async rpc_send(agent, method, args, opts /*{role, node, worker, wait, wait_delegated, broadcast}*/ = {}) {
         /* Send an RPC message to a remote `agent`. If needed, the message is first sent over internal (IPC) and
            external (TCP) communication channels to arrive at a proper node and worker process where the `agent` is running.
            There, '$agent.<method>'(...args) of `agent` is invoked and the response is returned via the same path.
@@ -331,23 +331,18 @@ export class Node extends Agent {
     }
 
     _rpc_request(agent_id, method, args = [], opts) {
-        /* RPC message format: [type, agent_id, method, args, opts]. Added here  */
-        let tx = schemat.tx?.dump() || null
-        let app_id = schemat.app_id
-        opts = {...opts, tx: tx || undefined, app_id}
-
-        let request = ['RPC', agent_id, method, JSONx.encode(args), opts]
-        // let request = ['RPC', agent_id, method, JSONx.encode(args), tx]
-        // if (app_id) request.push(app_id)
-
-        return request
+        /* RPC message format: [type, agent_id, method, args, opts]. Added here in `opts`: app (application ID), tx (transaction info). */
+        let tx = schemat.tx?.dump()
+        let app = schemat.app_id
+        opts = {...opts, app, tx}
+        return ['RPC', agent_id, method, JSONx.encode(args), opts]
     }
 
     _rpc_request_parse(request) {
-        let [type, agent_id, method, args, {tx, app_id}] = request
+        let [type, agent_id, method, args, {tx, app}] = request
         assert(type === 'RPC', `incorrect message type, expected RPC`)
         if (tx) tx = schemat.load_transaction(tx)
-        return {type, agent_id, method, args: JSONx.decode(args), tx, app_id}
+        return {type, agent_id, method, args: JSONx.decode(args), tx, app_id: app}
     }
 
     _rpc_response(result, error) {
