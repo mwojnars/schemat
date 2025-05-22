@@ -111,10 +111,10 @@ class Intercept {
 
     static _create_agent_proxy(target, role) {
         /* Create an RPC proxy for this agent running in a particular role ($agent, $leader, etc.).
-           The proxy provides access to the local state of the agent (obj.$ROLE.field), and creates triggers
-           for intra-cluster RPC calls: obj.$ROLE.fun(...args) sends a message that invokes obj['$ROLE.fun'](...args)
+           The proxy creates triggers for intra-cluster RPC calls: obj.$ROLE.fun(...args) sends a message that invokes obj['$ROLE.fun'](...args)
            on the host node of the agent represented by this web object. The object should be an instance of Agent class/category,
            because only agents are deployed permanently on specific nodes in the cluster, maintain local state and accept RPC calls.
+           `obj.$ROLE.state` is a special field that gives access to the locally running agent's state (if present)
          */
         let id = target.id
         // let obj = target
@@ -124,9 +124,12 @@ class Intercept {
             get(target, name) {
                 if (typeof name !== 'string') return
 
-                // if `name` exists in the local state of the agent, use it instead of doing RPC
-                let field = schemat.get_frame(id)?.state[name]
-                if (field !== undefined) return field
+                // obj.$ROLE.state is a special field that gives access to the locally running agent's state (if present)
+                if (name === 'state') return schemat.get_frame(id)?.state
+
+                // // if `name` exists in the local state of the agent, use it instead of doing RPC
+                // let field = schemat.get_frame(id)?.state[name]
+                // if (field !== undefined) return field
 
                 // function wrapper for an RPC call...
                 assert(schemat.node, `the node must be initialized before remote agents are called`)
