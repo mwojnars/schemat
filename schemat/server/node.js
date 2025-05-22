@@ -320,7 +320,7 @@ export class Node extends Agent {
         let frame = await this._find_frame(agent_id, role)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
 
-        role ??= frame.state.__role || '$agent'
+        role ??= frame.state.__role
         assert(role[0] === '$', `incorrect name of agent role (${role})`)
 
         let call = async () => {

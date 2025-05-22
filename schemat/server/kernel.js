@@ -301,7 +301,7 @@ export class Kernel {
         this._print(`starting agent ${agent} ...`)
 
         let state = await schemat.in_context(agent.__app, () => agent.__start__({role, options})) || {}
-        state.__role = role
+        state.__role = role || '$agent'     // a missing role is equivalent to the '$agent' role
         state.__options = options
 
         this.frames.set(agent.id, new Frame(agent, state))
