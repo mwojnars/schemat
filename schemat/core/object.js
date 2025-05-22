@@ -126,7 +126,7 @@ class Intercept {
                 // obj.$ROLE.state is a special field that gives access to the locally running agent's state (if present)
                 if (name === 'state') return schemat.get_frame(id)?.state
 
-                if (role === '$agent') role = undefined     // "$agent" is a generic role that matches all role names at the target
+                if (role === '$agent') role = undefined     // "$agent" as a requested role matches all role names at the target
 
                 // function wrapper for an RPC call...
                 assert(schemat.node, `the node must be initialized before remote agents are called`)

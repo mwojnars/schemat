@@ -244,7 +244,7 @@ export class Kernel {
             }
 
             for (let frame of this.frames.values())                 // refresh/reload agents if needed
-                await this.refresh_agent(frame.agent.id)
+                await this.refresh_agent(frame)
 
             let passed = (Date.now() - beginning) / 1000
             let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
@@ -292,6 +292,8 @@ export class Kernel {
 
     async start_agent(id, {role, options} = {}) {
         let agent = schemat.get_object(id)
+        role ??= '$agent'                       // "$agent" role is the default for running agents
+
         if (this.frames.has(agent.id)) throw new Error(`agent ${agent} is already running`)
         if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
 
@@ -301,7 +303,7 @@ export class Kernel {
         this._print(`starting agent ${agent} ...`)
 
         let state = await schemat.in_context(agent.__app, () => agent.__start__({role, options})) || {}
-        state.__role = role || '$agent'     // a missing role is equivalent to the '$agent' role
+        state.__role = role
         state.__options = options
 
         this.frames.set(agent.id, new Frame(agent, state))
@@ -310,12 +312,11 @@ export class Kernel {
         return state
     }
 
-    async refresh_agent(id) {
-        let frame = this.frames.get(id)
+    async refresh_agent(frame) {
         let agent = frame.agent.refresh()
 
         if (agent.__ttl_left() < 0) agent = await agent.reload()
-        if (agent === frame.agent) return
+        if (agent === frame.agent) return       // no need to restart the agent if it's still the same object after refresh
 
         this._print(`restarting agent ${agent} ...`)
         let prev = frame.state
