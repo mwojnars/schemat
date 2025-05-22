@@ -148,10 +148,10 @@ export class Kernel {
        Delegates some other duties to the Node class.
      */
 
-    node                    // Node web object that represents the Schemat cluster node this process is running
-    frames = new Map()      // Frames of currently running agents, keyed by agent IDs
-    _promise                // Promise returned by .main(), kept here for graceful termination in .stop()
-    _closing                // true if .stop() was called and the process is shutting down right now
+    node                        // Node web object that represents the Schemat cluster node this process is running
+    frames = new FramesMap()    // Frames of currently running agents, keyed by agent IDs
+    _promise                    // Promise returned by .main(), kept here for graceful termination in .stop()
+    _closing                    // true if .stop() was called and the process is shutting down right now
 
     get worker_id() {
         /* Numeric ID (1, 2, 3, ...) of the node's current worker process; 0 for the master process. */
@@ -250,7 +250,7 @@ export class Kernel {
             if (schemat.terminating) {                              // if closing, let the currently running agents gently stop
                 for (let frame of [...this.frames.values()].reverse()) {
                     await this.stop_agent(frame)
-                    this.frames.delete(frame.agent.id)
+                    this.frames.delete([frame.agent.id, frame.state.__role])
                 }
                 break
             }
@@ -306,7 +306,7 @@ export class Kernel {
         let agent = schemat.get_object(id)
         role ??= '$agent'                       // "$agent" role is the default for running agents
 
-        if (this.frames.has(agent.id)) throw new Error(`agent ${agent} is already running`)
+        if (this.frames.has([agent.id, role])) throw new Error(`agent ${agent} in role ${role} is already running`)
         if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
 
         // print(`_start_agent():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
@@ -318,7 +318,7 @@ export class Kernel {
         state.__role = role
         state.__options = options
 
-        this.frames.set(agent.id, new Frame(agent, state))
+        this.frames.set([agent.id, role], new Frame(agent, state))
         this._print(`starting agent ${agent} done`)
 
         return state
