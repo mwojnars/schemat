@@ -445,7 +445,6 @@ export class Node extends Agent {
         // print("tcp_send():", JSON.stringify(msg))
         assert(this.is_master())
         if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
-        // return this.$state.tcp_sender.send(msg, node.tcp_address)
         return this.$agent.state.tcp_sender.send(msg, node.tcp_address)
     }
 

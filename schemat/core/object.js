@@ -117,7 +117,6 @@ class Intercept {
            `obj.$ROLE.state` is a special field that gives access to the locally running agent's state (if present)
          */
         let id = target.id
-        // let obj = target
         assert(id, `trying to target a newborn object like an agent`)
 
         return new Proxy({}, {
@@ -127,21 +126,9 @@ class Intercept {
                 // obj.$ROLE.state is a special field that gives access to the locally running agent's state (if present)
                 if (name === 'state') return schemat.get_frame(id)?.state
 
-                // // if `name` exists in the local state of the agent, use it instead of doing RPC
-                // let field = schemat.get_frame(id)?.state[name]
-                // if (field !== undefined) return field
-
                 // function wrapper for an RPC call...
                 assert(schemat.node, `the node must be initialized before remote agents are called`)
                 return (...args) => schemat.node.rpc_send(id, name, args, {role})
-
-                // return (...args) => {
-                //     let method = `${role}.${name}`
-                //     if (id && schemat.node)                             // RPC call if we're in a cluster environment
-                //         return schemat.node.rpc_send(id, name, args, {role})
-                //     else                                                // direct call with empty state if a newborn object or booting now
-                //         return obj.__self[method].call(obj, {}, ...args)
-                // }
             }
         })
     }
@@ -999,13 +986,13 @@ export class WebObject {
     //         }
     //     })
     // }
-
-    get $state() {
-        /* Current local execution state of the agent represented by this web object, as returned by __start__()
-           - see the Agent class. NOT cached.
-         */
-        return {value: schemat.get_frame(this.id)?.state, [Intercept.NO_CACHING]: true}
-    }
+    //
+    // get $state() {
+    //     /* Current local execution state of the agent represented by this web object, as returned by __start__()
+    //        - see the Agent class. NOT cached.
+    //      */
+    //     return {value: schemat.get_frame(this.id)?.state, [Intercept.NO_CACHING]: true}
+    // }
 
     get $_wrap() {
         /* For internal use. Call $agent.*() like a plain method with `state` explicitly supplied. */
