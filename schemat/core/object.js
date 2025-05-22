@@ -118,16 +118,18 @@ class Intercept {
            agents are deployed on specific nodes in the cluster, execute a perpetual event loop and accept RPC calls.
          */
         let id = target.id
-        let obj = target
+        // let obj = target
 
-        assert(id, `trying to access an agent of a newborn web object`)
+        assert(id, `trying to target a newborn object as an agent`)
         assert(schemat.node, `the node must be initialized before agents are accessed`)
 
         return new Proxy({}, {
             get(target, name) {
                 if (typeof name !== 'string') return
-                // find agent locally by ID+role
-                // if `name` exists in the local state, use it instead of doing RPC
+
+                // if `name` exists in the local state of the agent, use it instead of doing RPC
+                let field = schemat.get_frame(id)?.state[name]
+                if (field !== undefined) return field
 
                 // function wrapper for an RPC call...
                 return (...args) => schemat.node.rpc_send(id, name, args, {role})
