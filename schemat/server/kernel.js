@@ -235,6 +235,8 @@ export class Kernel {
         let {starting_agents} = await this.start_agent(this.node.id)    // start this node's own agent to enable internode communication
         await starting_agents                                           // wait for other agents to start
 
+        this._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
+
         while (true) {
             let beginning = Date.now()
             // this.node = this.node.refresh()
@@ -382,7 +384,7 @@ export class MasterProcess extends Kernel {
 
         print(`starting node:`, this.node.id)
         this._start_workers()
-        await sleep(2.0)            // wait for workers to start their IPC before sending requests
+        await sleep(1.0)            // wait for workers to start their IPC before sending requests
         await schemat._boot_done()
 
         await (this._promise = this.main())
@@ -429,7 +431,7 @@ export class WorkerProcess extends Kernel {
 
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC requests from master to this worker
-        await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in MasterProcess.start()
+        // await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in MasterProcess.start()
         await schemat._boot_done()
 
         await (this._promise = this.main())
