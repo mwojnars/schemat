@@ -237,9 +237,11 @@ export class Kernel {
 
             this.node = new_node
 
-            if (schemat.terminating) {
-                for (let id of [...this.frames.keys()].reverse())   // if closing, let the currently running agents gently stop
-                    await this.stop_agent(id)
+            if (schemat.terminating) {                              // if closing, let the currently running agents gently stop
+                for (let frame of [...this.frames.values()].reverse()) {
+                    await this.stop_agent(frame)
+                    this.frames.delete(frame.agent.id)
+                }
                 break
             }
 
@@ -334,10 +336,7 @@ export class Kernel {
         //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
     }
 
-    async stop_agent(id) {
-        let frame = this.frames.get(id)
-        if (!frame) throw new Error(`execution frame of agent [${id}] not found on this process`)
-
+    async stop_agent(frame) {
         let {agent, calls} = frame
         frame.stopping = true               // prevent new calls from being executed on the agent
 
@@ -349,8 +348,6 @@ export class Kernel {
 
         let stop = () => agent.__stop__(frame.state)
         await schemat.in_context(agent.__app, stop)
-
-        this.frames.delete(agent.id)
         this._print(`stopping agent ${agent} done`)
     }
 }
