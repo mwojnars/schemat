@@ -271,7 +271,7 @@ export class Node extends Agent {
     async _find_frame(agent_id, role, attempts = 5, delay = 0.2) {
         /* Find an agent by its ID in the current process. Retry `attempts` times with a delay to allow the agent to start during bootstrap. */
         for (let i = 0; i < attempts; i++) {
-            let frame = schemat.get_frame(agent_id)
+            let frame = schemat.get_frame(agent_id, role)
             if (frame) return frame
             this._print(`_find_frame(): retrying agent_id=${agent_id}`)
             await sleep(delay)
@@ -301,7 +301,7 @@ export class Node extends Agent {
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
         if (!opts.broadcast) {
-            let frame = schemat.get_frame(agent_id)
+            let frame = schemat.get_frame(agent_id, opts.role)
             if (frame) return this._rpc_response_parse(await this.rpc_recv(message))
         }
 
