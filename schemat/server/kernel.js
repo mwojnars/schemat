@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {print, assert, T, sleep} from "../common/utils.js";
+import {CustomMap} from "../common/structs.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {BootDatabase} from "../db/db.js";
 import {Agent, AgentState} from "./agent.js";
@@ -50,6 +51,13 @@ export async function boot_schemat(opts, callback) {
 
 
 /**********************************************************************************************************************/
+
+export class FramesMap extends CustomMap {
+    /* A Map where keys are id+role strings. */
+
+    convert([id, role]) { return `${id}_${role}` }      // 1234_$agent
+    reverse(key)        { let [id, role] = key.split('_'); return [Number(id), role] }
+}
 
 class Frame {
     /* Status of a running agent + its internal variables (state). */
@@ -131,6 +139,8 @@ class Frame {
         }
     }
 }
+
+/**********************************************************************************************************************/
 
 export class Kernel {
     /* OS process (master or worker) of a cluster's node. Executes message loops of Agents assigned to the current node,
