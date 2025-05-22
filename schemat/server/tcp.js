@@ -156,7 +156,7 @@ export class TCP_Sender {
                 if (entry) {
                     entry.resolve(resp)
                     this.pending.delete(id)
-                } else console.warn('Response received for unknown request:', id)
+                } else schemat.node._print('WARNING Response received for unknown request:', id)
             }
             catch (e) { console.error('Invalid response:', e) }
         })

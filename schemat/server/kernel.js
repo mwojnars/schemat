@@ -236,6 +236,7 @@ export class Kernel {
         await starting_agents                                           // wait for other agents to start
 
         this._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
+        await sleep(this.node.agent_refresh_interval)
 
         while (true) {
             let beginning = Date.now()
@@ -384,7 +385,7 @@ export class MasterProcess extends Kernel {
 
         print(`starting node:`, this.node.id)
         this._start_workers()
-        await sleep(1.0)            // wait for workers to start their IPC before sending requests
+        await sleep(2.0)            // wait for workers to start their IPC before sending requests
         await schemat._boot_done()
 
         await (this._promise = this.main())
