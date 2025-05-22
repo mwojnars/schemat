@@ -86,9 +86,9 @@ class Intercept {
 
         // handle role-based access to agent methods and state (e.g., $agent.f(), $leader.f(), etc.)
         if (typeof prop === 'string' && prop.startsWith('$') && prop.length > 1) {
-            val = Intercept._create_role_getter(target, prop)
-            if (cache) Intercept._cache_value(cache, prop, val)
-            return val
+            let proxy = Intercept._create_agent_proxy(target, prop)
+            if (cache) Intercept._cache_value(cache, prop, proxy)
+            return proxy
         }
 
         // return if the object is not loaded yet, or the property is special in any way
@@ -109,19 +109,16 @@ class Intercept {
         return plural ? values : values[0]
     }
 
-    static _create_role_getter(target, role) {
-        /* Create a dynamic getter for a role-based agent RPC proxy ($agent, $leader, etc.).
-           The getter returns a proxy that redirects calls to methods with the role prefix.
-         */
-        /* Triggers of intra-cluster RPC calls: obj.$ROLE.X(...args) sends a TCP message that
-           invokes obj['$ROLE.X'](...args) on the host node of this object. The object should be an Agent, because only
-           agents are deployed on specific nodes in the cluster, execute a perpetual event loop and accept RPC calls.
+    static _create_agent_proxy(target, role) {
+        /* Create an RPC proxy for this agent running in a particular role ($agent, $leader, etc.).
+           The proxy provides access to the local state of the agent (obj.$ROLE.field), and creates triggers
+           for intra-cluster RPC calls: obj.$ROLE.fun(...args) sends a message that invokes obj['$ROLE.fun'](...args)
+           on the host node of the agent represented by this web object. The object should be an instance of Agent class/category,
+           because only agents are deployed permanently on specific nodes in the cluster, maintain local state and accept RPC calls.
          */
         let id = target.id
         // let obj = target
-
-        assert(id, `trying to target a newborn object as an agent`)
-        assert(schemat.node, `the node must be initialized before agents are accessed`)
+        assert(id, `trying to target a newborn object like an agent`)
 
         return new Proxy({}, {
             get(target, name) {
@@ -132,6 +129,7 @@ class Intercept {
                 if (field !== undefined) return field
 
                 // function wrapper for an RPC call...
+                assert(schemat.node, `the node must be initialized before remote agents are called`)
                 return (...args) => schemat.node.rpc_send(id, name, args, {role})
 
                 // return (...args) => {
