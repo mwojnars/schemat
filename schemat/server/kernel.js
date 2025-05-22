@@ -56,7 +56,7 @@ export class FramesMap extends CustomMap {
     /* A Map where keys are id+role strings. */
 
     convert([id, role]) { return `${id}_${role}` }      // 1234_$agent
-    reverse(key)        { let [id, role] = key.split('_'); return [Number(id), role] }
+    // reverse(key)     { let [id, role] = key.split('_'); return [Number(id), role] }
 }
 
 class Frame {
@@ -72,9 +72,9 @@ class Frame {
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
-    constructor(agent, state) {
+    constructor(agent, state = null) {
         this.agent = agent
-        this.set_state(state)
+        if (state !== null) this.set_state(state)
     }
     
     set_state(state) {
@@ -314,13 +314,15 @@ export class Kernel {
         assert(agent instanceof Agent)
         this._print(`starting agent ${agent} ...`)
 
+        let frame = new Frame(agent)
+        this.frames.set([agent.id, role], frame)    // the frame must be assigned to `frames` already before __start__() is executed
+
         let state = await schemat.in_context(agent.__app, () => agent.__start__({role, options})) || {}
         state.__role = role
         state.__options = options
+        frame.set_state(state)
 
-        this.frames.set([agent.id, role], new Frame(agent, state))
         this._print(`starting agent ${agent} done`)
-
         return state
     }
 
