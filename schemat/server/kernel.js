@@ -402,6 +402,7 @@ export class MasterProcess extends Kernel {
         let worker = this.workers[id-1] = cluster.fork({WORKER_ID: id})
         this.worker_pids.set(worker.process.pid, id)                                // remember PID-to-ID mapping
         worker.mailbox = new IPC_Mailbox(worker, msg => this.node.ipc_master(msg))  // IPC requests from `worker` to master
+        // worker.mailbox = new IPC_Mailbox(worker, msg => this.node.$master.ipc_master(msg))
         return worker
     }
 }

@@ -446,6 +446,8 @@ export class Node extends Agent {
         assert(this.is_master())
         if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
         return this.$state.tcp_sender.send(msg, node.tcp_address)
+        // return this.$agent.tcp_sender.send(msg, node.tcp_address)
+        // return this.$agent.state.tcp_sender.send(msg, node.tcp_address)
     }
 
     tcp_recv(message) {
@@ -603,8 +605,10 @@ export class Node extends Agent {
 
     /*************/
 
-    // async '$worker.start_agent'()
+    // async '$master.ipc_recv'()
+    // async '$worker.ipc_recv'()
 
+    // async '$worker.start_agent'()
     async '$master.start_agent'(...args) { return this['$agent.start_agent'](...args) }
 
     async '$agent.start_agent'(state, agent, {role, options, worker, num_workers = 1} = {}) {
