@@ -236,7 +236,7 @@ export class Kernel {
         await starting_agents                                           // wait for other agents to start
 
         this._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
-        await sleep(this.node.agent_refresh_interval)
+        await sleep(this.node.agent_refresh_interval || 10)
 
         while (true) {
             let beginning = Date.now()
