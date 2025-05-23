@@ -113,19 +113,6 @@ export class Agent extends WebObject {
     }
 }
 
-export function make_agent_role(agent, role = null) {
-    /* Utility function for building a specification string that identifies an agent (by ID) together with its particular role.
-       `agent` is an ID or a web object. If `role` is empty or missing, "agent" is used as the role name.
-     */
-    assert(agent)
-    let id = (typeof agent === 'object') ? agent.id : agent
-
-    role ??= '$agent'
-    assert(role[0] === '$', `incorrect name of agent role (${role})`)
-
-    return `${id}_${role}`      // 1234_$agent
-}
-
 
 /**********************************************************************************************************************/
 

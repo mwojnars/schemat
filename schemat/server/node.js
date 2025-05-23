@@ -253,7 +253,7 @@ export class Node extends Agent {
            If the agent is deployed on one of the local processes, return `this`.
          */
         if (this._find_process(agent_id, role) != null) return this
-        return schemat.cluster.find_node(agent_id)  //,role
+        return schemat.cluster.find_node(agent_id, role)
     }
 
     _find_process(agent_id, role) {

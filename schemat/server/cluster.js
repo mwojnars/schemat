@@ -2,6 +2,15 @@ import {assert} from "../common/utils.js";
 import {WebObject} from "../core/object.js";
 
 
+function _agent_role(id, role = null) {
+    /* Utility function for building a specification string that identifies an agent (by ID) together with its particular role. */
+    role ??= schemat.GENERIC_ROLE
+    assert(role[0] === '$', `incorrect name of agent role (${role})`)
+    return `${id}_${role}`      // 1234_$agent
+}
+
+/**********************************************************************************************************************/
+
 // Cluster extends System
 // Application extends System
 
@@ -15,14 +24,16 @@ export class Cluster extends WebObject {
     }
 
     get agent_placements() {
-        /* Map of agent_id --> array of nodes where this agent is deployed.
-           TODO: keys are strings of the form `agent_role`.
+        /* Map of agent_role --> array of nodes where this agent is deployed, where `agent_role` is a string
+           of the form `${id}_${role}`, like "1234_$agent".
          */
         let placements = {}
 
         for (let node of this.nodes)
-            for (let {agent, role} of node.agents)
-                (placements[agent.id] ??= []).push(node)
+            for (let {agent, role} of node.agents) {
+                let agent_role = _agent_role(agent.id, role);
+                (placements[agent_role] ??= []).push(node)
+            }
 
         for (let node of this.nodes) {
             assert(placements[node.id] === undefined)
@@ -37,8 +48,10 @@ export class Cluster extends WebObject {
            on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
            If `agent` is deployed here, on the current node, this location is always returned.
          */
-        if (typeof agent === 'number') agent = schemat.get_object(agent)
-        let nodes = this.agent_placements[agent.id]
+        agent = schemat.as_object(agent)
+        let agent_role = _agent_role(agent.id, role)
+        let nodes = this.agent_placements[agent_role]
+
         if (!nodes?.length) throw new Error(`agent ${agent} not deployed on any node`)
         if (nodes.some(node => node.id === this.id)) return this
         return nodes[0]
