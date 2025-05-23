@@ -130,13 +130,9 @@ export class IPC_Mailbox extends Mailbox {
 
 export class Node extends Agent {
     /* Node of a Schemat cluster. Technically, each node is a local (master) process launched independently
-       on a particular machine, together with its child (worker) processes, if any. Nodes communicate with each other
-       using Kafka, and in this way they form a distributed compute & storage cluster.
-
-       The node, as an Agent, must NOT have any __install__() or __uninstall__() method, because these methods will never
-       be launched: the node is assumed to be installed on itself without any installation procedure and without
-       being included in `agents_installed`. The node is added implicitly to the list of currently
-       running agents in Kernel._get_agents_running().
+       on a particular machine, together with its child (worker) processes. Nodes communicate with each other
+       using TCP connections, and in this way they form a distributed compute & storage cluster.
+       The node's own agent is started implicitly on itself.
      */
 
     agents
@@ -165,13 +161,13 @@ export class Node extends Agent {
         return `${this.tcp_host}:${this._tcp_port}`
     }
 
-    get agents_installed() {
-        // pull `agent` fields from this.agents, drop duplicates but preserve order
-        let ids = []
-        for (let status of this.agents)
-            if (!ids.includes(status.agent.id)) ids.push(status.agent.id)
-        return ids.map(id => schemat.get_object(id))
-    }
+    // get agents_installed() {
+    //     // pull `agent` fields from this.agents, drop duplicates but preserve order
+    //     let ids = []
+    //     for (let status of this.agents)
+    //         if (!ids.includes(status.agent.id)) ids.push(status.agent.id)
+    //     return ids.map(id => schemat.get_object(id))
+    // }
 
     async __init__() {
         await Promise.all(this.agents.map(status => status.agent.load()))
