@@ -608,10 +608,7 @@ export class Node extends Agent {
     // async '$master.ipc_recv'()
     // async '$worker.ipc_recv'()
 
-    // async '$worker.start_agent'()
-    async '$master.start_agent'(...args) { return this['$agent.start_agent'](...args) }
-
-    async '$agent.start_agent'(state, agent, {role, options, worker, num_workers = 1} = {}) {
+    async '$master.start_agent'(state, agent, {role, options, worker, num_workers = 1} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$agent.start_agent() agent=${agent}`)
         agent = schemat.as_object(agent)
@@ -640,7 +637,7 @@ export class Node extends Agent {
         // await this.$agent.flush_agents()      // what guarantee that this call will be directed to the current agent (state.__frame)
     }
 
-    async '$agent.stop_agent'(state, agent, {role, worker} = {}) {
+    async '$master.stop_agent'(state, agent, {role, worker} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$agent.stop_agent() agent=${agent}`)
         agent = schemat.as_object(agent)
@@ -655,8 +652,6 @@ export class Node extends Agent {
 
         await this._flush_agents()
     }
-
-    // async '$master.flush_agents'({agents}) {}
 
     async _flush_agents() {
         /* Save the current `agents` state to DB. */
