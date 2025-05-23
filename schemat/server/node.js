@@ -269,9 +269,11 @@ export class Node extends Agent {
     }
 
     _find_process(agent_id, role) {
-        assert(this.$master.state?.agents, `list of running agents not yet initialized`)
+        /* Look up the `agents` list of agent placements to find the local process where the given agent runs. */
+        let agents = this.$master.state?.agents
+        assert(agents, `list of running agents not yet initialized`)
         if (agent_id === this.id) return 0      // the node agent itself is contacted at the master process
-        return this.$master.state.agents.find(status => status.agent.id === agent_id)?.worker
+        return agents.find(status => status.agent.id === agent_id)?.worker
     }
 
     async _find_frame(agent_id, role, attempts = 5, delay = 0.2) {
