@@ -92,7 +92,7 @@ export class Agent extends WebObject {
 
     /***  Triggers  ***/
 
-    '$agent.ping'(state, msg) {
+    async '$agent.ping'(state, msg) {
         /* Default RPC endpoint for testing intra-cluster communication. */
         let response = `[${utc()}]  PING: agent [${this.id}], ${msg}`
         print(response)

@@ -203,7 +203,7 @@ export class Node extends Agent {
     }
 
     async _start_agents(agents) {
-        /* Send SYS signals down to worker processes to request them to start particular `agents`. */
+        /* Send SYS signals down to worker processes to make them start particular `agents`. */
         for (let {worker, agent, role, options} of agents)
             await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
     }
