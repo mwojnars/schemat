@@ -81,6 +81,8 @@ export class Schemat {
        loading and caching of web objects, dynamic module import, classpath management, session management etc.
      */
 
+    GENERIC_ROLE = "$agent"     // special role name for RPC calls to agent objects
+
     config          // boot configuration (on server) or RequestContext (on client)
     app_id          // ID of the active Application object
     _app            // `app` of the previous generation, remembered here during complete cache erasure to keep the .app() getter operational

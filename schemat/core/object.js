@@ -122,7 +122,7 @@ class Intercept {
         return new Proxy({}, {
             get(target, name) {
                 if (typeof name !== 'string') return
-                if (role === '$agent') role = undefined     // "$agent" as a requested role matches all role names at the target
+                if (role === schemat.GENERIC_ROLE) role = undefined     // "$agent" as a requested role matches all role names at the target
 
                 // obj.$ROLE.state is a special field that gives access to the locally running agent's state (if present)
                 if (name === 'state') return schemat.get_frame(id, role)?.state

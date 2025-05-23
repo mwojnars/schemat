@@ -170,7 +170,7 @@ export class Node extends Agent {
 
     async __start__({role}) {
         /* On master only. */
-        this._print(`Node.__start__() role:`, role)
+        // this._print(`Node.__start__() role:`, role)
         if (this.is_worker()) return
 
         let tcp_sender = new TCP_Sender()
@@ -257,9 +257,9 @@ export class Node extends Agent {
     }
 
     _find_process(agent_id, role) {
-        /* Look up the `agents` list of agent placements to find the local process where the given agent runs. */
+        /* On master, look up the `agents` array of agent placements to find the local process where the agent runs. */
         let agents = this.$master.state?.agents
-        assert(agents, `list of running agents not yet initialized`)
+        assert(agents, `array of running agents not yet initialized`)
         if (agent_id === this.id) return 0      // the node agent itself is contacted at the master process
         return agents.find(status => status.agent.id === agent_id)?.worker
     }
@@ -616,6 +616,8 @@ export class Node extends Agent {
 
         let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(state)
         workers = workers.slice(0, num_workers)
+
+        if (role === schemat.GENERIC_ROLE) role = undefined     // don't store the default role name "$agent"
         
         for (let worker of workers) {
             assert(worker >= 1 && worker <= this.num_workers)
@@ -645,7 +647,7 @@ export class Node extends Agent {
     }
 
     async '$agent.flush_agents'({agents}) {
-        /* Save the current {agents} state to DB. */
+        /* Save the current `agents` state to DB. */
         let node = this.get_mutable()
         node.agents = agents
         await node.save()
