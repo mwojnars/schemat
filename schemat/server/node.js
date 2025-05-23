@@ -513,11 +513,11 @@ export class Node extends Agent {
     /* list of SYS signals */
 
     async START_AGENT(agent_id, {role, options}) {
-        await schemat.kernel.start_agent(agent_id, {role, options})
+        await schemat.kernel.start_agent(agent_id, role, options)
     }
 
     async STOP_AGENT(agent_id, {role}) {
-        await schemat.kernel.stop_agent(agent_id, {role})
+        await schemat.kernel.stop_agent(agent_id, role)
     }
 
     // CACHE_RECORD() / REGISTER_RECORD()
@@ -610,7 +610,7 @@ export class Node extends Agent {
 
     async '$master.start_agent'(state, agent, {role, options, worker, num_workers = 1} = {}) {
         /* `agent` is a web object or ID. */
-        this._print(`$agent.start_agent() agent=${agent}`)
+        this._print(`$master.start_agent() agent=${agent}`)
         agent = schemat.as_object(agent)
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
@@ -629,7 +629,7 @@ export class Node extends Agent {
 
             // request the worker process to start the agent:
             await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
-            // this.$worker({node: this, worker: i}).start_agent(agent.id, {role, options})
+            // this.$worker({node: this, worker: i}).start_agent(agent.id, role, options)
         }
         await this._flush_agents()
 
@@ -639,7 +639,7 @@ export class Node extends Agent {
 
     async '$master.stop_agent'(state, agent, {role, worker} = {}) {
         /* `agent` is a web object or ID. */
-        this._print(`$agent.stop_agent() agent=${agent}`)
+        this._print(`$master.stop_agent() agent=${agent}`)
         agent = schemat.as_object(agent)
 
         let stop = state.agents.filter(status => status.agent.is(agent))

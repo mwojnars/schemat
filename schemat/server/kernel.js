@@ -265,7 +265,7 @@ export class Kernel {
         /* Start/stop agents. Refresh agent objects and the `node` object itself. */
 
         let role = this.is_master() ? '$master' : '$worker'
-        let {starting_agents} = await this.start_agent(this.node, {role})   // start this node's own agent to enable internode communication
+        let {starting_agents} = await this.start_agent(this.node, role)     // start this node's own agent to enable internode communication
         await starting_agents                                               // on master, wait for other agents (in child processes) to start
 
         // this._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
@@ -285,7 +285,7 @@ export class Kernel {
 
             if (schemat.terminating) {                              // if closing, let the currently running agents gently stop
                 for (let frame of [...this.frames.values()].reverse()) {
-                    await this.stop_agent(frame)
+                    await this.stop_agent(null, null, frame)
                     this.frames.delete([frame.agent.id, frame.state.__role])
                 }
                 break
@@ -308,7 +308,7 @@ export class Kernel {
         this._print(`process closed`)
     }
 
-    async start_agent(obj, {role, options} = {}) {
+    async start_agent(obj, role, options) {
         let agent = schemat.as_object(obj)
         role ??= '$agent'                       // "$agent" role is the default for running agents
 
@@ -354,9 +354,10 @@ export class Kernel {
         //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
     }
 
-    async stop_agent(frame) {
-        let {agent, calls} = frame
+    async stop_agent(id, role, frame = null) {
+        frame ??= this.frames.get([id, role])
         frame.stopping = true               // prevent new calls from being executed on the agent
+        let {agent, calls} = frame
 
         if (calls.length > 0) {             // wait for pending calls to complete before stopping
             this._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
