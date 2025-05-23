@@ -627,6 +627,7 @@ export class Node extends Agent {
             await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
             // this.$worker({node: this, worker: i}).start_agent(agent.id, {role, options})
         }
+        await this._flush_agents()
 
         // await this['$agent.flush_agents'](state)
         // await this.$agent.flush_agents()      // what guarantee that this call will be directed to the current agent (state.__frame)
@@ -644,11 +645,18 @@ export class Node extends Agent {
         // stop every agent from `stop`, in reverse order
         for (let status of stop.reverse())
             await this.sys_send(status.worker, 'STOP_AGENT', agent.id, {role})
+
+        await this._flush_agents()
     }
 
-    async '$agent.flush_agents'({agents}) {
+    // async '$master.flush_agents'({agents}) {}
+
+    async _flush_agents() {
         /* Save the current `agents` state to DB. */
         let node = this.get_mutable()
+        let agents = this.$master.state?.agents
+        if (agents === undefined) throw new Error(`missing agent placements, cannot flush them to DB`)
+
         node.agents = agents
         await node.save()
     }
