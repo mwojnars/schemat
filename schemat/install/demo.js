@@ -60,7 +60,8 @@ async function create_demo_01() {
     db = db.replaceAll('tcp_port: 5828', `tcp_port: 5820`)
     db = db.replaceAll('tcp_port: 5829', `tcp_port: 5821`)
 
-    db = db.replaceAll('tcp_port: 5820', `  - "@": 1030\n  tcp_port: 5820`)     // add 02_app.index block [1030] to agents_installed
+    // add 02_app.index block [1030] to agents_installed of node [1024] to allow single-node execution of the application
+    db = db.replaceAll('  agents:', `  agents:\n    - {worker: 1, agent: {"@": 1030}}`)
 
     // insert AuthorCategory and BookCategory references in [app.global]; insert URL routes
     db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 2002\n    BookCategory:\n      "@": 2001`)
