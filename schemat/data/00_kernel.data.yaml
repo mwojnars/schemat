@@ -720,14 +720,6 @@
         "@": schemat/types/type.js:GENERIC
       inline: false
       "@": schemat/types/type.js:ARRAY
-    agents_installed:
-      info: Array of all Agent objects installed on this machine.
-      default: []
-      type:
-        category:
-          "@": 29
-        "@": schemat/types/type.js:REF
-      "@": schemat/types/type.js:ARRAY
     master_agents_running:
       info: Names of installed agents that should be currently running on the master
         process of this node. [NOT USED!]
