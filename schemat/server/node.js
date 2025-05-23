@@ -180,9 +180,9 @@ export class Node extends Agent {
 
     /* This node as an agent (on master only!) */
 
-    async __start__() {
+    async __start__({role}) {
         /* On master only. */
-        if (this.is_worker()) return {}
+        if (this.is_worker()) return
 
         let tcp_sender = new TCP_Sender()
         let tcp_receiver = new TCP_Receiver()
@@ -203,6 +203,7 @@ export class Node extends Agent {
     }
 
     async _start_agents(agents) {
+        /* Send SYS signals down to worker processes to request them to start particular `agents`. */
         for (let {worker, agent, role, options} of agents)
             await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
     }

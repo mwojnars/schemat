@@ -235,8 +235,8 @@ export class Kernel {
         let {starting_agents} = await this.start_agent(this.node.id)    // start this node's own agent to enable internode communication
         await starting_agents                                           // wait for other agents to start
 
-        this._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
-        await sleep(this.node.agent_refresh_interval || 10)
+        // this._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
+        await sleep(this.node.agent_refresh_interval || 10)             // avoid reloading the agents immediately after creation
 
         while (true) {
             let beginning = Date.now()
