@@ -2,7 +2,7 @@ import {assert, print, timeout, sleep} from '../common/utils.js'
 import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../core/catalog.js";
 import {WebObject} from "../core/object.js";
-import {Agent, make_agent_role} from "./agent.js";
+import {Agent} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";
 import {Counter} from "../common/structs.js";
 
@@ -309,7 +309,7 @@ export class Node extends Agent {
         /* Execute an RPC message addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        let {agent_id, agent_role, role, method, args, app_id, tx} = this._rpc_request_parse(message)
+        let {agent_id, role, method, args, app_id, tx} = this._rpc_request_parse(message)
         if (tx?.debug) this._print("rpc_recv():", JSON.stringify(message))
 
         // locate the agent by its `agent_id`, should be running here in this process
@@ -338,8 +338,7 @@ export class Node extends Agent {
         let [type, agent_id, method, args, {role, tx, app}] = request
         assert(type === 'RPC', `incorrect message type, expected RPC`)
         if (tx) tx = schemat.load_transaction(tx)
-        let agent_role = make_agent_role(agent_id, role)
-        return {type, agent_id, agent_role, method, args: JSONx.decode(args), tx, app_id: app}
+        return {type, agent_id, role, method, args: JSONx.decode(args), tx, app_id: app}
     }
 
     _rpc_response(result, error) {
@@ -380,7 +379,7 @@ export class Node extends Agent {
 
         if (type === 'SYS') return this.sys_recv(message)
         if (type === 'RPC') {
-            let {agent_id, agent_role, role} = this._rpc_request_parse(message)
+            let {agent_id, role} = this._rpc_request_parse(message)
             // print(`ipc_master():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(message))
 
             // check if the target object is deployed here on this node, then no need to look any further
@@ -454,7 +453,7 @@ export class Node extends Agent {
         // this._print(`tcp_recv():`, JSON.stringify(message))
 
         if (type === 'RPC') {
-            let {agent_id, agent_role, role} = this._rpc_request_parse(message)
+            let {agent_id, role} = this._rpc_request_parse(message)
 
             // find out which process (worker >= 1 or master = 0), has the `agent_id` agent deployed
 
