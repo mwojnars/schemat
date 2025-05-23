@@ -267,9 +267,9 @@ export class Node extends Agent {
     }
 
     find_process(agent_id, role) {
-        assert(this.$agent.state?.agents, `list of running agents not yet initialized`)
+        assert(this.$master.state?.agents, `list of running agents not yet initialized`)
         if (agent_id === this.id) return 0      // the node agent itself is contacted at the master process
-        return this.$agent.state.agents.find(status => status.agent.id === agent_id)?.worker
+        return this.$master.state.agents.find(status => status.agent.id === agent_id)?.worker
     }
 
     async _find_frame(agent_id, role, attempts = 5, delay = 0.2) {
@@ -449,7 +449,7 @@ export class Node extends Agent {
         // print("tcp_send():", JSON.stringify(msg))
         assert(this.is_master())
         if (!node.is_loaded()) await node.load()    // target node's TCP address is needed
-        return this.$agent.state.tcp_sender.send(msg, node.tcp_address)
+        return this.$master.state.tcp_sender.send(msg, node.tcp_address)
     }
 
     tcp_recv(message) {

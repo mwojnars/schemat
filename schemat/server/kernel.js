@@ -232,7 +232,7 @@ export class Kernel {
     async main() {
         /* Start/stop agents. Refresh agent objects and the `node` object itself. */
 
-        let role //= this.is_master() ? '$master' : '$worker'
+        let role = this.is_master() ? '$master' : '$worker'
         let {starting_agents} = await this.start_agent(this.node, {role})   // start this node's own agent to enable internode communication
         await starting_agents                                               // on master, wait for other agents (in child processes) to start
 
