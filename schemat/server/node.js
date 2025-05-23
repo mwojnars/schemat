@@ -190,7 +190,7 @@ export class Node extends Agent {
 
         await tcp_receiver.start(this._tcp_port)
 
-        await sleep(2.0)        // wait for worker processes to start
+        await sleep(2.0)        // wait for worker processes (and peer nodes?) to start
         await tcp_sender.start(this.tcp_retry_interval * 1000)
 
         let agents = this.agents
