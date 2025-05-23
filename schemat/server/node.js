@@ -161,14 +161,6 @@ export class Node extends Agent {
         return `${this.tcp_host}:${this._tcp_port}`
     }
 
-    // get agents_installed() {
-    //     // pull `agent` fields from this.agents, drop duplicates but preserve order
-    //     let ids = []
-    //     for (let status of this.agents)
-    //         if (!ids.includes(status.agent.id)) ids.push(status.agent.id)
-    //     return ids.map(id => schemat.get_object(id))
-    // }
-
     async __init__() {
         await Promise.all(this.agents.map(status => status.agent.load()))
     }
