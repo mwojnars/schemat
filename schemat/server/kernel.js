@@ -57,7 +57,10 @@ export class FramesMap extends CustomMap {
 
     _frames_by_id = new Map()    // internal map: id -> list of frames
 
-    convert([id, role]) { return `${id}_${role}` }      // 1234_$agent
+    convert([id, role]) {
+        role ??= schemat.GENERIC_ROLE
+        return `${id}_${role}`          // 1234_$agent
+    }
     // reverse(key)     { let [id, role] = key.split('_'); return [Number(id), role] }
 
     set(key, frame) {
@@ -310,7 +313,7 @@ export class Kernel {
 
     async start_agent(obj, role, options) {
         let agent = schemat.as_object(obj)
-        role ??= '$agent'                       // "$agent" role is the default for running agents
+        role ??= schemat.GENERIC_ROLE           // "$agent" role is the default for running agents
 
         if (this.frames.has([agent.id, role])) throw new Error(`agent ${agent} in role ${role} is already running`)
         if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
