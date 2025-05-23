@@ -57,11 +57,16 @@ export class FramesMap extends CustomMap {
 
     convert([id, role]) { return `${id}_${role}` }      // 1234_$agent
     // reverse(key)     { let [id, role] = key.split('_'); return [Number(id), role] }
+
+    get_any_role(id, unique = true) {
+        /* Return any frame that has a given agent ID, no matter the role. */
+        return this.get([id, "$agent"])
+    }
 }
 
 class Frame {
     /* Status of a running agent + its internal variables (state). */
-    agent               // web object that created this frame
+    agent               // web object that created this frame, replaced with a new reference on every refresh
     state               // AgentState object wrapped around or returned by agent.__start__()
 
     calls = []          // promises for currently executing concurrent calls on this agent
