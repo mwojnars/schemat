@@ -232,11 +232,12 @@ export class Kernel {
     async main() {
         /* Start/stop agents. Refresh agent objects and the `node` object itself. */
 
-        let {starting_agents} = await this.start_agent(this.node)       // start this node's own agent to enable internode communication
-        await starting_agents                                           // wait for other agents to start
+        let role //= this.is_master() ? '$master' : '$worker'
+        let {starting_agents} = await this.start_agent(this.node, {role})   // start this node's own agent to enable internode communication
+        await starting_agents                                               // on master, wait for other agents (in child processes) to start
 
         // this._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
-        await sleep(this.node.agent_refresh_interval || 10)             // avoid reloading the agents immediately after creation
+        await sleep(this.node.agent_refresh_interval || 10)         // avoid reloading the agents immediately after creation
 
         while (true) {
             let beginning = Date.now()
@@ -385,7 +386,7 @@ export class MasterProcess extends Kernel {
 
         print(`starting node:`, this.node.id)
         this._start_workers()
-        await sleep(2.0)            // wait for workers to start their IPC before sending requests
+        // await sleep(2.0)            // wait for workers to start their IPC before sending requests
         await schemat._boot_done()
 
         await (this._promise = this.main())

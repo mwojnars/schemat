@@ -188,8 +188,10 @@ export class Node extends Agent {
         let tcp_sender = new TCP_Sender()
         let tcp_receiver = new TCP_Receiver()
 
-        await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this._tcp_port)
+
+        await sleep(2.0)        // wait for worker processes to start
+        await tcp_sender.start(this.tcp_retry_interval * 1000)
 
         let agents = this.agents
         let starting_agents = this._start_agents(agents)    // a promise
