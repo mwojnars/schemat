@@ -638,6 +638,9 @@ export class Node extends Agent {
             await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
             // this.$worker({node: this, worker: i}).start_agent(agent.id, {role, options})
         }
+
+        // await this['$agent.flush_agents'](state)
+        // await this.$agent.flush_agents()      // what guarantee that this call will be directed to the current agent (state.__frame)
     }
 
     async '$agent.stop_agent'(state, agent, {role, worker} = {}) {

@@ -21,7 +21,7 @@ export class Cluster extends WebObject {
         let placements = {}
 
         for (let node of this.nodes)
-            for (let agent of node.agents_installed)
+            for (let {agent, role} of node.agents)
                 (placements[agent.id] ??= []).push(node)
 
         for (let node of this.nodes) {
