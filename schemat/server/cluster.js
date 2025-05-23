@@ -2,11 +2,11 @@ import {assert} from "../common/utils.js";
 import {WebObject} from "../core/object.js";
 
 
-function _agent_role(id, role = null) {
+function _agent_role(agent, role = null) {
     /* Utility function for building a specification string that identifies an agent (by ID) together with its particular role. */
     role ??= schemat.GENERIC_ROLE
     assert(role[0] === '$', `incorrect name of agent role (${role})`)
-    return `${id}_${role}`      // 1234_$agent
+    return `${agent.id}_${role}`        // 1234_$agent
 }
 
 /**********************************************************************************************************************/
@@ -31,15 +31,15 @@ export class Cluster extends WebObject {
 
         for (let node of this.nodes)
             for (let {agent, role} of node.agents) {
-                let agent_role = _agent_role(agent.id, role);
+                let agent_role = _agent_role(agent, role);
                 (placements[agent_role] ??= []).push(node)
             }
 
         for (let node of this.nodes) {
-            assert(placements[node.id] === undefined)
-            placements[node.id] = [node]        // node as an agent is deployed on itself and nowhere else
+            let agent_role = _agent_role(node, '$master')   // there are $worker deployments, too, but they shouldn't be needed
+            assert(placements[agent_role] === undefined)
+            placements[agent_role] = [node]                 // node as an agent is deployed on itself and nowhere else
         }
-
         return placements
     }
 
@@ -49,7 +49,7 @@ export class Cluster extends WebObject {
            If `agent` is deployed here, on the current node, this location is always returned.
          */
         agent = schemat.as_object(agent)
-        let agent_role = _agent_role(agent.id, role)
+        let agent_role = _agent_role(agent, role)
         let nodes = this.agent_placements[agent_role]
 
         if (!nodes?.length) throw new Error(`agent ${agent} not deployed on any node`)
