@@ -257,11 +257,17 @@ export class Node extends Agent {
     }
 
     _find_process(agent_id, role) {
-        /* On master, look up the `agents` array of agent placements to find the local process where the agent runs. */
+        /* On master, look up the `agents` array of agent placements to find the local process where the agent runs
+           in a given `role` (or in any role if `role` is missing or GENERIC_ROLE).
+         */
         let agents = this.$master.state?.agents
         assert(agents, `array of running agents not yet initialized`)
         if (agent_id === this.id) return 0      // the node agent itself is contacted at the master process
-        return agents.find(status => status.agent.id === agent_id)?.worker
+
+        if (role === schemat.GENERIC_ROLE) role = undefined
+
+        let status = agents.find(status => status.agent.id === agent_id && (!role || status.role === role))
+        return status?.worker
     }
 
     async _find_frame(agent_id, role, attempts = 5, delay = 0.2) {
