@@ -260,13 +260,15 @@ export class Node extends Agent {
 
     /* Agent routing */
 
-    async find_node(agent_id, role) {
-        // if agent is deployed on one of local processes, return this node
-        if (this.find_process(agent_id) != null) return this
+    _find_node(agent_id, role) {
+        /* Return the node where the `agent` running in a given `role` can be found.
+           If the agent is deployed on one of the local processes, return `this`.
+         */
+        if (this._find_process(agent_id, role) != null) return this
         return schemat.cluster.find_node(agent_id)  //,role
     }
 
-    find_process(agent_id, role) {
+    _find_process(agent_id, role) {
         assert(this.$master.state?.agents, `list of running agents not yet initialized`)
         if (agent_id === this.id) return 0      // the node agent itself is contacted at the master process
         return this.$master.state.agents.find(status => status.agent.id === agent_id)?.worker
@@ -377,7 +379,7 @@ export class Node extends Agent {
 
     /* IPC: vertical communication between master/worker processes */
 
-    async ipc_master(message) {
+    ipc_master(message) {
         /* On master process, handle an IPC message received from a worker process or directly from itself.
            IPC calls do NOT perform JSONx-encoding/decoding of arguments/result, so the latter must be
            plain JSON-serializable objects, or already JSONx-encoded.
@@ -394,7 +396,7 @@ export class Node extends Agent {
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
 
-            let node = await this.find_node(agent_id)
+            let node = this._find_node(agent_id, role)
 
             if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
             if (node.is(schemat.node)) {
@@ -470,7 +472,7 @@ export class Node extends Agent {
             // if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this}`)
             // let proc = locs[0]
 
-            let proc = this.find_process(agent_id)
+            let proc = this._find_process(agent_id, role)
             // print("tcp_recv(): process", proc)
 
             if (proc === undefined)
