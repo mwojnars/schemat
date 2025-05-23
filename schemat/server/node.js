@@ -182,6 +182,7 @@ export class Node extends Agent {
 
     async __start__({role}) {
         /* On master only. */
+        this._print(`Node.__start__() role:`, role)
         if (this.is_worker()) return
 
         let tcp_sender = new TCP_Sender()

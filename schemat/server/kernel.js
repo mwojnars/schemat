@@ -232,7 +232,7 @@ export class Kernel {
     async main() {
         /* Start/stop agents. Refresh agent objects and the `node` object itself. */
 
-        let {starting_agents} = await this.start_agent(this.node.id)    // start this node's own agent to enable internode communication
+        let {starting_agents} = await this.start_agent(this.node)       // start this node's own agent to enable internode communication
         await starting_agents                                           // wait for other agents to start
 
         // this._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
@@ -305,8 +305,8 @@ export class Kernel {
     //     for (let id of to_stop.reverse()) await this.stop_agent(id)
     // }
 
-    async start_agent(id, {role, options} = {}) {
-        let agent = schemat.get_object(id)
+    async start_agent(obj, {role, options} = {}) {
+        let agent = schemat.as_object(obj)
         role ??= '$agent'                       // "$agent" role is the default for running agents
 
         if (this.frames.has([agent.id, role])) throw new Error(`agent ${agent} in role ${role} is already running`)
