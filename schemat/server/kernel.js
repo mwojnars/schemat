@@ -55,12 +55,36 @@ export async function boot_schemat(opts, callback) {
 export class FramesMap extends CustomMap {
     /* A Map where keys are id+role strings. */
 
+    _frames_by_id = new Map()    // internal map: id -> list of frames
+
     convert([id, role]) { return `${id}_${role}` }      // 1234_$agent
     // reverse(key)     { let [id, role] = key.split('_'); return [Number(id), role] }
 
     get_any_role(id, unique = true) {
         /* Return any frame that has a given agent ID, no matter the role. */
         return this.get([id, "$agent"])
+    }
+
+    set(key, frame) {
+        /* Update _frames_by_id in addition to the base mapping by id+role. */
+        let [id, role] = key
+        let frames = this._frames_by_id.get(id) || []
+        frames.push(frame)
+        this._frames_by_id.set(id, frames)
+        return super.set(key, frame)
+    }
+
+    delete(key) {
+        /* Update _frames_by_id in addition to the base mapping by id+role. */
+        let [id, role] = key
+        let frames = this._frames_by_id.get(id)
+        if (frames) {
+            let frame = this.get(key)
+            frames = frames.filter(f => f !== frame)
+            if (frames.length) this._frames_by_id.set(id, frames)
+            else this._frames_by_id.delete(id)
+        }
+        return super.delete(key)
     }
 }
 
