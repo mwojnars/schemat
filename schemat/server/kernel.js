@@ -276,36 +276,6 @@ export class Kernel {
         this._print(`process closed`)
     }
 
-    // async _start_stop() {
-    //     /* In each iteration of the main loop, start/stop the agents that should (or should not) be running now.
-    //        Update `this.frames` accordingly.
-    //      */
-    //     let current_agents = Array.from(this.frames.values(), frame => frame.agent)     // currently running agents
-    //     let desired_agents = this.is_master() ? [this.node] : [this.node, ...this.agents_running]  // agents that should be running when this method completes; master process runs the node agent and nothing else
-    //
-    //     if (schemat.terminating) {
-    //         desired_agents = []                                 // enforce clean shutdown by stopping all agents
-    //         this._print(`closing and stopping all agents`)
-    //     }
-    //
-    //     // sets of IDs for quick lookup
-    //     let current_ids = current_agents.map(agent => agent.id)
-    //     let desired_ids = desired_agents.map(agent => agent.id)
-    //     let current_set = new Set(current_ids)
-    //     let desired_set = new Set(desired_ids)
-    //
-    //     let to_stop = current_ids.filter(id => !desired_set.has(id))        // find agents to stop (currently running but not desired)
-    //     let to_start = desired_ids.filter(id => !current_set.has(id))       // find agents to start (desired but not running)
-    //     let to_refresh = current_ids.filter(id => desired_set.has(id))      // find agents to refresh (running and still desired)
-    //
-    //     // start/refresh agents ...
-    //     for (let id of to_start) await this.start_agent(id)
-    //     for (let id of to_refresh) await this.refresh_agent(id)
-    //
-    //     // stop agents; use reverse order as some agents may depend on previous ones
-    //     for (let id of to_stop.reverse()) await this.stop_agent(id)
-    // }
-
     async start_agent(obj, {role, options} = {}) {
         let agent = schemat.as_object(obj)
         role ??= '$agent'                       // "$agent" role is the default for running agents
