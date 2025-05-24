@@ -450,6 +450,8 @@
       "@": schemat/types/type.js:ARRAY
     "@": schemat:Catalog
   class: schemat/server/cluster.js:Cluster
+  __prototype:
+    "@": 29
   __category:
     "@": 1
 - id: 11

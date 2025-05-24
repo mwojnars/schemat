@@ -1,5 +1,5 @@
 import {assert} from "../common/utils.js";
-import {WebObject} from "../core/object.js";
+import {Agent} from "./agent.js";
 
 
 function _agent_role(agent, role = null) {
@@ -14,7 +14,7 @@ function _agent_role(agent, role = null) {
 // Cluster extends System
 // Application extends System
 
-export class Cluster extends WebObject {
+export class Cluster extends Agent {
 
     async __init__()  {
         if (SERVER) {
