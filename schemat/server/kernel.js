@@ -61,7 +61,11 @@ export class FramesMap extends CustomMap {
         role ??= schemat.GENERIC_ROLE
         return `${id}_${role}`          // 1234_$agent
     }
-    // reverse(key)     { let [id, role] = key.split('_'); return [Number(id), role] }
+
+    reverse(key) {
+        let [id, role] = key.split('_')
+        return [Number(id), role]
+    }
 
     set(key, frame) {
         /* Update _frames_by_id in addition to the base mapping by id+role. */
