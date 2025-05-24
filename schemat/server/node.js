@@ -611,6 +611,8 @@ export class Node extends Agent {
     async '$master.start_agent'(state, agent, {role, options, worker, num_workers = 1} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$master.start_agent() agent=${agent} role=${role}`)
+        // this._print(`$master.start_agent() agents:`, state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
+
         agent = schemat.as_object(agent)
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
@@ -621,7 +623,7 @@ export class Node extends Agent {
         let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(state)
         workers = workers.slice(0, num_workers)
 
-        if (role === schemat.GENERIC_ROLE) role = undefined     // don't store the default role name "$agent"
+        if (role === schemat.GENERIC_ROLE) role = undefined     // the default role "$agent" is passed implicitly
         
         for (let worker of workers) {
             assert(worker >= 1 && worker <= this.num_workers)
@@ -640,6 +642,8 @@ export class Node extends Agent {
     async '$master.stop_agent'(state, agent, {role, worker} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$master.stop_agent() agent=${agent} role=${role}`)
+        // this._print(`$master.stop_agent() agents:`, state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
+
         agent = schemat.as_object(agent)
 
         let stop = state.agents.filter(status => status.agent.is(agent))
