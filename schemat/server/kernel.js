@@ -291,8 +291,8 @@ export class Kernel {
             this.node = new_node
 
             if (schemat.terminating) {                              // if closing, let the currently running agents gently stop
-                for (let {agent, state} of [...this.frames.values()].reverse())
-                    await this.stop_agent(agent.id, state.__role)
+                for (let [id, role] of [...this.frames.keys()].reverse())
+                    await this.stop_agent(id, role)
                 break
             }
 
