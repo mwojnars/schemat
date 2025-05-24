@@ -293,7 +293,7 @@ export class Kernel {
             if (schemat.terminating) {                              // if closing, let the currently running agents gently stop
                 for (let [id, role] of [...this.frames.keys()].reverse())
                     await this.stop_agent(id, role)
-                break
+                if (this.frames.size) continue; else break
             }
 
             for (let frame of this.frames.values())                 // refresh/reload agents if needed
