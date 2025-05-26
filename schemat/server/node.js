@@ -162,9 +162,11 @@ export class Node extends Agent {
     }
 
     async __init__() {
-        // let cluster_id = schemat.cluster?.id
-        // if (SERVER) await Promise.all(this.agents.map(({agent}) => agent.id !== cluster_id && agent.load()))
-        if (SERVER) await Promise.all(this.agents.map(({agent}) => agent.id !== 1025 && agent.load()))
+        // // preload the agents marked with boot=true, they're needed during node bootstrap and must be loaded from the boot DB when it's still available
+        // if (SERVER) await Promise.all(this.agents.map(({boot, agent}) => boot && agent.load()))
+
+        // if (SERVER) await Promise.all(this.agents.map(({agent}) => agent.id !== schemat.cluster_id && agent.load()))
+        if (SERVER) await Promise.all(this.agents.map(({agent}) => agent.id !== 1025 && agent.id !== 1014 && agent.load()))
     }
 
 
@@ -339,6 +341,7 @@ export class Node extends Agent {
         /* RPC message format: [type, agent_id, method, args, opts]. Added here in `opts`: app (application ID), tx (transaction info). */
         let tx = schemat.tx?.dump()
         let app = schemat.app_id
+        if (opts.role === schemat.GENERIC_ROLE) delete opts.role        // default role is passed implicitly
         opts = {...opts, app, tx}
         return ['RPC', agent_id, method, JSONx.encode(args), opts]
     }
