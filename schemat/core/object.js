@@ -921,7 +921,7 @@ export class WebObject {
         if (T.isPOJO(data) || data instanceof Catalog) this.__data.updateAll(data)
     }
 
-    __setup__({ring, block}) {}
+    __setup__(config, {ring, block}) {}
         /* One-time setup of the object, launched on server when the object is being inserted to a data `block`
            and already has an ID assigned (this.id is present). Typically, this method creates related sub-objects
            and creates links to/from itself and these objects - creating such objects on client is in many cases

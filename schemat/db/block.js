@@ -278,7 +278,7 @@ export class DataBlock extends Block {
             let obj = objects[pos]
             obj.id ??= this._assign_id(state)
 
-            let setup = obj.__setup__({ring: this.ring, block: this})
+            let setup = obj.__setup__({}, {ring: this.ring, block: this})
             if (setup instanceof Promise) await setup
 
             // find all unseen newborn references and add them to the queue
