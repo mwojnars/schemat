@@ -61,4 +61,8 @@ export class Cluster extends Agent {
     find_nodes(agent, role) {
         /* Array of all nodes where `agent` is currently deployed. */
     }
+
+    async '$leader.create_node'(state, settings = {}) {
+        /* Create a new Node object and add it to this cluster. */
+    }
 }
