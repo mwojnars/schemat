@@ -128,7 +128,7 @@ export class ServerSchemat extends Schemat {
         await this.app?.reload()            // repeated app reload is needed for app.global initialization which fails on first attempt during bootstrap
         // if (this.app) await this.reload(this.app_id, true)
 
-        if (auto) this._boot_done()
+        if (auto) this._boot_done()         // remove _boot_db so the target DB is being used from now on
 
         // print(`boot() system:`, this.system.__label)
         // print(`boot() this.db:`, this.db.__label)
