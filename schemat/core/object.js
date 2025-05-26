@@ -550,6 +550,7 @@ export class WebObject {
     async _load({sealed = true, activate = true, ...opts} = {}) {
         /* Load this.__data from DB if missing. Initialize this object: set up the class and prototypes, run __init__() etc. */
 
+        // this._print(`_load() ...`)
         schemat.before_data_loading(this)
         let data_loaded = false
 
