@@ -122,13 +122,19 @@ class Intercept {
         return new Proxy({}, {
             get(target, name) {
                 if (typeof name !== 'string') return
-                if (role === schemat.GENERIC_ROLE) role = undefined     // "$agent" as a requested role matches all role names at the target
+                role ??= schemat.GENERIC_ROLE
+                // if (role === schemat.GENERIC_ROLE) role = undefined     // "$agent" as a requested role matches all role names at the target
+
+                let frame = schemat.get_frame(id, role)
 
                 // obj.$ROLE.state is a special field that gives access to the locally running agent's state (if present)
-                if (name === 'state') return schemat.get_frame(id, role)?.state
+                if (name === 'state') return frame?.state
+
+                // if the target object is deployed here on the current process, call this object directly without any remote RPC
+                if (frame) return (...args) => frame.call_agent(`${role}.${name}`, args)
 
                 // function wrapper for an RPC call...
-                assert(schemat.node, `the node must be initialized before remote agents are called`)
+                assert(schemat.node, `the node must be initialized before remote agent [${id}].${role}.${name}() is called`)
                 return (...args) => schemat.node.rpc_send(id, name, args, {role})
             }
         })
