@@ -309,6 +309,10 @@
         "@": 1045
     - worker: 1
       agent:
+        "@": 1025
+      role: "$leader"
+    - worker: 1
+      agent:
         "@": 1023
     - worker: 2
       agent:

@@ -162,7 +162,9 @@ export class Node extends Agent {
     }
 
     async __init__() {
-        if (SERVER) await Promise.all(this.agents.map(status => status.agent.load()))
+        // let cluster_id = schemat.cluster?.id
+        // if (SERVER) await Promise.all(this.agents.map(({agent}) => agent.id !== cluster_id && agent.load()))
+        if (SERVER) await Promise.all(this.agents.map(({agent}) => agent.id !== 1025 && agent.load()))
     }
 
 

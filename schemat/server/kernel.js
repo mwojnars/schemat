@@ -315,6 +315,7 @@ export class Kernel {
 
     async start_agent(obj, role, options) {
         let agent = schemat.as_object(obj)
+        this._print(`starting agent ${agent} ...`)
         role ??= schemat.GENERIC_ROLE           // "$agent" role is the default for running agents
 
         if (this.frames.has([agent.id, role])) throw new Error(`agent ${agent} in role ${role} is already running`)
@@ -323,7 +324,6 @@ export class Kernel {
         // print(`_start_agent():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
         assert(agent.is_loaded())
         assert(agent instanceof Agent)
-        this._print(`starting agent ${agent} ...`)
 
         let frame = new Frame(agent)
         this.frames.set([agent.id, role], frame)    // the frame must be assigned to `frames` already before __start__() is executed
