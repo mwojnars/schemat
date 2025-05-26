@@ -60,6 +60,7 @@ export class ServerSchemat extends Schemat {
 
     kernel          // Kernel that runs the main Schemat loop of the current master/worker process
     parent          // parent ServerSchemat that created this one via .fork() below
+    cluster_id      // ID of the active Cluster object
 
     _boot_db        // boot Database, its presence indicates the boot phase is still going on; regular server-side DB is taken from app.database or cluster.database
     _cluster        // Cluster object of the previous generation, always present but not always the most recent one (Registry may hold a more recent version)
@@ -114,7 +115,7 @@ export class ServerSchemat extends Schemat {
         await this._init_classpath()
         this._boot_db = await boot_db?.() || this.parent.db     // bootstrap DB, created anew or taken from parent; the ultimate DB is opened later: on the first access to this.db
 
-        let cluster_id = this.config.cluster
+        let cluster_id = this.cluster_id = this.config.cluster
         if (cluster_id) {
             print(`loading cluster ${cluster_id} ...`)
             this._essential.push(cluster_id)
@@ -198,7 +199,7 @@ export class ServerSchemat extends Schemat {
 
         this.registry.erase()
 
-        if (this._cluster) await this.reload(this._cluster.id, true)
+        if (this._cluster) await this.reload(this.cluster_id, true)
         if (this._app) await this.reload(this._app.id, true)
 
         // print(`_erase_registry() app:`, this.app?.__label, this.app?.__hash)
