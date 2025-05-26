@@ -413,6 +413,8 @@ export class WebObject {
     is_category()   { return false }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
+    if_loaded()     { return this.is_loaded() && this }     // return self if already loaded, false/undefined otherwise
+
     assert_loaded() { if (!this.is_loaded()) throw new NotLoaded(this) }
     assert_active() { if (!this.is_loaded() && !this.is_newborn()) throw new NotLoaded(this) }
 
