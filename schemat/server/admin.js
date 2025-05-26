@@ -1,4 +1,4 @@
-import {assert, print} from "../common/utils.js";
+import {assert, print, sleep} from "../common/utils.js";
 import {ObjectNotFound} from "../common/errors.js";
 import {WebObject} from "../core/object.js";
 import {Struct} from "../core/catalog.js";
@@ -21,6 +21,7 @@ export class AdminProcess {
         assert(this[method], `unknown command: ${cmd}`)
 
         await boot_schemat(opts, async () => {
+            await schemat._boot_done()
             await this[method](opts)
             await schemat.kernel.stop()
         })
