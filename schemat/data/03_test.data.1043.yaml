@@ -26,12 +26,16 @@
         "@": 1045
     - worker: 1
       agent:
+        "@": 1014
+      role: "$leader"
+    - worker: 1
+      agent:
         "@": 1023
     - worker: 2
       agent:
         "@": 1023
-  tcp_port: 5828
-#  tcp_port: 5820
+#  tcp_port: 5828
+  tcp_port: 5820
   __category:
     "@": 21
 - id: 1036
@@ -60,7 +64,7 @@
     - worker: 2
       agent:
         "@": 1023
-  tcp_port: 5829
-#  tcp_port: 5821
+#  tcp_port: 5829
+  tcp_port: 5821
   __category:
     "@": 21
