@@ -1,3 +1,5 @@
+# NOT USED right now because cluster configuration CANNOT be overridden in a non-bootstrap ring "ring-test".
+
 # ID of the Cluster that this node is, or should be, a part of
 cluster: 1014
 
