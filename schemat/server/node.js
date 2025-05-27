@@ -162,11 +162,8 @@ export class Node extends Agent {
     }
 
     async __init__() {
-        // // preload the agents marked with boot=true, they're needed during node bootstrap and must be loaded from the boot DB when it's still available
-        // if (SERVER) await Promise.all(this.agents.map(({boot, agent}) => boot && agent.load()))
-
-        // if (SERVER) await Promise.all(this.agents.map(({agent}) => agent.id !== schemat.cluster_id && agent.load()))
-        if (SERVER) await Promise.all(this.agents.map(({agent}) => agent.id !== 1025 && agent.id !== 1014 && agent.load()))
+        if (SERVER) await Promise.all(this.agents.map(({agent}) => agent.id !== schemat.cluster_id && agent.load()))    // do NOT preload a cluster object to avoid cyclic dependency
+        // if (SERVER) await Promise.all(this.agents.map(({boot, agent}) => boot && agent.load()))     // preload the agents marked with boot=true, they're needed during node bootstrap and must be loaded from the boot DB when it's still available
     }
 
 
