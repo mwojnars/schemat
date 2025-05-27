@@ -428,8 +428,9 @@ export class WebObject {
         /* True if `this` and `other` object have the same ID; they still can be two different instances
            AND may contain different data (!), for example, if one of them contains more recent updates than the other.
            If `other` is undefined or any of the objects has a missing ID, they are considered NOT equivalent.
+           Also, `other` can be an ID rather than an object.
          */
-        return this.id !== undefined && this.id === other?.id
+        return this.id !== undefined && ((typeof other === 'object' && this.id === other?.id) || this.id === other)
     }
 
 
