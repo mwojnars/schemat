@@ -75,7 +75,7 @@ export class Ring extends WebObject {
         this.min_id_sharded = min_id_sharded
     }
 
-    async __setup__({}) {
+    async __setup__() {
         /* Create `data_sequence`. Re-create all indexes from the lower ring. */
 
         let base = await this.base_ring?.load()

@@ -310,7 +310,7 @@
     - worker: 1
       agent:
         "@": 1025
-      role: "$leader"
+      role: $leader
     - worker: 1
       agent:
         "@": 1023
@@ -449,6 +449,7 @@
     "@": 33
 - id: 1039
   name: db-test
+  info: NOT USED right now
   top_ring:
     "@": 1040
   __category:
