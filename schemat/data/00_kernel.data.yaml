@@ -353,6 +353,13 @@
   schema:
     local_path:
       "@": schemat/types/type.js:STRING
+    paths_allowed:
+      info: Space-separated list of subpaths in this local directory that are allowed
+        as a path prefix of the requested file. NO leading slash. If the request
+        contains a different prefix (none of those), 'URL not found' error is
+        returned. If this property is missing (default), every subpath is
+        allowed unless excluded by other rules.
+      "@": schemat/types/type.js:STRING
     extensions_allowed:
       default: html htm xml css postcss pcss js ejs jpg jpeg png gif bmp svg mp3 mp4
         wav pdf webp ico ttf woff woff2
