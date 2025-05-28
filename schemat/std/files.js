@@ -116,7 +116,7 @@ export class LocalDirectory extends Directory {
 
     local_path
     extensions_allowed
-    paths_forbidden
+    words_forbidden
     paths_allowed
 
     async __init__() {
@@ -142,7 +142,7 @@ export class LocalDirectory extends Directory {
             if (!this._ext_allowed.includes(ext)) return null
 
             // check if the path possibly contains a forbidden substring
-            if (this._paths_forbid.some(s => file_path.includes(s))) {
+            if (this._words_forbidden.some(s => file_path.includes(s))) {
                 print(`LocalDirectory._read_file(), forbidden path requested: '${file_path}'`)
                 return null
             }
@@ -152,7 +152,7 @@ export class LocalDirectory extends Directory {
     }
 
     get _ext_allowed()      { return this.extensions_allowed.toLowerCase().split(/[ ,;:]+/) }
-    get _paths_forbid()     { return this.paths_forbidden?.split(/\s+/) || [] }
+    get _words_forbidden()  { return this.words_forbidden?.split(/\s+/) || [] }
     get _paths_allowed()    { return this.paths_allowed?.split(/\s+/) || [] }
 
     async _read_file(path, res) {

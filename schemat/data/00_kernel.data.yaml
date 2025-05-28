@@ -361,7 +361,7 @@
         files that have any other extension are treated as invalid and result in
         'URL not found' error.
       "@": schemat/types/type.js:STRING
-    paths_forbidden:
+    words_forbidden:
       default: /_ /.git /.svn/
       info: Space-separated list of substrings that must NOT occur in the target file
         path after its translation from the URL. If any of these substrings is
