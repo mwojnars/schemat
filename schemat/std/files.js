@@ -115,6 +115,7 @@ export class LocalDirectory extends Directory {
     /* File directory on the local filesystem containing files and subfolders (no objects). */
 
     local_path
+    paths_allowed
     extensions_allowed
     words_forbidden
     files_allowed
