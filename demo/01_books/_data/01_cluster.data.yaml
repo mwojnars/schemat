@@ -189,8 +189,12 @@
     "@": 22
 - id: 1014
   name: test-cluster
-  info: Cluster configuration for unit tests. Extends the database with
-    [test-ring] to override some system configuration like TCP port numbers.
+  info: >-
+    NOT USED right now because cluster configuration CANNOT be overridden in a
+    non-bootstrap ring "ring-test".
+
+
+    Cluster configuration for unit tests. Extends the database with [test-ring] to override some system configuration like TCP port numbers.
   database:
     "@": 1039
   __prototype:
@@ -271,6 +275,7 @@
 - id: 1020
   name: /$/local
   local_path: .
+  paths_allowed: schemat/ app/ demo/ node_modules/
   __container:
     "@": 1019
   __category:
@@ -319,6 +324,10 @@
     - worker: 2
       agent:
         "@": 1045
+    - worker: 1
+      agent:
+        "@": 1025
+      role: $leader
     - worker: 1
       agent:
         "@": 1023
