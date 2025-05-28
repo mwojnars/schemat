@@ -136,22 +136,35 @@ export class LocalDirectory extends Directory {
         if (!file_path.startsWith(root)) return null
 
         let subpath = file_path.slice(root.length + 1)              // truncate 'root' from 'file_path'
-        if (!this._files_allowed.includes(subpath)) {               // only if the path is NOT explicitly allowed, there's need for further checks
-
-            // check if the file extension of `path` is in the list of allowed extensions
-            let ext = path.split('.').pop().toLowerCase()
-            if (!this._ext_allowed.includes(ext)) return null
-
-            // check if the path possibly contains a forbidden substring
-            if (this._words_forbidden.some(s => file_path.includes(s))) {
-                print(`LocalDirectory._read_file(), forbidden path requested: '${file_path}'`)
-                return null
-            }
-        }
+        if (!this._is_allowed(subpath)) return null
 
         return (request) => this._read_file(file_path, request.res)
     }
 
+    _is_allowed(subpath) {
+        // only if the path is NOT explicitly allowed, there's a need for further checks
+        if (this._files_allowed.includes(subpath)) return true
+
+        // check if the path prefix is allowed
+        if (this._paths_allowed) {
+            let prefix_allowed = this._paths_allowed.some(prefix => subpath.startsWith(prefix))
+            if (!prefix_allowed) return false
+        }
+
+        // check if the file extension of `path` is in the list of allowed extensions
+        let ext = subpath.split('.').pop().toLowerCase()
+        if (!this._ext_allowed.includes(ext)) return false
+
+        // check if the path possibly contains a forbidden substring
+        if (this._words_forbidden.some(s => subpath.includes(s))) {
+            print(`LocalDirectory, forbidden substring in path: '${subpath}'`)
+            return false
+        }
+
+        return true
+    }
+
+    get _paths_allowed()    { return this.paths_allowed?.split(/\s+/) }
     get _ext_allowed()      { return this.extensions_allowed.toLowerCase().split(/[ ,;:]+/) }
     get _words_forbidden()  { return this.words_forbidden?.split(/\s+/) || [] }
     get _files_allowed()    { return this.files_allowed?.split(/\s+/) || [] }

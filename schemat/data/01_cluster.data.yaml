@@ -264,7 +264,7 @@
 - id: 1020
   name: /$/local
   local_path: .
-  paths_allowed: schemat/ app/ demo/
+  paths_allowed: schemat/ app/ demo/ node_modules/
   __container:
     "@": 1019
   __category:
