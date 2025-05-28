@@ -95,11 +95,11 @@ export class ServerSchemat extends Schemat {
         assert(globalThis._contexts.get(this.app_id) === undefined, `ServerSchemat context for app_id=${this.app_id} is already registered`)
         globalThis._contexts.set(this.app_id, this)
 
-        this.ROOT_DIRECTORY = process.cwd()                 // initialize ROOT_DIRECTORY from the current working dir
-        // this.SCHEMAT_DIRECTORY = this.ROOT_DIRECTORY + '/schemat'
+        this.PATH_WORKING = process.cwd()               // initialize PATH_WORKING from the current working dir
+        // this.PATH_SCHEMAT = this.PATH_WORKING + '/schemat'
 
         // check that it points to the installation's root folder and contains `schemat` subfolder with `config.yaml` file in it
-        assert(fs.existsSync(this.ROOT_DIRECTORY + '/schemat/config.yaml'), 'The current working directory does not contain ./schemat/config.yaml file')
+        assert(fs.existsSync(this.PATH_WORKING + '/schemat/config.yaml'), 'The current working directory does not contain ./schemat/config.yaml file')
 
         this._transaction = new AsyncLocalStorage()
         // this.loader = new Loader(import.meta.url)

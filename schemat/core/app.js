@@ -84,7 +84,7 @@ export class Application extends WebObject {
     get_file_url(path) {
         /* Convert a local file path to its corresponding URL-path (href=...). Typically used for loading assets on the client. */
         if (path.startsWith('file://')) path = path.slice(7)                // trim leading 'file://' if present
-        let root = schemat.ROOT_DIRECTORY
+        let root = schemat.PATH_WORKING
         if (!path.startsWith(root + '/')) throw new Error(`path is not accessible via URL: ${path}`)
         return path.replace(root, Application.URL_LOCAL)
     }
@@ -103,7 +103,7 @@ export class Application extends WebObject {
          */
         // print(`Application.import():  ${path}`)
         let [file_path, symbol] = splitLast(path || '', ':')
-        let import_path = CLIENT ? this.get_module_url(file_path) : schemat.ROOT_DIRECTORY + '/' + file_path
+        let import_path = CLIENT ? this.get_module_url(file_path) : schemat.PATH_WORKING + '/' + file_path
 
         // print(`...importing:  ${import_path}`)
         let module = this._modules_cache.get(import_path)           // first, try taking the module from the cache - returns immediately
