@@ -117,7 +117,7 @@ export class LocalDirectory extends Directory {
     local_path
     extensions_allowed
     words_forbidden
-    paths_allowed
+    files_allowed
 
     async __init__() {
         if (SERVER) {
@@ -135,7 +135,7 @@ export class LocalDirectory extends Directory {
         if (!file_path.startsWith(root)) return null
 
         let subpath = file_path.slice(root.length + 1)              // truncate 'root' from 'file_path'
-        if (!this._paths_allowed.includes(subpath)) {               // only if the path is NOT explicitly allowed, there's need for further checks
+        if (!this._files_allowed.includes(subpath)) {               // only if the path is NOT explicitly allowed, there's need for further checks
 
             // check if the file extension of `path` is in the list of allowed extensions
             let ext = path.split('.').pop().toLowerCase()
@@ -153,7 +153,7 @@ export class LocalDirectory extends Directory {
 
     get _ext_allowed()      { return this.extensions_allowed.toLowerCase().split(/[ ,;:]+/) }
     get _words_forbidden()  { return this.words_forbidden?.split(/\s+/) || [] }
-    get _paths_allowed()    { return this.paths_allowed?.split(/\s+/) || [] }
+    get _files_allowed()    { return this.files_allowed?.split(/\s+/) || [] }
 
     async _read_file(path, res) {
         // file transforms to be applied

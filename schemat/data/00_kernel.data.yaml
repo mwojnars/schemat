@@ -368,7 +368,7 @@
         present, 'URL not found' error is returned regardless of the target file
         extension.
       "@": schemat/types/type.js:STRING
-    paths_allowed:
+    files_allowed:
       default: robots.txt ads.txt security.txt humans.txt manifest.json
       info: Explicit list of file paths, space-separated, that are allowed to be
         served even if excluded by other rules (e.g., due to missing or
