@@ -275,7 +275,7 @@ export class Schemat {
         if (!id) return
         let obj = this.registry.get_object(id)
         if (obj?.is_loaded()) return obj
-        // if (schedule_load) this.get_loaded(id)     // load content in background for future access; intentionally not awaited
+        if (schedule_load) this.get_loaded(id)     // load content in background for future access; intentionally not awaited
     }
 
     async get_mutable(...objects_or_ids) {
