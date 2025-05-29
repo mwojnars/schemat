@@ -116,7 +116,7 @@ export class ServerSchemat extends Schemat {
         this._boot_db = await boot_db?.() || this.parent.db     // bootstrap DB, created anew or taken from parent; the ultimate DB is opened later: on the first access to this.db
 
         let cluster_id = this.cluster_id = this.config.cluster
-        if (cluster_id) {
+        if (cluster_id && !this.app_id) {
             print(`loading cluster ${cluster_id} ...`)
             this._essential.push(cluster_id)
             this._cluster = await this.get_loaded(cluster_id)
