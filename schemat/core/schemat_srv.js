@@ -63,14 +63,14 @@ export class ServerSchemat extends Schemat {
     cluster_id      // ID of the active Cluster object
 
     _boot_db        // boot Database, its presence indicates the boot phase is still going on; regular server-side DB is taken from app.database or cluster.database
-    _cluster        // Cluster object of the previous generation, always present but not always the most recent one (Registry may hold a more recent version)
+    _cluster        // Cluster object of the previous generation, remembered here to keep the .cluster() getter operational during complete cache erasure
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
     // get db()     { return this.system?.database || this._boot_db }
     get db()     { return this._boot_db || this.system?.database }
     get tx()     { return this._transaction.getStore() }
     get node()   { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
-    get cluster(){ return this.get_if_loaded(this._cluster?.id) || this._cluster }
+    get cluster(){ return this._cluster = this.get_if_loaded(this._cluster?.id) || this._cluster }
 
     // get app()    {
     //     let id = this.app_id
@@ -195,14 +195,14 @@ export class ServerSchemat extends Schemat {
     }
 
     async _erase_registry() {
-        /* Once in a while, clear the object cache entirely (except `app` and `root category`!) to cut links between subsequent
-           generations of instances and allow efficient garbage-collection in presence of cyclic links between different web objects.
+        /* Once in a while, clear the object cache entirely to cut links between subsequent generations of instances
+           and allow efficient garbage-collection in the presence of cyclic links between different web objects.
          */
         print(`Schemat._erase_registry(), ${this.registry.objects.size} objects ...`)
         this._cluster = this.cluster
         this._app = this.app
 
-        assert(this._cluster.is_loaded() && (!this._app || this._app.is_loaded()))
+        assert((!this._cluster || this._cluster.is_loaded()) && (!this._app || this._app.is_loaded()))
 
         this.registry.erase()
 

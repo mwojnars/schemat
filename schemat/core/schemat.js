@@ -167,7 +167,7 @@ export class Schemat {
 
         this._essential.push(app_id)
 
-        await this.reload(app_id, true)
+        this._app = await this.reload(app_id, true)
         assert(this.app?.is_loaded())
     }
 
@@ -274,7 +274,9 @@ export class Schemat {
         if (!id) return
         let obj = this.registry.get_object(id)
         if (obj?.is_loaded()) return obj
-        if (schedule_load) this.get_loaded(id)     // load content in background for future access; intentionally not awaited
+
+        // reloading below causes a crash after several minutes of execution: "TypeError: this.db.select is not a function"
+        // if (schedule_load) this.reload(id, false)       // load content in background for future access; intentionally not awaited
     }
 
     async get_mutable(...objects_or_ids) {
