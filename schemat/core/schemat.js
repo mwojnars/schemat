@@ -95,6 +95,7 @@ export class Schemat {
 
     get root_category() { return this.get_object(ROOT_ID) }
     get app()           { return this.get_if_loaded(this.app_id) || this._app }
+    // get app()           { return this.app_id && (this._app = this.get_if_loaded(this.app_id) || this._app) }
     get db()            { return this.app?.database }           // a stub when on client, fully loaded when on server
     get global()        { return this.app?._global }
     get system()        { return this.app || this.cluster }     // user mode | kernel mode
@@ -156,6 +157,15 @@ export class Schemat {
         assert(T.isNumber(app_id), `Invalid application ID: ${app_id}`)
 
         this.app_id = app_id
+
+        // if (SERVER && this.parent) {
+        //     this._app = await _schemat.run(this.parent, () => this.parent.reload(app_id, true))
+        // }
+        // else {
+        //     this._essential.push(app_id)
+        //     this._app = await this.reload(app_id, true)
+        // }
+
         this._essential.push(app_id)
 
         await this.reload(app_id, true)
@@ -225,6 +235,10 @@ export class Schemat {
         if (path.startsWith('schemat:') || !this.app?.is_loaded())
             return this.get_builtin(path)
         if (path[0] === '/') return this.app.import_global(path)
+        // if (!this.app.import_local) {
+        //     print(`Schemat.import(${path}): missing app.import_local(), app_id`)
+        //     process.exit()
+        // }
         return this.app.import_local(path)
     }
 
@@ -257,9 +271,11 @@ export class Schemat {
 
     get_if_present(id) { return this.registry.get_object(id) }
 
-    get_if_loaded(id) {
+    get_if_loaded(id, schedule_load = true) {
+        if (!id) return
         let obj = this.registry.get_object(id)
         if (obj?.is_loaded()) return obj
+        // if (schedule_load) this.get_loaded(id)     // load content in background for future access; intentionally not awaited
     }
 
     async get_mutable(...objects_or_ids) {
