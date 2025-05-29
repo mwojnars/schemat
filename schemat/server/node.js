@@ -135,7 +135,7 @@ export class Node extends Agent {
        The node's own agent is started implicitly on itself.
      */
 
-    agents
+    agents                  // array of AgentStatus objects of the form {worker, agent, role, options, ...}; AgentStatus class is not yet defined, so these are plain objects
     agent_refresh_interval
     data_directory
     http_host

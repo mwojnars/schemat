@@ -99,7 +99,7 @@ export class FramesMap extends CustomMap {
 }
 
 class Frame {
-    /* Status of a running agent + its internal variables (state). */
+    /* State (internal variables) and status of a running agent. */
     agent               // web object that created this frame, replaced with a new reference on every refresh
     state               // AgentState object wrapped around or returned by agent.__start__()
 
