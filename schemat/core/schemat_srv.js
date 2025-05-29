@@ -198,7 +198,7 @@ export class ServerSchemat extends Schemat {
         /* Once in a while, clear the object cache entirely to cut links between subsequent generations of instances
            and allow efficient garbage-collection in the presence of cyclic links between different web objects.
          */
-        print(`Schemat._erase_registry(), ${this.registry.objects.size} objects ...`)
+        this.node._print(`Schemat._erase_registry() app=${this.app}, ${this.registry.objects.size} objects ...`)
         this._cluster = this.cluster
         this._app = this.app
 
