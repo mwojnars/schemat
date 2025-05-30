@@ -167,9 +167,7 @@ export class Node extends Agent {
         /* Absolute path to this node's local folder. */
         assert(schemat.cluster)
         let parts = [schemat.PATH_CLUSTER, schemat.cluster.file_tag, `node.${this.id}`]
-        let path = parts.filter(p => p).join('/')
-        this._print(`Node.file_path():`, path)
-        return path
+        return parts.filter(p => p).join('/')
     }
 
 
