@@ -106,8 +106,8 @@ export class ServerSchemat extends Schemat {
         this.PATH_CLUSTER = this.PATH_WORKING + '/cluster'
         // this.PATH_SCHEMAT = this.PATH_WORKING + '/schemat'
 
-        // check that PATH_WORKING points to the installation's root folder and contains `schemat` subfolder with `config.yaml` file in it
-        assert(fs.existsSync(this.PATH_WORKING + '/schemat/config.yaml'), 'The current working directory does not contain ./schemat/config.yaml file')
+        // check that PATH_WORKING points to the Schemat root folder
+        assert(fs.existsSync(this.PATH_WORKING + '/schemat/core/schemat.js'), 'working directory does not contain the Schemat installation with ./schemat source tree')
 
         this._transaction = new AsyncLocalStorage()
         // this.loader = new Loader(import.meta.url)
