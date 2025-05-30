@@ -346,7 +346,7 @@
 - id: 1026
   sequence:
     "@": 1013
-  filename: ./schemat/data/00_kernel.index.jl
+  filename: ./schemat/data/00_kernel.idx-category.jl
   format: index-jl
   __category:
     "@": 18
