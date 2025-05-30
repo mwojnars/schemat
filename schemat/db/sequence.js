@@ -161,7 +161,7 @@ export class DataSequence extends Sequence {
 
     __new__(ring, operator, {boot_file} = {}) {
         super.__new__(ring, operator)
-        if (boot_file) this.blocks = [BootDataBlock._draft(this, {filename: boot_file})]
+        if (boot_file) this.blocks = [BootDataBlock._draft(this, {file_path: boot_file})]
     }
 
     async __setup__() {

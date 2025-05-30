@@ -81,7 +81,7 @@ export class Block extends Agent {
         let format = this.format
         if (!format) {
             // infer the storage type from the filename extension
-            let extension = this.filename.split('.').pop()
+            let extension = this.file_path.split('.').pop()
             if (extension === 'yaml') format = 'data-yaml'
             if (extension === 'jl')   format = 'index-jl'
         }
@@ -89,7 +89,7 @@ export class Block extends Agent {
         if      (format === 'data-yaml') return YamlDataStorage
         else if (format === 'index-jl')  return JsonIndexStorage
         else
-            throw new Error(`unsupported storage type '${format}' in [${this.id}] for ${this.filename}`)
+            throw new Error(`unsupported storage type '${format}' in [${this.id}] for ${this.file_path}`)
     }
 
     encode_key(key) { return this.sequence.encode_key(key) }
@@ -101,7 +101,6 @@ export class Block extends Agent {
     async __start__() {
         let storage_class = this._detect_storage_class()
         let storage = new storage_class(this.file_path, this)
-        // let storage = new storage_class(this.filename, this)
         let autoincrement = await this._reopen(storage)
         // return storage.open()
         return {storage, autoincrement}
@@ -475,12 +474,21 @@ export class DataBlock extends Block {
 export class BootDataBlock extends DataBlock {
 
     _storage        // Storage for this block's records
+    _file_path      // for booting, a complete file_path must be provided by the caller, so it's a variable here + custom getter below
+
+    get file_path() { return this._file_path }
+
+    __new__(sequence, props = {}) {
+        super.__new__(sequence, props)
+        this._file_path = props.file_path
+        print(`file_path:`, this._file_path)
+    }
 
     async __init__() {
         await super.__init__()
 
         let storage_class = this._detect_storage_class()
-        this._storage = new storage_class(this.filename, this)
+        this._storage = new storage_class(this._file_path, this)
         this._autoincrement = await this._reopen(this._storage) || 1
     }
 
