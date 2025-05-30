@@ -92,7 +92,7 @@ export class YamlDataStorage extends MemoryStorage {
     open() {
         /* Load records from this block's file. */
 
-        // print(`YamlDataStorage #1 opening ${this.filename}...`)
+        print(`YamlDataStorage opening ${this.filename}...`)
         // assert(this.sequence = this.block.sequence)
         // assert(this.block.sequence.ring)
 

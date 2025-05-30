@@ -67,10 +67,10 @@ export class ServerSchemat extends Schemat {
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
     // get db()     { return this.system?.database || this._boot_db }
-    get db()     { return this._boot_db || this.system?.database }
-    get tx()     { return this._transaction.getStore() }
-    get node()   { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
-    get cluster(){ return this._cluster = this.get_if_loaded(this._cluster?.id) || this._cluster }
+    get db()        { return this._boot_db || this.system?.database }
+    get tx()        { return this._transaction.getStore() }
+    get node()      { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
+    get cluster()   { return this._cluster = this.get_if_loaded(this._cluster?.id) || this._cluster }
 
     // get app()    {
     //     let id = this.app_id

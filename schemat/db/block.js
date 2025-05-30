@@ -18,9 +18,10 @@ export class Block extends Agent {
        A unit of data replication, distribution and concurrency. Records are arranged by key using byte order.
      */
 
-    sequence                // parent sequence
-    filename                // path to a local file or folder on the worker node where this block is stored
-    format                  // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
+    sequence        // parent sequence
+    format          // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
+    filename        // path to a local file or folder on the worker node where this block is stored
+    file_name       // name of the local file/directory of this block, no path; initialized during block creation, same on every node (TODO)
 
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
@@ -94,9 +95,8 @@ export class Block extends Agent {
     encode_key(key) { return this.sequence.encode_key(key) }
     decode_key(bin) { return this.sequence.decode_key(bin) }
 
-    get file_path() {
-        return `${schemat.node.file_path}/${this.file_name}`
-    }
+    // absolute path to this block's local folder/file on the current node; the upper part of the path may vary between nodes
+    get file_path() { return `${schemat.node.file_path}/${this.file_name}` }
 
     async __start__() {
         let storage_class = this._detect_storage_class()

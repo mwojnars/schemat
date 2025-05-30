@@ -137,7 +137,6 @@ export class Node extends Agent {
 
     agents                  // array of AgentStatus objects of the form {worker, agent, role, options, ...}; AgentStatus class is not yet defined, so these are plain objects
     agent_refresh_interval
-    data_directory
     http_host
     http_port
     https_port
@@ -154,12 +153,16 @@ export class Node extends Agent {
 
     _print(...args) { print(`${this.id}/#${this.worker_id}`, ...args) }
 
+
     get _tcp_port() { return schemat.config['tcp-port'] || this.tcp_port }      // FIXME: workaround
 
     get tcp_address() {
         if (!this.tcp_host || !this._tcp_port) throw new Error(`TCP host and port must be configured`)
         return `${this.tcp_host}:${this._tcp_port}`
     }
+
+    get file_path() { return `${cluster.file_tag}.${this.id}` }
+
 
     async __init__() {
         if (SERVER) await Promise.all(this.agents.map(({agent}) => agent.is_not(schemat.cluster_id) && agent.load()))   // do NOT preload a cluster object to avoid cyclic dependency
