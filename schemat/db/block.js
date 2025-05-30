@@ -481,14 +481,13 @@ export class BootDataBlock extends DataBlock {
     __new__(sequence, props = {}) {
         super.__new__(sequence, props)
         this._file_path = props.file_path
-        print(`file_path:`, this._file_path)
     }
 
     async __init__() {
         await super.__init__()
 
         let storage_class = this._detect_storage_class()
-        this._storage = new storage_class(this._file_path, this)
+        this._storage = new storage_class(this.file_path, this)
         this._autoincrement = await this._reopen(this._storage) || 1
     }
 
