@@ -94,9 +94,13 @@ export class Block extends Agent {
     encode_key(key) { return this.sequence.encode_key(key) }
     decode_key(bin) { return this.sequence.decode_key(bin) }
 
+    get file_path() {
+        return `${schemat.node.file_path}/${this.file_name}`
+    }
 
     async __start__() {
         let storage_class = this._detect_storage_class()
+        // let storage = new storage_class(this.file_path, this)
         let storage = new storage_class(this.filename, this)
         let autoincrement = await this._reopen(storage)
         // return storage.open()
