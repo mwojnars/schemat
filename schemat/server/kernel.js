@@ -328,7 +328,7 @@ export class Kernel {
         let frame = new Frame(agent)
         this.frames.set([agent.id, role], frame)    // the frame must be assigned to `frames` already before __start__() is executed
 
-        let state = await schemat.in_context(agent.__app, () => agent.__start__({role, options})) || {}
+        let state = await schemat.in_context(agent.__app, () => agent.__start__({node: this.node, role, options})) || {}
         state.__role = role
         state.__options = options
         frame.set_state(state)
