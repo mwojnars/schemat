@@ -222,7 +222,7 @@ export class Kernel {
 
         schemat.set_kernel(this)
 
-        let node_file = opts['node-file']
+        let node_file = './schemat/node.id' //opts['node-file']
         let node_id = opts.node || this._read_node_id(node_file)
         this.node = node_id ? await schemat.load(node_id) : await this._create_node(node_file)
         assert(this.node)

@@ -15,7 +15,7 @@ const WORKERS =  1 //Math.floor(os.cpus().length / 2)
 await (async function run() {
     let opts = yargs(hideBin(process.argv))
         .option('config',    {type: 'string'})
-        .option('node-file', {type: 'string', default: './schemat/node.id'})
+        // .option('node-file', {type: 'string', default: './schemat/node.id'})
         .option('workers',   {type: 'number', default: WORKERS})
         .option('host',      {type: 'string', default: HOST})
         .option('port',      {type: 'number', default: PORT})
