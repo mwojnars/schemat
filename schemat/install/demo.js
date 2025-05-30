@@ -96,14 +96,4 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
     // copy initial files to demo folder
     await create_demo(demo_id)
-
-    // // start Schemat from the demo folder, so that all modifications are saved in the demo's DB
-    // let demo_name = demo_names[demo_id]
-    // await new AdminProcess().start(null, {demo_id, config: `${root_dir}/demo/${demo_name}/config.yaml`})
-    //
-    // // drop unneeded objects
-    // let ids = [2001, 2002, 2003, 2004, 2005, 2006]    // 1005, 1006  ??
-    // for (let id of ids) await schemat.db.delete(id)
-    //
-    // schemat.set_closing()
 }
