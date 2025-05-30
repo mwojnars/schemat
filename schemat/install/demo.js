@@ -71,7 +71,7 @@ async function create_demo_01() {
     fs.writeFileSync(`${demo_dir}/_data/01_cluster.data.yaml`, db, 'utf8')
     
     // copy the index file
-    fs.copyFileSync(`${root_dir}/schemat/data/01_cluster.index.jl`, `${demo_dir}/_data/01_cluster.index.jl`)
+    fs.copyFileSync(`${root_dir}/schemat/data/01_cluster.idx-category.1033.jl`, `${demo_dir}/_data/01_cluster.idx-category.1033.jl`)
 }
 
 async function create_demo(demo_id) {
