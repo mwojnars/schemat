@@ -56,6 +56,8 @@ export class Agent extends WebObject {
     hard_restart
     file_tag        // string to be included in names of files and directories
 
+    get file_path() { throw new Error(`file_path not implemented for agent ${this}`) }
+
 
     async __install__(node) {}  // ideally, this method should be idempotent in case of failure and subsequent re-launch
     async __uninstall__(node) {}
