@@ -20,17 +20,15 @@ export class Block extends Agent {
 
     sequence        // parent sequence
     format          // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
-    filename        // path to a local file or folder on the worker node where this block is stored
     file_name       // name of the local file/directory of this block, no path; initialized during block creation, same value on every node (TODO)
 
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
     get ring()      { return this.sequence.ring }
 
-    __new__(sequence, {filename, format} = {}) {
+    __new__(sequence, {format} = {}) {
         sequence.assert_active()
         this.sequence = sequence
-        this.filename = filename
         this.format = format
         // this.__node = node
     }
@@ -40,21 +38,19 @@ export class Block extends Agent {
         if (!this.sequence.is_loaded()) await this.sequence.load()
         if (!this.ring.is_loaded()) await this.ring.load()
 
-        // this.__node ??= schemat.node
-        this.filename ??= this._create_filename()
+        this.file_name ??= this._make_file_name()
 
-        print('Block.__setup__() done, filename', this.filename)
+        print('Block.__setup__() done, file_name', this.file_name)
     }
 
-    _create_filename() {
+    _make_file_name() {
         let parts = [
             this.ring.file_tag,
             this.sequence.file_tag || this.sequence.operator?.file_tag || this.sequence.operator?.name,
             `${this.id}`,
             this._file_extension()
         ]
-        // TODO: below, replace `schemat.node` with the current node where the block is being installed/deployed
-        return joinPath(schemat.node.data_directory, parts.filter(Boolean).join('.'))
+        return parts.filter(p => p).join('.')
     }
 
     _file_extension() {
@@ -80,7 +76,7 @@ export class Block extends Agent {
     _detect_storage_class() {
         let format = this.format
         if (!format) {
-            // infer the storage type from the filename extension
+            // infer the storage type from the file extension
             let extension = this.file_path.split('.').pop()
             if (extension === 'yaml') format = 'data-yaml'
             if (extension === 'jl')   format = 'index-jl'
