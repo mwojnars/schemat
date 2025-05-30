@@ -21,7 +21,7 @@ export class Block extends Agent {
     sequence        // parent sequence
     format          // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
     filename        // path to a local file or folder on the worker node where this block is stored
-    file_name       // name of the local file/directory of this block, no path; initialized during block creation, same on every node (TODO)
+    file_name       // name of the local file/directory of this block, no path; initialized during block creation, same value on every node (TODO)
 
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 

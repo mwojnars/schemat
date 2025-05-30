@@ -935,10 +935,15 @@
         more consistent in terms of the agent's internal state.
       "@": schemat/types/type.js:BOOLEAN
     file_tag:
-      info: A string to be included as a part of file/directory names, possibly with
-        some other dot-separated elements. If missing, it is replaced with ID or
-        ignored (skipped) while building the file path. Should not contain any
-        slashes (it is not a path), nor an extension.
+      info: A string to be included in names of local files/directories related to
+        this agent. Should not contain any slashes (it is not a path), nor an
+        extension.
+      "@": schemat/types/type.js:STRING
+    file_name:
+      info: Name of the local file/directory of this agent, or a path relative to this
+        agent owner's file_path. Fixed during agent initialization, should not
+        be changed later on. Same value on every node, unlike `file_path` getter
+        which may partly depend on the local node's settings.
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   __category:
