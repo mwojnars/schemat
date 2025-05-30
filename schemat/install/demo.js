@@ -21,14 +21,14 @@ let root_dir = `${__dirname}/../..`
 let demo_names = [null, '01_books', '02_blog', '03_chatter']
 
 
-function _load_data_init() {
-    /* Read the ring-cluster data file and return its plain-text content. Drop unneeded objects. */
-
-    let path = `${root_dir}/schemat/data/01_cluster.data.1032.yaml`
-    let db = fs.readFileSync(path, 'utf8')
-    // let data = yaml.load(db)
-    return db
-}
+// function _load_data_init() {
+//     /* Read the ring-cluster data file and return its plain-text content. Drop unneeded objects. */
+//
+//     let path = `${root_dir}/schemat/data/01_cluster.data.1032.yaml`
+//     let db = fs.readFileSync(path, 'utf8')
+//     // let data = yaml.load(db)
+//     return db
+// }
 
 // function _delete_object(db, id) {
 //     /* In a yaml string `db`, delete the block that starts with:
@@ -45,9 +45,11 @@ function _load_data_init() {
 
 async function create_demo_01() {
     // load and transform the initial ring-cluster as a plain YAML file
+
     let demo_name = demo_names[1]
     let demo_dir = `${root_dir}/demo/${demo_name}`
-    let db = _load_data_init()
+    let path = `${root_dir}/schemat/data/01_cluster.data.1032.yaml`
+    let db = fs.readFileSync(path, 'utf8')
 
     // replace file paths, object names and port numbers in `db`
     db = db.replaceAll('main-app', `Bookstore (demo app)`)
