@@ -16,6 +16,6 @@ cluster: 1025
 
 bootstrap_rings:
   - name: boot_kernel
-    file: ./schemat/data/00_kernel.data.yaml                    # core categories; practically immutable (very rarely changed)
+    file: ./cluster/sample/node.1024/00_kernel.data.yaml
   - name: boot_cluster
-    file: ./schemat/data/01_cluster.data.1032.yaml
+    file: ./cluster/sample/node.1024/01_cluster.data.1032.yaml
