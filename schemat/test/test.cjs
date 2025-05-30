@@ -125,13 +125,14 @@ async function wait_for_port_release(port, retries = 10, delay_ms = 1000) {
 
 async function start_server(node, port, tcp_port, config, args = '') {
     await wait_for_port_release(port)           // wait for port to be released before starting new server
-    // let opts = `--node ${node} --port ${port} --tcp-port ${tcp_port} ${args}`
-    let opts = `--node ${node} --config ${config} --port ${port} ${args}`
+
+    let opts = `--node-dir ${node} --config ${config} --port ${port} ${args}`
+    let command = `exec node --experimental-vm-modules schemat/server/run.js ${opts}`
 
     // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
     // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
     // with all its sockets still open and another re-run of the tests will fail with "EADDRINUSE" error (!)
-    return exec(`exec node --experimental-vm-modules schemat/server/run.js ${opts}`,
+    return exec(command,
         {maxBuffer: 1024 * 1024 * 10},  // capture full output, 10MB buffer
         (error, stdout, stderr) => {
             if (error) console.error('\nSchemat server error:', error)
@@ -234,7 +235,8 @@ describe('Schemat Tests', function () {
 
     describe('Web Application', function () {
 
-        let setup = server_setup({nodes: [1024, 1036]})
+        // let setup = server_setup({nodes: [1024, 1036]})
+        let setup = server_setup({nodes: ['./cluster/sample/node.1024', './cluster/sample/node.1036']})
         let server, browser, page, messages
 
         before(async function () {({server, browser, page, messages} = setup())})
