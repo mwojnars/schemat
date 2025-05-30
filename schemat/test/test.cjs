@@ -365,7 +365,7 @@ describe('Schemat Tests', function () {
 
     describe('Demo 01', function () {
 
-        let setup = server_setup({config: './demo/01_books/config.yaml'})
+        let setup = server_setup({config: './demo/01_books/config.yaml', nodes: ['./cluster/demo-01/node.1024']})
         let server, browser, page, messages
 
         before(async function () {({server, browser, page, messages} = setup())})
