@@ -48,10 +48,11 @@ async function create_demo_01() {
     let demo_name = demo_names[1]
     let demo_dir = `${root_dir}/demo/${demo_name}`
     let db = _load_data_init()
-    
+
     // replace file paths, object names and port numbers in `db`
     db = db.replaceAll('main-app', `Bookstore (demo app)`)
     db = db.replaceAll('name: home', `name: home\n  view_endpoint: demo/01_books/home/home.js:homepage`)
+    db = db.replaceAll('file_tag: sample', 'file_tag: demo-01')
 
     db = db.replaceAll('/schemat/data/01', `/demo/${demo_name}/_data/01`)       // 01_cluster.*
     db = db.replaceAll('/schemat/data/02', `/demo/${demo_name}/_data/02`)       // 02_app.*
