@@ -22,7 +22,7 @@ let demo_names = [null, '01_books', '02_blog', '03_chatter']
 
 
 function _load_data_init() {
-    /* Read 01_cluster.data.yaml and return its plain-text content. Drop unneeded objects. */
+    /* Read the ring-cluster data file and return its plain-text content. Drop unneeded objects. */
 
     let path = `${root_dir}/schemat/data/01_cluster.data.yaml`
     let db = fs.readFileSync(path, 'utf8')
@@ -44,7 +44,7 @@ function _load_data_init() {
 /**********************************************************************************************************************/
 
 async function create_demo_01() {
-    // load initial `db` from 01_cluster.data.yaml
+    // load and transform the initial ring-cluster as a plain YAML file
     let demo_name = demo_names[1]
     let demo_dir = `${root_dir}/demo/${demo_name}`
     let db = _load_data_init()
@@ -67,7 +67,7 @@ async function create_demo_01() {
     db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 2002\n    BookCategory:\n      "@": 2001`)
     db = db.replaceAll(`entries:\n    ""`, `entries:\n    authors:\n      "@": 2002\n    books:\n      "@": 2001\n    book:\n      "@": 2015\n    ""`)
 
-    // save as 01_cluster.data.yaml in the demo folder
+    // save as a new .yaml file in the demo folder
     fs.writeFileSync(`${demo_dir}/_data/01_cluster.data.yaml`, db, 'utf8')
     
     // copy the index file
