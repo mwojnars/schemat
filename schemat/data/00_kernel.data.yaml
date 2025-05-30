@@ -673,9 +673,6 @@
     sequence:
       info: parent Sequence this block is a part of
       "@": schemat/types/type.js:REF
-    filename:
-      info: path to a local file that contains records of this block
-      "@": schemat/types/type.js:STRING
     format:
       info: "storage format: data-yaml, index-jl, rocksdb (in the future), ..."
       "@": schemat/types/type.js:STRING

@@ -30,7 +30,6 @@ export class Block extends Agent {
         sequence.assert_active()
         this.sequence = sequence
         this.format = format
-        // this.__node = node
     }
 
     async __setup__() {
