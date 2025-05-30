@@ -100,8 +100,8 @@ export class Block extends Agent {
 
     async __start__() {
         let storage_class = this._detect_storage_class()
-        // let storage = new storage_class(this.file_path, this)
-        let storage = new storage_class(this.filename, this)
+        let storage = new storage_class(this.file_path, this)
+        // let storage = new storage_class(this.filename, this)
         let autoincrement = await this._reopen(storage)
         // return storage.open()
         return {storage, autoincrement}
