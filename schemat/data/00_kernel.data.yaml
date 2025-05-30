@@ -934,6 +934,12 @@
         less efficient and cause transient unavailability of the agent, but is
         more consistent in terms of the agent's internal state.
       "@": schemat/types/type.js:BOOLEAN
+    file_tag:
+      info: A string to be included as a part of file/directory names, possibly with
+        some other dot-separated elements. If missing, it is replaced with ID or
+        ignored (skipped) while building the file path. Should not contain any
+        slashes (it is not a path), nor an extension.
+      "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   __category:
     "@": 1
