@@ -371,7 +371,7 @@
 - id: 1030
   sequence:
     "@": 1018
-  filename: ./schemat/data/02_app.idx_category.1030.jl
+  filename: ./schemat/data/02_app.idx-category.1030.jl
   format: index-jl
   __category:
     "@": 18
@@ -512,7 +512,7 @@
 - id: 1045
   sequence:
     "@": 1044
-  filename: ./schemat/data/03_test.idx_category.1045.jl
+  filename: ./schemat/data/03_test.idx-category.1045.jl
   format: index-jl
   __category:
     "@": 18

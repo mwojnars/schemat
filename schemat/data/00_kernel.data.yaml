@@ -804,7 +804,7 @@
   __container:
     "@": 1009
 - id: 23
-  name: idx_category
+  name: idx-category
   info: "Index of all objects by their category: the key is [category ID, item
     ID], no payload."
   key:
