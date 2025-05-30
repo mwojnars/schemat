@@ -103,9 +103,10 @@ export class ServerSchemat extends Schemat {
         globalThis._contexts.set(this.app_id, this)
 
         this.PATH_WORKING = process.cwd()               // initialize PATH_WORKING from the current working dir
+        this.PATH_CLUSTER = this.PATH_WORKING + '/cluster'
         // this.PATH_SCHEMAT = this.PATH_WORKING + '/schemat'
 
-        // check that it points to the installation's root folder and contains `schemat` subfolder with `config.yaml` file in it
+        // check that PATH_WORKING points to the installation's root folder and contains `schemat` subfolder with `config.yaml` file in it
         assert(fs.existsSync(this.PATH_WORKING + '/schemat/config.yaml'), 'The current working directory does not contain ./schemat/config.yaml file')
 
         this._transaction = new AsyncLocalStorage()
