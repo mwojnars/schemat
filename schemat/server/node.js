@@ -161,10 +161,13 @@ export class Node extends Agent {
         return `${this.tcp_host}:${this._tcp_port}`
     }
 
+    // TODO: file_name =
+
     get file_path() {
         /* Absolute path to this node's local folder. */
         assert(schemat.cluster)
-        return `${schemat.PATH_CLUSTER}/${schemat.cluster.file_tag}.${this.id}`
+        let parts = [schemat.PATH_CLUSTER, schemat.cluster.file_tag, `node.${this.id}`]
+        return parts.filter(p => p).join('/')
     }
 
 
