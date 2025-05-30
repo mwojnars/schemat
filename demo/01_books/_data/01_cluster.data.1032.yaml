@@ -1,8 +1,7 @@
 - id: 1001
   name: Bookstore (demo app)
-  info: The "app" object is the main entry point to the entire application. It
-    contains top-level configuration of the website, cluster, database, URL
-    routes etc.
+  info: Entry point to the web application. Contains top-level configuration of
+    the website, URL routes, app-level database etc.
   root:
     "@": 1007
   global:
@@ -161,6 +160,7 @@
   sequence:
     "@": 1017
   filename: ./demo/01_books/_data/02_app.data.1010.yaml
+  file_name: 02_app.data.1010.yaml
   __category:
     "@": 19
 - id: 1011
@@ -205,6 +205,7 @@
   sequence:
     "@": 1012
   filename: ./schemat/data/00_kernel.data.yaml
+  file_name: 00_kernel.data.yaml
   format: data-yaml
   shard:
     =:
@@ -320,12 +321,6 @@
         "@": 1033
     - worker: 1
       agent:
-        "@": 1043
-    - worker: 2
-      agent:
-        "@": 1045
-    - worker: 1
-      agent:
         "@": 1025
       role: $leader
     - worker: 1
@@ -336,6 +331,7 @@
         "@": 1023
 - id: 1025
   name: cluster
+  file_tag: demo-01
   database:
     "@": 1011
   nodes:
@@ -347,6 +343,7 @@
   sequence:
     "@": 1013
   filename: ./schemat/data/00_kernel.idx-category.jl
+  file_name: 00_kernel.idx-category.jl
   format: index-jl
   __category:
     "@": 18
@@ -372,6 +369,7 @@
   sequence:
     "@": 1017
   filename: ./demo/01_books/_data/02_app.data.1029.yaml
+  file_name: 02_app.data.1029.yaml
   shard:
     =:
       - 0
@@ -383,6 +381,7 @@
   sequence:
     "@": 1018
   filename: ./demo/01_books/_data/02_app.idx-category.1030.jl
+  file_name: 02_app.idx-category.1030.jl
   format: index-jl
   __category:
     "@": 18
@@ -394,6 +393,7 @@
   sequence:
     "@": 1027
   filename: ./demo/01_books/_data/01_cluster.data.1032.yaml
+  file_name: 01_cluster.data.1032.yaml
   format: data-yaml
   shard:
     =:
@@ -406,6 +406,7 @@
   sequence:
     "@": 1028
   filename: ./demo/01_books/_data/01_cluster.idx-category.1033.jl
+  file_name: 01_cluster.idx-category.1033.jl
   format: index-jl
   __category:
     "@": 18
@@ -504,6 +505,7 @@
   sequence:
     "@": 1041
   filename: ./schemat/data/03_test.data.1043.yaml
+  file_name: 03_test.data.1043.yaml
   format: data-yaml
   shard:
     =:
@@ -525,6 +527,7 @@
   sequence:
     "@": 1044
   filename: ./schemat/data/03_test.idx-category.1045.jl
+  file_name: 03_test.idx-category.1045.jl
   format: index-jl
   __category:
     "@": 18
