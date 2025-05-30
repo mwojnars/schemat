@@ -47,8 +47,8 @@ export class Block extends Agent {
 
     _create_filename() {
         let parts = [
-            this.ring.file_prefix,
-            this.sequence.file_prefix || this.sequence.operator?.file_prefix || this.sequence.operator?.name,
+            this.ring.file_tag,
+            this.sequence.file_tag || this.sequence.operator?.file_tag || this.sequence.operator?.name,
             `${this.id}`,
             this._file_extension()
         ]

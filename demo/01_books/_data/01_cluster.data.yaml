@@ -475,7 +475,7 @@
   name: ring-test
   base_ring:
     "@": 1016
-  file_prefix: 03_test
+  file_tag: 03_test
   readonly: false
   data_sequence:
     "@": 1041

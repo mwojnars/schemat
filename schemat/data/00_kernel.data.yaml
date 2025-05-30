@@ -525,7 +525,7 @@
       "@": schemat/types/type.js:BOOLEAN
     readonly:
       "@": schemat/types/type.js:BOOLEAN
-    file_prefix:
+    file_tag:
       info: Optional prefix to be prepended (with a separating dot '.') to names of
         new data files created by sequences in this ring.
       "@": schemat/types/type.js:STRING
@@ -600,7 +600,7 @@
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together
       "@": schemat/types/type.js:NUMBER
-    file_prefix:
+    file_tag:
       info: Prefix (infix) to be inserted in file names of all new blocks created in
         this sequence.
       "@": schemat/types/type.js:STRING
@@ -709,7 +709,7 @@
     "@": 1009
 - id: 20
   name: data
-  file_prefix: data
+  file_tag: data
   __category:
     "@": 17
 - id: 21
@@ -834,7 +834,7 @@
       type:
         "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
-    file_prefix:
+    file_tag:
       info: Prefix (infix) inserted in file names of all new blocks created in data
         sequences of this operator.
       "@": schemat/types/type.js:STRING

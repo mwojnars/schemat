@@ -18,7 +18,7 @@ export class Ring extends WebObject {
        input data to other (derived) streams: indexes, aggregations etc. Some streams may have special type (e.g., "blobs").
      */
 
-    file_prefix
+    file_tag
     data_sequence           // DataSequence containing all primary data of this ring
     sequences = []          // array of derived sequences (Sequence objects)
 
@@ -59,7 +59,7 @@ export class Ring extends WebObject {
     }
 
 
-    __new__({name, base_ring, file_prefix, file, min_id_exclusive, min_id_forbidden, min_id_sharded, readonly = false} = {}) {
+    __new__({name, base_ring, file_tag, file, min_id_exclusive, min_id_forbidden, min_id_sharded, readonly = false} = {}) {
         this.name = name || (file && fileBaseName(file))
         this.base_ring = base_ring
 
@@ -68,7 +68,7 @@ export class Ring extends WebObject {
         //     // this.name = file.substring(file.lastIndexOf('/') + 1, file.lastIndexOf('.') >= 0 ? file.lastIndexOf('.') : undefined)
         //     // this.name = path.basename(file, path.extname(file))
 
-        this.file_prefix = file_prefix
+        this.file_tag = file_tag
         this.readonly = readonly
         this.min_id_exclusive = min_id_exclusive
         this.min_id_forbidden = min_id_forbidden

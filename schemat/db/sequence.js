@@ -25,7 +25,7 @@ export class Sequence extends WebObject {
     splits              // array of split points between blocks
     blocks              // array of Blocks that make up this sequence, can be empty []
     flush_delay         // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
-    file_prefix
+    file_tag
 
     // impute_name() { return this.operator?.name }
 
@@ -127,7 +127,7 @@ export class Sequence extends WebObject {
 
 export class IndexSequence extends Sequence {
 
-    get file_prefix() { return 'index' }
+    get file_tag() { return 'index' }
 
     async __setup__() {
         print('IndexSequence.__setup__() creating a block')
@@ -157,7 +157,7 @@ export class DataSequence extends Sequence {
        Supports direct inserts (of new items) with auto-assignment and autoincrement of ID.
      */
 
-    get file_prefix() { return 'data' }
+    get file_tag() { return 'data' }
 
     __new__(ring, operator, {boot_file} = {}) {
         super.__new__(ring, operator)
@@ -203,7 +203,7 @@ export class Operator extends WebObject {
 
     key_spec
     payload
-    file_prefix
+    file_tag
 
     get record_schema() {
         /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
