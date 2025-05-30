@@ -18,4 +18,4 @@ bootstrap_rings:
   - name: boot_kernel
     file: ./schemat/data/00_kernel.data.yaml
   - name: boot_cluster
-    file: ./demo/01_books/_data/01_cluster.data.yaml
+    file: ./demo/01_books/_data/01_cluster.data.1032.yaml
