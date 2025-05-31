@@ -213,26 +213,27 @@ export class Kernel {
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
-        // node = schemat.get_loaded(this_node_ID)
-        // return node.activate()     // start the life-loop and all worker processes (servers)
-
         // let m = await schemat.import('/$/local/schemat/test/temp1.js')
         // print('loaded:', m)
         // let {WebServer} = await schemat.import('/$/local/schemat/server/agent.js')
 
         schemat.set_kernel(this)
 
-        let node_file = './schemat/node.id'
-        let node_id = opts.node || Number(opts['node-dir'].split('.').pop()) || this._read_node_id(node_file)
-        this.node = node_id ? await schemat.load(node_id) : await this._create_node(node_file)
+        let node_id = Number(opts['node-dir'].split('.').pop())
+        this.node = await schemat.load(node_id)
         assert(this.node)
+
+        // let node_file = './schemat/node.id'
+        // let node_id = opts.node || Number(opts['node-dir'].split('.').pop()) || this._read_node_id(node_file)
+        // this.node = node_id ? await schemat.load(node_id) : await this._create_node(node_file)
+        // assert(this.node)
     }
 
-    _read_node_id(path) {
-        /* Read from a file the ID of the node object to be executed in this local installation. */
-        try { return Number(fs.readFileSync(path, 'utf8').trim()) }
-        catch (ex) { print('node ID not found in', path) }
-    }
+    // _read_node_id(path) {
+    //     /* Read from a file the ID of the node object to be executed in this local installation. */
+    //     try { return Number(fs.readFileSync(path, 'utf8').trim()) }
+    //     catch (ex) { print('node ID not found in', path) }
+    // }
 
     async _create_node(path) {
         if (!cluster.isPrimary) throw new Error('unexpected error: a new Node object should only be created in the primary process, not in a worker')
