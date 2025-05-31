@@ -1,5 +1,6 @@
 import cluster from 'node:cluster'
 import fs from 'node:fs'
+import yaml from 'yaml'
 
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
@@ -25,7 +26,8 @@ export async function boot_schemat(opts, callback) {
         console.error(reason, '\n')
     })
 
-    opts.config ??= `cluster/${opts['node']}/config.yaml`
+    let node_dir = opts['node']
+    opts.config ??= `cluster/${node_dir}/config.yaml`
     let config = await _load_config(opts.config)
     config = {...config, ...opts}
     // print('config:', config)
@@ -38,8 +40,6 @@ export async function boot_schemat(opts, callback) {
     })
 
     async function _load_config(filename) {
-        let fs = await import('node:fs')
-        let yaml = (await import('yaml')).default
         let content = fs.readFileSync(filename, 'utf8')
         return yaml.parse(content)
     }
