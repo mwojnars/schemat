@@ -44,10 +44,10 @@ export async function boot_schemat(opts, callback) {
 
         // if no config file is given, use the default config suitable for low-level admin operations like cluster creation
         return {
-            bootstrap_rings: {
+            bootstrap_rings: [{
                 name: 'boot_kernel',
                 file: './schemat/data/00_kernel.data.yaml'
-            }
+            }]
         }
     }
 
