@@ -236,7 +236,7 @@ describe('Schemat Tests', function () {
     describe('Web Application', function () {
 
         // let setup = server_setup({nodes: [1024, 1036]})
-        let setup = server_setup({nodes: ['./cluster/sample/node.1024', './cluster/sample/node.1036']})
+        let setup = server_setup({nodes: ['sample/node.1024', 'sample/node.1036']})
         let server, browser, page, messages
 
         before(async function () {({server, browser, page, messages} = setup())})
@@ -365,7 +365,7 @@ describe('Schemat Tests', function () {
 
     describe('Demo 01', function () {
 
-        let setup = server_setup({config: './demo/01_books/config.yaml', nodes: ['./cluster/demo-01/node.1024']})
+        let setup = server_setup({config: './demo/01_books/config.yaml', nodes: ['demo-01/node.1024']})
         let server, browser, page, messages
 
         before(async function () {({server, browser, page, messages} = setup())})
