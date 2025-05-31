@@ -23,7 +23,7 @@ export class AdminProcess {
         await boot_schemat(opts, async () => {
             await schemat._boot_done()
             await this[method](opts)
-            await schemat.kernel.stop()
+            process.exit(0)
         })
     }
 
