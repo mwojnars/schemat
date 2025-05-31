@@ -18,7 +18,7 @@ await (async function run() {
         .option('workers',   {type: 'number', default: WORKERS})
         .option('host',      {type: 'string', default: HOST})
         .option('port',      {type: 'number', default: PORT})
-        .option('node-dir',  {type: 'string', desc: "path to the node folder inside ./cluster/... for finding config.yaml and inferring node ID"})
+        .option('node',      {type: 'string', desc: "path to the node's local folder inside ./cluster/... for finding config.yaml and inferring node ID"})
         .option('tcp-port',  {type: 'number'})
         // .option('node-file', {type: 'string', default: './schemat/node.id'})
         // .option('node',      {type: 'number', desc: "ID of the node object in DB, overrides the content of node.id"})

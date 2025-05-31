@@ -219,7 +219,7 @@ export class Kernel {
 
         schemat.set_kernel(this)
 
-        let node_id = Number(opts['node-dir'].split('.').pop())
+        let node_id = Number(opts['node'].split('.').pop())
         this.node = await schemat.load(node_id)
         assert(this.node)
 

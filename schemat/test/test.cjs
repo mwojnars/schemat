@@ -126,7 +126,7 @@ async function wait_for_port_release(port, retries = 10, delay_ms = 1000) {
 async function start_server(node, port, tcp_port, config, args = '') {
     await wait_for_port_release(port)           // wait for port to be released before starting new server
 
-    let opts = `--node-dir ${node} --config ${config} --port ${port} ${args}`
+    let opts = `--node ${node} --config ${config} --port ${port} ${args}`
     let command = `exec node --experimental-vm-modules schemat/server/run.js ${opts}`
 
     // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
