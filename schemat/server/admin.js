@@ -27,6 +27,14 @@ export class AdminProcess {
         })
     }
 
+    async cmd_create_cluster(opts) {
+        /* Create a new ring (ring-cluster) and cluster-related objects (nodes, database, etc.) according to
+           the cluster description read from a manifest file.
+         */
+        // {manifest_file}
+        print(`cmd_create_cluster() opts:`, opts)
+    }
+
     async cmd_reinsert({ids, new: new_id, ring: ring_name}) {
         /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring.
            WARNING: there's no explicit flushing of changes, so they're done at the end, which may lead to inconsistencies
