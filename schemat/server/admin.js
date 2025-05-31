@@ -8,14 +8,14 @@ import {boot_schemat} from "./kernel.js";
 /**********************************************************************************************************************/
 
 export class AdminProcess {
-    /* Boot up Schemat and execute the CLI_cmd() method to perform an administrative task.
-       Dashes (-) in `cmd` are replaced with underscores (_).
+    /* Boot up Schemat and execute the cmd_XXX() method to perform an administrative task.
+       Dashes (-) in command name are replaced with underscores (_).
      */
 
-    CLI_PREFIX = 'CLI_'     // command-line interface (CLI) on the server
+    CLI_PREFIX = 'cmd_'     // command-line interface (CLI) on the server
 
     async start(cmd, opts = {}) {
-        /* Boot up Schemat and execute the CLI_cmd() method. Dashes (-) in `cmd` are replaced with underscores (_). */
+        /* Boot up Schemat and execute the cmd_XXX() method. Dashes (-) in command name are replaced with underscores (_). */
         if (!cmd) return
         let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
         assert(this[method], `unknown command: ${cmd}`)
@@ -27,47 +27,7 @@ export class AdminProcess {
         })
     }
 
-    // async CLI_move({id, newid, bottom, ring: ring_name}) {
-    //     /* Move an item to a different ring, or change its ID. */
-    //     // TODO: REMOVE. This function is no longer used; all the same things can be done with CLI_reinsert (!)
-    //
-    //     id = Number(id)
-    //     newid = Number(newid)
-    //
-    //     let db = schemat.db
-    //     let sameID = (id === newid)
-    //     let req = new DataRequest(this, 'CLI_move', {id})
-    //
-    //     if (!sameID && await db.select(req.safe_step(null, 'check-not-exists', {id: newid})))
-    //         throw new Error(`target ID already exists: [${newid}]`)
-    //
-    //     // identify the source ring
-    //     let source = await db.find_ring_containing(id)
-    //     if (source === undefined) throw new Error(`item not found: [${id}]`)
-    //     if (source.readonly) throw new Error(`the ring '${source.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
-    //
-    //     // identify the target ring
-    //     let target = ring_name ? await db.get_ring(ring_name) : bottom ? db.bottom_ring : source
-    //
-    //     if (sameID && source === target)
-    //         throw new Error(`trying to move a record [${id}] to the same ring (${source.name}) without change of ID`)
-    //
-    //     print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
-    //
-    //     // load the item from its current ID; save a copy under the new ID, this will propagate to a higher ring if `id` can't be stored in `target`
-    //     let data = await source.select(id, req)
-    //     await db.save_update(req.safe_step(target, 'upsave', {id: newid, data}))
-    //
-    //     if (!sameID) await this._update_references(id, newid)
-    //
-    //     // remove the old item from DB
-    //     try { await source.delete(id, req) }
-    //     catch (ex) { print("WARNING:", ex) }
-    //
-    //     print('move: done')
-    // }
-
-    async CLI_reinsert({ids, new: new_id, ring: ring_name}) {
+    async cmd_reinsert({ids, new: new_id, ring: ring_name}) {
         /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring.
            WARNING: there's no explicit flushing of changes, so they're done at the end, which may lead to inconsistencies
                     when multiple objects are reinserted, esp. when they are system objects (loaded already before reinsert).
@@ -140,6 +100,47 @@ export class AdminProcess {
             }
     }
 
+
+    // async cmd_move({id, newid, bottom, ring: ring_name}) {
+    //     /* Move an item to a different ring, or change its ID. */
+    //     // TODO: REMOVE. This function is no longer used; all the same things can be done with cmd_reinsert (!)
+    //
+    //     id = Number(id)
+    //     newid = Number(newid)
+    //
+    //     let db = schemat.db
+    //     let sameID = (id === newid)
+    //     let req = new DataRequest(this, 'cmd_move', {id})
+    //
+    //     if (!sameID && await db.select(req.safe_step(null, 'check-not-exists', {id: newid})))
+    //         throw new Error(`target ID already exists: [${newid}]`)
+    //
+    //     // identify the source ring
+    //     let source = await db.find_ring_containing(id)
+    //     if (source === undefined) throw new Error(`item not found: [${id}]`)
+    //     if (source.readonly) throw new Error(`the ring '${source.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
+    //
+    //     // identify the target ring
+    //     let target = ring_name ? await db.get_ring(ring_name) : bottom ? db.bottom_ring : source
+    //
+    //     if (sameID && source === target)
+    //         throw new Error(`trying to move a record [${id}] to the same ring (${source.name}) without change of ID`)
+    //
+    //     print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
+    //
+    //     // load the item from its current ID; save a copy under the new ID, this will propagate to a higher ring if `id` can't be stored in `target`
+    //     let data = await source.select(id, req)
+    //     await db.save_update(req.safe_step(target, 'upsave', {id: newid, data}))
+    //
+    //     if (!sameID) await this._update_references(id, newid)
+    //
+    //     // remove the old item from DB
+    //     try { await source.delete(id, req) }
+    //     catch (ex) { print("WARNING:", ex) }
+    //
+    //     print('move: done')
+    // }
+    //
     // async _update_all() {
     //     /* Perform "update in place" on every item in the database, for instance, to force conversion of the items
     //        to a new format. All rings in the DB must be set as writable (!), otherwise the update will write a copy
