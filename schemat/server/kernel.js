@@ -27,10 +27,8 @@ export async function boot_schemat(opts, callback) {
     })
 
     let node_dir = opts['node']
-    opts.config ??= `cluster/${node_dir}/config.yaml`
-
-    let content = fs.readFileSync(opts.config, 'utf8')
-    let config = yaml.parse(content)
+    if (node_dir) opts.config ??= `cluster/${node_dir}/config.yaml`
+    let config = await _load_config(opts.config)
     config = {...config, ...opts}
     // print('config:', config)
 
@@ -40,6 +38,18 @@ export async function boot_schemat(opts, callback) {
         await schemat.boot(() => _open_bootstrap_db(), false)
         await callback()
     })
+
+    async function _load_config(filename = null) {
+        if (filename) return yaml.parse(fs.readFileSync(filename, 'utf8'))
+
+        // if no config file is given, use the default config suitable for low-level admin operations like cluster creation
+        return {
+            bootstrap_rings: {
+                name: 'boot_kernel',
+                file: './schemat/data/00_kernel.data.yaml'
+            }
+        }
+    }
 
     async function _open_bootstrap_db() {
         let db = BootDatabase.new()
