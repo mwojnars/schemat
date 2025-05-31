@@ -234,15 +234,15 @@ export class Kernel {
     //     try { return Number(fs.readFileSync(path, 'utf8').trim()) }
     //     catch (ex) { print('node ID not found in', path) }
     // }
-
-    async _create_node(path) {
-        if (!cluster.isPrimary) throw new Error('unexpected error: a new Node object should only be created in the primary process, not in a worker')
-        let Node = await schemat.import('/$/sys/Node')
-        let node = await Node.new().save({ring: 'ring-cluster'})
-        fs.writeFileSync(path, this.node.id.toString())
-        print(`created new node:`, this.node.id)
-        return node
-    }
+    //
+    // async _create_node(path) {
+    //     if (!cluster.isPrimary) throw new Error('unexpected error: a new Node object should only be created in the primary process, not in a worker')
+    //     let Node = await schemat.import('/$/sys/Node')
+    //     let node = await Node.new().save({ring: 'ring-cluster'})
+    //     fs.writeFileSync(path, this.node.id.toString())
+    //     print(`created new node:`, this.node.id)
+    //     return node
+    // }
 
     async start(opts) {}    // implemented in subclasses
 
