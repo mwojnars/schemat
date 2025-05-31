@@ -41,8 +41,6 @@ function check_internet(fail, retries = 2) {
 
 /**********************************************************************************************************************/
 
-// const CONFIG = './schemat/test/config.yaml'
-const CONFIG = './schemat/config.yaml'
 const NODE = 1024           // ID of the Node object that should be loaded upon start up  ... 1036 is missing in Demo database
 const HOST = '127.0.0.1'
 const PORT = 2998
@@ -123,10 +121,10 @@ async function wait_for_port_release(port, retries = 10, delay_ms = 1000) {
         }
 }
 
-async function start_server(node, port, tcp_port, config, args = '') {
+async function start_server(node, port, tcp_port, args = '') {
     await wait_for_port_release(port)           // wait for port to be released before starting new server
 
-    let opts = `--node ${node} --config ${config} --port ${port} ${args}`
+    let opts = `--node ${node} --port ${port} ${args}`
     let command = `exec node --experimental-vm-modules schemat/server/run.js ${opts}`
 
     // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
@@ -141,14 +139,14 @@ async function start_server(node, port, tcp_port, config, args = '') {
         })
 }
 
-function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PORT, config = CONFIG, args = ''} = {}) {
+function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PORT, args = ''} = {}) {
     let server, servers = [], browser, page, messages
 
     before(async function() {
         nodes ??= [node]
 
         for (let node of nodes) {
-            let srv = await start_server(node, port++, tcp_port++, config, args)
+            let srv = await start_server(node, port++, tcp_port++, args)
             servers.push(srv)
             srv.stdout.pipe(process.stdout)                     // pipe output in real-time
             srv.stderr.pipe(process.stderr)
@@ -235,7 +233,6 @@ describe('Schemat Tests', function () {
 
     describe('Web Application', function () {
 
-        // let setup = server_setup({nodes: [1024, 1036]})
         let setup = server_setup({nodes: ['sample/node.1024', 'sample/node.1036']})
         let server, browser, page, messages
 
@@ -365,7 +362,7 @@ describe('Schemat Tests', function () {
 
     describe('Demo 01', function () {
 
-        let setup = server_setup({config: './demo/01_books/config.yaml', nodes: ['demo-01/node.1024']})
+        let setup = server_setup({nodes: ['demo-01/node.1024']})
         let server, browser, page, messages
 
         before(async function () {({server, browser, page, messages} = setup())})
