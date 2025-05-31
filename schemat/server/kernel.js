@@ -20,6 +20,11 @@ import {IPC_Mailbox} from "./node.js";
 export async function boot_schemat(opts, callback) {
     /* Create global (async local) `schemat` object, load the initial database, and run `callback`. */
 
+    process.on("unhandledRejection", (reason, promise) => {
+        console.error(`\n${schemat.node?.id}/#${process.env.WORKER_ID || 0} UNHANDLED PROMISE REJECTION! A promise is created somewhere in the call stack that has NO .catch() handler and is NOT immediately awaited (possibly stored in a variable for future awaiting):`)
+        console.error(reason, '\n')
+    })
+
     opts.config ??= `cluster/${opts['node']}/config.yaml`
     let config = await _load_config(opts.config)
     config = {...config, ...opts}
@@ -204,11 +209,6 @@ export class Kernel {
 
     async init(opts) {
         print('Kernel WORKER_ID:', process.env.WORKER_ID || 0)
-
-        process.on("unhandledRejection", (reason, promise) => {
-            console.error(`\n${this.node?.id}/#${this.worker_id} UNHANDLED PROMISE REJECTION! A promise is created somewhere in the call stack that has NO .catch() handler and is NOT immediately awaited (possibly stored in a variable for future awaiting):`)
-            console.error(reason, '\n')
-        })
 
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
