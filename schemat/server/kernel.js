@@ -20,7 +20,7 @@ import {IPC_Mailbox} from "./node.js";
 export async function boot_schemat(opts, callback) {
     /* Create global (async local) `schemat` object, load the initial database, and run `callback`. */
 
-    opts.config ??= './schemat/config.yaml'
+    opts.config ??= `cluster/${opts['node']}/config.yaml`
     let config = await _load_config(opts.config)
     config = {...config, ...opts}
     // print('config:', config)
