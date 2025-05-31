@@ -28,7 +28,9 @@ export async function boot_schemat(opts, callback) {
 
     let node_dir = opts['node']
     opts.config ??= `cluster/${node_dir}/config.yaml`
-    let config = await _load_config(opts.config)
+
+    let content = fs.readFileSync(opts.config, 'utf8')
+    let config = yaml.parse(content)
     config = {...config, ...opts}
     // print('config:', config)
 
@@ -38,11 +40,6 @@ export async function boot_schemat(opts, callback) {
         await schemat.boot(() => _open_bootstrap_db(), false)
         await callback()
     })
-
-    async function _load_config(filename) {
-        let content = fs.readFileSync(filename, 'utf8')
-        return yaml.parse(content)
-    }
 
     async function _open_bootstrap_db() {
         let db = BootDatabase.new()
