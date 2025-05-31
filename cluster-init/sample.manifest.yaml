@@ -1,0 +1,7 @@
+cluster:
+  name: sample-cluster
+  file_tag: sample-new
+
+ring:
+  name: ring-cluster
+  file_tag: 01_cluster

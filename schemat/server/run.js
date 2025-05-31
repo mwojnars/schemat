@@ -1,8 +1,8 @@
+import cluster from "node:cluster"
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {boot_schemat, MasterProcess, WorkerProcess} from "./kernel.js"
-import cluster from "node:cluster";
 
 
 const HOST    = '127.0.0.1'

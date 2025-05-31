@@ -1,3 +1,6 @@
+import fs from 'node:fs'
+import yaml from 'yaml'
+
 import {assert, print, sleep} from "../common/utils.js";
 import {ObjectNotFound} from "../common/errors.js";
 import {WebObject} from "../core/object.js";
@@ -31,8 +34,13 @@ export class AdminProcess {
         /* Create a new ring (ring-cluster) and cluster-related objects (nodes, database, etc.) according to
            the cluster description read from a manifest file.
          */
-        // {manifest_file}
-        print(`cmd_create_cluster() opts:`, opts)
+        // print(`cmd_create_cluster() opts:`, opts)
+        let {manifest_file} = opts
+        let manifest = yaml.parse(fs.readFileSync(manifest_file, 'utf8'))
+
+        print(`cmd_create_cluster() manifest:`)
+        print(manifest)
+
     }
 
     async cmd_reinsert({ids, new: new_id, ring: ring_name}) {
