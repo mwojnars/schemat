@@ -431,6 +431,11 @@ export class BootDatabase extends Database {
         this.top_ring = top
     }
 
+    add_ring(ring) {
+        ring.base_ring = this.top_ring
+        this.top_ring = ring
+    }
+
     insert() {assert(false)}
     scan() {assert(false)}
 }

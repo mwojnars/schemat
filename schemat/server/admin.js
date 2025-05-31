@@ -31,16 +31,26 @@ export class AdminProcess {
     }
 
     async cmd_create_cluster(opts) {
-        /* Create a new ring (ring-cluster) and cluster-related objects (nodes, database, etc.) according to
-           the cluster description read from a manifest file.
+        /* Create a new ring (ring-cluster) and cluster-related objects in it (nodes, database, etc.)
+           according to cluster description read from a manifest file.
          */
         // print(`cmd_create_cluster() opts:`, opts)
         let {manifest_file} = opts
         let manifest = yaml.parse(fs.readFileSync(manifest_file, 'utf8'))
+        let {cluster, ring} = manifest
 
         print(`cmd_create_cluster() manifest:`)
         print(manifest)
 
+        let cluster_tag = cluster.file_tag || cluster.name || 'nodes'
+        let cluster_path = `cluster/${cluster_tag}`
+        let node_path = `${cluster_path}/node`          // to be renamed later
+
+        let ring_tag = ring.file_tag || ring.name || 'ring-cluster'
+        let ring_path = `${node_path}/${ring_tag}`      // the file name is incomplete
+
+        let db = schemat.db         // boot database to be extended with a new ring
+        db.add_ring()
     }
 
     async cmd_reinsert({ids, new: new_id, ring: ring_name}) {
