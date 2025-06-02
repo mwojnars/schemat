@@ -70,8 +70,12 @@ export class Admin {
         let ring_tag = ring.file_tag || ring.name || 'ring-cluster'
         let ring_path = `${node_path}/${ring_tag}`      // the file name is incomplete
 
-        let db = schemat.db         // boot database to be extended with a new ring
-        db.add_ring(ring)
+        await schemat.root_category.reload()            // load the root Category from DB so its .lib is configured
+        // await sleep(0)
+        // await schemat.root_category.lib.Ring.load()
+
+        print(`root_category.lib:`, schemat.root_category.lib)
+        print(`Ring:`, schemat.root_category.lib.Ring.is_loaded())
     }
 
     async normal__reinsert({ids, new: new_id, ring: ring_name}) {
