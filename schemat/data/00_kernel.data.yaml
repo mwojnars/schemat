@@ -15,12 +15,12 @@
     std:
       value_type:
         "@": schemat/types/type.js:REF
-      info: Collection of standard related objects (categories) that should be loaded
+      info: Collection of standard related objects (categories) to be loaded
         automatically when this category is initialized during __init__().
         Typically, these objects are other categories that are necessary for
         creating new objects of the current category (__new__(), __setup__()) --
         listing them here removes the need for async schemat.import() from a web
-        path later on.
+        path later on. The loading is only invoked when on server, not on clients.
       "@": schemat/types/type.js:OBJECT
     defaults:
       value_type:
