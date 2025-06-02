@@ -37,11 +37,11 @@ export class Admin {
         }
         assert(fun, `unknown command: ${command}`)
 
-        // in "telnet" mode, Schemat is not created at all
+        // in "telnet" mode, the Schemat object is not created at all
         if (mode === 'telnet') return fun.call(this, opts)
 
         await boot_schemat(opts, async () => {
-            // in "rescue" mode, only the bootstrap database is created, and Schemat stays in booting phase, no final DB
+            // in "rescue" mode, only the bootstrap database is created; Schemat stays in booting phase; no final DB
             if (mode === 'normal') await schemat._boot_done()
 
             await fun.call(this, opts)
@@ -53,12 +53,12 @@ export class Admin {
         /* Create a new ring (ring-cluster) and cluster-related objects in it (nodes, database, etc.)
            according to cluster description read from a manifest file.
          */
-        // print(`cmd_create_cluster() opts:`, opts)
+        // print(`opts:`, opts)
         let {manifest_file} = opts
         let manifest = yaml.parse(fs.readFileSync(manifest_file, 'utf8'))
         let {cluster, ring} = manifest
 
-        print(`cmd_create_cluster() manifest:`)
+        print(`manifest:`)
         print(manifest)
 
         let cluster_tag = cluster.file_tag || cluster.name || 'nodes'
