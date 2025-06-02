@@ -11,12 +11,14 @@ import {boot_schemat} from "./kernel.js";
 /**********************************************************************************************************************/
 
 export class Admin {
-    /* Boot up Schemat and execute the cmd_XXX() method to perform an administrative task.
+    /* Boot up Schemat and execute the <mode>__<command>() method to perform an administrative task.
        Dashes (-) in command name are replaced with underscores (_).
      */
 
+    // "normal" mode: Schemat is fully booted with the final DB initialized
+    // "rescue" mode: Schemat stays in the booting phase, only the bootstrap database is created, no final DB
+    // "telnet" mode: no Schemat object created, the handler connects to the cluster leader via low-level TCP
     MODES = ['telnet', 'rescue', 'normal']
-    // dry/wet, file, ftp, tcp, protected, maintain
 
     static async run(...args) { return new this()._run(...args) }
 
@@ -68,7 +70,6 @@ export class Admin {
         let ring_tag = ring.file_tag || ring.name || 'ring-cluster'
         let ring_path = `${node_path}/${ring_tag}`      // the file name is incomplete
 
-        print('schemat.db', schemat.db)
         let db = schemat.db         // boot database to be extended with a new ring
         db.add_ring(ring)
     }
