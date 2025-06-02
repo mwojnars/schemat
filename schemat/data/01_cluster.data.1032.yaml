@@ -103,44 +103,6 @@
   name: /$/sys
   info: Core system objects and categories, for dynamic imports by path instead of
     ID.
-  entries:
-    Category:
-      "@": 1
-    Container:
-      "@": 3
-    Application:
-      "@": 2
-    Directory:
-      "@": 5
-    File:
-      "@": 4
-    LocalDirectory:
-      "@": 6
-    LocalFile:
-      "@": 27
-    Namespace:
-      "@": 7
-    Revision:
-      "@": 26
-    ObjectSpace:
-      "@": 8
-    IndexOperator:
-      "@": 15
-    ObjectIndexOperator:
-      "@": 16
-    Node:
-      "@": 21
-    IndexSequence:
-      "@": 22
-    DataSequence:
-      "@": 14
-    DataBlock:
-      "@": 19
-    Block:
-      "@": 18
-    DataOperator:
-      "@": 17
-    "@": schemat:Catalog
   __container:
     "@": 1019
   __category:

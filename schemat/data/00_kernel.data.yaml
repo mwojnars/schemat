@@ -295,8 +295,6 @@
     "@": 5
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 3
   name: Container
   __category:
@@ -324,8 +322,6 @@
   class: schemat/std/files.js:File
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 5
   name: Directory
   info: >-
@@ -390,8 +386,6 @@
     "@": 5
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 7
   name: Namespace
   info: "Unbounded collection of objects: each object that satisfies the criteria
@@ -404,8 +398,6 @@
     "@": 3
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 8
   name: ObjectSpace
   info: Namespace that maps all objects to URLs of the form /<ID>. Optionally
@@ -424,8 +416,6 @@
     "@": 7
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 9
   name: Category_IID_Namespace
   info: "Namespace for accessing public data through verbose paths of the form:
@@ -624,8 +614,6 @@
     "@": 13
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 15
   name: IndexOperator
   info: Base category for indexes over the data sequence.
@@ -633,8 +621,6 @@
     "@": 24
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 16
   name: ObjectIndexOperator
   info: An index that receives record updates from the main data sequence, so
@@ -657,8 +643,6 @@
     "@": 15
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 17
   name: DataOperator
   class: schemat/db/sequence.js:DataOperator
@@ -666,8 +650,6 @@
     "@": 24
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 18
   name: Block
   info: A continuous subrange of records of a data/index sequence, physically
@@ -685,8 +667,6 @@
     "@": 29
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 19
   name: DataBlock
   info: Block of a DataSequence.
@@ -705,8 +685,6 @@
     "@": 18
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 20
   name: data
   file_tag: data
@@ -788,8 +766,6 @@
     "@": 29
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 22
   name: IndexSequence
   info: Category for sequences of index records.
@@ -801,8 +777,6 @@
     "@": 13
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 23
   name: idx-category
   info: "Index of all objects by their category: the key is [category ID, item
@@ -896,8 +870,6 @@
   class: schemat/std/files.js:LocalFile
   __category:
     "@": 1
-  __container:
-    "@": 1009
 - id: 28
   name: Config
   class: schemat/server/node.js:Config
