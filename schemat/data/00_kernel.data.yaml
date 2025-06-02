@@ -243,8 +243,44 @@
   cache_timeout: 60
   class: schemat:Category
   lib:
+    Category:
+      "@": 1
+    Container:
+      "@": 3
+    Application:
+      "@": 2
+    Directory:
+      "@": 5
+    File:
+      "@": 4
+    LocalDirectory:
+      "@": 6
+    LocalFile:
+      "@": 27
+    Namespace:
+      "@": 7
+    ObjectSpace:
+      "@": 8
+    IndexOperator:
+      "@": 15
+    ObjectIndexOperator:
+      "@": 16
+    Node:
+      "@": 21
+    IndexSequence:
+      "@": 22
+    Database:
+      "@": 11
     Ring:
       "@": 12
+    DataSequence:
+      "@": 14
+    DataBlock:
+      "@": 19
+    Block:
+      "@": 18
+    DataOperator:
+      "@": 17
 - id: 2
   name: Application
   info: Top-level URL routing + global configuration of the application.
