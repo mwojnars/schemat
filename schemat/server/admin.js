@@ -37,8 +37,13 @@ export class Admin {
         }
         assert(fun, `unknown command: ${command}`)
 
+        // in "telnet" mode, Schemat is not created at all
+        if (mode === 'telnet') return fun.call(this, opts)
+
         await boot_schemat(opts, async () => {
+            // in "rescue" mode, only the bootstrap database is created, and Schemat stays in booting phase, no final DB
             if (mode === 'normal') await schemat._boot_done()
+
             await fun.call(this, opts)
             process.exit(0)
         })
