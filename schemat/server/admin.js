@@ -15,34 +15,36 @@ export class Admin {
        Dashes (-) in command name are replaced with underscores (_).
      */
 
-    CLI_PREFIX = 'cmd_'     // command-line interface (CLI) on the server
-
-    MODES = ['dry', 'rescue', 'normal']
-    MODES = ['dialup', 'rescue', 'normal']
-    MODES = ['dry', 'rescue', 'maintain']
-    MODES = ['DIAL', 'DRY', 'WET']
-    // protected
+    MODES = ['telnet', 'rescue', 'normal']
+    // dry/wet, file, ftp, tcp, protected, maintain
 
     static async run(...args) { return new this()._run(...args) }
 
-    async _run(cmd, opts = {}) {
+    async _run(command, opts = {}) {
         /* Boot up Schemat and execute the cmd_XXX() method. Dashes (-) in command name are replaced with underscores (_). */
-        if (!cmd) return
-        let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
+        if (!command) return
+        let cmd = command.replace(/-/g, '_')
+        let mode, fun
 
-        let fun = this[method]
-        assert(fun, `unknown command: ${cmd}`)
+        // find the method and mode that together match the command name with MODE__ prefix, e.g. rescue__create_cluster
+        for (let _mode of this.MODES) {
+            let method = `${_mode}__${cmd}`
+            if (this[method]) {
+                mode = _mode
+                fun = this[method]
+                break
+            }
+        }
+        assert(fun, `unknown command: ${command}`)
 
         await boot_schemat(opts, async () => {
-            // await schemat._boot_done()
+            if (mode === 'normal') await schemat._boot_done()
             await fun.call(this, opts)
             process.exit(0)
         })
     }
 
-    async rescue__create_cluster(opts) {}
-
-    async cmd_create_cluster(opts) {
+    async rescue__create_cluster(opts) {
         /* Create a new ring (ring-cluster) and cluster-related objects in it (nodes, database, etc.)
            according to cluster description read from a manifest file.
          */
@@ -66,7 +68,7 @@ export class Admin {
         db.add_ring(ring)
     }
 
-    async cmd_reinsert({ids, new: new_id, ring: ring_name}) {
+    async normal__reinsert({ids, new: new_id, ring: ring_name}) {
         /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring.
            WARNING: there's no explicit flushing of changes, so they're done at the end, which may lead to inconsistencies
                     when multiple objects are reinserted, esp. when they are system objects (loaded already before reinsert).
@@ -140,7 +142,7 @@ export class Admin {
     }
 
 
-    // async cmd_move({id, newid, bottom, ring: ring_name}) {
+    // async normal__move({id, newid, bottom, ring: ring_name}) {
     //     /* Move an item to a different ring, or change its ID. */
     //     // TODO: REMOVE. This function is no longer used; all the same things can be done with cmd_reinsert (!)
     //
