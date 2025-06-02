@@ -242,6 +242,9 @@
   seal_dependencies: false
   cache_timeout: 60
   class: schemat:Category
+  lib:
+    Ring:
+      "@": 12
 - id: 2
   name: Application
   info: Top-level URL routing + global configuration of the application.
