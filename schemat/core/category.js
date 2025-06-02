@@ -43,9 +43,12 @@ export class Category extends WebObject {
 
     is_category()   { return true }
 
-    async __init__() {
+    async __init__(no_await = false) {
         await this.__child_class            // from now on, __child_class is a regular value not a promise
-        if (this.lib) await Promise.all(Object.values(this.lib).map(obj => obj.load()))
+        if (this.lib) {
+            let promise = Promise.all(Object.values(this.lib).map(obj => obj.load()))
+            if (!no_await) await promise    // root category cannot await the related objects, otherwise a deadlock occurs
+        }
         return this._init_schema()
     }
 
@@ -216,6 +219,9 @@ export class RootCategory extends Category {
         let fields = new Catalog([...root_fields, ...default_fields])
         let custom = this.__data.get('allow_custom_fields')
         return new SCHEMA({fields: fields.object(), strict: custom !== true})
+    }
+
+    async __init__(no_await = false) {
     }
 }
 
