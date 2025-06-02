@@ -1,0 +1,370 @@
+- id: 1001
+  name: main-app
+  info: Entry point to the web application. Contains top-level configuration of
+    the website, URL routes, app-level database etc.
+  root:
+    "@": 1007
+  global:
+    "@": schemat:Catalog
+  default_path: /$/id
+  database:
+    "@": 1002
+  logger:
+    "@": 1037
+  eval_allowed: true
+  __category:
+    "@": 2
+- id: 1002
+  name: database
+  top_ring:
+    "@": 1016
+  __category:
+    "@": 11
+- id: 1003
+  name: ring-kernel
+  data_sequence:
+    "@": 1012
+  sequences:
+    - "@": 1013
+  readonly: false
+  insert_mode: compact
+  min_id_exclusive: 1
+  min_id_forbidden: 1000
+  min_id_sharded: 5001
+  shard3:
+    =:
+      - 0
+      - 9
+    "@": schemat/common/structs.js:Shard
+  __category:
+    "@": 12
+- id: 1004
+  name: ring-cluster
+  base_ring:
+    "@": 1003
+  base_ring_readonly: false
+  data_sequence:
+    "@": 1027
+  sequences:
+    - "@": 1028
+  readonly: false
+  insert_mode: compact
+  min_id_exclusive: 1001
+  min_id_forbidden: 2000
+  min_id_sharded: 5001
+  shard3:
+    =:
+      - 3
+      - 9
+    "@": schemat/common/structs.js:Shard
+  __category:
+    "@": 12
+- id: 1005
+  name: app_source
+  info: Path to the local directory containing source code of the application.
+    Typically, this directory does NOT include Schemat source code, and is
+    mainly used for serving static files, like .css files, robots.txt etc.
+  local_path: ./app
+  __container:
+    "@": 1007
+  __category:
+    "@": 6
+- id: 1006
+  name: app_objects
+  entries:
+    "@": schemat:Catalog
+  __container:
+    "@": 1007
+  __category:
+    "@": 5
+- id: 1007
+  name: <root>
+  info: Root of the container hierarchy exposed at URL path = /
+  entries:
+    "":
+      "@": 1008
+    $:
+      "@": 1019
+    "*app_source":
+      "@": 1005
+    "*app_objects":
+      "@": 1006
+    "@": schemat:Catalog
+  __path: /
+  __category:
+    "@": 5
+- id: 1008
+  name: home
+  __container:
+    "@": 1007
+  __category:
+    "@": 25
+- id: 1009
+  name: /$/sys
+  info: Core system objects and categories, for dynamic imports by path instead of
+    ID.
+  __container:
+    "@": 1019
+  __category:
+    "@": 5
+- id: 1010
+  sequence:
+    "@": 1017
+  file_name: 02_app.data.1010.yaml
+  __category:
+    "@": 19
+- id: 1011
+  name: db-cluster
+  top_ring:
+    "@": 1004
+  __category:
+    "@": 11
+- id: 1012
+  ring:
+    "@": 1003
+  operator:
+    "@": 20
+  blocks:
+    - "@": 1015
+  __category:
+    "@": 14
+- id: 1013
+  ring:
+    "@": 1003
+  operator:
+    "@": 23
+  blocks:
+    - "@": 1026
+  __category:
+    "@": 22
+- id: 1015
+  sequence:
+    "@": 1012
+  file_name: 00_kernel.data.yaml
+  format: data-yaml
+  shard:
+    =:
+      - 0
+      - 1
+    "@": schemat/common/structs.js:Shard
+  __category:
+    "@": 19
+- id: 1016
+  name: ring-app
+  base_ring:
+    "@": 1004
+  base_ring_readonly: false
+  data_sequence:
+    "@": 1017
+  sequences:
+    - "@": 1018
+  readonly: false
+  min_id_exclusive: 2001
+  min_id_forbidden: 3000
+  min_id_sharded: 5001
+  shard3:
+    =:
+      - 1
+      - 3
+    "@": schemat/common/structs.js:Shard
+  __category:
+    "@": 12
+- id: 1017
+  ring:
+    "@": 1016
+  operator:
+    "@": 20
+  blocks:
+    - "@": 1029
+    - "@": 1010
+  __category:
+    "@": 14
+- id: 1018
+  ring:
+    "@": 1016
+  operator:
+    "@": 23
+  blocks:
+    - "@": 1030
+  __category:
+    "@": 22
+- id: 1019
+  name: system
+  info: >-
+    The root system directory (/$). It provides access to:
+
+    1) every web object by its ID through the "default URL path" (.../id/<ID>), which is used when the object does not belong to any other URL container;
+
+    2) Schemat's source code that is read from a local disk folder.
+  entries:
+    id:
+      "@": 1021
+    local:
+      "@": 1020
+    sys:
+      "@": 1009
+    "@": schemat:Catalog
+  __container:
+    "@": 1007
+  __category:
+    "@": 5
+- id: 1020
+  name: /$/local
+  local_path: .
+  paths_allowed: schemat/ app/ demo/ node_modules/
+  __container:
+    "@": 1019
+  __category:
+    "@": 6
+- id: 1021
+  name: default-namespace
+  info: All objects accessible by their IDs.
+  __container:
+    "@": 1019
+  __category:
+    "@": 8
+- id: 1023
+  name: webserver
+  num_workers: -1
+  __app:
+    "@": 1001
+  __category:
+    "@": 30
+- id: 1024
+  tcp_port: 5828
+  __category:
+    "@": 21
+  agents:
+    - worker: 1
+      agent:
+        "@": 1010
+    - worker: 2
+      agent:
+        "@": 1015
+    - worker: 1
+      agent:
+        "@": 1026
+    - worker: 2
+      agent:
+        "@": 1029
+    - worker: 1
+      agent:
+        "@": 1032
+    - worker: 2
+      agent:
+        "@": 1033
+    - worker: 1
+      agent:
+        "@": 1025
+      role: $leader
+    - worker: 1
+      agent:
+        "@": 1023
+    - worker: 2
+      agent:
+        "@": 1023
+- id: 1025
+  name: cluster
+  file_tag: <CLUSTER_FILE_TAG>
+  database:
+    "@": 1011
+  nodes:
+    - "@": 1024
+    - "@": 1036
+  __category:
+    "@": 10
+- id: 1026
+  sequence:
+    "@": 1013
+  file_name: 00_kernel.idx-category.jl
+  format: index-jl
+  __category:
+    "@": 18
+- id: 1027
+  ring:
+    "@": 1004
+  operator:
+    "@": 20
+  blocks:
+    - "@": 1032
+  __category:
+    "@": 14
+- id: 1028
+  ring:
+    "@": 1004
+  operator:
+    "@": 23
+  blocks:
+    - "@": 1033
+  __category:
+    "@": 22
+- id: 1029
+  sequence:
+    "@": 1017
+  file_name: 02_app.data.1029.yaml
+  shard:
+    =:
+      - 0
+      - 1
+    "@": schemat/common/structs.js:Shard
+  __category:
+    "@": 19
+- id: 1030
+  sequence:
+    "@": 1018
+  file_name: 02_app.idx-category.1030.jl
+  format: index-jl
+  __category:
+    "@": 18
+- id: 1032
+  sequence:
+    "@": 1027
+  file_name: 01_cluster.data.1032.yaml
+  format: data-yaml
+  shard:
+    =:
+      - 0
+      - 1
+    "@": schemat/common/structs.js:Shard
+  __category:
+    "@": 19
+- id: 1033
+  sequence:
+    "@": 1028
+  file_name: 01_cluster.idx-category.1033.jl
+  format: index-jl
+  __category:
+    "@": 18
+- id: 1036
+  tcp_port: 5829
+  __category:
+    "@": 21
+  agents:
+    - worker: 1
+      agent:
+        "@": 1015
+    - worker: 2
+      agent:
+        "@": 1026
+    - worker: 1
+      agent:
+        "@": 1030
+    - worker: 2
+      agent:
+        "@": 1032
+    - worker: 1
+      agent:
+        "@": 1033
+    - worker: 2
+      agent:
+        "@": 1037
+    - worker: 1
+      agent:
+        "@": 1023
+    - worker: 2
+      agent:
+        "@": 1023
+- id: 1037
+  name: logger
+  __category:
+    "@": 33
