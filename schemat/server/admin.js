@@ -70,11 +70,11 @@ export class Admin {
         let ring_tag = ring.file_tag || ring.name || 'ring-cluster'
         let ring_path = `${node_path}/${ring_tag}`      // the file name is incomplete
 
-        await schemat.root_category.reload()            // load the root Category from DB so its .lib is configured
-        await sleep()                                   // wait for root_category.lib.* objects to load
+        await schemat.root_category.reload()            // load the root Category from DB so its .std is configured
+        await sleep()                                   // wait for root_category.std.* objects to load
 
-        print(`root_category.lib:`, schemat.root_category.lib)
-        print(`Ring:`, schemat.root_category.lib.Ring.is_loaded())
+        print(`root_category.std:`, schemat.root_category.std)
+        print(`Ring:`, schemat.root_category.std.Ring.is_loaded())
     }
 
     async normal__reinsert({ids, new: new_id, ring: ring_name}) {

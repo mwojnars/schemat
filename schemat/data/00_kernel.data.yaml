@@ -12,10 +12,10 @@
         not instances.'
       default: schemat:WebObject
       "@": schemat/types/type.js:STRING
-    lib:
+    std:
       value_type:
         "@": schemat/types/type.js:REF
-      info: Collection of related objects (categories) that should be loaded
+      info: Collection of standard related objects (categories) that should be loaded
         automatically when this category is initialized during __init__().
         Typically, these objects are other categories that are necessary for
         creating new objects of the current category (__new__(), __setup__()) --
@@ -242,7 +242,7 @@
   seal_dependencies: false
   cache_timeout: 60
   class: schemat:Category
-  lib:
+  std:
     Category:
       "@": 1
     Container:
@@ -506,7 +506,7 @@
       info: If true, write access to the database is allowed, otherwise it is not.
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
-  lib:
+  std:
     ObjectIndexOperator:
       "@": 16
   class: schemat/db/db.js:Database
@@ -516,7 +516,7 @@
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
-  lib:
+  std:
     DataSequence:
       "@": 14
     IndexSequence:
@@ -642,7 +642,7 @@
 - id: 14
   name: DataSequence
   info: Category for the main data sequence that contains serialized web objects.
-  lib:
+  std:
     DataBlock:
       "@": 19
   class: schemat/db/sequence.js:DataSequence
@@ -806,7 +806,7 @@
   name: IndexSequence
   info: Category for sequences of index records.
   class: schemat/db/sequence.js:IndexSequence
-  lib:
+  std:
     Block:
       "@": 18
   __prototype:

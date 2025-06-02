@@ -82,12 +82,12 @@ export class Ring extends WebObject {
 
         this.min_id_sharded ??= this.base_ring.min_id_sharded
 
-        let DataSequence = this.__lib.DataSequence
+        let DataSequence = this.__std.DataSequence
         this.data_sequence = DataSequence.new(this, base?.data_sequence.operator)
         this.sequences = []
         if (!base) return
 
-        let IndexSequence = this.__lib.IndexSequence
+        let IndexSequence = this.__std.IndexSequence
         for (let seq of base.sequences)
             this.sequences.push(IndexSequence.new(this, seq.operator))
     }
@@ -231,7 +231,7 @@ export class Ring extends WebObject {
         // TODO SEC: check permissions
         if (this.readonly) throw new Error("the ring is read-only")
         let opts = {ring: this.__ring, broadcast: true}
-        let IndexSequence = this.__lib.IndexSequence
+        let IndexSequence = this.__std.IndexSequence
         let seq = await IndexSequence.new(this).save(opts)
         this.sequences.push(seq)
         await this.save(opts)
@@ -399,7 +399,7 @@ export class Database extends WebObject {
         else ring = this.bottom_ring
 
         // create index specification
-        let ObjectIndexOperator = this.__lib.ObjectIndexOperator
+        let ObjectIndexOperator = this.__std.ObjectIndexOperator
         let index = ObjectIndexOperator.new(name, key, payload)
         index = await index.save({ring})
         // schemat._transaction.getStore()?.log_modified(index)

@@ -45,8 +45,8 @@ export class Category extends WebObject {
 
     async __init__(no_await = false) {
         await this.__child_class            // from now on, __child_class is a regular value not a promise
-        if (SERVER && this.lib) {
-            let promise = Promise.all(Object.values(this.lib).map(obj => obj.load()))
+        if (SERVER && this.std) {
+            let promise = Promise.all(Object.values(this.std).map(obj => obj.load()))
             if (!no_await) await promise    // root category cannot await the related objects, otherwise a deadlock occurs
         }
         return this._init_schema()
