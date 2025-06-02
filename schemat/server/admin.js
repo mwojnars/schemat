@@ -10,7 +10,7 @@ import {boot_schemat} from "./kernel.js";
 
 /**********************************************************************************************************************/
 
-export class AdminProcess {
+export class Admin {
     /* Boot up Schemat and execute the cmd_XXX() method to perform an administrative task.
        Dashes (-) in command name are replaced with underscores (_).
      */
@@ -23,7 +23,9 @@ export class AdminProcess {
     MODES = ['DIAL', 'DRY', 'WET']
     // protected
 
-    async run(cmd, opts = {}) {
+    static async run(...args) { return new this()._run(...args) }
+
+    async _run(cmd, opts = {}) {
         /* Boot up Schemat and execute the cmd_XXX() method. Dashes (-) in command name are replaced with underscores (_). */
         if (!cmd) return
         let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')

@@ -8,7 +8,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {print, T} from '../common/utils.js'
-import {AdminProcess} from "./admin.js"
+import {Admin} from "./admin.js"
 
 
 /**********************************************************************************************************************/
@@ -52,5 +52,5 @@ await (async function main() {
 
     // let loader = new Loader(import.meta.url)
 
-    await new AdminProcess().run(cmd, {...opts})
+    await Admin.run(cmd, {...opts})
 })()
