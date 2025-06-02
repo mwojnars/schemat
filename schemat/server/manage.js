@@ -52,5 +52,5 @@ await (async function main() {
 
     // let loader = new Loader(import.meta.url)
 
-    await new AdminProcess().start(cmd, {...opts})
+    await new AdminProcess().run(cmd, {...opts})
 })()

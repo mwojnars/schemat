@@ -17,18 +17,28 @@ export class AdminProcess {
 
     CLI_PREFIX = 'cmd_'     // command-line interface (CLI) on the server
 
-    async start(cmd, opts = {}) {
+    MODES = ['dry', 'rescue', 'normal']
+    MODES = ['dialup', 'rescue', 'normal']
+    MODES = ['dry', 'rescue', 'maintain']
+    MODES = ['DIAL', 'DRY', 'WET']
+    // protected
+
+    async run(cmd, opts = {}) {
         /* Boot up Schemat and execute the cmd_XXX() method. Dashes (-) in command name are replaced with underscores (_). */
         if (!cmd) return
         let method = this.CLI_PREFIX + cmd.replace(/-/g, '_')
-        assert(this[method], `unknown command: ${cmd}`)
+
+        let fun = this[method]
+        assert(fun, `unknown command: ${cmd}`)
 
         await boot_schemat(opts, async () => {
-            await schemat._boot_done()
-            await this[method](opts)
+            // await schemat._boot_done()
+            await fun.call(this, opts)
             process.exit(0)
         })
     }
+
+    async rescue__create_cluster(opts) {}
 
     async cmd_create_cluster(opts) {
         /* Create a new ring (ring-cluster) and cluster-related objects in it (nodes, database, etc.)
@@ -49,8 +59,9 @@ export class AdminProcess {
         let ring_tag = ring.file_tag || ring.name || 'ring-cluster'
         let ring_path = `${node_path}/${ring_tag}`      // the file name is incomplete
 
+        print('schemat.db', schemat.db)
         let db = schemat.db         // boot database to be extended with a new ring
-        db.add_ring()
+        db.add_ring(ring)
     }
 
     async cmd_reinsert({ids, new: new_id, ring: ring_name}) {
