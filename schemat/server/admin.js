@@ -55,8 +55,25 @@ export class Admin {
         })
     }
 
-    async prepare__create_cluster(opts) {
-        /* Create database files for a new cluster by copying boot.* ring images and doing modifications. */
+    async prepare__create_cluster(opts) {}
+    async normal__create_cluster(opts) {}
+
+    async _create_cluster(opts) {
+        /* Create database files for a new cluster by copying boot.01_cluster.data.XXXX.yaml ring image and doing plaintext modifications:
+           - set cluster name and directory path
+           - set TCP host and port for the first node (current physical node)
+           - create an initial app-ring if missing (keep an existing one if present)
+             - copy boot.02_app.data.XXXX.yaml
+             - set application name
+           - transform .yaml file(s) to the desired data format (rocksdb etc.)
+         */
+    }
+    async _init_cluster(opts) {
+        /* Open and modify a newly created cluster & app rings:
+           - add cluster nodes #2, #3, ...
+           - redistribute agents if needed (?)
+           - generate index files
+         */
     }
 
     async rescue__create_cluster(opts) {
