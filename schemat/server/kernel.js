@@ -35,7 +35,7 @@ export async function boot_schemat(opts, callback) {
     ServerSchemat.global_init()
 
     await globalThis._schemat.run(new ServerSchemat(config), async () => {
-        await schemat.boot(() => _open_bootstrap_db(), false)
+        await schemat.boot(_create_boot_db, false)
         await callback()
     })
 
@@ -51,7 +51,7 @@ export async function boot_schemat(opts, callback) {
         }
     }
 
-    async function _open_bootstrap_db() {
+    async function _create_boot_db() {
         let db = BootDatabase.new()
         let rings = config.bootstrap_rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
