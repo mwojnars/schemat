@@ -154,8 +154,6 @@ export class Schemat {
         if (!app_id) return
         assert(T.isNumber(app_id), `Invalid application ID: ${app_id}`)
 
-        // this.app_id = app_id
-        //
         // if (SERVER && this.parent) {
         //     this._app = await _schemat.run(this.parent, () => this.parent.reload(app_id, true))
         // }
@@ -165,7 +163,6 @@ export class Schemat {
         // }
 
         this._essential.push(app_id)
-
         this._app = await this.reload(app_id, true)
         assert(this.app?.is_loaded())
     }
