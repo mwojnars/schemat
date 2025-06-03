@@ -68,8 +68,7 @@ export class ServerSchemat extends Schemat {
     _cluster        // Cluster object of the previous generation, remembered here to keep the .cluster() getter operational during complete cache erasure
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
-    // get db()     { return this.system?.database || this._boot_db }
-    get db()        { return this._boot_db || this._db }  //|| this.system?.database }
+    get db()        { return this._boot_db || this._db }
     get tx()        { return this._transaction.getStore() }
     get node()      { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster()   { return this._cluster = this.get_if_loaded(this._cluster?.id) || this._cluster }
