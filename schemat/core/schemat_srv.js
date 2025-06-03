@@ -79,6 +79,8 @@ export class ServerSchemat extends Schemat {
     //     return this._app = _schemat.run(this.parent, () => this.parent.get_if_loaded(id)) || this._app
     // }
 
+    in_kernel_context() { return !this.app_id }
+
 
     /***  Initialization  ***/
 
@@ -227,7 +229,7 @@ export class ServerSchemat extends Schemat {
     }
 
     async in_context(db_id, callback) {
-        /* Run callback() in the Schemat async context (`_schemat`) built around a specific app.
+        /* Run callback() in the Schemat async context (`_schemat`) built around a specific database & app.
            If not yet created, this context (ServerSchemat instance) is created now and saved in
            globalThis._contexts for reuse by other requests. If `app_id` is missing, `this` is used as the context.
            If current `schemat` is already the target context, the callback is executed directly without
@@ -235,16 +237,15 @@ export class ServerSchemat extends Schemat {
 
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
+        if (!db_id && schemat.in_kernel_context()) return callback()
+        if (db_id === schemat.db.id) return callback()
+
         let app_id, db
         if (db_id) {
             db = (typeof db_id === 'object') ? db_id : this.get_object(db_id)
             if (!db.is_loaded()) await db.load()
             app_id = db?.application?.id
         }
-
-        // app_id ??= undefined
-        // if (typeof app_id === 'object') app_id = app_id.id
-        if (app_id === schemat.app_id) return callback()
 
         // this.kernel._print(`ServerSchemat.in_context() this.app_id = ${this.app_id} ...`)
         let context = app_id ? globalThis._contexts.get(app_id) : this
