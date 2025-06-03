@@ -97,9 +97,10 @@ export class ServerSchemat extends Schemat {
         globalThis._contexts = new Map()
     }
 
-    constructor(config, parent) {
+    constructor(config, parent, boot_db = null) {
         super(config)
         if (parent) this._clone(parent)
+        this._boot_db = boot_db || this.parent?.db
 
         assert(globalThis._contexts.get(this.app_id) === undefined, `ServerSchemat context for app_id=${this.app_id} is already registered`)
         globalThis._contexts.set(this.app_id, this)
@@ -121,12 +122,13 @@ export class ServerSchemat extends Schemat {
         this.builtin = parent.builtin
     }
 
-    async boot(boot_db, auto = true) {
+    async boot(boot_db = null, auto = true) {
         /* Initialize built-in objects, app_id, app, bootstrap DB. */
         if (!this.builtin) await this._init_classpath()
 
         // bootstrap DB: provided by the caller, created anew, or taken from parent; the ultimate DB is opened later: on the first access to this.db
-        this._boot_db = (typeof boot_db === 'function') ? await boot_db?.() : boot_db || this.parent.db
+        this._boot_db ??= await boot_db?.()
+        // this._boot_db = (typeof boot_db === 'function') ? await boot_db?.() : boot_db || this.parent.db
         assert(this._boot_db.is_loaded())
 
         let cluster_id = this.cluster_id = this.config.cluster
@@ -255,10 +257,10 @@ export class ServerSchemat extends Schemat {
 
         if (!context) {
             this.kernel._print(`ServerSchemat.in_context() creating context for [${app_id}]`)
-            context = new ServerSchemat({...this.config, app: app_id}, this)
+            context = new ServerSchemat({...this.config, app: app_id}, this, db)
 
             // globalThis._contexts.set(app_id, context)
-            await _schemat.run(context, () => context.boot(db))
+            await _schemat.run(context, () => context.boot())
 
             // let promise = _schemat.run(context, () => context.boot())
             // globalThis._contexts.set(app_id, promise)          // to avoid race condition

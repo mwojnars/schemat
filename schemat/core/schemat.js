@@ -144,7 +144,6 @@ export class Schemat {
         this.WebObject = WebObject          // schemat.WebObject is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
         this.registry = new Registry(this._on_evict.bind(this))
-        // this.parent_schemat = globalThis.schemat
     }
 
     async _load_app() {
