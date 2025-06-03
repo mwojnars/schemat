@@ -188,6 +188,18 @@ export class ServerSchemat extends Schemat {
 
     /***  Registry  ***/
 
+    _reload_db_timer_id     // used by _reload_db() below
+
+    async _reload_db() {
+        /* Dedicated method to reload this._db, which is a special object and needs special handling.
+           Normally, this method schedules its next execution automatically, but it is also possible and correct to invoke it manually.
+         */
+        clearTimeout(this._reload_db_timer_id)      // in case of a manual invocation, the previous timer should be cleared
+        this._db = await this._db.reload()
+        let timeout = (this._db.__ttl || 60.0) * 1000 + 0.01
+        this._reload_db_timer_id = setTimeout(() => this._reload_db(), timeout)
+    }
+
     async _purge_registry(generation = 0, ERASE_TIMEOUT = 20) {
         /* Purge the object cache in the registry. Schedule periodical re-run: the interval is configured
            in app.cache_purge_interval and may change over time.
