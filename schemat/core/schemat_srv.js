@@ -235,7 +235,7 @@ export class ServerSchemat extends Schemat {
         /* Run callback() in the Schemat async context (`_schemat`) built around a specific database & app.
            If not yet created, this context (ServerSchemat instance) is created now and saved in
            globalThis._contexts for reuse by other requests. If `app_id` is missing, `this` is used as the context.
-           If current `schemat` is already the target context, the callback is executed directly without
+           If the current `schemat` is already the target context, the callback is executed directly without
            starting a new async context.
 
            This method is used to set a custom request-specific context for RPC calls to agent methods.
