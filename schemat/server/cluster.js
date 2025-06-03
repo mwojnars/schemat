@@ -17,10 +17,7 @@ function _agent_role(agent, role = null) {
 export class Cluster extends Agent {
 
     async __init__()  {
-        if (SERVER) {
-            await this.database?.load()
-            await Promise.all(this.nodes.map(node => node.load()))
-        }
+        if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
     get agent_placements() {

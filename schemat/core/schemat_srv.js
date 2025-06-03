@@ -102,7 +102,9 @@ export class ServerSchemat extends Schemat {
     constructor(config, parent = null, boot_db = null) {
         super(config)
         if (parent) this._clone(parent)
-        this._boot_db = boot_db || this.parent?.db
+
+        this._boot_db = boot_db || this.parent?.db      // can be missing
+        this._db = boot_db                              // can be missing
 
         assert(globalThis._contexts.get(this.app_id) === undefined, `ServerSchemat context for app_id=${this.app_id} is already registered`)
         globalThis._contexts.set(this.app_id, this)
@@ -140,7 +142,10 @@ export class ServerSchemat extends Schemat {
         }
         else await super._load_app()
 
-        this._db = (this._app || this._cluster).database
+        // only the very first _boot_db (when loading the cluster) is a newborn object; later, when child contexts are created,
+        // their _boot_db is already the final db, so this._db is initialized in constructor()
+        this._db ??= await this._cluster.database.load()
+        assert(this._db.is_loaded())
 
         await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
         await this.app?.reload()            // repeated app reload is needed for app.global initialization which fails on the first attempt during bootstrap
