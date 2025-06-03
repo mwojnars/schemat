@@ -232,12 +232,6 @@ export class ServerSchemat extends Schemat {
 
         this.registry.erase()
         this._db = await this._db.reload()
-
-        // if (this._cluster) await this.reload(this.cluster_id, true)
-        // if (this._app) await this.reload(this._app.id, true)
-
-        // print(`_erase_registry() app:`, this.app?.__label, this.app?.__hash)
-        // print(`_erase_registry() this.db:`, this.db.__label, this.db.__hash)
     }
 
 
