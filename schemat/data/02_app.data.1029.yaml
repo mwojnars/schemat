@@ -1,3 +1,19 @@
+- id: 1001
+  name: main-app
+  info: Entry point to the web application. Contains top-level configuration of
+    the website, URL routes, app-level database etc.
+  root:
+    "@": 1007
+  global:
+    "@": schemat:Catalog
+  default_path: /$/id
+  database:
+    "@": 1002
+  logger:
+    "@": 1037
+  eval_allowed: true
+  __category:
+    "@": 2
 - id: 2001
   name: Varia
   info: Category of items that do not belong to any specific category.
