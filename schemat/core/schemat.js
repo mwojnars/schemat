@@ -147,19 +147,11 @@ export class Schemat {
     }
 
     async _load_app() {
-        /* Initialize this.app. */
+        /* Initialize this._app (this.app). */
 
         let app_id = this.app_id
         if (!app_id) return
         assert(T.isNumber(app_id), `Invalid application ID: ${app_id}`)
-
-        // if (SERVER && this.parent) {
-        //     this._app = await _schemat.run(this.parent, () => this.parent.reload(app_id, true))
-        // }
-        // else {
-        //     this._essential.push(app_id)
-        //     this._app = await this.reload(app_id, true)
-        // }
 
         this._essential.push(app_id)
         this._app = await this.reload(app_id, true)
