@@ -507,13 +507,13 @@
       info: If true, write access to the database is allowed, otherwise it is not.
       "@": schemat/types/type.js:BOOLEAN
     application:
-      info: "Reference to the Application object this database belongs to, undefined
-        for a cluster-level database. This link is important for context
-        switching: a [database] object defines an execution context, but the
-        actual context is fully initialized only after the [application] is
-        loaded from this database (typically from its highest ring rather than
-        ring-cluster which would prevent loading the application beforehand
-        using the cluster-level context)."
+      info: "Reference to the Application object this database belongs to, or
+        undefined for a cluster-level database (kernel context). This link is
+        important for context switching: [database] object defines an execution
+        context, but the actual context is fully initialized only after the
+        [application] is loaded from this database (typically from its highest
+        ring rather than ring-cluster which would prevent loading the
+        application beforehand using the kernel context)."
       category:
         "@": 2
       "@": schemat/types/type.js:REF
