@@ -62,8 +62,8 @@ export class ServerSchemat extends Schemat {
     parent          // parent ServerSchemat that created this one via .fork() below
     cluster_id      // ID of the active Cluster object
 
-    _boot_db        // boot Database, its presence indicates the boot phase is still going on; regular server-side DB is taken from app.database or cluster.database
-    _db             // ultimate Database loaded from _boot_db and then reloaded periodically
+    _boot_db        // boot Database: its presence indicates the boot phase is still going on
+    _db             // ultimate Database: loaded from _boot_db, then reloaded periodically
 
     _cluster        // Cluster object of the previous generation, remembered here to keep the .cluster() getter operational during complete cache erasure
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action

@@ -30,7 +30,6 @@ export class Application extends WebObject {
     root
     global
     cluster
-    database
     webserver
     default_path
     cache_purge_interval
@@ -41,7 +40,6 @@ export class Application extends WebObject {
         this._modules_cache = new Map()
         if (SERVER) {
             await this.root?.load()
-            await this.database?.load()
             await this.logger?.load()
             // this._vm = await import('node:vm')
             if (this.default_path) this._check_default_container()      // no await to avoid blocking the app's startup

@@ -287,9 +287,6 @@
   info: Top-level URL routing + global configuration of the application.
   class: schemat/core/app.js:Application
   schema:
-    database:
-      info: Database instance that contains all data of this application.
-      "@": schemat/types/type.js:REF
     webserver:
       info: A WebServer that handles all web requests.
       "@": schemat/types/type.js:REF
@@ -932,9 +929,9 @@
     located in the cluster or outside of it, depending on the type of agent."
   schema:
     __ctx:
-      info: Database object that represents the context (data, application, URLs
-        etc.) in which this agent should execute ('user mode'). If missing, the
-        agent executes in the context of the cluster database ('kernel mode').
+      info: Database object that represents the context (data, application, URLs etc.)
+        in which this agent should execute ('user mode'). If missing, the agent
+        executes in the context of the cluster database ('kernel mode').
       category:
         "@": 11
       "@": schemat/types/type.js:REF
