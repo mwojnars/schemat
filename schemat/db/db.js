@@ -292,6 +292,7 @@ export class Database extends WebObject {
 
     // properties:
     top_ring
+    application
 
 
     /***  Rings manipulation  ***/
