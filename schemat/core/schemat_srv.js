@@ -225,7 +225,7 @@ export class ServerSchemat extends Schemat {
         return (...args) => _schemat.run(this, () => handler(...args))
     }
 
-    async in_context(app_id, callback) {
+    async in_context(db_id, callback) {
         /* Run callback() in the Schemat async context (`_schemat`) built around a specific app.
            If not yet created, this context (ServerSchemat instance) is created now and saved in
            globalThis._contexts for reuse by other requests. If `app_id` is missing, `this` is used as the context.
@@ -234,8 +234,15 @@ export class ServerSchemat extends Schemat {
 
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
-        app_id ??= undefined
-        if (typeof app_id === 'object') app_id = app_id.id
+        let app_id
+        if (db_id) {
+            if (typeof db_id === 'object') db_id = db_id.id
+            let db = await this.get_loaded(db_id)
+            app_id = db?.application?.id
+        }
+
+        // app_id ??= undefined
+        // if (typeof app_id === 'object') app_id = app_id.id
         if (app_id === schemat.app_id) return callback()
 
         // this.kernel._print(`ServerSchemat.in_context() this.app_id = ${this.app_id} ...`)
@@ -336,16 +343,11 @@ export class ServerSchemat extends Schemat {
         return (tx === this.tx) ? action() : this._transaction.run(tx, action)
     }
 
-    async in_tx_context(db_id, tx, callback) {
+    in_tx_context(ctx, tx, callback) {
         /* Run callback() inside a double async context created by first setting the global `schemat`
-           to the context built around `app_id`, and then setting schemat.tx to `tx`. Both arguments are optional.
+           to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
          */
-        let app_id
-        if (db_id) {
-            let db = await this.get_loaded(db_id)
-            app_id = db?.application?.id
-        }
-        return this.in_context(app_id, tx ? () => schemat.in_transaction(tx, callback) : callback)
+        return this.in_context(ctx, tx ? () => schemat.in_transaction(tx, callback) : callback)
     }
 
     // with_transaction(action, tx = null) {

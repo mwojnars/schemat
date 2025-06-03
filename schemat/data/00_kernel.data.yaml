@@ -932,11 +932,11 @@
     located in the cluster or outside of it, depending on the type of agent."
   schema:
     __ctx:
-      info: Application object that represents the context (database, web domain, URLs
+      info: Database object that represents the context (data, application, URLs
         etc.) in which this agent should execute ('user mode'). If missing, the
         agent executes in the context of the cluster database ('kernel mode').
       category:
-        "@": 2
+        "@": 11
       "@": schemat/types/type.js:REF
     num_workers:
       default: 1

@@ -292,10 +292,11 @@ export class Database extends WebObject {
 
     // properties:
     top_ring
-    application
+    application         // reference to an Application object that's typically stored in `top_ring` of THIS very database;
+                        // for this reason it can only get fully loaded in the execution context of this database, not in the kernel context
 
 
-    /***  Rings manipulation  ***/
+    /***  Ring manipulation  ***/
 
     get rings()             { return this.top_ring.stack }      // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
     get rings_reversed()    { return this.rings.toReversed() }
