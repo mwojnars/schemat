@@ -336,11 +336,15 @@ export class ServerSchemat extends Schemat {
         return (tx === this.tx) ? action() : this._transaction.run(tx, action)
     }
 
-    in_tx_context(app_id, tx, callback) {
+    async in_tx_context(db_id, tx, callback) {
         /* Run callback() inside a double async context created by first setting the global `schemat`
-           to the context built around `app_id`, and then setting schemat.tx to `tx`.
-           Both arguments (app_id, tx) are optional.
+           to the context built around `app_id`, and then setting schemat.tx to `tx`. Both arguments are optional.
          */
+        let app_id
+        if (db_id) {
+            let db = await this.get_loaded(db_id)
+            app_id = db?.application?.id
+        }
         return this.in_context(app_id, tx ? () => schemat.in_transaction(tx, callback) : callback)
     }
 

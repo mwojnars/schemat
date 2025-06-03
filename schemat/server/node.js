@@ -347,7 +347,7 @@ export class Node extends Agent {
     _rpc_request(agent_id, method, args = [], opts) {
         /* RPC message format: [type, agent_id, method, args, opts]. Added here in `opts`: app (application ID), tx (transaction info). */
         let tx = schemat.tx?.dump()
-        let ctx = schemat.app_id
+        let ctx = schemat.app?.database.id  //schemat.app_id
         if (opts.role === schemat.GENERIC_ROLE) delete opts.role        // default role is passed implicitly
         opts = {...opts, ctx, tx}
         return ['RPC', agent_id, method, JSONx.encode(args), opts]
