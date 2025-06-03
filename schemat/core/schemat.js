@@ -94,7 +94,7 @@ export class Schemat {
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
 
     get root_category() { return this.get_object(ROOT_ID) }
-    get app()           { return this._app = this.get_if_loaded(this.app_id) || this._app }
+    get app()           { return this.get_if_loaded(this.app_id, obj => {this._app = obj}) || this._app }
     get global()        { return this.app?._global }
     get terminating()   { return this.kernel?._closing }
 
@@ -254,11 +254,17 @@ export class Schemat {
 
     get_if_present(id) { return this.registry.get_object(id) }
 
-    get_if_loaded(id, schedule_load = true) {
+    get_if_loaded(id, set_loaded = null) {
+        /* Only return the object from registry if it is already loaded. Otherwise, if set_loaded callback is provided,
+           load the object in the background and call set_loaded(obj) with the loaded instance when done.
+         */
         if (!id) return
         let obj = this.registry.get_object(id)
-        if (obj?.is_loaded()) return obj
-        if (schedule_load) obj?.load()      // load content in background for future access; intentionally not awaited
+        if (obj?.is_loaded()) {
+            set_loaded?.(obj)
+            return obj
+        }
+        if (set_loaded) obj?.load().then(set_loaded)    // load content in the background for future access; intentionally not awaited
     }
 
     async get_mutable(...objects_or_ids) {

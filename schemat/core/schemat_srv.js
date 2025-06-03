@@ -71,7 +71,7 @@ export class ServerSchemat extends Schemat {
     get db()        { return this._boot_db || this._db }
     get tx()        { return this._transaction.getStore() }
     get node()      { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
-    get cluster()   { return this._cluster = this.get_if_loaded(this._cluster?.id) || this._cluster }
+    get cluster()   { return this.get_if_loaded(this._cluster?.id, obj => {this._cluster = obj}) || this._cluster }
 
     // get app()    {
     //     let id = this.app_id
