@@ -225,17 +225,16 @@ export class ServerSchemat extends Schemat {
            and allow efficient garbage-collection in the presence of cyclic links between different web objects.
          */
         this.node._print(`Schemat._erase_registry() app=${this.app}, ${this.registry.objects.size} objects ...`)
+
         this._cluster = this.cluster
         this._app = this.app
-
         assert((!this._cluster || this._cluster.is_loaded()) && (!this._app || this._app.is_loaded()))
 
         this.registry.erase()
-
         this._db = await this._db.reload()
 
-        if (this._cluster) await this.reload(this.cluster_id, true)
-        if (this._app) await this.reload(this._app.id, true)
+        // if (this._cluster) await this.reload(this.cluster_id, true)
+        // if (this._app) await this.reload(this._app.id, true)
 
         // print(`_erase_registry() app:`, this.app?.__label, this.app?.__hash)
         // print(`_erase_registry() this.db:`, this.db.__label, this.db.__hash)
