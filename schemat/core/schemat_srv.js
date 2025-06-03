@@ -124,15 +124,10 @@ export class ServerSchemat extends Schemat {
     async boot(boot_db, auto = true) {
         /* Initialize built-in objects, app_id, app, bootstrap DB. */
         if (!this.builtin) await this._init_classpath()
-        this._boot_db = await boot_db?.() || this.parent.db     // bootstrap DB, created anew or taken from parent; the ultimate DB is opened later: on the first access to this.db
 
-        if (this.config.db) {
-            print(`ServerSchemat.boot() db_id=${this.db_id}`)
-            this._boot_db = this.config.db
-            delete this.config.db
-            assert(this._boot_db.is_loaded())
-        }
-
+        // bootstrap DB: provided by the caller, created anew, or taken from parent; the ultimate DB is opened later: on the first access to this.db
+        this._boot_db = (typeof boot_db === 'function') ? await boot_db?.() : boot_db || this.parent.db
+        assert(this._boot_db.is_loaded())
 
         let cluster_id = this.cluster_id = this.config.cluster
         if (cluster_id && !this.app_id) {
@@ -260,10 +255,10 @@ export class ServerSchemat extends Schemat {
 
         if (!context) {
             this.kernel._print(`ServerSchemat.in_context() creating context for [${app_id}]`)
-            context = new ServerSchemat({...this.config, db, app: app_id}, this)
+            context = new ServerSchemat({...this.config, app: app_id}, this)
 
             // globalThis._contexts.set(app_id, context)
-            await _schemat.run(context, () => context.boot())
+            await _schemat.run(context, () => context.boot(db))
 
             // let promise = _schemat.run(context, () => context.boot())
             // globalThis._contexts.set(app_id, promise)          // to avoid race condition
