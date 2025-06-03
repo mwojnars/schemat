@@ -37,8 +37,6 @@ export class Application extends WebObject {
     eval_allowed
     logger
 
-    get top_ring() { return this.database.top_ring }
-
     async __init__()  {
         this._modules_cache = new Map()
         if (SERVER) {
