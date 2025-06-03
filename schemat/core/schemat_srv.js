@@ -148,7 +148,6 @@ export class ServerSchemat extends Schemat {
 
         if (auto) this._boot_done()         // remove _boot_db so the target DB is being used from now on
 
-        // print(`boot() system:`, this.system.__label)
         // print(`boot() this.db:`, this.db.__label)
         return this
     }
