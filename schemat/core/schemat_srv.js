@@ -63,11 +63,13 @@ export class ServerSchemat extends Schemat {
     cluster_id      // ID of the active Cluster object
 
     _boot_db        // boot Database, its presence indicates the boot phase is still going on; regular server-side DB is taken from app.database or cluster.database
+    _db             // ultimate Database loaded from _boot_db and then reloaded periodically
+
     _cluster        // Cluster object of the previous generation, remembered here to keep the .cluster() getter operational during complete cache erasure
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
     // get db()     { return this.system?.database || this._boot_db }
-    get db()        { return this._boot_db || this.system?.database }
+    get db()        { return this._boot_db || this._db || this.system?.database }
     get tx()        { return this._transaction.getStore() }
     get node()      { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster()   { return this._cluster = this.get_if_loaded(this._cluster?.id) || this._cluster }
@@ -138,6 +140,9 @@ export class ServerSchemat extends Schemat {
         }
 
         await super._load_app()
+
+        this._db = this.system?.database
+
         await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
 
         await this.app?.reload()            // repeated app reload is needed for app.global initialization which fails on first attempt during bootstrap
