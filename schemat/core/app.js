@@ -172,18 +172,18 @@ export class Application extends WebObject {
            Every content object is a Catalog instance or an internal *state* of such instance (the result of .__getstate__()).
            The respond is an array of {id, data} records, one for each object created, in the same order as in the request.
          */
-        return this.database.insert(data, opts)
+        return schemat.db.insert(data, opts)
     }
 
     'action.submit_edits'(id, ...edits) {
         /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
            of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
          */
-        return this.database.update(id, edits)
+        return schemat.db.update(id, edits)
     }
 
     'action.delete_object'(id) {
-        return this.database.delete(id)
+        return schemat.db.delete(id)
     }
 
 
