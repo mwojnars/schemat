@@ -145,16 +145,6 @@ export class Schemat {
         this.registry = new Registry(this._on_evict.bind(this))
     }
 
-    async _load_app() {
-        /* Initialize this._app (this.app). */
-        let id = this.app_id
-        assert(T.isNumber(id), `Invalid application ID: ${id}`)
-
-        this._essential.push(id)
-        this._app = await this.reload(id, true)
-        assert(this.app?.is_loaded())
-    }
-
     async _init_classpath() {
         let builtin = this.builtin = new Classpath()
 
@@ -180,6 +170,16 @@ export class Schemat {
         let accept = (name) => name.toUpperCase() === name
         await builtin.fetch("../types/type.js", {accept})
         await builtin.fetch("../types/catalog_type.js", {accept})
+    }
+
+    async _load_app() {
+        /* Initialize this._app (this.app). */
+        let id = this.app_id
+        assert(T.isNumber(id), `Invalid application ID: ${id}`)
+
+        this._essential.push(id)
+        this._app = await this.reload(id, true)
+        assert(this.app?.is_loaded())
     }
 
     async _boot_done() {
