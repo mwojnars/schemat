@@ -73,13 +73,6 @@ export class ServerSchemat extends Schemat {
     get node()      { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster()   { return this.get_if_loaded(this._cluster?.id, obj => {this._cluster = obj}) || this._cluster }
 
-    // get app()    {
-    //     let id = this.app_id
-    //     if (!id) return
-    //     if (!this.parent) return this.get_if_loaded(id) || this._app
-    //     return this._app = _schemat.run(this.parent, () => this.parent.get_if_loaded(id)) || this._app
-    // }
-
     in_kernel_context() { return !this.app_id }
 
 

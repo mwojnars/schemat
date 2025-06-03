@@ -256,19 +256,19 @@ export class Schemat {
 
     get_if_loaded(id, set_loaded = null) {
         /* Only return the object from registry if it is already loaded. Otherwise, if set_loaded callback is provided,
-           load the object in the background and call set_loaded(obj) with the loaded instance when done.
+           load the object in the background and call set_loaded(obj) when done.
          */
         if (!id) return
-        let obj = this.registry.get_object(id)
+        let obj = this.get_object(id)
         if (obj?.is_loaded()) {
             set_loaded?.(obj)
             return obj
         }
-        if (set_loaded) obj?.load().then(set_loaded)    // load content in the background for future access; intentionally not awaited
+        if (set_loaded) obj.load().then(set_loaded)     // load content in the background for future access; intentionally not awaited
     }
 
     async get_mutable(...objects_or_ids) {
-        /* Return an array of mutable, fully-loaded instances of given objects. Like WebObject.get_mutable(),
+        /* Return an array of mutable, fully loaded instances of given objects. Like WebObject.get_mutable(),
            but executed for multiple objects (IDs) at once, and preceded by object loading when needed.
            Some objects/IDs on the args list can be missing (null, undefined).
          */
