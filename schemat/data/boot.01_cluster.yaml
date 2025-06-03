@@ -7,8 +7,6 @@
   global:
     "@": schemat:Catalog
   default_path: /$/id
-  database:
-    "@": 1002
   logger:
     "@": 1037
   eval_allowed: true
