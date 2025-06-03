@@ -20,7 +20,8 @@
         Typically, these objects are other categories that are necessary for
         creating new objects of the current category (__new__(), __setup__()) --
         listing them here removes the need for async schemat.import() from a web
-        path later on. The loading is only invoked when on server, not on clients.
+        path later on. The loading is only invoked when on server, not on
+        clients.
       "@": schemat/types/type.js:OBJECT
     defaults:
       value_type:
@@ -505,6 +506,17 @@
       default: true
       info: If true, write access to the database is allowed, otherwise it is not.
       "@": schemat/types/type.js:BOOLEAN
+    application:
+      info: "Reference to the Application object this database belongs to, undefined
+        for a cluster-level database. This link is important for context
+        switching: a [database] object defines an execution context, but the
+        actual context is fully initialized only after the [application] is
+        loaded from this database (typically from its highest ring rather than
+        ring-cluster which would prevent loading the application beforehand
+        using the cluster-level context)."
+      category:
+        "@": 2
+      "@": schemat/types/type.js:REF
     "@": schemat:Catalog
   std:
     ObjectIndexOperator:
