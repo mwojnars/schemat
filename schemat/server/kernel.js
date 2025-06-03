@@ -336,7 +336,7 @@ export class Kernel {
         let frame = new Frame(agent)
         this.frames.set([agent.id, role], frame)    // the frame must be assigned to `frames` already before __start__() is executed
 
-        let state = await schemat.in_context(agent.__app, () => agent.__start__({node: this.node, role, options})) || {}
+        let state = await schemat.in_context(agent.__ctx, () => agent.__start__({node: this.node, role, options})) || {}
         state.__role = role
         state.__options = options
         frame.set_state(state)
@@ -355,7 +355,7 @@ export class Kernel {
         let prev = frame.state
         let restart = () => agent.__restart__(prev, frame.agent)
 
-        let state = await schemat.in_context(agent.__app, restart)
+        let state = await schemat.in_context(agent.__ctx, restart)
         state.__role = prev.__role
         state.__options = prev.__options
 
@@ -379,7 +379,7 @@ export class Kernel {
         this._print(`stopping agent ${agent} ...`)
 
         let stop = () => agent.__stop__(frame.state)
-        await schemat.in_context(agent.__app, stop)
+        await schemat.in_context(agent.__ctx, stop)
 
         this.frames.delete([id, role])
         this._print(`stopping agent ${agent} done`)
