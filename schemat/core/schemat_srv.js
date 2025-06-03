@@ -69,7 +69,7 @@ export class ServerSchemat extends Schemat {
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
     // get db()     { return this.system?.database || this._boot_db }
-    get db()        { return this._boot_db || this._db || this.system?.database }
+    get db()        { return this._boot_db || this._db }  //|| this.system?.database }
     get tx()        { return this._transaction.getStore() }
     get node()      { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster()   { return this._cluster = this.get_if_loaded(this._cluster?.id) || this._cluster }
@@ -141,11 +141,9 @@ export class ServerSchemat extends Schemat {
         else await super._load_app()
 
         this._db = (this._app || this._cluster).database
-        // this._db = this.system?.database
 
         await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
-
-        await this.app?.reload()            // repeated app reload is needed for app.global initialization which fails on first attempt during bootstrap
+        await this.app?.reload()            // repeated app reload is needed for app.global initialization which fails on the first attempt during bootstrap
         // if (this.app) await this.reload(this.app_id, true)
 
         if (auto) this._boot_done()         // remove _boot_db so the target DB is being used from now on
