@@ -138,10 +138,10 @@ export class ServerSchemat extends Schemat {
             this._essential.push(cluster_id)
             this._cluster = await this.get_loaded(cluster_id)
         }
+        else await super._load_app()
 
-        await super._load_app()
-
-        this._db = this.system?.database
+        this._db = (this._app || this._cluster).database
+        // this._db = this.system?.database
 
         await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
 
