@@ -28,6 +28,10 @@ export class Admin {
         let cmd = command.replace(/-/g, '_')
         let mode, fun
 
+        // preparation method is executed before loading Schemat, so it can create ring files for the Schemat database
+        if (this[`prepare__${cmd}`])
+            await this[`prepare__${cmd}`](opts)
+
         // find the method and mode that together match the command name with MODE__ prefix, e.g. rescue__create_cluster
         for (let _mode of this.MODES) {
             let method = `${_mode}__${cmd}`
@@ -49,6 +53,10 @@ export class Admin {
             await fun.call(this, opts)
             process.exit(0)
         })
+    }
+
+    async prepare__create_cluster(opts) {
+        /* Create database files for a new cluster by copying boot.* ring images and doing modifications. */
     }
 
     async rescue__create_cluster(opts) {
