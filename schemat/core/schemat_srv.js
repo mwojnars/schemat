@@ -189,7 +189,7 @@ export class ServerSchemat extends Schemat {
     /***  Registry  ***/
 
     async _purge_registry(generation = 0, ERASE_TIMEOUT = 20) {
-        /* Purge the objects cache in the registry. Schedule periodical re-run: the interval is configured
+        /* Purge the object cache in the registry. Schedule periodical re-run: the interval is configured
            in app.cache_purge_interval and may change over time.
          */
         // print(`Schemat._purge_registry() generation ${generation}`)
@@ -220,6 +220,8 @@ export class ServerSchemat extends Schemat {
         assert((!this._cluster || this._cluster.is_loaded()) && (!this._app || this._app.is_loaded()))
 
         this.registry.erase()
+
+        this._db = await this._db.reload()
 
         if (this._cluster) await this.reload(this.cluster_id, true)
         if (this._app) await this.reload(this._app.id, true)
