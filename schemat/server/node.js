@@ -326,7 +326,7 @@ export class Node extends Agent {
         /* Execute an RPC message addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        let {agent_id, role, method, args, app_id, tx} = this._rpc_request_parse(message)
+        let {agent_id, role, method, args, ctx, tx} = this._rpc_request_parse(message)
         if (tx?.debug) this._print("rpc_recv():", JSON.stringify(message))
 
         // role ??= frame.state.__role
@@ -341,23 +341,23 @@ export class Node extends Agent {
             let result = await frame.call_agent(`${role}.${method}`, args)
             return this._rpc_response(result)
         }
-        return schemat.in_tx_context(app_id, tx, call)
+        return schemat.in_tx_context(ctx, tx, call)
     }
 
     _rpc_request(agent_id, method, args = [], opts) {
         /* RPC message format: [type, agent_id, method, args, opts]. Added here in `opts`: app (application ID), tx (transaction info). */
         let tx = schemat.tx?.dump()
-        let app = schemat.app_id
+        let ctx = schemat.app_id
         if (opts.role === schemat.GENERIC_ROLE) delete opts.role        // default role is passed implicitly
-        opts = {...opts, app, tx}
+        opts = {...opts, ctx, tx}
         return ['RPC', agent_id, method, JSONx.encode(args), opts]
     }
 
     _rpc_request_parse(request) {
-        let [type, agent_id, method, args, {role, tx, app}] = request
+        let [type, agent_id, method, args, {role, tx, ctx}] = request
         assert(type === 'RPC', `incorrect message type, expected RPC`)
         if (tx) tx = schemat.load_transaction(tx)
-        return {type, agent_id, role, method, args: JSONx.decode(args), tx, app_id: app}
+        return {type, agent_id, role, method, args: JSONx.decode(args), tx, ctx}
     }
 
     _rpc_response(result, error) {
