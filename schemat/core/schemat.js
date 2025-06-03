@@ -95,7 +95,6 @@ export class Schemat {
 
     get root_category() { return this.get_object(ROOT_ID) }
     get app()           { return this._app = this.get_if_loaded(this.app_id) || this._app }
-    get db()            { return this.app?.database }           // a stub when on client, fully loaded when on server
     get global()        { return this.app?._global }
     get system()        { return this.app || this.cluster }     // user mode | kernel mode
     get terminating()   { return this.kernel?._closing }
