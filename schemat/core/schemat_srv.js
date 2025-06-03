@@ -116,11 +116,12 @@ export class ServerSchemat extends Schemat {
     _clone(parent) {
         this.parent = parent
         this.kernel = parent.kernel
+        this.builtin = parent.builtin
     }
 
     async boot(boot_db, auto = true) {
         /* Initialize built-in objects, app_id, app, bootstrap DB. */
-        await this._init_classpath()
+        if (!this.builtin) await this._init_classpath()
         this._boot_db = await boot_db?.() || this.parent.db     // bootstrap DB, created anew or taken from parent; the ultimate DB is opened later: on the first access to this.db
 
         let cluster_id = this.cluster_id = this.config.cluster
@@ -234,10 +235,10 @@ export class ServerSchemat extends Schemat {
 
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
-        let app_id
+        let app_id, db
         if (db_id) {
-            if (typeof db_id === 'object') db_id = db_id.id
-            let db = await this.get_loaded(db_id)
+            db = (typeof db_id === 'object') ? db_id : this.get_object(db_id)
+            if (!db.is_loaded()) await db.load()
             app_id = db?.application?.id
         }
 
