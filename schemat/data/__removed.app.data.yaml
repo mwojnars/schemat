@@ -1,0 +1,78 @@
+- id: 2004
+  name: Post A
+  text: Ala ma kota
+  __category:
+    "@": 2006
+- id: 2005
+  name: MysqlDB
+  schema:
+    host:
+      "@": schemat/types/type.js:STRING
+    port:
+      "@": schemat/types/type.js:STRING
+    user:
+      "@": schemat/types/type.js:STRING
+    database:
+      "@": schemat/types/type.js:STRING
+    password:
+      "@": schemat/types/type.js:STRING
+    connection:
+      info: Javascript object containing connection parameters.
+      "@": schemat/types/type.js:GENERIC
+    tables:
+      info: Mapping of categories (their paths) to names of sql tables.
+      value_type:
+        "@": schemat/types/type.js:STRING
+      "@": schemat/types/catalog_type.js:CATALOG
+    offset:
+      "@": schemat/types/type.js:INTEGER
+    readonly:
+      "@": schemat/types/type.js:BOOLEAN
+    "@": schemat:Catalog
+  class: schemat/db/mysql.js:MySQL
+  __category:
+    "@": 1
+- id: 2006
+  name: TwitterPost
+  schema:
+    text:
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  class_init: |
+    // DRAFT...
+    // import {print} from '/app/utils.js'
+    // console.log('print:', print)
+    // console.log('TwitterPost/code executed')
+
+    // import {check} from '/app/widgets.js'
+    // import {WebObject} from '/$/local/schemat/core/object.js'
+    // import vm from 'vm'
+    // check()
+    // console.log('schemat:', schemat)
+    // console.log('WebObject:', WebObject)
+    // console.log('vm:', vm)
+  views:
+    view: |
+      let text = this.text
+      return P('Post:', BR(), text)
+    "@": schemat:Catalog
+  class_body: |-
+    // FOR RECORD ONLY...
+    // this method works OK (no await import)
+    init_OK() {
+        console.log('this.utils #1: started...')
+        return import('/app/utils.js').then(utils => {
+            this.utils = utils
+            console.log('this.utils #1:', this.utils)
+        })
+    }
+    // this method works WRONG: the web request is being completed while 
+    // the method waits on await import below (!?)
+    async init_ERR() {
+        console.log('this.utils #1: started...')
+        let utils = await import('/app/utils.js')
+        this.utils = utils
+        console.log('this.utils #1:', this.utils)
+    }
+  __category:
+    "@": 1
