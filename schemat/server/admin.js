@@ -98,8 +98,8 @@ export class Admin {
         await schemat.root_category.reload()            // load the root_category from DB so its .std is present
         await sleep()                                   // wait for root_category.std.* objects to load
 
-        print(`root_category.std:`, schemat.root_category.std)
-        print(`Ring:`, schemat.root_category.std.Ring.is_loaded())
+        print(`std:`, schemat.std)
+        print(`Ring:`, schemat.std.Ring.is_loaded())
     }
 
     async normal__reinsert({ids, new: new_id, ring: ring_name}) {

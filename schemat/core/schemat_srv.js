@@ -70,8 +70,9 @@ export class ServerSchemat extends Schemat {
 
     get db()        { return this._boot_db || this._db }
     get tx()        { return this._transaction.getStore() }
-    get node()      { return this.kernel?.node }       // host Node (web object) of the current process; initialized and periodically reloaded in Server
+    get node()      { return this.kernel?.node }        // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster()   { return this.get_if_loaded(this._cluster?.id, obj => {this._cluster = obj}) || this._cluster }
+    get std()       { return this.root_category.std }   // standard categories and objects from ring-kernel
 
     in_kernel_context() { return !this.app_id }
 
