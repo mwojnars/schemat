@@ -1,0 +1,105 @@
+- id: 1014
+  name: test-cluster
+  info: >-
+    NOT USED right now because cluster configuration CANNOT be overridden in a
+    non-bootstrap ring "ring-test".
+
+
+    Cluster configuration for unit tests. Extends the database with [test-ring] to override some system configuration like TCP port numbers.
+  database:
+    "@": 1039
+  __prototype:
+    "@": 1025
+  __category:
+    "@": 10
+- id: 1039
+  name: db-test
+  top_ring:
+    "@": 1040
+  __category:
+    "@": 11
+- id: 1040
+  name: ring-test
+  base_ring:
+    "@": 1016
+  file_tag: 03_test
+  readonly: false
+  data_sequence:
+    "@": 1041
+  sequences:
+    - "@": 1044
+  min_id_exclusive: 3001
+  min_id_forbidden: 4000
+  min_id_sharded: 5001
+  shard3:
+    =:
+      - 6
+      - 9
+    "@": schemat/common/structs.js:Shard
+  __category:
+    "@": 12
+- id: 1041
+  ring:
+    "@": 1040
+  operator:
+    "@": 20
+  blocks:
+    - "@": 1043
+  __category:
+    "@": 14
+- id: 1043
+  sequence:
+    "@": 1041
+  file_name: 03_test.data.1043.yaml
+  format: data-yaml
+  shard:
+    =:
+      - 0
+      - 1
+    "@": schemat/common/structs.js:Shard
+  __category:
+    "@": 19
+- id: 1044
+  ring:
+    "@": 1040
+  operator:
+    "@": 23
+  blocks:
+    - "@": 1045
+  __category:
+    "@": 22
+- id: 1045
+  sequence:
+    "@": 1044
+  file_name: 03_test.idx-category.1045.jl
+  format: index-jl
+  __category:
+    "@": 18
+
+
+- id: 1031
+  name: kafka-broker
+  __category:
+    "@": 31
+- id: 1034
+  name: kafka-master
+  info: Kafka client of the master process of a node. Comes with a shared producer
+    and a per-node dedicated consumer that processes messages addressed to the
+    Node.
+  start_client: true
+  start_producer: true
+  start_consumer: true
+  __class: schemat/server/kafka.js:KafkaNode
+  __category:
+    "@": 32
+- id: 1035
+  name: kafka-worker
+  info: Kafka client of a worker process of a node. Comes with a shared producer
+    (needed on every worker process), but no per-node consumer (only exists on
+    the master process).
+  start_client: true
+  start_producer: true
+  start_consumer: false
+  __class: schemat/server/kafka.js:KafkaNode
+  __category:
+    "@": 32
