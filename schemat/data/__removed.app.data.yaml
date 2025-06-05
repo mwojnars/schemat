@@ -76,3 +76,31 @@
     }
   __category:
     "@": 1
+
+
+- id: 2008
+  name: /app
+  entries:
+    utils.js:
+      "@": 2009
+    widgets.js:
+      "@": 2010
+    "@": schemat:Catalog
+  __category:
+    "@": 5
+- id: 2009
+  content: export let print = console.log
+  __category:
+    "@": 4
+  __container:
+    "@": 2008
+- id: 2010
+  content: |-
+    import {print} from '../app/utils.js'
+    export function check() { print('called widgets.js:check()') } 
+    //let fs = await import('fs')
+    //print('fs:',fs)
+  __category:
+    "@": 4
+  __container:
+    "@": 2008
