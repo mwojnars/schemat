@@ -253,7 +253,7 @@ describe('Schemat Tests', function () {
         it('Varia: load/insert/delete', async function () {
             // navigate to the Varia category page
             await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main',
-                ['Varia', 'Category', 'name', '__category', 'schema', 'Varia:2002', 'Create'])
+                ['Varia', 'Category', 'name', '__category', 'schema', 'Varia:2102', 'Create'])
 
             // these strings are only available after client-side rendering, not in HTML source:
             expect_include_all(await extract_content(page), 'check', 'Varia.code')
@@ -312,7 +312,7 @@ describe('Schemat Tests', function () {
         // })
 
         it('Varia object', async function () {
-            await test_page(page, `${DOMAIN}/$/id/2002`, '#page-main', ['Varia', 'title', '__category', 'Ala ma kota', 'Add new entry'])
+            await test_page(page, `${DOMAIN}/$/id/2102`, '#page-main', ['Varia', 'title', '__category', 'Ala ma kota', 'Add new entry'])
         })
 
         it('uncategorized object', async function () {
@@ -320,7 +320,7 @@ describe('Schemat Tests', function () {
         })
 
         it('static html page', async function () {
-            await test_page(page, `${DOMAIN}/$/id/2002::test_html`, null, ['Test Page', 'Headings', 'First item'])
+            await test_page(page, `${DOMAIN}/$/id/2102::test_html`, null, ['Test Page', 'Headings', 'First item'])
         })
 
         it('robots.txt', async function () {
