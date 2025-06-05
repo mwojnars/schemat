@@ -95,14 +95,6 @@
     "@": 1019
   __category:
     "@": 8
-- id: 2007
-  name: /apps
-  entries:
-    demo:
-      "@": 2011
-    "@": schemat:Catalog
-  __category:
-    "@": 5
 - id: 2008
   name: /app
   entries:
@@ -129,12 +121,6 @@
     "@": 4
   __container:
     "@": 2008
-- id: 2011
-  name: /demo
-  __category:
-    "@": 5
-  __container:
-    "@": 2007
 - id: 2012
   name: main-space
   spaces:
