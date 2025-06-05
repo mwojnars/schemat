@@ -21,27 +21,7 @@
   info: Core system objects and categories, for dynamic imports by path instead of
     ID.
   __container:
-    "@": 1019
-  __category:
-    "@": 5
-- id: 1019
-  name: system
-  info: >-
-    The root system directory (/$). It provides access to:
-
-    1) every web object by its ID through the "default URL path" (.../id/<ID>), which is used when the object does not belong to any other URL container;
-
-    2) Schemat's source code that is read from a local disk folder.
-  entries:
-    id:
-      "@": 1021
-    local:
-      "@": 1020
-    sys:
-      "@": 1009
-    "@": schemat:Catalog
-  __container:
-    "@": 2002
+    "@": 2004
   __category:
     "@": 5
 - id: 1020
@@ -49,14 +29,14 @@
   local_path: .
   paths_allowed: schemat/ app/ demo/ node_modules/
   __container:
-    "@": 1019
+    "@": 2004
   __category:
     "@": 6
 - id: 1021
   name: default-namespace
   info: All objects accessible by their IDs.
   __container:
-    "@": 1019
+    "@": 2004
   __category:
     "@": 8
 - id: 2001
@@ -80,7 +60,7 @@
     "":
       "@": 2003
     $:
-      "@": 1019
+      "@": 2004
     "*app_source":
       "@": 1005
     "*app_objects":
@@ -95,6 +75,26 @@
     "@": 2002
   __category:
     "@": 25
+- id: 2004
+  name: system
+  info: >-
+    The root system directory (/$). It provides access to:
+
+    1) every web object by its ID through the "default URL path" (.../id/<ID>), which is used when the object does not belong to any other URL container;
+
+    2) Schemat's source code that is read from a local disk folder.
+  entries:
+    id:
+      "@": 1021
+    local:
+      "@": 1020
+    sys:
+      "@": 1009
+    "@": schemat:Catalog
+  __container:
+    "@": 2002
+  __category:
+    "@": 5
 - id: 2101
   name: Varia
   info: Category of items that do not belong to any specific category.
