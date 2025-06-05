@@ -311,7 +311,7 @@ export class Struct {
     }
 
     static transform(target, fun, path = []) {
-        /* Transform all (nested) objects in the `target` collection through a function, fun(obj, path), in pre-order.
+        /* In-place transform of all (nested) objects in the `target` collection through a function, fun(obj, path), in pre-order.
            If fun() returns undefined, the object is left unchanged and transform() proceeds to its child nodes;
            otherwise, the object is replaced with the returned (modified) object and the processing moves on to sibling nodes.
            Returning an unchanged `obj` from fun() is a way to skip the processing of its children.

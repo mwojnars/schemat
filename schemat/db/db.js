@@ -488,10 +488,6 @@ export class Database extends WebObject {
                 let old_json = data.dump()
                 let new_json = Struct.transform(data, transform).dump()     // `data` catalog is transformed in place (!)
 
-                // print(`_update_references() id=${id}:`)
-                // print(` ...old=${old_json}`)
-                // print(` ...new=${new_json}`)
-
                 if (old_json === new_json) continue       // no changes? don't update the record
                 if (ring.readonly)
                     print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
