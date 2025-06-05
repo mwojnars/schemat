@@ -457,7 +457,7 @@ export class Schemat {
 
         let {reload = true, ...opts} = opts_
         let data = objects.map(obj => obj.__data.__getstate__())
-        let ids = await this.app.action.insert_objects(data, opts)
+        let ids = await this.server.insert_objects(data, opts)
         ids.map((id, i) => {
             delete objects[i].__self.__provisional_id   // replace provisional IDs with final IDs
             objects[i].id = id
@@ -479,11 +479,6 @@ export class Schemat {
         //     return reload ? save?.then(() => obj.reload()) : save
         // }))
     }
-
-    // async server(code) {
-    //     /* Run eval(code) on the server and return the result; `code` is a string. Can be called on the client or the server. */
-    //     return this.app.POST.eval(code)
-    // }
 
     get server() {
         /* Proxy object that handles both direct calls (server(code)) and property access (server.XYZ).
