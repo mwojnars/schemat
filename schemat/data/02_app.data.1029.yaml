@@ -95,14 +95,6 @@
     "@": 1019
   __category:
     "@": 8
-- id: 2012
-  name: main-space
-  spaces:
-    sys.category:
-      "@": 1
-    "@": schemat:Catalog
-  __category:
-    "@": 9
 - id: 2101
   name: Varia
   info: Category of items that do not belong to any specific category.

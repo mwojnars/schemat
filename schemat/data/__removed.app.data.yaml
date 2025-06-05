@@ -104,3 +104,12 @@
     "@": 4
   __container:
     "@": 2008
+
+- id: 2012
+  name: main-space
+  spaces:
+    sys.category:
+      "@": 1
+    "@": schemat:Catalog
+  __category:
+    "@": 9
