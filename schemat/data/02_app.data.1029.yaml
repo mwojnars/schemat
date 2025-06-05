@@ -95,26 +95,11 @@
     "@": 1019
   __category:
     "@": 8
-- id: 2001
-  name: Varia
-  info: Category of items that do not belong to any specific category.
-  class_body: >-
-    static check() { import('/$/local/schemat/common/utils.js').then(mod =>
-    console.log("Varia.code: imported ", mod)) }
-
-    static error() { throw new Error('Varia/code/error()') }
-  schema:
-    title:
-      repeated: true
-      "@": schemat/types/type.js:STRING
-    "@": schemat:Catalog
-  __category:
-    "@": 1
 - id: 2002
   title: Ala ma kota Sierściucha i psa Kłapoucha.
   title/2: drugi tytuł...
   __category:
-    "@": 2001
+    "@": 2101
 - id: 2003
   title: ąłęÓŁŻŹŚ
 - id: 2007
@@ -169,4 +154,19 @@
   name: varia_01
   info: xxxxxxxxxxxxxxxxxx
   __category:
-    "@": 2001
+    "@": 2101
+- id: 2101
+  name: Varia
+  info: Category of items that do not belong to any specific category.
+  class_body: >-
+    static check() { import('/$/local/schemat/common/utils.js').then(mod =>
+    console.log("Varia.code: imported ", mod)) }
+
+    static error() { throw new Error('Varia/code/error()') }
+  schema:
+    title:
+      repeated: true
+      "@": schemat/types/type.js:STRING
+    "@": schemat:Catalog
+  __category:
+    "@": 1
