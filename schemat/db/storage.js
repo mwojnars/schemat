@@ -136,6 +136,7 @@ export class YamlDataStorage extends MemoryStorage {
         let recs = [...this.scan()].map(([key, data_json]) => {
             let id = data_schema.decode_key(key)[0]
             let data = JSON.parse(data_json)
+            assert(data.id === undefined)       // there must be no `id` included as a plain attribute
             return T.isPOJO(data) ? {id, ...data} : {id, __data: data}
         })
         let out = yaml.stringify(recs)
