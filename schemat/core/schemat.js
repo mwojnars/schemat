@@ -485,6 +485,21 @@ export class Schemat {
         return this.app.POST.eval(code)
     }
 
+    get server() {
+        /* Proxy object that handles both direct calls (server(code)) and property access (server.XYZ).
+           Direct calls execute code on the server via eval, while property access forwards to app.action.XYZ().
+         */
+        return new Proxy(
+            async (code) => this.app.POST.eval(code),  // handle direct calls like server(code)
+            {
+                get: (target, prop) => {               // handle property access like server.XYZ
+                    if (prop === 'then') return undefined  // prevent Promise-like behavior
+                    return (...args) => this.app.action[prop](...args)
+                }
+            }
+        )
+    }
+
     /***  Events & Debugging  ***/
 
     before_data_loading(obj, MAX_LOADING = 10) {
