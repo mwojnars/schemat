@@ -41,6 +41,8 @@ await (async function main() {
 
         // .command('find-orphans', 'find all objects that are not referenced by any other object; orphan cycles are NOT detected',)
 
+        .option('node', {type: 'string', desc: "path to the node's local folder inside ./cluster/... for finding config.yaml, detecting cluster ID and inferring node ID"})
+
         .demandCommand(1, 'Please provide a command to run.')
         .help().alias('help', 'h')
         .argv

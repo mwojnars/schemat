@@ -49,7 +49,6 @@ export class Admin {
         await boot_schemat(opts, async () => {
             // in "rescue" mode, only the bootstrap database is created; Schemat stays in booting phase; no final DB
             if (mode === 'normal') await schemat._boot_done()
-
             await fun.call(this, opts)
             process.exit(0)
         })
@@ -137,6 +136,7 @@ export class Admin {
                     print(`...WARNING: object [${id}] not found, skipping`)
                     continue
                 }
+                else throw ex
             }
 
             let insert = new_id ? ring.insert_at(new_id, obj.__json) : ring.insert(obj.__json)
@@ -149,6 +149,9 @@ export class Admin {
             print(`...reinserted object [${id}] as [${new_id}]`)
             new_id = undefined
         }
+
+        // TODO: rebuild indexes ??
+
         print()
     }
 
