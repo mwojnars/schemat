@@ -421,10 +421,10 @@ export class Database extends WebObject {
 
     /***  Administrative  ***/
 
-    async admin_reinsert(ids, {new: new_id, ring: ring_name} = {}) {
-        /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring.
-           Only for development purposes. May lead to data inconsistencies. Changing object IDs should never be done in production,
-           especially that the entire database is scanned for references after each reinsert.
+    async admin_reinsert(ids, {id: new_id, ring: ring_name} = {}) {
+        /* Remove object(s) from its current ring and reinsert under new `id` into `ring` (if present), or to the top-most ring.
+           Only for development purposes, this operation may lead to data inconsistencies. Changing object IDs should never
+           be done in production, especially that the entire database is scanned for references after each re-insert.
          */
         ids = String(ids)
         print(`\nreinserting object(s) [${ids}] ...`)

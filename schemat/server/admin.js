@@ -101,7 +101,7 @@ export class Admin {
         print(`Ring:`, schemat.std.Ring.is_loaded())
     }
 
-    
+
     // async _update_all() {
     //     /* Perform "update in place" on every item in the database, for instance, to force conversion of the items
     //        to a new format. All rings in the DB must be set as writable (!), otherwise the update will write a copy
