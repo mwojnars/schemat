@@ -1,26 +1,3 @@
-- id: 1009
-  name: /$/sys
-  info: Core system objects and categories, for dynamic imports by path instead of
-    ID.
-  __container:
-    "@": 2004
-  __category:
-    "@": 5
-- id: 1020
-  name: /$/local
-  local_path: .
-  paths_allowed: schemat/ app/ demo/ node_modules/
-  __container:
-    "@": 2004
-  __category:
-    "@": 6
-- id: 1021
-  name: default-namespace
-  info: All objects accessible by their IDs.
-  __container:
-    "@": 2004
-  __category:
-    "@": 8
 - id: 2001
   name: application
   info: Entry point to the web application. Contains top-level configuration of
@@ -67,11 +44,11 @@
     2) Schemat's source code that is read from a local disk folder.
   entries:
     id:
-      "@": 1021
+      "@": 2009
     local:
-      "@": 1020
+      "@": 2008
     sys:
-      "@": 1009
+      "@": 2007
     "@": schemat:Catalog
   __container:
     "@": 2002
@@ -95,6 +72,29 @@
     "@": 2002
   __category:
     "@": 5
+- id: 2007
+  name: /$/sys
+  info: Core system objects and categories, for dynamic imports by path instead of
+    ID.
+  __container:
+    "@": 2004
+  __category:
+    "@": 5
+- id: 2008
+  name: /$/local
+  local_path: .
+  paths_allowed: schemat/ app/ demo/ node_modules/
+  __container:
+    "@": 2004
+  __category:
+    "@": 6
+- id: 2009
+  name: default-namespace
+  info: All objects accessible by their IDs.
+  __container:
+    "@": 2004
+  __category:
+    "@": 8
 - id: 2101
   name: Varia
   info: Category of items that do not belong to any specific category.
