@@ -231,10 +231,11 @@ export class DataBlock extends Block {
         return await this._move_down(id, req).select(id, req)
     }
 
-    async '$agent.insert'(state, id, data, opts = {}) {
+    async '$agent.insert'(state, data, opts = {}) {
         /* `data` can be an array if multiple objects are to be inserted. */
         // this._print(`before $agent.insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
 
+        let {id} = opts         // optional target ID to be assigned to the new object
         let ring = this.ring
         assert(ring?.is_loaded())
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
