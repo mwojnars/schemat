@@ -160,7 +160,7 @@ export class Application extends WebObject {
     async resolve(path) { return this.root.resolve(path) }
 
 
-    /***  Actions  ***/
+    /***  Actions -- can be called via schemat.server.*()  ***/
 
     'action.insert_objects'(data, opts) {
         /* Insert new object(s) to DB with __data initialized from the provided JSONx-stringified representation(s).
