@@ -459,7 +459,7 @@ export class FIELD extends STRING {
     /* A STRING than only contains alphanumeric characters (Unicode allowed!), "_" and "-",
        but no punctuation, spaces or control chars.
      */
-    static options = {charset: 'a-zA-Z0-9_\\-\\p{L}\\p{N}'}
+    static options = {charset: 'a-zA-Z0-9$_\\-\\p{L}\\p{N}'}
 }
 
 export class IDENTIFIER extends STRING {
