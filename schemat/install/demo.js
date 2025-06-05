@@ -52,7 +52,7 @@ async function create_demo_01() {
     let db = fs.readFileSync(path, 'utf8')
 
     // replace file paths, object names and port numbers in `db`
-    db = db.replaceAll('main-app', `Bookstore (demo app)`)
+    db = db.replaceAll('application', `Bookstore (demo app)`)
     db = db.replaceAll('name: home', `name: home\n  view_endpoint: demo/01_books/home/home.js:homepage`)
     db = db.replaceAll('file_tag: sample', 'file_tag: demo-01')
 
