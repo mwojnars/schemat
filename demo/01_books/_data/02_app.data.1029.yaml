@@ -3,7 +3,7 @@
   info: Entry point to the web application. Contains top-level configuration of
     the website, URL routes, app-level database etc.
   root:
-    "@": 1007
+    "@": 2002
   global:
     AuthorCategory:
       "@": 2102
@@ -16,6 +16,98 @@
   eval_allowed: true
   __category:
     "@": 2
+- id: 2002
+  name: <root>
+  info: Root of the container hierarchy exposed at URL path = /
+  entries:
+    authors:
+      "@": 2102
+    books:
+      "@": 2101
+    book:
+      "@": 2115
+    "":
+      "@": 2003
+    $:
+      "@": 2004
+    "*app_source":
+      "@": 2005
+    "*app_objects":
+      "@": 2006
+    "@": schemat:Catalog
+  __path: /
+  __category:
+    "@": 5
+- id: 2003
+  name: home
+  view_endpoint: demo/01_books/home/home.js:homepage
+  __container:
+    "@": 2002
+  __category:
+    "@": 25
+- id: 2004
+  name: system
+  info: >-
+    The root system directory (/$). It provides access to:
+
+    1) every web object by its ID through the "default URL path" (.../id/<ID>), which is used when the object does not belong to any other URL container;
+
+    2) Schemat's source code that is read from a local disk folder.
+  entries:
+    id:
+      "@": 2009
+    local:
+      "@": 2008
+    sys:
+      "@": 2007
+    "@": schemat:Catalog
+  __container:
+    "@": 2002
+  __category:
+    "@": 5
+- id: 2005
+  name: app_source
+  info: Path to the local directory containing source code of the application.
+    Typically, this directory does NOT include Schemat source code, and is
+    mainly used for serving static files, like .css files, robots.txt etc.
+  local_path: ./demo/01_books
+  __container:
+    "@": 2002
+  __category:
+    "@": 6
+- id: 2006
+  name: app_objects
+  entries:
+    "@": schemat:Catalog
+  __container:
+    "@": 2002
+  __category:
+    "@": 5
+- id: 2007
+  name: /$/sys
+  info: Core system objects and categories, for dynamic imports by path instead of
+    ID.
+  __container:
+    "@": 2004
+  __category:
+    "@": 5
+- id: 2008
+  name: /$/local
+  local_path: .
+  paths_allowed: schemat/ app/ demo/ node_modules/
+  __container:
+    "@": 2004
+  __category:
+    "@": 6
+- id: 2009
+  name: default-namespace
+  info: All objects accessible by their IDs.
+  __container:
+    "@": 2004
+  __category:
+    "@": 8
+
+
 - id: 2101
   name: Book
   class: demo/01_books/books/books.js:Book
