@@ -6,7 +6,7 @@
     "@": 1007
   global:
     AuthorCategory:
-      "@": 2002
+      "@": 2102
     BookCategory:
       "@": 2101
     "@": schemat:Catalog
@@ -16,33 +16,6 @@
   eval_allowed: true
   __category:
     "@": 2
-- id: 2002
-  name: Author
-  class: demo/01_books/authors/author.js:Author
-  schema:
-    birth_year:
-      "@": schemat/types/type.js:INTEGER
-    death_year:
-      "@": schemat/types/type.js:INTEGER
-    nationality:
-      "@": schemat/types/type.js:STRING
-    notable_work:
-      repeated: true
-      "@": schemat/types/type.js:STRING
-    literary_movement:
-      "@": schemat/types/type.js:STRING
-    alma_mater:
-      "@": schemat/types/type.js:STRING
-    award:
-      repeated: true
-      "@": schemat/types/type.js:STRING
-    spouse:
-      "@": schemat/types/type.js:STRING
-    bio:
-      "@": schemat/types/type.js:TEXT
-    "@": schemat:Catalog
-  __category:
-    "@": 1
 - id: 2003
   title: The Great Gatsby
   author:
@@ -75,7 +48,7 @@
     writer, widely regarded as one of the greatest American writers of the 20th
     century.
   __category:
-    "@": 2002
+    "@": 2102
 - id: 2005
   title: The Hobbit
   author:
@@ -110,7 +83,7 @@
     known as the author of the high fantasy works The Hobbit and The Lord of the
     Rings.
   __category:
-    "@": 2002
+    "@": 2102
 - id: 2007
   title: Pride and Prejudice
   author:
@@ -140,7 +113,7 @@
     novels, which interpret, critique and comment upon the British landed gentry
     at the end of the 18th century.
   __category:
-    "@": 2002
+    "@": 2102
 - id: 2009
   title: Good Omens
   author:
@@ -177,7 +150,7 @@
     novels, and screenplays. His works blend elements of fantasy, horror, and
     mythology.
   __category:
-    "@": 2002
+    "@": 2102
 - id: 2011
   name: Terry Pratchett
   birth_year: 1948
@@ -193,7 +166,7 @@
   bio: Sir Terry Pratchett was an English humorist, satirist, and author of
     fantasy novels, best known for his Discworld series of 41 novels.
   __category:
-    "@": 2002
+    "@": 2102
 - id: 2012
   title: The Silmarillion
   author:
@@ -283,7 +256,7 @@
     His work is characterized by lucid prose, social criticism, opposition to
     totalitarianism, and support of democracy.
   __category:
-    "@": 2002
+    "@": 2102
 - id: 2101
   name: Book
   class: demo/01_books/books/books.js:Book
@@ -294,7 +267,7 @@
       info: Repeat this field to enter multiple authors.
       repeated: true
       category:
-        "@": 2002
+        "@": 2102
       "@": schemat/types/type.js:REF
     genre:
       "@": schemat/types/type.js:STRING
@@ -314,6 +287,33 @@
       "@": schemat/types/type.js:NUMBER
     cover_image:
       "@": schemat/types/type.js:URL
+    "@": schemat:Catalog
+  __category:
+    "@": 1
+- id: 2102
+  name: Author
+  class: demo/01_books/authors/author.js:Author
+  schema:
+    birth_year:
+      "@": schemat/types/type.js:INTEGER
+    death_year:
+      "@": schemat/types/type.js:INTEGER
+    nationality:
+      "@": schemat/types/type.js:STRING
+    notable_work:
+      repeated: true
+      "@": schemat/types/type.js:STRING
+    literary_movement:
+      "@": schemat/types/type.js:STRING
+    alma_mater:
+      "@": schemat/types/type.js:STRING
+    award:
+      repeated: true
+      "@": schemat/types/type.js:STRING
+    spouse:
+      "@": schemat/types/type.js:STRING
+    bio:
+      "@": schemat/types/type.js:TEXT
     "@": schemat:Catalog
   __category:
     "@": 1

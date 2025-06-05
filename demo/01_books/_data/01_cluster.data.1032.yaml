@@ -68,7 +68,7 @@
   info: Root of the container hierarchy exposed at URL path = /
   entries:
     authors:
-      "@": 2002
+      "@": 2102
     books:
       "@": 2101
     book:
