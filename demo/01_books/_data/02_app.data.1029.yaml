@@ -8,7 +8,7 @@
     AuthorCategory:
       "@": 2002
     BookCategory:
-      "@": 2001
+      "@": 2101
     "@": schemat:Catalog
   default_path: /$/id
   logger:
@@ -16,39 +16,6 @@
   eval_allowed: true
   __category:
     "@": 2
-- id: 2001
-  name: Book
-  class: demo/01_books/books/books.js:Book
-  schema:
-    title:
-      "@": schemat/types/type.js:STRING
-    author:
-      info: Repeat this field to enter multiple authors.
-      repeated: true
-      category:
-        "@": 2002
-      "@": schemat/types/type.js:REF
-    genre:
-      "@": schemat/types/type.js:STRING
-    published_year:
-      "@": schemat/types/type.js:INTEGER
-    isbn:
-      "@": schemat/types/type.js:STRING
-    page_count:
-      "@": schemat/types/type.js:INTEGER
-    language:
-      "@": schemat/types/type.js:STRING
-    publisher:
-      "@": schemat/types/type.js:STRING
-    description:
-      "@": schemat/types/type.js:TEXT
-    average_rating:
-      "@": schemat/types/type.js:NUMBER
-    cover_image:
-      "@": schemat/types/type.js:URL
-    "@": schemat:Catalog
-  __category:
-    "@": 1
 - id: 2002
   name: Author
   class: demo/01_books/authors/author.js:Author
@@ -91,7 +58,7 @@
   average_rating: 4.2
   cover_image: https://dummyimage.com/200x300/3498db/ffffff.png&text=The+Great+Gatsby
   __category:
-    "@": 2001
+    "@": 2101
 - id: 2004
   name: F. Scott Fitzgerald
   birth_year: 1896
@@ -125,7 +92,7 @@
   average_rating: 4.6
   cover_image: https://dummyimage.com/200x300/16a085/ffffff.png&text=The+Hobbit
   __category:
-    "@": 2001
+    "@": 2101
 - id: 2006
   name: J.R.R. Tolkien
   birth_year: 1892
@@ -159,7 +126,7 @@
   average_rating: 4.4
   cover_image: https://dummyimage.com/200x300/9b59b6/ffffff.png&text=Pride+and+Prejudice
   __category:
-    "@": 2001
+    "@": 2101
 - id: 2008
   name: Jane Austen
   birth_year: 1775
@@ -191,7 +158,7 @@
   average_rating: 4.5
   cover_image: https://dummyimage.com/200x300/f39c12/ffffff.png&text=Good+Omens
   __category:
-    "@": 2001
+    "@": 2101
 - id: 2010
   name: Neil Gaiman
   birth_year: 1960
@@ -243,7 +210,7 @@
   average_rating: 4.2
   cover_image: https://dummyimage.com/200x300/1abc9c/ffffff.png&text=The+Silmarillion
   __category:
-    "@": 2001
+    "@": 2101
 - id: 2013
   title: The Children of Húrin
   author:
@@ -260,7 +227,7 @@
   average_rating: 4
   cover_image: https://dummyimage.com/200x300/d35400/ffffff.png&text=The+Children+of+Húrin
   __category:
-    "@": 2001
+    "@": 2101
 - id: 2014
   title: Unfinished Tales of Númenor and Middle-earth
   author:
@@ -276,12 +243,12 @@
   average_rating: 4.1
   cover_image: https://dummyimage.com/200x300/2980b9/ffffff.png&text=Unfinished+Tales
   __category:
-    "@": 2001
+    "@": 2101
 - id: 2015
   name: book
   info: All objects of the Book category accessible via /book/<ID> URL paths.
   category:
-    "@": 2001
+    "@": 2101
   __category:
     "@": 8
 - id: 2016
@@ -299,7 +266,7 @@
   average_rating: 4.1
   cover_image: https://dummyimage.com/200x300/27ae60/ffffff.png&text=Animal+Farm
   __category:
-    "@": 2001
+    "@": 2101
 - id: 2017
   name: George Orwell
   birth_year: 1903
@@ -317,3 +284,36 @@
     totalitarianism, and support of democracy.
   __category:
     "@": 2002
+- id: 2101
+  name: Book
+  class: demo/01_books/books/books.js:Book
+  schema:
+    title:
+      "@": schemat/types/type.js:STRING
+    author:
+      info: Repeat this field to enter multiple authors.
+      repeated: true
+      category:
+        "@": 2002
+      "@": schemat/types/type.js:REF
+    genre:
+      "@": schemat/types/type.js:STRING
+    published_year:
+      "@": schemat/types/type.js:INTEGER
+    isbn:
+      "@": schemat/types/type.js:STRING
+    page_count:
+      "@": schemat/types/type.js:INTEGER
+    language:
+      "@": schemat/types/type.js:STRING
+    publisher:
+      "@": schemat/types/type.js:STRING
+    description:
+      "@": schemat/types/type.js:TEXT
+    average_rating:
+      "@": schemat/types/type.js:NUMBER
+    cover_image:
+      "@": schemat/types/type.js:URL
+    "@": schemat:Catalog
+  __category:
+    "@": 1

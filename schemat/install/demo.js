@@ -51,8 +51,9 @@ async function create_demo_01() {
     let path = `${root_dir}/schemat/data/01_cluster.data.1032.yaml`
     let db = fs.readFileSync(path, 'utf8')
 
-    // replace file paths, object names and port numbers in `db`
-    db = db.replaceAll('application', `Bookstore (demo app)`)
+    // replace file paths, object names and port numbers in `db` ...
+
+    // db = db.replaceAll('application', `Bookstore (demo app)`)
     db = db.replaceAll('name: home', `name: home\n  view_endpoint: demo/01_books/home/home.js:homepage`)
     db = db.replaceAll('file_tag: sample', 'file_tag: demo-01')
 
@@ -67,8 +68,8 @@ async function create_demo_01() {
     db = db.replaceAll('  agents:', `  agents:\n    - {worker: 1, agent: {"@": 1030}}`)
 
     // insert AuthorCategory and BookCategory references in [app.global]; insert URL routes
-    db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 2002\n    BookCategory:\n      "@": 2001`)
-    db = db.replaceAll(`entries:\n    ""`, `entries:\n    authors:\n      "@": 2002\n    books:\n      "@": 2001\n    book:\n      "@": 2015\n    ""`)
+    db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 2002\n    BookCategory:\n      "@": 2101`)
+    db = db.replaceAll(`entries:\n    ""`, `entries:\n    authors:\n      "@": 2002\n    books:\n      "@": 2101\n    book:\n      "@": 2015\n    ""`)
 
     // save as a new .yaml file in the demo folder
     fs.writeFileSync(`${demo_dir}/_data/01_cluster.data.1032.yaml`, db, 'utf8')

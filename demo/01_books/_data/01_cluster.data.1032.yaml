@@ -70,7 +70,7 @@
     authors:
       "@": 2002
     books:
-      "@": 2001
+      "@": 2101
     book:
       "@": 2015
     "":
@@ -242,7 +242,9 @@
   __category:
     "@": 21
   agents:
-    - {worker: 1, agent: {"@": 1030}}
+    - worker: 1
+      agent:
+        "@": 1030
     - worker: 1
       agent:
         "@": 1010
@@ -374,7 +376,9 @@
   __category:
     "@": 21
   agents:
-    - {worker: 1, agent: {"@": 1030}}
+    - worker: 1
+      agent:
+        "@": 1030
     - worker: 1
       agent:
         "@": 1015
