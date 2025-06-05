@@ -1,4 +1,4 @@
-- id: 1001
+- id: 2001
   name: Bookstore (demo app)
   info: Entry point to the web application. Contains top-level configuration of
     the website, URL routes, app-level database etc.
