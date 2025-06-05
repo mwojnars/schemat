@@ -16,247 +16,6 @@
   eval_allowed: true
   __category:
     "@": 2
-- id: 2003
-  title: The Great Gatsby
-  author:
-    "@": 2004
-  genre: Classic
-  published_year: 1925
-  isbn: "9780743273565"
-  page_count: 180
-  language: English
-  publisher: Scribner
-  description: A tragic love story set in the roaring 20s, exploring themes of
-    decadence, idealism, and the American Dream.
-  average_rating: 4.2
-  cover_image: https://dummyimage.com/200x300/3498db/ffffff.png&text=The+Great+Gatsby
-  __category:
-    "@": 2101
-- id: 2004
-  name: F. Scott Fitzgerald
-  birth_year: 1896
-  death_year: 1940
-  nationality: American
-  notable_work: The Great Gatsby
-  notable_work/2: Tender Is the Night
-  notable_work/3: This Side of Paradise
-  literary_movement: Modernism
-  alma_mater: Princeton University
-  award: National Book Award (posthumously)
-  spouse: Zelda Fitzgerald
-  bio: F. Scott Fitzgerald was an American novelist, essayist, and short story
-    writer, widely regarded as one of the greatest American writers of the 20th
-    century.
-  __category:
-    "@": 2102
-- id: 2005
-  title: The Hobbit
-  author:
-    "@": 2006
-  genre: Fantasy
-  published_year: 1937
-  isbn: "9780547928227"
-  page_count: 366
-  language: English
-  publisher: George Allen & Unwin
-  description: A children's fantasy novel that follows the quest of home-loving
-    hobbit Bilbo Baggins to win a share of the treasure guarded by the dragon,
-    Smaug.
-  average_rating: 4.6
-  cover_image: https://dummyimage.com/200x300/16a085/ffffff.png&text=The+Hobbit
-  __category:
-    "@": 2101
-- id: 2006
-  name: J.R.R. Tolkien
-  birth_year: 1892
-  death_year: 1973
-  nationality: British
-  notable_work: The Hobbit
-  notable_work/2: The Lord of the Rings
-  notable_work/3: The Silmarillion
-  literary_movement: Fantasy
-  alma_mater: Exeter College, Oxford
-  award: Commander of the Order of the British Empire
-  award/2: Locus Award for Best Fantasy
-  spouse: Edith Bratt
-  bio: J.R.R. Tolkien was an English writer, poet, philologist, and academic, best
-    known as the author of the high fantasy works The Hobbit and The Lord of the
-    Rings.
-  __category:
-    "@": 2102
-- id: 2007
-  title: Pride and Prejudice
-  author:
-    "@": 2008
-  genre: Romance
-  published_year: 1813
-  isbn: "9780141439518"
-  page_count: 432
-  language: English
-  publisher: T. Egerton, Whitehall
-  description: A classic tale of love and misunderstanding set in class-conscious
-    England of the late 18th century.
-  average_rating: 4.4
-  cover_image: https://dummyimage.com/200x300/9b59b6/ffffff.png&text=Pride+and+Prejudice
-  __category:
-    "@": 2101
-- id: 2008
-  name: Jane Austen
-  birth_year: 1775
-  death_year: 1817
-  nationality: British
-  notable_work: Sense and Sensibility
-  notable_work/2: Pride and Prejudice
-  notable_work/3: Emma
-  literary_movement: Romanticism
-  bio: Jane Austen was an English novelist known primarily for her six major
-    novels, which interpret, critique and comment upon the British landed gentry
-    at the end of the 18th century.
-  __category:
-    "@": 2102
-- id: 2009
-  title: Good Omens
-  author:
-    "@": 2010
-  author/2:
-    "@": 2011
-  genre: Fantasy, Comedy
-  published_year: 1990
-  isbn: "9780060853976"
-  page_count: 288
-  language: English
-  publisher: Workman
-  description: The classic collaboration between Terry Pratchett and Neil Gaiman
-    about the forces of good and evil coming together to prevent the apocalypse.
-  average_rating: 4.5
-  cover_image: https://dummyimage.com/200x300/f39c12/ffffff.png&text=Good+Omens
-  __category:
-    "@": 2101
-- id: 2010
-  name: Neil Gaiman
-  birth_year: 1960
-  nationality: British
-  notable_work: American Gods
-  notable_work/2: Coraline
-  notable_work/3: The Sandman
-  notable_work/4: Good Omens
-  literary_movement: Contemporary fantasy
-  award: Hugo Award
-  award/2: Nebula Award
-  award/3: Bram Stoker Award
-  award/4: Newbery Medal
-  spouse: Amanda Palmer
-  bio: Neil Gaiman is a prolific English author known for his work in comic books,
-    novels, and screenplays. His works blend elements of fantasy, horror, and
-    mythology.
-  __category:
-    "@": 2102
-- id: 2011
-  name: Terry Pratchett
-  birth_year: 1948
-  death_year: 2015
-  nationality: British
-  notable_work: Discworld series
-  notable_work/2: Good Omens
-  notable_work/3: The Carpet People
-  literary_movement: Comic fantasy
-  award: Carnegie Medal
-  award/2: Knighthood for services to literature
-  spouse: Lyn Purves
-  bio: Sir Terry Pratchett was an English humorist, satirist, and author of
-    fantasy novels, best known for his Discworld series of 41 novels.
-  __category:
-    "@": 2102
-- id: 2012
-  title: The Silmarillion
-  author:
-    "@": 2006
-  genre: Fantasy
-  published_year: 1977
-  isbn: "9780261102736"
-  page_count: 365
-  language: English
-  publisher: George Allen & Unwin
-  description: A collection of mythopoeic works by J.R.R. Tolkien, edited and
-    published posthumously by his son Christopher Tolkien, that forms a
-    comprehensive background to his Lord of the Rings trilogy.
-  average_rating: 4.2
-  cover_image: https://dummyimage.com/200x300/1abc9c/ffffff.png&text=The+Silmarillion
-  __category:
-    "@": 2101
-- id: 2013
-  title: The Children of Húrin
-  author:
-    "@": 2006
-  genre: Fantasy
-  published_year: 2007
-  isbn: "9780618894642"
-  page_count: 313
-  language: English
-  publisher: Houghton Mifflin
-  description: A tragic tale of the hero Túrin Turambar and his sister Nienor,
-    children of Húrin, set in the First Age of Middle-earth. This book expands
-    on a story from The Silmarillion.
-  average_rating: 4
-  cover_image: https://dummyimage.com/200x300/d35400/ffffff.png&text=The+Children+of+Húrin
-  __category:
-    "@": 2101
-- id: 2014
-  title: Unfinished Tales of Númenor and Middle-earth
-  author:
-    "@": 2006
-  genre: Fantasy
-  published_year: 1980
-  isbn: "9780261102163"
-  page_count: 472
-  language: English
-  publisher: George Allen & Unwin
-  description: A collection of stories and essays by J.R.R. Tolkien, edited by his
-    son Christopher Tolkien, that expand on the lore of Middle-earth.
-  average_rating: 4.1
-  cover_image: https://dummyimage.com/200x300/2980b9/ffffff.png&text=Unfinished+Tales
-  __category:
-    "@": 2101
-- id: 2015
-  name: book
-  info: All objects of the Book category accessible via /book/<ID> URL paths.
-  category:
-    "@": 2101
-  __category:
-    "@": 8
-- id: 2016
-  title: Animal Farm
-  author:
-    "@": 2017
-  genre: Satire
-  published_year: 1945
-  isbn: "9780451526342"
-  page_count: 112
-  language: English
-  publisher: Secker & Warburg
-  description: An allegorical novella reflecting events leading up to the Russian
-    Revolution of 1917 and the early years of the Soviet Union.
-  average_rating: 4.1
-  cover_image: https://dummyimage.com/200x300/27ae60/ffffff.png&text=Animal+Farm
-  __category:
-    "@": 2101
-- id: 2017
-  name: George Orwell
-  birth_year: 1903
-  death_year: 1950
-  nationality: British
-  notable_work: "1984"
-  notable_work/2: Animal Farm
-  notable_work/3: Homage to Catalonia
-  literary_movement: Political fiction
-  alma_mater: Eton College
-  award: Prometheus Hall of Fame Award
-  spouse: Eileen O'Shaughnessy
-  bio: George Orwell was an English novelist, essayist, journalist, and critic.
-    His work is characterized by lucid prose, social criticism, opposition to
-    totalitarianism, and support of democracy.
-  __category:
-    "@": 2102
 - id: 2101
   name: Book
   class: demo/01_books/books/books.js:Book
@@ -317,3 +76,244 @@
     "@": schemat:Catalog
   __category:
     "@": 1
+- id: 2103
+  title: The Great Gatsby
+  author:
+    "@": 2104
+  genre: Classic
+  published_year: 1925
+  isbn: "9780743273565"
+  page_count: 180
+  language: English
+  publisher: Scribner
+  description: A tragic love story set in the roaring 20s, exploring themes of
+    decadence, idealism, and the American Dream.
+  average_rating: 4.2
+  cover_image: https://dummyimage.com/200x300/3498db/ffffff.png&text=The+Great+Gatsby
+  __category:
+    "@": 2101
+- id: 2104
+  name: F. Scott Fitzgerald
+  birth_year: 1896
+  death_year: 1940
+  nationality: American
+  notable_work: The Great Gatsby
+  notable_work/2: Tender Is the Night
+  notable_work/3: This Side of Paradise
+  literary_movement: Modernism
+  alma_mater: Princeton University
+  award: National Book Award (posthumously)
+  spouse: Zelda Fitzgerald
+  bio: F. Scott Fitzgerald was an American novelist, essayist, and short story
+    writer, widely regarded as one of the greatest American writers of the 20th
+    century.
+  __category:
+    "@": 2102
+- id: 2105
+  title: The Hobbit
+  author:
+    "@": 2106
+  genre: Fantasy
+  published_year: 1937
+  isbn: "9780547928227"
+  page_count: 366
+  language: English
+  publisher: George Allen & Unwin
+  description: A children's fantasy novel that follows the quest of home-loving
+    hobbit Bilbo Baggins to win a share of the treasure guarded by the dragon,
+    Smaug.
+  average_rating: 4.6
+  cover_image: https://dummyimage.com/200x300/16a085/ffffff.png&text=The+Hobbit
+  __category:
+    "@": 2101
+- id: 2106
+  name: J.R.R. Tolkien
+  birth_year: 1892
+  death_year: 1973
+  nationality: British
+  notable_work: The Hobbit
+  notable_work/2: The Lord of the Rings
+  notable_work/3: The Silmarillion
+  literary_movement: Fantasy
+  alma_mater: Exeter College, Oxford
+  award: Commander of the Order of the British Empire
+  award/2: Locus Award for Best Fantasy
+  spouse: Edith Bratt
+  bio: J.R.R. Tolkien was an English writer, poet, philologist, and academic, best
+    known as the author of the high fantasy works The Hobbit and The Lord of the
+    Rings.
+  __category:
+    "@": 2102
+- id: 2107
+  title: Pride and Prejudice
+  author:
+    "@": 2108
+  genre: Romance
+  published_year: 1813
+  isbn: "9780141439518"
+  page_count: 432
+  language: English
+  publisher: T. Egerton, Whitehall
+  description: A classic tale of love and misunderstanding set in class-conscious
+    England of the late 18th century.
+  average_rating: 4.4
+  cover_image: https://dummyimage.com/200x300/9b59b6/ffffff.png&text=Pride+and+Prejudice
+  __category:
+    "@": 2101
+- id: 2108
+  name: Jane Austen
+  birth_year: 1775
+  death_year: 1817
+  nationality: British
+  notable_work: Sense and Sensibility
+  notable_work/2: Pride and Prejudice
+  notable_work/3: Emma
+  literary_movement: Romanticism
+  bio: Jane Austen was an English novelist known primarily for her six major
+    novels, which interpret, critique and comment upon the British landed gentry
+    at the end of the 18th century.
+  __category:
+    "@": 2102
+- id: 2109
+  title: Good Omens
+  author:
+    "@": 2110
+  author/2:
+    "@": 2111
+  genre: Fantasy, Comedy
+  published_year: 1990
+  isbn: "9780060853976"
+  page_count: 288
+  language: English
+  publisher: Workman
+  description: The classic collaboration between Terry Pratchett and Neil Gaiman
+    about the forces of good and evil coming together to prevent the apocalypse.
+  average_rating: 4.5
+  cover_image: https://dummyimage.com/200x300/f39c12/ffffff.png&text=Good+Omens
+  __category:
+    "@": 2101
+- id: 2110
+  name: Neil Gaiman
+  birth_year: 1960
+  nationality: British
+  notable_work: American Gods
+  notable_work/2: Coraline
+  notable_work/3: The Sandman
+  notable_work/4: Good Omens
+  literary_movement: Contemporary fantasy
+  award: Hugo Award
+  award/2: Nebula Award
+  award/3: Bram Stoker Award
+  award/4: Newbery Medal
+  spouse: Amanda Palmer
+  bio: Neil Gaiman is a prolific English author known for his work in comic books,
+    novels, and screenplays. His works blend elements of fantasy, horror, and
+    mythology.
+  __category:
+    "@": 2102
+- id: 2111
+  name: Terry Pratchett
+  birth_year: 1948
+  death_year: 2015
+  nationality: British
+  notable_work: Discworld series
+  notable_work/2: Good Omens
+  notable_work/3: The Carpet People
+  literary_movement: Comic fantasy
+  award: Carnegie Medal
+  award/2: Knighthood for services to literature
+  spouse: Lyn Purves
+  bio: Sir Terry Pratchett was an English humorist, satirist, and author of
+    fantasy novels, best known for his Discworld series of 41 novels.
+  __category:
+    "@": 2102
+- id: 2112
+  title: The Silmarillion
+  author:
+    "@": 2106
+  genre: Fantasy
+  published_year: 1977
+  isbn: "9780261102736"
+  page_count: 365
+  language: English
+  publisher: George Allen & Unwin
+  description: A collection of mythopoeic works by J.R.R. Tolkien, edited and
+    published posthumously by his son Christopher Tolkien, that forms a
+    comprehensive background to his Lord of the Rings trilogy.
+  average_rating: 4.2
+  cover_image: https://dummyimage.com/200x300/1abc9c/ffffff.png&text=The+Silmarillion
+  __category:
+    "@": 2101
+- id: 2113
+  title: The Children of Húrin
+  author:
+    "@": 2106
+  genre: Fantasy
+  published_year: 2007
+  isbn: "9780618894642"
+  page_count: 313
+  language: English
+  publisher: Houghton Mifflin
+  description: A tragic tale of the hero Túrin Turambar and his sister Nienor,
+    children of Húrin, set in the First Age of Middle-earth. This book expands
+    on a story from The Silmarillion.
+  average_rating: 4
+  cover_image: https://dummyimage.com/200x300/d35400/ffffff.png&text=The+Children+of+Húrin
+  __category:
+    "@": 2101
+- id: 2114
+  title: Unfinished Tales of Númenor and Middle-earth
+  author:
+    "@": 2106
+  genre: Fantasy
+  published_year: 1980
+  isbn: "9780261102163"
+  page_count: 472
+  language: English
+  publisher: George Allen & Unwin
+  description: A collection of stories and essays by J.R.R. Tolkien, edited by his
+    son Christopher Tolkien, that expand on the lore of Middle-earth.
+  average_rating: 4.1
+  cover_image: https://dummyimage.com/200x300/2980b9/ffffff.png&text=Unfinished+Tales
+  __category:
+    "@": 2101
+- id: 2115
+  name: book
+  info: All objects of the Book category accessible via /book/<ID> URL paths.
+  category:
+    "@": 2101
+  __category:
+    "@": 8
+- id: 2116
+  title: Animal Farm
+  author:
+    "@": 2117
+  genre: Satire
+  published_year: 1945
+  isbn: "9780451526342"
+  page_count: 112
+  language: English
+  publisher: Secker & Warburg
+  description: An allegorical novella reflecting events leading up to the Russian
+    Revolution of 1917 and the early years of the Soviet Union.
+  average_rating: 4.1
+  cover_image: https://dummyimage.com/200x300/27ae60/ffffff.png&text=Animal+Farm
+  __category:
+    "@": 2101
+- id: 2117
+  name: George Orwell
+  birth_year: 1903
+  death_year: 1950
+  nationality: British
+  notable_work: "1984"
+  notable_work/2: Animal Farm
+  notable_work/3: Homage to Catalonia
+  literary_movement: Political fiction
+  alma_mater: Eton College
+  award: Prometheus Hall of Fame Award
+  spouse: Eileen O'Shaughnessy
+  bio: George Orwell was an English novelist, essayist, journalist, and critic.
+    His work is characterized by lucid prose, social criticism, opposition to
+    totalitarianism, and support of democracy.
+  __category:
+    "@": 2102
