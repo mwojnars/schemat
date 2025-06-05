@@ -1,17 +1,3 @@
-- id: 1001
-  name: application
-  info: Entry point to the web application. Contains top-level configuration of
-    the website, URL routes, app-level database etc.
-  root:
-    "@": 1007
-  global:
-    "@": schemat:Catalog
-  default_path: /$/id
-  logger:
-    "@": 1037
-  eval_allowed: true
-  __category:
-    "@": 2
 - id: 1005
   name: app_source
   info: Path to the local directory containing source code of the application.
@@ -95,6 +81,20 @@
     "@": 1019
   __category:
     "@": 8
+- id: 2001
+  name: application
+  info: Entry point to the web application. Contains top-level configuration of
+    the website, URL routes, app-level database etc.
+  root:
+    "@": 1007
+  global:
+    "@": schemat:Catalog
+  default_path: /$/id
+  logger:
+    "@": 1037
+  eval_allowed: true
+  __category:
+    "@": 2
 - id: 2101
   name: Varia
   info: Category of items that do not belong to any specific category.
