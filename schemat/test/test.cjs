@@ -316,7 +316,7 @@ describe('Schemat Tests', function () {
         })
 
         it('uncategorized object', async function () {
-            await test_page(page, `${DOMAIN}/$/id/2003`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
+            await test_page(page, `${DOMAIN}/$/id/2104`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
         })
 
         it('static html page', async function () {
