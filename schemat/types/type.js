@@ -456,10 +456,10 @@ export let generic_string = new STRING()
 
 
 export class FIELD extends STRING {
-    /* A STRING than only contains alphanumeric characters (Unicode allowed!), "_" and "-",
-       but no punctuation, spaces or control chars.
+    /* A STRING than only contains alphanumeric characters (Unicode allowed!), "_", "-", "$", "*",
+       but no punctuation, spaces or other control chars.
      */
-    static options = {charset: 'a-zA-Z0-9_\\-\\$\\p{L}\\p{N}'}
+    static options = {charset: 'a-zA-Z0-9_\\-\\$\\*\\p{L}\\p{N}'}
 }
 
 export class IDENTIFIER extends STRING {
