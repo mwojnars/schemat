@@ -182,12 +182,12 @@ export class Ring extends WebObject {
         return this._find_block(id).$agent.delete(id, req || new DataRequest())
     }
 
-    async insert(data, req) {
-        return this._random_block().$agent.insert(null, data)
+    async insert(data, opts = {}) {
+        return this._random_block().$agent.insert(null, data, opts)
     }
 
-    async insert_at(id, data) {
-        return this._find_block(id).$agent.insert(id, data)
+    async insert_at(id, data, opts = {}) {
+        return this._find_block(id).$agent.insert(id, data, opts)
     }
 
     async update(id, edits, req) {

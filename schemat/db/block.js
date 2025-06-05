@@ -231,7 +231,7 @@ export class DataBlock extends Block {
         return await this._move_down(id, req).select(id, req)
     }
 
-    async '$agent.insert'(state, id, data) {
+    async '$agent.insert'(state, id, data, opts = {}) {
         /* `data` can be an array if multiple objects are to be inserted. */
         // this._print(`before $agent.insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
 
@@ -257,7 +257,7 @@ export class DataBlock extends Block {
         // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
         for (let rec of records) {
             let {id, data} = rec
-            let obj = await WebObject.from_data(id || this._assign_id(state), data, {mutable: true, activate: false})
+            let obj = await WebObject.from_data(id || this._assign_id(state, opts), data, {mutable: true, activate: false})
             objects.push(obj)
         }
         let unique = new Set(objects)
@@ -274,7 +274,7 @@ export class DataBlock extends Block {
 
         for (let pos = 0; pos < objects.length; pos++) {
             let obj = objects[pos]
-            obj.id ??= this._assign_id(state)
+            obj.id ??= this._assign_id(state, opts)
 
             let setup = obj.__setup__({}, {ring: this.ring, block: this})
             if (setup instanceof Promise) await setup
@@ -307,10 +307,11 @@ export class DataBlock extends Block {
         obj._seal_dependencies()            // set __seal
     }
 
-    _assign_id(state) {
+    _assign_id(state, {insert_mode} = {}) {
         /* Calculate a new `id` to be assigned to the record being inserted. */
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
-        let id = (this.ring.insert_mode === 'compact') ? this._assign_id_compact(state) : this._assign_id_incremental(state)
+        insert_mode ??= this.ring.insert_mode
+        let id = (insert_mode === 'compact') ? this._assign_id_compact(state) : this._assign_id_incremental(state)
 
         if (!this.ring.valid_insert_id(id))
             throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid set for the ring ${this.ring}`)
