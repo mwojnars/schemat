@@ -480,10 +480,10 @@ export class Schemat {
         // }))
     }
 
-    async server(code) {
-        /* Run eval(code) on the server and return the result; `code` is a string. Can be called on the client or the server. */
-        return this.app.POST.eval(code)
-    }
+    // async server(code) {
+    //     /* Run eval(code) on the server and return the result; `code` is a string. Can be called on the client or the server. */
+    //     return this.app.POST.eval(code)
+    // }
 
     get server() {
         /* Proxy object that handles both direct calls (server(code)) and property access (server.XYZ).
