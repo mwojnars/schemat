@@ -5,7 +5,7 @@
     mainly used for serving static files, like .css files, robots.txt etc.
   local_path: ./app
   __container:
-    "@": 1007
+    "@": 2002
   __category:
     "@": 6
 - id: 1006
@@ -13,29 +13,13 @@
   entries:
     "@": schemat:Catalog
   __container:
-    "@": 1007
-  __category:
-    "@": 5
-- id: 1007
-  name: <root>
-  info: Root of the container hierarchy exposed at URL path = /
-  entries:
-    "":
-      "@": 1008
-    $:
-      "@": 1019
-    "*app_source":
-      "@": 1005
-    "*app_objects":
-      "@": 1006
-    "@": schemat:Catalog
-  __path: /
+    "@": 2002
   __category:
     "@": 5
 - id: 1008
   name: home
   __container:
-    "@": 1007
+    "@": 2002
   __category:
     "@": 25
 - id: 1009
@@ -63,7 +47,7 @@
       "@": 1009
     "@": schemat:Catalog
   __container:
-    "@": 1007
+    "@": 2002
   __category:
     "@": 5
 - id: 1020
@@ -86,7 +70,7 @@
   info: Entry point to the web application. Contains top-level configuration of
     the website, URL routes, app-level database etc.
   root:
-    "@": 1007
+    "@": 2002
   global:
     "@": schemat:Catalog
   default_path: /$/id
@@ -95,6 +79,22 @@
   eval_allowed: true
   __category:
     "@": 2
+- id: 2002
+  name: <root>
+  info: Root of the container hierarchy exposed at URL path = /
+  entries:
+    "":
+      "@": 1008
+    $:
+      "@": 1019
+    "*app_source":
+      "@": 1005
+    "*app_objects":
+      "@": 1006
+    "@": schemat:Catalog
+  __path: /
+  __category:
+    "@": 5
 - id: 2101
   name: Varia
   info: Category of items that do not belong to any specific category.
