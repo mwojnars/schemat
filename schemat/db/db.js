@@ -475,6 +475,7 @@ export class Database extends WebObject {
 
     async _update_references(old_id, new_id) {
         /* Scan all items in the DB and replace references to `old_id` with references to `new_id`. */
+        print(`_update_references() old_id=${old_id} new_id=${new_id}:`)
         if (old_id === new_id) return
         let target = WebObject.stub(new_id)
 
@@ -484,16 +485,19 @@ export class Database extends WebObject {
         // search for references to `old_id` in all rings and all records
         for (let ring of this.rings)
             for await (let {id, data} of ring.data_sequence.scan_objects()) {
-                print(`_update_references() id=${id} data=${data}`)
-                assert(id)
-                let new_data = Struct.transform(data, transform)
-                if (new_data.dump() === data.dump()) continue       // no changes? don't update the record
+                let old_json = data.dump()
+                let new_json = Struct.transform(data, transform).dump()     // `data` catalog is transformed in place (!)
 
+                // print(`_update_references() id=${id}:`)
+                // print(` ...old=${old_json}`)
+                // print(` ...new=${new_json}`)
+
+                if (old_json === new_json) continue       // no changes? don't update the record
                 if (ring.readonly)
                     print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
                 else {
                     print(`...updating reference(s) in object [${id}]`)
-                    await ring.update_full(id, new_data)
+                    await ring.update_full(id, data)
                     // await ring.flush()
                 }
             }
