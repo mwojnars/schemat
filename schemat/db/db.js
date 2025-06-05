@@ -457,7 +457,8 @@ export class Database extends WebObject {
                 else throw ex
             }
 
-            new_id = await (new_id ? ring.insert_at(new_id, obj.__json) : ring.insert(obj.__json))
+            let opts = {insert_mode: 'compact'}
+            new_id = await (new_id ? ring.insert_at(new_id, obj.__json, opts) : ring.insert(obj.__json, opts))
             assert(new_id)
 
             await ring.flush()
