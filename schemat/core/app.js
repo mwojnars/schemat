@@ -162,6 +162,8 @@ export class Application extends WebObject {
 
     /***  Actions -- can be called via schemat.server.*()  ***/
 
+    // TODO: allow actions to run on immutable `this`, otherwise the `app` object is *recreated* on every execution of the actions below!
+
     'action.insert_objects'(data, opts) {
         /* Insert new object(s) to DB with __data initialized from the provided JSONx-stringified representation(s).
            `data` is either an array of content objects, one for each web object to be created; or a single content object.
