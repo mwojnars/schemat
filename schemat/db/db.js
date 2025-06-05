@@ -183,12 +183,8 @@ export class Ring extends WebObject {
     }
 
     async insert(data, opts = {}) {
-        let block = this._random_block()
+        let block = opts.id ? this._find_block(opts.id) : this._random_block()
         return block.$agent.insert(data, opts)
-    }
-
-    async insert_at(data, opts = {}) {
-        return this._find_block(opts.id).$agent.insert(data, opts)
     }
 
     async update(id, edits, req) {
@@ -459,7 +455,7 @@ export class Database extends WebObject {
             }
 
             let opts = {insert_mode: 'compact', id: new_id}
-            new_id = await (new_id ? ring.insert_at(obj.__json, opts) : ring.insert(obj.__json, opts))
+            new_id = await ring.insert(obj.__json, opts)
             assert(new_id)
 
             await ring.flush()
