@@ -16,12 +16,6 @@
     "@": 2002
   __category:
     "@": 5
-- id: 1008
-  name: home
-  __container:
-    "@": 2002
-  __category:
-    "@": 25
 - id: 1009
   name: /$/sys
   info: Core system objects and categories, for dynamic imports by path instead of
@@ -84,7 +78,7 @@
   info: Root of the container hierarchy exposed at URL path = /
   entries:
     "":
-      "@": 1008
+      "@": 2003
     $:
       "@": 1019
     "*app_source":
@@ -95,6 +89,12 @@
   __path: /
   __category:
     "@": 5
+- id: 2003
+  name: home
+  __container:
+    "@": 2002
+  __category:
+    "@": 25
 - id: 2101
   name: Varia
   info: Category of items that do not belong to any specific category.
