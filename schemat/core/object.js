@@ -970,9 +970,12 @@ export class WebObject {
     }
 
     get action() {
+        // TODO: rename to server() ?? ... use as: obj.server.method()
         /* Triggers of server-side actions: obj.action.X(...args) invokes app.POST.action(id, 'X', ...args),
-           which forwards the call to obj['action.X'](...args) on server.
-           Triggers can be called on stubs, without fully loading the target object.
+           which forwards the call to obj['action.X'](...args) on server. Inside the 'action.X'() method,
+           `this` object is made mutable, so it can be easily edited. Any modified records are returned to the caller
+           and saved in Registry, so the caller can recreate corresponding objects with their most recent content
+           by simply refreshing/reloading them. Action triggers can be called on stubs without fully loading the target object.
          */
         let id = this.id
         assert(id)
