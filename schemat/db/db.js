@@ -425,6 +425,7 @@ export class Database extends WebObject {
         /* Remove object(s) from its current ring and reinsert under new `id` into `ring` (if present), or to the top-most ring.
            Only for development purposes, this operation may lead to data inconsistencies. Changing object IDs should never
            be done in production, especially that the entire database is scanned for references after each re-insert.
+           `ids` can be a number, an array, a string with comma-separated numbers (no spaces) or "X-Y" value ranges.
          */
         ids = String(ids)
         print(`\nreinserting object(s) [${ids}] ...`)
