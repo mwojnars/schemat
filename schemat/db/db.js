@@ -418,6 +418,84 @@ export class Database extends WebObject {
             await ring.rebuild_indexes()
         return true
     }
+
+    /***  Administrative  ***/
+
+    async admin_reinsert(ids, {new: new_id, ring: ring_name}) {
+        /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring.
+           Only for development purposes. May lead to data inconsistencies. Changing object IDs should never be done in production,
+           especially that the entire database is scanned for references after each reinsert.
+         */
+        ids = String(ids)
+        print(`\nreinserting object(s) [${ids}] ...`)
+
+        let id_list = []
+        let ring = ring_name ? this.get_ring(ring_name) : this.top_ring
+        let obj
+
+        // parse the list of `ids`, which is a comma-separated list of integers or "X-Y" value ranges
+        for (let id of ids.split(','))
+            if (id.includes('-')) {
+                let [start, stop] = id.split('-')
+                start = Number(start)
+                stop = Number(stop)
+                for (let i = start; i <= stop; i++) id_list.push(i)
+            }
+            else id_list.push(Number(id))
+
+        if (new_id && id_list.length > 1) throw new Error('cannot specify a new ID when reinserting multiple objects')
+
+        // reinsert each object
+        for (let id of id_list) {
+            try { obj = await schemat.get_loaded(id) }
+            catch (ex) {
+                if (ex instanceof ObjectNotFound) {
+                    print(`...WARNING: object [${id}] not found, skipping`)
+                    continue
+                }
+                else throw ex
+            }
+
+            let insert = new_id ? ring.insert_at(new_id, obj.__json) : ring.insert(obj.__json)
+            new_id = (await insert).id
+
+            await ring.flush()
+            await this._update_references(id, new_id)
+            await this.delete(id)
+
+            print(`...reinserted object [${id}] as [${new_id}]`)
+            new_id = undefined
+        }
+
+        // print(`rebuilding indexes...`)
+        // await this.rebuild_indexes()
+
+        print()
+    }
+
+    async _update_references(old_id, new_id) {
+        /* Scan all items in the DB and replace references to `old_id` with references to `new_id`. */
+        if (old_id === new_id) return
+        let target = WebObject.stub(new_id)
+
+        // transform function: checks if a sub-object is an item of ID=old_id and replaces it with new `item` if so
+        let transform = (obj => obj?.id === old_id ? target : undefined)
+
+        // search for references to `old_id` in all rings and all records
+        for (let ring of this.rings)
+            for await (let {id, data} of ring.data_sequence.scan_objects()) {
+                let new_data = Struct.transform(data, transform)
+                if (new_data.dump() === data.dump()) continue       // no changes? don't update the record
+
+                if (ring.readonly)
+                    print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
+                else {
+                    print(`...updating reference(s) in object [${id}]`)
+                    await ring.update_full(id, new_data)
+                    // await ring.flush()
+                }
+            }
+    }
 }
 
 
