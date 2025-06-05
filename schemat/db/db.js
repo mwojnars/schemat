@@ -1,10 +1,10 @@
 import {T, assert, print, merge, fileBaseName, sleep} from '../common/utils.js'
 import {DataAccessError, DatabaseError, ObjectNotFound} from "../common/errors.js"
+import {Struct} from "../core/catalog.js";
 import {WebObject} from "../core/object.js"
 import {data_schema, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
-import {Catalog} from "../core/catalog.js";
 
 
 /**********************************************************************************************************************
@@ -421,7 +421,7 @@ export class Database extends WebObject {
 
     /***  Administrative  ***/
 
-    async admin_reinsert(ids, {new: new_id, ring: ring_name}) {
+    async admin_reinsert(ids, {new: new_id, ring: ring_name} = {}) {
         /* Remove objects from their current rings and reinsert under new IDs into `ring` (if present), or to the top-most ring.
            Only for development purposes. May lead to data inconsistencies. Changing object IDs should never be done in production,
            especially that the entire database is scanned for references after each reinsert.
@@ -456,8 +456,8 @@ export class Database extends WebObject {
                 else throw ex
             }
 
-            let insert = new_id ? ring.insert_at(new_id, obj.__json) : ring.insert(obj.__json)
-            new_id = (await insert).id
+            let inserted = new_id ? await ring.insert_at(new_id, obj.__json) : await ring.insert(obj.__json)
+            new_id = inserted.id
 
             await ring.flush()
             await this._update_references(id, new_id)
@@ -484,6 +484,8 @@ export class Database extends WebObject {
         // search for references to `old_id` in all rings and all records
         for (let ring of this.rings)
             for await (let {id, data} of ring.data_sequence.scan_objects()) {
+                print(`_update_references() id=${id} data=${data}`)
+                assert(id)
                 let new_data = Struct.transform(data, transform)
                 if (new_data.dump() === data.dump()) continue       // no changes? don't update the record
 
