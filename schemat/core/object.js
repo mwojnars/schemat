@@ -888,7 +888,7 @@ export class WebObject {
             }
             catch (ex) {
                 // add name of the property to the exception message
-                ex.message = `invalid value for property ${prop} in object [${this.id}]: ${ex.message}`
+                ex.message = `invalid value of property "${prop}" in object [${this.id}]: ${ex.message}`
                 throw ex
             }
         }
