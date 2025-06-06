@@ -198,9 +198,9 @@ class Intercept {
 
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${path})`)
-                target._make_edit('set', base, ...value)
+                target._make_edit('set', base, value)
             }
-            else target._make_edit('set', path, value)
+            else target._make_edit('set', path, [value])
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${prop})`)
@@ -958,13 +958,13 @@ export class WebObject {
     /***  Triggers  ***/
 
     get edit() {
-        /* Triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', ...args).
+        /* Triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', args).
            Can be called on client and server alike.
          */
         let obj = this
         return new Proxy({}, {
             get(target, name) {
-                if (typeof name === 'string') return (...args) => obj._make_edit(name, ...args)
+                if (typeof name === 'string') return (...args) => obj._make_edit(name, args)
             }
         })
     }
@@ -1217,7 +1217,7 @@ export class WebObject {
         this.__meta.mutable = true
     }
 
-    _make_edit(op, ...args) {
+    _make_edit(op, args) {
         /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). Return `this`. */
         if (!this.__meta.mutable)
             if (SERVER) throw new Error(`cannot apply edit operation ('${op}') to immutable object [${this.id}]`)
