@@ -671,10 +671,13 @@ export class Node extends Agent {
 
     async _flush_agents() {
         /* Save the current `agents` state to DB. */
-        let node = this.get_mutable()
+
+        // await this.mutate({agents: this.$master.state?.agents}).save()
+
         let agents = this.$master.state?.agents
         if (agents === undefined) throw new Error(`missing agent placements, cannot flush them to DB`)
 
+        let node = this.get_mutable()
         node.agents = agents
         await node.save()
     }
