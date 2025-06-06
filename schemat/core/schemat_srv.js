@@ -13,7 +13,11 @@ import {Catalog} from "./catalog.js";
 
 export class Transaction {
     /* Metadata about an action being executed against multiple objects in the database.
-       IMPORTANT: at the moment, actions (transactions) are NOT atomic!
+       The role of transaction is to:
+       - track all mutations applied to web objects in a given execution thread; this includes new object instantiations;
+       - send these changes to the database upon request, or when the transaction is committed;
+       - receive back the updated records: save them in local cache and propagate back to the originator of the transaction.
+       IMPORTANT: at the moment, transactions are NOT ATOMIC!
      */
 
     tid = randint(10000)
@@ -23,8 +27,8 @@ export class Transaction {
     stage(obj) {
         /* Mark this object as containing uncommitted changes, for auto-saving when this transaction commits. */
     }
-    commit() {
-        /* Save all uncommitted changes to the database. */
+    commit(...objects) {
+        /* Save uncommitted changes to the database: either all of them or only those affecting given `objects`. */
     }
     capture(...records) {
         /* Save updated records received from the DB to the local cache. */
