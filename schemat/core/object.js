@@ -381,15 +381,16 @@ export class WebObject {
     __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
 
     __meta = {                      // some special properties are grouped here to avoid cluttering the object's interface ...
-        mutable:        false,      // if true, object can be edited; the edits are accumulated and committed to DB using .save(); this prop CANNOT be changed after construction; editable objects are excluded from server-side caching
+        mutable:        false,      // if true, this object can be edited; the edits are accumulated and committed to DB using .save(); this prop CANNOT be changed after construction; editable objects are excluded from server-side caching
         active:         false,      // set to true after full initialization procedure was completed; implies that full __data is present (newborn or loaded)
         loading:        false,      // promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         loaded_at:      undefined,  // timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
         expire_at:      undefined,  // timestamp [ms] when this object should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
-        // accessed_at:    undefined,  // the most recent timestamp [ms] when this object (if fully loaded) was requested from the Registry via schemat.get_object/get_loaded() or .refresh()
+        // accessed_at:    undefined,  // (NOT USED) the most recent timestamp [ms] when this object (if fully loaded) was requested from the Registry via schemat.get_object/get_loaded() or .refresh()
 
         cache:          undefined,  // Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
         edits:          undefined,  // array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
+        mutable_copy:   undefined,  // if the current object is immutable, but a mutable copy of it was created, it is linked here for reuse in get_mutable()
     }
 
     static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in Intercept
@@ -1200,11 +1201,16 @@ export class WebObject {
         /* Create a fully loaded, mutable instance of this (loaded) web object. The object is created synchronously by cloning this.__data.
            If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
          */
-        assert(this.is_loaded() && !this.is_mutable(), 'a mutable copy can only be created from a fully-loaded immutable object')
+        if (this.is_mutable()) return this
+        if (this.__meta.mutable_copy) return this.__meta.mutable_copy
+        if (!this.is_loaded()) throw new Error('a mutable copy can only be created synchronously from a fully-loaded object')
+
         let obj = WebObject.stub(this.id, {...opts, mutable: true})
         obj._set_data(this.__data.clone(), this.__meta.loaded_at)
         T.setClass(obj, T.getClass(this))
         if (activate) obj._activate()
+        
+        this.__meta.mutable_copy = obj
         return obj
     }
 
