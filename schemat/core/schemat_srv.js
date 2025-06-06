@@ -30,11 +30,9 @@ export class Transaction {
     commit(...objects) {
         /* Save uncommitted changes to the database: either all of them or only those affecting given `objects`. */
     }
+
     capture(...records) {
         /* Save updated records received from the DB to the local cache. */
-    }
-
-    register_changes(...records) {
         for (let rec of records)
             this.records.push(rec)
         // TODO: detect duplicates, restrict the size of `records`
