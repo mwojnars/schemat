@@ -379,18 +379,20 @@ export class Schemat {
 
     register_changes(rec) {
         this.tx?.capture(rec)
-        if (rec.data.__status === 'DELETED') {
-            this.registry.delete_record(rec.id)
-            this.registry.delete_object(rec.id)
-        }
-        else this.register_record(rec)
+        this.register_record(rec)
     }
 
-    register_record({id, data}) {
-        /* Keep {id, data} record as the most up-to-date (raw) representation of the corresponding object that will be used on the next object (re)load.
-           Remove the existing object from cache, if loaded from a different JSON source.
+    register_record(record /*{id, data}*/) {
+        /* Keep an {id, data} record as the most up-to-date (raw) representation of the corresponding object that will be used
+           on the next object (re)load. Remove the existing object from cache, if loaded from a different JSON source.
            `data` is either a JSON string, or an encoded (plain) representation of a Catalog instance.
          */
+        let {id, data} = record
+
+        if (data.__status === 'DELETED') {
+            this.registry.delete_record(id)
+            this.registry.delete_object(id)
+        }
         let json = this.registry.set_record(id, data)       // save `data` in the record registry
 
         // if a fully-loaded instance of this object exists in the cache, keep `json` in obj.__refresh for easy recreation of an updated instance
@@ -402,7 +404,7 @@ export class Schemat {
         // if (obj?.__data && (!json || json !== obj.__json_source))
         //     this._on_evict(obj) || this.registry.delete_object(id)
 
-        return {id, data}
+        return record
     }
 
     register_version(obj) {
