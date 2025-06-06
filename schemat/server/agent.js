@@ -13,10 +13,10 @@ export class AgentState {   // AgentData, AgentVariables, Registers
        Some of these variables are created by kernel: __role, __options, __frame.
      */
 
-    __role          // name of the agent's role, e.g. "$leader"; starts with '$', empty/undefined means a generic role ($agent)
-    __options       // startup options provided by the creator of this agent
-    __exclusive     // a flag that can be set in __start__() to inform the kernel that all calls to agent methods should be executed in a mutually exclusive lock (no concurrency)
-    __frame         // Frame of the current run, assigned by kernel
+    __role              // name of the agent's role, e.g. "$leader"; starts with '$', empty/undefined means a generic role ($agent)
+    __options           // startup options provided by the creator of this agent
+    __exclusive = true  // informs the kernel that all calls to agent methods should be executed in a mutually exclusive lock (no concurrency)
+    __frame             // Frame of the current run, assigned by kernel
 
     // subclasses can add custom fields here:
     // ...
