@@ -671,15 +671,13 @@ export class Node extends Agent {
 
     async _flush_agents() {
         /* Save the current `agents` state to DB. */
-
-        // await this.mutate({agents: this.$master.state?.agents}).save()
-
         let agents = this.$master.state?.agents
-        if (agents === undefined) throw new Error(`missing agent placements, cannot flush them to DB`)
+        if (!agents) throw new Error(`missing agent placements, cannot flush them to DB`)
+        await this.mutate({agents}).save()
 
-        let node = this.get_mutable()
-        node.agents = agents
-        await node.save()
+        // let node = this.get_mutable()
+        // node.agents = agents
+        // await node.save()
     }
 
     _rank_workers(state) {
