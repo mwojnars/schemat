@@ -1,4 +1,4 @@
-import {assert} from "../common/utils.js";
+import {assert, print} from "../common/utils.js";
 import {Agent} from "./agent.js";
 
 
@@ -59,7 +59,17 @@ export class Cluster extends Agent {
         /* Array of all nodes where `agent` is currently deployed. */
     }
 
-    async '$leader.create_node'(state, settings = {}) {
+    async '$leader.create_node'({nodes}, tcp_addr, settings = {}) {
         /* Create a new Node object and add it to this cluster. */
+        let {Node} = schemat.std
+        print(`Node:`, Node)
+
+        let node = Node.new({tcp_addr})
+        print(`node:`, node)
+
+        nodes.push(node)
+
+        await node.save()
+        await this.save
     }
 }
