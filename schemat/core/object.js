@@ -912,6 +912,17 @@ export class WebObject {
         console.log(`[${this.id}] ${msg}`)
     }
 
+    get $_wrap() {
+        /* RPC mock-up triggers: $_wrap.X() Calls $agent.X() as a plain method with `state` explicitly supplied. For internal use only. */
+        let id = this.id
+        let obj = this
+        return new Proxy({}, {
+            get(target, name) {
+                if (typeof name === 'string') return (state, ...args) => obj.__self[`$agent.${name}`].call(obj, state, ...args)
+            }
+        })
+    }
+
 
     /***  Hooks  ***/
 
@@ -954,83 +965,6 @@ export class WebObject {
     // __done__() {}
     //     /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 
-
-    /***  Triggers  ***/
-
-    get edit() {
-        /* Triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', args).
-           Can be called on client and server alike.
-         */
-        let obj = this
-        return new Proxy({}, {
-            get(target, name) {
-                if (typeof name === 'string') return (...args) => obj._make_edit(name, args)
-            }
-        })
-    }
-
-    get action() {
-        // TODO: rename to server() ?? ... use as: obj.server.method()
-        /* Triggers of server-side actions: obj.action.X(...args) invokes app.POST.action(id, 'X', ...args),
-           which forwards the call to obj['action.X'](...args) on server. Inside the 'action.X'() method,
-           `this` object is made mutable, so it can be easily edited. Any modified records are returned to the caller
-           and saved in Registry, so the caller can recreate corresponding objects with their most recent content
-           by simply refreshing/reloading them. Action triggers can be called on stubs without fully loading the target object.
-         */
-        let id = this.id
-        assert(id)
-        return new Proxy({}, {
-            get(target, name) {
-                if (typeof name === 'string') return (...args) => schemat.app.POST.action(id, name, ...args)
-            }
-        })
-    }
-
-    get $_wrap() {
-        /* For internal use. Call $agent.*() like a plain method with `state` explicitly supplied. */
-        let id = this.id
-        let obj = this
-        return new Proxy({}, {
-            get(target, name) {
-                if (typeof name === 'string') return (state, ...args) => obj.__self[`$agent.${name}`].call(obj, state, ...args)
-            }
-        })
-    }
-
-
-    // GET/POST/LOCAL.*() are isomorphic triggers ({name: trigger_function}) for this object's web endpoints ...
-
-    get GET()   { return this._web_triggers('GET') }        // triggers for HTTP GET endpoints of this object
-    get POST()  { return this._web_triggers('POST') }       // triggers for HTTP POST endpoints
-    get LOCAL() { return this._web_triggers('LOCAL') }      // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
-
-    _web_triggers(protocol, SEP = '.') {
-        /* Triggers of web endpoints on a given protocol: obj.<protocol>.<endpoint>() redirects to obj['<protocol>.<endpoint>']().
-           If the result is a Service, its .client() or .server() is called (via .invoke()), according to the current environment.
-         */
-        let obj = this
-        return new Proxy({}, {
-            get(target, name) {
-                if (typeof name === 'string') return (...args) => {
-                    let endpoint = protocol + SEP + name
-                    let result = obj.__self[endpoint]()
-                    let invoke = (res) => res instanceof Service ? res.invoke(obj, endpoint, ...args) : res
-                    return result instanceof Promise ? result.then(invoke) : invoke(result)
-                }
-            }
-        })
-    }
-
-    // static _collect_methods(protocols = ['LOCAL', 'GET', 'POST'], SEP = '.') {
-    //     /* Collect all special methods of this class: web handlers + actions + edit operators. */
-    //     let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
-    //     let proto = this.prototype
-    //     let props = T.getAllPropertyNames(proto)
-    //
-    //     let handlers = props.filter(is_endpoint).filter(name => proto[name]).map(name => [name, proto[name]])
-    //     this.__handlers = new Map(handlers)
-    // }
-    //
 
     /***  Networking  ***/
 
@@ -1134,6 +1068,59 @@ export class WebObject {
         return steps.reverse()
     }
 
+    /***  Web Triggers  ***/
+
+    get action() {
+        // TODO: rename to server() ?? ... use as: obj.server.method()
+        /* Triggers of server-side actions: obj.action.X(...args) invokes app.POST.action(id, 'X', ...args),
+           which forwards the call to obj['action.X'](...args) on server. Inside the 'action.X'() method,
+           `this` object is made mutable, so it can be easily edited. Any modified records are returned to the caller
+           and saved in Registry, so the caller can recreate corresponding objects with their most recent content
+           by simply refreshing/reloading them. Action triggers can be called on stubs without fully loading the target object.
+         */
+        let id = this.id
+        assert(id)
+        return new Proxy({}, {
+            get(target, name) {
+                if (typeof name === 'string') return (...args) => schemat.app.POST.action(id, name, ...args)
+            }
+        })
+    }
+
+    // GET/POST/LOCAL.*() are isomorphic triggers ({name: trigger_function}) for this object's web endpoints ...
+
+    get GET()   { return this._web_triggers('GET') }        // triggers for HTTP GET endpoints of this object
+    get POST()  { return this._web_triggers('POST') }       // triggers for HTTP POST endpoints
+    get LOCAL() { return this._web_triggers('LOCAL') }      // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
+
+    _web_triggers(protocol, SEP = '.') {
+        /* Triggers of web endpoints on a given protocol: obj.<protocol>.<endpoint>() redirects to obj['<protocol>.<endpoint>']().
+           If the result is a Service, its .client() or .server() is called (via .invoke()), according to the current environment.
+         */
+        let obj = this
+        return new Proxy({}, {
+            get(target, name) {
+                if (typeof name === 'string') return (...args) => {
+                    let endpoint = protocol + SEP + name
+                    let result = obj.__self[endpoint]()
+                    let invoke = (res) => res instanceof Service ? res.invoke(obj, endpoint, ...args) : res
+                    return result instanceof Promise ? result.then(invoke) : invoke(result)
+                }
+            }
+        })
+    }
+
+    // static _collect_methods(protocols = ['LOCAL', 'GET', 'POST'], SEP = '.') {
+    //     /* Collect all special methods of this class: web handlers + actions + edit operators. */
+    //     let is_endpoint = prop => protocols.some(p => prop.startsWith(p + SEP))
+    //     let proto = this.prototype
+    //     let props = T.getAllPropertyNames(proto)
+    //
+    //     let handlers = props.filter(is_endpoint).filter(name => proto[name]).map(name => [name, proto[name]])
+    //     this.__handlers = new Map(handlers)
+    // }
+    //
+
 
     /***  Database operations on self  ***/
 
@@ -1186,6 +1173,18 @@ export class WebObject {
 
 
     /***  Object editing  ***/
+
+    get edit() {
+        /* Triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', args).
+           Can be called on client and server alike.
+         */
+        let obj = this
+        return new Proxy({}, {
+            get(target, name) {
+                if (typeof name === 'string') return (...args) => obj._make_edit(name, args)
+            }
+        })
+    }
 
     mutate(props = {}, opts = {}) {
         /* Create synchronously a mutable copy of `this` and assign selected properties according to `props`. Return the mutated object.
