@@ -20,6 +20,16 @@ export class Transaction {
     debug               // if true, debug info should be printed/collected while executing this transaction
     records = []        // array of {id, data} records of objects that were created/modified during this transaction
 
+    stage(obj) {
+        /* Mark this object as containing uncommitted changes, for auto-saving when this transaction commits. */
+    }
+    commit() {
+        /* Save all uncommitted changes to the database. */
+    }
+    capture(...records) {
+        /* Save updated records received from the DB to the local cache. */
+    }
+
     register_changes(...records) {
         for (let rec of records)
             this.records.push(rec)

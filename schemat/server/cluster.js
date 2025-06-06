@@ -59,7 +59,7 @@ export class Cluster extends Agent {
         /* Array of all nodes where `agent` is currently deployed. */
     }
 
-    async '$leader.create_node'({nodes}, tcp_addr, settings = {}) {
+    async 'TX.$leader.create_node'({nodes}, tcp_addr, settings = {}) {
         /* Create a new Node object and add it to this cluster. */
         let {Node} = schemat.std
         print(`Node:`, Node)
@@ -68,8 +68,13 @@ export class Cluster extends Agent {
         print(`node:`, node)
 
         nodes.push(node)
-
         await node.save()
-        await this.save
+        await this.mutate({nodes}).save()
+
+        // TX mode:
+        // - edits to existing objects & new object creation are tracked automatically
+        // - commits & saves are done automatically when the function returns
+        nodes.push(node)
+        this.nodes = nodes
     }
 }

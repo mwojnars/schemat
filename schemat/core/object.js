@@ -1186,7 +1186,7 @@ export class WebObject {
     }
 
     mutate(props = {}, opts = {}) {
-        /* Create synchronously a mutable copy of `this` and assign selected properties according to `props`. Return the mutated object.
+        /* Create synchronously a mutable copy of `this` and assign selected properties to it according to `props`. Return the mutated object.
            Remember to call `await obj.save()` on the returned object to actually save the mutations to DB.
          */
         let obj = this.get_mutable(opts)
