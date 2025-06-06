@@ -986,31 +986,6 @@ export class WebObject {
         })
     }
 
-    // get $agent() {
-    //     /* Triggers of intra-cluster RPC calls: obj.$agent.X(...args) call makes the current node send a TCP message that
-    //        invokes obj['$agent.X'](...args) on the host node of this object. The object should be an Agent, because only
-    //        agents are deployed on specific nodes in the cluster, execute a perpetual event loop and accept RPC calls;
-    //        however, to avoid the necessity to load the object only to send an RPC call to it, $agent() is defined here
-    //        at the top WebObject level.
-    //      */
-    //     let id = this.id
-    //     let obj = this
-    //     // assert(id)
-    //     return new Proxy({}, {
-    //         get(target, name) {
-    //             if (typeof name === 'string') return (...args) => (id && schemat.node) ? schemat.node.rpc_send(id, name, args)
-    //                 : obj.__self[`$agent.${name}`].call(obj, undefined, ...args)
-    //         }
-    //     })
-    // }
-    //
-    // get $state() {
-    //     /* Current local execution state of the agent represented by this web object, as returned by __start__()
-    //        - see the Agent class. NOT cached.
-    //      */
-    //     return {value: schemat.get_frame(this.id)?.state, [Intercept.NO_CACHING]: true}
-    // }
-
     get $_wrap() {
         /* For internal use. Call $agent.*() like a plain method with `state` explicitly supplied. */
         let id = this.id
@@ -1211,14 +1186,6 @@ export class WebObject {
 
 
     /***  Object editing  ***/
-
-    // get_private(opts = {}) {
-    //     /* Create a fully-loaded, immutable, private copy of this web object (excluded from registry cache) whose content can be updated in place using .refresh() -
-    //        so the object is not strictly immutable, but the edit operations are disallowed. The object is wrapped up in a proxy with AsyncLocalStorage,
-    //        so each async thread receives its own copy that can be refreshed independently, i.e., without interference when one thread
-    //        refreshes the copy while another one is still relying on a previous version.
-    //      */
-    // }
 
     mutate(props = {}, opts = {}) {
         /* Create synchronously a mutable copy of `this` and assign selected properties according to `props`. Return the mutated object.
