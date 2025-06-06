@@ -390,7 +390,6 @@ export class WebObject {
 
         cache:          undefined,  // Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
         edits:          undefined,  // array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
-        mutable_copy:   undefined,  // if the current object is immutable, but a mutable copy of it was created, it is linked here for reuse in get_mutable()
     }
 
     static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in Intercept
@@ -1202,15 +1201,12 @@ export class WebObject {
            If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
          */
         if (this.is_mutable()) return this
-        if (this.__meta.mutable_copy) return this.__meta.mutable_copy
-        if (!this.is_loaded()) throw new Error('a mutable copy can only be created synchronously from a fully-loaded object')
+        if (!this.is_loaded()) throw new Error('a mutable copy can only be created from a fully-loaded immutable object')
 
         let obj = WebObject.stub(this.id, {...opts, mutable: true})
         obj._set_data(this.__data.clone(), this.__meta.loaded_at)
         T.setClass(obj, T.getClass(this))
         if (activate) obj._activate()
-        
-        this.__meta.mutable_copy = obj
         return obj
     }
 
