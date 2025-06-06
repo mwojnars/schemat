@@ -377,9 +377,9 @@ export class Schemat {
 
     /***  Registry management  ***/
 
-    register_changes(rec) {
-        this.tx?.capture(rec)
-        this.register_record(rec)
+    register_changes(...records) {
+        this.tx?.capture(...records)
+        records.forEach(rec => this.register_record(rec))
     }
 
     register_record(record /*{id, data}*/) {
@@ -395,7 +395,7 @@ export class Schemat {
         }
         let json = this.registry.set_record(id, data)       // save `data` in the record registry
 
-        // if a fully-loaded instance of this object exists in the cache, keep `json` in obj.__refresh for easy recreation of an updated instance
+        // if a fully loaded instance of this object exists in the cache, keep `json` in obj.__refresh for easy recreation of an updated instance
         let obj = this.get_if_present(id)
         if (obj?.__json_source) obj.__self.__refresh = {json, loaded_at: Date.now()}
 

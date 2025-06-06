@@ -32,10 +32,13 @@ export class Transaction {
     }
 
     capture(...records) {
-        /* Save updated records received from the DB to the local cache. */
+        /* Remember updated records received from the DB, so they can be propagated further back to the originator.
+           WARNING: in case of multiple modifications to the same record, the one received most recently will take
+                    precedence in the Registry, which may not always be the most recent version of the object.
+           // TODO: detect duplicates, restrict the size of `records`
+         */
         for (let rec of records)
             this.records.push(rec)
-        // TODO: detect duplicates, restrict the size of `records`
     }
 
     dump_records() {
