@@ -1220,17 +1220,23 @@ export class WebObject {
     }
 
     _make_edit(op, args) {
-        /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save(). Return `this`. */
+        /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save().
+           Return `this`, or whatever the mutable version of this object is returned from the current transaction.
+         */
+        let obj = this
         if (!this.__meta.mutable)
-            if (SERVER) throw new Error(`cannot apply edit operation ('${op}') to immutable object [${this.id}]`)
-            else this._make_mutable()       // on client, an immutable object becomes mutable on the first modification attempt
+            if (CLIENT) this._make_mutable()    // on client, an immutable object becomes mutable on the first modification attempt
+            else {
+                obj = schemat.tx?.get_mutable(this)
+                if (!obj) throw new Error(`cannot apply edit operation ('${op}') to immutable object [${this.id}]`)
+            }
 
         let edit = [op, ...args]
-        this._apply_edits(edit)
-        this.__meta.edits?.push(edit)       // `edits` does not exist in newborn objects, so `edit` is not recorded then, but is still applied to __data
-        schemat.tx?.stage(this)             // add `this` to the current transaction for auto-commit at the end of web/rpc request
+        obj._apply_edits(edit)
+        obj.__meta.edits?.push(edit)        // `edits` does not exist in newborn objects, so `edit` is not recorded then, but is still applied to __data
+        schemat.tx?.stage(obj)              // add the object to the current transaction for auto-commit at the end of web/rpc request
 
-        return this
+        return obj
     }
 
     _apply_edits(...edits) {
