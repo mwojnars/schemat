@@ -160,6 +160,37 @@ export class Application extends WebObject {
     async resolve(path) { return this.root.resolve(path) }
 
 
+    /***  Endpoints  ***/
+
+    'POST.eval'() {
+        /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string. */
+        return new JsonPOST({
+            server: (code) => this.eval_allowed ? eval(code) : undefined,
+            input:  mString
+        })
+    }
+
+    'POST.action'() {
+        /* Submit a server-side action that performs edit operations on a number of objects. */
+        return new JsonPOST({
+            server: async (id, action, args) => {
+                this._print(`POST.action(${action}) ...`)
+                let obj = await schemat.get_loaded(id)
+                let tx = schemat.get_transaction()
+                tx.debug = true
+
+                let run = () => obj._execute_action(action, args)
+                let result = schemat.in_transaction(tx, run)
+                if (result instanceof Promise) result = await result
+
+                this._print(`POST.action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
+                return [result, tx]     // `tx` is used internally by mActionResult (below) and then dropped
+            },
+            output: mActionResult,
+        })
+    }
+
+
     /***  Actions -- can be called via schemat.remote.*()  ***/
 
     // TODO: allow actions to run on immutable `this`, otherwise the `app` object is *recreated* on every execution of the actions below!
@@ -182,37 +213,6 @@ export class Application extends WebObject {
 
     'action.delete_object'(id) {
         return schemat.db.delete(id)
-    }
-
-
-    /***  Endpoints  ***/
-
-    'POST.action'() {
-        /* Submit a server-side action that performs edit operations on a number of objects. */
-        return new JsonPOST({
-            server: async (id, action, args) => {
-                this._print(`POST.action(${action}) ...`)
-                let obj = await schemat.get_loaded(id)
-                let tx = schemat.get_transaction()
-                tx.debug = true
-
-                let run = () => obj._execute_action(action, args)
-                let result = schemat.in_transaction(tx, run)
-                if (result instanceof Promise) result = await result
-
-                this._print(`POST.action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
-                return [result, tx]     // `tx` is used internally by mActionResult (below) and then dropped
-            },
-            output: mActionResult,
-        })
-    }
-
-    'POST.eval'() {
-        /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string. */
-        return new JsonPOST({
-            server: (code) => this.eval_allowed ? eval(code) : undefined,
-            input:  mString
-        })
     }
 
 
