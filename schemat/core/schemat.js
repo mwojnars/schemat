@@ -447,7 +447,7 @@ export class Schemat {
 
         let queue = [...objects]
 
-        // find all references to newly-created objects not yet in `objects`
+        // find all references to newly created objects not yet in `objects`
         while (queue.length) {
             let obj = queue.pop()
             obj.__references.forEach(ref => {

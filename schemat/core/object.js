@@ -251,9 +251,9 @@ export class WebObject {
 
     SPECIAL properties (some of them virtual or imputed with getters; must be commented out not to mask the getters):
 
-    __provisional_id        temporary ID (1,2,3...) of a newly-created object not yet saved to DB; only used to differentiate the object
+    __provisional_id        temporary ID (1,2,3...) of a newly created object not yet saved to DB; only used to differentiate the object
                             in a batch of interconnected objects that are being inserted to DB altogether
-    __index_id              ID that can be used for local indexing of persisted and newborn objects combined: id || -__provisional_id
+    __index_id              ID to be used for local indexing of persisted and newborn objects combined: positive value for persisted objects, negative for newborn ones
 
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
                             that inherits (like from prototypes) from all __category$ listed in this object or inherited
