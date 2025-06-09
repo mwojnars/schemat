@@ -76,6 +76,8 @@
   name: /$/sys
   info: Core system objects and categories, for dynamic imports by path instead of
     ID.
+  entries:
+    "@": schemat:Catalog
   __container:
     "@": 2004
   __category:

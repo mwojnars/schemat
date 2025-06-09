@@ -134,11 +134,11 @@ export class Directory extends Container {
 
     has_entry(key, obj = null) {
         /* If `obj` (web object) is given, check that this particular object (and not any other) is present at a given key. */
-        return obj ? obj.is(this.entries.get(key)) : this.entries.has(key)
+        return obj ? obj.is(this.entries?.get(key)) : this.entries?.has(key)
     }
 
-    'edit.del_entry'(key)           { return this.entries.delete(key) }
-    'edit.set_entry'(key, target)   { return this.entries.set(key, target) }
+    'edit.del_entry'(key)           { return this.entries?.delete(key) }
+    'edit.set_entry'(key, target)   { return (this.entries ??= []).set(key, target) }
 }
 
 
