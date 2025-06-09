@@ -29,7 +29,7 @@ export class Transaction {
     _created = []               // an array of newly created web objects that wait for insertion to DB
 
     // captured DB changes after commit & save:
-    _updated = []               // array of {id, data} records captured from DB that were already updated and saved during this transaction
+    _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
 
     stage(obj) {
         /* Mark this object as containing uncommitted changes, for auto-saving when this transaction commits. */
@@ -46,6 +46,12 @@ export class Transaction {
         objects ??= [...this._changed.keys(), ...this._created]
         if (typeof objects === 'object') objects = [objects]
         if (objects.length) await schemat.save(...objects)
+    }
+
+    revert() {
+        /* Remove all pending changes recorded during this transaction. */
+        this._changed.clear()
+        this._created.length = 0
     }
 
     capture(...records) {
