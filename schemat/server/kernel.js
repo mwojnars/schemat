@@ -150,10 +150,12 @@ class Frame {
 
         let func = agent.__self[method]
         if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
-        // print(`calling agent ${agent}.${method}() in tracked mode`)
+        // print(`calling agent ${agent}.${method}()`)
 
-        while ((this.exclusive || state.__exclusive) && this.calls.length > 0)
+        while ((this.exclusive || state.__exclusive) && this.calls.length > 0) {
+            // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
             await Promise.all(this.calls)
+        }
 
         let result = func.call(agent, state, ...args)
         if (!(result instanceof Promise)) return result

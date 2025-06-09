@@ -97,8 +97,8 @@ export class Block extends Agent {
         let storage_class = this._detect_storage_class()
         let storage = new storage_class(this.file_path, this)
         let autoincrement = await this._reopen(storage)
-        // return storage.open()
-        return {storage, autoincrement}
+        let __exclusive = false         // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
+        return {storage, autoincrement, __exclusive}
     }
 
     async _reopen(storage) {
