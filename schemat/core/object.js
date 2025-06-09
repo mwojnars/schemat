@@ -1363,7 +1363,7 @@ export class WebObject {
         if (src?.has_entry(this.__ident, this))
             src.edit.del_entry(this.__ident)
 
-        await schemat.save([dst, this, src])
+        // await schemat.save([dst, this, src])
     }
 
 

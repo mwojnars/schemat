@@ -185,7 +185,7 @@ export class Application extends WebObject {
 
                 let result = await schemat.in_transaction(tx, async () => {
                     let res = await obj._execute_action(action, args)
-                    // await tx.commit()
+                    await tx.commit()
                     return res
                 })
 

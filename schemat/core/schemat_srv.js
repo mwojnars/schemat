@@ -68,8 +68,8 @@ export class Transaction {
         // }
         // else objects = [...this._changed, ...this._created]
 
-        print(`tx.save() new:      `, [...this._created].map(String))
-        print(`          modified: `, [...this._changed].map(String))
+        // print(`tx.save() new:      `, [...this._created].map(String))
+        // print(`          modified: `, [...this._changed].map(String))
         let db = schemat.db
 
         // await schemat.insert([...this._created], opts)      // new objects must be inserted together due to possible cross-references
@@ -112,7 +112,7 @@ export class Transaction {
 
     dump_tx() {
         let {tid, debug} = this
-        return {tid, debug} //records: this.dump_records()}
+        return {tid, debug}
     }
 
     static load({tid, records, debug}) {
