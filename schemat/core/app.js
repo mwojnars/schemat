@@ -179,10 +179,15 @@ export class Application extends WebObject {
                 let tx = schemat.get_transaction()
                 tx.debug = true
 
-                let run = () => obj._execute_action(action, args)
-                let result = schemat.in_transaction(tx, run)
-                if (result instanceof Promise) result = await result
-                // await tx.commit()
+                // let run = () => obj._execute_action(action, args)
+                // let result = schemat.in_transaction(tx, run)
+                // if (result instanceof Promise) result = await result
+
+                let result = await schemat.in_transaction(tx, async () => {
+                    let res = await obj._execute_action(action, args)
+                    // await tx.commit()
+                    return res
+                })
 
                 this._print(`POST.action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
                 return [result, tx]     // `tx` is used internally by mActionResult (below) and then dropped
