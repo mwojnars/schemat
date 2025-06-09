@@ -136,6 +136,8 @@ export class ServerSchemat extends Schemat {
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
 
+    GENERIC_ROLE = "$agent"     // special role name for RPC calls to agent objects
+
     kernel          // Kernel that runs the main Schemat loop of the current master/worker process
     parent          // parent ServerSchemat that created this one via .fork() below
     cluster_id      // ID of the active Cluster object
