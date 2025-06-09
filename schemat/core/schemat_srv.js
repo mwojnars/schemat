@@ -25,8 +25,8 @@ export class Transaction {
     debug                       // if true, debug info should be printed/collected while executing this transaction
 
     // staging area:
-    _changed = new Objects()    // a set of mutable web objects that have been modified in this transaction and wait for being committed
-    _created = []               // an array of newly created web objects that wait for insertion to DB
+    _changed = new Objects()    // a set of persisted (with IDs) mutable objects that have been modified in this transaction and wait for being committed
+    _created = new Set()        // a set of newly created web objects that wait for insertion to DB
 
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
@@ -49,20 +49,20 @@ export class Transaction {
         return obj
     }
 
-    stage_newborn(obj) { this._created.push(obj) }
+    stage_newborn(obj) { this._created.add(obj) }
     
     async save(objects = null, opts = {}) {
         /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object).
-           Every item in `objects` must have been staged already.
+           Any non-staged item in `objects` gets implicitly staged.
          */
         if (objects && typeof objects === 'object') objects = [objects]
         if (Array.isArray(objects)) {
             // check that every object has been staged before
             for (let obj of objects) {
-                if (!this._changed.has(obj)) throw new Error(`object ${obj} is not staged`)
+                if (!this._changed.has(obj)) this.stage(obj)
             }
         }
-        else objects = [...this._changed.keys(), ...this._created]
+        else objects = [...this._changed, ...this._created]
 
         if (objects.length) await schemat.save(...objects)
     }
@@ -75,7 +75,7 @@ export class Transaction {
     revert() {
         /* Remove all pending changes recorded during this transaction. */
         this._changed.clear()
-        this._created.length = 0
+        this._created.clear()
     }
 
     capture(...records) {
