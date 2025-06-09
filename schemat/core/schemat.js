@@ -454,6 +454,10 @@ export class Schemat {
                 if (ref.is_newborn() && !unique.has(ref)) {unique.add(ref); queue.push(ref); objects.push(ref)}
             })
         }
+
+        // // check that very object has a provisional ID
+        // objects.forEach(obj => {if (!obj.__provisional_id) throw new Error(`missing provisional ID`)})
+
         // set provisional IDs so that cross-references to these objects are properly resolved in the DB when creating data records
         objects.forEach((obj, i) => obj.__self.__provisional_id = i+1)      // 1, 2, 3, ...
 

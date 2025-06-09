@@ -27,6 +27,7 @@ export class Transaction {
     // staging area:
     _changed = new Objects()    // a set of persisted (with IDs) mutable objects that have been modified in this transaction and wait for being committed
     _created = new Set()        // a set of newly created web objects that wait for insertion to DB
+    _max_provisional_id = 0
 
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
@@ -49,22 +50,26 @@ export class Transaction {
         return obj
     }
 
-    stage_newborn(obj) { this._created.add(obj) }
+    stage_newborn(obj) {
+        assert(!obj.__provisional_id)
+        obj.__self.__provisional_id = ++this._max_provisional_id
+        this._created.add(obj)
+    }
     
     async save(objects = null, opts = {}) {
         /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object).
            Any non-staged item in `objects` gets implicitly staged.
          */
-        if (objects && typeof objects === 'object') objects = [objects]
-        if (Array.isArray(objects)) {
-            // check that every object has been staged before
-            for (let obj of objects) {
-                if (!this._changed.has(obj)) this.stage(obj)
-            }
-        }
-        else objects = [...this._changed, ...this._created]
+        // if (objects && typeof objects === 'object') objects = [objects]
+        // if (Array.isArray(objects)) {
+        //     for (let obj of objects)        // stage the unstaged objects
+        //         if (!this._changed.has(obj) && !this._created.has(obj)) this.stage(obj)
+        // }
+        // else objects = [...this._changed, ...this._created]
 
-        if (objects.length) await schemat.save(...objects)
+        assert(!objects)
+        await schemat.insert([...this._created], opts)      // new objects must be inserted together due to possible cross-references
+        await Promise.all([...this._changed].map(obj => obj._save_edits(opts)))
     }
 
     async commit(objects = null, opts = {}) {
