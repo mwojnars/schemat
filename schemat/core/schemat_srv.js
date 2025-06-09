@@ -31,12 +31,11 @@ export class Transaction {
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
 
-    get_mutable(obj_or_id) {
-        /* Return the mutable copy of an object that's unique transaction-wide: multiple calls return the same copy,
+    get_mutable(obj) {
+        /* Return an object's mutable copy that's unique transaction-wide: multiple calls return the same copy,
            so consecutive modifications add to rather than replace previous ones. If the object is not yet
-           in the staging area, a new mutable copy is created and staged. Don't use this method for newborn objects.
+           in the staging area, a new mutable copy is created and staged. The object must be loaded, not a newborn.
          */
-        let obj = schemat.as_object(obj_or_id)
         let existing = this._changed.get(obj)
         return existing || this.stage(obj.mutate())
     }
