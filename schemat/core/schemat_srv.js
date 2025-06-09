@@ -51,11 +51,25 @@ export class Transaction {
 
     stage_newborn(obj) { this._created.push(obj) }
     
-    async commit(objects = null, opts = {}) {
-        /* Save uncommitted changes to the database: either all of them or only those in the `objects` array (can be a single object). */
-        objects ??= [...this._changed.keys(), ...this._created]
-        if (typeof objects === 'object') objects = [objects]
+    async save(objects = null, opts = {}) {
+        /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object).
+           Every item in `objects` must have been staged already.
+         */
+        if (objects && typeof objects === 'object') objects = [objects]
+        if (Array.isArray(objects)) {
+            // check that every object has been staged before
+            for (let obj of objects) {
+                if (!this._changed.has(obj)) throw new Error(`object ${obj} is not staged`)
+            }
+        }
+        else objects = [...this._changed.keys(), ...this._created]
+
         if (objects.length) await schemat.save(...objects)
+    }
+
+    async commit(objects = null, opts = {}) {
+        return this.save(objects, opts)     // transfer all pending changes to the database
+        // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
     }
 
     revert() {

@@ -189,7 +189,6 @@ export class Ring extends WebObject {
 
     async update(id, edits, req) {
         /* Apply `edits` to an item's data and store under the `id` in top-most ring that allows writing this particular `id`.
-           Return an {id, data} record as written to the data block.
            FUTURE: `edits` may perform tests or create side effects, for example, to check for a specific item version
                    to apply the edits to; or to perform a sensitive operation inside the record-level exclusive lock,
                    even without changing the record's data.

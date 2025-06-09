@@ -373,7 +373,8 @@ export class DataBlock extends Block {
     async '$agent.update'({storage}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
-           in this block (if the ring permits), or forward the write request back to a higher ring. Return {id, data}.
+           in this block (if the ring permits), or forward the write request back to a higher ring.
+           The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
         let key = this.encode_id(id)
         let data = await storage.get(key)
