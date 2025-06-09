@@ -459,7 +459,7 @@ export class Schemat {
 
         let {reload = true, ...opts} = opts_
         let data = objects.map(obj => obj.__data.__getstate__())
-        let ids = await this.remote.insert_objects(data, opts)
+        let ids = await this.app.action.insert_objects(data, opts)
         ids.map((id, i) => {
             delete objects[i].__self.__provisional_id   // replace provisional IDs with final IDs
             objects[i].id = id
