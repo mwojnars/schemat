@@ -160,7 +160,7 @@ export class Application extends WebObject {
     async resolve(path) { return this.root.resolve(path) }
 
 
-    /***  Actions -- can be called via schemat.server.*()  ***/
+    /***  Actions -- can be called via schemat.remote.*()  ***/
 
     // TODO: allow actions to run on immutable `this`, otherwise the `app` object is *recreated* on every execution of the actions below!
 

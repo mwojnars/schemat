@@ -459,7 +459,7 @@ export class Schemat {
 
         let {reload = true, ...opts} = opts_
         let data = objects.map(obj => obj.__data.__getstate__())
-        let ids = await this.server.insert_objects(data, opts)
+        let ids = await this.remote.insert_objects(data, opts)
         ids.map((id, i) => {
             delete objects[i].__self.__provisional_id   // replace provisional IDs with final IDs
             objects[i].id = id
@@ -482,18 +482,20 @@ export class Schemat {
         // }))
     }
 
-    /* Proxy object that handles both direct calls (server(code)) and property access (server.XYZ).
+    /* Proxy object that handles both direct calls (remote(code)) and property access (remote.XYZ).
        Direct calls execute code on the server via eval, while property access forwards to app.action.XYZ().
      */
-    server = new Proxy(
-        async (code) => this.app.POST.eval(code),       // handle direct calls like server(code)
+    remote = new Proxy(
+        async (code) => this.app.POST.eval(code),       // handle direct calls like remote(code)
         {
-            get: (target, prop) => {                    // handle property access like server.XYZ
+            get: (target, prop) => {                    // handle property access like remote.XYZ
                 if (prop === 'then') return undefined   // prevent Promise-like behavior
                 return (...args) => this.app.action[prop](...args)
             }
         }
     )
+    async server(code) { return this.app.POST.eval(code) }
+
 
     /***  Events & Debugging  ***/
 

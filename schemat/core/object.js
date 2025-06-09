@@ -1070,7 +1070,7 @@ export class WebObject {
     /***  Web Triggers  ***/
 
     get action() {
-        // TODO: rename to server() ?? ... use as: obj.server.method()
+        // TODO: rename to server() or remote() ?? ... use as: obj.server.method()
         /* Triggers of server-side actions: obj.action.X(...args) invokes app.POST.action(id, 'X', ...args),
            which forwards the call to obj['action.X'](...args) on server. Inside the 'action.X'() method,
            `this` object is made mutable, so it can be easily edited. Any modified records are returned to the caller
@@ -1125,7 +1125,7 @@ export class WebObject {
 
     async delete_self() {
         /* Delete this object from the database. No need to use save(). */
-        return schemat.server.delete_object(this.id)
+        return schemat.remote.delete_object(this.id)
     }
 
     _bump_version() {
@@ -1254,7 +1254,7 @@ export class WebObject {
 
         let edits = this.__meta.edits           // otherwise, save updates of an existing object...
         if (edits?.length) {
-            let submit = schemat.server.submit_edits(this.id, ...edits)
+            let submit = schemat.remote.submit_edits(this.id, ...edits)
             edits.length = 0
             return reload ? submit.then(() => this.reload()) : submit
         }
