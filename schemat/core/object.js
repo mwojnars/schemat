@@ -471,10 +471,11 @@ export class WebObject {
         return obj.__proxy = Intercept.wrap(obj)
     }
 
-    static newborn(data = null, opts = {}) {
+    static newborn(data = null, {provisional, ...opts} = {}) {
         /* Create a newborn object (not yet in DB): a mutable object with __data but no ID.
            Optionally, initialize its __data with `data`, but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
+        if (provisional) obj.__self.__provisional_id = provisional
         obj.__data = new Catalog(data)
         schemat.tx?.stage_newborn(this)
         return obj
