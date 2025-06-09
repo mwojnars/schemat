@@ -41,8 +41,11 @@ export class Transaction {
         }
     }
     
-    commit(...objects) {
-        /* Save uncommitted changes to the database: either all of them or only those in `objects`. */
+    async commit(objects = null, opts = {}) {
+        /* Save uncommitted changes to the database: either all of them or only those in the `objects` array (can be a single object). */
+        objects ??= [...this._changed.keys(), ...this._created]
+        if (typeof objects === 'object') objects = [objects]
+        if (objects.length) await schemat.save(...objects)
     }
 
     capture(...records) {
