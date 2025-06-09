@@ -27,7 +27,7 @@ export class Transaction {
     // staging area:
     _changed = new Objects()    // a set of persisted (with IDs) mutable objects that have been modified in this transaction and wait for being committed
     _created = new Set()        // a set of newly created web objects that wait for insertion to DB
-    _max_provisional_id = 0
+    _provisional = 0
 
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
@@ -51,8 +51,8 @@ export class Transaction {
     }
 
     stage_newborn(obj) {
-        assert(!obj.__provisional_id)
-        obj.__self.__provisional_id = ++this._max_provisional_id
+        // if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
+        // else obj.__self.__provisional_id = ++this._provisional
         this._created.add(obj)
     }
     
@@ -70,11 +70,15 @@ export class Transaction {
 
         print(`tx.save() new:      `, [...this._created].map(String))
         print(`          modified: `, [...this._changed].map(String))
+        let db = schemat.db
 
-        await schemat.insert([...this._created], opts)      // new objects must be inserted together due to possible cross-references
+        // await schemat.insert([...this._created], opts)      // new objects must be inserted together due to possible cross-references
+        let data = [...this._created].map(obj => obj.__data.__getstate__())
+        await db.insert(data, opts)
         this._created.clear()
 
-        await Promise.all([...this._changed].map(obj => obj._save_edits(opts)))
+        // await Promise.all([...this._changed].map(obj => obj._save_edits(opts)))
+        await Promise.all([...this._changed].map(obj => db.update(obj.id, obj.__meta.edits)))
         this._changed.clear()
     }
 
@@ -106,15 +110,16 @@ export class Transaction {
         }))
     }
 
-    dump() {
-        return {...this, records: this.dump_records()}
+    dump_tx() {
+        let {tid, debug} = this
+        return {tid, debug} //records: this.dump_records()}
     }
 
     static load({tid, records, debug}) {
         let tx = new Transaction()
         tx.tid = tid
         tx.debug = debug
-        tx._updated = records
+        tx._updated = records || []
         return tx
     }
 }
