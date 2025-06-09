@@ -198,9 +198,9 @@ class Intercept {
 
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${path})`)
-                target._make_edit('set', [base, ...value])
+                receiver._make_edit('set', [base, ...value])
             }
-            else target._make_edit('set', [path, value])
+            else receiver._make_edit('set', [path, value])
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${prop})`)
