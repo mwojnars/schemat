@@ -1071,7 +1071,7 @@ export class WebObject {
 
     get action() {
         // TODO: rename to server() or remote() ?? ... use as: obj.server.method()
-        /* Triggers of server-side actions: obj.action.X(...args) invokes app.POST.action(id, 'X', ...args),
+        /* Triggers of server-side actions: obj.action.X(...args) invokes app.POST.action(id, 'X', args),
            which forwards the call to obj['action.X'](...args) on server. Inside the 'action.X'() method,
            `this` object is made mutable, so it can be easily edited. Any modified records are returned to the caller
            and saved in Registry, so the caller can recreate corresponding objects with their most recent content
@@ -1081,7 +1081,7 @@ export class WebObject {
         assert(id)
         return new Proxy({}, {
             get(target, name) {
-                if (typeof name === 'string') return (...args) => schemat.app.POST.action(id, name, ...args)
+                if (typeof name === 'string') return (...args) => schemat.app.POST.action(id, name, args)
             }
         })
     }
