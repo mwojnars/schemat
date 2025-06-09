@@ -173,8 +173,8 @@ export class Application extends WebObject {
         return schemat.db.insert(data, opts)
     }
 
-    'action.submit_edits'(id, ...edits) {
-        /* Submit a list of object edits to the DB. Each plain edit is an array: [op, ...args], where `op` is the name
+    'action.apply_edits'(id, ...edits) {
+        /* Modify an object by executing a number of edits in the DB. Each plain edit is an array: [op, ...args], where `op` is the name
            of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
          */
         return schemat.db.update(id, edits)
