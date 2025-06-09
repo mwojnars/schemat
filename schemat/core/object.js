@@ -1324,7 +1324,7 @@ export class WebObject {
 
     /***  Actions  ***/
 
-    _execute_action(name, ...args) {
+    _execute_action(name, args) {
         assert(this.is_mutable())
         let func = this.__self[`action.${name}`]
         if (!func) throw new Error(`action method not found: '${name}'`)

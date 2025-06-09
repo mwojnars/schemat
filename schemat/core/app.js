@@ -195,7 +195,7 @@ export class Application extends WebObject {
                 let obj = await schemat.get_loaded(id)
                 let tx = schemat.get_transaction()
                 if (mutating) obj = tx.get_mutable(obj)
-                let run = () => obj._execute_action(action, ...args)
+                let run = () => obj._execute_action(action, args)
 
                 tx.debug = true
                 let result = schemat.in_transaction(tx, run)
