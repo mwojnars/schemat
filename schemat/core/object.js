@@ -1324,11 +1324,11 @@ export class WebObject {
 
     /***  Actions  ***/
 
-    _execute_action(name, args) {
-        assert(this.is_mutable())
-        let func = this.__self[`action.${name}`]
+    _execute_action(name, args, as_mutable = true) {
+        let obj = as_mutable ? schemat.tx.get_mutable(this) : this
+        let func = obj.__self[`action.${name}`]
         if (!func) throw new Error(`action method not found: '${name}'`)
-        return func.call(this, ...args)
+        return func.call(obj, ...args)
     }
 
     async 'action.move_to'(directory, overwrite = false) {
