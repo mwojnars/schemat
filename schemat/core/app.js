@@ -190,11 +190,12 @@ export class Application extends WebObject {
     'POST.action'() {
         /* Submit a server-side action that performs edit operations on a number of objects. */
         return new JsonPOST({
-            server: async (id, action, args) => {
+            server: async (id, action, args, mutating = true) => {
                 this._print(`POST.action(${action}) ...`)
                 let obj = await schemat.get_loaded(id)
                 let tx = schemat.get_transaction()
-                let run = () => tx.get_mutable(obj)._execute_action(action, ...args)
+                if (mutating) obj = tx.get_mutable(obj)
+                let run = () => obj._execute_action(action, ...args)
 
                 tx.debug = true
                 let result = schemat.in_transaction(tx, run)
