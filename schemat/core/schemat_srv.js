@@ -23,13 +23,24 @@ export class Transaction {
 
     tid = randint(10000) /*Number.MAX_SAFE_INTEGER*/
     debug                       // if true, debug info should be printed/collected while executing this transaction
-    _staging = new Objects()    // staging area: a set of mutable web objects that have been modified/created in this transaction and wait for being committed
+
+    // staging area:
+    _changed = new Objects()    // a set of mutable web objects that have been modified in this transaction and wait for being committed
+    _created = []               // an array of newly created web objects that wait for insertion to DB
+
+    // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records captured from DB that were already updated and saved during this transaction
 
     stage(obj) {
         /* Mark this object as containing uncommitted changes, for auto-saving when this transaction commits. */
-
+        if (obj.is_newborn()) this._created.push(obj)
+        else {
+            let existing = this._changed.get(obj)
+            if (existing && existing !== obj) throw new Error(`a different copy of the same object ${obj} is already staged`)
+            this._changed.add(obj)
+        }
     }
+    
     commit(...objects) {
         /* Save uncommitted changes to the database: either all of them or only those in `objects`. */
     }

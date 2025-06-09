@@ -142,9 +142,10 @@ export class Objects {
     }
 
     delete(obj)     { return this.objects.delete(obj.id) }
+    get(obj)        { return this.objects.get(obj.id) }     // another copy of the same web object may exist
     has(obj)        { return this.objects.has(obj.id) }
     ids()           { return this.objects.keys() }
-    keys()          { return this.objects.values() }                // for compatibility with Set interface
+    keys()          { return this.objects.values() }        // for compatibility with Set interface
     values()        { return this.objects.values() }
     clear()         { this.objects.clear() }
 
