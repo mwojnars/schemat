@@ -171,7 +171,7 @@ export class Application extends WebObject {
     }
 
     'POST.action'() {
-        /* Submit a server-side action that performs edit operations on a number of objects. */
+        /* Execute a server-side action inside a Transaction so that record modifications are captured and sent back to caller. */
         return new JsonPOST({
             server: async (id, action, args) => {
                 this._print(`POST.action(${action}) ...`)
@@ -199,7 +199,8 @@ export class Application extends WebObject {
         /* Insert new object(s) to DB with __data initialized from the provided JSONx-stringified representation(s).
            `data` is either an array of content objects, one for each web object to be created; or a single content object.
            Every content object is a Catalog instance or an internal *state* of such instance (the result of .__getstate__()).
-           The respond is an array of {id, data} records, one for each object created, in the same order as in the request.
+           The respond is an array of IDs, one for each object created, in the same order as in the request.
+           Additionally, DB records are passed implicitly through a Transaction context.
          */
         return schemat.db.insert(data, opts)
     }
