@@ -275,7 +275,7 @@ export class Schemat {
         let objs = objects_or_ids.map(async obj => {
             if (!obj) return obj
             if (Number.isInteger(obj)) obj = await this.get_loaded(obj)
-            return obj.get_mutable()
+            return obj.mutate()
         })
         return Promise.all(objs)
     }

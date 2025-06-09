@@ -1185,17 +1185,18 @@ export class WebObject {
         })
     }
 
-    mutate(props = {}, opts = {}) {
+    mutate(props = null, opts = {}) {
         /* Create synchronously a mutable copy of `this` and assign selected properties to it according to `props`. Return the mutated object.
            Remember to call `await obj.save()` on the returned object to actually save the mutations to DB.
          */
-        let obj = this.get_mutable(opts)
-        for (let [key, value] of Object.entries(props))
-            obj[key] = value
+        let obj = this._get_mutable(opts)
+        if (props)
+            for (let [key, val] of Object.entries(props))
+                obj[key] = val
         return obj
     }
 
-    get_mutable({activate = true, ...opts} = {}) {
+    _get_mutable({activate = true, ...opts} = {}) {
         /* Create a fully loaded, mutable instance of this (loaded) web object. The object is created synchronously by cloning this.__data.
            If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
          */
