@@ -103,8 +103,7 @@ export class JSONx {
             }
 
             if (obj instanceof schemat.WebObject) {
-                if (obj.id || obj.__provisional_id)
-                    return {[JSONx.ATTR_CLASS]: obj.id || -obj.__provisional_id}    // ref to newly-created object encoded by negated __provisional_id
+                if (obj.__index_id) return {[JSONx.ATTR_CLASS]: obj.__index_id}     // ref to a newly created object uses __provisional_id
                 throw new Error(`can't encode a reference to a newly-created object (no ID): ${obj}`)
             }
 

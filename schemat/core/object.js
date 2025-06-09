@@ -253,6 +253,7 @@ export class WebObject {
 
     __provisional_id        temporary ID (1,2,3...) of a newly-created object not yet saved to DB; only used to differentiate the object
                             in a batch of interconnected objects that are being inserted to DB altogether
+    __index_id              ID that can be used for local indexing of persisted and newborn objects combined: id || -__provisional_id
 
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
                             that inherits (like from prototypes) from all __category$ listed in this object or inherited
@@ -290,6 +291,8 @@ export class WebObject {
 
     get __cid()  { return this.__category?.id }
     get __cid$() { return this.__category$.map(c => c.id) }
+
+    get __index_id() { return this.id || (this.__provisional_id && -this.__provisional_id) }
 
     get __base() {
         let cats = this.__category$
