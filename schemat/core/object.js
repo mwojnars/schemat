@@ -1250,23 +1250,31 @@ export class WebObject {
         }
     }
 
+    _save_edits({reload = true} = {}) {
+        /* Send __meta.edits to the database. If reload=true, an updated copy of this object is returned. */
+        let edits = this.__meta.edits           // otherwise, save updates of an existing object...
+        if (!edits?.length) return this
+        let submit = schemat.app.action.apply_edits(this.id, ...edits)
+        edits.length = 0
+        return reload ? submit.then(() => this.reload()) : submit
+    }
+
     async save(opts = {}) {
         /* Send __data (for a newly created object) or __meta.edits (for an existing object) to DB.
            Some of the available options: {ring, reload}.
            If reload=true (default), a new instance of this object is created with new content and returned.
          */
         this.assert_active()
-        let {reload = true} = opts
+        return this.is_newborn() ? schemat.insert(this, opts) : this._save_edits(opts)
 
-        if (this.is_newborn()) return schemat.insert(this, opts)    // save a newly-created object
-
-        let edits = this.__meta.edits           // otherwise, save updates of an existing object...
-        if (edits?.length) {
-            let submit = schemat.app.action.apply_edits(this.id, ...edits)
-            edits.length = 0
-            return reload ? submit.then(() => this.reload()) : submit
-        }
-        // throw new Error(`no edits to be submitted for ${this.id}`)
+        // let {reload = true} = opts
+        // if (this.is_newborn()) return schemat.insert(this, opts)    // save a newly created object
+        // let edits = this.__meta.edits           // otherwise, save updates of an existing object...
+        // if (edits?.length) {
+        //     let submit = schemat.app.action.apply_edits(this.id, ...edits)
+        //     edits.length = 0
+        //     return reload ? submit.then(() => this.reload()) : submit
+        // }
     }
 
 
