@@ -36,7 +36,7 @@ export class Mailbox {
      */
 
     // constructor(callback, timeout = null) {
-    constructor(callback, timeout = 5000) {
+    constructor(callback, timeout = schemat.debug ? null : 5000) {
         this.callback = callback        // processing function for incoming messages
         this.pending = new Map()        // requests sent awaiting a response
         this.message_id = 0             // last message ID sent

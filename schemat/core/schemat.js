@@ -89,6 +89,7 @@ export class Schemat {
     registry        // cache of web objects, records and indexes loaded from DB
     builtin         // a Classpath containing built-in classes and their paths
     booting         // a Promise that resolves when this Schemat is fully booted; false after that
+    debug           // if true, some elements of Schemat and environment are tuned towards debugging
 
     _essential = [ROOT_ID]  // IDs of web objects that must be always present (fully loaded) in the Registry, so eviction must reload not delete them
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
@@ -143,6 +144,7 @@ export class Schemat {
         this.WebObject = WebObject          // schemat.WebObject is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
         this.registry = new Registry(this._on_evict.bind(this))
+        this.debug = config.debug
     }
 
     async _init_classpath() {

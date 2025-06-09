@@ -20,6 +20,7 @@ await (async function run() {
         .option('port',      {type: 'number', default: PORT})
         .option('node',      {type: 'string', desc: "path to the node's local folder inside ./cluster/... for finding config.yaml and inferring node ID"})
         .option('tcp-port',  {type: 'number'})
+        .option('debug',     {type: 'boolean'})
         // .option('node-file', {type: 'string', default: './schemat/node.id'})
         // .option('node',      {type: 'number', desc: "ID of the node object in DB, overrides the content of node.id"})
         // .option('kafka-port',               {type: 'number'})
