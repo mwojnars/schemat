@@ -193,7 +193,7 @@ export class Ring extends WebObject {
                    to apply the edits to; or to perform a sensitive operation inside the record-level exclusive lock,
                    even without changing the record's data.
          */
-        assert(edits.length, 'missing edits')
+        if (!edits?.length) return
         return this._find_block(id).$agent.update(id, edits, req || new DataRequest())
     }
 
