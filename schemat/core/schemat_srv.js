@@ -42,15 +42,14 @@ export class Transaction {
 
     stage(obj) {
         /* Mark this object as containing uncommitted changes, for auto-saving when this transaction commits. */
-        assert(obj.is_mutable())
-        if (obj.is_newborn()) this._created.push(obj)
-        else {
-            let existing = this._changed.get(obj)
-            if (existing && existing !== obj) throw new Error(`a different copy of the same object ${obj} is already staged`)
-            this._changed.add(obj)
-        }
+        assert(obj.is_mutable() && !obj.is_newborn())
+        let existing = this._changed.get(obj)
+        if (existing && existing !== obj) throw new Error(`a different copy of the same object ${obj} is already staged`)
+        this._changed.add(obj)
         return obj
     }
+
+    stage_newborn(obj) { this._created.push(obj) }
     
     async commit(objects = null, opts = {}) {
         /* Save uncommitted changes to the database: either all of them or only those in the `objects` array (can be a single object). */
