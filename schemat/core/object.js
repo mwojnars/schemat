@@ -1226,6 +1226,8 @@ export class WebObject {
         let edit = [op, ...args]
         this._apply_edits(edit)
         this.__meta.edits?.push(edit)       // `edits` does not exist in newborn objects, so `edit` is not recorded then, but is still applied to __data
+        schemat.tx?.stage(this)             // add `this` to the current transaction for auto-commit at the end of web/rpc request
+
         return this
     }
 

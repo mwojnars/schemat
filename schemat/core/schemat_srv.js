@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import {AsyncLocalStorage} from 'node:async_hooks'
 
 import {assert, print, randint} from '../common/utils.js'
+import {Objects} from "../common/structs.js";
 import {Schemat} from './schemat.js'
 import {RequestContext} from "../web/request.js";
 import {Catalog} from "./catalog.js";
@@ -20,15 +21,17 @@ export class Transaction {
        IMPORTANT: at the moment, transactions are NOT ATOMIC!
      */
 
-    tid = randint(10000)
-    debug               // if true, debug info should be printed/collected while executing this transaction
-    records = []        // array of {id, data} records of objects that were created/modified during this transaction
+    tid = randint(10000) /*Number.MAX_SAFE_INTEGER*/
+    debug                       // if true, debug info should be printed/collected while executing this transaction
+    _staging = new Objects()    // staging area: a set of mutable web objects that have been modified/created in this transaction and wait for being committed
+    _updated = []               // array of {id, data} records captured from DB that were already updated and saved during this transaction
 
     stage(obj) {
         /* Mark this object as containing uncommitted changes, for auto-saving when this transaction commits. */
+
     }
     commit(...objects) {
-        /* Save uncommitted changes to the database: either all of them or only those affecting given `objects`. */
+        /* Save uncommitted changes to the database: either all of them or only those in `objects`. */
     }
 
     capture(...records) {
@@ -38,11 +41,11 @@ export class Transaction {
            // TODO: detect duplicates, restrict the size of `records`
          */
         for (let rec of records)
-            this.records.push(rec)
+            this._updated.push(rec)
     }
 
     dump_records() {
-        return this.records.map(({id, data}) => ({id, data:
+        return this._updated.map(({id, data}) => ({id, data:
                 (typeof data === 'string') ? JSON.parse(data) :
                 (data instanceof Catalog) ? data.encode() : data
         }))
@@ -56,7 +59,7 @@ export class Transaction {
         let tx = new Transaction()
         tx.tid = tid
         tx.debug = debug
-        tx.records = records
+        tx._updated = records
         return tx
     }
 }
