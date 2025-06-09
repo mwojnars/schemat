@@ -1266,15 +1266,6 @@ export class WebObject {
          */
         this.assert_active()
         return this.is_newborn() ? schemat.insert(this, opts) : this._save_edits(opts)
-
-        // let {reload = true} = opts
-        // if (this.is_newborn()) return schemat.insert(this, opts)    // save a newly created object
-        // let edits = this.__meta.edits           // otherwise, save updates of an existing object...
-        // if (edits?.length) {
-        //     let submit = schemat.app.action.apply_edits(this.id, ...edits)
-        //     edits.length = 0
-        //     return reload ? submit.then(() => this.reload()) : submit
-        // }
     }
 
 
