@@ -60,6 +60,7 @@ export class Transaction {
         /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object).
            Any non-staged item in `objects` gets implicitly staged.
          */
+        assert(!objects)
         // if (objects && typeof objects === 'object') objects = [objects]
         // if (Array.isArray(objects)) {
         //     for (let obj of objects)        // stage the unstaged objects
@@ -67,9 +68,14 @@ export class Transaction {
         // }
         // else objects = [...this._changed, ...this._created]
 
-        assert(!objects)
+        print(`tx.save() new:      `, [...this._created].map(String))
+        print(`          modified: `, [...this._changed].map(String))
+
         await schemat.insert([...this._created], opts)      // new objects must be inserted together due to possible cross-references
+        this._created.clear()
+
         await Promise.all([...this._changed].map(obj => obj._save_edits(opts)))
+        this._changed.clear()
     }
 
     async commit(objects = null, opts = {}) {
