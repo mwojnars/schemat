@@ -1346,7 +1346,9 @@ export class WebObject {
 
         if (typeof directory === 'number') directory = await schemat.get_loaded(directory)
         else if (typeof directory === 'string') directory = await schemat.import(directory)
-        // TODO: check that `directory` is a Directory
+
+        assert(directory.is_loaded())
+        assert(directory.instanceof(schemat.std.Directory))
 
         let ident = this.__ident || this.name || `${this.id}`
         let src = this.__container
