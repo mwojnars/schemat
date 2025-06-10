@@ -68,16 +68,18 @@ export class Cluster extends Agent {
         print(`node:`, node)
 
         nodes.push(node)
-        await this.action.update_nodes(nodes)
+        await this.action._update_nodes(nodes)
 
         // await node.save()
         // await this.mutate({nodes}).save()
     }
 
-    async 'action.update_nodes'(nodes) {
-        // transaction mode:
-        // edits to existing objects & new object creation are tracked automatically
-        // commits & saves are done automatically when the function returns
+    async 'action._update_nodes'(nodes) {
+        /* Transaction mode:
+           - edits to existing objects & new object creation are tracked automatically
+           - commits & saves are done automatically when the function returns
+           Prefix '_' in method name marks a server-side-only action.
+         */
         this.nodes = nodes
     }
 }

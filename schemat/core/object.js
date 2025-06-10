@@ -1087,7 +1087,9 @@ export class WebObject {
         assert(id)
         return new Proxy({}, {
             get(target, name) {
-                if (typeof name === 'string') return (...args) => schemat.app.POST.action(id, name, args)
+                if (typeof name === 'string')
+                    if (CLIENT && name[0] === '_') throw new Error(`private action.${name}() can only be invoked on server`)
+                    else return (...args) => schemat.app.POST.action(id, name, args)
             }
         })
     }
