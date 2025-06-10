@@ -477,15 +477,10 @@ export class Schemat {
         return batch ? objects : objects[0]
     }
 
-    async save(objects, opts = {}) {
-        /* Save changes in multiple objects all at once (concurrently). */
-        return Promise.all(objects.map(obj => obj?.save(opts)))
-        // let {reload = true, ...opts} = opts_
-        // return Promise.all(objects.map(obj => {
-        //     let save = obj?.save(opts)
-        //     return reload ? save?.then(() => obj.reload()) : save
-        // }))
-    }
+    // async save(objects, opts = {}) {
+    //     /* Save changes in multiple objects all at once (concurrently). */
+    //     return Promise.all(objects.map(obj => obj?.save(opts)))
+    // }
 
     /* Proxy object that handles both direct calls (remote(code)) and property access (remote.XYZ).
        Direct calls execute code on the server via eval, while property access forwards to app.action.XYZ().
