@@ -178,10 +178,6 @@ export class Application extends WebObject {
                 let obj = schemat.get_if_loaded(id) || await schemat.get_loaded(id)
                 let tx = schemat.get_transaction()
 
-                // let run = () => obj._execute_action(action, args)
-                // let result = schemat.in_transaction(tx, run)
-                // if (result instanceof Promise) result = await result
-
                 let result = await schemat.in_transaction(tx, async () => {
                     let res = await obj._execute_action(action, args)
                     await tx.commit()
