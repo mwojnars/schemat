@@ -675,10 +675,6 @@ export class Node extends Agent {
         let agents = this.$master.state?.agents
         if (!agents) throw new Error(`missing agent placements, cannot flush them to DB`)
         await this.mutate({agents}).save()
-
-        // let node = this.get_mutable()
-        // node.agents = agents
-        // await node.save()
     }
 
     _rank_workers(state) {
