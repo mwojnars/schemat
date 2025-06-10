@@ -2,7 +2,7 @@ import {print, assert, T, sleep, splitLast, normalizePath} from '../common/utils
 import {URLNotFound} from "../common/errors.js"
 import {WebRequest} from '../web/request.js'
 import {WebObject} from './object.js'
-import {JsonPOST} from "../web/services.js";
+import {JsonPOST, TxPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
 
 
@@ -191,11 +191,13 @@ export class Application extends WebObject {
         })
     }
 
-    // 'POST.insert_objects'() {
-    //     return new TxPOST({
-    //         server: (data, opts) => schemat.db.insert(data, opts),
-    //     })
-    // }
+    'POST.insert_objects'() {
+        return new TxPOST({
+            server: (data, opts) => {
+                schemat.db.insert(data, opts)
+            },
+        })
+    }
 
 
     /***  Actions -- can be called via schemat.remote.*()  ***/

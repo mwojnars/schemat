@@ -76,12 +76,11 @@ export class Transaction {
         // print(`          modified: `, [...this._changed].map(String))
         let db = schemat.db
 
-        // await schemat.insert([...this._created], opts)      // new objects must be inserted together due to possible cross-references
+        // new objects must be inserted together due to possible cross-references
         let data = [...this._created].map(obj => obj.__data.__getstate__())
         await db.insert(data, opts)
         this._created.clear()
 
-        // await Promise.all([...this._changed].map(obj => obj._save_edits(opts)))
         await Promise.all([...this._changed].map(obj => db.update(obj.id, obj.__meta.edits)))
         this._changed.clear()
     }
