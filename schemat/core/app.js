@@ -177,7 +177,6 @@ export class Application extends WebObject {
                 this._print(`POST.action(${action}) ...`)
                 let obj = schemat.get_if_loaded(id) || await schemat.get_loaded(id)
                 let tx = schemat.get_transaction()
-                tx.debug = true
 
                 // let run = () => obj._execute_action(action, args)
                 // let result = schemat.in_transaction(tx, run)

@@ -32,6 +32,10 @@ export class Transaction {
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
 
+    constructor() {
+        if (schemat.debug) this.debug = true
+    }
+
     get_mutable(obj) {
         /* Return an object's mutable copy that's unique transaction-wide: multiple calls return the same copy,
            so consecutive modifications add to rather than replace previous ones. If the object is not yet
