@@ -1344,6 +1344,12 @@ export class WebObject {
         return func.call(obj, ...args)
     }
 
+    async 'action.set'(props = {}) {
+        /* Copy `props` entries into `this` and save the changes automatically to DB. */
+        for (let [key, val] of Object.entries(props))
+            this[key] = val
+    }
+
     async 'action.move_to'(directory, overwrite = false) {
         /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL. */
 

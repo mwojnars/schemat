@@ -647,7 +647,7 @@ export class Node extends Agent {
             await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
             // this.$worker({node: this, worker: i}).start_agent(agent.id, role, options)
         }
-        await this.action._set_agents(agents)
+        await this.action.set({agents})
     }
 
     async '$master.stop_agent'(state, agent, {role, worker} = {}) {
@@ -667,7 +667,7 @@ export class Node extends Agent {
         for (let status of stop.reverse())
             await this.sys_send(status.worker, 'STOP_AGENT', agent.id, {role})
 
-        await this.action._set_agents(agents)
+        await this.action.set({agents})
     }
 
     _rank_workers(agents) {
@@ -676,11 +676,6 @@ export class Node extends Agent {
         let counts = new Counter(workers)
         let sorted = counts.least_common()
         return sorted.map(entry => entry[0])
-    }
-
-    async 'action._set_agents'(agents) {
-        /* Save the current `agents` to DB. */
-        this.agents = agents
     }
 }
 
