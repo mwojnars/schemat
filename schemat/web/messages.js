@@ -139,34 +139,6 @@ export class mActionResult extends MessageEncoder {
     }
 }
 
-// export class mActionResult extends MessageEncoder {
-//     /* Result of an insert/update operation, as {id, data} record(s) that were written to DB.
-//        During decoding, all records are automatically added to the local Registry as the newest representations of their IDs.
-//        Also, if there is a Transaction object present on the caller, the records are registered with this transaction.
-//
-//        Input:  record, or array of records, of the form {id, data}, where `data` is a Catalog or its stringified representation.
-//        Output: record, or array of {id, data} records, where each `data` is JSONx-encoded, but no longer stringified.
-//      */
-//     encode(recs) {
-//         let batch = (recs instanceof Array)
-//         if (!batch) recs = [recs]
-//         recs = recs.map(rec => {
-//             let {id, data} = rec
-//             if (typeof data === 'string') return JSON.stringify({id, data: JSON.parse(data)})
-//             return JSONx.stringify({id, data: data.__getstate__()})
-//         })
-//         return batch ? `[${recs.join(',')}]` : recs[0]
-//     }
-//     decode(msg) {
-//         if (!msg) return
-//         let recs = JSON.parse(msg)
-//         if (recs instanceof Array) recs.map(rec => schemat.register_record(rec))
-//         else schemat.register_record(recs)
-//         // schemat.register_changes(recs)
-//         return recs
-//     }
-// }
-
 /**********************************************************************************************************************/
 
 export class mWebObjects extends MessageEncoder {

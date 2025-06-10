@@ -202,7 +202,12 @@ export class Application extends WebObject {
     'POST.insert_record'() {
         /* Insert a record directly to DB. No transactions. */
         return new JsonPOST({
-            server: (data, opts) => schemat.db.insert(data, opts),
+            // server: (data, opts) => schemat.db.insert(data, opts),
+            server: async (data, opts) => {
+                let id = await schemat.db.insert(data, opts)
+                let {json} = schemat.get_record(id)
+                return {id, data: JSON.parse(json)}
+            },
         })
     }
 
