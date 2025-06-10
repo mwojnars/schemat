@@ -452,10 +452,10 @@ export class DataBlock extends Block {
         return Number(deleted)
     }
 
-    async '$agent.erase'({storage}) {
+    async '$agent.erase'(state) {
         this._autoincrement = 1
         this._reserved = new Set()
-        return super['$agent.erase']({storage})
+        return super['$agent.erase'](state)
     }
 
     async propagate_change(key, obj_old = null, obj_new = null) {

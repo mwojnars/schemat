@@ -13,11 +13,14 @@ import {Catalog} from "./catalog.js";
 /**********************************************************************************************************************/
 
 export class Transaction {
-    /* Metadata about an action being executed against multiple objects in the database.
+    /* Logical transaction (pseudo-transaction). A group of related modifications in the database that will be
+       pushed out together to the DB, but without ACID guarantees of consistency and atomicity.
+
        The role of transaction is to:
        - track all mutations applied to web objects in a given execution thread; this includes new object instantiations;
        - send these changes to the database upon request, or when the transaction is committed;
        - receive back the updated records: save them in local cache and propagate back to the originator of the transaction.
+
        IMPORTANT: at the moment, transactions are NOT ATOMIC!
      */
 
