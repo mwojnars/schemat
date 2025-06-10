@@ -247,10 +247,10 @@ export class Schemat {
 
     get_provisional(id) {
         /* Create a stub for a newborn object before its insertion to DB; it only has __provisional_id, not id. */
-        return WebObject.newborn(null, {provisional: id})
-        // let obj = WebObject.stub()
-        // obj.__self.__provisional_id = id
-        // return obj
+        // return WebObject.newborn(null, {provisional: id})
+        let obj = WebObject.stub()
+        obj.__self.__provisional_id = id
+        return obj
     }
 
     get_if_present(id) { return this.registry.get_object(id) }
