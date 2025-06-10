@@ -626,6 +626,7 @@ export class Node extends Agent {
         this._print(`$master.start_agent() agent=${agent} role=${role}`)
         // this._print(`$master.start_agent() agents:`, state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
 
+        let {agents} = state
         agent = schemat.as_object(agent)
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
@@ -633,23 +634,20 @@ export class Node extends Agent {
         if (num_workers === -1) num_workers = this.num_workers
         assert(num_workers <= this.num_workers, `num_workers (${num_workers}) must be <= ${this.num_workers}`)
 
-        let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(state)
+        let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(agents)
         workers = workers.slice(0, num_workers)
 
         if (role === schemat.GENERIC_ROLE) role = undefined     // the default role "$agent" is passed implicitly
         
         for (let worker of workers) {
             assert(worker >= 1 && worker <= this.num_workers)
-            state.agents.push({worker, agent, role, options})
+            agents.push({worker, agent, role, options})
 
             // request the worker process to start the agent:
             await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
             // this.$worker({node: this, worker: i}).start_agent(agent.id, role, options)
         }
-        await this.action._flush_agents()
-
-        // await this['$agent.flush_agents'](state)
-        // await this.$agent.flush_agents()      // what guarantee that this call will be directed to the current agent (state.__frame)
+        await this.action._set_agents(agents)
     }
 
     async '$master.stop_agent'(state, agent, {role, worker} = {}) {
@@ -657,32 +655,32 @@ export class Node extends Agent {
         this._print(`$master.stop_agent() agent=${agent} role=${role}`)
         // this._print(`$master.stop_agent() agents:`, state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
 
+        let {agents} = state
         agent = schemat.as_object(agent)
 
-        let stop = state.agents.filter(status => status.agent.is(agent))
-        state.agents = state.agents.filter(status => !status.agent.is(agent))
+        let stop = agents.filter(status => status.agent.is(agent))
         if (!stop.length) return
+
+        state.agents = agents = agents.filter(status => !status.agent.is(agent))
 
         // stop every agent from `stop`, in reverse order
         for (let status of stop.reverse())
             await this.sys_send(status.worker, 'STOP_AGENT', agent.id, {role})
 
-        await this.action._flush_agents()
+        await this.action._set_agents(agents)
     }
 
-    async 'action._flush_agents'() {
-        /* Save the current `agents` state to DB. */
-        this.agents = this.$master.state?.agents
-        if (!this.agents) throw new Error(`missing agent placements, cannot flush them to DB`)
-        // await this.mutate({agents}).save()
-    }
-
-    _rank_workers(state) {
+    _rank_workers(agents) {
         /* Order workers by utilization, from least to most busy. */
-        let workers = state.agents.map(status => status.worker).filter(w => w >= 1)     // pull out worker IDs, skip the master process (0)
+        let workers = agents.map(status => status.worker).filter(w => w >= 1)     // pull out worker IDs, skip the master process (0)
         let counts = new Counter(workers)
         let sorted = counts.least_common()
         return sorted.map(entry => entry[0])
+    }
+
+    async 'action._set_agents'(agents) {
+        /* Save the current `agents` to DB. */
+        this.agents = agents
     }
 }
 
