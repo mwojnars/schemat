@@ -193,9 +193,16 @@ export class Application extends WebObject {
 
     'POST.insert_objects'() {
         return new TxPOST({
-            server: (data, opts) => {
-                schemat.db.insert(data, opts)
+            server: async (data, opts) => {
+                await schemat.db.insert(data, opts)
             },
+        })
+    }
+
+    'POST.insert_record'() {
+        /* Insert a record directly to DB. No transactions. */
+        return new JsonPOST({
+            server: (data, opts) => schemat.db.insert(data, opts),
         })
     }
 

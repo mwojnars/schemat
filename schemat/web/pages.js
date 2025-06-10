@@ -359,9 +359,11 @@ export class CategoryInspectView extends InspectView {
 
             let data = Object.fromEntries([...fdata])
             if (!data.name) delete data.name
-            let obj = await this.create(data).save()
+            let obj = this.create(data)
+            // obj.validate()                   // cross-field validation?
+            await obj.save()
 
-            form.current.reset()                            // clear input fields
+            form.current.reset()                // clear input fields
             setFormDisabled(false)
             itemAdded(obj)
         }
