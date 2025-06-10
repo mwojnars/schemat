@@ -243,6 +243,10 @@ export class JsonPOST extends HttpService {
     }
 }
 
+// export class TxPOST extends JsonPOST {
+//     /* JSON-based communication with execution of the server-side function inside a transaction. */
+// }
+
 /**********************************************************************************************************************/
 
 // export class Network {

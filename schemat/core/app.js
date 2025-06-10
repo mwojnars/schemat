@@ -191,6 +191,12 @@ export class Application extends WebObject {
         })
     }
 
+    // 'POST.insert_objects'() {
+    //     return new TxPOST({
+    //         server: (data, opts) => schemat.db.insert(data, opts),
+    //     })
+    // }
+
 
     /***  Actions -- can be called via schemat.remote.*()  ***/
 
