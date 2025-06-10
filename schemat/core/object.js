@@ -849,6 +849,7 @@ export class WebObject {
         /* Check whether this item belongs to a `category`, or its subcategory.
            All comparisons along the way use item IDs, not object identity. The item must be loaded.
         */
+        if (!this.is_loaded()) throw new Error(`object ${this} is not loaded, cannot perform instanceof()`)
         return this.__category$.some(cat => cat.inherits_from(category))
     }
 
@@ -1346,8 +1347,6 @@ export class WebObject {
 
         if (typeof directory === 'number') directory = await schemat.get_loaded(directory)
         else if (typeof directory === 'string') directory = await schemat.import(directory)
-
-        assert(directory.is_loaded())
         assert(directory.instanceof(schemat.std.Directory))
 
         let ident = this.__ident || this.name || `${this.id}`
