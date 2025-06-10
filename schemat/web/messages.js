@@ -27,8 +27,8 @@ export class MessageEncoder {
         /* Convert encoded message (string) back to an array of [...arguments] for the server. */
     }
 
-    encode_error(error) {
-        return [error.message || 'Internal Error', _valid_code(error.code)]
+    encode_error(ex) {
+        return [_valid_code(ex.code), ex.message || 'Internal Error']
     }
     decode_error(message, code) {
         throw new RequestFailed({message, code})
@@ -56,12 +56,12 @@ export class mJsonBase extends MessageEncoder {
 }
 
 export class mJsonError extends mJsonBase {
-    encode_error(error)     { let {name, message} = error; return [JSON.stringify({error: {name, message}}), _valid_code(error.code)] }
+    encode_error(ex)    { let {name, message} = ex; return [_valid_code(ex.code), JSON.stringify({error: {name, message}})] }
     decode_error(msg, code) { throw msg ? new RequestFailed({...JSON.parse(msg).error, code}) : new Error(`Unexpected error`) }
 }
 
 export class mJsonxError extends mJsonBase {
-    encode_error(error)     { return [JSONx.stringify({error}), _valid_code(error.code)] }
+    encode_error(ex)    { return [_valid_code(ex.code), JSONx.stringify({error: ex})] }
     decode_error(msg, code) { throw msg ? JSONx.parse(msg).error : new Error(`Unexpected error`) }
 }
 

@@ -187,7 +187,7 @@ export class HttpService extends Service {
         }
         catch (ex) {
             // print('ERROR in HttpService.handle():', ex)
-            let [msg, code] = this.error.encode_error(ex)
+            let [code, msg] = this.error.encode_error(ex)
             request.res.status(code).send(msg)
             throw ex
         }
