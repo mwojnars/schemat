@@ -4,6 +4,7 @@ import {WebRequest} from '../web/request.js'
 import {WebObject} from './object.js'
 import {JsonPOST, TxPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
+import {JSONx} from "../common/jsonx.js";
 
 
 // Currently, vm.Module (Application.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -191,25 +192,32 @@ export class Application extends WebObject {
         })
     }
 
-    'POST.insert_objects'() {
-        return new TxPOST({
-            server: async (data, opts) => {
-                await schemat.db.insert(data, opts)
-            },
-        })
-    }
-
-    'POST.insert_record'() {
-        /* Insert a record directly to DB. No transactions. */
-        return new JsonPOST({
-            // server: (data, opts) => schemat.db.insert(data, opts),
-            server: async (data, opts) => {
-                let id = await schemat.db.insert(data, opts)
-                let {json} = schemat.get_record(id)
-                return {id, data: JSON.parse(json)}
-            },
-        })
-    }
+    // 'POST.insert_objects'() {
+    //     return new TxPOST({
+    //         server: async (data, opts) => {
+    //             await schemat.db.insert(data, opts)
+    //         },
+    //     })
+    // }
+    //
+    // 'POST.insert_record'() {
+    //     /* Insert a record directly to DB. No transaction. */
+    //     return new JsonPOST({
+    //         // server: (data, opts) => schemat.db.insert(data, opts),
+    //         server: async (data, opts) => {
+    //             let id = await schemat.db.insert(data, opts)
+    //             let {json} = schemat.get_record(id)
+    //             return {id, data: JSON.parse(json)}
+    //         },
+    //         result_encode: ({id, data}) => JSON.stringify({id, data}),
+    //         result_decode: (message) => {
+    //             let {id, data} = JSONx.parse(message)
+    //             if (!data) return id
+    //             schemat.register_record({id, data})
+    //             return schemat.get_loaded(id)
+    //         },
+    //     })
+    // }
 
 
     /***  Actions -- can be called via schemat.remote.*()  ***/
