@@ -1342,18 +1342,15 @@ export class WebObject {
     }
 
     async 'action.move_to'(directory, overwrite = false) {
-        /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL.
-           Returns an array of objects affected: the current object, the target directory, and the previous container.
-         */
+        /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL. */
+
         if (typeof directory === 'number') directory = await schemat.get_loaded(directory)
         else if (typeof directory === 'string') directory = await schemat.import(directory)
         // TODO: check that `directory` is a Directory
 
-        // let src = this.__container
-        // let dir = directory
-
-        let [src, dst] = await schemat.get_mutable(this.__container, directory)
         let ident = this.__ident || this.name || `${this.id}`
+        let src = this.__container
+        let dst = directory
 
         if (!overwrite && dst.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dst})`)
 
@@ -1362,8 +1359,6 @@ export class WebObject {
 
         if (src?.has_entry(this.__ident, this))
             src.edit.del_entry(this.__ident)
-
-        // await schemat.save([dst, this, src])
     }
 
 
