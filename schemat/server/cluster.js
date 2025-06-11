@@ -91,7 +91,8 @@ export class Cluster extends Agent {
     async 'action._create_node'(props) {
         this._print_stack()
         let node = schemat.std.Node.new(props)      // ??? will the ID be assigned in Transaction?
-        this._print(`action._create_node() node:\n`, node.__content)
+        await schemat.tx.commit()
+        this._print(`action._create_node():\n`, node.__content)
         // TX+DB operations performed in the background:
         // - the new object is registered in TX and receives a provisional ID
         // - when the action returns, the object is written to DB where its record receives a proper ID

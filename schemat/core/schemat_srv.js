@@ -85,8 +85,15 @@ export class Transaction {
         let db = schemat.db
 
         // new objects must be inserted together due to possible cross-references
-        let data = [...this._created].map(obj => obj.__data.__getstate__())
-        await db.insert(data, opts)
+        let created = [...this._created]
+        let data = created.map(obj => obj.__data.__getstate__())
+        let ids = await db.insert(data, opts)
+
+        // replace provisional IDs with proper IDs
+        ids.map((id, i) => {
+            delete created[i].__self.__provisional_id
+            created[i].id = id
+        })
         this._created.clear()
 
         await Promise.all([...this._changed].map(obj => db.update(obj.id, obj.__meta.edits)))
