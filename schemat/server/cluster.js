@@ -20,6 +20,12 @@ export class Cluster extends Agent {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
+    async __start__({role}) {
+        assert(role === '$leader')
+        let nodes = this.nodes
+        return {nodes}
+    }
+
     get agent_placements() {
         /* Map of agent_role --> array of nodes where this agent is deployed, where `agent_role` is a string
            of the form `${id}_${role}`, like "1234_$agent".
@@ -68,6 +74,8 @@ export class Cluster extends Agent {
         print(`node:`, node)
 
         nodes.push(node)
+        print(`nodes:`, nodes)
+
         await this.action.set({nodes})
         // await this.edit.set({nodes}).save()   -- edit will fail because `this` is immutable
     }
