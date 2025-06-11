@@ -67,7 +67,7 @@ export class Cluster extends Agent {
 
     async '$leader.create_node'({nodes}, props = {}) {
         /* Create a new Node object and add it to this cluster. */
-        print.stack()
+        this._print_stack()
 
         /* The newly created node is *first* saved to the DB and only later added to the local state; if we tried to change 
            this order, the state would contain a newborn object (no ID) for some time, which breaks the state's consistency!
@@ -91,7 +91,7 @@ export class Cluster extends Agent {
     }
 
     async 'action._create_node'(props) {
-        print.stack()
+        this._print_stack()
         return schemat.std.Node.new(props)      // ??? will the ID be assigned in Transaction?
         // TX+DB operations performed in the background:
         // - the new object is registered in TX and receives a provisional ID

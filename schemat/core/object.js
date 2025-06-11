@@ -534,7 +534,8 @@ export class WebObject {
 
     toString() { return this.__label }
 
-    _print(...args) { print(`${schemat.node?.id}/#${schemat.kernel?.worker_id} ${this.__label}`, ...args) }
+    _print(...args) { console.log(`${schemat.node?.id}/#${schemat.kernel?.worker_id} ${this.__label}`, ...args) }
+    _print_stack(...args) { console.trace(`${schemat.node?.id}/#${schemat.kernel?.worker_id} ${this.__label}`, ...args) }
 
 
     /***  Loading & initialization  ***/
