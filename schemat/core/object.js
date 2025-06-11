@@ -346,7 +346,7 @@ export class WebObject {
 
     get __content() {
         /* Combined __data + __meta attributes, JSONx-encoded into a flat object suitable for display. Useful for debugging. */
-        let flat = this.id ? {id: this.id} : {}
+        let flat = this.id ? {id: this.__index_id} : {}
         flat = {...flat, ...(this.__data?.encode() || {})}
         if (Object.keys(this.__meta).length)        // add __meta, but only if it's not empty
             flat.__meta = this.__meta
