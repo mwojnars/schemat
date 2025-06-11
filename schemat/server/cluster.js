@@ -1,4 +1,4 @@
-import {assert, print} from "../common/utils.js";
+import {assert, print, print_stack} from "../common/utils.js";
 import {Agent} from "./agent.js";
 
 
@@ -67,14 +67,13 @@ export class Cluster extends Agent {
 
     async '$leader.create_node'({nodes}, tcp_addr, settings = {}) {
         /* Create a new Node object and add it to this cluster. */
-        let {Node} = schemat.std
-        print(`Node:`, Node)
+        print_stack()
 
+        let {Node} = schemat.std
         let node = Node.new({tcp_addr})
         print(`node:`, node)
 
         nodes.push(node)
-        print(`nodes:`, nodes)
 
         await this.action.set({nodes})
         // await this.edit.set({nodes}).save()   -- edit will fail because `this` is immutable
