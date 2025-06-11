@@ -589,7 +589,8 @@ export class SHARD extends CUSTOM_OBJECT {
 /**********************************************************************************************************************/
 
 export class REF extends Type {
-    /* Reference to a WebObject, encoded as {"@": id} during serialization through JSONx.
+    /* Reference to a WebObject, encoded as {"@": id} or {"@": __index_id} during serialization through JSONx.
+       Newly created objects with `__provisional_id` instead of `id` are accepted.
        REF without parameters is equivalent to GENERIC(WebObject), however, REF can also be parameterized,
        which is not possible with a GENERIC.
      */
@@ -602,8 +603,8 @@ export class REF extends Type {
     _validate(obj) {
         obj = super._validate(obj)
         if (!(obj instanceof schemat.WebObject)) throw new ValueError(`expected a WebObject, got ${obj} instead`)
-        if (!obj.id) throw new ValueError(`found a reference to a newborn object (no ID): ${obj}`)
-        if (obj.id < 0) throw new ValueError(`found a reference to an object with provisional ID=${obj.id} (${obj})`)
+        if (!obj.__index_id) throw new ValueError(`found a reference to a newborn object without a provisional ID: ${obj}`)
+        // if (obj.id < 0) throw new ValueError(`found a reference to an object with provisional ID=${obj.id} (${obj})`)
         // TODO: check that options.category.id is present in the list of object's ancestors, obj.__ancestor_ids
         return obj
     }

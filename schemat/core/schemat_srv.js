@@ -34,7 +34,7 @@ export class Transaction {
     // staging area:
     _changed = new Objects()    // a set of persisted (with IDs) mutable objects that have been modified in this transaction and wait for being committed
     _created = new Set()        // a set of newly created web objects that wait for insertion to DB
-    _provisional = 0
+    _provisional = 0            // highest __provisional_id so far
 
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
@@ -62,9 +62,9 @@ export class Transaction {
     }
 
     stage_newborn(obj) {
-        // if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
-        // else obj.__self.__provisional_id = ++this._provisional
         assert(obj.is_newborn())
+        if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
+        else obj.__self.__provisional_id = ++this._provisional
         this._created.add(obj)
     }
     
