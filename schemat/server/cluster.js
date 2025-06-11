@@ -65,17 +65,42 @@ export class Cluster extends Agent {
         /* Array of all nodes where `agent` is currently deployed. */
     }
 
-    async '$leader.create_node'({nodes}, tcp_addr, settings = {}) {
+    async '$leader.create_node'({nodes}, props = {}) {
         /* Create a new Node object and add it to this cluster. */
         print.stack()
 
-        let {Node} = schemat.std
-        let node = Node.new({tcp_addr})
-        print(`node:`, node.__content)
+        /* The newly created node is *first* saved to the DB and only later added to the local state; if we tried to change 
+           this order, the state would contain a newborn object (no ID) for some time, which breaks the state's consistency!
+
+           GENERAL RULE:
+           When adding new system objects, always save them to DB first, only later add them to the state.
+           Also, use the state to update the parent's content in DB, not the other way round ([agent] reflects $agent.state, not the opposite!).
+
+           The correct order:
+           1. create child object and save to DB
+           2. add child object to parent state
+           3. save parent state to DB 
+        */
+        let node = await this.action._create_node(props)
 
         nodes.push(node)
+        await this.action.set({nodes})
 
-        await this.action.set({nodes})          // fails because `node` lacks a provisional ID, so its serialization fails
+        // await this.action.set({nodes})       -- fails because `node` lacks a provisional ID, so its serialization fails
         // await this.edit.set({nodes}).save()  -- edit will fail because `this` is immutable
+    }
+
+    async 'action._create_node'(props) {
+        print.stack()
+        return schemat.std.Node.new(props)      // ??? will the ID be assigned in Transaction?
+        // TX+DB operations performed in the background:
+        // - the new object is registered in TX and receives a provisional ID
+        // - when the action returns, the object is written to DB where its record receives a proper ID
+        // - record + ID are transferred back to TX
+        // - TX writes the final ID into the object, so it can be serialized by JSONx when completing the action
+        // - JsonPOST + JSONx write the ID in HTTP response (serialized representation of the "result" object);
+        //   "records" are appended to the response, where the DB content of the object is included
+        // - client deserializes "records" and saves the object's record in the Registry, then it deserializes the object itself
+        //   from its ID via JSONx, which pulls the record from Registry and recreates the object with its full content and proper ID
     }
 }

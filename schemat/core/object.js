@@ -390,7 +390,7 @@ export class WebObject {
     /***  Internal properties  ***/
 
     __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
-    __self = this   // for direct access to POJO attributes after proxying; and for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
+    __self = this   // for direct system-level access to POJO special attributes after proxying
 
     __meta = {      // special properties grouped here to avoid cluttering the object's interface ...
         // mutable          if true, this object can be edited; the edits are accumulated and committed to DB using .save(); this prop CANNOT be changed after construction; editable objects are excluded from server-side caching
