@@ -1,4 +1,4 @@
-import {assert, print, print_stack} from "../common/utils.js";
+import {assert, print} from "../common/utils.js";
 import {Agent} from "./agent.js";
 
 
@@ -67,15 +67,16 @@ export class Cluster extends Agent {
 
     async '$leader.create_node'({nodes}, tcp_addr, settings = {}) {
         /* Create a new Node object and add it to this cluster. */
-        print_stack()
+        print.stack()
 
         let {Node} = schemat.std
         let node = Node.new({tcp_addr})
-        print(`node:`, node)
+        print(`node:`, node.__flat)
+        print(`node:`, node.__object)
 
         nodes.push(node)
 
-        await this.action.set({nodes})
-        // await this.edit.set({nodes}).save()   -- edit will fail because `this` is immutable
+        await this.action.set({nodes})          // fails because `node` lacks a provisional ID and its serialization fails
+        // await this.edit.set({nodes}).save()  -- edit will fail because `this` is immutable
     }
 }
