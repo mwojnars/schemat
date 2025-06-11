@@ -1346,6 +1346,7 @@ export class WebObject {
 
     async 'action.set'(props = {}) {
         /* Copy `props` entries into `this` and save the changes automatically to DB. */
+        // schemat.tx.config({capture: false, atomic: true})
         for (let [key, val] of Object.entries(props))
             this[key] = val
     }
