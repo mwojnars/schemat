@@ -33,9 +33,11 @@ Object.prototype.toString = toString
  **
  */
 
-export let print = console.log
 export let print_stack = console.trace
 export let print_trace = console.trace
+export let print = console.log
+print.stack = console.trace     // print.stack() is another way to print stack trace
+print.trace = console.trace
 
 export function assert(test, ...msg) {
     if (test) return true
