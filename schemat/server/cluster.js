@@ -71,8 +71,7 @@ export class Cluster extends Agent {
 
         let {Node} = schemat.std
         let node = Node.new({tcp_addr})
-        print(`node:`, node.__flat)
-        print(`node:`, node.__object)
+        print(`node:`, node.__content)
 
         nodes.push(node)
 

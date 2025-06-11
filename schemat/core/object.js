@@ -276,6 +276,7 @@ export class WebObject {
     __path                  (virtual) URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
     __url                   (virtual) absolute URL path of this object, calculated via __url() getter
 
+    __content               JSONx-encoded representation of {id, ...__data, __meta} for display during debugging
     __record                JSONx-encoded representation of this object as {id, data}, where `data` is this.__flat
     __flat                  JSONx-encoded representation of this object's __data, where custom classes are replaced using {@:...} notation; suitable for JSON.stringify()
     __json                  stringified representation of this object's __data; can be passed to Catalog.load() to recreate the original __data structure
@@ -341,6 +342,15 @@ export class WebObject {
         if (this.name) return `[${this.name}]`
         if (this.__category?.name) return `[${this.id}:${this.__category.name}]`
         return `[${this.id}]`
+    }
+
+    get __content() {
+        /* Combined __data + __meta attributes, JSONx-encoded into a flat object suitable for display. Useful for debugging. */
+        let flat = this.id ? {id: this.id} : {}
+        flat = {...flat, ...(this.__data?.encode() || {})}
+        if (Object.keys(this.__meta).length)        // add __meta, but only if it's not empty
+            flat.__meta = this.__meta
+        return flat
     }
 
     get __references() {       // find_references()
