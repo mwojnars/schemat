@@ -28,7 +28,7 @@ export class Transaction {
        IMPORTANT: at the moment, transactions are NOT ATOMIC!
      */
 
-    tid = 1 + randint(10000) /*Number.MAX_SAFE_INTEGER*/
+    tid = 1 + randint(10000) /* 1 + randint() */
     debug                       // if true, debug info should be printed/collected while executing this transaction
 
     // staging area:

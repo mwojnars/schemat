@@ -390,7 +390,7 @@ export class WebObject {
     /***  Internal properties  ***/
 
     __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
-    __self          // a reference to `this`; for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
+    __self = this   // for direct access to POJO attributes after proxying; and for proper caching of computed properties when this object is used as a prototype (e.g., for View objects) and this <> __self during property access
 
     __meta = {      // special properties grouped here to avoid cluttering the object's interface ...
         // mutable          if true, this object can be edited; the edits are accumulated and committed to DB using .save(); this prop CANNOT be changed after construction; editable objects are excluded from server-side caching
@@ -455,11 +455,8 @@ export class WebObject {
            (where any modifications might spoil other web requests), changing `mutable` after creation is disallowed.
          */
         if(_fail) throw new Error('web objects should be instantiated with CLASS._create() or category.create() instead of new CLASS()')
-
         if (id) this.id = id
-
-        this.__self = this              // for proper caching of computed properties when this object is used as a prototype (e.g., for View objects)
-        this.__hash = randint()
+        this.__hash = 1 + randint()
 
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
         // only on the client this flag can be changed after object creation
@@ -476,8 +473,8 @@ export class WebObject {
         if (id === ROOT_ID && !this.__is_root_category)
             return RootCategory.stub(id, opts)
 
-        let obj = new this(false, id, opts)
-        return obj.__proxy = Intercept.wrap(obj)
+        let self = new this(false, id, opts)
+        return self.__proxy = Intercept.wrap(self)
     }
 
     static newborn(data = null, {provisional, ...opts} = {}) {
