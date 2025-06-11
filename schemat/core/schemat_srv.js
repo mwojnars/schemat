@@ -64,6 +64,7 @@ export class Transaction {
     stage_newborn(obj) {
         // if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
         // else obj.__self.__provisional_id = ++this._provisional
+        assert(obj.is_newborn())
         this._created.add(obj)
     }
     

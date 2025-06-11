@@ -483,7 +483,7 @@ export class WebObject {
         let obj = this.stub(null, {mutable: true, ...opts})
         if (provisional) obj.__self.__provisional_id = provisional
         obj.__data = new Catalog(data)
-        schemat.tx?.stage_newborn(this)
+        schemat.tx?.stage_newborn(obj)
         return obj
     }
 
