@@ -75,7 +75,7 @@ export class Cluster extends Agent {
 
         nodes.push(node)
 
-        await this.action.set({nodes})          // fails because `node` lacks a provisional ID and its serialization fails
+        await this.action.set({nodes})          // fails because `node` lacks a provisional ID, so its serialization fails
         // await this.edit.set({nodes}).save()  -- edit will fail because `this` is immutable
     }
 }

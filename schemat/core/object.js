@@ -220,17 +220,17 @@ class Intercept {
 
 export class WebObject {
     /* Web object. Persisted in the database; has a unique ID; can be exposed on the web at a particular URL. */
-    // net object? internet object? active object? live object?
 
     static SEAL_SEP = '.'
 
-    /***  Common properties ***/
-
-    name
-    info
-
     /***
-    SYSTEM properties (POJO attributes or getters; not in DB or stored outside __data):
+
+    COMMON properties (stored in __data and persisted to DB):
+
+    name                    human-readable name of this object (optional, repeated)
+    info                    description of this object, similar to a comment or docstring in source code (optional, repeated)
+
+    SYSTEM properties (implemented as POJO attributes or getters):
 
     id                      database ID of the object, globally unique; undefined in a newly created object; must never change;
                             it is assumed that `id` only exists for objects that are ALREADY stored in the DB; for newly-created objects,
@@ -249,7 +249,7 @@ export class WebObject {
     __meta, __proxy, __self -- see below in the code for details
 
 
-    SPECIAL properties (some of them virtual or imputed with getters; must be commented out not to mask the getters):
+    SPECIAL properties (some of them are virtual or implemented with getters; they must be commented out not to mask the getters):
 
     __provisional_id        temporary ID (1,2,3...) of a newly created object not yet saved to DB; only used to differentiate the object
                             in a batch of interconnected objects that are being inserted to DB altogether
@@ -380,7 +380,6 @@ export class WebObject {
     //     Struct.collect(this.__data, obj => {if (obj instanceof WebObject && obj.is_newborn()) refs.push(obj)})
     //     return refs
     // }
-
 
     // static compare(obj1, obj2) {
     //     /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
