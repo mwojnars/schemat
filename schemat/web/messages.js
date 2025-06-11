@@ -130,12 +130,12 @@ export class mActionResult extends MessageEncoder {
     encode(result, tx) {
         let records = tx.dump_records()
         assert(records?.length, 'no object got modified during a database action')
-        return JSON.stringify({status: 'success', result: JSONx.encode(result), records})
+        return JSON.stringify({status: 'success', result: JSONx.encode_checked(result), records})
     }
     decode(msg) {
         let {status, result, records} = JSON.parse(msg)
         schemat.register_changes(...records)
-        return JSONx.decode(result)
+        return JSONx.decode_checked(result)
     }
 }
 
