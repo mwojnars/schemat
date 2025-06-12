@@ -97,7 +97,7 @@ export class Transaction {
         // print(`          modified: `, [...this._edited].map(String))
 
         if (this._created?.size) await this._save_created(opts)
-        if (this._edited?.size) await this._save_changed(opts)
+        if (this._edited?.size) await this._save_edited(opts)
     }
 
     async _save_created(opts) {
@@ -114,7 +114,7 @@ export class Transaction {
         this._created.clear()
     }
 
-    async _save_changed(opts) {
+    async _save_edited(opts) {
         let db = schemat.db
         await Promise.all([...this._edited].map(obj => db.update(obj.id, obj.__meta.edits, opts)))
         this._edited.clear()
