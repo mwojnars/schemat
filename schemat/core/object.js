@@ -535,7 +535,16 @@ export class WebObject {
     toString() { return this.__label }
 
     _print(...args) { console.log(`${schemat.node?.id}/#${schemat.kernel?.worker_id} ${this.__label}`, ...args) }
-    _print_stack(...args) { console.trace(`${schemat.node?.id}/#${schemat.kernel?.worker_id} ${this.__label}`, ...args) }
+
+    _print_stack(...args) {
+        /* Print the current stack trace with detailed header information: node ID, worker process, current object. */
+        let stack  = new Error().stack
+        let lines  = stack.split('\n').slice(2)
+        let caller = lines[0].trim()                // caller of the current method
+        let fun    = caller.match(/at (\S+)/)[1]    // function name of the caller
+        let title  = `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${this.__label}${fun ? '.'+fun+'()' : ''} context ${schemat.db}`
+        console.error([title, ...lines].join('\n'), ...args)
+    }
 
 
     /***  Loading & initialization  ***/
