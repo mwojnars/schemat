@@ -30,6 +30,7 @@ export class Transaction {
 
     tid = 1 + randint(10000) /* 1 + randint() */
     debug                       // if true, debug info should be printed/collected while executing this transaction
+    committed                   // true after commit(), indicates that this transaction is closed (no more objects can be added)
 
     // staging area:
     _changed = new Objects()    // a set of persisted (with IDs) mutable objects that have been modified in this transaction and wait for being committed
@@ -54,6 +55,7 @@ export class Transaction {
 
     stage(obj) {
         /* Mark this object as containing uncommitted changes, for auto-saving when this transaction commits. */
+        if (this.committed) throw new Error(`cannot add another object to a committed transaction`)
         assert(obj.is_mutable() && !obj.is_newborn())
         let existing = this._changed.get(obj)
         if (existing && existing !== obj) throw new Error(`a different copy of the same object ${obj} is already staged`)
@@ -62,6 +64,7 @@ export class Transaction {
     }
 
     stage_newborn(obj) {
+        if (this.committed) throw new Error(`cannot add another object to a committed transaction`)
         assert(obj.is_newborn())
         if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
         else obj.__self.__provisional_id = ++this._provisional
@@ -108,6 +111,7 @@ export class Transaction {
     }
 
     async commit(objects = null, opts = {}) {
+        this.committed = true
         return this.save(objects, opts)     // transfer all pending changes to the database
         // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
     }
