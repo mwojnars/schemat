@@ -29,8 +29,12 @@ export class Transaction {
      */
 
     tid = 1 + randint(10000) /* 1 + randint() */
-    debug                       // if true, debug info should be printed/collected while executing this transaction
-    committed                   // true after commit(), indicates that this transaction is closed (no more objects can be added)
+
+    /* Attributes:
+
+       debug            if true, debug info should be printed/collected while executing this transaction
+       committed        becomes true after commit(), indicates that this transaction is closed (no more objects can be added)
+    */
 
     // staging area:
     _changed = new Objects()    // a set of persisted (with IDs) mutable objects that have been modified in this transaction and wait for being committed
@@ -132,11 +136,14 @@ export class Transaction {
             this._updated.push(rec)
     }
 
-    dump_records() {
-        return this._updated.map(({id, data}) => ({id, data:
-                (typeof data === 'string') ? JSON.parse(data) :
-                (data instanceof Catalog) ? data.encode() : data
-        }))
+    /*  Serialization  */
+
+    static load({tid, debug}) {
+        let tx = new Transaction()
+        tx.tid = tid
+        tx.debug = debug
+        // tx._updated = records || []
+        return tx
     }
 
     dump_tx() {
@@ -144,12 +151,11 @@ export class Transaction {
         return {tid, debug}
     }
 
-    static load({tid, records, debug}) {
-        let tx = new Transaction()
-        tx.tid = tid
-        tx.debug = debug
-        tx._updated = records || []
-        return tx
+    dump_records() {
+        return this._updated.map(({id, data}) => ({id, data:
+                (typeof data === 'string') ? JSON.parse(data) :
+                (data instanceof Catalog) ? data.encode() : data
+        }))
     }
 }
 
