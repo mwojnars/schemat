@@ -14,13 +14,13 @@ import {Catalog} from "./catalog.js";
 
 export class Transaction {
     /* Logical transaction (pseudo-transaction). A group of related database mutations that will be
-       pushed together to the DB. Does NOT provide ACID guarantees of consistency and atomicity.
+       pushed together to the DB. Does NOT currently provide ACID guarantees of consistency and atomicity.
 
        The role of transaction is to:
        - track mutations applied to web objects in a given execution thread;
-       - track new object instantiations; count newborn objects and assign provisional IDs (TODO);
+       - track new object instantiations; count newborn objects and assign provisional IDs;
        - send these changes to the database upon request, or when the transaction is committed;
-       - receive back the updated records: save them in local cache and propagate back to the originator of the transaction.
+       - receive back the updated records: save them in local cache and backpropagate to the originator of the transaction.
 
        The fact that transaction assigns provisional IDs to new objects is the reason why it is instantiated everywhere:
        on client and on every individual RPC/IPC request received by a worker process on server. (TODO)
@@ -170,7 +170,6 @@ export class LightTransaction extends Transaction {
      */
 
     constructor() { super(true) }
-
     commit() { throw new Error(`light transaction cannot be committed`) }
 }
 
