@@ -102,8 +102,8 @@ export class Transaction {
     async _save_created(opts) {
         // new objects must be inserted together due to possible cross-references
         let created = [...this._created]
-        let data = created.map(obj => obj.__data.__getstate__())
-        let ids = await this._db_insert(data, opts)
+        let datas = created.map(obj => obj.__data.__getstate__())
+        let ids = await this._db_insert(datas, opts)
 
         // replace provisional IDs with proper IDs in original objects
         ids.map((id, i) => {
@@ -116,22 +116,6 @@ export class Transaction {
     async _save_edited(opts) {
         await this._db_update([...this._edited], opts)
         this._edited.clear()
-    }
-
-    async _db_insert(data, opts) {
-        return schemat.db.insert(data, opts)    // returns an array of IDs assigned
-    }
-
-    async _db_update(objects, opts) {
-        let db = schemat.db
-        return Promise.all(objects.map(obj => db.update(obj.id, obj.__meta.edits, opts)))
-    }
-
-    async commit(opts = {}) {
-        /* Save all the remaining unsaved mutations to DB and mark this transaction as completed and closed. */
-        this.committed = true
-        return this.save(null, opts)        // transfer all pending changes to the database
-        // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
     }
 
     revert() {
@@ -157,6 +141,22 @@ export class ServerTransaction extends Transaction {
 
     tid = 1 + randint(10000) /* 1 + randint() */
 
+    async _db_insert(datas, opts) {
+        return schemat.db.insert(datas, opts)       // returns an array of IDs assigned
+    }
+
+    async _db_update(objects, opts) {
+        let db = schemat.db
+        return Promise.all(objects.map(obj => db.update(obj.id, obj.__meta.edits, opts)))
+    }
+
+    async commit(opts = {}) {
+        /* Save all the remaining unsaved mutations to DB and mark this transaction as completed and closed. */
+        this.committed = true
+        return this.save(null, opts)        // transfer all pending changes to the database
+        // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
+    }
+
     /*  Serialization  */
 
     static load({tid, debug}) {
@@ -181,14 +181,21 @@ export class ServerTransaction extends Transaction {
 }
 
 
-export class LightTransaction extends Transaction {
-    /* A transaction without TID that allows non-atomic saving of mutations (save()), but not committing the transaction as a whole.
-       This means the transaction is always open: it can exist for a long time and be reused for new groups of mutations.
-     */
+export class ClientTransaction extends Transaction {
+    /* Client-side transaction object. No TID. No commits. Exists permanently. */
 
-    constructor() { super(true) }
-    commit() { throw new Error(`light transaction cannot be committed`) }
+    commit() { throw new Error(`client-side transaction cannot be committed`) }
+    capture(...records) {}      // on client, records are saved in Registry and this is enough (no further back-propagation is done)
 }
+
+// export class LightTransaction extends Transaction {
+//     /* A transaction without TID that allows non-atomic saving of mutations (save()), but not committing the transaction as a whole.
+//        This means the transaction is always open: it can exist for a long time and be reused for new groups of mutations.
+//      */
+//
+//     constructor() { super(true) }
+//     commit() { throw new Error(`light transaction cannot be committed`) }
+// }
 
 /**********************************************************************************************************************
  **
