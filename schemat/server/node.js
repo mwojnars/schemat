@@ -341,8 +341,8 @@ export class Node extends Agent {
             let result = await frame.call_agent(`${role}.${method}`, args)
             return this._rpc_response(result)
         }
-        return schemat.in_transaction(tx, call)
-        // return schemat.in_tx_context(ctx, tx, call)
+        return schemat.in_tx_context(ctx, tx, call)
+        // return schemat.in_tx_context(frame.agent.__ctx, tx, call)
     }
 
     _rpc_request(agent_id, method, args = [], opts) {
