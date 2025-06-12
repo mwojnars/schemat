@@ -54,7 +54,7 @@ export class Transaction {
            in the staging area, a new mutable copy is created and staged. The object must be loaded, not a newborn.
          */
         let existing = this._changed.get(obj)
-        return existing || this.stage(obj.mutate())
+        return existing || this.stage(obj._get_mutable())
     }
 
     stage(obj) {
