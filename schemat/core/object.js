@@ -482,7 +482,7 @@ export class WebObject {
            Optionally, initialize its __data with `data`, but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
         obj.__data = new Catalog(data)
-        schemat.tx?.stage_newborn(obj)
+        schemat.tx?.stage_newborn(obj)      // schemat.tx is missing during boot
         return obj
     }
 
