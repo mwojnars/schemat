@@ -456,11 +456,11 @@ export class Schemat {
             })
         }
 
-        // // check that very object has a provisional ID
-        // objects.forEach(obj => {if (!obj.__provisional_id) throw new Error(`missing provisional ID`)})
+        // check that very object has a provisional ID
+        objects.forEach(obj => {if (!obj.__provisional_id) throw new Error(`missing provisional ID`)})
 
-        // set provisional IDs so that cross-references to these objects are properly resolved in the DB when creating data records
-        objects.forEach((obj, i) => obj.__self.__provisional_id = i+1)      // 1, 2, 3, ...
+        // // set provisional IDs so that cross-references to these objects are properly resolved in the DB when creating data records
+        // objects.forEach((obj, i) => obj.__self.__provisional_id = i+1)      // 1, 2, 3, ...
 
         let {reload = true, ...opts} = opts_
         let data = objects.map(obj => obj.__data.__getstate__())
