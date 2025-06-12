@@ -436,6 +436,7 @@ export class Schemat {
            `objects` can be either an Array of web objects, or a single web object. In the latter case, this single
            object (original or reloaded) is returned, not an array.
          */
+        // print.stack()
         let batch = (objects instanceof Array)
         if (!batch) objects = [objects]
 

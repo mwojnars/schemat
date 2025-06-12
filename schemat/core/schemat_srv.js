@@ -47,9 +47,8 @@ export class Transaction {
 
     constructor(light = false) {
         if (schemat.debug) this.debug = true
-        if (light) return
-
-        this.tid = 1 + randint(10000) /* 1 + randint() */
+        // if (light) return
+        // this.tid = 1 + randint(10000) /* 1 + randint() */
     }
 
     get_mutable(obj) {
@@ -104,7 +103,7 @@ export class Transaction {
         // new objects must be inserted together due to possible cross-references
         let created = [...this._created]
         let data = created.map(obj => obj.__data.__getstate__())
-        let ids = await schemat.db.insert(data, opts)
+        let ids = await this._db_insert(data, opts)
 
         // replace provisional IDs with proper IDs in original objects
         ids.map((id, i) => {
@@ -115,9 +114,17 @@ export class Transaction {
     }
 
     async _save_edited(opts) {
-        let db = schemat.db
-        await Promise.all([...this._edited].map(obj => db.update(obj.id, obj.__meta.edits, opts)))
+        await this._db_update([...this._edited], opts)
         this._edited.clear()
+    }
+
+    async _db_insert(data, opts) {
+        return schemat.db.insert(data, opts)    // returns an array of IDs assigned
+    }
+
+    async _db_update(objects, opts) {
+        let db = schemat.db
+        return Promise.all(objects.map(obj => db.update(obj.id, obj.__meta.edits, opts)))
     }
 
     async commit(opts = {}) {
@@ -128,7 +135,7 @@ export class Transaction {
     }
 
     revert() {
-        /* Remove all pending changes recorded during this transaction. */
+        /* Remove all pending changes from this transaction. */
         this._edited.clear()
         this._created.clear()
     }
@@ -142,11 +149,18 @@ export class Transaction {
         for (let rec of records)
             this._updated.push(rec)
     }
+}
+
+
+export class ServerTransaction extends Transaction {
+    /* Server-side transaction object. */
+
+    tid = 1 + randint(10000) /* 1 + randint() */
 
     /*  Serialization  */
 
     static load({tid, debug}) {
-        let tx = new Transaction()
+        let tx = new ServerTransaction()
         tx.tid = tid
         tx.debug = debug
         // tx._updated = records || []
@@ -165,6 +179,7 @@ export class Transaction {
         }))
     }
 }
+
 
 export class LightTransaction extends Transaction {
     /* A transaction without TID that allows non-atomic saving of mutations (save()), but not committing the transaction as a whole.
@@ -472,10 +487,10 @@ export class ServerSchemat extends Schemat {
 
     get_transaction() {
         /* Return the current Transaction object or create a new one. */
-        return this.tx || new Transaction()
+        return this.tx || new ServerTransaction()
     }
 
-    load_transaction(dump) { return Transaction.load(dump) }
+    load_transaction(dump) { return ServerTransaction.load(dump) }
 
     in_transaction(tx, action) {
         /* Execute action() in the context of a Transaction object: this.tx === tx.
