@@ -231,7 +231,8 @@ export class Application extends WebObject {
            The respond is an array of IDs, one for each object created, in the same order as in the request.
            Additionally, DB records are passed implicitly through a Transaction context.
          */
-        return schemat.db.insert(data, opts)
+        return Array.isArray(data) ? data.map(d => WebObject.newborn(d)) : WebObject.newborn(data)
+        // return schemat.db.insert(data, opts)
     }
 
     'action.apply_edits'(id, ...edits) {
