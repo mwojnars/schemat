@@ -452,23 +452,11 @@ export class ServerSchemat extends Schemat {
         return (!tx || tx === this.tx) ? action() : this._transaction.run(tx, action)
     }
 
-    in_tx_context(ctx, tx, callback) {
-        /* Run callback() inside a double async context created by first setting the global `schemat`
-           to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
-         */
-        return this.in_context(ctx, tx ? () => schemat.in_transaction(tx, callback) : callback)
-    }
-
-    // with_transaction(action, tx = null) {
-    //     /* Execute the action() function in the context of a Transaction object: tx, or this.tx, or a newly-created one.
-    //        Return a pair: [transaction-object, result-of-action], where the latter can be a Promise if action() is async.
-    //        After the action() is executed (awaited), the transaction object contains info about the execution, like a list of objects modified.
+    // in_tx_context(ctx, tx, callback) {
+    //     /* Run callback() inside a double async context created by first setting the global `schemat`
+    //        to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
     //      */
-    //     tx ??= this.tx
-    //     if (tx && tx === this.tx) return [action(), tx]
-    //
-    //     tx = new Transaction()
-    //     return [this._transaction.run(tx, action), tx]
+    //     return this.in_context(ctx, tx ? () => schemat.in_transaction(tx, callback) : callback)
     // }
 
 
