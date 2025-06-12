@@ -543,7 +543,8 @@ export class WebObject {
         let caller = lines[0].trim()                // caller of the current method
         let fun    = caller.match(/at (\S+)/)[1]    // function name of the caller
         let title  = `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${this.__label}${fun ? '.'+fun+'()' : ''} context ${schemat.db}`
-        console.error([title, ...lines].join('\n'), ...args)
+        console.error(title, ...args)
+        console.error(lines.join('\n'))
     }
 
 
