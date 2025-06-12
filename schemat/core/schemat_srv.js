@@ -38,7 +38,7 @@ export class Transaction {
     */
 
     // staging area:
-    _changed = new Objects()    // a set of persisted (with IDs) mutable objects that have been modified in this transaction and wait for being committed
+    _edited  = new Objects()    // a set of persisted (with IDs) mutable objects that have been modified in this transaction and wait for being committed
     _created = new Set()        // a set of newly created web objects that wait for insertion to DB
     _provisional = 0            // highest __provisional_id so far
 
@@ -57,22 +57,24 @@ export class Transaction {
            so consecutive modifications add to rather than replace previous ones. If the object is not yet
            in the staging area, a new mutable copy is created and staged. The object must be loaded, not a newborn.
          */
-        let existing = this._changed.get(obj)
+        let existing = this._edited.get(obj)
         return existing || this.stage(obj._get_mutable())
     }
 
     stage(obj) {
         /* Mark this object as containing uncommitted changes, for auto-saving when this transaction commits. */
-        if (this.committed) throw new Error(`cannot add another object to a committed transaction`)
-        assert(obj.is_mutable() && !obj.is_newborn())
-        let existing = this._changed.get(obj)
+        if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
+        if (obj.is_newborn()) return this.stage_newborn(obj)
+
+        assert(obj.is_mutable())
+        let existing = this._edited.get(obj)
         if (existing && existing !== obj) throw new Error(`a different copy of the same object ${obj} is already staged`)
-        this._changed.add(obj)
+        this._edited.add(obj)
         return obj
     }
 
     stage_newborn(obj) {
-        if (this.committed) throw new Error(`cannot add another object to a committed transaction`)
+        if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
         assert(obj.is_newborn())
         if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
         else obj.__self.__provisional_id = ++this._provisional
@@ -87,15 +89,15 @@ export class Transaction {
         // if (objects && typeof objects === 'object') objects = [objects]
         // if (Array.isArray(objects)) {
         //     for (let obj of objects)        // stage the unstaged objects
-        //         if (!this._changed.has(obj) && !this._created.has(obj)) this.stage(obj)
+        //         if (!this._edited.has(obj) && !this._created.has(obj)) this.stage(obj)
         // }
-        // else objects = [...this._changed, ...this._created]
+        // else objects = [...this._edited, ...this._created]
 
         // print(`tx.save() new:      `, [...this._created].map(String))
-        // print(`          modified: `, [...this._changed].map(String))
+        // print(`          modified: `, [...this._edited].map(String))
 
         if (this._created?.size) await this._save_created(opts)
-        if (this._changed?.size) await this._save_changed(opts)
+        if (this._edited?.size) await this._save_changed(opts)
     }
 
     async _save_created(opts) {
@@ -114,8 +116,8 @@ export class Transaction {
 
     async _save_changed(opts) {
         let db = schemat.db
-        await Promise.all([...this._changed].map(obj => db.update(obj.id, obj.__meta.edits, opts)))
-        this._changed.clear()
+        await Promise.all([...this._edited].map(obj => db.update(obj.id, obj.__meta.edits, opts)))
+        this._edited.clear()
     }
 
     async commit(opts = {}) {
@@ -127,7 +129,7 @@ export class Transaction {
 
     revert() {
         /* Remove all pending changes recorded during this transaction. */
-        this._changed.clear()
+        this._edited.clear()
         this._created.clear()
     }
 
