@@ -121,7 +121,7 @@ export class Transaction {
     async commit(opts = {}) {
         /* Save all the remaining unsaved mutations to DB and mark this transaction as completed and closed. */
         this.committed = true
-        return this.save(opts)      // transfer all pending changes to the database
+        return this.save(null, opts)        // transfer all pending changes to the database
         // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
     }
 
