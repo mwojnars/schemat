@@ -452,12 +452,12 @@ export class ServerSchemat extends Schemat {
         return (!tx || tx === this.tx) ? action() : this._transaction.run(tx, action)
     }
 
-    // in_tx_context(ctx, tx, callback) {
-    //     /* Run callback() inside a double async context created by first setting the global `schemat`
-    //        to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
-    //      */
-    //     return this.in_context(ctx, tx ? () => schemat.in_transaction(tx, callback) : callback)
-    // }
+    in_tx_context(ctx, tx, callback) {
+        /* Run callback() inside a double async context created by first setting the global `schemat`
+           to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
+         */
+        return this.in_context(ctx, tx ? () => schemat.in_transaction(tx, callback) : callback)
+    }
 
 
     // async _reset_class(ServerSchemat) {
