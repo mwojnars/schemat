@@ -81,6 +81,7 @@ export class Cluster extends Agent {
         */
         let node = await this.action._create_node(props)
         this._print(`$leader.create_node() node:\n`, node.__content)
+        this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}`)
 
         nodes.push(node)
         await this.action.set({nodes})

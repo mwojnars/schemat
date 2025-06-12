@@ -233,7 +233,7 @@ export class DataBlock extends Block {
 
     async '$agent.insert'(state, data, opts = {}) {
         /* `data` can be an array if multiple objects are to be inserted. */
-        // this._print(`before $agent.insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
+        // this._print_stack()
 
         let {id} = opts         // optional target ID to be assigned to the new object
         let ring = this.ring
