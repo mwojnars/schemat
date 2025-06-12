@@ -268,18 +268,18 @@ export class Schemat {
         if (set_loaded) obj.load().then(set_loaded)     // load content in the background for future access; intentionally not awaited
     }
 
-    async get_mutable(...objects_or_ids) {
-        /* Return an array of mutable, fully loaded instances of given objects. Like WebObject.get_mutable(),
-           but executed for multiple objects (IDs) at once, and preceded by object loading when needed.
-           Some objects/IDs on the args list can be missing (null, undefined).
-         */
-        let objs = objects_or_ids.map(async obj => {
-            if (!obj) return obj
-            if (Number.isInteger(obj)) obj = await this.get_loaded(obj)
-            return obj.mutate()
-        })
-        return Promise.all(objs)
-    }
+    // async get_mutable(...objects_or_ids) {
+    //     /* Return an array of mutable, fully loaded instances of given objects. Like WebObject.get_mutable(),
+    //        but executed for multiple objects (IDs) at once, and preceded by object loading when needed.
+    //        Some objects/IDs on the args list can be missing (null, undefined).
+    //      */
+    //     let objs = objects_or_ids.map(async obj => {
+    //         if (!obj) return obj
+    //         if (Number.isInteger(obj)) obj = await this.get_loaded(obj)
+    //         return obj.mutate()
+    //     })
+    //     return Promise.all(objs)
+    // }
 
     async get_loaded(...ids) {
         /* Load and return the web object identified by a given ID. If multiple `ids` are provided, an array of objects is returned. */
