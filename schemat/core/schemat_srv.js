@@ -62,7 +62,7 @@ export class Transaction {
     }
 
     stage(obj) {
-        /* Mark this object as containing uncommitted changes, for auto-saving when this transaction commits. */
+        /* Add a web object to the transaction. */
         if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
         if (obj.is_newborn()) return this.stage_newborn(obj)
 
