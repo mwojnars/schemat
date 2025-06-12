@@ -13,8 +13,8 @@ import {Catalog} from "./catalog.js";
 /**********************************************************************************************************************/
 
 export class Transaction {
-    /* Logical transaction (pseudo-transaction). A group of related object modifications that will be
-       pushed together to the DB. It does NOT provide ACID guarantees of consistency and atomicity.
+    /* Logical transaction (pseudo-transaction). A group of related database mutations that will be
+       pushed together to the DB. Does NOT provide ACID guarantees of consistency and atomicity.
 
        The role of transaction is to:
        - track mutations applied to web objects in a given execution thread;
@@ -28,12 +28,13 @@ export class Transaction {
        IMPORTANT: at the moment, transactions are NOT ATOMIC!
      */
 
-    tid = 1 + randint(10000) /* 1 + randint() */
 
     /* Attributes:
 
+       tid              Transaction ID
        debug            if true, debug info should be printed/collected while executing this transaction
        committed        becomes true after commit(), indicates that this transaction is closed (no more objects can be added)
+       ?? derived       true in a derived TX object that was spawned by a parent Transaction; the child inherits `tid`, but cannot commit the transaction (not a coordinator)
     */
 
     // staging area:
@@ -44,8 +45,11 @@ export class Transaction {
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
 
-    constructor() {
+    constructor(light = false) {
         if (schemat.debug) this.debug = true
+        if (light) return
+
+        this.tid = 1 + randint(10000) /* 1 + randint() */
     }
 
     get_mutable(obj) {
@@ -114,9 +118,10 @@ export class Transaction {
         this._changed.clear()
     }
 
-    async commit(objects = null, opts = {}) {
+    async commit(opts = {}) {
+        /* Save all the remaining unsaved mutations to DB and mark this transaction as completed and closed. */
         this.committed = true
-        return this.save(objects, opts)     // transfer all pending changes to the database
+        return this.save(opts)      // transfer all pending changes to the database
         // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
     }
 
@@ -159,6 +164,15 @@ export class Transaction {
     }
 }
 
+export class LightTransaction extends Transaction {
+    /* A transaction without TID that allows non-atomic saving of mutations (save()), but not committing the transaction as a whole.
+       This means the transaction is always open: it can exist for a long time and be reused for new groups of mutations.
+     */
+
+    constructor() { super(true) }
+
+    commit() { throw new Error(`light transaction cannot be committed`) }
+}
 
 /**********************************************************************************************************************
  **
