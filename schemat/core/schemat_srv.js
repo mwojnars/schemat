@@ -82,21 +82,28 @@ export class Transaction {
 
         // print(`tx.save() new:      `, [...this._created].map(String))
         // print(`          modified: `, [...this._changed].map(String))
-        let db = schemat.db
 
+        if (this._created?.size) await this._save_created(opts)
+        if (this._changed?.size) await this._save_changed(opts)
+    }
+
+    async _save_created(opts) {
         // new objects must be inserted together due to possible cross-references
         let created = [...this._created]
         let data = created.map(obj => obj.__data.__getstate__())
-        let ids = await db.insert(data, opts)
+        let ids = await schemat.db.insert(data, opts)
 
-        // replace provisional IDs with proper IDs
+        // replace provisional IDs with proper IDs in original objects
         ids.map((id, i) => {
             delete created[i].__self.__provisional_id
             created[i].id = id
         })
         this._created.clear()
+    }
 
-        await Promise.all([...this._changed].map(obj => db.update(obj.id, obj.__meta.edits)))
+    async _save_changed(opts) {
+        let db = schemat.db
+        await Promise.all([...this._changed].map(obj => db.update(obj.id, obj.__meta.edits, opts)))
         this._changed.clear()
     }
 
