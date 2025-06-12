@@ -38,6 +38,8 @@ export class AgentState {   // AgentData, AgentVariables, Registers
     }
 
     unlock() { this.__frame.unlock() }
+
+    // switch_context(callback)     -- execute callback() in originator's not agent's context; for use inside agent methods
 }
 
 

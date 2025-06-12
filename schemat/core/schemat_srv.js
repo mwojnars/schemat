@@ -449,7 +449,7 @@ export class ServerSchemat extends Schemat {
         /* Execute action() in the context of a Transaction object: this.tx === tx.
            After that, the transaction object contains info about the execution, like a list of objects modified.
          */
-        return (tx === this.tx) ? action() : this._transaction.run(tx, action)
+        return (!tx || tx === this.tx) ? action() : this._transaction.run(tx, action)
     }
 
     in_tx_context(ctx, tx, callback) {
