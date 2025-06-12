@@ -1,5 +1,5 @@
+import {print, assert, randint} from "../common/utils.js";
 import {Objects} from "../common/structs.js";
-import {assert, randint} from "../common/utils.js";
 import {Catalog} from "./catalog.js";
 
 /**********************************************************************************************************************/
@@ -185,6 +185,16 @@ export class ServerTransaction extends Transaction {
 
 export class ClientTransaction extends Transaction {
     /* Client-side transaction object. No TID. No commits. Exists permanently. */
+
+    // stage(obj) {
+    //     print(`ClientTransaction.stage()`, obj)
+    //     return super.stage(obj)
+    // }
+    //
+    // stage_newborn(obj) {
+    //     print(`ClientTransaction.stage_newborn()`, obj)
+    //     return super.stage_newborn(obj)
+    // }
 
     commit() { throw new Error(`client-side transaction cannot be committed`) }
     capture(...records) {}      // on client, records are saved in Registry and this is enough (no further back-propagation is done)

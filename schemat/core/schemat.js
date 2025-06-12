@@ -100,7 +100,7 @@ export class Schemat {
     // defined on server only:
     kernel
     get cluster()   {}
-    get tx()        {}
+    // get tx()        {}
     get node()      {}
     get_frame()     {}
 
