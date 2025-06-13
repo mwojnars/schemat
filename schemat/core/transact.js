@@ -53,21 +53,18 @@ export class Transaction {
 
     stage(obj) {
         /* Add a web object to the transaction. */
-        return obj.is_newborn() ? this.stage_newborn(obj) : this.stage_edited(obj)
-    }
-
-    stage_newborn(obj) {
         if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
-        assert(obj.is_newborn())
-
-        if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
-        else obj.__self.__provisional_id = ++this._provisional
-        this._created.add(obj)
+        obj.is_newborn() ? this._stage_newborn(obj) : this._stage_edited(obj)
         return obj
     }
 
-    stage_edited(obj) {
-        if (this.committed) throw new Error(`cannot add objects to a committed transaction`)
+    _stage_newborn(obj) {
+        if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
+        else obj.__self.__provisional_id = ++this._provisional
+        this._created.add(obj)
+    }
+
+    _stage_edited(obj) {
         assert(obj.__meta.mutable && !obj.__meta.obsolete)
 
         let existing = this._edited.get(obj)
@@ -79,9 +76,7 @@ export class Transaction {
             existing.__meta.obsolete = true
             this._edited.delete(existing)
         }
-
         this._edited.add(obj)
-        return obj
     }
 
     has(obj) {
