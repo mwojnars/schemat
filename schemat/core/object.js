@@ -1234,10 +1234,8 @@ export class WebObject {
            If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
          */
         if (this.__meta.obsolete) throw new Error(`this mutable instance of ${this} is obsolete (was replaced with a newer one) and should not be used`)
-        if (this.__meta.mutable) {
-            if (this.is_newborn()) this.__meta.edits ??= []     // newborn objects rarely receive mutations after .save(), that's why their .edits array is not initialized
-            return this
-        }
+        if (this.__meta.mutable) return this
+
         if (!this.is_loaded()) throw new Error('only a fully loaded object can be converted to a mutable instance')
         if (CLIENT) return this._make_mutable()
 
@@ -1262,11 +1260,11 @@ export class WebObject {
          */
         if (this.__meta.obsolete) throw new Error(`a newer mutable instance of ${this} exists and should be edited instead of this one`)
 
-        let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)
+        let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)     // the edit may go to a different instance (a mutable one)
         let edit = [op, ...args]
 
         obj._apply_edits(edit)
-        obj.__meta.edits?.push(edit)        // `edits` does not exist in newborn objects, so `edit` is not recorded then, but is still applied to __data
+        obj.__meta.edits?.push(edit)        // `edits` array is not present in newborns where it's enough that the edit is applied to __data
         return obj
     }
 

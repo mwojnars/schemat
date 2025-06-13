@@ -107,8 +107,11 @@ export class Transaction {
             this._staging.delete(obj)
             obj.id = id
             delete obj.__self.__provisional_id
-            // assert(!this._staging.has(obj))
-            // this._staging.add(obj)   // re-stage the object under its proper ID, as it can still receive mutations
+
+            // re-stage the object under its proper ID, as it can still receive mutations in the future
+            assert(!this._staging.has(obj))
+            obj.__meta.edits = []       // `edits` array is uninitialized in newborns
+            this._staging.add(obj)
         })
     }
 
