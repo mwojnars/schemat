@@ -1,6 +1,7 @@
 import {print, assert, randint} from "../common/utils.js";
 import {Objects} from "../common/structs.js";
 import {Catalog} from "./catalog.js";
+import {WebObject} from "./object.js";
 
 /**********************************************************************************************************************/
 
@@ -43,7 +44,7 @@ export class Transaction {
     get_mutable(obj) {
         /* Return an object's mutable copy that's unique transaction-wide: multiple calls return the same copy,
            so consecutive modifications add to, rather than replace, previous ones. If the object is not yet
-           in the staging area, a new mutable copy is created and staged. The object must be loaded, not a newborn.
+           in the staging area, a new mutable copy is created and staged.
          */
         let existing = this._staging.get(obj)
         return existing || this.stage(obj._get_mutable())
@@ -66,20 +67,25 @@ export class Transaction {
 
         let existing = this._staging.get(obj)
         if (existing === obj) return obj
-        if (existing) {
+        if (existing)
             // it is OK to replace an existing instance if it has no unsaved edits, but then it must be marked as obsolete
             if (existing.__meta.edits.length) throw new Error(`a different copy of the same object ${obj} is already staged`)
-            existing.__meta.obsolete = true
-            this._staging.delete(existing)
-        }
+            else this._discard(existing)
+
         return this._staging.add(obj)
     }
 
-    // stage_edits(id, edits) {
-    //     /* Convert an array of raw edits into a web object that can be stored in _staging. */
-    //     let obj = {}
-    //     return this._stage_edited(obj)
-    // }
+    _discard(obj) {
+        /* Remove `obj` from staging after all mutations have been pushed to DB. */
+        obj.__meta.obsolete = true
+        this._staging.delete(obj)
+    }
+
+    stage_edits(id, edits) {
+        /* Convert an array of raw edits into a web object that can be stored in _staging. */
+        let obj = WebObject.pseudo(id, edits)
+        return this._stage_edited(obj)
+    }
 
     has(obj)        { return this._staging.has(obj) }
     has_exact(obj)  { return this._staging.has_exact(obj) }
