@@ -28,11 +28,7 @@ export class Transaction {
        ?? derived       true in a derived TX object that was spawned by a parent Transaction; the child inherits `tid`, but cannot commit the transaction (not a coordinator)
     */
 
-    _staging = new Objects()
-
-    // staging area:
-    // _edited  = new Objects()    // a set of mutable web objects that have been modified in this transaction and wait for being committed
-    // _created = new Set()        // a set of newly created web objects that wait for insertion to DB
+    _staging = new Objects()    // staging area: a set of mutated or newborn objects that wait for being saved to DB
     _provisional = 0            // highest __provisional_id assigned to newborn objects so far
 
     // captured DB changes after commit & save:
@@ -84,9 +80,7 @@ export class Transaction {
 
 
     async save(objects = null, opts = {}) {
-        /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object).
-           Any non-staged item in `objects` gets implicitly staged.
-         */
+        /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object). */
         assert(!objects)
         if (!this._staging.size) return
         // if (objects && typeof objects === 'object') objects = [objects]
@@ -105,15 +99,15 @@ export class Transaction {
 
     async _save_created(opts) {
         // new objects must be inserted together due to possible cross-references
-        let created = [...this._staging].filter(obj => obj.__provisional_id)
-        if (!created.length) return
+        let objects = [...this._staging].filter(obj => obj.__provisional_id)
+        if (!objects.length) return
 
-        let datas = created.map(obj => obj.__data.__getstate__())
+        let datas = objects.map(obj => obj.__data.__getstate__())
         let ids = await this._db_insert(datas, opts)
 
         // replace provisional IDs with proper IDs in original objects
         ids.map((id, i) => {
-            let obj = created[i]
+            let obj = objects[i]
             this._staging.delete(obj)
             obj.id = id
             delete obj.__self.__provisional_id
@@ -123,15 +117,15 @@ export class Transaction {
     }
 
     async _save_edited(opts) {
-        let edited = [...this._staging].filter(obj => obj.id && obj.__meta.edits.length > 0)
-        if (!edited.length) return
+        let objects = [...this._staging].filter(obj => obj.id && obj.__meta.edits.length > 0)
+        if (!objects.length) return
 
-        await this._db_update(edited, opts)
-        for (let obj of edited)
+        await this._db_update(objects, opts)
+        for (let obj of objects)
             obj.__meta.edits.length = 0     // mark that there are no more pending edits
 
-        // the set of modified objects is NOT cleared because the instances are still there and remain mutable,
-        // so they can receive new mutations and any future .save() need to check if they shall be pushed again to DB
+        // the objects are NOT removed from _staging because they still remain mutable and can receive new mutations,
+        // so any future .save() need to check if they shouldn't be pushed again to DB
     }
 
     revert() { return this._clear() }
