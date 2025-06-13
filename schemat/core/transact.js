@@ -44,7 +44,7 @@ export class Transaction {
 
     get_mutable(obj) {
         /* Return an object's mutable copy that's unique transaction-wide: multiple calls return the same copy,
-           so consecutive modifications add to rather than replace previous ones. If the object is not yet
+           so consecutive modifications add to, rather than replace, previous ones. If the object is not yet
            in the staging area, a new mutable copy is created and staged. The object must be loaded, not a newborn.
          */
         let existing = this._edited.get(obj)
@@ -85,7 +85,7 @@ export class Transaction {
     }
 
     has(obj) {
-        return this._edited.has(obj) || this._created.has(obj)
+        return this._edited.has_exact(obj) || this._created.has(obj)
     }
 
 
