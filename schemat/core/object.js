@@ -1233,7 +1233,7 @@ export class WebObject {
            as mutable (on client). The object must be already fully loaded.
            If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
          */
-        if (this.__meta.obsolete) throw new Error(`this mutable instance of ${this} is obsolete and should be replaced`)
+        if (this.__meta.obsolete) throw new Error(`this mutable instance of ${this} is obsolete (was replaced with a newer one) and should not be used`)
         if (this.__meta.mutable) return this
 
         if (!this.is_loaded()) throw new Error('only a fully loaded instance of web object can be converted to a mutable copy')
@@ -1294,7 +1294,7 @@ export class WebObject {
            If reload=true (default), a new instance of this object is created with new content and returned.
          */
         assert(this.__meta.mutable)
-        assert(schemat.tx.has(this))
+        assert(schemat.tx.has_exact(this))
 
         this._print(`save() edits`, this.__meta.edits)
         this.assert_active()

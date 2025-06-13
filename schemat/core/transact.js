@@ -28,10 +28,12 @@ export class Transaction {
        ?? derived       true in a derived TX object that was spawned by a parent Transaction; the child inherits `tid`, but cannot commit the transaction (not a coordinator)
     */
 
+    _staging = new Objects()
+
     // staging area:
-    _edited  = new Objects()    // a set of mutable web objects that have been modified in this transaction and wait for being committed
-    _created = new Set()        // a set of newly created web objects that wait for insertion to DB
-    _provisional = 0            // highest __provisional_id so far
+    // _edited  = new Objects()    // a set of mutable web objects that have been modified in this transaction and wait for being committed
+    // _created = new Set()        // a set of newly created web objects that wait for insertion to DB
+    _provisional = 0            // highest __provisional_id assigned to newborn objects so far
 
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
@@ -47,7 +49,7 @@ export class Transaction {
            so consecutive modifications add to, rather than replace, previous ones. If the object is not yet
            in the staging area, a new mutable copy is created and staged. The object must be loaded, not a newborn.
          */
-        let existing = this._edited.get(obj)
+        let existing = this._staging.get(obj)
         return existing || this.stage(obj._get_mutable())
     }
 
@@ -55,31 +57,30 @@ export class Transaction {
         /* Add a web object to the transaction. */
         if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
         obj.is_newborn() ? this._stage_newborn(obj) : this._stage_edited(obj)
+        this._staging.add(obj)
         return obj
     }
 
     _stage_newborn(obj) {
         if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
         else obj.__self.__provisional_id = ++this._provisional
-        this._created.add(obj)
     }
 
     _stage_edited(obj) {
         assert(obj.__meta.mutable && !obj.__meta.obsolete)
 
-        let existing = this._edited.get(obj)
+        let existing = this._staging.get(obj)
         if (existing === obj) return
-
         if (existing) {
             // it is OK to replace an existing instance if it has no unsaved edits, but then it must be marked as obsolete
             if (existing.__meta.edits.length) throw new Error(`a different copy of the same object ${obj} is already staged`)
             existing.__meta.obsolete = true
-            this._edited.delete(existing)
+            this._staging.delete(existing)
         }
-        this._edited.add(obj)
     }
 
-    has(obj) { return this._edited.has_exact(obj) || this._created.has(obj) }
+    has(obj)        { return this._staging.has(obj) }
+    has_exact(obj)  { return this._staging.has_exact(obj) }
 
 
     async save(objects = null, opts = {}) {
@@ -87,6 +88,7 @@ export class Transaction {
            Any non-staged item in `objects` gets implicitly staged.
          */
         assert(!objects)
+        if (!this._staging.size) return
         // if (objects && typeof objects === 'object') objects = [objects]
         // if (Array.isArray(objects)) {
         //     for (let obj of objects)        // stage the unstaged objects
@@ -97,44 +99,50 @@ export class Transaction {
         // print(`tx.save() new:      `, [...this._created].map(String))
         // print(`          modified: `, [...this._edited].map(String))
 
-        if (this._created?.size) await this._save_created(opts)
-        if (this._edited?.size) await this._save_edited(opts)
+        await this._save_created(opts)
+        await this._save_edited(opts)
     }
 
     async _save_created(opts) {
         // new objects must be inserted together due to possible cross-references
-        let created = [...this._created]
+        let created = [...this._staging].filter(obj => obj.__provisional_id)
+        if (!created.length) return
+
         let datas = created.map(obj => obj.__data.__getstate__())
         let ids = await this._db_insert(datas, opts)
 
         // replace provisional IDs with proper IDs in original objects
         ids.map((id, i) => {
-            created[i].id = id
-            delete created[i].__self.__provisional_id
+            let obj = created[i]
+            this._staging.delete(obj)
+            obj.id = id
+            delete obj.__self.__provisional_id
+            // assert(!this._staging.has(obj))
+            // this._staging.add(obj)   // reinsert the object into staging under its proper ID, as it still can undergo mutations
         })
-        this._created.clear()
     }
 
     async _save_edited(opts) {
-        await this._db_update([...this._edited], opts)
-        for (let obj of this._edited)
+        let edited = [...this._staging].filter(obj => obj.id && obj.__meta.edits.length > 0)
+        if (!edited.length) return
+
+        await this._db_update(edited, opts)
+        for (let obj of edited)
             obj.__meta.edits.length = 0     // mark that there are no more pending edits
 
-        // the set of modified objects (_edited) is NOT cleared because the instances are still there and remain mutable,
+        // the set of modified objects is NOT cleared because the instances are still there and remain mutable,
         // so they can receive new mutations and any future .save() need to check if they shall be pushed again to DB
     }
 
     revert() { return this._clear() }
 
     _clear() {
-        /* Remove all pending changes from this transaction. */
-
-        // we cannot revert edits in a mutable instance because they were already applied to __data, but we can mark it as obsolete
-        for (let obj of this._edited)
+        /* Remove all pending changes from this transaction. We cannot revert edits in a mutable instance because
+           they were already applied to __data, but we can mark it as obsolete.
+         */
+        for (let obj of this._staging)
             obj.__meta.obsolete = true
-
-        this._edited.clear()
-        this._created.clear()
+        this._staging.clear()
     }
 
     capture(...records) {
