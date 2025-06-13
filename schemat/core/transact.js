@@ -89,9 +89,6 @@ export class Transaction {
             for (let obj of objects)        // every object must have been staged already
                 if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
 
-        // print(`tx.save() new:      `, [...this._created].map(String))
-        // print(`          modified: `, [...this._edited].map(String))
-
         let created = objects.filter(obj => obj.__provisional_id)
         let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0)
 
@@ -207,12 +204,10 @@ export class ClientTransaction extends Transaction {
     /* Client-side transaction object. No TID. No commits. Exists permanently. */
 
     async _db_insert(datas, opts) {
-        print(`ClientTransaction._db_insert() #objects = ${datas.length}`)
         return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
     }
 
     async _db_update(objects, opts) {
-        print(`ClientTransaction._db_update() #objects = ${objects.length}`)
         return Promise.all(objects.map(obj => schemat.app.action.apply_edits(obj.id, obj.__meta.edits, opts)))
     }
 
