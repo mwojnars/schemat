@@ -129,7 +129,9 @@ export class DependenciesStack extends Stack {
 /**********************************************************************************************************************/
 
 export class Objects {
-    /* A Set of web objects deduplicated by object.id. */
+    /* A Set of web objects deduplicated by object.id. Adding another instance with the same ID removes the previous one.
+       Deleting an object removes the corresponding ID, even if a different instance was stored under this ID.
+     */
 
     objects = new Map()
 
@@ -142,6 +144,7 @@ export class Objects {
     delete(obj)     { return this.objects.delete(obj.id) }
     get(obj)        { return this.objects.get(obj.id) }     // another copy of the same web object may exist
     has(obj)        { return this.objects.has(obj.id) }
+    has_exact(obj)  { return this.objects.get(obj.id) === obj }
     ids()           { return this.objects.keys() }
     keys()          { return this.objects.values() }        // for compatibility with Set interface
     values()        { return this.objects.values() }
@@ -152,15 +155,15 @@ export class Objects {
 
     [Symbol.iterator]() { return this.objects.values() }
 
-    forEach(callbackFn, thisArg) {
-        this.objects.forEach((value) => {
-            callbackFn.call(thisArg, value, value, this)
-        })
-    }
+    // forEach(callbackFn, thisArg) {
+    //     this.objects.forEach((value) => {
+    //         callbackFn.call(thisArg, value, value, this)
+    //     })
+    // }
 }
 
 export class RecentObjects extends Objects {
-    /* Like Objects, but when an existing ID is to be overwritten, `__meta.loaded_at` is compared and the most recent object is kept. */
+    /* Like Objects, but when an existing ID is to be overwritten, `__meta.loaded_at` is compared and the more recent instance is kept. */
 
     add(obj) {
         if (obj.id === undefined) throw new Error("missing 'id' for an object being added to RecentObjects")

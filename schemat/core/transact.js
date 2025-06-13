@@ -29,7 +29,7 @@ export class Transaction {
     */
 
     // staging area:
-    _edited  = new Objects()    // a set of persisted (with IDs) mutable objects that have been modified in this transaction and wait for being committed
+    _edited  = new Objects()    // a set of mutable web objects that have been modified in this transaction and wait for being committed
     _created = new Set()        // a set of newly created web objects that wait for insertion to DB
     _provisional = 0            // highest __provisional_id so far
 
