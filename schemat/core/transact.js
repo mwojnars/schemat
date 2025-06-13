@@ -53,10 +53,22 @@ export class Transaction {
 
     stage(obj) {
         /* Add a web object to the transaction. */
-        if (this.committed) throw new Error(`cannot add objects to a committed transaction`)
-        if (obj.is_newborn()) return this.stage_newborn(obj)
+        return obj.is_newborn() ? this.stage_newborn(obj) : this.stage_edited(obj)
+    }
 
+    stage_newborn(obj) {
+        if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
+        assert(obj.is_newborn())
+
+        if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
+        else obj.__self.__provisional_id = ++this._provisional
+        this._created.add(obj)
+    }
+
+    stage_edited(obj) {
+        if (this.committed) throw new Error(`cannot add objects to a committed transaction`)
         assert(obj.__meta.mutable && !obj.__meta.obsolete)
+
         let existing = this._edited.get(obj)
         if (existing === obj) return obj
 
@@ -71,13 +83,6 @@ export class Transaction {
         return obj
     }
 
-    stage_newborn(obj) {
-        if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
-        assert(obj.is_newborn())
-        if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
-        else obj.__self.__provisional_id = ++this._provisional
-        this._created.add(obj)
-    }
 
     async save(objects = null, opts = {}) {
         /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object).
@@ -115,12 +120,21 @@ export class Transaction {
     async _save_edited(opts) {
         await this._db_update([...this._edited], opts)
         for (let obj of this._edited)
-            obj.__meta.edits.length = 0
-        this._edited.clear()
+            obj.__meta.edits.length = 0     // mark that there are no more pending edits
+
+        // the set of modified objects (_edited) is NOT cleared because the instances are still there and remain mutable,
+        // so they can receive new mutations and any future .save() need to check if they need to be pushed again to DB
     }
 
-    revert() {
+    revert() { return this._clear() }
+
+    _clear() {
         /* Remove all pending changes from this transaction. */
+
+        // we cannot revert edits in a mutable instance because they were already applied to __data, but we can mark it as obsolete
+        for (let obj of this._edited)
+            obj.__meta.obsolete = true
+
         this._edited.clear()
         this._created.clear()
     }
@@ -155,7 +169,8 @@ export class ServerTransaction extends Transaction {
     async commit(opts = {}) {
         /* Save all the remaining unsaved mutations to DB and mark this transaction as completed and closed. */
         this.committed = true
-        return this.save(null, opts)        // transfer all pending changes to the database
+        await this.save(null, opts)     // transfer all pending changes to the database
+        this._clear()                   // allow garbage collection of objects
         // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
     }
 
