@@ -106,6 +106,8 @@ export class Transaction {
 
     async _save_edited(opts) {
         await this._db_update([...this._edited], opts)
+        for (let obj of this._edited)
+            obj.__meta.edits.length = 0
         this._edited.clear()
     }
 
@@ -195,6 +197,14 @@ export class ClientTransaction extends Transaction {
     //     print(`ClientTransaction.stage_newborn()`, obj)
     //     return super.stage_newborn(obj)
     // }
+
+    async _db_insert(datas, opts) {
+        return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
+    }
+
+    async _db_update(objects, opts) {
+        return Promise.all(objects.map(obj => schemat.app.action.apply_edits(obj.id, obj.__meta.edits, opts)))
+    }
 
     commit() { throw new Error(`client-side transaction cannot be committed`) }
     capture(...records) {}      // on client, records are saved in Registry and this is enough (no further back-propagation is done)

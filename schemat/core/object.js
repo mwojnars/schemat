@@ -1269,11 +1269,11 @@ export class WebObject {
         }
     }
 
-    _save_edits({reload = true} = {}) {
+    _save_edits({reload = true, ...opts} = {}) {
         /* Send __meta.edits to the database. If reload=true, an updated copy of this object is returned. */
         let edits = this.__meta.edits           // otherwise, save updates of an existing object...
         if (!edits?.length) return this
-        let submit = schemat.app.action.apply_edits(this.id, edits)
+        let submit = schemat.app.action.apply_edits(this.id, edits, opts)
         edits.length = 0
         return reload ? submit.then(() => this.reload()) : submit
     }
