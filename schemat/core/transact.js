@@ -68,7 +68,7 @@ export class Transaction {
         assert(obj.__meta.mutable && !obj.__meta.obsolete)
 
         let existing = this._edited.get(obj)
-        if (existing === obj) return obj
+        if (existing === obj) return
 
         if (existing) {
             // it is OK to replace an existing instance if it has no unsaved edits, but then it must be marked as obsolete
@@ -79,9 +79,7 @@ export class Transaction {
         this._edited.add(obj)
     }
 
-    has(obj) {
-        return this._edited.has_exact(obj) || this._created.has(obj)
-    }
+    has(obj) { return this._edited.has_exact(obj) || this._created.has(obj) }
 
 
     async save(objects = null, opts = {}) {
@@ -111,8 +109,8 @@ export class Transaction {
 
         // replace provisional IDs with proper IDs in original objects
         ids.map((id, i) => {
-            delete created[i].__self.__provisional_id
             created[i].id = id
+            delete created[i].__self.__provisional_id
         })
         this._created.clear()
     }
