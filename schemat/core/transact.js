@@ -51,7 +51,7 @@ export class Transaction {
         if (existing?.__meta.edits.length)
             if (existing.__data) return existing
             else throw new Error(`unsaved raw edits exist for ${obj} and the pseudo-object cannot be edited further`)
-            // a pseudo-object created in stage_edits() has no __data and cannot be used for further edits
+            // pseudo-object created in stage_edits() has no __data and cannot be used for further edits
 
         if (existing) this._discard(existing)       // it is OK to replace an instance without any unsaved edits
 

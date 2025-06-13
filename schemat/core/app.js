@@ -239,8 +239,8 @@ export class Application extends WebObject {
         /* Modify an object by executing a number of edits in the DB. Each plain edit is an array: [op, ...args], where `op` is the name
            of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
          */
-        // schemat.tx.stage_edits(id, edits)
-        return schemat.db.update(id, edits, opts)
+        schemat.tx.stage_edits(id, edits)
+        // return schemat.db.update(id, edits, opts)
     }
 
     'action.delete_object'(id) {
