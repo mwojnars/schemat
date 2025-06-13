@@ -449,13 +449,13 @@ export class WebObject {
 
     /***  Instantiation  ***/
 
-    constructor(_fail = true, id = null, {mutable = false} = {}) {
+    constructor(_fail = true, id = null, {mutable = false, edits} = {}) {
         /* For internal use! Always call WebObject.new() or category.create() instead of `new WebObject()`.
            By default, the object is created immutable, and on client (where all modifications are local to the single client process)
            this gets toggled automatically on the first attempt to object modification. On the server
            (where any modifications might spoil other web requests), changing `mutable` after creation is disallowed.
          */
-        if(_fail) throw new Error('web objects should be instantiated with CLASS._create() or category.create() instead of new CLASS()')
+        if (_fail) throw new Error('web objects should be instantiated with CLASS._create() or category.create() instead of new CLASS()')
         if (id) this.id = id
         this.__hash = 1 + randint()
 
@@ -464,7 +464,7 @@ export class WebObject {
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
 
         if (!mutable) this.__meta.cache = new Map()
-        else if (!this.is_newborn()) this.__meta.edits = []
+        else if (id) this.__meta.edits = edits || []        // `edits` not needed for newborns because their full __data is transferred to DB upon save()
     }
 
     static stub(id = null, opts = {}) {
