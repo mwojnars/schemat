@@ -1249,7 +1249,6 @@ export class WebObject {
         delete this.__meta.cache
         this.__meta.mutable = true
         this.__meta.edits = []
-        schemat.tx.stage(this)
         return this
     }
 
@@ -1260,13 +1259,8 @@ export class WebObject {
         if (this.__meta.obsolete) throw new Error(`a newer mutable instance of ${this} exists and should be edited instead of this one`)
 
         let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)
-
-        // let obj = this
-        // if (!this.__meta.mutable)
-        //     if (CLIENT) this._make_mutable()            // on client, an immutable object becomes mutable on the first modification attempt
-        //     else obj = schemat.tx.get_mutable(this)     // on server, a mutable copy is created and remembered in global Transaction context for reuse
-
         let edit = [op, ...args]
+
         obj._apply_edits(edit)
         obj.__meta.edits?.push(edit)        // `edits` does not exist in newborn objects, so `edit` is not recorded then, but is still applied to __data
         return obj
