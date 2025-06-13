@@ -57,8 +57,8 @@ export class Transaction {
     }
 
     _stage_newborn(obj) {
-        if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
-        else obj.__self.__provisional_id = ++this._provisional
+        assert(!obj.__provisional_id)
+        obj.__self.__provisional_id = ++this._provisional
     }
 
     _stage_edited(obj) {
@@ -78,7 +78,7 @@ export class Transaction {
     //     /* Convert an array of raw edits into a web object that can be stored in _staging. */
     //     let obj = {}
     //     this._stage_edited(obj)
-    //     this._staging.add(obj)
+    //     return this._staging.add(obj)
     // }
 
     has(obj)        { return this._staging.has(obj) }
