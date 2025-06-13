@@ -51,7 +51,7 @@ export class Transaction {
         if (existing?.__meta.edits.length)
             if (existing.__data) return existing
             else throw new Error(`unsaved raw edits exist for ${obj} and the pseudo-object cannot be edited further`)
-            // pseudo-object created in stage_edits() has no __data and cannot be used for further edits
+            // never return pseudo-objects created in stage_edits(), they have no __data and cannot be used for further edits
 
         if (existing) this._discard(existing)       // it is OK to replace an instance without any unsaved edits
 
@@ -132,9 +132,11 @@ export class Transaction {
 
     async _save_edited(objects, opts) {
         await this._db_update(objects, opts)
-        for (let obj of objects) obj.__meta.edits.length = 0    // mark that there are no more pending edits
+        for (let obj of objects)
+            if (obj.__data) obj.__meta.edits.length = 0     // mark that there are no more pending edits
+            else this._staging.delete(obj)                  // remove permanently if a pseudo-object
 
-        // the objects are NOT removed from _staging because they still remain mutable and can receive new mutations,
+        // regular objects are NOT removed from _staging because they still remain mutable and can receive new mutations,
         // so any future .save() need to check if they shouldn't be pushed to DB again
     }
 
