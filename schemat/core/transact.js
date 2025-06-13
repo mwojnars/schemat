@@ -94,7 +94,7 @@ export class Transaction {
     has_exact(obj)  { return this._staging.has_exact(obj) }
 
 
-    async save(objects = null, opts = {}) {
+    async save(opts = {}, objects = null) {
         /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object). */
         if (!this._staging.size) return
         if (objects && typeof objects === 'object') objects = [objects]
@@ -183,8 +183,8 @@ export class ServerTransaction extends Transaction {
     async commit(opts = {}) {
         /* Save all the remaining unsaved mutations to DB and mark this transaction as completed and closed. */
         this.committed = true
-        await this.save(null, opts)     // transfer all pending changes to the database
-        this._clear()                   // allow garbage collection of objects
+        await this.save(opts)       // transfer all pending changes to the database
+        this._clear()               // allow garbage collection of objects
         // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
     }
 

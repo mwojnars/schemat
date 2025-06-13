@@ -1291,7 +1291,7 @@ export class WebObject {
            Some of the available options: {ring, reload}.
            If reload=true (default), a new instance of this object is created with new content and returned.
          */
-        await schemat.tx.save(this, opts)
+        await schemat.tx.save(opts, this)
         return reload ? this.reload() : this
     }
 
