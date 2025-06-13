@@ -378,7 +378,7 @@ export class Schemat {
     /***  Registry management  ***/
 
     register_changes(...records) {
-        this.tx?.capture(...records)
+        this.tx.capture(...records)
         records.forEach(rec => this.register_record(rec))
     }
 
