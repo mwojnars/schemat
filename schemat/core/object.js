@@ -1298,7 +1298,7 @@ export class WebObject {
 
         this._print(`save() edits`, this.__meta.edits)
         this.assert_active()
-        await schemat.tx.save(null, opts)     // TODO: .save(this, opts)
+        await schemat.tx.save(this, opts)
         return reload ? this.reload() : this
         // return this.is_newborn() ? schemat.insert(this, opts) : this._save_edits(opts)
     }

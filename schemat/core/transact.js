@@ -92,15 +92,15 @@ export class Transaction {
         // print(`tx.save() new:      `, [...this._created].map(String))
         // print(`          modified: `, [...this._edited].map(String))
 
-        await this._save_created([...this._staging], opts)
-        await this._save_edited([...this._staging], opts)
+        let created = objects.filter(obj => obj.__provisional_id)
+        let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0)
+
+        if (created.length) await this._save_created(created, opts)
+        if (edited.length)  await this._save_edited(edited, opts)
     }
 
     async _save_created(objects, opts) {
         // new objects must be inserted together due to possible cross-references
-        objects = objects.filter(obj => obj.__provisional_id)
-        if (!objects.length) return
-
         let datas = objects.map(obj => obj.__data.__getstate__())
         let ids = await this._db_insert(datas, opts)
 
@@ -116,12 +116,8 @@ export class Transaction {
     }
 
     async _save_edited(objects, opts) {
-        objects = objects.filter(obj => obj.id && obj.__meta.edits.length > 0)
-        if (!objects.length) return
-
         await this._db_update(objects, opts)
-        for (let obj of objects)
-            obj.__meta.edits.length = 0     // mark that there are no more pending edits
+        for (let obj of objects) obj.__meta.edits.length = 0    // mark that there are no more pending edits
 
         // the objects are NOT removed from _staging because they still remain mutable and can receive new mutations,
         // so any future .save() need to check if they shouldn't be pushed to DB again
