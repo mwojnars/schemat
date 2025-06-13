@@ -52,7 +52,7 @@ export async function boot_schemat(opts, callback) {
     }
 
     async function _create_boot_db() {
-        let db = BootDatabase.new()
+        let db = BootDatabase._draft()
         let rings = config.bootstrap_rings
         rings.forEach(ring => { if(ring.readonly === undefined) ring.readonly = true })
         await db.open(rings)

@@ -508,8 +508,8 @@ export class WebObject {
     }
 
     static _draft(...args) {
-        /* Draft newborn object that is properly initialized via its class's __new__(), but does NOT have any
-           __category assigned, which is incorrect in normal circumstances. This method should only be used
+        /* Create a temporary newborn object that is properly initialized via its class's __new__(), but does NOT have
+           any __category assigned, which is incorrect in normal circumstances. This method should only be used
            for internal purposes, typically during bootstrap, when category objects cannot be loaded yet
            and draft instances must be created from classes rather than categories.
          */
