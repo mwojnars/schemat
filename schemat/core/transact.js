@@ -36,9 +36,9 @@ export class Transaction {
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
 
-    constructor(light = false) {
+    constructor(lite = false) {
         if (schemat.debug) this.debug = true
-        // if (light) return
+        // if (lite) return
         // this.tid = 1 + randint(10000) /* 1 + randint() */
     }
 
@@ -202,13 +202,13 @@ export class ServerTransaction extends Transaction {
     }
 }
 
-// export class LightTransaction extends Transaction {
+// export class LiteTransaction extends Transaction {
 //     /* A transaction without TID that allows non-atomic saving of mutations (save()), but not committing the transaction as a whole.
 //        This means the transaction is always open: it can exist for a long time and be reused for new groups of mutations.
 //      */
 //
 //     constructor() { super(true) }
-//     commit() { throw new Error(`light transaction cannot be committed`) }
+//     commit() { throw new Error(`lite transaction cannot be committed`) }
 // }
 
 /**********************************************************************************************************************/
