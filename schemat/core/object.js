@@ -1273,7 +1273,7 @@ export class WebObject {
         /* Send __meta.edits to the database. If reload=true, an updated copy of this object is returned. */
         let edits = this.__meta.edits           // otherwise, save updates of an existing object...
         if (!edits?.length) return this
-        let submit = schemat.app.action.apply_edits(this.id, ...edits)
+        let submit = schemat.app.action.apply_edits(this.id, edits)
         edits.length = 0
         return reload ? submit.then(() => this.reload()) : submit
     }
@@ -1284,6 +1284,8 @@ export class WebObject {
            If reload=true (default), a new instance of this object is created with new content and returned.
          */
         this.assert_active()
+        // await schemat.tx.save(null, opts)     // TODO: .save(this, opts)
+        // return opts.reload ? this.reload() : this
         return this.is_newborn() ? schemat.insert(this, opts) : this._save_edits(opts)
     }
 
