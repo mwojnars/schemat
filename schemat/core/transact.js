@@ -53,12 +53,20 @@ export class Transaction {
 
     stage(obj) {
         /* Add a web object to the transaction. */
-        if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
+        if (this.committed) throw new Error(`cannot add objects to a committed transaction`)
         if (obj.is_newborn()) return this.stage_newborn(obj)
 
-        assert(obj.is_mutable())
+        assert(obj.__meta.mutable && !obj.__meta.obsolete)
         let existing = this._edited.get(obj)
-        if (existing && existing !== obj) throw new Error(`a different copy of the same object ${obj} is already staged`)
+        if (existing === obj) return obj
+
+        if (existing) {
+            // it is OK to replace an existing instance if it has no unsaved edits, but then it must be marked as obsolete
+            if (existing.__meta.edits.length) throw new Error(`a different copy of the same object ${obj} is already staged`)
+            existing.__meta.obsolete = true
+            this._edited.delete(existing)
+        }
+
         this._edited.add(obj)
         return obj
     }
