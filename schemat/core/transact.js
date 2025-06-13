@@ -47,7 +47,11 @@ export class Transaction {
            in the staging area, a new mutable copy is created and staged.
          */
         let existing = this._staging.get(obj)
-        return existing || this.stage(obj._get_mutable())
+        if (existing === obj) return obj
+        if (existing?.__meta.edits.length) return existing
+        if (existing) this._discard(existing)       // it is OK to replace an existing instance if it has no unsaved edits
+
+        return this.stage(obj._get_mutable())
     }
 
     stage(obj) {
@@ -68,7 +72,6 @@ export class Transaction {
         let existing = this._staging.get(obj)
         if (existing === obj) return obj
         if (existing)
-            // it is OK to replace an existing instance if it has no unsaved edits, but then it must be marked as obsolete
             if (existing.__meta.edits.length) throw new Error(`a different copy of the same object ${obj} is already staged`)
             else this._discard(existing)
 
