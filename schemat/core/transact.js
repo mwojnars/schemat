@@ -52,33 +52,33 @@ export class Transaction {
     stage(obj) {
         /* Add a web object to the transaction. */
         if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
-        obj.is_newborn() ? this._stage_newborn(obj) : this._stage_edited(obj)
-        return this._staging.add(obj)
+        return obj.is_newborn() ? this._stage_newborn(obj) : this._stage_edited(obj)
     }
 
     _stage_newborn(obj) {
         assert(!obj.__provisional_id)
         obj.__self.__provisional_id = ++this._provisional
+        return this._staging.add(obj)
     }
 
     _stage_edited(obj) {
         assert(obj.__meta.mutable && !obj.__meta.obsolete)
 
         let existing = this._staging.get(obj)
-        if (existing === obj) return
+        if (existing === obj) return obj
         if (existing) {
             // it is OK to replace an existing instance if it has no unsaved edits, but then it must be marked as obsolete
             if (existing.__meta.edits.length) throw new Error(`a different copy of the same object ${obj} is already staged`)
             existing.__meta.obsolete = true
             this._staging.delete(existing)
         }
+        return this._staging.add(obj)
     }
 
     // stage_edits(id, edits) {
     //     /* Convert an array of raw edits into a web object that can be stored in _staging. */
     //     let obj = {}
-    //     this._stage_edited(obj)
-    //     return this._staging.add(obj)
+    //     return this._stage_edited(obj)
     // }
 
     has(obj)        { return this._staging.has(obj) }
@@ -95,15 +95,15 @@ export class Transaction {
             for (let obj of objects)        // every object must have been staged already
                 if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
 
-        let created = objects.filter(obj => obj.__provisional_id)
+        let newborn = objects.filter(obj => obj.__provisional_id)
         let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0)
 
-        if (created.length) await this._save_created(created, opts)
+        if (newborn.length) await this._save_newborn(newborn, opts)
         if (edited.length)  await this._save_edited(edited, opts)
     }
 
-    async _save_created(objects, opts) {
-        // new objects must be inserted together due to possible cross-references
+    async _save_newborn(objects, opts) {
+        // new objects must be inserted all together due to possible cross-references
         let datas = objects.map(obj => obj.__data.__getstate__())
         let ids = await this._db_insert(datas, opts)
 
