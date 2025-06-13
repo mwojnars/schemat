@@ -74,13 +74,6 @@ export class Category extends WebObject {
         return this.__child_class._new([this], ...args)
     }
 
-    // async insert(...args) {
-    //     /* Create a new object in this category, execute its __new__(...args) and save it to DB.
-    //        Return the reloaded object in the exact form as written to the DB (after validation, imputation etc.).
-    //      */
-    //     return this.new(...args).save()
-    // }
-
     async list_objects(opts = {}) {
         /* Return an array of all objects in this category, possibly truncated or re-ordered according to `opts`. */
         return this.GET.list_objects(opts)

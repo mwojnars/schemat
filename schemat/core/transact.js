@@ -124,7 +124,7 @@ export class Transaction {
             obj.__meta.edits.length = 0     // mark that there are no more pending edits
 
         // the set of modified objects (_edited) is NOT cleared because the instances are still there and remain mutable,
-        // so they can receive new mutations and any future .save() need to check if they need to be pushed again to DB
+        // so they can receive new mutations and any future .save() need to check if they shall be pushed again to DB
     }
 
     revert() { return this._clear() }
@@ -211,16 +211,6 @@ export class ServerTransaction extends Transaction {
 
 export class ClientTransaction extends Transaction {
     /* Client-side transaction object. No TID. No commits. Exists permanently. */
-
-    // stage(obj) {
-    //     print(`ClientTransaction.stage()`, obj)
-    //     return super.stage(obj)
-    // }
-    //
-    // stage_newborn(obj) {
-    //     print(`ClientTransaction.stage_newborn()`, obj)
-    //     return super.stage_newborn(obj)
-    // }
 
     async _db_insert(datas, opts) {
         print(`ClientTransaction._db_insert() #objects = ${datas.length}`)
