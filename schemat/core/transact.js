@@ -75,12 +75,6 @@ export class Transaction {
         return this._staging.add(obj)
     }
 
-    _discard(obj) {
-        /* Remove `obj` from staging after all mutations have been pushed to DB. */
-        obj.__meta.obsolete = true
-        this._staging.delete(obj)
-    }
-
     stage_edits(id, edits) {
         /* Convert an array of raw edits into a web object that can be stored in _staging. */
         let obj = WebObject.pseudo(id, edits)
@@ -141,9 +135,13 @@ export class Transaction {
         /* Remove all pending changes from this transaction. We cannot revert edits in a mutable instance because
            they were already applied to __data, but we can mark it as obsolete.
          */
-        for (let obj of this._staging)
-            obj.__meta.obsolete = true
-        this._staging.clear()
+        for (let obj of this._staging) this._discard(obj)
+    }
+
+    _discard(obj) {
+        /* Remove `obj` from staging, usually after all mutations have been pushed to DB and the object is replaced with a newer copy. */
+        obj.__meta.obsolete = true
+        this._staging.delete(obj)
     }
 
     capture(...records) {
