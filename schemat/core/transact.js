@@ -79,7 +79,9 @@ export class Transaction {
     }
 
     stage_edits(id, edits) {
-        /* Convert an array of raw edits into a web object that can be stored in _staging. */
+        /* Convert an array of raw edits into a web object, so it can be stored in _staging. Importantly, the object
+           has no __data (pseudo-object), so it does NOT require data loading from DB ahead of save().
+         */
         let obj = WebObject.pseudo(id, edits)
         return this._stage_edited(obj)
     }

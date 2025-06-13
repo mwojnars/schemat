@@ -478,13 +478,20 @@ export class WebObject {
         return self.__proxy = Intercept.wrap(self)
     }
 
+    static pseudo(id, edits) {
+        /* Create a pseudo-object: an object with ID and __meta.edits, but no __data; it serves as a temporary wrapper for `edits`
+           within a transaction before they get written to DB. Importantly, a pseudo-object is NOT loaded, although it is marked mutable.
+         */
+        return this.stub(id, {mutable: true, edits})
+    }
+
     static newborn(data = null, {draft, ...opts} = {}) {
         /* Create a newborn object (not yet in DB): a mutable object with __data but no ID.
            Optionally, initialize its __data with `data`, but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
         obj.__data = new Catalog(data)
         if (!draft)
-            if (schemat.tx) schemat.tx.stage(obj)       // schemat.tx is missing during boot
+            if (schemat.tx) schemat.tx.stage(obj)       // schemat.tx is missing during boot; that's why draft objects can't be staged
             else throw new Error(`cannot create a newborn object when outside a transaction`)
         return obj
     }
