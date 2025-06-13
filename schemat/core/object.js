@@ -1227,8 +1227,8 @@ export class WebObject {
     // }
 
     _get_mutable({activate = true, ...opts} = {}) {
-        /* Create a mutable instance of this (loaded) web object. The object is created synchronously by cloning
-           this.__data (on server), or by marking this instance as mutable (on client).
+        /* Create synchronously a mutable instance of itself: by cloning this.__data (on server), or by marking itself
+           as mutable (on client). The object must be already fully loaded.
            If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
          */
         if (this.__meta.obsolete) throw new Error(`this mutable instance of ${this} is obsolete and should be replaced`)
@@ -1259,11 +1259,12 @@ export class WebObject {
          */
         if (this.__meta.obsolete) throw new Error(`a newer mutable instance of ${this} exists and should be edited instead of this one`)
 
-        // let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)
-        let obj = this
-        if (!this.__meta.mutable)
-            if (CLIENT) this._make_mutable()            // on client, an immutable object becomes mutable on the first modification attempt
-            else obj = schemat.tx.get_mutable(this)     // on server, a mutable copy is created and remembered in global Transaction context for reuse
+        let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)
+
+        // let obj = this
+        // if (!this.__meta.mutable)
+        //     if (CLIENT) this._make_mutable()            // on client, an immutable object becomes mutable on the first modification attempt
+        //     else obj = schemat.tx.get_mutable(this)     // on server, a mutable copy is created and remembered in global Transaction context for reuse
 
         let edit = [op, ...args]
         obj._apply_edits(edit)
