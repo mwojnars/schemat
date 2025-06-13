@@ -1,5 +1,5 @@
 import {print, assert, splitLast} from "../common/utils.js";
-import {Objects} from "../common/structs.js";
+import {RecentObjects} from "../common/structs.js";
 
 
 export class Request {
@@ -86,7 +86,7 @@ export class RequestContext {
         let app = schemat.app
         let target = request.target
 
-        let items = new Objects()
+        let items = new RecentObjects()
         let queue = [target, app, ...app.global?.values() || [], ...objects].filter(Boolean)
         
         // extend the `items` set with all objects that are referenced from the `target` and `app` via __category, __extend or __container

@@ -129,15 +129,13 @@ export class DependenciesStack extends Stack {
 /**********************************************************************************************************************/
 
 export class Objects {
-    /* A Set of objects deduplicated by object.id, serialized as a sorted array of IDs (todo).
-       When an existing ID is to be overwritten, the `__meta.loaded_at` property is compared and the most recent object is kept.
-     */
+    /* A Set of web objects deduplicated by object.id. */
+
     objects = new Map()
 
     add(obj) {
-        if (obj.id === undefined) throw new Error("missing 'id' for the object to be added to the Objects")
-        if (!this.hasNewer(obj))
-            this.objects.set(obj.id, obj)
+        if (obj.id === undefined) throw new Error("missing 'id' for an object being added to Objects")
+        this.objects.set(obj.id, obj)
         return this
     }
 
@@ -149,12 +147,6 @@ export class Objects {
     values()        { return this.objects.values() }
     clear()         { this.objects.clear() }
 
-    hasNewer(obj) {
-        /* True if the set already contains an object with the same ID and a newer or equal `__meta.loaded_at`. */
-        let prev = this.objects.get(obj.id)
-        return prev && (obj.__meta.loaded_at || 0) <= (prev.__meta.loaded_at || 0)
-    }
-
     get size()      { return this.objects.size }
     get length()    { return this.objects.size }
 
@@ -164,6 +156,22 @@ export class Objects {
         this.objects.forEach((value) => {
             callbackFn.call(thisArg, value, value, this)
         })
+    }
+}
+
+export class RecentObjects extends Objects {
+    /* Like Objects, but when an existing ID is to be overwritten, `__meta.loaded_at` is compared and the most recent object is kept. */
+
+    add(obj) {
+        if (obj.id === undefined) throw new Error("missing 'id' for an object being added to RecentObjects")
+        if (!this.hasNewer(obj)) this.objects.set(obj.id, obj)
+        return this
+    }
+
+    hasNewer(obj) {
+        /* True if the set already contains an object with the same ID and a newer or equal `__meta.loaded_at`. */
+        let prev = this.objects.get(obj.id)
+        return prev && (obj.__meta.loaded_at || 0) <= (prev.__meta.loaded_at || 0)
     }
 }
 
