@@ -1245,13 +1245,14 @@ export class WebObject {
         delete this.__meta.cache
         this.__meta.edits = []
         this.__meta.mutable = true
-        // schemat.tx.stage(this)   (TODO)
+        schemat.tx.stage(this)
     }
 
     _make_edit(op, args) {
         /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save().
            Return `this`, or whatever the mutable version of this object is returned from the current transaction.
          */
+        // let obj = this.__meta.mutating ? this : schemat.tx.get_mutable(this)
         let obj = this
         if (!this.__meta.mutable)
             if (CLIENT) this._make_mutable()            // on client, an immutable object becomes mutable on the first modification attempt
@@ -1288,11 +1289,11 @@ export class WebObject {
            Some of the available options: {ring, reload}.
            If reload=true (default), a new instance of this object is created with new content and returned.
          */
-        // this._print(`save() edits`, this.__meta.edits)
+        this._print(`save() edits`, this.__meta.edits)
         this.assert_active()
-        // await schemat.tx.save(null, opts)     // TODO: .save(this, opts)
-        // return reload ? this.reload() : this
-        return this.is_newborn() ? schemat.insert(this, opts) : this._save_edits(opts)
+        await schemat.tx.save(null, opts)     // TODO: .save(this, opts)
+        return reload ? this.reload() : this
+        // return this.is_newborn() ? schemat.insert(this, opts) : this._save_edits(opts)
     }
 
 

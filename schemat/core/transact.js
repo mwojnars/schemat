@@ -199,10 +199,12 @@ export class ClientTransaction extends Transaction {
     // }
 
     async _db_insert(datas, opts) {
+        print(`ClientTransaction._db_insert() #objects = ${datas.length}`)
         return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
     }
 
     async _db_update(objects, opts) {
+        print(`ClientTransaction._db_update() #objects = ${objects.length}`)
         return Promise.all(objects.map(obj => schemat.app.action.apply_edits(obj.id, obj.__meta.edits, opts)))
     }
 
