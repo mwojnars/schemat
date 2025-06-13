@@ -533,7 +533,11 @@ export class WebObject {
 
     toString() { return this.__label }
 
-    _print(...args) { console.log(`${schemat.node?.id}/#${schemat.kernel?.worker_id} ${this.__label}`, ...args) }
+    _print(...args) {
+        let msg = SERVER ? `${schemat.node?.id}/#${schemat.kernel?.worker_id} ` : ''
+        msg += this.__label
+        console.log(msg, ...args)
+    }
 
     _print_stack(...args) {
         /* Print the current stack trace with detailed header information: node ID, worker process, current object. */
@@ -541,7 +545,8 @@ export class WebObject {
         let lines  = stack.split('\n').slice(2)
         let caller = lines[0].trim()                // caller of the current method
         let fun    = caller.match(/at (\S+)/)[1]    // function name of the caller
-        let title  = `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${this.__label}${fun ? '.'+fun+'()' : ''} context ${schemat.db}`
+        let label  = `${this.__label}${fun ? '.'+fun+'()' : ''}`
+        let title  = SERVER ? `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${label} context ${schemat.db}` : label
         console.error(title, ...args)
         console.error(lines.join('\n'))
     }
@@ -1278,14 +1283,15 @@ export class WebObject {
         return reload ? submit.then(() => this.reload()) : submit
     }
 
-    async save(opts = {}) {
+    async save({reload = true, ...opts} = {}) {
         /* Send __data (for a newly created object) or __meta.edits (for an existing object) to DB.
            Some of the available options: {ring, reload}.
            If reload=true (default), a new instance of this object is created with new content and returned.
          */
+        // this._print(`save() edits`, this.__meta.edits)
         this.assert_active()
         // await schemat.tx.save(null, opts)     // TODO: .save(this, opts)
-        // return opts.reload ? this.reload() : this
+        // return reload ? this.reload() : this
         return this.is_newborn() ? schemat.insert(this, opts) : this._save_edits(opts)
     }
 
