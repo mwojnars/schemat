@@ -48,8 +48,12 @@ export class Transaction {
          */
         let existing = this._staging.get(obj)
         if (existing === obj) return obj
-        if (existing?.__meta.edits.length) return existing
-        if (existing) this._discard(existing)       // it is OK to replace an existing instance if it has no unsaved edits
+        if (existing?.__meta.edits.length)
+            if (existing.__data) return existing
+            else throw new Error(`unsaved raw edits exist for ${obj} and the pseudo-object cannot be edited further`)
+            // a pseudo-object created in stage_edits() has no __data and cannot be used for further edits
+
+        if (existing) this._discard(existing)       // it is OK to replace an instance without any unsaved edits
 
         return this.stage(obj._get_mutable())
     }
