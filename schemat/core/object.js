@@ -1293,6 +1293,9 @@ export class WebObject {
            Some of the available options: {ring, reload}.
            If reload=true (default), a new instance of this object is created with new content and returned.
          */
+        assert(this.__meta.mutable)
+        assert(schemat.tx.has(this))
+
         this._print(`save() edits`, this.__meta.edits)
         this.assert_active()
         await schemat.tx.save(null, opts)     // TODO: .save(this, opts)

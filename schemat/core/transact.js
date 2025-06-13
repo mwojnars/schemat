@@ -84,6 +84,10 @@ export class Transaction {
         return obj
     }
 
+    has(obj) {
+        return this._edited.has(obj) || this._created.has(obj)
+    }
+
 
     async save(objects = null, opts = {}) {
         /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object).
