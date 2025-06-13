@@ -1230,7 +1230,9 @@ export class WebObject {
         /* Create a fully loaded, mutable instance of this (loaded) web object. The object is created synchronously by cloning this.__data.
            If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
          */
-        if (this.is_mutable()) return this
+        if (this.__meta.obsolete) throw new Error(`this mutable instance of ${this} is obsolete and should be replaced`)
+        if (this.__meta.mutable) return this
+
         if (!this.is_loaded()) throw new Error('a mutable copy can only be created from a fully-loaded immutable object')
 
         let obj = WebObject.stub(this.id, {...opts, mutable: true})
