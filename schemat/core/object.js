@@ -483,7 +483,11 @@ export class WebObject {
            Optionally, initialize its __data with `data`, but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
         obj.__data = new Catalog(data)
+
+        // if (schemat.tx) schemat.tx.stage_newborn(obj)
+        // else print(`newborn() missing tx for`, this)
         schemat.tx?.stage_newborn(obj)      // schemat.tx is missing during boot
+
         return obj
     }
 
@@ -507,11 +511,11 @@ export class WebObject {
         // return ret instanceof Promise ? ret.then(() => obj) : obj
     }
 
-    static _draft(...args) {
-        /* Create a temporary newborn object that is properly initialized via its class's __new__(), but does NOT have
-           any __category assigned, which is incorrect in normal circumstances. This method should only be used
-           for internal purposes, typically during bootstrap, when category objects cannot be loaded yet
-           and draft instances must be created from classes rather than categories.
+    static draft(...args) {
+        /* Create a temporary newborn object that is properly initialized via its class's __new__(), but is NOT intended
+           for insertion to DB (should not be registered in transaction) and does NOT have any __category assigned,
+           which is incorrect in normal circumstances. This method should only be used for internal purposes, typically
+           during bootstrap, when category objects cannot be loaded yet and draft instances must be created from classes not categories.
          */
         return this._new([], args)
     }
