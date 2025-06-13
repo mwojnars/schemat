@@ -478,25 +478,21 @@ export class WebObject {
         return self.__proxy = Intercept.wrap(self)
     }
 
-    static newborn(data = null, opts = {}) {
+    static newborn(data = null, {draft, ...opts} = {}) {
         /* Create a newborn object (not yet in DB): a mutable object with __data but no ID.
            Optionally, initialize its __data with `data`, but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
         obj.__data = new Catalog(data)
-
-        // if (schemat.tx) schemat.tx.stage_newborn(obj)
-        // else print(`newborn() missing tx for`, this)
-        schemat.tx?.stage_newborn(obj)      // schemat.tx is missing during boot
-
+        if (!draft) schemat.tx.stage_newborn(obj)       // schemat.tx is missing during boot
         return obj
     }
 
-    static _new(categories = [], args) {
+    static _new(categories = [], args, opts) {
         /* Create a newborn object and execute its __new__(...args) to perform caller-side initialization.
            Return the object. If __new__() returns a Promise, this method returns a Promise too.
            `categories` (if any) are category objects/IDs to be written to the object's __category property.
          */
-        let obj = this.newborn()
+        let obj = this.newborn(null, opts)
         categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat) || []
         
         let set_categories = () => {
@@ -517,7 +513,7 @@ export class WebObject {
            which is incorrect in normal circumstances. This method should only be used for internal purposes, typically
            during bootstrap, when category objects cannot be loaded yet and draft instances must be created from classes not categories.
          */
-        return this._new([], args)
+        return this._new([], args, {draft: true})
     }
 
     static new(...args) {
