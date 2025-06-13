@@ -63,6 +63,7 @@ export class Transaction {
         if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
         else obj.__self.__provisional_id = ++this._provisional
         this._created.add(obj)
+        return obj
     }
 
     stage_edited(obj) {

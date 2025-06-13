@@ -1227,13 +1227,15 @@ export class WebObject {
     // }
 
     _get_mutable({activate = true, ...opts} = {}) {
-        /* Create a fully loaded, mutable instance of this (loaded) web object. The object is created synchronously by cloning this.__data.
+        /* Create a mutable instance of this (loaded) web object. The object is created synchronously by cloning
+           this.__data (on server), or by marking this instance as mutable (on client).
            If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
          */
         if (this.__meta.obsolete) throw new Error(`this mutable instance of ${this} is obsolete and should be replaced`)
         if (this.__meta.mutable) return this
 
-        if (!this.is_loaded()) throw new Error('a mutable copy can only be created from a fully-loaded immutable object')
+        if (!this.is_loaded()) throw new Error('only a fully loaded instance of web object can be converted to a mutable copy')
+        if (CLIENT) return this._make_mutable()
 
         let obj = WebObject.stub(this.id, {...opts, mutable: true})
         obj._set_data(this.__data.clone(), this.__meta.loaded_at)
@@ -1244,18 +1246,18 @@ export class WebObject {
 
     _make_mutable() {
         /* Make itself mutable. This removes the property cache, so read access becomes less efficient. Only allowed on client. */
-        assert(CLIENT && !this.__meta.mutable)
         delete this.__meta.cache
-        this.__meta.edits = []
         this.__meta.mutable = true
+        this.__meta.edits = []
         schemat.tx.stage(this)
+        return this
     }
 
     _make_edit(op, args) {
         /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save().
            Return `this`, or whatever the mutable version of this object is returned from the current transaction.
          */
-        if (this.__meta.obsolete) throw new Error(`a newer mutable instance of ${this} exists and should be used for new edits instead of this one`)
+        if (this.__meta.obsolete) throw new Error(`a newer mutable instance of ${this} exists and should be edited instead of this one`)
 
         // let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)
         let obj = this
