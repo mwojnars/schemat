@@ -483,7 +483,9 @@ export class WebObject {
            Optionally, initialize its __data with `data`, but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
         obj.__data = new Catalog(data)
-        if (!draft) schemat.tx.stage_newborn(obj)       // schemat.tx is missing during boot
+        if (!draft)
+            if (schemat.tx) schemat.tx.stage_newborn(obj)       // schemat.tx is missing during boot
+            else throw new Error(`cannot create a newborn object when outside a transaction`)
         return obj
     }
 
