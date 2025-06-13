@@ -133,30 +133,30 @@ export class Objects {
        Deleting an object removes the corresponding ID, even if a different instance was stored under this ID.
      */
 
-    objects = new Map()
+    _map = new Map()
 
     add(obj) {
         if (obj.id === undefined) throw new Error("missing 'id' for an object being added to Objects")
-        this.objects.set(obj.id, obj)
+        this._map.set(obj.id, obj)
         return this
     }
 
-    delete(obj)     { return this.objects.delete(obj.id) }
-    get(obj)        { return this.objects.get(obj.id) }     // another copy of the same web object may exist
-    has(obj)        { return this.objects.has(obj.id) }
-    has_exact(obj)  { return this.objects.get(obj.id) === obj }
-    ids()           { return this.objects.keys() }
-    keys()          { return this.objects.values() }        // for compatibility with Set interface
-    values()        { return this.objects.values() }
-    clear()         { this.objects.clear() }
+    delete(obj)     { return this._map.delete(obj.id) }
+    get(obj)        { return this._map.get(obj.id) }    // may return a different instance of the same web object, not `obj`
+    has(obj)        { return this._map.has(obj.id) }
+    has_exact(obj)  { return this._map.get(obj.id) === obj }
+    ids()           { return this._map.keys() }
+    keys()          { return this._map.values() }       // for compatibility with Set interface
+    values()        { return this._map.values() }
+    clear()         { this._map.clear() }
 
-    get size()      { return this.objects.size }
-    get length()    { return this.objects.size }
+    get size()      { return this._map.size }
+    get length()    { return this._map.size }
 
-    [Symbol.iterator]() { return this.objects.values() }
+    [Symbol.iterator]() { return this._map.values() }
 
     // forEach(callbackFn, thisArg) {
-    //     this.objects.forEach((value) => {
+    //     this._map.forEach((value) => {
     //         callbackFn.call(thisArg, value, value, this)
     //     })
     // }
@@ -167,13 +167,13 @@ export class RecentObjects extends Objects {
 
     add(obj) {
         if (obj.id === undefined) throw new Error("missing 'id' for an object being added to RecentObjects")
-        if (!this.hasNewer(obj)) this.objects.set(obj.id, obj)
+        if (!this.hasNewer(obj)) this._map.set(obj.id, obj)
         return this
     }
 
     hasNewer(obj) {
         /* True if the set already contains an object with the same ID and a newer or equal `__meta.loaded_at`. */
-        let prev = this.objects.get(obj.id)
+        let prev = this._map.get(obj.id)
         return prev && (obj.__meta.loaded_at || 0) <= (prev.__meta.loaded_at || 0)
     }
 }
