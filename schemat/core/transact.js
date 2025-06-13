@@ -81,25 +81,24 @@ export class Transaction {
 
     async save(objects = null, opts = {}) {
         /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object). */
-        assert(!objects)
         if (!this._staging.size) return
-        // if (objects && typeof objects === 'object') objects = [objects]
-        // if (Array.isArray(objects)) {
-        //     for (let obj of objects)        // stage the unstaged objects
-        //         if (!this._edited.has(obj) && !this._created.has(obj)) this.stage(obj)
-        // }
-        // else objects = [...this._edited, ...this._created]
+        if (objects && typeof objects === 'object') objects = [objects]
+
+        if (!objects) objects = [...this._staging]
+        else
+            for (let obj of objects)        // every object must have been staged already
+                if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
 
         // print(`tx.save() new:      `, [...this._created].map(String))
         // print(`          modified: `, [...this._edited].map(String))
 
-        await this._save_created(opts)
-        await this._save_edited(opts)
+        await this._save_created([...this._staging], opts)
+        await this._save_edited([...this._staging], opts)
     }
 
-    async _save_created(opts) {
+    async _save_created(objects, opts) {
         // new objects must be inserted together due to possible cross-references
-        let objects = [...this._staging].filter(obj => obj.__provisional_id)
+        objects = objects.filter(obj => obj.__provisional_id)
         if (!objects.length) return
 
         let datas = objects.map(obj => obj.__data.__getstate__())
@@ -112,12 +111,12 @@ export class Transaction {
             obj.id = id
             delete obj.__self.__provisional_id
             // assert(!this._staging.has(obj))
-            // this._staging.add(obj)   // reinsert the object into staging under its proper ID, as it still can undergo mutations
+            // this._staging.add(obj)   // reinsert the object into staging under its proper ID, as it still can receive mutations
         })
     }
 
-    async _save_edited(opts) {
-        let objects = [...this._staging].filter(obj => obj.id && obj.__meta.edits.length > 0)
+    async _save_edited(objects, opts) {
+        objects = objects.filter(obj => obj.id && obj.__meta.edits.length > 0)
         if (!objects.length) return
 
         await this._db_update(objects, opts)
@@ -125,7 +124,7 @@ export class Transaction {
             obj.__meta.edits.length = 0     // mark that there are no more pending edits
 
         // the objects are NOT removed from _staging because they still remain mutable and can receive new mutations,
-        // so any future .save() need to check if they shouldn't be pushed again to DB
+        // so any future .save() need to check if they shouldn't be pushed to DB again
     }
 
     revert() { return this._clear() }
