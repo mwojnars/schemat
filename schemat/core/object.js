@@ -464,7 +464,7 @@ export class WebObject {
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
 
         if (!mutable) this.__meta.cache = new Map()
-        if (mutable && !this.is_newborn()) this.__meta.edits = []
+        else if (!this.is_newborn()) this.__meta.edits = []
     }
 
     static stub(id = null, opts = {}) {
@@ -1234,9 +1234,11 @@ export class WebObject {
            If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
          */
         if (this.__meta.obsolete) throw new Error(`this mutable instance of ${this} is obsolete (was replaced with a newer one) and should not be used`)
-        if (this.__meta.mutable) return this
-
-        if (!this.is_loaded()) throw new Error('only a fully loaded instance of web object can be converted to a mutable copy')
+        if (this.__meta.mutable) {
+            if (this.is_newborn()) this.__meta.edits ??= []     // newborn objects rarely receive mutations after .save(), that's why their .edits array is not initialized
+            return this
+        }
+        if (!this.is_loaded()) throw new Error('only a fully loaded object can be converted to a mutable instance')
         if (CLIENT) return this._make_mutable()
 
         let obj = WebObject.stub(this.id, {...opts, mutable: true})
