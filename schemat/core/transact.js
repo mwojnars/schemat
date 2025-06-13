@@ -111,7 +111,7 @@ export class Transaction {
             obj.id = id
             delete obj.__self.__provisional_id
             // assert(!this._staging.has(obj))
-            // this._staging.add(obj)   // reinsert the object into staging under its proper ID, as it still can receive mutations
+            // this._staging.add(obj)   // re-stage the object under its proper ID, as it can still receive mutations
         })
     }
 

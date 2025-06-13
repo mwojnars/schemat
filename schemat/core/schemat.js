@@ -425,58 +425,6 @@ export class Schemat {
     }
 
 
-    /***  Object modifications (CRUD)  ***/
-
-    // async insert(objects, opts_ = {}) {
-    //     /* Insert 1+ related objects all at once to the same DB block. The objects may reference each other.
-    //        The links will be properly replaced in the DB with newly assigned object IDs even if the references are cyclic.
-    //        All the `objects` must be newborns (no ID assigned yet). After this call completes, the objects & references
-    //        get their id values assigned. The returned array either contains the original `objects`,
-    //        or their new instances in the same order (reloaded objects), depending on the `reload` flag.
-    //        `objects` can be either an Array of web objects, or a single web object. In the latter case, this single
-    //        object (original or reloaded) is returned, not an array.
-    //      */
-    //     // print.stack()
-    //     let batch = (objects instanceof Array)
-    //     if (!batch) objects = [objects]
-    //
-    //     objects.forEach(obj => {if (!obj.is_newborn()) throw new Error(`object ${obj} already has an ID, cannot be inserted to DB again`)})
-    //
-    //     let size = objects.length
-    //     let unique = new Set(objects)
-    //     if (size !== unique.size) throw new Error(`same object passed twice to insert()`)
-    //
-    //     let queue = [...objects]
-    //
-    //     // find all references to newly created objects not yet in `objects`
-    //     while (queue.length) {
-    //         let obj = queue.pop()
-    //         obj.__references.forEach(ref => {
-    //             if (ref.is_newborn() && !unique.has(ref)) {unique.add(ref); queue.push(ref); objects.push(ref)}
-    //         })
-    //     }
-    //
-    //     // check that very object has a provisional ID
-    //     objects.forEach(obj => {if (!obj.__provisional_id) throw new Error(`missing provisional ID`)})
-    //
-    //     // // set provisional IDs so that cross-references to these objects are properly resolved in the DB when creating data records
-    //     // objects.forEach((obj, i) => obj.__self.__provisional_id = i+1)      // 1, 2, 3, ...
-    //
-    //     let {reload = true, ...opts} = opts_
-    //     let data = objects.map(obj => obj.__data.__getstate__())
-    //     let ids = (await this.app.action.insert_objects(data, opts)).map(obj => obj.id)
-    //     ids.map((id, i) => {
-    //         delete objects[i].__self.__provisional_id   // replace provisional IDs with final IDs
-    //         objects[i].id = id
-    //     })
-    //     objects = objects.slice(0, size)                // return only the original list of objects, not the whole array of references
-    //     if (reload) {
-    //         objects = objects.map(obj => obj.reload())
-    //         if (batch) return Promise.all(objects)
-    //     }
-    //     return batch ? objects : objects[0]
-    // }
-
     /* Proxy object that handles both direct calls (remote(code)) and property access (remote.XYZ).
        Direct calls execute code on the server via eval, while property access forwards to app.action.XYZ().
      */
