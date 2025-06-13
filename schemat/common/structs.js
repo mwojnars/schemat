@@ -135,7 +135,7 @@ export class Objects {
      */
     _map = new Map()
 
-    add(obj)        { this._map.set(obj.__index_id, obj); return this }
+    add(obj)        { this._map.set(obj.__index_id, obj); return obj }  // return value is different than in Set
     delete(obj)     { return this._map.delete(obj.__index_id) }
     get(obj)        { return this._map.get(obj.__index_id) }    // may return a different instance of the same web object, not `obj`
     has(obj)        { return this._map.has(obj.__index_id) }

@@ -53,8 +53,7 @@ export class Transaction {
         /* Add a web object to the transaction. */
         if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
         obj.is_newborn() ? this._stage_newborn(obj) : this._stage_edited(obj)
-        this._staging.add(obj)
-        return obj
+        return this._staging.add(obj)
     }
 
     _stage_newborn(obj) {
@@ -74,6 +73,13 @@ export class Transaction {
             this._staging.delete(existing)
         }
     }
+
+    // stage_edits(id, edits) {
+    //     /* Convert an array of raw edits into a web object that can be stored in _staging. */
+    //     let obj = {}
+    //     this._stage_edited(obj)
+    //     this._staging.add(obj)
+    // }
 
     has(obj)        { return this._staging.has(obj) }
     has_exact(obj)  { return this._staging.has_exact(obj) }
