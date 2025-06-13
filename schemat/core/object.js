@@ -393,14 +393,15 @@ export class WebObject {
     __self = this   // for direct system-level access to POJO special attributes after proxying
 
     __meta = {      // special properties grouped here to avoid cluttering the object's interface ...
-        // mutable          if true, this object can be edited; the edits are accumulated and committed to DB using .save(); this prop CANNOT be changed after construction; editable objects are excluded from server-side caching
         // active           set to true after full initialization procedure was completed; implies that full __data is present (newborn or loaded)
         // loading          promise created at the start of _load() and removed at the end; indicates that the object is currently loading its data from DB
         // loaded_at        timestamp [ms] when the full loading of this object was completed; to detect the most recently loaded copy of the same object
         // expire_at        timestamp [ms] when this object should be evicted from cache; 0 = immediate (i.e., on the next cache purge)
         // accessed_at      (NOT USED) the most recent timestamp [ms] when this object (if fully loaded) was requested from the Registry via schemat.get_object/get_loaded() or .refresh()
-        // cache:           Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
-        // edits:           array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
+        // mutable          if true, this object can be edited; the edits are accumulated and committed to DB using .save(); this prop CANNOT be changed after construction; editable objects are excluded from server-side caching
+        // obsolete         true if this mutable instance got replaced in the transaction's staging area by another one, so doing mutations on it is no longer allowed; max ONE instance per ID can accept mutations at a given time
+        // cache            Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
+        // edits            array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
     }
 
     static _cachable_getters        // Set of names of getters of the WebObject class or its subclass, for caching in Intercept
