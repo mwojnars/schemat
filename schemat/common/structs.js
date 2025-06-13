@@ -129,24 +129,19 @@ export class DependenciesStack extends Stack {
 /**********************************************************************************************************************/
 
 export class Objects {
-    /* A Set of web objects deduplicated by object.id. Adding another instance with the same ID removes the previous one.
+    /* A Set of web objects deduplicated by object.__index_id (both persisted and newborn objects supported).
+       Adding another instance with the same ID (or provisional ID) removes the previous one.
        Deleting an object removes the corresponding ID, even if a different instance was stored under this ID.
      */
-
     _map = new Map()
 
-    add(obj) {
-        if (obj.id === undefined) throw new Error("missing 'id' for an object being added to Objects")
-        this._map.set(obj.id, obj)
-        return this
-    }
-
-    delete(obj)     { return this._map.delete(obj.id) }
-    get(obj)        { return this._map.get(obj.id) }    // may return a different instance of the same web object, not `obj`
-    has(obj)        { return this._map.has(obj.id) }
-    has_exact(obj)  { return this._map.get(obj.id) === obj }
+    add(obj)        { this._map.set(obj.__index_id, obj); return this }
+    delete(obj)     { return this._map.delete(obj.__index_id) }
+    get(obj)        { return this._map.get(obj.__index_id) }    // may return a different instance of the same web object, not `obj`
+    has(obj)        { return this._map.has(obj.__index_id) }
+    has_exact(obj)  { return this._map.get(obj.__index_id) === obj }
     ids()           { return this._map.keys() }
-    keys()          { return this._map.values() }       // for compatibility with Set interface
+    keys()          { return this._map.values() }               // for compatibility with Set interface
     values()        { return this._map.values() }
     clear()         { this._map.clear() }
 
@@ -154,16 +149,12 @@ export class Objects {
     get length()    { return this._map.size }
 
     [Symbol.iterator]() { return this._map.values() }
-
-    // forEach(callbackFn, thisArg) {
-    //     this._map.forEach((value) => {
-    //         callbackFn.call(thisArg, value, value, this)
-    //     })
-    // }
 }
 
 export class RecentObjects extends Objects {
-    /* Like Objects, but when an existing ID is to be overwritten, `__meta.loaded_at` is compared and the more recent instance is kept. */
+    /* Like Objects, but when an existing ID is to be overwritten, `__meta.loaded_at` is compared and the more recent instance is kept.
+       Supports only persisted objects (with proper ID), no newborns.
+     */
 
     add(obj) {
         if (obj.id === undefined) throw new Error("missing 'id' for an object being added to RecentObjects")
