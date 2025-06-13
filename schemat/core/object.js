@@ -487,7 +487,7 @@ export class WebObject {
         return obj
     }
 
-    static _new(categories = [], ...args) {
+    static _new(categories = [], args) {
         /* Create a newborn object and execute its __new__(...args) to perform caller-side initialization.
            Return the object. If __new__() returns a Promise, this method returns a Promise too.
            `categories` (if any) are category objects/IDs to be written to the object's __category property.
@@ -513,7 +513,7 @@ export class WebObject {
            for internal purposes, typically during bootstrap, when category objects cannot be loaded yet
            and draft instances must be created from classes rather than categories.
          */
-        return this._new([], ...args)
+        return this._new([], args)
     }
 
     static new(...args) {
@@ -521,7 +521,7 @@ export class WebObject {
            If __new__() returns a Promise, this method returns a Promise too. Used instead of the constructor.
          */
         // if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
-        return this._new([], ...args)
+        return this._new([], args)
     }
 
     static async from_data(id, data, {mutable = false, sealed = true, activate = true} = {}) {

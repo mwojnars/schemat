@@ -71,7 +71,7 @@ export class Category extends WebObject {
 
     new(...args) {
         /* Create a new object in this category and execute its __new__(...args). Return the object (no ID yet). */
-        return this.__child_class._new([this], ...args)
+        return this.__child_class._new([this], args)
     }
 
     async list_objects(opts = {}) {
