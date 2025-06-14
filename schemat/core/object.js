@@ -222,8 +222,7 @@ export class WebObject {
     /* Web object. Persisted in the database; has a unique ID; can be exposed on the web at a particular URL. */
 
     static Status = Object.freeze({
-        TO_DELETE:  "TO_DELETE",
-        DELETED:    "DELETED",
+        DELETED:  "DELETED",    // indicates the object is deleted from DB, or marked for deletion
     })
 
     static SEAL_SEP = '.'
@@ -434,8 +433,8 @@ export class WebObject {
 
     is_newborn()    { return !this.id }         // object is "newborn" ("virgin") when it hasn't been saved to DB, yet, and has no ID assigned
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
+    is_deleted()    { return this.__status === WebObject.Status.DELETED }
     is_category()   { return false }
-    is_deleted()    { return this.__status && (this.__status === WebObject.Status.TO_DELETE || this.__status === WebObject.Status.DELETED) }
     //is_mutable()    { return this.__meta.mutable }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
@@ -488,7 +487,7 @@ export class WebObject {
 
     static pseudo(id, edits = null) {
         /* Create a pseudo-object: a mutable object with ID and __meta.edits, but no __data; it serves as a temporary wrapper
-           for `edits` or __status=TO_DELETE within a transaction that is to be written to DB. Importantly, a pseudo-object
+           for `edits` or __status=DELETED within a transaction that is to be written to DB. Importantly, a pseudo-object
            is NOT really loaded (despite it is marked mutable), so it cannot be used for any real edit operations.
          */
         return this.stub(id, {mutable: true, edits})
@@ -1176,7 +1175,7 @@ export class WebObject {
     delete_self() {
         /* Mark this object as to-be-deleted in the transaction and return the mutable copy for easy chaining of .save() call. */
         let obj = schemat.tx.get_mutable(this)
-        obj.__status = WebObject.Status.TO_DELETE
+        obj.__status = WebObject.Status.DELETED
         return obj
     }
 

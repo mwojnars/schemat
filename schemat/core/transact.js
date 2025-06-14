@@ -105,9 +105,9 @@ export class Transaction {
                 if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
 
         // discard objects that are newborn and marked for deletion at the same time
-        let {TO_DELETE} = WebObject.Status
+        let {DELETED} = WebObject.Status
         objects = objects.filter(obj => {
-            if (obj.__provisional_id && obj.__status === TO_DELETE) {
+            if (obj.__provisional_id && obj.__status === DELETED) {
                 this._discard(obj)
                 return false
             }
@@ -115,8 +115,8 @@ export class Transaction {
         })
 
         let newborn = objects.filter(obj => obj.__provisional_id)
-        let deleted = objects.filter(obj => obj.__status === TO_DELETE)
-        let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0 && obj.__status !== TO_DELETE)
+        let deleted = objects.filter(obj => obj.__status === DELETED)
+        let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0 && obj.__status !== DELETED)
 
         // deleting may run in parallel with saving newborn and edited objects
         let deleting = deleted.length ? this._save_deleted(deleted, opts) : null
