@@ -895,9 +895,9 @@ export class WebObject {
     }
 
     validate() {
-        // TODO SECURITY: make sure that __data does NOT contain special props: __meta, __self, __proxy, id etc!
-
         let data = this.__data
+
+        // TODO SECURITY: make sure that __data does NOT contain special props: id, __meta, __self, __proxy, __status etc!
 
         // validate each individual property in __data ... __data._entries may get directly modified (!)
 
@@ -1164,6 +1164,8 @@ export class WebObject {
 
     async delete_self() {
         /* Delete this object from the database. No need to use save(). */
+        // let obj = schemat.tx.get_mutable(this)
+        // obj.__status = "DELETED"
         return schemat.app.action.delete_object(this.id)
     }
 
