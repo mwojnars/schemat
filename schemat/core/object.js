@@ -221,6 +221,11 @@ class Intercept {
 export class WebObject {
     /* Web object. Persisted in the database; has a unique ID; can be exposed on the web at a particular URL. */
 
+    static Status = Object.freeze({
+        TO_DELETE:  "TO_DELETE",
+        DELETED:    "DELETED",
+    })
+
     static SEAL_SEP = '.'
 
     // these properties cannot be set directly by user when inserting/updating a web object
@@ -1166,10 +1171,13 @@ export class WebObject {
 
     /***  Database operations on self  ***/
 
+    // async delete_self() {
+    //     /* Mark this object as to-be-deleted in the transaction. */
+    //     schemat.tx.get_mutable(this).__status = WebObject.Status.TO_DELETE
+    // }
+
     async delete_self() {
         /* Delete this object from the database. No need to use save(). */
-        // let obj = schemat.tx.get_mutable(this)
-        // obj.__status = "DELETED"
         return schemat.app.action.delete_object(this.id)
     }
 

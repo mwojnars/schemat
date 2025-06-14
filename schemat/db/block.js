@@ -445,7 +445,7 @@ export class DataBlock extends Block {
         this._flush(storage)
         await this.propagate_change(key, obj)
 
-        schemat.register_changes({id, data: {'__status': 'DELETED'}})
+        schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
 
         assert(Number(deleted) === 1)
         return Number(deleted)

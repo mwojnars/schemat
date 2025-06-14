@@ -389,7 +389,7 @@ export class Schemat {
          */
         let {id, data} = record
 
-        if (data.__status === 'DELETED') {
+        if (data.__status === WebObject.Status.DELETED) {
             this.registry.delete_record(id)
             this.registry.delete_object(id)
         }
