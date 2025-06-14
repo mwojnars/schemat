@@ -304,7 +304,7 @@ export class ServerSchemat extends Schemat {
 
     /***  Actions / Transactions  ***/
 
-    async execute_action(obj, action, args) {
+    async execute_action(obj, action, args, _return_tx = true) {
         /* Server-side execution of an action. No network communication, no encoding/decoding of args & result.
            Returns a pair: [result, tx].
          */
@@ -320,7 +320,7 @@ export class ServerSchemat extends Schemat {
         })
 
         obj._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
-        return [result, tx]
+        return _return_tx ? [result, tx] : result
     }
 
     get_transaction() {

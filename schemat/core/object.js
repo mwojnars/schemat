@@ -1132,7 +1132,7 @@ export class WebObject {
             get(target, name) {
                 if (typeof name === 'string')
                     if (CLIENT && name[0] === '_') throw new Error(`private action.${name}() can only be invoked on server`)
-                    else return (...args) => SERVER ? schemat.execute_action(obj, name, args) : schemat.app.POST.action(id, name, args)
+                    else return (...args) => SERVER ? schemat.execute_action(obj, name, args, false) : schemat.app.POST.action(id, name, args)
             }
         })
     }
