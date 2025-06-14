@@ -136,9 +136,9 @@ export class Objects {
     _map = new Map()
 
     add(obj)        { this._map.set(obj.__index_id, obj); return obj }  // return value is different than in Set
-    delete(obj)     { return this._map.delete(obj.__index_id) }
-    get(obj)        { return this._map.get(obj.__index_id) }    // may return a different instance of the same web object, not `obj`
-    has(obj)        { return this._map.has(obj.__index_id) }
+    delete(obj)     { return this._map.delete(typeof obj === 'object' ? obj.__index_id : obj) }
+    get(obj)        { return this._map.get(typeof obj === 'object' ? obj.__index_id : obj) }    // may return a different instance of the same web object, not `obj`
+    has(obj)        { return this._map.has(typeof obj === 'object' ? obj.__index_id : obj) }
     has_exact(obj)  { return this._map.get(obj.__index_id) === obj }
     ids()           { return this._map.keys() }
     keys()          { return this._map.values() }               // for compatibility with Set interface
