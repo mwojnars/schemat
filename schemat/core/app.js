@@ -230,7 +230,7 @@ export class Application extends WebObject {
             groups.set(id, edits)
         }
         for (let [id, edits] of groups) {       // add every object to transaction
-            let obj = WebObject.pseudo(id, edits)
+            let obj = WebObject.dummy(id, edits)
             schemat.tx.stage(obj)
         }
         await schemat.tx.save(opts)
@@ -239,7 +239,7 @@ export class Application extends WebObject {
     async 'action.delete_objects'(ids, opts) {
         /* Delete objects by ID. `ids` is an array of IDs, or a single ID. */
         if (!Array.isArray(ids)) ids = [ids]
-        for (let id of ids) WebObject.pseudo(id).delete_self()
+        for (let id of ids) WebObject.dummy(id).delete_self()
         await schemat.tx.save(opts)
     }
 

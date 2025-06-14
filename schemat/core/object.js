@@ -485,10 +485,10 @@ export class WebObject {
         return self.__proxy = Intercept.wrap(self)
     }
 
-    static pseudo(id, edits = null) {
-        /* Create a pseudo-object: a mutable object with ID and __meta.edits, but no __data; it serves as a temporary wrapper
-           for `edits` or __status=DELETED within a transaction that is to be written to DB. Importantly, a pseudo-object
-           is NOT really loaded (despite it is marked mutable), so it cannot be used for any real edit operations.
+    static dummy(id, edits = null) {
+        /* Create a "dummy" object: a mutable object with ID and __meta.edits, but no __data; it serves as a temporary container
+           for `edits` or __status=DELETED within a transaction that is to be written to DB. Importantly, a dummy object
+           is NOT really loaded (despite it is marked mutable), so it cannot be used for property access.
          */
         return this.stub(id, {mutable: true, edits})
     }
@@ -1282,8 +1282,8 @@ export class WebObject {
         let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)     // the edit may go to a different instance (a mutable one)
         let edit = [op, ...args]
 
-        obj.__data && obj._apply_edits(edit)    // __data is not present in pseudo-objects where appending to `edits` is enough
-        obj.__meta.edits?.push(edit)            // `edits` is not present in newborns where editing __data is enough
+        obj.__data && obj._apply_edits(edit)    // __data is not present in dummy objects, but appending to `edits` is enough there
+        obj.__meta.edits?.push(edit)            // `edits` is not present in newborns, but editing __data is enough there
         return obj
     }
 
