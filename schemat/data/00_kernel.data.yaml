@@ -725,6 +725,9 @@
         block has been created.
       "@": schemat/types/type.js:SHARD
     "@": schemat:Catalog
+  defaults:
+    switch_context: true
+    "@": schemat:Catalog
   class: schemat/db/block.js:DataBlock
   __prototype:
     "@": 18
