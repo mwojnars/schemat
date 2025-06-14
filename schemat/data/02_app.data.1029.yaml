@@ -109,6 +109,8 @@
     title:
       repeated: true
       "@": schemat/types/type.js:STRING
+    ref:
+      "@": schemat/types/type.js:REF
     "@": schemat:Catalog
   __category:
     "@": 1
