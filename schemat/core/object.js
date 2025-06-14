@@ -1298,11 +1298,13 @@ export class WebObject {
         }
     }
 
-    async save({reload = true, ...opts} = {}) {
+    async save({reload = null, ...opts} = {}) {
         /* Send __data (for a newly created object) or __meta.edits (for an existing object) to DB.
-           Some of the available options: {ring, reload}.
-           If reload=true (default), a new instance of this object is created with new content and returned.
+           If reload=true (default for inserted and mutated objects, but not for deleted ones), a new instance of `this`
+           is created with new content and returned. Some other available options include {ring}.
          */
+        if (reload === null && this.__status !== WebObject.Status.TO_DELETE)
+            reload = true
         await schemat.tx.save(opts, this)
         return reload ? this.reload() : this
     }
