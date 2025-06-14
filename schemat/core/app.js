@@ -231,7 +231,7 @@ export class Application extends WebObject {
         }
         for (let [id, edits] of groups) {       // add every object to transaction
             let obj = WebObject.dummy(id, edits)
-            schemat.tx.stage(obj)
+            schemat.stage(obj)
         }
         await schemat.save(opts)
     }

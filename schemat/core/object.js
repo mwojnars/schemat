@@ -499,7 +499,7 @@ export class WebObject {
         let obj = this.stub(null, {mutable: true, ...opts})
         obj.__data = new Catalog(data)
         if (!draft)
-            if (schemat.tx) schemat.tx.stage(obj)       // schemat.tx is missing during boot; that's why draft objects can't be staged
+            if (schemat.tx) schemat.stage(obj)      // schemat.tx is missing during boot; that's why draft objects can't be staged
             else throw new Error(`cannot create a newborn object when outside a transaction`)
         return obj
     }

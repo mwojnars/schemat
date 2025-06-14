@@ -439,7 +439,11 @@ export class Schemat {
     )
     async server(code) { return this.app.POST.eval(code) }
 
+    /***  Transactions  ***/
+
+    stage(...args)      { return this.tx.stage(...args) }
     async save(...args) { return this.tx.save(...args) }
+    async commit(opts)  { return this.tx.commit(opts) }
 
 
     /***  Events & Debugging  ***/
