@@ -256,7 +256,7 @@ export class ClientTransaction extends Transaction {
     }
 
     async _db_delete(objects, opts) {
-        return Promise.all(objects.map(obj => schemat.app.action.delete_object(obj.id, opts)))
+        return schemat.app.action.delete_objects(objects.map(obj => obj.id), opts)
     }
 
     async _db_update(objects, opts) {
