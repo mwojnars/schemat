@@ -1282,8 +1282,8 @@ export class WebObject {
         let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)     // the edit may go to a different instance (a mutable one)
         let edit = [op, ...args]
 
-        obj._apply_edits(edit)
-        obj.__meta.edits?.push(edit)        // `edits` array is not present in newborns where it's enough that the edit is applied to __data
+        obj.__data && obj._apply_edits(edit)    // __data is not present in pseudo-objects where appending to `edits` is enough
+        obj.__meta.edits?.push(edit)            // `edits` is not present in newborns where editing __data is enough
         return obj
     }
 

@@ -234,7 +234,6 @@ export class Application extends WebObject {
         let ret = Array.isArray(data) ? data.map(d => WebObject.newborn(d)) : WebObject.newborn(data)
         await schemat.tx.save(opts)
         return ret
-        // return schemat.db.insert(data, opts)
     }
 
     async 'action.apply_edits'(id, edits, opts = {}) {
@@ -243,7 +242,6 @@ export class Application extends WebObject {
          */
         schemat.tx.stage_edits(id, edits)
         await schemat.tx.save(opts)
-        // return schemat.db.update(id, edits, opts)
     }
 
     async 'action.delete_objects'(ids, opts) {
