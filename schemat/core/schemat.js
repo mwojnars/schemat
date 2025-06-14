@@ -439,7 +439,7 @@ export class Schemat {
     )
     async server(code) { return this.app.POST.eval(code) }
 
-    async save(opts = {}) { return this.tx.save(opts) }
+    async save(...args) { return this.tx.save(...args) }
 
 
     /***  Events & Debugging  ***/

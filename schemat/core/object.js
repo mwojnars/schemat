@@ -1304,7 +1304,7 @@ export class WebObject {
            is created with new content and returned. Some other available options include {ring}.
          */
         if (reload === null && !this.is_deleted()) reload = true
-        await schemat.tx.save(opts, this)
+        await schemat.save(opts, this)
         return reload ? this.reload() : this
     }
 

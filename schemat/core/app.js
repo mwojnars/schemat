@@ -204,7 +204,7 @@ export class Application extends WebObject {
     //        - ['upd', id, edit, ...args]  -- modification of an existing object, where `edit` is the name of the edit method to be called,
     //                                         and `args` are 0+ arguments to be passed to the method
     //      */
-    //     await schemat.tx.save(opts)
+    //     await schemat.save(opts)
     // }
 
     async 'action.insert_objects'(data, opts) {
@@ -215,7 +215,7 @@ export class Application extends WebObject {
            Additionally, DB records are passed implicitly through a Transaction context.
          */
         let ret = Array.isArray(data) ? data.map(d => WebObject.newborn(d)) : WebObject.newborn(data)
-        await schemat.tx.save(opts)
+        await schemat.save(opts)
         return ret
     }
 
@@ -233,14 +233,14 @@ export class Application extends WebObject {
             let obj = WebObject.dummy(id, edits)
             schemat.tx.stage(obj)
         }
-        await schemat.tx.save(opts)
+        await schemat.save(opts)
     }
 
     async 'action.delete_objects'(ids, opts) {
         /* Delete objects by ID. `ids` is an array of IDs, or a single ID. */
         if (!Array.isArray(ids)) ids = [ids]
         for (let id of ids) WebObject.dummy(id).delete_self()
-        await schemat.tx.save(opts)
+        await schemat.save(opts)
     }
 
 
