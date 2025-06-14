@@ -1179,11 +1179,6 @@ export class WebObject {
         return obj
     }
 
-    // async delete_self() {
-    //     /* Delete this object from the database. No need to use save(). */
-    //     return schemat.app.action.delete_object(this.id)
-    // }
-
     _bump_version() {
         /* Set or increment __ver number, if already present or category's `set_version` is true. */
         if (this.__ver || this.__base?.set_version) {

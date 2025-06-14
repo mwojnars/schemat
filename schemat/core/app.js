@@ -253,12 +253,6 @@ export class Application extends WebObject {
         await schemat.tx.save(opts)
     }
 
-    // async 'action.delete_object'(id, opts) {
-    //     WebObject.pseudo(id).delete_self()
-    //     await schemat.tx.save(opts)
-    //     // return schemat.db.delete(id, opts)
-    // }
-
 
     /***  Dynamic imports  ***/
 
