@@ -962,6 +962,10 @@
         be changed later on. Same value on every node, unlike `file_path` getter
         which may partly depend on the local node's settings.
       "@": schemat/types/type.js:STRING
+    switch_context:
+      info: If true, commands are executed in the caller's context (application & DB),
+        not the agent's own context.
+      "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   __category:
     "@": 1
