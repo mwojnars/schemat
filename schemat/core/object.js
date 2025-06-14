@@ -435,6 +435,7 @@ export class WebObject {
     is_newborn()    { return !this.id }         // object is "newborn" ("virgin") when it hasn't been saved to DB, yet, and has no ID assigned
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     is_category()   { return false }
+    is_deleted()    { return this.__status && (this.__status === WebObject.Status.TO_DELETE || this.__status === WebObject.Status.DELETED) }
     //is_mutable()    { return this.__meta.mutable }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
@@ -1303,8 +1304,7 @@ export class WebObject {
            If reload=true (default for inserted and mutated objects, but not for deleted ones), a new instance of `this`
            is created with new content and returned. Some other available options include {ring}.
          */
-        if (reload === null && this.__status !== WebObject.Status.TO_DELETE)
-            reload = true
+        if (reload === null && !this.is_deleted()) reload = true
         await schemat.tx.save(opts, this)
         return reload ? this.reload() : this
     }
