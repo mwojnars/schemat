@@ -224,7 +224,7 @@ export class Application extends WebObject {
 
     // TODO: allow actions to run on immutable `this`, otherwise the `app` object is *recreated* on every execution of the actions below!
 
-    'action.insert_objects'(data, opts) {
+    async 'action.insert_objects'(data, opts) {
         /* Insert new object(s) to DB with __data initialized from the provided JSONx-stringified representation(s).
            `data` is either an array of content objects, one for each web object to be created; or a single content object.
            Every content object is a Catalog instance or an internal *state* of such instance (the result of .__getstate__()).
@@ -235,15 +235,16 @@ export class Application extends WebObject {
         // return schemat.db.insert(data, opts)
     }
 
-    'action.apply_edits'(id, edits, opts = {}) {
+    async 'action.apply_edits'(id, edits, opts = {}) {
         /* Modify an object by executing a number of edits in the DB. Each plain edit is an array: [op, ...args], where `op` is the name
            of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
          */
-        schemat.tx.stage_edits(id, edits).save(opts)
+        schemat.tx.stage_edits(id, edits)
+        await schemat.tx.save(opts)
         // return schemat.db.update(id, edits, opts)
     }
 
-    'action.delete_object'(id) {
+    async 'action.delete_object'(id) {
         return schemat.db.delete(id)
     }
 
