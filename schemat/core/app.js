@@ -192,37 +192,20 @@ export class Application extends WebObject {
         })
     }
 
-    // 'POST.insert_objects'() {
-    //     return new TxPOST({
-    //         server: async (data, opts) => {
-    //             await schemat.db.insert(data, opts)
-    //         },
-    //     })
-    // }
-    //
-    // 'POST.insert_record'() {
-    //     /* Insert a record directly to DB. No transaction. */
-    //     return new JsonPOST({
-    //         // server: (data, opts) => schemat.db.insert(data, opts),
-    //         server: async (data, opts) => {
-    //             let id = await schemat.db.insert(data, opts)
-    //             let {json} = schemat.get_record(id)
-    //             return {id, data: JSON.parse(json)}
-    //         },
-    //         result_encode: ({id, data}) => JSON.stringify({id, data}),
-    //         result_decode: (message) => {
-    //             let {id, data} = JSONx.parse(message)
-    //             if (!data) return id
-    //             schemat.register_record({id, data})
-    //             return schemat.get_loaded(id)
-    //         },
-    //     })
-    // }
-
 
     /***  Actions -- can be called via schemat.remote.*()  ***/
 
     // TODO: allow actions to run on immutable `this`, otherwise the `app` object is *recreated* on every execution of the actions below!
+
+    // async 'action.submit_tx'(changes, opts) {
+    //     /* Submit a transaction to the database. `changes` is an array of changes, each change is either of:
+    //        - ['ins', data]  -- insertion of a new object
+    //        - ['del', id]    -- deletion of an existing object
+    //        - ['upd', id, edit, ...args]  -- modification of an existing object, where `edit` is the name of the edit method to be called,
+    //                                         and `args` are 0+ arguments to be passed to the method
+    //      */
+    //     await schemat.tx.save(opts)
+    // }
 
     async 'action.insert_objects'(data, opts) {
         /* Insert new object(s) to DB with __data initialized from the provided JSONx-stringified representation(s).
