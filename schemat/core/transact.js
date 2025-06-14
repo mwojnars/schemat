@@ -118,10 +118,10 @@ export class Transaction {
         let deleted = objects.filter(obj => obj.__status === TO_DELETE)
         let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0 && obj.__status !== TO_DELETE)
 
-        // deleting may run in parallel with saving newborns and edited objects
+        // deleting may run in parallel with saving newborn and edited objects
         let deleting = deleted.length ? this._save_deleted(deleted, opts) : null
 
-        // newborns must be saved before edited objects and receive their final IDs due to possible references
+        // newborns must receive their final IDs and be saved before edited objects due to possible references
         if (newborn.length) await this._save_newborn(newborn, opts)
         if (edited.length)  await this._save_edited(edited, opts)
         if (deleting) await deleting
