@@ -219,13 +219,30 @@ export class Application extends WebObject {
         return ret
     }
 
-    async 'action.apply_edits'(id, edits, opts = {}) {
-        /* Modify an object by executing a number of edits in the DB. Each plain edit is an array: [op, ...args], where `op` is the name
+    async 'action.apply_edits'(edits, opts = {}) {
+        /* Modify 1+ objects by executing a number of edits in the DB. Each plain edit is an array: [id, op, ...args], where `op` is the name
            of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
          */
-        schemat.tx.stage_edits(id, edits)
+        let groups = new Map()                  // group edits by object ID
+        for (let [id, op, ...args] of edits) {
+            let edits = groups.get(id) || []
+            edits.push([op, ...args])
+            groups.set(id, edits)
+        }
+        for (let [id, edits] of groups) {       // add every object to transaction
+            let obj = WebObject.pseudo(id, edits)
+            schemat.tx.stage(obj)
+        }
         await schemat.tx.save(opts)
     }
+
+    // async 'action.apply_edits'(id, edits, opts = {}) {
+    //     /* Modify an object by executing a number of edits in the DB. Each plain edit is an array: [op, ...args], where `op` is the name
+    //        of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
+    //      */
+    //     schemat.tx.stage_edits(id, edits)
+    //     await schemat.tx.save(opts)
+    // }
 
     async 'action.delete_objects'(ids, opts) {
         /* Delete objects by ID. `ids` is an array of IDs, or a single ID. */

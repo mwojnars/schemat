@@ -82,13 +82,21 @@ export class Transaction {
         return this._staging.add(obj)
     }
 
-    stage_edits(id, edits) {
-        /* Convert an array of raw edits into a web object, so it can be stored in _staging. Importantly, the object
-           has no __data (pseudo-object), so it does NOT require data loading from DB ahead of save().
-         */
-        let obj = WebObject.pseudo(id, edits)
-        return this._stage_edited(obj)
-    }
+    // stage_edit(id, edit, ...args) {
+    //     /* Convert a single edit into a web object, so it can be stored in _staging. Importantly, the object
+    //        has no __data (pseudo-object), so it does NOT require data loading from DB ahead of save().
+    //      */
+    //     let obj = WebObject.pseudo(id, [edit, ...args])
+    //     return this._stage_edited(obj)
+    // }
+    //
+    // stage_edits(id, edits) {
+    //     /* Convert an array of raw edits into a web object, so it can be stored in _staging. Importantly, the object
+    //        has no __data (pseudo-object), so it does NOT require data loading from DB ahead of save().
+    //      */
+    //     let obj = WebObject.pseudo(id, edits)
+    //     return this._stage_edited(obj)
+    // }
 
     has(obj)        { return this._staging.has(obj) }
     has_exact(obj)  { return this._staging.has_exact(obj) }
@@ -264,7 +272,9 @@ export class ClientTransaction extends Transaction {
     }
 
     async _db_update(objects, opts) {
-        return Promise.all(objects.map(obj => schemat.app.action.apply_edits(obj.id, obj.__meta.edits, opts)))
+        let edits = objects.flatMap(obj => obj.__meta.edits.map(edit => [obj.id, ...edit]))
+        return schemat.app.action.apply_edits(edits, opts)
+        // return Promise.all(objects.map(obj => schemat.app.action.apply_edits(obj.id, obj.__meta.edits, opts)))
     }
 
     commit() { throw new Error(`client-side transaction cannot be committed`) }
