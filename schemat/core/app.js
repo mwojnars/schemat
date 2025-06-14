@@ -174,20 +174,24 @@ export class Application extends WebObject {
     'POST.action'() {
         /* Execute a server-side action inside a Transaction so that record modifications are captured and sent back to caller. */
         return new JsonPOST({
-            server: async (id, action, args) => {
-                this._print(`POST.action(${action}) ...`)
-                let obj = schemat.get_if_loaded(id) || await schemat.get_loaded(id)
-                let tx = schemat.get_transaction()
-
-                let result = await schemat.in_transaction(tx, async () => {
-                    let res = await obj._execute_action(action, args)
-                    await tx.commit()
-                    return res
-                })
-
-                this._print(`POST.action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
-                return [result, tx]     // `tx` is used internally by mActionResult (below) and then dropped
+            server: (id, action, args) => {
+                let obj = schemat.get_object(id)
+                return schemat.execute_action(obj, action, args)    // [result, tx]; `tx` is used internally by mActionResult (below) and then dropped
             },
+            // server: async (id, action, args) => {
+            //     this._print(`POST.action(${action}) ...`)
+            //     let obj = schemat.get_if_loaded(id) || await schemat.get_loaded(id)
+            //     let tx = schemat.get_transaction()
+            //
+            //     let result = await schemat.in_transaction(tx, async () => {
+            //         let res = await obj._execute_action(action, args)
+            //         await tx.commit()
+            //         return res
+            //     })
+            //
+            //     this._print(`POST.action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
+            //     return [result, tx]     // `tx` is used internally by mActionResult (below) and then dropped
+            // },
             output: mActionResult,
         })
     }
