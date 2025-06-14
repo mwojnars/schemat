@@ -308,10 +308,10 @@ export class ServerSchemat extends Schemat {
         /* Server-side execution of an action. No network communication, no encoding/decoding of args & result.
            Returns a pair: [result, tx].
          */
-        this._print(`execute_action(${action}) ...`)
-
         if (!obj.is_loaded()) await obj.load()
         let tx = this.tx || new ServerTransaction()     // use the current transaction, if present, or create a new one
+
+        obj._print(`schemat.execute_action(${action}) ...`)
 
         let result = await this.in_transaction(tx, async () => {
             let res = await obj._execute_action(action, args)
@@ -319,7 +319,7 @@ export class ServerSchemat extends Schemat {
             return res
         })
 
-        this._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
+        obj._print(`schemat.execute_action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
         return [result, tx]
     }
 

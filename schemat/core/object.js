@@ -1125,12 +1125,15 @@ export class WebObject {
            by simply refreshing/reloading them. Action triggers can be called on stubs without fully loading the target object.
          */
         let id = this.id
+        let obj = this
         assert(id)
+
         return new Proxy({}, {
             get(target, name) {
                 if (typeof name === 'string')
                     if (CLIENT && name[0] === '_') throw new Error(`private action.${name}() can only be invoked on server`)
-                    else return (...args) => schemat.app.POST.action(id, name, args)
+                    else return (...args) => SERVER ? schemat.execute_action(obj, name, args) : schemat.app.POST.action(id, name, args)
+                    // else return (...args) => schemat.app.POST.action(id, name, args)
             }
         })
     }
