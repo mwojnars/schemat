@@ -293,14 +293,26 @@ describe('Schemat Tests', function () {
             expect(updated_content).to.not.include(name)
         })
 
+        // it('Varia: double insert', async function () {
+        //     await delay(200)
+        //     await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main')
+        //     await delay(200)
+        //     let done = await page.evaluate(async () => {
+        //         let Varia = schemat.object
+        //         let a = Varia.new()
+        //         let b = a.ref = Varia.new({ref: a})
+        //         await schemat.save()
+        //         // a.delete_self()
+        //         // b.delete_self()
+        //         // await schemat.save()
+        //     })
+        //     expect(done).to.be.true
+        // })
+
         it('rebuild_indexes', async function () {
             await delay(200)
             await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main')
             await delay(200)
-            // let done = await page.evaluate(async () => {
-            //     let db = await schemat.db.load()
-            //     return db.action.rebuild_indexes()
-            // })
             let done = await page.evaluate(() => schemat.server('schemat.db.rebuild_indexes()'))
             expect(done).to.be.true
         })
