@@ -326,7 +326,7 @@ export class CategoryInspectView extends InspectView {
 
     Items({items, itemRemoved}) {
         if (!items || items.length === 0) return null
-        let remove = (item) => item.delete_self().then(() => itemRemoved && itemRemoved(item))
+        let remove = (item) => item.delete_self().save().then(() => itemRemoved && itemRemoved(item))
         let rows = items.map(item => this._ItemEntry({item, remove}))
         return TABLE(TBODY(...rows))
         // let items_loaded = delayed_render(T.arrayFromAsync(items).then(arr => amap(arr, item => item.load())), [items])

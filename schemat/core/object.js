@@ -485,9 +485,10 @@ export class WebObject {
         return self.__proxy = Intercept.wrap(self)
     }
 
-    static pseudo(id, edits) {
-        /* Create a pseudo-object: an object with ID and __meta.edits, but no __data; it serves as a temporary wrapper for `edits`
-           within a transaction before they get written to DB. Importantly, a pseudo-object is NOT loaded, although it is marked mutable.
+    static pseudo(id, edits = null) {
+        /* Create a pseudo-object: a mutable object with ID and __meta.edits, but no __data; it serves as a temporary wrapper
+           for `edits` or __status=TO_DELETE within a transaction that is to be written to DB. Importantly, a pseudo-object
+           is NOT really loaded (despite it is marked mutable), so it cannot be used for any real edit operations.
          */
         return this.stub(id, {mutable: true, edits})
     }
@@ -1171,15 +1172,17 @@ export class WebObject {
 
     /***  Database operations on self  ***/
 
-    // async delete_self() {
-    //     /* Mark this object as to-be-deleted in the transaction. */
-    //     schemat.tx.get_mutable(this).__status = WebObject.Status.TO_DELETE
-    // }
-
-    async delete_self() {
-        /* Delete this object from the database. No need to use save(). */
-        return schemat.app.action.delete_object(this.id)
+    delete_self() {
+        /* Mark this object as to-be-deleted in the transaction and return the mutable copy for easy chaining of .save() call. */
+        let obj = schemat.tx.get_mutable(this)
+        obj.__status = WebObject.Status.TO_DELETE
+        return obj
     }
+
+    // async delete_self() {
+    //     /* Delete this object from the database. No need to use save(). */
+    //     return schemat.app.action.delete_object(this.id)
+    // }
 
     _bump_version() {
         /* Set or increment __ver number, if already present or category's `set_version` is true. */
