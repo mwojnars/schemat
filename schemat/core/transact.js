@@ -6,8 +6,8 @@ import {WebObject} from "./object.js";
 /**********************************************************************************************************************/
 
 export class Transaction {
-    /* Logical transaction (pseudo-transaction). A group of related database mutations that will be
-       pushed together to the DB. Does NOT currently provide ACID guarantees of consistency and atomicity.
+    /* Logical transaction. A group of related database mutations that will be pushed together to the DB.
+       Does NOT currently provide ACID guarantees of consistency and atomicity.
 
        The role of transaction is to:
        - track mutations applied to web objects in a given execution thread;
@@ -104,10 +104,22 @@ export class Transaction {
             for (let obj of objects)        // every object must have been staged already
                 if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
 
+        // discard objects that are newborn and marked for deletion at the same time
+        let {TO_DELETE} = WebObject.Status
+        objects = objects.filter(obj => {
+            if (obj.__provisional_id && obj.__status === TO_DELETE) {
+                this._discard(obj)
+                return false
+            }
+            return true
+        })
+
         let newborn = objects.filter(obj => obj.__provisional_id)
-        let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0)
+        let deleted = objects.filter(obj => obj.__status === TO_DELETE)
+        let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0 && obj.__status !== TO_DELETE)
 
         if (newborn.length) await this._save_newborn(newborn, opts)
+        if (deleted.length) await this._save_deleted(deleted, opts)
         if (edited.length)  await this._save_edited(edited, opts)
     }
 
@@ -130,11 +142,16 @@ export class Transaction {
         })
     }
 
+    async _save_deleted(objects, opts) {
+        await this._db_delete(objects, opts)
+        for (let obj of objects) this._discard(obj)
+    }
+
     async _save_edited(objects, opts) {
         await this._db_update(objects, opts)
         for (let obj of objects)
             if (obj.__data) obj.__meta.edits.length = 0     // mark that there are no more pending edits
-            else this._staging.delete(obj)                  // remove permanently if a pseudo-object
+            else this._staging.delete(obj)                  // remove permanently if a pseudo-object (no __data)
 
         // regular objects are NOT removed from _staging because they still remain mutable and can receive new mutations,
         // so any future .save() need to check if they shouldn't be pushed to DB again
@@ -175,6 +192,11 @@ export class ServerTransaction extends Transaction {
 
     async _db_insert(datas, opts) {
         return schemat.db.insert(datas, opts)       // returns an array of IDs assigned
+    }
+
+    async _db_delete(objects, opts) {
+        let db = schemat.db
+        return Promise.all(objects.map(obj => db.delete(obj.id, opts)))
     }
 
     async _db_update(objects, opts) {
@@ -229,6 +251,10 @@ export class ClientTransaction extends Transaction {
 
     async _db_insert(datas, opts) {
         return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
+    }
+
+    async _db_delete(objects, opts) {
+        return Promise.all(objects.map(obj => schemat.app.action.delete_object(obj.id, opts)))
     }
 
     async _db_update(objects, opts) {

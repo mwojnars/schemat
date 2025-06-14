@@ -246,10 +246,10 @@ export class Application extends WebObject {
         // return schemat.db.update(id, edits, opts)
     }
 
-    async 'action.delete_object'(id) {
+    async 'action.delete_object'(id, opts) {
         // WebObject.stub(id).delete_self()
         // await schemat.tx.save(opts)
-        return schemat.db.delete(id)
+        return schemat.db.delete(id, opts)
     }
 
 
