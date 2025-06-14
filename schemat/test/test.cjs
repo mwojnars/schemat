@@ -297,19 +297,27 @@ describe('Schemat Tests', function () {
             await delay(200)
             await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main')
             await delay(200)
-            let done = await page.evaluate(async () => {
+
+            let inserted = await page.evaluate(async () => {
                 let Varia = schemat.object
                 let a = Varia.new()
                 let b = a.ref = Varia.new({ref: a})
                 await schemat.save()
-                a = await a.reload()
-                b = await b.reload()
-                // a.delete_self()
-                // b.delete_self()
-                // await schemat.save()
+                window.a = a = await a.reload()
+                window.b = b = await b.reload()
                 return a.ref.is(b) && b.ref.is(a)
             })
-            expect(done).to.be.true
+            expect(inserted).to.be.true
+
+            let deleted = await page.evaluate(async () => {
+                let a = window.a
+                let b = window.b
+                a.delete_self()
+                b.delete_self()
+                await schemat.save()
+                return true
+            })
+            expect(deleted).to.be.true
         })
 
         it('rebuild_indexes', async function () {
