@@ -250,26 +250,7 @@ describe('Schemat Tests', function () {
                 ['Category of objects', 'name', '__ttl', 'defaults', 'schema', 'Ring', 'Varia', 'schemat:Category'])
         })
 
-        // it('Varia: double insert', async function () {
-        //     await delay(200)
-        //     await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main')
-        //     await delay(200)
-        //     let done = await page.evaluate(async () => {
-        //         let Varia = schemat.object
-        //         let a = Varia.new()
-        //         let b = a.ref = Varia.new({ref: a})
-        //         await schemat.save()
-        //         a = await a.reload()
-        //         b = await b.reload()
-        //         // a.delete_self()
-        //         // b.delete_self()
-        //         // await schemat.save()
-        //         return a.ref.is(b) && b.ref.is(a)
-        //     })
-        //     expect(done).to.be.true
-        // })
-
-        it('Varia: load/insert/delete', async function () {
+        it('Varia: load/insert/delete (UI)', async function () {
             // navigate to the Varia category page
             await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main',
                 ['Varia', 'Category', 'name', '__category', 'schema', 'Varia:2102', 'Create'])
@@ -310,6 +291,25 @@ describe('Schemat Tests', function () {
             // check that the new item disappeared from the list
             let updated_content = await extract_content(page)
             expect(updated_content).to.not.include(name)
+        })
+
+        it('Varia: double insert (console)', async function () {
+            await delay(200)
+            await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main')
+            await delay(200)
+            let done = await page.evaluate(async () => {
+                let Varia = schemat.object
+                let a = Varia.new()
+                let b = a.ref = Varia.new({ref: a})
+                await schemat.save()
+                a = await a.reload()
+                b = await b.reload()
+                // a.delete_self()
+                // b.delete_self()
+                // await schemat.save()
+                return a.ref.is(b) && b.ref.is(a)
+            })
+            expect(done).to.be.true
         })
 
         it('rebuild_indexes', async function () {
