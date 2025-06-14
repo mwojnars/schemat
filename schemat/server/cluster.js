@@ -85,6 +85,7 @@ export class Cluster extends Agent {
 
         nodes.push(node)
         await this.action.set({nodes})
+
         // await this.set({nodes}).save({ring: this.__ring})    -- .set() will not work outside action
         // await this.action({ring: this.__ring}).set({nodes})
     }

@@ -304,6 +304,25 @@ export class ServerSchemat extends Schemat {
 
     /***  Actions / Transactions  ***/
 
+    async execute_action(obj, action, args) {
+        /* Server-side execution of an action. No network communication, no encoding/decoding of args & result.
+           Returns a pair: [result, tx].
+         */
+        this._print(`execute_action(${action}) ...`)
+
+        if (!obj.is_loaded()) await obj.load()
+        let tx = this.tx || new ServerTransaction()     // use the current transaction, if present, or create a new one
+
+        let result = await this.in_transaction(tx, async () => {
+            let res = await obj._execute_action(action, args)
+            await tx.commit()
+            return res
+        })
+
+        this._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
+        return [result, tx]
+    }
+
     get_transaction() {
         /* Return the current Transaction object or create a new one. */
         return this.tx || new ServerTransaction()
