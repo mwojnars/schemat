@@ -82,12 +82,13 @@ export class Schemat {
      */
 
     config          // boot configuration (on server) or RequestContext (on client)
+    debug           // if true, some elements of Schemat and environment are tuned towards debugging
     app_id          // ID of the active Application object
     _app            // `app` of the previous generation, remembered here to keep the .app() getter operational during complete cache erasure
     registry        // cache of web objects, records and indexes loaded from DB
     builtin         // a Classpath containing built-in classes and their paths
     booting         // a Promise that resolves when this Schemat is fully booted; false after that
-    debug           // if true, some elements of Schemat and environment are tuned towards debugging
+    // tx           // a Transaction that collects object modifications (inserts/updates/deletes) before sending them to DB
 
     _essential = [ROOT_ID]  // IDs of web objects that must be always present (fully loaded) in the Registry, so eviction must reload not delete them
     _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
@@ -100,7 +101,6 @@ export class Schemat {
     // defined on server only:
     kernel
     get cluster()   {}
-    // get tx()        {}
     get node()      {}
     get_frame()     {}
 
@@ -438,6 +438,8 @@ export class Schemat {
         }
     )
     async server(code) { return this.app.POST.eval(code) }
+
+    async save(opts = {}) { return this.tx.save(opts) }
 
 
     /***  Events & Debugging  ***/
