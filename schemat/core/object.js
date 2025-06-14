@@ -223,8 +223,10 @@ export class WebObject {
 
     static SEAL_SEP = '.'
 
-    /***
+    // these properties cannot be set directly by user when inserting/updating a web object
+    static PROPS_FORBIDDEN = ['id', '__meta', '__data', '__self', '__proxy', '__status', '__ring']
 
+    /***
     COMMON properties (stored in __data and persisted to DB):
 
     name                    human-readable name of this object (optional, repeated)
@@ -897,7 +899,9 @@ export class WebObject {
     validate() {
         let data = this.__data
 
-        // TODO SECURITY: make sure that __data does NOT contain special props: id, __meta, __self, __proxy, __status etc!
+        // make sure that __data does NOT contain special props: id, __meta, __self, __proxy, __status, etc.
+        for (let prop of WebObject.PROPS_FORBIDDEN)
+            if (data._keys.has(prop)) throw new ValidationError(`forbidden property found: '${prop}'`)
 
         // validate each individual property in __data ... __data._entries may get directly modified (!)
 
