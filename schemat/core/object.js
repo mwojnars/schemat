@@ -561,8 +561,8 @@ export class WebObject {
         /* Print the current stack trace with detailed header information: node ID, worker process, current object. */
         let stack  = new Error().stack
         let lines  = stack.split('\n').slice(2)
-        let caller = lines[0].trim()                // caller of the current method
-        let fun    = caller.match(/at (\S+)/)[1]    // function name of the caller
+        let caller = lines[0]?.trim()                   // caller of the current method
+        let fun    = caller?.match(/at (\S+)/)?.[1]     // function name of the caller
         let label  = `${this.__label}${fun ? '.'+fun+'()' : ''}`
         let title  = SERVER ? `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${label} context ${schemat.db}` : label
         console.error(title, ...args)
@@ -679,7 +679,7 @@ export class WebObject {
             await container.load()          // [Category], [Container], [Directory] have no __container set up despite being placed in /$/sys just to avoid deadlocks here!
             // if (this.id <= 5) container.load(); else await container.load()   // __container of [Container] must not be awaited
 
-        if (this.__status) print(`WARNING: object [${this.id}] has status ${this.__status}`)
+        if (this.__status) this._print_stack(`WARNING: __status == ${this.__status}`)
 
         if (this.constructor === WebObject) {           // set the target WebObject subclass if not yet present; stubs only have WebObject as their class, which must be changed when the data is loaded and the item is linked to its category
             let cls = this._load_class()
