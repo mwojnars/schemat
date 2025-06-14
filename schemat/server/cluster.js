@@ -85,16 +85,18 @@ export class Cluster extends Agent {
 
         nodes.push(node)
         await this.action.set({nodes})
+        // await this.set({nodes}).save({ring: this.__ring})    -- .set() will not work outside action
         // await this.action({ring: this.__ring}).set({nodes})
-
-        // await this.edit.set({nodes}).save()  -- edit will fail because `this` is immutable
     }
 
     async 'action._create_node'(props) {
         // this._print_stack()
-        let node = schemat.std.Node.new(props)      // ??? will the ID be assigned in Transaction?
-        this._print(`action._create_node():\n`, node.__content)
-        return node
+        return schemat.std.Node.new(props)
+
+        // let node = schemat.std.Node.new(props)
+        // this._print(`action._create_node():\n`, node.__content)
+        // return node
+
         // TX+DB operations performed in the background:
         // - the new object is registered in TX and receives a provisional ID
         // - a request is sent over HTTP to an edge server

@@ -1378,7 +1378,7 @@ export class WebObject {
     }
 
     async 'action.set'(props = {}) {
-        /* Copy `props` entries into `this` and save the changes automatically to DB. */
+        /* Copy `props` entries into `this` and save changes automatically to DB. */
         // schemat.tx.config({capture: false, atomic: true})
         // schemat.tx.default({capture: false, atomic: true}) -- has effect unless the property was already configured by client
         for (let [key, val] of Object.entries(props))
