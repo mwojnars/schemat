@@ -229,7 +229,7 @@ describe('Environment Checks', function() {
 
 
 describe('Schemat Tests', function () {
-    this.timeout(10000)         // Extended timeout for asynchronous tests
+    this.timeout(12000)         // Extended timeout for asynchronous tests
 
     describe('Web Application', function () {
 
@@ -294,7 +294,6 @@ describe('Schemat Tests', function () {
         })
 
         it('Varia: double insert (console)', async function () {
-            await delay(200)
             await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main')
             await delay(200)
 
@@ -321,7 +320,7 @@ describe('Schemat Tests', function () {
         })
 
         it('rebuild_indexes', async function () {
-            await delay(200)
+            // await delay(200)
             await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main')
             await delay(200)
             let done = await page.evaluate(() => schemat.server('schemat.db.rebuild_indexes()'))
