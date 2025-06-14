@@ -220,8 +220,8 @@ export class Application extends WebObject {
     }
 
     async 'action.apply_edits'(edits, opts = {}) {
-        /* Modify 1+ objects by executing a number of edits in the DB. Each plain edit is an array: [id, op, ...args], where `op` is the name
-           of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
+        /* Modify 1+ objects by executing a number of edits in the DB. Each plain edit is an array: [id, op, ...args], where `id` is
+           the object ID, `op` is the name of edit.*() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
          */
         let groups = new Map()                  // group edits by object ID
         for (let [id, op, ...args] of edits) {
@@ -235,14 +235,6 @@ export class Application extends WebObject {
         }
         await schemat.tx.save(opts)
     }
-
-    // async 'action.apply_edits'(id, edits, opts = {}) {
-    //     /* Modify an object by executing a number of edits in the DB. Each plain edit is an array: [op, ...args], where `op` is the name
-    //        of the edit.<name>() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
-    //      */
-    //     schemat.tx.stage_edits(id, edits)
-    //     await schemat.tx.save(opts)
-    // }
 
     async 'action.delete_objects'(ids, opts) {
         /* Delete objects by ID. `ids` is an array of IDs, or a single ID. */
