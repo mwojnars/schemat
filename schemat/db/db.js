@@ -476,8 +476,7 @@ export class Database extends WebObject {
                     print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
                 else {
                     print(`...updating references in object [${id}]`)
-                    await WebObject.editable(id).edit.overwrite(data).save({ring})
-                    // await ring.update(id, [['overwrite', data]])
+                    await schemat.get_editable(id).edit.overwrite(data).save({ring})
                 }
             }
     }
