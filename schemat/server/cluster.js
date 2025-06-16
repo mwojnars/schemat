@@ -79,6 +79,7 @@ export class Cluster extends Agent {
            2. add child object to parent state
            3. save parent state to DB 
         */
+        this._print_stack()
         this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}`)
 
         let node = await this.action._create_node(props)
