@@ -492,7 +492,7 @@ export class WebObject {
            for `edits` or __status=DELETED within a transaction that is to be written to DB. Importantly, a dummy object
            is NOT really loaded (despite it is marked mutable), so it cannot be used for property access.
          */
-        return this.stub(id, {mutable: true, edits})
+        return schemat.stage(this.stub(id, {mutable: true, edits}))
     }
 
     static newborn(data = null, {draft, ...opts} = {}) {

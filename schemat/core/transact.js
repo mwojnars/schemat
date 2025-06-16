@@ -59,7 +59,7 @@ export class Transaction {
     }
 
     stage(obj) {
-        /* Add a web object to the transaction. */
+        /* Add a web object to the transaction. Return `obj`. */
         if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
         return obj.is_newborn() ? this._stage_newborn(obj) : this._stage_edited(obj)
     }

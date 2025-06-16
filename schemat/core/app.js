@@ -183,7 +183,7 @@ export class Application extends WebObject {
     }
 
 
-    /***  Actions -- can be called via schemat.remote.*()  ***/
+    /***  Actions -- can be called via schemat.action.*()  ***/
 
     // TODO: allow actions to run on immutable `this`, otherwise the `app` object is *recreated* on every execution of the actions below!
 
@@ -219,10 +219,8 @@ export class Application extends WebObject {
             edits.push([op, ...args])
             groups.set(id, edits)
         }
-        for (let [id, edits] of groups) {       // add every object to transaction
-            let obj = WebObject.dummy(id, edits)
-            schemat.stage(obj)
-        }
+        for (let [id, edits] of groups)         // add every object to transaction
+            WebObject.dummy(id, edits)
         await schemat.save(opts)
     }
 
