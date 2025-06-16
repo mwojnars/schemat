@@ -151,8 +151,6 @@ export class Node extends Agent {
     is_worker()     { return !this.is_master() }
     get_worker(i)   { return schemat.kernel.get_worker(i) }     // i = 1,2,...,N
 
-    _print(...args) { print(`${this.id}/#${this.worker_id}`, ...args) }
-
 
     get _tcp_port() { return schemat.config['tcp-port'] || this.tcp_port }      // FIXME: workaround
 
