@@ -445,12 +445,10 @@ export class Database extends WebObject {
 
             let opts = {ring, insert_mode: compact ? 'compact' : null, id: new_id}
             new_id = (await WebObject.newborn(obj.__json).save(opts)).id
-            // new_id = await this.insert(obj.__json, {ring, ...opts})
             assert(new_id)
 
             await this._update_references(id, new_id)
             await obj.delete_self().save()
-            // await this.delete(id)
 
             print(`...reinserted object [${id}] as [${new_id}]`)
             new_id = undefined
@@ -478,7 +476,8 @@ export class Database extends WebObject {
                     print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
                 else {
                     print(`...updating references in object [${id}]`)
-                    await ring.update(id, [['overwrite', data]])
+                    await WebObject.remote(id).edit.overwrite(data).save({ring})
+                    // await ring.update(id, [['overwrite', data]])
                 }
             }
     }
