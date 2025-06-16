@@ -487,8 +487,8 @@ export class WebObject {
         return self.__proxy = Intercept.wrap(self)
     }
 
-    static remote(id, edits = null) {
-        /* Representation of a mutating remote object: a mutable object with ID and __meta.edits, but no __data.
+    static editable(id, edits = null) {
+        /* Representation of an editable remote object: a mutable object with ID and __meta.edits, but no __data.
            Serves as a temporary container for `edits` or __status=DELETED within a transaction that is to be written to DB.
            In this way, it allows manipulations (edits & delete) on a remote object *without* fully loading it.
            Since this object is not loaded, it cannot be used for property access.
@@ -1300,7 +1300,7 @@ export class WebObject {
         let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)     // the edit may go to a different instance (a mutable one)
         let edit = [op, ...args]
 
-        obj.__data && obj._apply_edits(edit)    // __data is not present in "remote" objects, but appending to `edits` is enough there
+        obj.__data && obj._apply_edits(edit)    // __data is not present in editable "remote" objects, but appending to `edits` is enough there
         obj.__meta.edits?.push(edit)            // `edits` is not present in newborns, but editing __data is enough there
         return obj
     }

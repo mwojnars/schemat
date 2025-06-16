@@ -220,14 +220,14 @@ export class Application extends WebObject {
             groups.set(id, edits)
         }
         for (let [id, edits] of groups)         // add every object to transaction
-            WebObject.remote(id, edits)
+            WebObject.editable(id, edits)
         await schemat.save(opts)
     }
 
     async 'action.delete_objects'(ids, opts) {
         /* Delete objects by ID. `ids` is an array of IDs, or a single ID. */
         if (!Array.isArray(ids)) ids = [ids]
-        for (let id of ids) WebObject.remote(id).delete_self()
+        for (let id of ids) WebObject.editable(id).delete_self()
         await schemat.save(opts)
     }
 
