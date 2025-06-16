@@ -1279,9 +1279,9 @@ export class WebObject {
 
     _make_edit(op, args) {
         /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save().
-           Return `this`, or whatever the mutable version of this object is returned from the current transaction.
+           Return `this`, or whatever the mutable version of this object is registered in the current transaction (if `this` is immutable).
          */
-        if (this.__meta.obsolete) throw new Error(`a newer mutable instance of ${this} exists and should be edited instead of this one`)
+        if (this.__meta.obsolete) throw new Error(`this instance of ${this} is obsolete, reload it to edit`)
 
         let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)     // the edit may go to a different instance (a mutable one)
         let edit = [op, ...args]
