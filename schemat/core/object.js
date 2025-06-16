@@ -487,10 +487,11 @@ export class WebObject {
         return self.__proxy = Intercept.wrap(self)
     }
 
-    static dummy(id, edits = null) {
-        /* Create a "dummy" object: a mutable object with ID and __meta.edits, but no __data; it serves as a temporary container
-           for `edits` or __status=DELETED within a transaction that is to be written to DB. Importantly, a dummy object
-           is NOT really loaded (despite it is marked mutable), so it cannot be used for property access.
+    static remote(id, edits = null) {
+        /* Representation of a remote object: a mutable object with ID and __meta.edits, but no __data.
+           Serves as a temporary container for `edits` or __status=DELETED within a transaction that is to be written to DB.
+           In this way, it allows manipulations (edits & delete) on a remote object *without* fully loading it.
+           Since this object is not loaded, it cannot be used for property access.
          */
         return schemat.stage(this.stub(id, {mutable: true, edits}))
     }
@@ -1299,7 +1300,7 @@ export class WebObject {
         let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)     // the edit may go to a different instance (a mutable one)
         let edit = [op, ...args]
 
-        obj.__data && obj._apply_edits(edit)    // __data is not present in dummy objects, but appending to `edits` is enough there
+        obj.__data && obj._apply_edits(edit)    // __data is not present in "remote" objects, but appending to `edits` is enough there
         obj.__meta.edits?.push(edit)            // `edits` is not present in newborns, but editing __data is enough there
         return obj
     }
