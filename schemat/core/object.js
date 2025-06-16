@@ -619,10 +619,13 @@ export class WebObject {
                 if (Object.keys(db_opts).length && !this.is_mutable() && !custom_opts_allowed)
                     return WebObject.stub(this.id).load({...opts, custom_opts_allowed: true})
 
-                let rec = schemat.load_record(this.id, db_opts)
-                if (rec instanceof Promise) rec = await rec
-                let {json, loaded_at} = rec
-                this._set_data(json, loaded_at)
+                if (db_opts.json) this._set_data(db_opts.json)
+                else {
+                    let rec = schemat.load_record(this.id, db_opts)
+                    if (rec instanceof Promise) rec = await rec
+                    let {json, loaded_at} = rec
+                    this._set_data(json, loaded_at)
+                }
                 data_loaded = true
             }
 
