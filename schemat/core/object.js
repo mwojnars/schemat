@@ -499,7 +499,7 @@ export class WebObject {
         /* Create a newborn object (not yet in DB): a mutable object with __data but no ID.
            Optionally, initialize its __data with `data`, but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
-        obj.__data = new Catalog(data)
+        obj.__data = (typeof data === 'string') ? Catalog.load(data) : new Catalog(data)
         if (!draft)
             if (schemat.tx) schemat.stage(obj)      // schemat.tx is missing during boot; that's why draft objects can't be staged
             else throw new Error(`cannot create a newborn object when outside a transaction`)
@@ -543,12 +543,12 @@ export class WebObject {
         return this._new([], args)
     }
 
-    static async from_data(id, data, {mutable = false, sealed = true, activate = true} = {}) {
+    static async from_data(id, data, {mutable = false, ...load_opts} = {}) {
         /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSONx string). */
         // assert(typeof data === 'string' || data instanceof Catalog)
         let obj = WebObject.stub(id, {mutable})
         obj._set_data(data)
-        return obj.load({sealed, activate})
+        return obj.load(load_opts)
     }
 
     toString() { return this.__label }
