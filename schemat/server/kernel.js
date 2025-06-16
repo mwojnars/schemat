@@ -147,10 +147,6 @@ class Frame {
         let {agent} = this
         let agent_ctx = agent.__ctx || schemat.kernel_context       // empty agent.__ctx means kernel context should be used
         let ctx = agent.switch_context ? caller_ctx : agent_ctx
-
-        if (method === '$leader.create_node')
-            schemat._print(`call_agent() caller_ctx=${caller_ctx}, agent_ctx=${agent_ctx}, using ctx=${ctx}`)
-
         let call = async () => {
             let result = await this._call_agent(method, args)
             return callback ? callback(result) : result

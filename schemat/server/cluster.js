@@ -79,8 +79,8 @@ export class Cluster extends Agent {
            2. add child object to parent state
            3. save parent state to DB 
         */
-        this._print_stack()
-        this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}`)
+        // this._print_stack()
+        // this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}`)
 
         let node = await this.action._create_node(props)
         this._print(`$leader.create_node() node:\n`, node.__content)
@@ -94,7 +94,7 @@ export class Cluster extends Agent {
 
     async 'action._create_node'(props) {
         // this._print_stack()
-        this._print(`action._create_node() context: ${schemat.db}, ${schemat.app}`)
+        // this._print(`action._create_node() context: ${schemat.db}, ${schemat.app}`)
         return schemat.std.Node.new(props)
 
         // let node = schemat.std.Node.new(props)
