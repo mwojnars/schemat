@@ -470,7 +470,7 @@ export class WebObject {
 
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
         // only on the client this flag can be changed after object creation
-        Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false})
+        Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false, enumerable: true})
 
         if (!mutable) this.__meta.cache = new Map()
         else if (id) this.__meta.edits = edits || []        // `edits` not needed for newborns because their full __data is transferred to DB upon save()
