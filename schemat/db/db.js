@@ -455,10 +455,8 @@ export class Database extends WebObject {
 
             let opts = {insert_mode: compact ? 'compact' : null, id: new_id}
             new_id = await this.insert(obj.__json, {ring, ...opts})
-            // new_id = await ring.insert(obj.__json, opts)
             assert(new_id)
 
-            await ring.flush()
             await this._update_references(id, new_id)
             await this.delete(id)
 
@@ -493,7 +491,6 @@ export class Database extends WebObject {
                 else {
                     print(`...updating reference(s) in object [${id}]`)
                     await ring.update_full(id, data)
-                    // await ring.flush()
                 }
             }
     }
