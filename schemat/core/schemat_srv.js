@@ -195,6 +195,8 @@ export class ServerSchemat extends Schemat {
 
     /***  Context management  ***/
 
+    get current_context() { return this.db.id }
+
     with_context(handler) {
         /* Wrap up the `handler` function in async context that sets global schemat = this (via _schemat async store).
            This should be applied to all event handlers when registering them on TCP/HTTP sockets, IPC channels etc.,
@@ -213,7 +215,7 @@ export class ServerSchemat extends Schemat {
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
         if (!db_id && schemat.in_kernel_context()) return callback()
-        if (db_id === schemat.db.id) return callback()
+        if (db_id === schemat.current_context) return callback()
 
         let app_id, db
         if (db_id) {

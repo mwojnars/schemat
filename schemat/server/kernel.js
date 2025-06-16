@@ -141,7 +141,7 @@ class Frame {
         this.state = state
     }
 
-    async call_agent(method, args, caller_ctx) {
+    async call_agent(method, args, caller_ctx = null) {
         /* Call agent's `method` in tracked mode, in a proper app context (caller's or own), and pass the state as an extra argument. */
         let {agent} = this
         let ctx = agent.switch_context ? caller_ctx : agent.__ctx
