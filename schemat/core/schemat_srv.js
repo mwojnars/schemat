@@ -38,7 +38,10 @@ export class ServerSchemat extends Schemat {
     get cluster()   { return this.get_if_loaded(this._cluster?.id, obj => {this._cluster = obj}) || this._cluster }
     get std()       { return this.root_category.std }   // standard categories and objects from ring-kernel
 
-    in_kernel_context() { return !this.app_id }
+    get current_context()   { return this.db.id }
+    in_kernel_context()     { return !this.app_id }
+
+    _print(...args) { print(`${this.node?.id}/#${this.worker_id}`, ...args) }
 
 
     /***  Initialization  ***/
@@ -81,6 +84,7 @@ export class ServerSchemat extends Schemat {
         this.parent = parent
         this.kernel = parent.kernel
         this.builtin = parent.builtin
+        this.kernel_context = parent.kernel_context
     }
 
     async boot(create_boot_db = null, auto = true) {
@@ -103,6 +107,9 @@ export class ServerSchemat extends Schemat {
         // their _boot_db is already the final db, so this._db is initialized in constructor()
         this._db ??= await this._cluster.database.load()
         assert(this._db.is_loaded())
+
+        if (!this.parent) { assert(!this.app_id); this.kernel_context = this._db.id }
+        // print(`kernel_context created:`, this.kernel_context)
 
         await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
         await this.app?.reload()            // repeated app reload is needed for app.global initialization which fails on the first attempt during bootstrap
@@ -194,8 +201,6 @@ export class ServerSchemat extends Schemat {
 
 
     /***  Context management  ***/
-
-    get current_context() { return this.db.id }
 
     with_context(handler) {
         /* Wrap up the `handler` function in async context that sets global schemat = this (via _schemat async store).

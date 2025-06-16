@@ -142,8 +142,12 @@ class Frame {
     }
 
     async call_agent(method, args, caller_ctx = schemat.current_context, caller_tx = null, callback = null) {
+        // agent.__ctx == null  -->  use kernel context
+        // caller_ctx  == null  -->  use existing context
+        assert(schemat.kernel_context)
         let {agent} = this
-        let ctx = agent.switch_context ? caller_ctx : agent.__ctx
+        let agent_ctx = agent.__ctx || schemat.kernel_context       // empty agent.__ctx means kernel context should be used
+        let ctx = agent.switch_context ? caller_ctx : agent_ctx
         let call = async () => {
             let result = await this._call_agent(method, args)
             return callback ? callback(result) : result
