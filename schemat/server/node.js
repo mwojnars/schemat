@@ -205,8 +205,15 @@ export class Node extends Agent {
 
     async _start_agents(agents) {
         /* Send SYS signals down to worker processes to make them start particular `agents`. */
-        for (let {worker, agent, role, options} of agents)
+        for (let {worker, agent, role, options} of agents) {
+            // adjust the `worker` index if it does not match a valid worker ID (should be in 1,2,...,num_workers)
+            if (worker < 1 || worker > this.num_workers) {
+                let new_worker = (worker-1) % this.num_workers + 1
+                this._print(`_start_agents(): adjusted worker process index of ${agent} from #${worker} to #${new_worker}`)
+                worker = new_worker
+            }
             await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
+        }
     }
 
     // _place_agents(agents) {
