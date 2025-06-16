@@ -39,10 +39,15 @@ export class ServerSchemat extends Schemat {
     get std()       { return this.root_category.std }   // standard categories and objects from ring-kernel
 
     kernel_context          // db.id of the kernel database, initialized in the kernel's ServerSchemat and inherited by child contexts
-    get current_context()   { return this.db.id }
+    get current_context()   { return this._db.id }
+    get _context_id()       { return this.app_id || null }      // app ID that represents the execution context; or `null` for kernel context (no app)
     in_kernel_context()     { return !this.app_id }
 
-    _print(...args) { print(`${this.node?.id}/#${this.worker_id}`, ...args) }
+    // below, missing `app_id` (undefined or null) indicates a request for the kernel context
+    static get_context(app_id)   { return globalThis._contexts.get(app_id || null) }
+    static set_context(_schemat) { globalThis._contexts.set(_schemat.app_id || null, _schemat) }
+
+    _print(...args) { print(`${this.node?.id}/#${this.kernel?.worker_id}`, ...args) }
 
 
     /***  Initialization  ***/
@@ -57,7 +62,7 @@ export class ServerSchemat extends Schemat {
             enumerable: true
         })
         globalThis._schemat = new AsyncLocalStorage()
-        globalThis._contexts = new Map()
+        globalThis._contexts = new Map()        // app_id -> schemat_instance; kernel context stored under `null` key (!)
     }
 
     constructor(config, parent = null, boot_db = null) {
@@ -67,8 +72,10 @@ export class ServerSchemat extends Schemat {
         this._boot_db = boot_db || this.parent?.db      // can be missing
         this._db = boot_db                              // can be missing
 
-        assert(globalThis._contexts.get(this.app_id) === undefined, `ServerSchemat context for app_id=${this.app_id} is already registered`)
-        globalThis._contexts.set(this.app_id, this)
+        assert(ServerSchemat.get_context(this.app_id) === undefined, `ServerSchemat context for app_id=${this.app_id} is already registered`)
+        ServerSchemat.set_context(this)
+        // assert(globalThis._contexts.get(this._context_id) === undefined, `ServerSchemat context for app_id=${this.app_id} is already registered`)
+        // globalThis._contexts.set(this._context_id, this)
 
         this.PATH_WORKING = process.cwd()               // initialize PATH_WORKING from the current working dir
         this.PATH_CLUSTER = this.PATH_WORKING + '/cluster'
@@ -220,21 +227,25 @@ export class ServerSchemat extends Schemat {
 
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
-        if (!db_id && schemat.in_kernel_context()) return callback()
-        if (db_id === schemat.current_context) return callback()
+        if (!db_id && this.in_kernel_context()) return callback()
+        if (db_id === this.current_context) return callback()
 
+        // this._print(`in_context() current_context=${this.current_context} db_id=${db_id}`)
         let app_id, db
         if (db_id) {
+            // this._print(`in_context() loading db...`)
             db = (typeof db_id === 'object') ? db_id : this.get_object(db_id)
             if (!db.is_loaded()) await db.load()
             app_id = db?.application?.id
+            // this._print(`in_context() this.app_id=${this.app_id} app_id=${app_id}`)
         }
 
-        // this.kernel._print(`ServerSchemat.in_context() this.app_id = ${this.app_id} ...`)
-        let context = app_id ? globalThis._contexts.get(app_id) : this
+        // let context = app_id ? globalThis._contexts.get(app_id) : this
+        let context = ServerSchemat.get_context(app_id)
+        // this._print(`in_context() found existing context: ${!!context}`)
 
         if (!context) {
-            this.kernel._print(`ServerSchemat.in_context() creating context for [${app_id}]`)
+            // this._print(`in_context() creating context for [${app_id}]`)
             context = new ServerSchemat({...this.config, app: app_id}, this, db)
             await _schemat.run(context, () => context.boot())
 
@@ -245,7 +256,8 @@ export class ServerSchemat extends Schemat {
         // else if (context.booting) await context.booting
         // else if (context instanceof Promise) context = await context
 
-        // this.kernel._print(`ServerSchemat.in_context() executing callback`)
+        // this._print(`in_context() context.app_id=${context.app_id} .db=${context._db.id}`)
+        // this._print(`globalThis._contexts:\n`, globalThis._contexts)
         return _schemat.run(context, callback)
 
         // return schemat === context ? callback() : await _schemat.run(context, callback)
