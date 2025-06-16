@@ -408,7 +408,7 @@ export class Database extends WebObject {
 
     /***  Administrative  ***/
 
-    async admin_reinsert(ids, {id: new_id, ring, compact = false} = {}) {
+    async 'action.admin_reinsert'(ids, {id: new_id, ring, compact = false} = {}) {
         /* Remove object(s) from its current ring and reinsert under new `id` into `ring` (if present), or to the top-most ring.
            Only for development purposes, this operation may lead to data inconsistencies. Changing object IDs should never
            be done in production, especially that the entire database is scanned for references after each re-insert.
@@ -443,12 +443,14 @@ export class Database extends WebObject {
                 else throw ex
             }
 
-            let opts = {insert_mode: compact ? 'compact' : null, id: new_id}
-            new_id = await this.insert(obj.__json, {ring, ...opts})
+            let opts = {ring, insert_mode: compact ? 'compact' : null, id: new_id}
+            new_id = (await WebObject.newborn(obj.__json).save(opts)).id
+            // new_id = await this.insert(obj.__json, {ring, ...opts})
             assert(new_id)
 
             await this._update_references(id, new_id)
-            await this.delete(id)
+            await obj.delete_self().save()
+            // await this.delete(id)
 
             print(`...reinserted object [${id}] as [${new_id}]`)
             new_id = undefined
