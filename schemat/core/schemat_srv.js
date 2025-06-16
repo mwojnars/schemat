@@ -40,10 +40,9 @@ export class ServerSchemat extends Schemat {
 
     kernel_context          // db.id of the kernel database, initialized in the kernel's ServerSchemat and inherited by child contexts
     get current_context()   { return this._db.id }
-    get _context_id()       { return this.app_id || null }      // app ID that represents the execution context; or `null` for kernel context (no app)
     in_kernel_context()     { return !this.app_id }
 
-    // below, missing `app_id` (undefined or null) indicates a request for the kernel context
+    // below, empty `app_id` (undefined or null) indicates a request for the kernel context
     static get_context(app_id)   { return globalThis._contexts.get(app_id || null) }
     static set_context(_schemat) { globalThis._contexts.set(_schemat.app_id || null, _schemat) }
 
@@ -62,7 +61,7 @@ export class ServerSchemat extends Schemat {
             enumerable: true
         })
         globalThis._schemat = new AsyncLocalStorage()
-        globalThis._contexts = new Map()        // app_id -> schemat_instance; kernel context stored under `null` key (!)
+        globalThis._contexts = new Map()        // app_id -> schemat_instance; kernel context stored under `null` key
     }
 
     constructor(config, parent = null, boot_db = null) {
@@ -74,8 +73,6 @@ export class ServerSchemat extends Schemat {
 
         assert(ServerSchemat.get_context(this.app_id) === undefined, `ServerSchemat context for app_id=${this.app_id} is already registered`)
         ServerSchemat.set_context(this)
-        // assert(globalThis._contexts.get(this._context_id) === undefined, `ServerSchemat context for app_id=${this.app_id} is already registered`)
-        // globalThis._contexts.set(this._context_id, this)
 
         this.PATH_WORKING = process.cwd()               // initialize PATH_WORKING from the current working dir
         this.PATH_CLUSTER = this.PATH_WORKING + '/cluster'
@@ -96,7 +93,7 @@ export class ServerSchemat extends Schemat {
     }
 
     async boot(create_boot_db = null, auto = true) {
-        /* Initialize built-in objects, app_id, app, bootstrap DB. */
+        /* Initialize built-in objects, app, bootstrap DB. */
         if (!this.builtin) await this._init_classpath()
 
         // bootstrap DB: provided by the caller in constructor(), taken from parent, or created anew; the ultimate DB is opened later: on the first access to this.db
@@ -233,19 +230,16 @@ export class ServerSchemat extends Schemat {
         // this._print(`in_context() current_context=${this.current_context} db_id=${db_id}`)
         let app_id, db
         if (db_id) {
-            // this._print(`in_context() loading db...`)
             db = (typeof db_id === 'object') ? db_id : this.get_object(db_id)
             if (!db.is_loaded()) await db.load()
             app_id = db?.application?.id
             // this._print(`in_context() this.app_id=${this.app_id} app_id=${app_id}`)
         }
 
-        // let context = app_id ? globalThis._contexts.get(app_id) : this
         let context = ServerSchemat.get_context(app_id)
         // this._print(`in_context() found existing context: ${!!context}`)
 
         if (!context) {
-            // this._print(`in_context() creating context for [${app_id}]`)
             context = new ServerSchemat({...this.config, app: app_id}, this, db)
             await _schemat.run(context, () => context.boot())
 
