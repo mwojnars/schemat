@@ -437,7 +437,7 @@ export class WebObject {
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     is_deleted()    { return this.__status === WebObject.Status.DELETED }
     is_category()   { return false }
-    //is_mutable()    { return this.__meta.mutable }
+    is_mutable()    { return this.__meta.mutable }
     //is_expired()    { return this.__meta.expire_at < Date.now() }
 
     if_loaded()     { return this.is_loaded() && this }     // return self if already loaded, false/undefined otherwise
@@ -575,7 +575,8 @@ export class WebObject {
     /***  Loading & initialization  ***/
 
     async load(opts = {}) {
-        /* Load full __data of this object from DB, if not loaded yet. Return this object.
+        /* Load full __data of this object from DB, if not loaded yet. Return this object, *unless* custom DB options for
+           loading are included in `opts` (see _load() below) which may enforce creating a new instance.
            For a newborn object (__data already present), only perform its *activation* (initialization), no data loading.
            If sealed=true and __seal is present in the object, the exact versions of dependencies (prototypes, categories)
            as indicated by __seal are linked. The data can only be loaded ONCE for a given WebObject instance due to immutability.
@@ -600,8 +601,10 @@ export class WebObject {
         return loading
     }
 
-    async _load({sealed = true, activate = true, ...opts} = {}) {
+    async _load(opts = {}) {
         /* Load this.__data from DB if missing. Initialize this object: set up the class and prototypes, run __init__() etc. */
+
+        let {sealed = true, activate = true, custom_opts_allowed = false, ...db_opts} = opts
 
         // this._print(`_load() ...`)
         schemat.before_data_loading(this)
@@ -609,7 +612,14 @@ export class WebObject {
 
         try {
             if (!this.__data) {
-                let rec = schemat.load_record(this.id, opts)
+                // if custom `db_opts` for DB loading are specified, the loaded object would no longer be "clean",
+                // and for this reason, another instance must be created, not to pollute `this` which may be already
+                // stored in the Registry and referenced by other objects or even by unrelated requests/threads
+                // (this problem doesn't affect mutable objects, though, as they never get included in the Registry):
+                if (Object.keys(db_opts).length && !this.is_mutable() && !custom_opts_allowed)
+                    return WebObject.stub(this.id).load({...opts, custom_opts_allowed: true})
+
+                let rec = schemat.load_record(this.id, db_opts)
                 if (rec instanceof Promise) rec = await rec
                 let {json, loaded_at} = rec
                 this._set_data(json, loaded_at)
