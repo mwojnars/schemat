@@ -197,14 +197,14 @@ export class Ring extends WebObject {
         return this._find_block(id).$agent.update(id, edits, req || new DataRequest())
     }
 
-    async update_full(id_or_obj, data = null, req = null) {
-        let obj = T.isNumber(id_or_obj) ? null : id_or_obj
-        let id  = obj?.id || id_or_obj
-        data ??= obj.__data //__json
-        let edits = [['overwrite', data]]
-
-        return this._find_block(id).$agent.update(id, edits, req || new DataRequest())
-    }
+    // async update_full(id_or_obj, data = null, req = null) {
+    //     let obj = T.isNumber(id_or_obj) ? null : id_or_obj
+    //     let id  = obj?.id || id_or_obj
+    //     data ??= obj.__data //__json
+    //     let edits = [['overwrite', data]]
+    //
+    //     return this._find_block(id).$agent.update(id, edits, req || new DataRequest())
+    // }
 
     async upsave(id, data, req) {
         return this._find_block(id).$agent.upsave(id, data, req || new DataRequest())
@@ -485,7 +485,8 @@ export class Database extends WebObject {
                     print(`...WARNING: cannot update a reference [${old_id}] > [${new_id}] in item [${id}], the ring is read-only`)
                 else {
                     print(`...updating reference(s) in object [${id}]`)
-                    await ring.update_full(id, data)
+                    await ring.update(id, [['overwrite', data]])
+                    // await ring.update_full(id, data)
                 }
             }
     }
