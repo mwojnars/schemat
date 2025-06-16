@@ -328,7 +328,7 @@ export class Database extends WebObject {
         return ring.select(id)
     }
 
-    async insert(data, {ring} = {}) {
+    async insert(data, {ring, ...opts} = {}) {
         /* Find the top-most writable ring and insert `data` as a new entry there. Return {id, data} record.
            If `ring` is given (name/object/ID), the entry is inserted to this particular ring, or error is raised if read-only.
          */
@@ -338,7 +338,7 @@ export class Database extends WebObject {
             if (!ring) throw new DataAccessError("all ring(s) are read-only")
         }
         if (ring.readonly) throw new DataAccessError(`target ring is read-only`)
-        return ring.insert(data)
+        return ring.insert(data, opts)
     }
 
     async update(id, edits, {ring} = {}) {
@@ -454,7 +454,8 @@ export class Database extends WebObject {
             }
 
             let opts = {insert_mode: compact ? 'compact' : null, id: new_id}
-            new_id = await ring.insert(obj.__json, opts)
+            new_id = await this.insert(obj.__json, {ring, ...opts})
+            // new_id = await ring.insert(obj.__json, opts)
             assert(new_id)
 
             await ring.flush()
