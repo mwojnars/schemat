@@ -488,7 +488,7 @@ export class WebObject {
     }
 
     static remote(id, edits = null) {
-        /* Representation of a remote object: a mutable object with ID and __meta.edits, but no __data.
+        /* Representation of a mutating remote object: a mutable object with ID and __meta.edits, but no __data.
            Serves as a temporary container for `edits` or __status=DELETED within a transaction that is to be written to DB.
            In this way, it allows manipulations (edits & delete) on a remote object *without* fully loading it.
            Since this object is not loaded, it cannot be used for property access.
