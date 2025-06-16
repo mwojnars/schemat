@@ -247,8 +247,8 @@ export class DataBlock extends Block {
         let records = data.map(d => ({data: d}))        // {id, data, obj} tuples that await ID assignment + setup
         let objects = []
 
-        if (batch) assert(!id)
-        else if (id) {
+        if (id && data.length) {
+            assert(data.length === 1)
             let key = this.encode_id(id)                // fixed ID provided by the caller? check for uniqueness
             if (await state.storage.get(key)) throw new DataConsistencyError(`record with this ID already exists`, {id})
             records[0].id = id
