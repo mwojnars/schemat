@@ -1320,6 +1320,9 @@ export class WebObject {
           They must NOT modify their arguments, because the same args may need to be sent later from client to DB.
      ***/
 
+    'edit.touch'() {}
+        /* No change. Used to enforce a rewrite of the database record, for debugging, etc. */
+
     'edit.set'(path, ...values) {
         /* Set value of a property or nested element inside a sub-catalog/map/array. */
         this.__data.set(path, ...values)
