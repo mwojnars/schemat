@@ -141,8 +141,14 @@ class Frame {
         this.state = state
     }
 
-    async call_agent(method, args, pause_delay = 1.0 /*seconds*/) {
-        /* Call agent's method in tracked mode and pass `state` as an extra argument. */
+    async call_agent(method, args, caller_ctx) {
+        /* Call agent's `method` in tracked mode, in a proper app context (caller's or own), and pass the state as an extra argument. */
+        let {agent} = this
+        let ctx = agent.switch_context ? caller_ctx : agent.__ctx
+        return schemat.in_context(ctx, () => this._call_agent(method, args))
+    }
+
+    async _call_agent(method, args, pause_delay = 1.0 /*seconds*/) {
         let {agent, state} = this
 
         if (this.stopping) throw new Error(`agent ${agent} is in the process of stopping`)
