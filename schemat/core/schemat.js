@@ -316,18 +316,22 @@ export class Schemat {
         return stub.load()      // here, this._loading gets updated
     }
 
-    load_record(id, opts = {}) {
+    load_record(id, opts) {
         /* Read object's raw data (JSON string) from DB, or from the registry (if present there).
-           In the former case, the newly retrieved data is saved in the registry for future use. Return {json, loaded_at}.
+           In the former case, the newly retrieved data is saved in the registry for future use.
+           If `opts` is provided, the read/write of Registry is skipped. Returns {json, loaded_at}.
          */
         assert(id !== undefined)
         // this.session?.countLoaded(id)
 
-        let rec = this.get_record(id)
+        if (opts && Object.keys(opts).length === 0)     // replace empty opts ({}) with undefined
+            opts = undefined
+
+        let rec = !opts && this.get_record(id)
         if (rec) return rec
 
         return this._db_select(id, opts).then(json => {
-            this.register_record({id, data: json})
+            if (!opts) this.register_record({id, data: json})
             return {json, loaded_at: Date.now()}
         })
     }
