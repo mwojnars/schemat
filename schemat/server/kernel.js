@@ -148,8 +148,7 @@ class Frame {
             let result = await this._call_agent(method, args)
             return callback ? callback(result) : result
         }
-        return schemat.in_context(ctx, caller_tx ? () => schemat.in_transaction(caller_tx, call) : call)
-        // return schemat.in_context(ctx, () => this._call_agent(method, args))
+        return schemat.in_tx_context(ctx, caller_tx, call)
     }
 
     async _call_agent(method, args, pause_delay = 1.0 /*seconds*/) {

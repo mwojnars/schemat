@@ -565,8 +565,8 @@ export class WebObject {
         let fun    = caller?.match(/at (\S+)/)?.[1]     // function name of the caller
         let label  = `${this.__label}${fun ? '.'+fun+'()' : ''}`
         let title  = SERVER ? `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${label} context ${schemat.db}` : label
-        console.error(title, ...args)
-        console.error(lines.join('\n'))
+        console.log(title, '- debug stack trace:', ...args)
+        console.log(lines.join('\n'))
     }
 
 
