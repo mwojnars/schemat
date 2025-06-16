@@ -113,8 +113,7 @@ export class ServerSchemat extends Schemat {
         this._db ??= await this._cluster.database.load()
         assert(this._db.is_loaded())
 
-        if (!this.parent) { assert(!this.app_id); this.kernel_context = this._db.id }
-        // print(`kernel_context created:`, this.kernel_context)
+        if (!this.parent) this.kernel_context = this._db.id
 
         await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
         await this.app?.reload()            // repeated app reload is needed for app.global initialization which fails on the first attempt during bootstrap
