@@ -417,7 +417,7 @@ export class Database extends WebObject {
 
     /***  Administrative  ***/
 
-    async admin_reinsert(ids, {id: new_id, ring: ring_name, compact = false} = {}) {
+    async admin_reinsert(ids, {id: new_id, ring, compact = false} = {}) {
         /* Remove object(s) from its current ring and reinsert under new `id` into `ring` (if present), or to the top-most ring.
            Only for development purposes, this operation may lead to data inconsistencies. Changing object IDs should never
            be done in production, especially that the entire database is scanned for references after each re-insert.
@@ -427,7 +427,6 @@ export class Database extends WebObject {
         print(`\nreinserting object(s) [${ids}] ...`)
 
         let id_list = []
-        let ring = ring_name ? this.get_ring(ring_name) : this.top_ring
         let obj
 
         // parse the list of `ids`, which is a comma-separated list of integers or "X-Y" value ranges
@@ -463,10 +462,6 @@ export class Database extends WebObject {
             print(`...reinserted object [${id}] as [${new_id}]`)
             new_id = undefined
         }
-
-        // print(`rebuilding indexes...`)
-        // await this.rebuild_indexes()
-
         print()
     }
 
