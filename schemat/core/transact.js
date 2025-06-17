@@ -124,7 +124,8 @@ export class Transaction {
     }
 
     async _save_newborn(objects, opts) {
-        // new objects must be inserted all together due to possible cross-references
+        /* New objects must be inserted all together due to possible cross-references. */
+
         let datas = objects.map(obj => obj.__data.__getstate__())
         let ids = await this._db_insert(datas, opts)
 
@@ -143,7 +144,8 @@ export class Transaction {
     }
 
     async _save_deleted(objects, opts) {
-        await this._db_delete(objects, opts)
+        let ids = objects.map(obj => obj.id)
+        await this._db_delete(ids, opts)
         this._discard(...objects)
     }
 
@@ -196,9 +198,9 @@ export class ServerTransaction extends Transaction {
         return schemat.db.insert(datas, opts)       // returns an array of IDs assigned
     }
 
-    async _db_delete(objects, opts) {
+    async _db_delete(ids, opts) {
         let db = schemat.db
-        return Promise.all(objects.map(obj => db.delete(obj.id, opts)))
+        return Promise.all(ids.map(id => db.delete(id, opts)))
     }
 
     async _db_update(objects, opts) {
@@ -255,8 +257,8 @@ export class ClientTransaction extends Transaction {
         return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
     }
 
-    async _db_delete(objects, opts) {
-        return schemat.app.action.delete_objects(objects.map(obj => obj.id), opts)
+    async _db_delete(ids, opts) {
+        return schemat.app.action.delete_objects(ids, opts)
     }
 
     async _db_update(objects, opts) {
