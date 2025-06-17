@@ -160,8 +160,8 @@ export class Transaction {
     }
 
     async _save_edited(objects, opts) {
-        let edits = objects.map(obj => [obj.id, obj.__meta.edits])
-        await this._db_update(edits, opts)
+        let id_edits = objects.map(obj => [obj.id, obj.__meta.edits])
+        await this._db_update(id_edits, opts)
         for (let obj of objects)
             if (obj.__data) obj.__meta.edits.length = 0     // mark that there are no more pending edits
             else this._staging.delete(obj)                  // remove permanently if a remote object (no __data)
@@ -214,9 +214,9 @@ export class ServerTransaction extends Transaction {
         return Promise.all(ids.map(id => db.delete(id, opts)))
     }
 
-    async _db_update(edits, opts) {
+    async _db_update(id_edits, opts) {
         let db = schemat.db
-        return Promise.all(edits.map(([id, edits]) => db.update(id, edits, opts)))
+        return Promise.all(id_edits.map(([id, edits]) => db.update(id, edits, opts)))
     }
 
     async commit(opts = {}) {
@@ -272,8 +272,8 @@ export class ClientTransaction extends Transaction {
         return schemat.app.action.delete_objects(ids, opts)
     }
 
-    async _db_update(edits, opts) {
-        edits = edits.flatMap(([id, eds]) => eds.map(ed => [id, ...ed]))
+    async _db_update(id_edits, opts) {
+        let edits = id_edits.flatMap(([id, eds]) => eds.map(ed => [id, ...ed]))
         return schemat.app.action.apply_edits(edits, opts)
     }
 
