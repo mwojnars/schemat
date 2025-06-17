@@ -88,7 +88,7 @@ export class Transaction {
            IMPORTANT:
            It is possible and allowed that while saving changes to DB, the transaction is modified by new mutations
            occurring inside data blocks! For example, new Revision objects may be created while updating a staged object.
-           This means that the content of _staging may change in the background during execution of _save_*() methods below.
+           This means that the content of _staging may change in the background during execution of _db_*() methods below.
            Importantly, there is a barrier between the transaction and the DB: no web objects are passed to _db_*() methods,
            and no objects are returned from them, only plain data structures like arrays of IDs or raw data contents.
            Also, the mutated objects are first removed from _staging, so the DB has no access to them and cannot modify them:
@@ -125,42 +125,46 @@ export class Transaction {
         let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0 && obj.__status !== DELETED)
         assert(objects.length >= newborn.length + deleted.length + edited.length)   // some objects may be skipped (zero edits)
 
-        // unwrap objects so that plain data structures are passed to DB
+        // unwrap objects so that only plain data structures are passed to DB
         let ins_datas = newborn.map(obj => obj.__data.__getstate__())
         let del_ids   = deleted.map(obj => obj.id)
         let upd_edits = edited.map(obj => [obj.id, [...obj.__meta.edits]])
 
-        // mark objects as obsolete if needed
+        // mark objects as obsolete, or prepare them for new incoming mutations during _db_*() calls below
         if (discard) this._discard(...objects)
         else {
-            this._discard(...deleted)
-            for (let obj of edited) obj.__meta.edits.length = 0     // clear pending edits in mutated objects
+            this._discard(...deleted)                               // discard all deleted objects, they should always be invalidated
+            edited.forEach(obj => {obj.__meta.edits.length = 0})    // clear pending edits in mutated objects
+            newborn.forEach(obj => this._staging.delete(obj))       // drop every newborn from _staging, it will be reinserted later
         }
 
         // deleting may run in parallel with saving newborn and edited objects
         let deleting = deleted.length ? this._db_delete(del_ids, opts) : null
 
-        // newborns must receive their final IDs and be saved before edited objects due to possible references
-        if (newborn.length) await this._save_newborn(newborn, ins_datas, opts)
-        if (edited.length)  await this._db_update(upd_edits, opts)
+        // newborns must be inserted together and receive their IDs before mutated objects are saved, due to possible cross-references
+        if (newborn.length) {
+            let ids = await this._db_insert(ins_datas, opts)
+            this._update_newborn(newborn, ids, discard)
+        }
+        if (edited.length) await this._db_update(upd_edits, opts)
         if (deleting) await deleting
+
     }
 
-    async _save_newborn(objects, ins_datas, opts) {
-        /* New objects must be inserted all together due to possible cross-references. */
-        let ids = await this._db_insert(ins_datas, opts)
-
-        // replace provisional IDs with proper IDs in original objects
-        ids.map((id, i) => {
-            let obj = objects[i]
-            this._staging.delete(obj)
+    _update_newborn(newborn, ids, discarded) {
+        /* Replace provisional IDs with proper IDs in newborn objects. */
+        ids.forEach((id, i) => {
+            let obj = newborn[i]
             obj.id = id
             delete obj.__self.__provisional_id
+            if (discarded) return
 
-            // re-stage the object under its proper ID, as it can still receive mutations in the future
-            assert(!this._staging.has(obj))
-            obj.__meta.edits = []       // `edits` array is uninitialized in newborns
-            this._staging.add(obj)
+            if (this._staging.has(obj))     // this object may have been already staged under its proper ID by a concurrent thread
+                obj.__meta.obsolete = true
+            else {                          // re-stage the object under its proper ID, as it can still receive mutations in the future
+                obj.__meta.edits = []       // `edits` array is uninitialized in newborns
+                this._staging.add(obj)
+            }
         })
     }
 
