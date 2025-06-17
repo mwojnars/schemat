@@ -375,7 +375,7 @@ export class Database extends WebObject {
     // }
 
     async 'action.create_index'(name, key, payload = undefined, {ring} = {}) {
-        /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (the kernel).
+        /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (ring-kernel).
            Schema of the new index is defined by `key` and `payload` (arrays of property names).
          */
         if (!Array.isArray(key) || key.length === 0) throw new Error(`index key must be an array with at least one element: ${key}`)
