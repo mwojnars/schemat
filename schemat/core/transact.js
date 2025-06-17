@@ -102,9 +102,17 @@ export class Transaction {
             return true
         })
 
+        // objects.forEach(obj => {
+        //     if (obj.id && !obj.__meta.edits) {
+        //         schemat._print(`Transaction.save() invalid object:`, obj.__content)
+        //         obj._print_stack()
+        //     }
+        // })
+
         let newborn = objects.filter(obj => obj.__provisional_id)
         let deleted = objects.filter(obj => obj.__status === DELETED)
         let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0 && obj.__status !== DELETED)
+        assert(objects.length >= newborn.length + deleted.length + edited.length)   // some objects may be skipped (zero edits)
 
         // deleting may run in parallel with saving newborn and edited objects
         let deleting = deleted.length ? this._save_deleted(deleted, opts) : null
