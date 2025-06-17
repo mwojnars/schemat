@@ -327,9 +327,7 @@ export class ServerSchemat extends Schemat {
         obj._print(`execute_action(${action}) ...`)
 
         let result = await this.in_transaction(tx, async () => {
-            // let res = await obj._execute_action(action, args)
-
-            // let obj = schemat.tx.get_mutable(this)
+            // obj = obj.get_mutable()
             let func = obj.__self[`action.${action}`]
             if (!func) throw new Error(`action method not found: '${action}'`)
             let res = await func.call(obj, ...args)

@@ -1191,8 +1191,8 @@ export class WebObject {
     /***  Database operations on self  ***/
 
     delete_self() {
-        /* Mark this object as to-be-deleted in the transaction and return the mutable copy for easy chaining of .save() call. */
-        let obj = schemat.tx.get_mutable(this)
+        /* Mark this object as to-be-deleted in its mutable copy (in transaction) and return this copy for easy chaining of a .save() call. */
+        let obj = this.get_mutable()
         obj.__status = WebObject.Status.DELETED
         return obj
     }
@@ -1265,6 +1265,14 @@ export class WebObject {
     //     return obj
     // }
 
+    get_mutable() {
+        /* Return the mutable instance of this object as currently recorded in the transaction under this ID;
+           or itself if `this` is already mutable (which does NOT imply it is included in the transaction!
+           but normally, __meta.obsolete should be true if this instance got excluded from the TX).
+         */
+        return this.__meta.mutable ? this : schemat.tx.get_mutable(this)
+    }
+
     _get_mutable({activate = true, ...opts} = {}) {
         /* Create synchronously a mutable instance of itself: by cloning this.__data (on server), or by marking itself
            as mutable (on client). The object must be already fully loaded.
@@ -1297,7 +1305,7 @@ export class WebObject {
          */
         if (this.__meta.obsolete) throw new Error(`this instance of ${this} is obsolete, reload it to edit`)
 
-        let obj = this.__meta.mutable ? this : schemat.tx.get_mutable(this)     // the edit may go to a different instance (a mutable one)
+        let obj = this.get_mutable()            // the edit may go to a different instance (a mutable one), not `this`!
         let edit = [op, ...args]
 
         obj.__data && obj._apply_edits(edit)    // __data is not present in editable "remote" objects, but appending to `edits` is enough there
@@ -1391,12 +1399,12 @@ export class WebObject {
 
     /***  Actions  ***/
 
-    _execute_action(name, args, as_mutable = true) {
-        let obj = as_mutable ? schemat.tx.get_mutable(this) : this
-        let func = obj.__self[`action.${name}`]
-        if (!func) throw new Error(`action method not found: '${name}'`)
-        return func.call(obj, ...args)
-    }
+    // _execute_action(name, args, as_mutable = true) {
+    //     let obj = as_mutable ? schemat.tx.get_mutable(this) : this
+    //     let func = obj.__self[`action.${name}`]
+    //     if (!func) throw new Error(`action method not found: '${name}'`)
+    //     return func.call(obj, ...args)
+    // }
 
     async 'action.set'(props = {}) {
         /* Copy `props` entries into `this` and save changes automatically to DB. */
