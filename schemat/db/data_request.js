@@ -34,7 +34,7 @@ export class DataRequest {
     // user                // user that initiated the request (if any), to check for permissions, user-specific config etc.
     // hops                // number of hops the request has gone through so far (for debugging and performance monitoring); after too many hops the request should be dropped to avoid infinite loops
 
-    trace = []             // array of ProcessingStep(s) that the request has gone through so far
+    // trace = []          // array of ProcessingStep(s) that the request has gone through so far
     rings = []             // higher Rings that have been encountered during "read" part of the request when forwarding it down from the top ring;
                            // ordered from top to bottom, *excluding* the current (bottom-most) ring
 
@@ -47,16 +47,6 @@ export class DataRequest {
     // current_db
     // current_ring
 
-    // current_data
-    // current_index
-    // current_block
-    // // etc... (whatever roles are defined for actors on the trace)
-    //
-    // get current_sequence() {
-    //     /* most recent data or index Sequence */
-    //     return this.current_data || this.current_index
-    // }
-
 
     constructor(actor = null, command = null, args = null) {
         if (actor || command) this.make_step(actor, command, args)
@@ -64,7 +54,7 @@ export class DataRequest {
 
     clone() {
         let dup = cloneObject(this)
-        dup.trace = [...this.trace]             // individual steps are NOT cloned!
+        // dup.trace = [...this.trace]             // individual steps are NOT cloned!
         dup.rings = [...this.rings]
         return dup
     }
@@ -80,7 +70,7 @@ export class DataRequest {
     make_step(actor, command = null, args = null) {
         /* Append a new step to the request path and return this object. */
         const step = new ProcessingStep(actor, command, args)
-        this.trace.push(step)
+        // this.trace.push(step)
 
         if (command) this.command = command
         if (args) {
