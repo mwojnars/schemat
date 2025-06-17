@@ -370,7 +370,7 @@ export class ServerSchemat extends Schemat {
          */
         // if (tx && this.tx) assert(tx.tid === this.tx.tid, `cannot start a transaction inside another one`)
         // let call = (tx && tx.tid !== this.tx?.tid) ? () => this._transaction.run(tx, callback) : callback
-        let call = tx ? () => this.in_transaction(callback, tx) : callback
+        let call = tx ? () => schemat.in_transaction(callback, tx, false) : callback    // critical to use `schemat` not `this` here, bcs context changes!
         return this.in_context(ctx, call)
     }
 
