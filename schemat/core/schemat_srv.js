@@ -336,7 +336,7 @@ export class ServerSchemat extends Schemat {
 
     load_transaction(dump) { return ServerTransaction.load(dump) }
 
-    async in_transaction(callback, tx = null) {
+    async in_transaction(callback, tx = null, _return_tx = true) {
         /* Run callback() in a transaction: the current one (if present), or `tx`, or a new one (commit at the end).
            Return a pair: [result-of-callback(), transaction-object]. After the call, the transaction object contains
            info about the execution, like a list of records updated.
@@ -348,11 +348,12 @@ export class ServerSchemat extends Schemat {
         if (tx) {
             if (!(tx instanceof ServerTransaction))     // `tx` can be provided as a serialized Transaction (plain object)
                 tx = ServerTransaction.load(tx)
-            return [await this._transaction.run(tx, callback), tx]
+            let result = await this._transaction.run(tx, callback)
+            return _return_tx ? [result, tx] : result
         }
 
         // do NOT create a new transaction if one is already present; only the original creator is allowed to commit the transaction!
-        if (this.tx) return [await callback(), this.tx]
+        if (this.tx) return _return_tx ? [await callback(), this.tx] : callback()
 
         tx = new ServerTransaction()
         let result = await this._transaction.run(tx, async () => {
@@ -360,15 +361,16 @@ export class ServerSchemat extends Schemat {
             await tx.commit()
             return res
         })
-        return [result, tx]
+        return _return_tx ? [result, tx] : result
     }
 
     in_tx_context(ctx, tx, callback) {
         /* Run callback() inside a double async context created by first setting the global `schemat`
            to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
          */
-        if (tx && this.tx) assert(tx.tid === this.tx.tid, `cannot start a transaction inside another one`)
-        let call = (tx && tx.tid !== this.tx?.tid) ? () => this._transaction.run(tx, callback) : callback
+        // if (tx && this.tx) assert(tx.tid === this.tx.tid, `cannot start a transaction inside another one`)
+        // let call = (tx && tx.tid !== this.tx?.tid) ? () => this._transaction.run(tx, callback) : callback
+        let call = tx ? () => this.in_transaction(callback, tx) : callback
         return this.in_context(ctx, call)
     }
 
