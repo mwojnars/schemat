@@ -131,11 +131,11 @@ export class Transaction {
         let upd_edits = edited.map(obj => [obj.id, [...obj.__meta.edits]])
 
         // deleting may run in parallel with saving newborn and edited objects
-        let deleting = deleted.length ? this._save_deleted(objects, del_ids, opts) : null
+        let deleting = deleted.length ? this._save_deleted(deleted, del_ids, opts) : null
 
         // newborns must receive their final IDs and be saved before edited objects due to possible references
-        if (newborn.length) await this._save_newborn(objects, ins_datas, opts)
-        if (edited.length)  await this._save_edited(objects, upd_edits, opts)
+        if (newborn.length) await this._save_newborn(newborn, ins_datas, opts)
+        if (edited.length)  await this._save_edited(edited, upd_edits, opts)
         if (deleting) await deleting
     }
 
