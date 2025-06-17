@@ -83,7 +83,17 @@ export class Transaction {
 
 
     async save(opts = {}, objects = null) {
-        /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object). */
+        /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object). 
+
+           IMPORTANT:
+           It is possible and allowed that while saving changes to DB, the transaction is modified by new mutations
+           occuring inside data blocks! For example, new Revision objects may be created while updating a staged object.
+           This means that the content of _staging may change in the background during execution of _save_*() methods below.
+           Importantly, there is a barrier between the transaction and the DB: no web objects are passed to _db_*() methods,
+           and no objects are returned from them, only plain data structures like arrays of IDs or raw data contents.
+           Also, the mutated objects are first removed from _staging, so the DB has no access to them and cannot modify them:
+           if the DB performs any mutations, these are recorded in new objects and don't interfere with what is being currently saved.
+         */
         if (!this._staging.size) return
         if (objects && typeof objects === 'object') objects = [objects]
 
@@ -150,7 +160,8 @@ export class Transaction {
     }
 
     async _save_edited(objects, opts) {
-        await this._db_update(objects, opts)
+        let edits = objects.map(obj => [obj.id, obj.__meta.edits])
+        await this._db_update(edits, opts)
         for (let obj of objects)
             if (obj.__data) obj.__meta.edits.length = 0     // mark that there are no more pending edits
             else this._staging.delete(obj)                  // remove permanently if a remote object (no __data)
@@ -203,9 +214,9 @@ export class ServerTransaction extends Transaction {
         return Promise.all(ids.map(id => db.delete(id, opts)))
     }
 
-    async _db_update(objects, opts) {
+    async _db_update(edits, opts) {
         let db = schemat.db
-        return Promise.all(objects.map(obj => db.update(obj.id, obj.__meta.edits, opts)))
+        return Promise.all(edits.map(([id, edits]) => db.update(id, edits, opts)))
     }
 
     async commit(opts = {}) {
@@ -261,8 +272,8 @@ export class ClientTransaction extends Transaction {
         return schemat.app.action.delete_objects(ids, opts)
     }
 
-    async _db_update(objects, opts) {
-        let edits = objects.flatMap(obj => obj.__meta.edits.map(edit => [obj.id, ...edit]))
+    async _db_update(edits, opts) {
+        edits = edits.flatMap(([id, eds]) => eds.map(ed => [id, ...ed]))
         return schemat.app.action.apply_edits(edits, opts)
     }
 
