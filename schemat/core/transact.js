@@ -126,20 +126,22 @@ export class Transaction {
 
         if (discard) this._discard(...objects)
 
+        let ins_datas = newborn.map(obj => obj.__data.__getstate__())
+        let del_ids   = deleted.map(obj => obj.id)
+        let upd_edits = edited.map(obj => [obj.id, [...obj.__meta.edits]])
+
         // deleting may run in parallel with saving newborn and edited objects
-        let deleting = deleted.length ? this._save_deleted(deleted, opts) : null
+        let deleting = deleted.length ? this._save_deleted(objects, del_ids, opts) : null
 
         // newborns must receive their final IDs and be saved before edited objects due to possible references
-        if (newborn.length) await this._save_newborn(newborn, opts)
-        if (edited.length)  await this._save_edited(edited, opts)
+        if (newborn.length) await this._save_newborn(objects, ins_datas, opts)
+        if (edited.length)  await this._save_edited(objects, upd_edits, opts)
         if (deleting) await deleting
     }
 
-    async _save_newborn(objects, opts) {
+    async _save_newborn(objects, ins_datas, opts) {
         /* New objects must be inserted all together due to possible cross-references. */
-
-        let datas = objects.map(obj => obj.__data.__getstate__())
-        let ids = await this._db_insert(datas, opts)
+        let ids = await this._db_insert(ins_datas, opts)
 
         // replace provisional IDs with proper IDs in original objects
         ids.map((id, i) => {
@@ -155,18 +157,18 @@ export class Transaction {
         })
     }
 
-    async _save_deleted(objects, opts) {
-        let ids = objects.map(obj => obj.id)
-        await this._db_delete(ids, opts)
+    async _save_deleted(objects, del_ids, opts) {
+        await this._db_delete(del_ids, opts)
         this._discard(...objects)
     }
 
-    async _save_edited(objects, opts) {
-        let id_edits = objects.map(obj => [obj.id, obj.__meta.edits])
-        await this._db_update(id_edits, opts)
+    async _save_edited(objects, upd_edits, opts) {
+        await this._db_update(upd_edits, opts)
         for (let obj of objects) obj.__meta.edits.length = 0   // mark that there are no more pending edits
-            // if (obj.__data) obj.__meta.edits.length = 0     // mark that there are no more pending edits
-            // else this._staging.delete(obj)                  // remove permanently if an "editable remote" object (no __data)
+
+        // for (let obj of objects)
+        //     if (obj.__data) obj.__meta.edits.length = 0     // mark that there are no more pending edits
+        //     else this._staging.delete(obj)                  // remove permanently if an "editable remote" object (no __data)
 
         // regular objects are NOT removed from _staging because they still remain mutable and can receive new mutations,
         // so any future .save() need to check if they shouldn't be pushed to DB again
