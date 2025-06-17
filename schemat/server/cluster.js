@@ -65,6 +65,12 @@ export class Cluster extends Agent {
         /* Array of all nodes where `agent` is currently deployed. */
     }
 
+    async 'TX.$leader.create_node'({nodes}, props = {}) {
+        let node = await schemat.std.Node.new(props).save()
+        nodes.push(node)
+        this.nodes = nodes
+    }
+
     async '$leader.create_node'({nodes}, props = {}) {
         /* Create a new Node object and add it to this cluster.
            The newly created node is *first* saved to the DB and only later added to the local state; if we tried to change
