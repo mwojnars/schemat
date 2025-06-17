@@ -338,10 +338,10 @@ export class ServerSchemat extends Schemat {
 
     async in_transaction(callback) {
         /* Run callback() in a transaction: the current one (if present), or a new one (commit at the end).
-           After the call, the transaction object contains info about the execution, like a list of records updated.
-           Return a pair: [result-of-callback(), transaction-object].
+           Return a pair: [result-of-callback(), transaction-object]. After the call, the transaction object contains
+           info about the execution, like a list of records updated.
          */
-        // do NOT create a new transaction if one is present already; only the original creator is allowed to commit the transaction!
+        // do NOT create a new transaction if one is already present; only the original creator is allowed to commit the transaction!
         if (this.tx) return [await callback(), this.tx]
 
         let tx = new ServerTransaction()
