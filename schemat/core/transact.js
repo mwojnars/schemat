@@ -134,7 +134,7 @@ export class Transaction {
         if (discard) this._discard(...objects)
         else {
             this._discard(...deleted)                               // discard all deleted objects, they should always be invalidated
-            edited.forEach(obj => {obj.__meta.edits.length = 0})    // clear pending edits in mutated objects
+            edited.forEach(obj => {obj.__meta.edits.length = 0})    // clear pending edits in mutated objects; they can still receive mutations after save()
             newborn.forEach(obj => this._staging.delete(obj))       // drop every newborn from _staging, it will be reinserted later
         }
 
@@ -167,18 +167,6 @@ export class Transaction {
             }
         })
     }
-
-    // async _save_edited(objects, upd_edits, opts) {
-    //     await this._db_update(upd_edits, opts)
-    //     for (let obj of objects) obj.__meta.edits.length = 0   // mark that there are no more pending edits
-    //
-    //     // for (let obj of objects)
-    //     //     if (obj.__data) obj.__meta.edits.length = 0     // mark that there are no more pending edits
-    //     //     else this._staging.delete(obj)                  // remove permanently if an "editable remote" object (no __data)
-    //
-    //     // regular objects are NOT removed from _staging because they still remain mutable and can receive new mutations,
-    //     // so any future .save() need to check if they shouldn't be pushed to DB again
-    // }
 
     revert() { return this._clear() }
 
