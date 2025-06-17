@@ -119,19 +119,25 @@ export class Transaction {
         //     }
         // })
 
+        // group objects by operation: to insert, to delete, to update
         let newborn = objects.filter(obj => obj.__provisional_id)
         let deleted = objects.filter(obj => obj.__status === DELETED)
         let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0 && obj.__status !== DELETED)
         assert(objects.length >= newborn.length + deleted.length + edited.length)   // some objects may be skipped (zero edits)
 
-        if (discard) this._discard(...objects)
-
+        // unwrap objects so that plain data structures are passed to DB
         let ins_datas = newborn.map(obj => obj.__data.__getstate__())
         let del_ids   = deleted.map(obj => obj.id)
         let upd_edits = edited.map(obj => [obj.id, [...obj.__meta.edits]])
 
+        // mark objects as obsolete if needed
+        if (discard) this._discard(...objects)
+        else {
+            this._discard(...deleted)
+        }
+
         // deleting may run in parallel with saving newborn and edited objects
-        let deleting = deleted.length ? this._save_deleted(deleted, del_ids, opts) : null
+        let deleting = deleted.length ? this._db_delete(del_ids, opts) : null
 
         // newborns must receive their final IDs and be saved before edited objects due to possible references
         if (newborn.length) await this._save_newborn(newborn, ins_datas, opts)
@@ -155,11 +161,6 @@ export class Transaction {
             obj.__meta.edits = []       // `edits` array is uninitialized in newborns
             this._staging.add(obj)
         })
-    }
-
-    async _save_deleted(objects, del_ids, opts) {
-        await this._db_delete(del_ids, opts)
-        this._discard(...objects)
     }
 
     async _save_edited(objects, upd_edits, opts) {
