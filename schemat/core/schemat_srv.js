@@ -336,15 +336,25 @@ export class ServerSchemat extends Schemat {
 
     load_transaction(dump) { return ServerTransaction.load(dump) }
 
-    async in_transaction(callback) {
-        /* Run callback() in a transaction: the current one (if present), or a new one (commit at the end).
+    async in_transaction(callback, tx = null) {
+        /* Run callback() in a transaction: the current one (if present), or `tx`, or a new one (commit at the end).
            Return a pair: [result-of-callback(), transaction-object]. After the call, the transaction object contains
            info about the execution, like a list of records updated.
          */
+        if (tx && this.tx) {
+            assert(tx.tid === this.tx.tid, `starting a transaction inside another one is not allowed`)
+            tx = null                                   // same TID numbers? better use existing `this.tx` rather than `tx`
+        }
+        if (tx) {
+            if (!(tx instanceof ServerTransaction))     // `tx` can be provided as a serialized Transaction (plain object)
+                tx = ServerTransaction.load(tx)
+            return [await this._transaction.run(tx, callback), tx]
+        }
+
         // do NOT create a new transaction if one is already present; only the original creator is allowed to commit the transaction!
         if (this.tx) return [await callback(), this.tx]
 
-        let tx = new ServerTransaction()
+        tx = new ServerTransaction()
         let result = await this._transaction.run(tx, async () => {
             let res = await callback()
             await tx.commit()
