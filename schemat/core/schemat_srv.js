@@ -328,29 +328,50 @@ export class ServerSchemat extends Schemat {
         if (!func) throw new Error(`action method not found: '${action}'`)
         obj._print(`execute_action(${action}) ...`)
 
-        // do NOT create a new transaction if there is one opened already; only the original creator is allowed to commit the transaction
-        if (this.tx) {
-            let result = await func.call(obj, ...args)
-            return _return_tx ? [result, this.tx] : result
-        }
-
-        let tx = new ServerTransaction()     // use the current transaction, if present, or create a new one
-        let result = await this.in_transaction(tx, async () => {
-            let res = await func.call(obj, ...args)
-            await tx.commit()
-            return res
-        })
+        let [result, tx] = await this.within_transaction(() => func.call(obj, ...args))
 
         obj._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
         return _return_tx ? [result, tx] : result
+
+        // // do NOT create a new transaction if there is one opened already; only the original creator is allowed to commit the transaction
+        // if (this.tx) {
+        //     let result = await func.call(obj, ...args)
+        //     return _return_tx ? [result, this.tx] : result
+        // }
+        //
+        // let tx = new ServerTransaction()     // use the current transaction, if present, or create a new one
+        // let result = await this.in_transaction(tx, async () => {
+        //     let res = await func.call(obj, ...args)
+        //     await tx.commit()
+        //     return res
+        // })
+        //
+        // obj._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
+        // return _return_tx ? [result, tx] : result
     }
 
-    get_transaction() {
-        /* Return the current Transaction object or create a new one. */
-        return this.tx || new ServerTransaction()
-    }
+    // get_transaction() {
+    //     /* Return the current Transaction object or create a new one. */
+    //     return this.tx || new ServerTransaction()
+    // }
 
     load_transaction(dump) { return ServerTransaction.load(dump) }
+
+    async within_transaction(callback) {
+        /* Run callback() in a transaction: the current one (if present), or a new one (commit at the end).
+           Return a pair: [result-of-callback(), transaction-object].
+         */
+        // do NOT create a new transaction if one is present already; only the original creator is allowed to commit the transaction!
+        if (this.tx) return [await callback(), this.tx]
+
+        let tx = new ServerTransaction()
+        let result = await this._transaction.run(tx, async () => {
+            let res = await callback()
+            await tx.commit()
+            return res
+        })
+        return [result, tx]
+    }
 
     in_transaction(tx, action) {
         /* Execute action() in the context of a Transaction object: this.tx === tx.
