@@ -76,7 +76,7 @@ export class Ring extends WebObject {
     }
 
     async __setup__() {
-        /* Create `data_sequence`. Re-create all indexes from the lower ring. */
+        /* Create `data_sequence` and all derived sequences as present in the lower ring. */
 
         let base = await this.base_ring?.load()
 
