@@ -353,13 +353,6 @@ export class ServerSchemat extends Schemat {
         return [result, tx]
     }
 
-    in_transaction(tx, action) {
-        /* Execute action() in the context of a Transaction object: this.tx === tx.
-           After that, the transaction object contains info about the execution, like a list of objects modified.
-         */
-        return (!tx || tx === this.tx) ? action() : this._transaction.run(tx, action)
-    }
-
     in_tx_context(ctx, tx, callback) {
         /* Run callback() inside a double async context created by first setting the global `schemat`
            to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
@@ -367,7 +360,6 @@ export class ServerSchemat extends Schemat {
         if (tx && this.tx) assert(tx.tid === this.tx.tid, `cannot start a transaction inside another one`)
         let call = (tx && tx.tid !== this.tx?.tid) ? () => this._transaction.run(tx, callback) : callback
         return this.in_context(ctx, call)
-        // return this.in_context(ctx, tx ? () => schemat.in_transaction(tx, callback) : callback)
     }
 
 
