@@ -222,15 +222,12 @@ export class ServerTransaction extends Transaction {
     }
 
     async commit(opts = {}) {
-        /* Save all remaining mutations to DB and mark this transaction as completed and closed.
-           Repeated .save() may be needed, because new objects & mutations can be created during previous save().
+        /* Save all remaining changes to DB and mark this transaction as completed and closed.
+           Repeated .save() may be needed, because new objects & mutations can be created during save().
          */
         this.committed = true
-        // while (this._staging.length) {      // transfer all pending changes to the database
-        //     await this.save(opts)
-        // }
-        await this.save(opts)
-        this._clear()                       // allow garbage collection of objects
+        while (this._staging.length)
+            await this.save({...opts, discard: true})
         // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
     }
 
