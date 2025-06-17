@@ -338,6 +338,7 @@ export class ServerSchemat extends Schemat {
 
     async within_transaction(callback) {
         /* Run callback() in a transaction: the current one (if present), or a new one (commit at the end).
+           After the call, the transaction object contains info about the execution, like a list of records updated.
            Return a pair: [result-of-callback(), transaction-object].
          */
         // do NOT create a new transaction if one is present already; only the original creator is allowed to commit the transaction!
@@ -363,7 +364,10 @@ export class ServerSchemat extends Schemat {
         /* Run callback() inside a double async context created by first setting the global `schemat`
            to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
          */
-        return this.in_context(ctx, tx ? () => schemat.in_transaction(tx, callback) : callback)
+        if (tx && this.tx) assert(tx.tid === this.tx.tid, `cannot start a transaction inside another one`)
+        let call = (tx && tx.tid !== this.tx?.tid) ? () => this._transaction.run(tx, callback) : callback
+        return this.in_context(ctx, call)
+        // return this.in_context(ctx, tx ? () => schemat.in_transaction(tx, callback) : callback)
     }
 
 
