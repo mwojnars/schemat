@@ -344,14 +344,6 @@ export class Node extends Agent {
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
 
         return frame.call_agent(`${role}.${method}`, args, ctx, tx, out => this._rpc_response(out))
-
-        // let {agent} = frame
-        // let call = async () => {
-        //     let result = await frame.call_agent(`${role}.${method}`, args)
-        //     return this._rpc_response(result)
-        // }
-        // let call_ctx = agent.switch_context ? ctx : agent.__ctx
-        // return schemat.in_tx_context(call_ctx, tx, call)
     }
 
     _rpc_request(agent_id, method, args = [], opts) {

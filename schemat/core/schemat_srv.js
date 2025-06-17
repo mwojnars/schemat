@@ -332,28 +332,7 @@ export class ServerSchemat extends Schemat {
 
         obj._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
         return _return_tx ? [result, tx] : result
-
-        // // do NOT create a new transaction if there is one opened already; only the original creator is allowed to commit the transaction
-        // if (this.tx) {
-        //     let result = await func.call(obj, ...args)
-        //     return _return_tx ? [result, this.tx] : result
-        // }
-        //
-        // let tx = new ServerTransaction()     // use the current transaction, if present, or create a new one
-        // let result = await this.in_transaction(tx, async () => {
-        //     let res = await func.call(obj, ...args)
-        //     await tx.commit()
-        //     return res
-        // })
-        //
-        // obj._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
-        // return _return_tx ? [result, tx] : result
     }
-
-    // get_transaction() {
-    //     /* Return the current Transaction object or create a new one. */
-    //     return this.tx || new ServerTransaction()
-    // }
 
     load_transaction(dump) { return ServerTransaction.load(dump) }
 
