@@ -82,12 +82,12 @@ export class Transaction {
     has_exact(obj)  { return this._staging.has_exact(obj) }
 
 
-    async save(opts = {}, objects = null) {
+    async save({discard = false, ...opts} = {}, objects = null) {
         /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object). 
 
            IMPORTANT:
            It is possible and allowed that while saving changes to DB, the transaction is modified by new mutations
-           occuring inside data blocks! For example, new Revision objects may be created while updating a staged object.
+           occurring inside data blocks! For example, new Revision objects may be created while updating a staged object.
            This means that the content of _staging may change in the background during execution of _save_*() methods below.
            Importantly, there is a barrier between the transaction and the DB: no web objects are passed to _db_*() methods,
            and no objects are returned from them, only plain data structures like arrays of IDs or raw data contents.
@@ -123,6 +123,8 @@ export class Transaction {
         let deleted = objects.filter(obj => obj.__status === DELETED)
         let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0 && obj.__status !== DELETED)
         assert(objects.length >= newborn.length + deleted.length + edited.length)   // some objects may be skipped (zero edits)
+
+        if (discard) this._discard(...objects)
 
         // deleting may run in parallel with saving newborn and edited objects
         let deleting = deleted.length ? this._save_deleted(deleted, opts) : null
@@ -162,9 +164,9 @@ export class Transaction {
     async _save_edited(objects, opts) {
         let id_edits = objects.map(obj => [obj.id, obj.__meta.edits])
         await this._db_update(id_edits, opts)
-        for (let obj of objects)
-            if (obj.__data) obj.__meta.edits.length = 0     // mark that there are no more pending edits
-            else this._staging.delete(obj)                  // remove permanently if a remote object (no __data)
+        for (let obj of objects) obj.__meta.edits.length = 0   // mark that there are no more pending edits
+            // if (obj.__data) obj.__meta.edits.length = 0     // mark that there are no more pending edits
+            // else this._staging.delete(obj)                  // remove permanently if an "editable remote" object (no __data)
 
         // regular objects are NOT removed from _staging because they still remain mutable and can receive new mutations,
         // so any future .save() need to check if they shouldn't be pushed to DB again
