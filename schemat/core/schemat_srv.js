@@ -319,7 +319,7 @@ export class ServerSchemat extends Schemat {
 
     async execute_action(obj, action, args, _return_tx = true) {
         /* Server-side execution of an action. No network communication, no encoding/decoding of args & result.
-           Returns a pair: [result, tx].
+           Returns a pair: [result, tx], or `result` alone if _return_tx=false.
          */
         if (!obj.is_loaded()) await obj.load()
         // obj = obj.get_mutable()
@@ -335,9 +335,9 @@ export class ServerSchemat extends Schemat {
     }
 
     async in_transaction(callback, tx = null, _return_tx = true) {
-        /* Run callback() in a transaction: the current one (if present), or `tx`, or a new one (commit at the end).
+        /* Run callback() inside a transaction: the current one (if present), or `tx`, or a new one (commit at the end).
            Return a pair: [result-of-callback(), transaction-object]. After the call, the transaction object contains
-           info about the execution, like a list of records updated.
+           info about the execution, esp. a list of records updated.
          */
         if (tx && this.tx) {
             assert(tx.tid === this.tx.tid, `starting a transaction inside another one is not allowed`)
@@ -366,8 +366,6 @@ export class ServerSchemat extends Schemat {
         /* Run callback() inside a double async context created by first setting the global `schemat`
            to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
          */
-        // if (tx && this.tx) assert(tx.tid === this.tx.tid, `cannot start a transaction inside another one`)
-        // let call = (tx && tx.tid !== this.tx?.tid) ? () => this._transaction.run(tx, callback) : callback
         let call = tx ? () => schemat.in_transaction(callback, tx, false) : callback    // critical to use `schemat` not `this` here, bcs context changes!
         return this.in_context(ctx, call)
     }
