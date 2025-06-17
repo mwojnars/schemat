@@ -358,7 +358,6 @@ export class Node extends Agent {
     _rpc_request_parse(request) {
         let [type, agent_id, method, args, {role, tx, ctx}] = request
         assert(type === 'RPC', `incorrect message type, expected RPC`)
-        if (tx) tx = schemat.load_transaction(tx)
         return {type, agent_id, role, method, args: JSONx.decode(args), tx, ctx}
     }
 

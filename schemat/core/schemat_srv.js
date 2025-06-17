@@ -334,8 +334,6 @@ export class ServerSchemat extends Schemat {
         return _return_tx ? [result, tx] : result
     }
 
-    load_transaction(dump) { return ServerTransaction.load(dump) }
-
     async in_transaction(callback, tx = null, _return_tx = true) {
         /* Run callback() in a transaction: the current one (if present), or `tx`, or a new one (commit at the end).
            Return a pair: [result-of-callback(), transaction-object]. After the call, the transaction object contains
