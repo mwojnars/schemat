@@ -1324,13 +1324,15 @@ export class WebObject {
     }
 
     async save({reload = null, ...opts} = {}) {
-        /* Send __data (for a newly created object) or __meta.edits (for an existing object) to DB.
-           If reload=true (default for inserted and mutated objects, but not for deleted ones), a new instance of `this`
-           is created with new content and returned. Some other available options include {ring}.
+        /* Send __data (for a newly created object) or __meta.edits (for an existing object) of the *mutable copy*
+           of this object (as recorded in the current transaction) to DB. Return the mutated object (from before save());
+           or, if reload=true (default for inserted and mutated objects, but not for deleted ones), return a new immutable copy
+           of `this` initialized with the new content captured from DB. Some other available options include {ring}.
          */
-        if (reload === null && !this.is_deleted()) reload = true
-        await schemat.save(opts, this)
-        return reload ? this.reload() : this
+        let obj = this.get_mutable()
+        if (reload === null && !obj.is_deleted()) reload = true
+        await schemat.save(opts, obj)
+        return reload ? obj.reload() : obj
     }
 
 
