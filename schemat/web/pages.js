@@ -363,7 +363,7 @@ export class CategoryInspectView extends InspectView {
             // let obj = await schemat.get_loaded(id)
             // let obj = await schemat.app.POST.insert_record(data, {load: true})
 
-            let obj = this.create(data)
+            let obj = this.assign(data)
             // obj.validate()                   // cross-field validation?
             await obj.save()
 

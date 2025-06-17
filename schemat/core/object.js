@@ -459,12 +459,12 @@ export class WebObject {
     /***  Instantiation  ***/
 
     constructor(_fail = true, id = null, {mutable = false, edits} = {}) {
-        /* For internal use! Always call WebObject.new() or category.create() instead of `new WebObject()`.
+        /* For internal use! Always call WebObject.new() or category.assign() instead of `new WebObject()`.
            By default, the object is created immutable, and on client (where all modifications are local to the single client process)
            this gets toggled automatically on the first attempt to object modification. On the server
            (where any modifications might spoil other web requests), changing `mutable` after creation is disallowed.
          */
-        if (_fail) throw new Error('web objects should be instantiated with CLASS._create() or category.create() instead of new CLASS()')
+        if (_fail) throw new Error('web objects should be instantiated with category.new() or category.assign() instead of new CLASS()')
         if (id) this.id = id
         this.__hash = 1 + randint()
 
@@ -540,7 +540,6 @@ export class WebObject {
         /* Create an empty newborn object, no ID, and execute its __new__(...args). Return the object.
            If __new__() returns a Promise, this method returns a Promise too. Used instead of the constructor.
          */
-        // if (this.__category === undefined) throw new Error(`static __category must be configured when calling create() through a class not category`)
         return this._new([], args)
     }
 
@@ -993,7 +992,7 @@ export class WebObject {
            The JS class and `__category` property are already configured; this.__data is created.
            The default implementation just updates the entire __data using the first argument.
            Subclasses may override this method to change this behavior and accept a different list of arguments.
-           Can be asynchronous in subclasses, in such case the call to ._create() or category.create() returns a Promise.
+           Can be asynchronous in subclasses, in such case the call to ._new() or category.new() returns a Promise.
          */
         if (T.isPOJO(data) || data instanceof Catalog) this.__data.updateAll(data)
     }
@@ -1212,7 +1211,7 @@ export class WebObject {
         assert(typeof data === 'string')
 
         let Revision = await schemat.import('/$/sys/Revision')
-        let rev = await Revision.create({data, target: this})
+        let rev = await Revision.assign({data, target: this})
         await rev.save()
         this.__data.set('__prev', rev)
     }
