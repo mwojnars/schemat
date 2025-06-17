@@ -328,7 +328,7 @@ export class ServerSchemat extends Schemat {
         if (!func) throw new Error(`action method not found: '${action}'`)
         obj._print(`execute_action(${action}) ...`)
 
-        let [result, tx] = await this.within_transaction(() => func.call(obj, ...args))
+        let [result, tx] = await this.in_transaction(() => func.call(obj, ...args))
 
         obj._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
         return _return_tx ? [result, tx] : result
@@ -336,7 +336,7 @@ export class ServerSchemat extends Schemat {
 
     load_transaction(dump) { return ServerTransaction.load(dump) }
 
-    async within_transaction(callback) {
+    async in_transaction(callback) {
         /* Run callback() in a transaction: the current one (if present), or a new one (commit at the end).
            After the call, the transaction object contains info about the execution, like a list of records updated.
            Return a pair: [result-of-callback(), transaction-object].
