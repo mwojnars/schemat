@@ -322,16 +322,21 @@ export class ServerSchemat extends Schemat {
            Returns a pair: [result, tx].
          */
         if (!obj.is_loaded()) await obj.load()
-        let tx = this.tx || new ServerTransaction()     // use the current transaction, if present, or create a new one
+        // obj = obj.get_mutable()
 
+        let func = obj.__self[`action.${action}`]
+        if (!func) throw new Error(`action method not found: '${action}'`)
         obj._print(`execute_action(${action}) ...`)
 
-        let result = await this.in_transaction(tx, async () => {
-            // obj = obj.get_mutable()
-            let func = obj.__self[`action.${action}`]
-            if (!func) throw new Error(`action method not found: '${action}'`)
-            let res = await func.call(obj, ...args)
+        // do NOT create a new transaction if there is one opened already; only the original creator is allowed to commit the transaction
+        if (this.tx) {
+            let result = await func.call(obj, ...args)
+            return _return_tx ? [result, this.tx] : result
+        }
 
+        let tx = new ServerTransaction()     // use the current transaction, if present, or create a new one
+        let result = await this.in_transaction(tx, async () => {
+            let res = await func.call(obj, ...args)
             await tx.commit()
             return res
         })

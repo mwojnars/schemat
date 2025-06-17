@@ -220,7 +220,8 @@ export class Ring extends WebObject {
         let opts = {ring: this.__ring, broadcast: true}
         let IndexSequence = this.__std.IndexSequence
         let seq = await IndexSequence.new(this).save(opts)
-        this.sequences.push(seq)
+        // this.sequences.push(seq)
+        this.sequences = [...this.sequences, seq]
         await this.save(opts)
     }
 
