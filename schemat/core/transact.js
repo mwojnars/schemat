@@ -134,6 +134,7 @@ export class Transaction {
         if (discard) this._discard(...objects)
         else {
             this._discard(...deleted)
+            for (let obj of edited) obj.__meta.edits.length = 0     // clear pending edits in mutated objects
         }
 
         // deleting may run in parallel with saving newborn and edited objects
@@ -141,7 +142,7 @@ export class Transaction {
 
         // newborns must receive their final IDs and be saved before edited objects due to possible references
         if (newborn.length) await this._save_newborn(newborn, ins_datas, opts)
-        if (edited.length)  await this._save_edited(edited, upd_edits, opts)
+        if (edited.length)  await this._db_update(upd_edits, opts)
         if (deleting) await deleting
     }
 
@@ -163,17 +164,17 @@ export class Transaction {
         })
     }
 
-    async _save_edited(objects, upd_edits, opts) {
-        await this._db_update(upd_edits, opts)
-        for (let obj of objects) obj.__meta.edits.length = 0   // mark that there are no more pending edits
-
-        // for (let obj of objects)
-        //     if (obj.__data) obj.__meta.edits.length = 0     // mark that there are no more pending edits
-        //     else this._staging.delete(obj)                  // remove permanently if an "editable remote" object (no __data)
-
-        // regular objects are NOT removed from _staging because they still remain mutable and can receive new mutations,
-        // so any future .save() need to check if they shouldn't be pushed to DB again
-    }
+    // async _save_edited(objects, upd_edits, opts) {
+    //     await this._db_update(upd_edits, opts)
+    //     for (let obj of objects) obj.__meta.edits.length = 0   // mark that there are no more pending edits
+    //
+    //     // for (let obj of objects)
+    //     //     if (obj.__data) obj.__meta.edits.length = 0     // mark that there are no more pending edits
+    //     //     else this._staging.delete(obj)                  // remove permanently if an "editable remote" object (no __data)
+    //
+    //     // regular objects are NOT removed from _staging because they still remain mutable and can receive new mutations,
+    //     // so any future .save() need to check if they shouldn't be pushed to DB again
+    // }
 
     revert() { return this._clear() }
 
