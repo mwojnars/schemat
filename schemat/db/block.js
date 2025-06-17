@@ -400,7 +400,7 @@ export class DataBlock extends Block {
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-        return this._save(storage, obj, prev)       // save changes and perform change propagation
+        return await this._save(storage, obj, prev) // save changes and perform change propagation
     }
 
     async '$agent.upsave'({storage}, id, data, req) {
@@ -410,7 +410,7 @@ export class DataBlock extends Block {
             throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
 
         let obj = await WebObject.from_data(id, data, {activate: false})
-        return this._save(storage, obj)
+        return await this._save(storage, obj)
     }
 
     async _save(storage, obj, prev = null) {
