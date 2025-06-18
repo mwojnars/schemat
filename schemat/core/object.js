@@ -458,7 +458,7 @@ export class WebObject {
 
     /***  Instantiation  ***/
 
-    constructor(_fail = true, id = null, {mutable = false, edits} = {}) {
+    constructor(_fail = true, id = null, {mutable = false, provisional, edits} = {}) {
         /* For internal use! Always call WebObject.new() or category.assign() instead of `new WebObject()`.
            By default, the object is created immutable, and on client (where all modifications are local to the single client process)
            this gets toggled automatically on the first attempt to object modification. On the server
@@ -466,6 +466,7 @@ export class WebObject {
          */
         if (_fail) throw new Error('web objects should be instantiated with category.new() or category.assign() instead of new CLASS()')
         if (id) this.id = id
+        if (provisional) this.__provisional_id = Math.abs(provisional)
         this.__hash = 1 + randint()
 
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
@@ -496,12 +497,11 @@ export class WebObject {
         return schemat.stage(this.stub(id, {mutable: true, edits}))
     }
 
-    static newborn(data = null, {draft, provisional, ...opts} = {}) {
+    static newborn(data = null, {draft, ...opts} = {}) {
         /* Create a newborn object (not yet in DB): a mutable object with __data but no ID.
            Optionally, initialize its __data with `data`, but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
         obj.__data = (typeof data === 'string') ? Catalog.load(data) : new Catalog(data)
-        if (provisional) obj.__self.__provisional_id = Math.abs(provisional)
         if (!draft)
             if (schemat.tx) schemat.stage(obj)      // schemat.tx is missing during boot; that's why draft objects can't be staged
             else throw new Error(`cannot create a newborn object when outside a transaction`)
@@ -544,10 +544,10 @@ export class WebObject {
         return this._new([], args)
     }
 
-    static async from_data(id, data, {mutable = false, ...load_opts} = {}) {
+    static async from_data(id, data, {mutable, provisional, ...load_opts} = {}) {
         /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSONx string). */
         // assert(typeof data === 'string' || data instanceof Catalog)
-        let obj = WebObject.stub(id, {mutable})
+        let obj = WebObject.stub(id, {mutable, provisional})
         obj._set_data(data)
         return obj.load(load_opts)
     }

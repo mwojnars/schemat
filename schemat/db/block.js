@@ -265,12 +265,12 @@ export class DataBlock extends Block {
         // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
         for (let rec of records) {
             let {id, npid, data} = rec
+            let provisional = npid ? -npid : ++provid
             id ??= this._assign_id(state, opts)
-            let obj = await WebObject.from_data(id, data, {mutable: true, activate: false})
-            obj.__self.__provisional_id = npid ? -npid : ++provid
+            let obj = await WebObject.from_data(id, data, {mutable: true, activate: false, provisional})
             objects.push(obj)
 
-            assert(!provs.has(obj.__neg_provid))
+            if (provs.has(obj.__neg_provid)) throw new Error(`repeated value (${obj.__neg_provid}) of provisional ID in insert batch`)
             provs.set(obj.__neg_provid, obj)
         }
         let unique = new Set(objects)
