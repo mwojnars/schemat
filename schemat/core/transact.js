@@ -133,7 +133,7 @@ export class Transaction {
 
         // unwrap objects so that only plain data structures are passed to DB
         // let ins_datas = newborn.map(obj => obj.__data.__getstate__())
-        let ins_datas = newborn.map(obj => [obj.__provisional_id, obj.__data.__getstate__()])
+        let ins_datas = newborn.map(obj => [obj.__neg_provid, obj.__data.__getstate__()])
         let del_ids   = deleted.map(obj => obj.id)
         let upd_edits = edited.map(obj => [obj.id, [...obj.__meta.edits]])
 

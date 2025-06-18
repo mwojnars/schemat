@@ -248,9 +248,11 @@ export class DataBlock extends Block {
         // let batch = (data instanceof Array)
         // if (!batch) data = [data]
 
-        let records = data.map(d => ({data: d}))        // {id, data} tuples that await ID assignment + setup
-        // let records = entries.map(e => ({id: e[0], data: e[1]}))        // {id, data} tuples that await ID assignment + setup
+        // let records = data.map(d => ({data: d}))        // {id, data} tuples that await ID assignment + setup
+        let records = entries.map(e => ({npid: e[0], data: e[1]}))        // {id, npid, data} tuples that await ID assignment + setup
         let objects = []
+        let provid  = 0
+        let provs   = new Map()     // __neg_provid -> object
 
         if (id && data.length) {
             assert(data.length === 1)
@@ -262,18 +264,30 @@ export class DataBlock extends Block {
         // assign IDs to the initial group of objects, as they may be referenced from other objects via provisional IDs;
         // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
         for (let rec of records) {
-            let {id, data} = rec
+            let {id, npid, data} = rec
             id ??= this._assign_id(state, opts)
             let obj = await WebObject.from_data(id, data, {mutable: true, activate: false})
+            obj.__self.__provisional_id = npid ? -npid : ++provid
             objects.push(obj)
+
+            assert(!provs.has(obj.__neg_provid))
+            provs.set(obj.__neg_provid, obj)
         }
         let unique = new Set(objects)
 
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
-        let prov
-        let rectify = (ref) => (ref instanceof WebObject && (prov = ref.__provisional_id) ? objects[prov-1] : undefined)
-        for (let obj of objects)
-            Struct.transform(obj.__data, rectify)
+        let rectify = (ref) => {
+            if (!(ref instanceof WebObject) || ref.id) return
+            let npid = ref.__neg_provid
+            assert(npid, `invalid reference: no ID nor provisional ID`)
+            let target = provs.get(npid)
+            if (!target) throw new Error(`incorrect provisional ID (${npid}) doesn't point to any object`)
+            return target
+        }
+
+        // let p
+        // let rectify = (ref) => (ref instanceof WebObject && (p = ref.__provisional_id) ? objects[p-1] : undefined)
+        for (let obj of objects) Struct.transform(obj.__data, rectify)
 
         // go through all the objects:
         // - assign ID & instantiate the web object (if not yet instantiated)
