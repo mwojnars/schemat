@@ -178,8 +178,7 @@ export class TCP_Receiver {
     /* Receive messages from other nodes in the cluster, send replies and acknowledgements. */
 
     async start(port) {
-
-        this.server = net.createServer(socket => {
+        this.server = net.createServer({reuseAddr: true}, socket => {
             // per-connection state
             let processed_offset = 0
             let msg_parser = new BinaryParser(async (id, msg) => {
