@@ -320,17 +320,21 @@ export class Database extends WebObject {
         return ring.select(id)
     }
 
-    async insert(data, {ring, ...opts} = {}) {
-        /* Find the top-most writable ring and insert `data` as a new entry there. Return {id, data} record.
+    async insert(entries, {ring, ...opts} = {}) {
+        /* Find the top-most writable ring and insert a number of [id, data] entries there, where `id` is either
+           a provisional ID (if negative), or the requested final record ID. Return an array of {id, data} records.
            If `ring` is given (name/object/ID), the entry is inserted to this particular ring, or error is raised if read-only.
          */
+        assert(Array.isArray(entries))
+        if (!entries.length) return []
+
         ring &&= this.get_ring(ring)
         if (!ring) {
             ring = this.rings_reversed.find(r => !r.readonly)       // find the first writable ring
             if (!ring) throw new DataAccessError("all ring(s) are read-only")
         }
         if (ring.readonly) throw new DataAccessError(`target ring is read-only`)
-        return ring.insert(data, opts)
+        return ring.insert(entries, opts)
     }
 
     async update(id, edits, {ring} = {}) {
