@@ -247,9 +247,7 @@ export class Schemat {
 
     get_provisional(id) {
         /* Deserialize a newborn object as a stub with __provisional_id assigned. For transferring newborn objects to DB. */
-        let obj = WebObject.stub()
-        obj.__self.__provisional_id = id
-        return obj
+        return WebObject.stub(null, {provisional: id})
     }
 
     get_editable(id, edits = null) {

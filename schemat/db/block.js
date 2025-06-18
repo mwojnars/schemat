@@ -277,9 +277,6 @@ export class DataBlock extends Block {
             if (!target) throw new Error(`incorrect provisional ID (${npid}) doesn't point to any object`)
             return target
         }
-
-        // let p
-        // let rectify = (ref) => (ref instanceof WebObject && (p = ref.__provisional_id) ? objects[p-1] : undefined)
         for (let obj of objects) Struct.transform(obj.__data, rectify)
 
         // go through all the objects:

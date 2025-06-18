@@ -299,7 +299,7 @@ export class WebObject {
     get __cid()  { return this.__category?.id }
     get __cid$() { return this.__category$.map(c => c.id) }
 
-    get __index_id() { return this.id || (this.__provisional_id && -this.__provisional_id) }
+    get __index_id()   { return this.id || this.__neg_provid }
     get __neg_provid() { return this.__provisional_id ? -this.__provisional_id : undefined }
 
     get __base() {
