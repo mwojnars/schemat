@@ -126,8 +126,14 @@ export class Transaction {
         let edited  = objects.filter(obj => obj.id && obj.__status !== DELETED && obj.__meta.edits.length > 0)
         assert(objects.length >= newborn.length + deleted.length + edited.length)   // some objects may be skipped (zero edits)
 
+        // build a list of provisional IDs of every newborn object, keep the same order
+        let provisional = newborn.map(obj => obj.__provisional_id)
+        assert(provisional.every(prov_id => prov_id > 0))
+        assert(new Set(provisional).size === provisional.length, `__provisional_id numbers are not unique`)
+
         // unwrap objects so that only plain data structures are passed to DB
         let ins_datas = newborn.map(obj => obj.__data.__getstate__())
+        // let ins_datas = newborn.map(obj => [obj.__provisional_id, obj.__data.__getstate__()])
         let del_ids   = deleted.map(obj => obj.id)
         let upd_edits = edited.map(obj => [obj.id, [...obj.__meta.edits]])
 
