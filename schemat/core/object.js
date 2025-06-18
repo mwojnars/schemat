@@ -7,7 +7,7 @@
  */
 
 import {ROOT_ID, PLURAL, SUBFIELD} from '../common/globals.js'
-import {print, assert, T, escape_html, concat, unique, sleep, randint} from '../common/utils.js'
+import {print, assert, T, copy, escape_html, concat, unique, sleep, randint} from '../common/utils.js'
 import {NotLoaded, URLNotFound, ValidationError} from '../common/errors.js'
 
 import {Catalog, Struct} from './catalog.js'
@@ -354,10 +354,8 @@ export class WebObject {
         /* Combined __data + __meta attributes, JSONx-encoded into a flat object suitable for display. Useful for debugging. */
         let flat = this.__index_id ? {id: this.__index_id} : {}
         flat = {...flat, ...(this.__data?.encode() || {})}
-        if (Object.keys(this.__meta).length) {       // add __meta, but only if it's not empty, drop .cache
-            flat.__meta = {...this.__meta}
-            delete flat.__meta.cache
-        }
+        if (Object.keys(this.__meta).length)            // add __meta but only if it's not empty, drop .cache
+            flat.__meta = copy(this.__meta, {drop: 'cache'})
         return flat
     }
 
@@ -563,11 +561,14 @@ export class WebObject {
         /* Print the current stack trace with detailed header information: node ID, worker process, current object. */
         let stack  = new Error().stack
         let lines  = stack.split('\n').slice(2)
-        let caller = lines[0]?.trim()                   // caller of the current method
-        let fun    = caller?.match(/at (\S+)/)?.[1]     // function name of the caller
-        let label  = `${this.__label}${fun ? '.'+fun+'()' : ''}`
-        let title  = SERVER ? `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${label} context ${schemat.db}` : label
-        console.log(title, '-- debug stack trace:', ...args)
+        // let caller = lines[0]?.trim()                   // caller of the current method
+        // let fun    = caller?.match(/at (\S+)/)?.[1]     // function name of the caller
+        // let label  = `${this.__label}${fun ? '.'+fun+'()' : ''}`
+        // let title  = SERVER ? `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${label} context ${schemat.db}` : label
+        // console.log(title, '-- debug stack trace:', ...args)
+        let label  = `${this.__label} debug stack trace`
+        let title  = SERVER ? `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${label}, context=${schemat.db}:` : label
+        console.log(title, ...args)
         console.log(lines.join('\n'))
     }
 
