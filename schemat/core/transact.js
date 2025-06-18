@@ -35,11 +35,11 @@ export class Transaction {
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
 
-    constructor(lite = false) {
-        if (schemat.debug) this.debug = true
-        // if (lite) return
-        // this.tid = 1 + randint(10000) /* 1 + randint() */
-    }
+    // constructor(lite = false) {
+    //     if (schemat.debug) this.debug = true
+    //     // if (lite) return
+    //     // this.tid = 1 + randint(10000) /* 1 + randint() */
+    // }
 
     get_mutable(obj) {
         /* Return an object's mutable copy that's unique transaction-wide: multiple calls return the same copy,
@@ -209,7 +209,12 @@ export class Transaction {
 export class ServerTransaction extends Transaction {
     /* Server-side transaction object. */
 
-    tid = 1 + randint(10000) /* 1 + randint() */
+    constructor(tid = null, lite = false) {
+        super()
+        this.tid = tid ||  (1 + randint(10000)) /* 1 + randint() */
+        // if (schemat.debug) this.debug = true
+        // if (lite) return
+    }
 
     async _db_insert(datas, opts) {
         return schemat.db.insert(datas, opts)       // returns an array of IDs assigned

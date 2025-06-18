@@ -335,32 +335,47 @@ export class ServerSchemat extends Schemat {
     }
 
     async in_transaction(callback, tx = null, _return_tx = true) {
-        /* Run callback() inside a transaction: the current one (if present), or `tx`, or a new one (commit at the end).
-           Return a pair: [result-of-callback(), transaction-object]. After the call, the transaction object contains
-           info about the execution, esp. a list of records updated.
+        /* Run callback() inside a new Transaction object, with TID possibly inherited from `tx`. If a new TID was assigned,
+           commit the transaction at the end. Return a pair: [result-of-callback(), transaction-object].
+           After the call, the transaction object contains info about the execution, esp. a list of records updated.
          */
-        if (tx && this.tx) {
-            assert(tx.tid === this.tx.tid, `starting a transaction inside another one is not allowed`)
-            tx = null                                   // same TID numbers? better use existing `this.tx` rather than `tx`
-        }
-        if (tx) {
-            if (!(tx instanceof ServerTransaction))     // `tx` can be provided as a serialized Transaction (plain object)
-                tx = ServerTransaction.load(tx)
-            let result = await this._transaction.run(tx, callback)
-            return _return_tx ? [result, tx] : result
-        }
-
-        // do NOT create a new transaction if one is already present; only the original creator is allowed to commit the transaction!
-        if (this.tx) return _return_tx ? [await callback(), this.tx] : callback()
-
-        tx = new ServerTransaction()
+        let tid = tx?.tid
+        tx = new ServerTransaction(tid)
         let result = await this._transaction.run(tx, async () => {
             let res = await callback()
-            await tx.commit()
+            if (!tid) await tx.commit()
             return res
         })
         return _return_tx ? [result, tx] : result
     }
+
+    // async in_transaction(callback, tx = null, _return_tx = true) {
+    //     /* Run callback() inside a transaction: the current one (if present), or `tx`, or a new one (commit at the end).
+    //        Return a pair: [result-of-callback(), transaction-object]. After the call, the transaction object contains
+    //        info about the execution, esp. a list of records updated.
+    //      */
+    //     if (tx && this.tx) {
+    //         assert(tx.tid === this.tx.tid, `starting a transaction inside another one is not allowed`)
+    //         tx = null                                   // same TID numbers? better use existing `this.tx` rather than `tx`
+    //     }
+    //     if (tx) {
+    //         if (!(tx instanceof ServerTransaction))     // `tx` can be provided as a serialized Transaction (plain object)
+    //             tx = ServerTransaction.load(tx)
+    //         let result = await this._transaction.run(tx, callback)
+    //         return _return_tx ? [result, tx] : result
+    //     }
+    //
+    //     // do NOT create a new transaction if one is already present; only the original creator is allowed to commit the transaction!
+    //     if (this.tx) return _return_tx ? [await callback(), this.tx] : callback()
+    //
+    //     tx = new ServerTransaction()
+    //     let result = await this._transaction.run(tx, async () => {
+    //         let res = await callback()
+    //         await tx.commit()
+    //         return res
+    //     })
+    //     return _return_tx ? [result, tx] : result
+    // }
 
     in_tx_context(ctx, tx, callback) {
         /* Run callback() inside a double async context created by first setting the global `schemat`
