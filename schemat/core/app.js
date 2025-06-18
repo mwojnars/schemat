@@ -205,7 +205,8 @@ export class Application extends WebObject {
            Additionally, DB records are passed implicitly through a Transaction context.
          */
         let data = entries.map(e => e[1])   // FIXME: use provisional IDs
-        let ret = Array.isArray(data) ? data.map(d => WebObject.newborn(d)) : WebObject.newborn(data)
+        let ret = entries.map(e => WebObject.newborn(e[1], {provisional: e[0]}))
+        // let ret = Array.isArray(data) ? data.map(d => WebObject.newborn(d)) : WebObject.newborn(data)
         await schemat.save(opts)
         return ret
     }

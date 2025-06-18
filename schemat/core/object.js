@@ -496,11 +496,12 @@ export class WebObject {
         return schemat.stage(this.stub(id, {mutable: true, edits}))
     }
 
-    static newborn(data = null, {draft, ...opts} = {}) {
+    static newborn(data = null, {draft, provisional, ...opts} = {}) {
         /* Create a newborn object (not yet in DB): a mutable object with __data but no ID.
            Optionally, initialize its __data with `data`, but NO other initialization is done. */
         let obj = this.stub(null, {mutable: true, ...opts})
         obj.__data = (typeof data === 'string') ? Catalog.load(data) : new Catalog(data)
+        if (provisional) obj.__self.__provisional_id = Math.abs(provisional)
         if (!draft)
             if (schemat.tx) schemat.stage(obj)      // schemat.tx is missing during boot; that's why draft objects can't be staged
             else throw new Error(`cannot create a newborn object when outside a transaction`)
