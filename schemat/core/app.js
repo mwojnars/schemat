@@ -197,13 +197,14 @@ export class Application extends WebObject {
     //     await schemat.save(opts)
     // }
 
-    async 'action.insert_objects'(data, opts) {
+    async 'action.insert_objects'(entries, opts) {
         /* Insert new object(s) to DB with __data initialized from the provided JSONx-stringified representation(s).
            `data` is either an array of content objects, one for each web object to be created; or a single content object.
            Every content object is a Catalog instance or an internal *state* of such instance (the result of .__getstate__()).
            The respond is an array of IDs, one for each object created, in the same order as in the request.
            Additionally, DB records are passed implicitly through a Transaction context.
          */
+        let data = entries.map(e => e[1])
         let ret = Array.isArray(data) ? data.map(d => WebObject.newborn(d)) : WebObject.newborn(data)
         await schemat.save(opts)
         return ret

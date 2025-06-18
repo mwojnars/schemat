@@ -231,15 +231,18 @@ export class DataBlock extends Block {
         return await this._move_down(id, req).select(id, req)
     }
 
-    async '$agent.insert'(state, data, {id, ...opts} = {}) {
+    async '$agent.insert'(state, entries, {id, ...opts} = {}) {
         /* `data` can be an array if multiple objects are to be inserted. */
         // id: optional target ID to be assigned to the new object
 
         // this._print_stack()
-
         let ring = this.ring
         assert(ring?.is_loaded())
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
+
+        assert(Array.isArray(entries))
+        let data = entries.map(e => e[1])
+        this._print(`$agent.insert() data:`, data)
 
         // convert scalar arguments to an array
         let batch = (data instanceof Array)
