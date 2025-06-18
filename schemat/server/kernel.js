@@ -148,7 +148,7 @@ class Frame {
         let agent_ctx = agent.__ctx || schemat.kernel_context       // empty agent.__ctx means kernel context should be used
         let ctx = agent.switch_context ? caller_ctx : agent_ctx
         let call = async () => {
-            agent._print(`call_agent(${method}) desired ctx=${ctx}, actual current_context=${schemat.current_context}`)
+            agent._print(`call_agent(${method}) desired ctx=${ctx}, actual=${schemat.current_context}`)
             let result = await this._call_agent(method, args)
             return callback ? callback(result) : result
         }
