@@ -241,7 +241,6 @@ export class DataBlock extends Block {
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
 
         assert(Array.isArray(entries))
-        let batch = true
         let data = entries.map(e => e[1])
         // this._print(`$agent.insert() data:`, data)
 
@@ -249,7 +248,8 @@ export class DataBlock extends Block {
         // let batch = (data instanceof Array)
         // if (!batch) data = [data]
 
-        let records = data.map(d => ({data: d}))        // {id, data, obj} tuples that await ID assignment + setup
+        let records = data.map(d => ({data: d}))        // {id, data} tuples that await ID assignment + setup
+        // let records = entries.map(e => ({id: e[0], data: e[1]}))        // {id, data} tuples that await ID assignment + setup
         let objects = []
 
         if (id && data.length) {
@@ -263,7 +263,8 @@ export class DataBlock extends Block {
         // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
         for (let rec of records) {
             let {id, data} = rec
-            let obj = await WebObject.from_data(id || this._assign_id(state, opts), data, {mutable: true, activate: false})
+            id ??= this._assign_id(state, opts)
+            let obj = await WebObject.from_data(id, data, {mutable: true, activate: false})
             objects.push(obj)
         }
         let unique = new Set(objects)
