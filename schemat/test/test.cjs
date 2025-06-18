@@ -293,28 +293,33 @@ describe('Schemat Tests', function () {
             expect(updated_content).to.not.include(name)
         })
 
-        it('Varia: double insert (console)', async function () {
+        it('Varia: multiple insert (console)', async function () {
             await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main')
             await delay(200)
 
             let inserted = await page.evaluate(async () => {
                 let Varia = schemat.object
+                let d = await Varia.new().save()
                 let a = Varia.new()
                 let c = Varia.new()
                 let b = a.ref = Varia.new({ref: a})
                 c.delete_self()
+                d.ref = b
                 await schemat.save()
                 window.a = a = await a.reload()
                 window.b = b = await b.reload()
-                return a.ref.is(b) && b.ref.is(a)
+                window.d = d
+                return a.ref.is(b) && b.ref.is(a) && d.ref.is(b)
             })
             expect(inserted).to.be.true
 
             let deleted = await page.evaluate(async () => {
                 let a = window.a
                 let b = window.b
+                let d = window.d
                 a.delete_self()
                 b.delete_self()
+                d.delete_self()
                 await schemat.save()
                 return true
             })
