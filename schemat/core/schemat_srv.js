@@ -3,7 +3,7 @@
 import fs from 'node:fs'
 import {AsyncLocalStorage} from 'node:async_hooks'
 
-import {assert, print} from '../common/utils.js'
+import {assert, print, copy} from '../common/utils.js'
 import {Schemat} from './schemat.js'
 import {RequestContext} from "../web/request.js";
 import {ServerTransaction} from "./transact.js";
@@ -330,7 +330,7 @@ export class ServerSchemat extends Schemat {
 
         let [result, tx] = await this.in_transaction(() => func.call(obj, ...args))
 
-        obj._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(tx)}`)
+        obj._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(copy(tx, {keep:'tid _provisional'}))}`)
         return _return_tx ? [result, tx] : result
     }
 
