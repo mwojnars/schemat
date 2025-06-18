@@ -300,9 +300,9 @@ describe('Schemat Tests', function () {
             let inserted = await page.evaluate(async () => {
                 let Varia = schemat.object
                 let a = Varia.new()
-                // let c = Varia.new()
+                let c = Varia.new()
                 let b = a.ref = Varia.new({ref: a})
-                // c.delete_self()
+                c.delete_self()
                 await schemat.save()
                 window.a = a = await a.reload()
                 window.b = b = await b.reload()
