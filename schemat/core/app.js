@@ -204,7 +204,7 @@ export class Application extends WebObject {
            The respond is an array of IDs, one for each object created, in the same order as in the request.
            Additionally, DB records are passed implicitly through a Transaction context.
          */
-        let data = entries.map(e => e[1])
+        let data = entries.map(e => e[1])   // FIXME: use provisional IDs
         let ret = Array.isArray(data) ? data.map(d => WebObject.newborn(d)) : WebObject.newborn(data)
         await schemat.save(opts)
         return ret

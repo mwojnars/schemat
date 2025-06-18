@@ -241,12 +241,13 @@ export class DataBlock extends Block {
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
 
         assert(Array.isArray(entries))
+        let batch = true
         let data = entries.map(e => e[1])
-        this._print(`$agent.insert() data:`, data)
+        // this._print(`$agent.insert() data:`, data)
 
-        // convert scalar arguments to an array
-        let batch = (data instanceof Array)
-        if (!batch) data = [data]
+        // // convert scalar arguments to an array
+        // let batch = (data instanceof Array)
+        // if (!batch) data = [data]
 
         let records = data.map(d => ({data: d}))        // {id, data, obj} tuples that await ID assignment + setup
         let objects = []
@@ -302,7 +303,7 @@ export class DataBlock extends Block {
         // print(`${this}.$agent.insert() saved IDs:`, ids)
         // this._print(`after $agent.insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
 
-        return batch ? ids.slice(0, data.length) : ids[0]
+        return ids.slice(0, data.length)    // return batch ? ids.slice(0, data.length) : ids[0]
     }
 
     _prepare_for_insert(obj) {
