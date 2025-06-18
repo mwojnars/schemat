@@ -232,30 +232,23 @@ export class DataBlock extends Block {
     }
 
     async '$agent.insert'(state, entries, {id, ...opts} = {}) {
-        /* `data` can be an array if multiple objects are to be inserted. */
-        // id: optional target ID to be assigned to the new object
-
+        /* Insert a number of `entries` as new objects into this block. Each entry is a pair: [provisional-id, data].
+           Option `id`: target ID to be assigned to the new object, only if `entries` contains exactly one entry.
+        */
         // this._print_stack()
         let ring = this.ring
+        assert(Array.isArray(entries))
         assert(ring?.is_loaded())
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
 
-        assert(Array.isArray(entries))
-        let data = entries.map(e => e[1])
-        // this._print(`$agent.insert() data:`, data)
-
-        // // convert scalar arguments to an array
-        // let batch = (data instanceof Array)
-        // if (!batch) data = [data]
-
-        // let records = data.map(d => ({data: d}))        // {id, data} tuples that await ID assignment + setup
+        let N = entries.length
         let records = entries.map(e => ({npid: e[0], data: e[1]}))        // {id, npid, data} tuples that await ID assignment + setup
         let objects = []
         let provid  = 0
         let provs   = new Map()     // __neg_provid -> object
 
-        if (id && data.length) {
-            assert(data.length === 1)
+        if (id && N) {
+            assert(N === 1)
             let key = this.encode_id(id)                // fixed ID provided by the caller? check for uniqueness
             if (await state.storage.get(key)) throw new DataConsistencyError(`record with this ID already exists`, {id})
             records[0].id = id
@@ -312,13 +305,11 @@ export class DataBlock extends Block {
             await this._save(state.storage, obj)
         }
 
-        // await Promise.all(objects.map(obj => {}))
-
         let ids = objects.map(obj => obj.id)
         // print(`${this}.$agent.insert() saved IDs:`, ids)
         // this._print(`after $agent.insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
 
-        return ids.slice(0, data.length)    // return batch ? ids.slice(0, data.length) : ids[0]
+        return ids.slice(0, N)
     }
 
     _prepare_for_insert(obj) {
