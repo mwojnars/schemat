@@ -53,7 +53,7 @@ export class DataRequest {
     }
 
     clone() {
-        let dup = copy(this)
+        let dup = copy(this, {class: true})
         // dup.trace = [...this.trace]             // individual steps are NOT cloned!
         dup.rings = [...this.rings]
         return dup

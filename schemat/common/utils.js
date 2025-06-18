@@ -170,9 +170,23 @@ export function setstate(cls, state) {
     return Object.assign(obj, state)
 }
 
-export function copy(obj, keep = null, drop = null) {
-    /* Create a shallow copy of an object while preserving its class (prototype). */
-    return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj)
+export function copy(obj, {class: _class, keep, drop} = {}) {
+    /* Create a shallow copy of an object, `obj`. Copy all enumerable own properties, or only those listed in `keep`
+       if present (an array or space-separated string). Skip the properties listed in `drop` (array/string).
+       If class=true, the original class (prototype) of `obj` is preserved in the duplicate.
+     */
+    let dup = _class ? Object.create(Object.getPrototypeOf(obj)) : {}
+    if (keep) {
+        if (typeof keep === 'string') keep = keep.split(' ')
+        for (let k of keep) dup[k] = obj[k]
+    }
+    else Object.assign(dup, obj)
+
+    if (drop) {
+        if (typeof drop === 'string') drop = drop.split(' ')
+        for (let k of drop) delete dup[k]
+    }
+    return dup
 }
 
 
