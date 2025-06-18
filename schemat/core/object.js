@@ -352,7 +352,8 @@ export class WebObject {
 
     get __content() {
         /* Combined __data + __meta attributes, JSONx-encoded into a flat object suitable for display. Useful for debugging. */
-        let flat = this.__index_id ? {id: this.__index_id} : {}
+        // let flat = this.__index_id ? {id: this.__index_id} : {}
+        let flat = {id: this.id, __provisional_id: this.__provisional_id}
         flat = {...flat, ...(this.__data?.encode() || {})}
         if (Object.keys(this.__meta).length)            // add __meta but only if it's not empty, drop .cache
             flat.__meta = copy(this.__meta, {drop: 'cache'})

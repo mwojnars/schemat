@@ -57,6 +57,7 @@ export class Transaction {
     stage(obj) {
         /* Add a web object to the transaction. Return `obj`. */
         if (this.committed) throw new Error(`cannot add an object to a committed transaction`)
+        if (obj.id && !obj.__meta.edits) throw new Error(`missing edits: ${obj.__content}`)
         return obj.is_newborn() ? this._stage_newborn(obj) : this._stage_edited(obj)
     }
 
@@ -112,17 +113,17 @@ export class Transaction {
             return true
         })
 
-        // objects.forEach(obj => {
-        //     if (obj.id && !obj.__meta.edits) {
-        //         schemat._print(`Transaction.save() invalid object:`, obj.__content)
-        //         obj._print_stack()
-        //     }
-        // })
+        objects.forEach(obj => {
+            if (obj.id && !obj.__meta.edits) {
+                schemat._print(`Transaction.save() missing edits:`, obj.__content)
+                obj._print_stack()
+            }
+        })
 
         // group objects by operation: to insert, to delete, to update
         let newborn = objects.filter(obj => obj.__provisional_id)
         let deleted = objects.filter(obj => obj.__status === DELETED)
-        let edited  = objects.filter(obj => obj.id && obj.__meta.edits.length > 0 && obj.__status !== DELETED)
+        let edited  = objects.filter(obj => obj.id && obj.__status !== DELETED && obj.__meta.edits.length > 0)
         assert(objects.length >= newborn.length + deleted.length + edited.length)   // some objects may be skipped (zero edits)
 
         // unwrap objects so that only plain data structures are passed to DB
@@ -157,6 +158,7 @@ export class Transaction {
             let obj = newborn[i]
             obj.id = id
             delete obj.__self.__provisional_id
+            assert(obj.__provisional_id === undefined)
             if (discarded) return
 
             if (this._staging.has(obj))     // this object may have been already staged under its proper ID by a concurrent thread
