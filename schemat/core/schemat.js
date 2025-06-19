@@ -183,7 +183,7 @@ export class Schemat {
     }
 
     async _boot_done() {
-        this._booting_resolve()     // resolve this.booting Promise
+        this._booting_resolve()     // resolve this.booting promise
         await this.booting          // await any other callbacks that were added with after_boot()
         this.booting = false
     }

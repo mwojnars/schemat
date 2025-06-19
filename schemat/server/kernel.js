@@ -215,6 +215,8 @@ export class Kernel {
        Delegates some other duties to the Node class.
      */
 
+    // booting = new Promise(resolve => this._booting_resolve = resolve)   // resolves when the kernel is fully booted; false after that
+
     node                        // Node web object that represents the Schemat cluster node this process is running
     frames = new FramesMap()    // Frames of currently running agents, keyed by agent IDs
     _promise                    // Promise returned by .main(), kept here for graceful termination in .stop()
@@ -292,12 +294,24 @@ export class Kernel {
         process.exit(0)
     }
 
+    // _boot_done() {
+    //     this._booting_resolve()     // resolve this.booting promise and replace it with false
+    //     this.booting = false
+    // }
+
     async main() {
         /* Start/stop agents. Refresh agent objects and the `node` object itself. */
 
+        // start this node's own agent and all agents in workers
         let role = this.is_master() ? '$master' : '$worker'
-        let {starting_agents} = await this.start_agent(this.node, role)     // start this node's own agent to enable internode communication
-        await starting_agents                                               // on master, wait for other agents (in child processes) to start
+        let {starting_agents, tcp_receiver} = await this.start_agent(this.node, role)
+
+        // on master, wait for other agents (in child processes) to start; only then the TCP receiver can be started, as the last step of boot up
+        if (this.is_master()) {
+            await starting_agents
+            // await tcp_receiver.start(this.node._tcp_port)
+            // this._boot_done()
+        }
 
         // this._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
         await sleep(this.node.agent_refresh_interval || 10)         // avoid reloading the agents immediately after creation
