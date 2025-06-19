@@ -66,7 +66,12 @@ export async function tryimport(path, property = null) {
 export const sleep = async sec => new Promise(resolve => setTimeout(resolve, sec * 1000))
 export const sleep_ms = async ms => new Promise(resolve => setTimeout(resolve, ms))
 
-export function timeout(ms, error = new Error('Timeout')) {
+export async function delay(ms, callback) {
+    /* Run callback() after a delay [ms] and return its result. */
+    return new Promise(resolve => setTimeout(() => resolve(callback?.()), ms))
+}
+
+export async function timeout(ms, error = new Error('Timeout')) {
     /* Return a promise that rejects with `error` after `ms` milliseconds. */
     return new Promise((_, reject) => setTimeout(() => reject(error), ms))
 }
