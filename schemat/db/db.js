@@ -371,12 +371,12 @@ export class Database extends WebObject {
         return {inserted, deleted}
     }
 
-    _rectify_refs(structs, inserts, inserted) {
-        /* Find all references to web objects inside `structs` and replace provisional IDs with final IDs from `inserted`. */
+    _rectify_refs(structs, inserts, ids) {
+        /* Find all references to web objects inside `structs` and replace provisional IDs with final IDs from `ids`. */
         if (!structs?.length) return
 
         let provisionals = inserts.map(([prov_id, _]) => prov_id)
-        let prov_map = new Map(zip(provisionals, inserted))
+        let prov_map = new Map(zip(provisionals, ids))
 
         let rectify = (ref) => {
             if (!(ref instanceof WebObject) || ref.id) return

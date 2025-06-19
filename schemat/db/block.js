@@ -267,8 +267,11 @@ export class DataBlock extends Block {
             provs.set(obj.__neg_provid, obj)
         }
         let unique = new Set(objects)
+        let ids = objects.map(obj => obj.id)
 
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
+        // this._rectify_refs(objects.map(obj => obj.__data), entries, ids)
+        
         let rectify = (ref) => {
             if (!(ref instanceof WebObject) || ref.id) return
             let npid = ref.__neg_provid
@@ -302,11 +305,29 @@ export class DataBlock extends Block {
             await this._save(state.storage, obj)
         }
 
-        let ids = objects.map(obj => obj.id)
+        // let ids = objects.map(obj => obj.id)
         // print(`${this}.$agent.insert() saved IDs:`, ids)
         // this._print(`after $agent.insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
 
-        return ids.slice(0, N)
+        return ids //.slice(0, N)
+    }
+
+    _rectify_refs(structs, inserts, ids) {
+        /* Find all references to web objects inside `structs` and replace provisional IDs with final IDs from `ids`. */
+        if (!structs?.length) return
+
+        let provisionals = inserts.map(([prov_id, _]) => prov_id)
+        let prov_map = new Map(zip(provisionals, ids))
+
+        let rectify = (ref) => {
+            if (!(ref instanceof WebObject) || ref.id) return
+            let npid = ref.__neg_provid
+            assert(npid, `invalid reference: no ID nor provisional ID`)
+            let id = prov_map.get(npid)
+            if (id) return WebObject.stub(id)
+            throw new Error(`provisional ID (${npid}) doesn't point to any newly created object`)
+        }
+        for (let struct of structs) Struct.transform(struct, rectify)
     }
 
     _prepare_for_insert(obj) {
