@@ -389,7 +389,8 @@ export class DataBlock extends Block {
         if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
         let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
-        let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev.clone() to avoid repeated async initialization
+        let obj  = prev._clone()                    // dependencies (category, container, prototypes) are loaded, but references are NOT (!)
+        // let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev._clone() to avoid repeated async initialization
 
         obj._apply_edits(...edits)                  // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
         await obj._initialize(false)                // reinitialize the dependencies (category, class, ...) WITHOUT sealing! they may have been altered by the edits

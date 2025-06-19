@@ -1301,7 +1301,7 @@ export class WebObject {
     }
 
     _clone(opts) {
-        let obj = WebObject.stub(this.id, {...opts, mutable: true})
+        let obj = WebObject.stub(this.id, {mutable: true, ...opts})
         obj._set_data(this.__data.clone(), this.__meta.loaded_at)
         T.setClass(obj, T.getClass(this))
         return obj
