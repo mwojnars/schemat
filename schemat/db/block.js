@@ -237,9 +237,11 @@ export class DataBlock extends Block {
         */
         // this._print_stack()
         let ring = this.ring
-        assert(Array.isArray(entries))
         assert(ring?.is_loaded())
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
+
+        assert(Array.isArray(entries))
+        assert(entries.every(([prov, _]) => prov && prov < 0))
 
         let N = entries.length
         let records = entries.map(e => ({npid: e[0], data: e[1]}))        // {id, npid, data} tuples that await ID assignment + setup
