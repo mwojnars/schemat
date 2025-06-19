@@ -270,8 +270,8 @@ export class DataBlock extends Block {
         let ids = objects.map(obj => obj.id)
 
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
-        // this._rectify_refs(objects.map(obj => obj.__data), entries, ids)
-        
+        // DataBlock._rectify_refs(objects.map(obj => obj.__data), entries, ids)
+
         let rectify = (ref) => {
             if (!(ref instanceof WebObject) || ref.id) return
             let npid = ref.__neg_provid
@@ -312,20 +312,20 @@ export class DataBlock extends Block {
         return ids //.slice(0, N)
     }
 
-    _rectify_refs(structs, inserts, ids) {
-        /* Find all references to web objects inside `structs` and replace provisional IDs with final IDs from `ids`. */
+    static _rectify_refs(structs, inserts, substitutes) {
+        /* Find all references to web objects inside `structs` and replace provisional IDs with final IDs/objects from `substitutes`. */
         if (!structs?.length) return
 
-        let provisionals = inserts.map(([prov_id, _]) => prov_id)
-        let prov_map = new Map(zip(provisionals, ids))
+        let provs = inserts.map(([prov_id, _]) => prov_id)
+        let subs = new Map(zip(provs, substitutes))     // map of provisional IDs -> substitutes
 
         let rectify = (ref) => {
             if (!(ref instanceof WebObject) || ref.id) return
             let npid = ref.__neg_provid
-            assert(npid, `invalid reference: no ID nor provisional ID`)
-            let id = prov_map.get(npid)
-            if (id) return WebObject.stub(id)
-            throw new Error(`provisional ID (${npid}) doesn't point to any newly created object`)
+            if (!npid) throw new Error(`reference does not contain an ID nor provisional ID`)
+            let sub = subs.get(npid)
+            if (!sub) throw new Error(`provisional ID (${npid}) does not point to any newly created object`)
+            return typeof sub === 'object' ? sub : WebObject.stub(sub)
         }
         for (let struct of structs) Struct.transform(struct, rectify)
     }
