@@ -51,14 +51,14 @@ export class Client extends Schemat {
             return JSON.stringify(data)
         },
         async insert(datas, opts) {
-            return schemat.app.action.insert_objects(datas, opts)
+            return schemat.app.action.db_insert(datas, opts)
         },
         async delete(ids, opts) {
-            return schemat.app.action.delete_objects(ids, opts)
+            return schemat.app.action.db_delete(ids, opts)
         },
         async update(id_edits, opts) {
             let edits = id_edits.flatMap(([id, eds]) => eds.map(ed => [id, ...ed]))
-            return schemat.app.action.apply_edits(edits, opts)
+            return schemat.app.action.db_update(edits, opts)
         },
     }
 }
