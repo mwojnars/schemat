@@ -304,20 +304,16 @@ export class Database extends WebObject {
         /* Return the top-most ring with a given name or ID, throw an error if not found; `ring` can also be a Ring object,
            in which case it is replaced with the same-ID object from the ring stack.
          */
+        if (ring == null) return this.top_ring
         if (typeof ring === 'string') ring = this.ring_names.get(ring)
         else if (typeof ring === 'number') ring = this.ring_ids.get(ring)
-        else ring = this.ring_ids.get(ring?.id)
+        else ring = this.ring_ids.get(ring?.id)         // replace `ring` with the database's instance
         if (!ring) throw new DataAccessError(`target ring not found in the database`)
         return ring
     }
 
     async select(id, {ring} = {}) {
-        ring &&= this.get_ring(ring)        // check that `ring` occurs in the stack and replace it with the database's instance
-        // if (ring) print(`selecting [${id}] from a custom top ring:`, ring.__label || ring)
-        ring ??= this.top_ring
-        // if (id === 2001) this._print(`db.select(2001) app_id = ${schemat.app_id}`)
-        // if (id === 2001) this._print(`db.select(2001) from ring ${ring}`)
-        return ring.select(id)
+        return this.get_ring(ring).select(id)
     }
 
     async insert(entries, {ring, ...opts} = {}) {
@@ -328,25 +324,20 @@ export class Database extends WebObject {
         assert(Array.isArray(entries))
         if (!entries.length) return []
 
-        ring &&= this.get_ring(ring)
-        if (!ring) {
-            ring = this.rings_reversed.find(r => !r.readonly)       // find the first writable ring
-            if (!ring) throw new DataAccessError("all ring(s) are read-only")
-        }
+        ring = this.get_ring(ring)
         if (ring.readonly) throw new DataAccessError(`target ring is read-only`)
         return ring.insert(entries, opts)
     }
 
     async update(id, edits, {ring} = {}) {
-        ring &&= this.get_ring(ring)
-        return (ring || this.top_ring).update(id, edits)
+        ring = this.get_ring(ring)
+        return ring.update(id, edits)
     }
 
     async delete(ids, {ring, ...opts} = {}) {
-        /* Delete a single ID, or an array of IDs from the database. */
+        /* Delete a single ID, or an array of IDs, from the database. */
         if (!Array.isArray(ids)) ids = [ids]
-        ring &&= this.get_ring(ring)
-        ring ||= this.top_ring
+        ring = this.get_ring(ring)
         let counts = await Promise.all(ids.map(id => ring.delete(id)))
         return sum(counts)
     }
@@ -390,11 +381,7 @@ export class Database extends WebObject {
         if (!Array.isArray(key) || key.length === 0) throw new Error(`index key must be an array with at least one element: ${key}`)
         if (payload && !Array.isArray(payload)) throw new Error(`index payload must be an array: ${payload}`)
 
-        if (ring) {
-            ring = this.get_ring(ring)
-            if (!ring) throw new Error(`target ring not found in the database`)
-        }
-        else ring = this.bottom_ring
+        ring = ring ? this.get_ring(ring) : this.bottom_ring
 
         // create index specification
         let ObjectIndexOperator = this.__std.ObjectIndexOperator
