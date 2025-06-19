@@ -143,11 +143,10 @@ export class TCP_Sender {
         })
     }
 
-    _connect(address, response_parser) {
+    async _connect(address, response_parser) {
         let [host, port] = address.split(':')
         port = parseInt(port)
-        let socket = net.createConnection({host, port})
-        socket.setNoDelay(false)
+        let socket = await _connect({host, port})
 
         socket.on('data', data => response_parser.feed(data))
         socket.on('close', () => {
@@ -172,6 +171,12 @@ export class TCP_Sender {
             catch (e) { console.error('Invalid response:', e) }
         })
     }
+}
+
+async function _connect({host, port}) {
+    let socket = net.createConnection({host, port})
+    socket.setNoDelay(false)
+    return socket
 }
 
 /**********************************************************************************************************************/
