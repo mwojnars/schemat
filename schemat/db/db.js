@@ -1,4 +1,4 @@
-import {T, assert, print, merge, fileBaseName, sum, zip} from '../common/utils.js'
+import {T, assert, print, merge, fileBaseName, sum} from '../common/utils.js'
 import {DataAccessError, DatabaseError, ObjectNotFound} from "../common/errors.js"
 import {Struct} from "../core/catalog.js";
 import {WebObject} from "../core/object.js"
@@ -358,7 +358,6 @@ export class Database extends WebObject {
         // inserts must be done together and receive their IDs before the updates are processed, due to possible cross-references
         if (inserts?.length) {
             inserted = await this.insert(inserts, opts)
-            // this._update_newborn(newborn, inserted, discard)
 
             // scan argument lists of all edits in `updates` and replace provisional IDs in references with final IDs from `inserted`
             let edits = updates?.flatMap(([_, edits]) => edits)
