@@ -217,21 +217,6 @@ export class Application extends WebObject {
         await schemat.save(opts)
     }
 
-    // async 'action.db_update'(edits, opts = {}) {
-    //     /* Modify 1+ objects by executing a number of edits in the DB. Each plain edit is an array: [id, op, ...args], where `id` is
-    //        the object ID, `op` is the name of edit.*() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
-    //      */
-    //     let groups = new Map()                  // group edits by object ID
-    //     for (let [id, op, ...args] of edits) {
-    //         let edits = groups.get(id) || []
-    //         edits.push([op, ...args])
-    //         groups.set(id, edits)
-    //     }
-    //     for (let [id, edits] of groups)         // add every object to transaction
-    //         WebObject.editable(id, edits)
-    //     await schemat.save(opts)
-    // }
-
     async 'action.db_delete'(ids, opts) {
         /* Delete objects by ID. `ids` is an array of IDs, or a single ID. */
         if (!Array.isArray(ids)) ids = [ids]
