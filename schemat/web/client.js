@@ -51,7 +51,7 @@ export class Client extends Schemat {
             return JSON.stringify(data)
         },
         async insert(datas, opts) {
-            return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
+            return schemat.app.action.insert_objects(datas, opts)
         },
         async delete(ids, opts) {
             return schemat.app.action.delete_objects(ids, opts)

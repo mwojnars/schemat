@@ -217,18 +217,6 @@ export class ServerTransaction extends Transaction {
         // if (lite) return
     }
 
-    // async _db_insert(datas, opts) {
-    //     return schemat.db.insert(datas, opts)       // returns an array of IDs assigned
-    // }
-    //
-    // async _db_delete(ids, opts) {
-    //     return schemat.db.delete(ids, opts)
-    // }
-    //
-    // async _db_update(id_edits, opts) {
-    //     return schemat.db.update(id_edits, opts)
-    // }
-
     async commit(opts = {}) {
         /* Save all remaining changes to DB and mark this transaction as completed and closed.
            Repeated .save() may be needed, because new objects & mutations can be created during save().
@@ -275,19 +263,6 @@ export class ServerTransaction extends Transaction {
 
 export class ClientTransaction extends Transaction {
     /* Client-side transaction object. No TID. No commits. Exists permanently. */
-
-    // async _db_insert(datas, opts) {
-    //     return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
-    // }
-    //
-    // async _db_delete(ids, opts) {
-    //     return schemat.app.action.delete_objects(ids, opts)
-    // }
-    //
-    // async _db_update(id_edits, opts) {
-    //     let edits = id_edits.flatMap(([id, eds]) => eds.map(ed => [id, ...ed]))
-    //     return schemat.app.action.apply_edits(edits, opts)
-    // }
 
     commit() { throw new Error(`client-side transaction cannot be committed`) }
     capture(...records) {}      // on client, records are saved in Registry and this is enough (no further back-propagation is done)
