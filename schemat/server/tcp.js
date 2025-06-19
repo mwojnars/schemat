@@ -1,4 +1,4 @@
-import {assert, print} from '../common/utils.js';
+import {assert, print, sleep_ms} from '../common/utils.js';
 
 let net = await server_import('node:net')
 
@@ -144,10 +144,8 @@ export class TCP_Sender {
     }
 
     async _connect(address, response_parser) {
-        let [host, port] = address.split(':')
-        port = parseInt(port)
-        let socket = await _connect({host, port})
-
+        let socket = await _tcp_connect(address)
+        socket.setNoDelay(false)
         socket.on('data', data => response_parser.feed(data))
         socket.on('close', () => {
             socket.removeAllListeners()
@@ -173,10 +171,30 @@ export class TCP_Sender {
     }
 }
 
-async function _connect({host, port}) {
-    let socket = net.createConnection({host, port})
-    socket.setNoDelay(false)
-    return socket
+async function _tcp_connect(address, attempts = 5, delay = 1000) {
+    let [host, port] = address.split(':')
+    port = parseInt(port)
+
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+        try {
+            let conn = net.createConnection({host, port})
+            return await new Promise((resolve, reject) => {
+                conn.on('connect', () => {
+                    conn.removeAllListeners('error')
+                    resolve(conn)
+                })
+                conn.on('error', (err) => {
+                    conn.removeAllListeners('connect')
+                    reject(err)
+                })
+            })
+        } catch (err) {
+            if (err.code === 'ECONNREFUSED' && attempt < attempts) {
+                schemat._print(`TCP error ECONNREFUSED when connecting to ${address}, retrying after a delay of ${delay}ms ...`)
+                await sleep_ms(delay)
+            } else throw err
+        }
+    }
 }
 
 /**********************************************************************************************************************/
