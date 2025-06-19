@@ -3,6 +3,9 @@ import {Objects} from "../common/structs.js";
 import {Catalog} from "./catalog.js";
 import {WebObject} from "./object.js";
 
+const {DELETED} = WebObject.Status
+
+
 /**********************************************************************************************************************/
 
 export class Transaction {
@@ -83,13 +86,25 @@ export class Transaction {
     has(obj)        { return this._staging.has(obj) }
     has_exact(obj)  { return this._staging.has_exact(obj) }
 
+    _pending() {
+        /* Array of objects from _staging that actually have any modifications in them to be saved. */
+        return this._staging.filter(obj =>
+            (obj.__provisional_id && obj.__status !== DELETED) ||
+            (obj.id && obj.__status === DELETED) ||
+            (obj.id && obj.__meta.edits.length > 0)
+        )
+    }
+
     async save_all(opts) {
-        /* Save all pending changes in _staging, plus any other that might have been created _while_ saving.
-           (All the instances being saved get *discarded*, so they cannot be mutated anymore after save_all() ??)
+        /* Save all pending changes in _staging, plus any others that might have been created while saving.
+           If opts.discard = true, all objects from _staging (not only the pending ones) get discarded, so they cannot be mutated anymore.
          */
-        // opts = {...opts, discard: true}
-        while (this._staging.length)
-            await this.save(opts, [...this._staging])
+        let {discard} = opts
+        while (true) {
+            let objects = discard ? this._staging : this._pending()
+            if (!objects.length) break
+            await this.save(opts, objects)
+        }
     }
 
     async save({discard = false, ...opts} = {}, objects = null) {
@@ -117,7 +132,6 @@ export class Transaction {
             if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
 
         // discard objects that are newborn and marked for deletion at the same time
-        let {DELETED} = WebObject.Status
         objects = objects.filter(obj => {
             if (obj.__provisional_id && obj.__status === DELETED) {
                 this._discard(obj)
