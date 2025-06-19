@@ -342,7 +342,7 @@ export class ServerSchemat extends Schemat {
         tx = new ServerTransaction(tid)
         let result = await this._transaction.run(tx, async () => {
             let res = await callback()
-            if (tid) await tx.save(); else await tx.commit()
+            if (tid) await tx.flush(); else await tx.commit()
             return res
         })
         return _return_tx ? [result, tx] : result

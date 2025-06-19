@@ -228,11 +228,14 @@ export class ServerTransaction extends Transaction {
         // if (lite) return
     }
 
+    async flush(opts = {}) {
+        /* Save all pending changes to DB and discard all objects, but do not mark this transaction as committed. */
+        return this.save_all({...opts, discard: true})
+    }
+
     async commit(opts = {}) {
-        /* Save all remaining changes to DB and mark this transaction as completed and closed.
-           Repeated .save() may be needed, because new objects & mutations can be created during save().
-         */
-        await this.save_all({...opts, discard: true})
+        /* Save all pending changes to DB and mark this transaction as completed and closed. */
+        await this.flush(opts)
         this.committed = true
         // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
     }
