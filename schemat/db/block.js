@@ -251,15 +251,14 @@ export class DataBlock extends Block {
             assert(N === 1)
             let key = this.encode_id(id)                // fixed ID provided by the caller? check for uniqueness
             if (await state.storage.get(key)) throw new DataConsistencyError(`record with this ID already exists`, {id})
-            records[0].id = id
         }
 
         // assign IDs to the initial group of objects, as they may be referenced from other objects via provisional IDs;
         // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
         for (let rec of records) {
-            let {id, npid, data} = rec
-            id ??= this._assign_id(state, opts)
-            let obj = await WebObject.from_data(id, data, {mutable: true, activate: false, provisional: -npid})
+            let {npid, data} = rec
+            let _id = id || this._assign_id(state, opts)
+            let obj = await WebObject.from_data(_id, data, {mutable: true, activate: false, provisional: -npid})
             objects.push(obj)
         }
         let ids = objects.map(obj => obj.id)
