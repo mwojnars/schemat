@@ -57,8 +57,8 @@ export class Client extends Schemat {
             return schemat.app.action.db_delete(ids, opts)
         },
         async update(id_edits, opts) {
-            let edits = id_edits.flatMap(([id, eds]) => eds.map(ed => [id, ...ed]))
-            return schemat.app.action.db_update(edits, opts)
+            // let edits = id_edits.flatMap(([id, eds]) => eds.map(ed => [id, ...ed]))
+            return schemat.app.action.db_update(id_edits, opts)
         },
     }
 }

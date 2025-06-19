@@ -197,6 +197,8 @@ export class Application extends WebObject {
     //     await schemat.save(opts)
     // }
 
+    // async 'action.db_insert'(entries, opts) { return schemat.db.insert(entries, opts) }
+
     async 'action.db_insert'(entries, opts) {
         /* Insert new object(s) to DB with __data initialized from the provided JSONx-stringified representation(s).
            `data` is either an array of content objects, one for each web object to be created; or a single content object.
@@ -209,20 +211,26 @@ export class Application extends WebObject {
         return objects.map(obj => obj.id)
     }
 
-    async 'action.db_update'(edits, opts = {}) {
-        /* Modify 1+ objects by executing a number of edits in the DB. Each plain edit is an array: [id, op, ...args], where `id` is
-           the object ID, `op` is the name of edit.*() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
-         */
-        let groups = new Map()                  // group edits by object ID
-        for (let [id, op, ...args] of edits) {
-            let edits = groups.get(id) || []
-            edits.push([op, ...args])
-            groups.set(id, edits)
-        }
-        for (let [id, edits] of groups)         // add every object to transaction
+    async 'action.db_update'(id_edits, opts = {}) {
+        for (let [id, edits] of id_edits)         // add objects to transaction
             WebObject.editable(id, edits)
         await schemat.save(opts)
     }
+
+    // async 'action.db_update'(edits, opts = {}) {
+    //     /* Modify 1+ objects by executing a number of edits in the DB. Each plain edit is an array: [id, op, ...args], where `id` is
+    //        the object ID, `op` is the name of edit.*() operation to be executed, and `args` are 0+ arguments to be passed to the operation.
+    //      */
+    //     let groups = new Map()                  // group edits by object ID
+    //     for (let [id, op, ...args] of edits) {
+    //         let edits = groups.get(id) || []
+    //         edits.push([op, ...args])
+    //         groups.set(id, edits)
+    //     }
+    //     for (let [id, edits] of groups)         // add every object to transaction
+    //         WebObject.editable(id, edits)
+    //     await schemat.save(opts)
+    // }
 
     async 'action.db_delete'(ids, opts) {
         /* Delete objects by ID. `ids` is an array of IDs, or a single ID. */
