@@ -353,8 +353,6 @@ export class Schemat {
         if (json && loaded_at + ttl * 0.8 > Date.now()) return {json, loaded_at}
     }
 
-    // _db_select(id, opts)    { throw new Error(`not implemented`) }
-
     async get_version(id, ver) {
         /* Restore a previous version, `ver`, of a given object, or take it from the registry if present. The object returned is fully loaded. */
         let obj = this.registry.get_version(id, ver)

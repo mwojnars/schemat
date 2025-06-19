@@ -272,8 +272,6 @@ export class ServerSchemat extends Schemat {
 
     /***  Database  ***/
 
-    // _db_select(id, opts) { return this.db.select(id, opts) }
-
     async *scan_category(category_or_id = null, {load=false, ...opts} = {}) {
         /* Generate a stream of objects found in a given category, or all objects if no first argument is given.
            `category_or_id` should be a Category object (not necessarily loaded), or an ID.
