@@ -1295,10 +1295,15 @@ export class WebObject {
         if (!this.is_loaded()) throw new Error('only a fully loaded object can be converted to a mutable instance')
         if (CLIENT) return this._make_mutable()
 
+        let obj = this._clone(opts)
+        if (activate) obj._activate()
+        return obj
+    }
+
+    _clone(opts) {
         let obj = WebObject.stub(this.id, {...opts, mutable: true})
         obj._set_data(this.__data.clone(), this.__meta.loaded_at)
         T.setClass(obj, T.getClass(this))
-        if (activate) obj._activate()
         return obj
     }
 
@@ -1349,10 +1354,12 @@ export class WebObject {
 
 
     /***  Individual edits. Should be called via this.edit.*().
-          Edits are methods that manipulate directly on the object's __data. Typically, they're first applied temporarily
-          on the client; recorded in __meta.edits; then replayed on the server to do the permanent update in the database.
-          New edit methods can be added in subclasses. They must be synchronous.
-          They must NOT modify their arguments, because the same args may need to be sent later from client to DB.
+          Edits are methods that manipulate directly on object's __data. They are first applied on the caller (client);
+          recorded in __meta.edits; then replayed in the DB block on origin server for permanent update in the database.
+          New edit methods can be added in subclasses:
+          - they must be synchronous;
+          - they must NOT access the content of other web objects except the one being mutated;
+          - they must NOT modify their arguments as the same args may need to be sent later from client to DB.
      ***/
 
     'edit.touch'() {}
