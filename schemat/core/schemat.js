@@ -335,7 +335,7 @@ export class Schemat {
         let rec = !opts && this.get_record(id)
         if (rec) return rec
 
-        return this._db_select(id, opts).then(json => {
+        return this.db.select(id, opts).then(json => {
             if (!opts) this.register_record({id, data: json})
             return {json, loaded_at: Date.now()}
         })
@@ -353,7 +353,7 @@ export class Schemat {
         if (json && loaded_at + ttl * 0.8 > Date.now()) return {json, loaded_at}
     }
 
-    _db_select(id, opts)    { throw new Error(`not implemented`) }
+    // _db_select(id, opts)    { throw new Error(`not implemented`) }
 
     async get_version(id, ver) {
         /* Restore a previous version, `ver`, of a given object, or take it from the registry if present. The object returned is fully loaded. */

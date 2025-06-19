@@ -42,15 +42,21 @@ export class Client extends Schemat {
         // check()
     }
 
-    async _db_select(id, opts) {
-        /* Load an object from the server via AJAX call. */
-        let url = schemat.app.default_path_of(id) + '::json'
-        let {data} = await fetch(url).then(response => response.json())     // {id, data} encoded
-        return JSON.stringify(data)
-    }
+    // async _db_select(id, opts) {
+    //     /* Load an object from the server via AJAX call. */
+    //     let url = schemat.app.default_path_of(id) + '::json'
+    //     let {data} = await fetch(url).then(response => response.json())     // {id, data} encoded
+    //     return JSON.stringify(data)
+    // }
 
     // a mockup object that provides the same core interface as server-side Database, but forwards all requests to the server
     db = {
+        async select(id, opts) {
+            /* Load an object from the server via AJAX call. */
+            let url = schemat.app.default_path_of(id) + '::json'
+            let {data} = await fetch(url).then(response => response.json())     // {id, data} encoded
+            return JSON.stringify(data)
+        },
         async insert(datas, opts) {
             return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
         },
