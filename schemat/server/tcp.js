@@ -131,7 +131,7 @@ export class TCP_Sender {
     async send(msg, address) {
         /* `msg` is a plain object/array whose elements have to be JSONx-encoded already if needed. */
         return new Promise((resolve, reject) => {
-            let socket = this.sockets.get(address) || this._connect(address)
+            let socket = this.sockets.get(address) || this._connect(address, this._response_parser())
             let id = ++this.message_id
             if (this.message_id >= 0xFFFFFFFF) this.message_id = 0      // check for 4-byte overflow
             
@@ -143,13 +143,24 @@ export class TCP_Sender {
         })
     }
 
-    _connect(address) {
+    _connect(address, response_parser) {
         let [host, port] = address.split(':')
         port = parseInt(port)
         let socket = net.createConnection({host, port})
         socket.setNoDelay(false)
 
-        let response_parser = new BinaryParser((id, resp) => {
+        socket.on('data', data => response_parser.feed(data))
+        socket.on('close', () => {
+            socket.removeAllListeners()
+            this.sockets.delete(address)
+        })
+        this.sockets.set(address, socket)
+
+        return socket
+    }
+
+    _response_parser() {
+        return new BinaryParser((id, resp) => {
             try {
                 // schemat.node._print(`TCP client response ${id} recv:`, _json(resp))
                 let entry = this.pending.get(id)
@@ -160,15 +171,6 @@ export class TCP_Sender {
             }
             catch (e) { console.error('Invalid response:', e) }
         })
-
-        socket.on('data', data => response_parser.feed(data))
-        socket.on('close', () => {
-            socket.removeAllListeners()
-            this.sockets.delete(address)
-        })
-        this.sockets.set(address, socket)
-
-        return socket
     }
 }
 
