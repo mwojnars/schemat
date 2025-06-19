@@ -236,27 +236,25 @@ export class DataBlock extends Block {
            Option `id`: target ID to be assigned to the new object, only if `entries` contains exactly one entry.
         */
         // this._print_stack()
+        assert(Array.isArray(entries))
+        assert(entries.every(([prov, _]) => prov && prov < 0))
+        if (!entries.length) return
+
         let ring = this.ring
         assert(ring?.is_loaded())
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
 
-        assert(Array.isArray(entries))
-        assert(entries.every(([prov, _]) => prov && prov < 0))
-
-        let N = entries.length
-        let records = entries.map(e => ({npid: e[0], data: e[1]}))        // {id, npid, data} tuples that await ID assignment + setup
         let objects = []
 
-        if (id && N) {
-            assert(N === 1)
+        if (id) {
+            assert(entries.length === 1)
             let key = this.encode_id(id)                // fixed ID provided by the caller? check for uniqueness
             if (await state.storage.get(key)) throw new DataConsistencyError(`record with this ID already exists`, {id})
         }
 
         // assign IDs to the initial group of objects, as they may be referenced from other objects via provisional IDs;
         // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
-        for (let rec of records) {
-            let {npid, data} = rec
+        for (let [npid, data] of entries) {
             let _id = id || this._assign_id(state, opts)
             let obj = await WebObject.from_data(_id, data, {mutable: true, activate: false, provisional: -npid})
             objects.push(obj)
