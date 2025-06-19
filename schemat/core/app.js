@@ -185,8 +185,6 @@ export class Application extends WebObject {
 
     /***  Actions -- can be called via schemat.action.*()  ***/
 
-    // TODO: allow actions to run on immutable `this`, otherwise the `app` object is *recreated* on every execution of the actions below!
-
     // async 'action.submit_tx'(changes, opts) {
     //     /* Submit a transaction to the database. `changes` is an array of changes, each change is either of:
     //        - ['ins', data]  -- insertion of a new object
@@ -197,6 +195,7 @@ export class Application extends WebObject {
     //     await schemat.save(opts)
     // }
 
+    // the actions below don't explicitly use a transaction, but they do run inside a TX, and updated DB records are captured at the end
     async 'action.db_insert'(entries, opts)  { return await schemat.db.insert(entries, opts) }
     async 'action.db_update'(id_edits, opts) { return await schemat.db.update(id_edits, opts) }
     async 'action.db_delete'(ids, opts)      { return await schemat.db.delete(ids, opts) }
