@@ -243,22 +243,18 @@ export class DataBlock extends Block {
         let ring = this.ring
         assert(ring?.is_loaded())
         if (ring.readonly) throw new DataAccessError(`cannot insert into a read-only ring [${ring.id}]`)
-
-        let objects = []
-
         if (id) {
-            assert(entries.length === 1)
-            let key = this.encode_id(id)                // fixed ID provided by the caller? check for uniqueness
+            assert(entries.length === 1)        // fixed ID provided by the caller? check for uniqueness
+            let key = this.encode_id(id)
             if (await state.storage.get(key)) throw new DataConsistencyError(`record with this ID already exists`, {id})
         }
 
-        // assign IDs to the initial group of objects, as they may be referenced from other objects via provisional IDs;
-        // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
-        for (let [npid, data] of entries) {
+        // assign IDs and convert entries to objects; each object is instantiated for validation,
+        // but not activated: __init__() & _activate() are NOT executed (performance)
+        let objects = await Promise.all(entries.map(([npid, data]) => {
             let _id = id || this._assign_id(state, opts)
-            let obj = await WebObject.from_data(_id, data, {mutable: true, activate: false, provisional: -npid})
-            objects.push(obj)
-        }
+            return WebObject.from_data(_id, data, {mutable: true, activate: false, provisional: -npid})
+        }))
         let ids = objects.map(obj => obj.id)
 
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
