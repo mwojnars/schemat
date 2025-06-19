@@ -170,6 +170,14 @@ export class Transaction {
             newborn.forEach(obj => this._staging.delete(obj))       // drop every newborn from _staging, it will be reinserted later
         }
 
+        // let result = await schemat.db.submit(ins_datas, upd_edits, del_ids, opts)
+        // let {inserted} = result
+        //
+        // if (newborn.length) {
+        //     assert(newborn.length === inserted.length)
+        //     this._update_newborn(newborn, inserted, discard)
+        // }
+
         // deleting may run in parallel with saving newborn and edited objects
         let deleting = deleted.length ? schemat.db.delete(del_ids, opts) : null
 
