@@ -489,7 +489,9 @@ export class WebObject {
     }
 
     static editable(id, edits = null) {
-        /* Representation of an editable remote object: a mutable object with ID and __meta.edits, but no __data.
+        /* An editable remote object: a mutable object with ID and __meta.edits, but no __data;
+           it is an object that is *not* loaded, but still can be edited: the edits are recorded
+           in the transaction and passed to DB upon .save() where they get applied to the object's content.
            Serves as a temporary container for `edits` or __status=DELETED within a transaction that is to be written to DB.
            In this way, it allows manipulations (edits & delete) on a remote object *without* fully loading it.
            Since this object is not loaded, it cannot be used for property access.

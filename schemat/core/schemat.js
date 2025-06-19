@@ -250,13 +250,6 @@ export class Schemat {
         return WebObject.stub(null, {provisional: id})
     }
 
-    get_editable(id, edits = null) {
-        /* A remote mutable object that is *not* loaded, but still can be edited: the edits are recorded
-           in the transaction and passed to DB upon .save() where they get applied to the object's content.
-         */
-        return WebObject.editable(id, edits)
-    }
-
     get_if_present(id) { return this.registry.get_object(id) }
 
     get_if_loaded(id, set_loaded = null) {
