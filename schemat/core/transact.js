@@ -84,33 +84,37 @@ export class Transaction {
     has_exact(obj)  { return this._staging.has_exact(obj) }
 
     async save_all(opts) {
-        /* Save all objects from _staging plus any other objects that might have been created or modified _during_ saving.
-           All the instances being saved get *discarded*, so they cannot be mutated anymore after save_all().
+        /* Save all pending changes in _staging, plus any other that might have been created _while_ saving.
+           (All the instances being saved get *discarded*, so they cannot be mutated anymore after save_all() ??)
          */
-        opts = {...opts, discard: true}
+        // opts = {...opts, discard: true}
         while (this._staging.length)
             await this.save(opts, [...this._staging])
     }
 
     async save({discard = false, ...opts} = {}, objects = null) {
-        /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object). 
+        /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object).
+           If `objects` are specified, only those are saved, even if some others are added to the transaction during saving.
+           Otherwise, save() without explicit `objects` is equivalent to save_all(), which includes all objects AND extends
+           to those created during saving; all these instances get discarded at the end.
 
            IMPORTANT:
            It is possible and allowed that while saving changes to DB, the transaction is modified by new mutations
-           occurring inside data blocks! For example, new Revision objects may be created while updating a staged object.
-           This means that the content of _staging may change in the background during execution of _db_*() methods below.
-           Importantly, there is a barrier between the transaction and the DB: no web objects are passed to _db_*() methods,
+           occurring inside data blocks. For example, new Revision objects may be created while updating a staged object.
+           This means that the content of _staging may change in the background during execution of db.*() calls below.
+           Importantly, there is a barrier between the transaction and the DB: no web objects are passed to db.*() methods,
            and no objects are returned from them, only plain data structures like arrays of IDs or raw data contents.
            Also, the mutated objects are first removed from _staging, so the DB has no access to them and cannot modify them:
-           if the DB performs any mutations, these are recorded in new objects and don't interfere with what is being currently saved.
+           if the DB performs any mutations, they are recorded separately and don't interfere with what is being currently saved.
          */
         if (!this._staging.size) return
+        // if (!objects) return this.save_all(opts)
+
         if (objects && typeof objects === 'object') objects = [objects]
 
-        if (!objects) objects = [...this._staging]
-        else
-            for (let obj of objects)        // every object must have been staged already
-                if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
+        if (!objects) objects = [...this._staging]; else
+        for (let obj of objects)        // every object must have been staged already
+            if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
 
         // discard objects that are newborn and marked for deletion at the same time
         let {DELETED} = WebObject.Status
@@ -122,12 +126,12 @@ export class Transaction {
             return true
         })
 
-        objects.forEach(obj => {
-            if (obj.id && !obj.__meta.edits) {
-                schemat._print(`Transaction.save() missing edits:`, obj.__content)
-                obj._print_stack()
-            }
-        })
+        // objects.forEach(obj => {
+        //     if (obj.id && !obj.__meta.edits) {
+        //         schemat._print(`Transaction.save() missing edits:`, obj.__content)
+        //         obj._print_stack()
+        //     }
+        // })
 
         // group objects by operation: to insert, to delete, to update
         let newborn = objects.filter(obj => obj.__provisional_id)
@@ -228,7 +232,7 @@ export class ServerTransaction extends Transaction {
         /* Save all remaining changes to DB and mark this transaction as completed and closed.
            Repeated .save() may be needed, because new objects & mutations can be created during save().
          */
-        await this.save_all(opts)
+        await this.save_all({...opts, discard: true})
         this.committed = true
         // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
     }
