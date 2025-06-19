@@ -359,22 +359,9 @@ export class Database extends WebObject {
             inserted = await this.insert(inserts, opts)
             // this._update_newborn(newborn, inserted, discard)
 
-            let provisionals = inserts.map(([prov_id, _]) => prov_id)
-            let prov_map = new Map(zip(provisionals, inserted))
-
-            let rectify = (ref) => {
-                if (!(ref instanceof WebObject) || ref.id) return
-                let npid = ref.__neg_provid
-                assert(npid, `invalid reference: no ID nor provisional ID`)
-                let id = prov_map.get(npid)
-                let target = WebObject.stub(id)
-                if (!target) throw new Error(`provisional ID (${npid}) doesn't point to any object being inserted`)
-                return target
-            }
-
-            // scan all arguments of edits in `updates` and replace provisional IDs in references with final IDs from `inserted`
-            for (let [_, edits] of updates || [])
-                for (let edit of edits) Struct.transform(edit, rectify)
+            // scan argument lists of all edits in `updates` and replace provisional IDs in references with final IDs from `inserted`
+            let edits = updates?.flatMap(([_, edits]) => edits)
+            this._rectify_refs(edits, inserts, inserted)
         }
         if (updates?.length) await this.update(updates, opts)
         if (deleting) deleted = await deleting
@@ -384,7 +371,22 @@ export class Database extends WebObject {
         return {inserted, deleted}
     }
 
-    _rectify_refs() {
+    _rectify_refs(structs, inserts, inserted) {
+        /* Find all references to web objects inside `structs` and replace provisional IDs with final IDs from `inserted`. */
+        if (!structs?.length) return
+
+        let provisionals = inserts.map(([prov_id, _]) => prov_id)
+        let prov_map = new Map(zip(provisionals, inserted))
+
+        let rectify = (ref) => {
+            if (!(ref instanceof WebObject) || ref.id) return
+            let npid = ref.__neg_provid
+            assert(npid, `invalid reference: no ID nor provisional ID`)
+            let id = prov_map.get(npid)
+            if (id) return WebObject.stub(id)
+            throw new Error(`provisional ID (${npid}) doesn't point to any newly created object`)
+        }
+        for (let struct of structs) Struct.transform(struct, rectify)
     }
 
 
