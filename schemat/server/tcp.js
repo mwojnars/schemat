@@ -109,7 +109,7 @@ export class TCP_Sender {
        for WRITE messages, process acknowledgements and resend un-acknowledged messages. */
 
     async start(retry_interval) {
-        this.sockets = new Map()        // Map<address, net.Socket>
+        this.sockets = new Map()        // Map<address, net.Socket or promise>
         this.pending = new Map()        // Map<id, {message, retries, address, resolve, reject}>
         this.message_id = 0             // last message ID sent
 
@@ -117,7 +117,7 @@ export class TCP_Sender {
             for (let [id, entry] of this.pending) {
                 entry.retries++
                 let socket = this.sockets.get(entry.address)
-                assert(socket)
+                assert(socket && !(socket instanceof Promise))
                 socket.write(entry.message)
             }
         }, retry_interval)
@@ -125,16 +125,18 @@ export class TCP_Sender {
 
     async stop() {
         clearInterval(this.retry_timer)
-        for (let socket of this.sockets.values()) socket.end()
+        for (let socket of this.sockets.values())
+            (await socket).end()
     }
 
     async send(msg, address) {
         /* `msg` is a plain object/array whose elements are JSONx-encoded already if needed. */
         let socket = this.sockets.get(address) || await this._connect(address, this._response_parser())
-        let id = ++this.message_id
+        if (socket instanceof Promise) socket = await socket
 
-        if (this.message_id >= 0xFFFFFFFF) this.message_id = 0      // check for 4-byte overflow
+        let id = ++this.message_id
         let message = BinaryParser.create_message(id, msg)
+        if (this.message_id >= 0xFFFFFFFF) this.message_id = 0      // check for 4-byte overflow
 
         return new Promise((resolve, reject) => {
             this.pending.set(id, {message, retries: 0, address, resolve, reject})
@@ -144,7 +146,10 @@ export class TCP_Sender {
     }
 
     async _connect(address, response_parser) {
-        let socket = await _tcp_connect(address)
+        let promise = _tcp_connect(address)
+        this.sockets.set(address, promise)
+        let socket = await promise
+
         socket.setNoDelay(false)
         socket.on('data', data => response_parser.feed(data))
         socket.on('close', () => {
@@ -152,7 +157,6 @@ export class TCP_Sender {
             this.sockets.delete(address)
         })
         this.sockets.set(address, socket)
-
         return socket
     }
 
@@ -172,6 +176,7 @@ export class TCP_Sender {
 }
 
 async function _tcp_connect(address, attempts = 5, delay = 1000) {
+    /* Connect to a TCP peer and return a socket. Retry in case of ECONNREFUSED error. */
     let [host, port] = address.split(':')
     port = parseInt(port)
 
@@ -190,7 +195,7 @@ async function _tcp_connect(address, attempts = 5, delay = 1000) {
             })
         } catch (err) {
             if (err.code === 'ECONNREFUSED' && attempt < attempts) {
-                schemat._print(`TCP error ECONNREFUSED when connecting to ${address}, retrying after a delay of ${delay}ms ...`)
+                schemat._print(`TCP error ${err.code} when connecting to ${address}, retrying after a delay of ${delay}ms ...`)
                 await sleep_ms(delay)
             } else throw err
         }
