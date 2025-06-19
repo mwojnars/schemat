@@ -461,6 +461,10 @@ export let T = Types                    // T is an alias for Types
  **
  */
 
+export function sum(...nums) {
+    return nums.flat().reduce((a, b) => a + b, 0)
+}
+
 export function argmin(arr, order, direction = 1) {
     /* Position of the lowest element in `arr` according to the ordering function: order(a,b)*direction.
         If there are two or more such elements, their lowest index is returned.
