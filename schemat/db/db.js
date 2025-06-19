@@ -329,9 +329,11 @@ export class Database extends WebObject {
         return ring.insert(entries, opts)
     }
 
-    async update(id, edits, {ring} = {}) {
+    async update(id_edits, {ring, ...opts} = {}) {
+        /* Apply edits to records in the database. `id_edits` is an array of pairs: [id, array_of_edits], or one such pair. */
+        if (!Array.isArray(id_edits)) id_edits = [id_edits]
         ring = this.get_ring(ring)
-        return ring.update(id, edits)
+        return Promise.all(id_edits.map(([id, edits]) => ring.update(id, edits)))
     }
 
     async delete(ids, {ring, ...opts} = {}) {

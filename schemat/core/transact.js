@@ -226,8 +226,7 @@ export class ServerTransaction extends Transaction {
     }
 
     async _db_update(id_edits, opts) {
-        let db = schemat.db
-        return Promise.all(id_edits.map(([id, edits]) => db.update(id, edits, opts)))
+        return schemat.db.update(id_edits, opts)
     }
 
     async commit(opts = {}) {
