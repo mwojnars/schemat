@@ -467,7 +467,6 @@ export class WebObject {
         if (_fail) throw new Error('web objects should be instantiated with category.new() or category.assign() instead of new CLASS()')
         if (id) this.id = id
         if (provisional) this.__provisional_id = Math.abs(provisional)
-        this.__hash = 1 + randint()
 
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
         // only on the client this flag can be changed after object creation
@@ -475,6 +474,11 @@ export class WebObject {
 
         if (!mutable) this.__meta.cache = new Map()
         else if (id) this.__meta.edits = edits || []        // `edits` not needed for newborns because their full __data is transferred to DB upon save()
+    }
+
+    static dummy(id) {
+        /* An object simpler than a stub, only used as an ID holder for JSONx serialization. NO real functionality: no proxy, data loading, ... */
+        return new this(false, id)
     }
 
     static stub(id = null, opts = {}) {
@@ -485,6 +489,8 @@ export class WebObject {
             return RootCategory.stub(id, opts)
 
         let self = new this(false, id, opts)
+        self.__hash = 1 + randint()
+
         return self.__proxy = Intercept.wrap(self)
     }
 
