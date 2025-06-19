@@ -272,22 +272,11 @@ export class DataBlock extends Block {
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
         DataBlock.rectify_refs(objects.map(obj => obj.__data), entries, ids)
 
-        // let rectify = (ref) => {
-        //     if (!(ref instanceof WebObject) || ref.id) return
-        //     let npid = ref.__neg_provid
-        //     assert(npid, `invalid reference: no ID nor provisional ID`)
-        //     let target = provs.get(npid)
-        //     if (!target) throw new Error(`incorrect provisional ID (${npid}) doesn't point to any object`)
-        //     return target
-        // }
-        // for (let obj of objects) Struct.transform(obj.__data, rectify)
-
         // go through all the objects:
         // - assign ID & instantiate the web object (if not yet instantiated)
         // - call __setup__(), which may create new related objects (!) that are added to the queue
 
-        for (let pos = 0; pos < objects.length; pos++) {
-            let obj = objects[pos]
+        for (let obj of [...objects]) {
             obj.id ??= this._assign_id(state, opts)
 
             let setup = obj.__setup__({}, {ring: this.ring, block: this})
@@ -304,12 +293,7 @@ export class DataBlock extends Block {
             this._prepare_for_insert(obj)       // validate obj.__data
             await this._save(state.storage, obj)
         }
-
-        // let ids = objects.map(obj => obj.id)
-        // print(`${this}.$agent.insert() saved IDs:`, ids)
-        // this._print(`after $agent.insert(), schemat.tx=${JSON.stringify(schemat.tx)}`)
-
-        return ids //.slice(0, N)
+        return ids
     }
 
     static rectify_refs(structs, inserts, substitutes) {
