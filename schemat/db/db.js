@@ -366,8 +366,9 @@ export class Database extends WebObject {
                 if (!(ref instanceof WebObject) || ref.id) return
                 let npid = ref.__neg_provid
                 assert(npid, `invalid reference: no ID nor provisional ID`)
-                let target = prov_map.get(npid)
-                if (!target) throw new Error(`provisional ID (${npid}) is invalid and doesn't point to an object`)
+                let id = prov_map.get(npid)
+                let target = WebObject.stub(id)
+                if (!target) throw new Error(`provisional ID (${npid}) doesn't point to any object being inserted`)
                 return target
             }
 
@@ -381,6 +382,9 @@ export class Database extends WebObject {
         // inserted = an array of IDs assigned to the inserted objects, in the same order as in `inserts`
         // deleted  = an integer number of objects actually found in DB and deleted
         return {inserted, deleted}
+    }
+
+    _rectify_refs() {
     }
 
 

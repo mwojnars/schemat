@@ -476,10 +476,10 @@ export class WebObject {
         else if (id) this.__meta.edits = edits || []        // `edits` not needed for newborns because their full __data is transferred to DB upon save()
     }
 
-    static dummy(id) {
-        /* An object simpler than a stub, only used as an ID holder for JSONx serialization. NO real functionality: no proxy, data loading, ... */
-        return new this(false, id)
-    }
+    // static dummy(id) {
+    //     /* An object simpler than a stub, only used as an ID holder for JSONx serialization. NO real functionality: no proxy, data loading, ... */
+    //     return new this(false, id)
+    // }
 
     static stub(id = null, opts = {}) {
         /* Create a stub: an empty object with `id` assigned. To load data, load() must be called afterwards. */
