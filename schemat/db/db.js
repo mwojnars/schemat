@@ -1,4 +1,4 @@
-import {T, assert, print, merge, fileBaseName, sleep} from '../common/utils.js'
+import {T, assert, print, merge, fileBaseName, sum} from '../common/utils.js'
 import {DataAccessError, DatabaseError, ObjectNotFound} from "../common/errors.js"
 import {Struct} from "../core/catalog.js";
 import {WebObject} from "../core/object.js"
@@ -342,9 +342,13 @@ export class Database extends WebObject {
         return (ring || this.top_ring).update(id, edits)
     }
 
-    delete(id, {ring} = {}) {
+    async delete(ids, {ring, ...opts} = {}) {
+        /* Delete a single ID, or an array of IDs from the database. */
+        if (!Array.isArray(ids)) ids = [ids]
         ring &&= this.get_ring(ring)
-        return (ring || this.top_ring).delete(id)
+        ring ||= this.top_ring
+        let counts = await Promise.all(ids.map(id => ring.delete(id)))
+        return sum(counts)
     }
 
 

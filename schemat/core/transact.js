@@ -278,6 +278,10 @@ export class ServerTransaction extends Transaction {
 export class ClientTransaction extends Transaction {
     /* Client-side transaction object. No TID. No commits. Exists permanently. */
 
+    async _db_insert__(...args) {
+        return schemat.app.action.db_oper('insert', ...args)
+    }
+
     async _db_insert(datas, opts) {
         return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
     }
