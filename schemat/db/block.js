@@ -246,8 +246,8 @@ export class DataBlock extends Block {
         let N = entries.length
         let records = entries.map(e => ({npid: e[0], data: e[1]}))        // {id, npid, data} tuples that await ID assignment + setup
         let objects = []
-        let provid  = 0
-        let provs   = new Map()     // __neg_provid -> object
+        // let provid  = 0
+        // let provs   = new Map()     // __neg_provid -> object
 
         if (id && N) {
             assert(N === 1)
@@ -260,15 +260,14 @@ export class DataBlock extends Block {
         // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
         for (let rec of records) {
             let {id, npid, data} = rec
-            let provisional = npid ? -npid : ++provid
+            // let provisional = npid ? -npid : ++provid
             id ??= this._assign_id(state, opts)
-            let obj = await WebObject.from_data(id, data, {mutable: true, activate: false, provisional})
+            let obj = await WebObject.from_data(id, data, {mutable: true, activate: false, provisional: -npid})
             objects.push(obj)
 
-            if (provs.has(obj.__neg_provid)) throw new Error(`repeated value (${obj.__neg_provid}) of provisional ID in insert batch`)
-            provs.set(obj.__neg_provid, obj)
+            // if (provs.has(obj.__neg_provid)) throw new Error(`repeated value (${obj.__neg_provid}) of provisional ID in insert batch`)
+            // provs.set(obj.__neg_provid, obj)
         }
-        let unique = new Set(objects)
         let ids = objects.map(obj => obj.id)
 
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
@@ -288,6 +287,7 @@ export class DataBlock extends Block {
         // - call __setup__(), which may create new related objects (!) that are added to `objects`
         // - assign IDs to newly added objects, call their __setup__(), etc...
 
+        // let unique = new Set(objects)
         // for (let pos = 0; pos < objects.length; pos++) {
         //     let obj = objects[pos]
         //     obj.id ??= this._assign_id(state, opts)
