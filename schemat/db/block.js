@@ -274,28 +274,38 @@ export class DataBlock extends Block {
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
         DataBlock.rectify_refs(objects.map(obj => obj.__data), entries, ids)
 
-        // go through all the objects, including those added now in the loop:
-        // - call __setup__(), which may create new related objects (!) that are added to `objects`
-        // - assign IDs to newly added objects
-
-        for (let pos = 0; pos < objects.length; pos++) {
-            let obj = objects[pos]
-            obj.id ??= this._assign_id(state, opts)
-
+        for (let obj of objects) {
             let setup = obj.__setup__({}, {ring: this.ring, block: this})
             if (setup instanceof Promise) await setup
-
-            // find all unseen newborn references and add them to the queue
-            obj.__references.forEach(ref => {
-                if (ref.is_newborn() && !unique.has(ref)) { objects.push(ref); unique.add(ref) }
-            })
         }
-        // print(`${this}.$agent.insert() saving ${objects.length} object(s)`)
 
         for (let obj of objects) {
             this._prepare_for_insert(obj)       // validate obj.__data
             await this._save(state.storage, obj)
         }
+
+        // go through all the objects, including those added now in the loop:
+        // - call __setup__(), which may create new related objects (!) that are added to `objects`
+        // - assign IDs to newly added objects, call their __setup__(), etc...
+
+        // for (let pos = 0; pos < objects.length; pos++) {
+        //     let obj = objects[pos]
+        //     obj.id ??= this._assign_id(state, opts)
+        //
+        //     let setup = obj.__setup__({}, {ring: this.ring, block: this})
+        //     if (setup instanceof Promise) await setup
+        //
+        //     // find all unseen newborn references and add them to the queue
+        //     obj.__references.forEach(ref => {
+        //         if (ref.is_newborn() && !unique.has(ref)) { objects.push(ref); unique.add(ref) }
+        //     })
+        // }
+        // // print(`${this}.$agent.insert() saving ${objects.length} object(s)`)
+        //
+        // for (let obj of objects) {
+        //     this._prepare_for_insert(obj)       // validate obj.__data
+        //     await this._save(state.storage, obj)
+        // }
         return ids
     }
 
