@@ -199,6 +199,7 @@ export class Application extends WebObject {
     async 'action.db_insert'(entries, opts)  { return await schemat.db.insert(entries, opts) }
     async 'action.db_update'(id_edits, opts) { return await schemat.db.update(id_edits, opts) }
     async 'action.db_delete'(ids, opts)      { return await schemat.db.delete(ids, opts) }
+    async 'action.db_submit'(...args)        { return await schemat.db.submit(...args) }
 
 
     /***  Dynamic imports  ***/

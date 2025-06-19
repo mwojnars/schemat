@@ -59,6 +59,7 @@ export class Client extends Schemat {
         async update(id_edits, opts) {
             return schemat.app.action.db_update(id_edits, opts)
         },
+        async submit(...args) { return schemat.app.action.db_submit(...args) }
     }
 }
 
