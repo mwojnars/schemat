@@ -274,11 +274,12 @@ export class DataBlock extends Block {
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
         DataBlock.rectify_refs(objects.map(obj => obj.__data), entries, ids)
 
-        // go through all the objects:
-        // - assign ID & instantiate the web object (if not yet instantiated)
-        // - call __setup__(), which may create new related objects (!) that are added to the queue
+        // go through all the objects, including those added now in the loop:
+        // - call __setup__(), which may create new related objects (!) that are added to `objects`
+        // - assign IDs to newly added objects
 
-        for (let obj of [...objects]) {
+        for (let pos = 0; pos < objects.length; pos++) {
+            let obj = objects[pos]
             obj.id ??= this._assign_id(state, opts)
 
             let setup = obj.__setup__({}, {ring: this.ring, block: this})
