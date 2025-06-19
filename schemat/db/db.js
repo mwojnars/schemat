@@ -317,8 +317,7 @@ export class Database extends WebObject {
     }
 
     async insert(entries, {ring, ...opts} = {}) {
-        /* Find the top-most writable ring and insert a number of [id, data] entries there, where `id` is either
-           a provisional ID (if negative), or the requested final record ID. Return an array of {id, data} records.
+        /* Find the top-most writable ring and insert a number of [provisional-id, data] entries. Return an array of {id, data} records.
            If `ring` is given (name/object/ID), the entry is inserted to this particular ring, or error is raised if read-only.
          */
         assert(Array.isArray(entries))
@@ -342,6 +341,27 @@ export class Database extends WebObject {
         ring = this.get_ring(ring)
         let counts = await Promise.all(ids.map(id => ring.delete(id)))
         return sum(counts)
+    }
+
+    async submit(inserts = null, updates = null, deletes = null, opts = {}) {
+        /* Perform multiple mutations of different types: insertions, updates, deletions.
+           This method is like insert() + update() + delete(), combined.
+           All arguments must be arrays (except `opts`) or null/undefined.
+         */
+        let inserted, deleted
+        let deleting = deletes?.length ? this.delete(deletes, opts) : null      // deletions may run in parallel with inserts & updates
+
+        // inserts must be done together and receive their IDs before the updates are processed, due to possible cross-references
+        if (inserts?.length) {
+            inserted = await this.insert(inserts, opts)
+            this._update_newborn(newborn, inserted, discard)
+        }
+        if (updates?.length) await this.update(updates, opts)
+        if (deleting) deleted = await deleting
+
+        // inserted = an array of IDs assigned to the inserted objects, in the same order as in `inserts`
+        // deleted  = an integer number of objects actually found in DB and deleted
+        return {inserted, deleted}
     }
 
 

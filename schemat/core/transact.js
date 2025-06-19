@@ -127,7 +127,7 @@ export class Transaction {
         let edited  = objects.filter(obj => obj.id && obj.__status !== DELETED && obj.__meta.edits.length > 0)
         assert(objects.length >= newborn.length + deleted.length + edited.length)   // some objects may be skipped (zero edits)
 
-        // build a list of provisional IDs of every newborn object, keep the same order
+        // verify the validity of provisional IDs of all newborn objects
         let provisional = newborn.map(obj => obj.__provisional_id)
         assert(provisional.every(prov_id => prov_id > 0))
         assert(new Set(provisional).size === provisional.length, `__provisional_id numbers are not unique`)
@@ -156,7 +156,6 @@ export class Transaction {
         }
         if (edited.length) await schemat.db.update(upd_edits, opts)
         if (deleting) await deleting
-
     }
 
     _update_newborn(newborn, ids, discarded) {
