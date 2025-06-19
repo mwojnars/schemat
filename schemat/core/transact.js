@@ -147,14 +147,14 @@ export class Transaction {
         }
 
         // deleting may run in parallel with saving newborn and edited objects
-        let deleting = deleted.length ? this._db_delete(del_ids, opts) : null
+        let deleting = deleted.length ? schemat.db.delete(del_ids, opts) : null
 
         // newborns must be inserted together and receive their IDs before mutated objects are saved, due to possible cross-references
         if (newborn.length) {
-            let ids = await this._db_insert(ins_datas, opts)
+            let ids = await schemat.db.insert(ins_datas, opts)
             this._update_newborn(newborn, ids, discard)
         }
-        if (edited.length) await this._db_update(upd_edits, opts)
+        if (edited.length) await schemat.db.update(upd_edits, opts)
         if (deleting) await deleting
 
     }
@@ -217,17 +217,17 @@ export class ServerTransaction extends Transaction {
         // if (lite) return
     }
 
-    async _db_insert(datas, opts) {
-        return schemat.db.insert(datas, opts)       // returns an array of IDs assigned
-    }
-
-    async _db_delete(ids, opts) {
-        return schemat.db.delete(ids, opts)
-    }
-
-    async _db_update(id_edits, opts) {
-        return schemat.db.update(id_edits, opts)
-    }
+    // async _db_insert(datas, opts) {
+    //     return schemat.db.insert(datas, opts)       // returns an array of IDs assigned
+    // }
+    //
+    // async _db_delete(ids, opts) {
+    //     return schemat.db.delete(ids, opts)
+    // }
+    //
+    // async _db_update(id_edits, opts) {
+    //     return schemat.db.update(id_edits, opts)
+    // }
 
     async commit(opts = {}) {
         /* Save all remaining changes to DB and mark this transaction as completed and closed.
@@ -276,18 +276,18 @@ export class ServerTransaction extends Transaction {
 export class ClientTransaction extends Transaction {
     /* Client-side transaction object. No TID. No commits. Exists permanently. */
 
-    async _db_insert(datas, opts) {
-        return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
-    }
-
-    async _db_delete(ids, opts) {
-        return schemat.app.action.delete_objects(ids, opts)
-    }
-
-    async _db_update(id_edits, opts) {
-        let edits = id_edits.flatMap(([id, eds]) => eds.map(ed => [id, ...ed]))
-        return schemat.app.action.apply_edits(edits, opts)
-    }
+    // async _db_insert(datas, opts) {
+    //     return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
+    // }
+    //
+    // async _db_delete(ids, opts) {
+    //     return schemat.app.action.delete_objects(ids, opts)
+    // }
+    //
+    // async _db_update(id_edits, opts) {
+    //     let edits = id_edits.flatMap(([id, eds]) => eds.map(ed => [id, ...ed]))
+    //     return schemat.app.action.apply_edits(edits, opts)
+    // }
 
     commit() { throw new Error(`client-side transaction cannot be committed`) }
     capture(...records) {}      // on client, records are saved in Registry and this is enough (no further back-propagation is done)
