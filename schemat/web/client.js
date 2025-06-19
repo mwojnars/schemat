@@ -48,6 +48,20 @@ export class Client extends Schemat {
         let {data} = await fetch(url).then(response => response.json())     // {id, data} encoded
         return JSON.stringify(data)
     }
+
+    // a mockup object that provides the same core interface as server-side Database, but forwards all requests to the server
+    db = {
+        async insert(datas, opts) {
+            return (await schemat.app.action.insert_objects(datas, opts)).map(obj => obj.id)
+        },
+        async delete(ids, opts) {
+            return schemat.app.action.delete_objects(ids, opts)
+        },
+        async update(id_edits, opts) {
+            let edits = id_edits.flatMap(([id, eds]) => eds.map(ed => [id, ...ed]))
+            return schemat.app.action.apply_edits(edits, opts)
+        },
+    }
 }
 
 // import {check} from "/app/widgets.js"
