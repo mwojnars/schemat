@@ -1,4 +1,4 @@
-import {T, assert, print, merge, fileBaseName, sum} from '../common/utils.js'
+import {T, assert, print, merge, fileBaseName, sum, zip} from '../common/utils.js'
 import {DataAccessError, DatabaseError, ObjectNotFound} from "../common/errors.js"
 import {Struct} from "../core/catalog.js";
 import {WebObject} from "../core/object.js"
@@ -345,8 +345,11 @@ export class Database extends WebObject {
 
     async submit(inserts = null, updates = null, deletes = null, opts = {}) {
         /* Perform multiple mutations of different types: insertions, updates, deletions.
-           This method is like insert() + update() + delete(), combined.
-           All arguments must be arrays (except `opts`) or null/undefined.
+           This method is like insert() + update() + delete(), combined. Arguments:
+           - inserts = an array of [negative-provisional-id, data] entries to insert;
+           - updates = an array of [id, array_of_edits] pairs for objects to be mutated;
+           - deletes = an array of IDs to delete.
+           All arguments except `opts` must be arrays or null/undefined.
          */
         let inserted, deleted
         let deleting = deletes?.length ? this.delete(deletes, opts) : null      // deletions may run in parallel with inserts & updates
@@ -354,7 +357,23 @@ export class Database extends WebObject {
         // inserts must be done together and receive their IDs before the updates are processed, due to possible cross-references
         if (inserts?.length) {
             inserted = await this.insert(inserts, opts)
-            this._update_newborn(newborn, inserted, discard)
+            // this._update_newborn(newborn, inserted, discard)
+
+            let provisionals = inserts.map(([prov_id, _]) => prov_id)
+            let prov_map = new Map(zip(provisionals, inserted))
+
+            let rectify = (ref) => {
+                if (!(ref instanceof WebObject) || ref.id) return
+                let npid = ref.__neg_provid
+                assert(npid, `invalid reference: no ID nor provisional ID`)
+                let target = prov_map.get(npid)
+                if (!target) throw new Error(`provisional ID (${npid}) is invalid and doesn't point to an object`)
+                return target
+            }
+
+            // scan all arguments of edits in `updates` and replace provisional IDs in references with final IDs from `inserted`
+            for (let [_, edits] of updates || [])
+                for (let edit of edits) Struct.transform(edit, rectify)
         }
         if (updates?.length) await this.update(updates, opts)
         if (deleting) deleted = await deleting
