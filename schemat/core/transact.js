@@ -125,9 +125,8 @@ export class Transaction {
 
         if (!this._staging.size) return
         if (!objects) return this.save_all(_opts)
-        if (objects && !Array.isArray(objects)) objects = [objects]
+        if (!Array.isArray(objects)) objects = [objects]
 
-        // if (!objects) objects = [...this._staging]; else
         for (let obj of objects)        // every object must have been staged already
             if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
 
@@ -159,7 +158,6 @@ export class Transaction {
         assert(new Set(provisional).size === provisional.length, `__provisional_id numbers are not unique`)
 
         // unwrap objects so that only plain data structures are passed to DB
-        // let ins_datas = newborn.map(obj => obj.__data.__getstate__())
         let ins_datas = newborn.map(obj => [obj.__neg_provid, obj.__data.__getstate__()])
         let del_ids   = deleted.map(obj => obj.id)
         let upd_edits = edited.map(obj => [obj.id, [...obj.__meta.edits]])
