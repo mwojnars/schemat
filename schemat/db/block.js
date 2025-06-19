@@ -270,17 +270,17 @@ export class DataBlock extends Block {
         let ids = objects.map(obj => obj.id)
 
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
-        // DataBlock._rectify_refs(objects.map(obj => obj.__data), entries, ids)
+        DataBlock.rectify_refs(objects.map(obj => obj.__data), entries, ids)
 
-        let rectify = (ref) => {
-            if (!(ref instanceof WebObject) || ref.id) return
-            let npid = ref.__neg_provid
-            assert(npid, `invalid reference: no ID nor provisional ID`)
-            let target = provs.get(npid)
-            if (!target) throw new Error(`incorrect provisional ID (${npid}) doesn't point to any object`)
-            return target
-        }
-        for (let obj of objects) Struct.transform(obj.__data, rectify)
+        // let rectify = (ref) => {
+        //     if (!(ref instanceof WebObject) || ref.id) return
+        //     let npid = ref.__neg_provid
+        //     assert(npid, `invalid reference: no ID nor provisional ID`)
+        //     let target = provs.get(npid)
+        //     if (!target) throw new Error(`incorrect provisional ID (${npid}) doesn't point to any object`)
+        //     return target
+        // }
+        // for (let obj of objects) Struct.transform(obj.__data, rectify)
 
         // go through all the objects:
         // - assign ID & instantiate the web object (if not yet instantiated)
@@ -312,10 +312,9 @@ export class DataBlock extends Block {
         return ids //.slice(0, N)
     }
 
-    static _rectify_refs(structs, inserts, substitutes) {
+    static rectify_refs(structs, inserts, substitutes) {
         /* Find all references to web objects inside `structs` and replace provisional IDs with final IDs/objects from `substitutes`. */
         if (!structs?.length) return
-
         let provs = inserts.map(([prov_id, _]) => prov_id)
         let subs = new Map(zip(provs, substitutes))     // map of provisional IDs -> substitutes
 
