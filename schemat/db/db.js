@@ -333,7 +333,7 @@ export class Database extends WebObject {
         /* Apply edits to records in the database. `id_edits` is an array of pairs: [id, array_of_edits], or one such pair. */
         if (!Array.isArray(id_edits)) id_edits = [id_edits]
         ring = this.get_ring(ring)
-        return Promise.all(id_edits.map(([id, edits]) => ring.update(id, edits)))
+        await Promise.all(id_edits.map(([id, edits]) => ring.update(id, edits)))
     }
 
     async delete(ids, {ring, ...opts} = {}) {

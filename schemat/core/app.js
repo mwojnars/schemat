@@ -197,32 +197,34 @@ export class Application extends WebObject {
     //     await schemat.save(opts)
     // }
 
-    // async 'action.db_insert'(entries, opts) { return schemat.db.insert(entries, opts) }
+    async 'action.db_insert'(entries, opts)  { return await schemat.db.insert(entries, opts) }
+    async 'action.db_update'(id_edits, opts) { return await schemat.db.update(id_edits, opts) }
+    async 'action.db_delete'(ids, opts)      { return await schemat.db.delete(ids, opts) }
 
-    async 'action.db_insert'(entries, opts) {
-        /* Insert new object(s) to DB with __data initialized from the provided JSONx-stringified representation(s).
-           `data` is either an array of content objects, one for each web object to be created; or a single content object.
-           Every content object is a Catalog instance or an internal *state* of such instance (the result of .__getstate__()).
-           The respond is an array of IDs, one for each object created, in the same order as in the request.
-           Additionally, DB records are passed implicitly through a Transaction context.
-         */
-        let objects = entries.map(e => WebObject.newborn(e[1], {provisional: e[0]}))
-        await schemat.save(opts)
-        return objects.map(obj => obj.id)
-    }
-
-    async 'action.db_update'(id_edits, opts = {}) {
-        for (let [id, edits] of id_edits)         // add objects to transaction
-            WebObject.editable(id, edits)
-        await schemat.save(opts)
-    }
-
-    async 'action.db_delete'(ids, opts) {
-        /* Delete objects by ID. `ids` is an array of IDs, or a single ID. */
-        if (!Array.isArray(ids)) ids = [ids]
-        for (let id of ids) WebObject.editable(id).delete_self()
-        await schemat.save(opts)
-    }
+    // async 'action.db_insert'(entries, opts) {
+    //     /* Insert new object(s) to DB with __data initialized from the provided JSONx-stringified representation(s).
+    //        `data` is either an array of content objects, one for each web object to be created; or a single content object.
+    //        Every content object is a Catalog instance or an internal *state* of such instance (the result of .__getstate__()).
+    //        The respond is an array of IDs, one for each object created, in the same order as in the request.
+    //        Additionally, DB records are passed implicitly through a Transaction context.
+    //      */
+    //     let objects = entries.map(e => WebObject.newborn(e[1], {provisional: e[0]}))
+    //     await schemat.save(opts)
+    //     return objects.map(obj => obj.id)
+    // }
+    //
+    // async 'action.db_update'(id_edits, opts = {}) {
+    //     for (let [id, edits] of id_edits)         // add objects to transaction
+    //         WebObject.editable(id, edits)
+    //     await schemat.save(opts)
+    // }
+    //
+    // async 'action.db_delete'(ids, opts) {
+    //     /* Delete objects by ID. `ids` is an array of IDs, or a single ID. */
+    //     if (!Array.isArray(ids)) ids = [ids]
+    //     for (let id of ids) WebObject.editable(id).delete_self()
+    //     await schemat.save(opts)
+    // }
 
 
     /***  Dynamic imports  ***/
