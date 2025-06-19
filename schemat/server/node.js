@@ -186,9 +186,9 @@ export class Node extends Agent {
         let tcp_sender = new TCP_Sender()
         let tcp_receiver = new TCP_Receiver()
 
-        await sleep(2.0)        // wait for worker processes (and peer nodes?) to start
-        await tcp_receiver.start(this._tcp_port)
         await tcp_sender.start(this.tcp_retry_interval * 1000)
+        await sleep(1.0)        // wait for worker processes (and peer nodes?) to start
+        await tcp_receiver.start(this._tcp_port)
 
         let agents = this.agents
         let starting_agents = this._start_agents(agents)    // a promise
