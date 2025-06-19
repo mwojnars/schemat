@@ -83,6 +83,14 @@ export class Transaction {
     has(obj)        { return this._staging.has(obj) }
     has_exact(obj)  { return this._staging.has_exact(obj) }
 
+    async save_all(opts) {
+        /* Save all objects from _staging plus any other objects that might have been created or modified _during_ saving.
+           All the instances being saved get *discarded*, so they cannot be mutated anymore after save_all().
+         */
+        opts = {...opts, discard: true}
+        while (this._staging.length)
+            await this.save(opts, [...this._staging])
+    }
 
     async save({discard = false, ...opts} = {}, objects = null) {
         /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object). 
@@ -220,8 +228,7 @@ export class ServerTransaction extends Transaction {
         /* Save all remaining changes to DB and mark this transaction as completed and closed.
            Repeated .save() may be needed, because new objects & mutations can be created during save().
          */
-        while (this._staging.length)
-            await this.save({...opts, discard: true})
+        await this.save_all(opts)
         this.committed = true
         // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
     }
