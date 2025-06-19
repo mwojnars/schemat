@@ -88,7 +88,7 @@ export class Transaction {
 
     _pending() {
         /* Array of objects from _staging that actually have any modifications in them to be saved. */
-        return this._staging.filter(obj =>
+        return [...this._staging].filter(obj =>
             (obj.__provisional_id && obj.__status !== DELETED) ||
             (obj.id && obj.__status === DELETED) ||
             (obj.id && obj.__meta.edits.length > 0)
@@ -101,17 +101,16 @@ export class Transaction {
          */
         let {discard} = opts
         while (true) {
-            let objects = discard ? this._staging : this._pending()
+            let objects = discard ? [...this._staging] : this._pending()
             if (!objects.length) break
             await this.save(opts, objects)
         }
     }
 
-    async save({discard = false, ...opts} = {}, objects = null) {
-        /* Save pending changes to the database: either all those staged, or the ones in `objects` (can be a single object).
-           If `objects` are specified, only those are saved, even if some others are added to the transaction during saving.
-           Otherwise, save() without explicit `objects` is equivalent to save_all(), which includes all objects AND extends
-           to those created during saving; all these instances get discarded at the end.
+    async save(_opts = {}, objects = null) {
+        /* Save changes to the database: either all those staged/pending, or the ones in `objects` (can be a single object).
+           If `objects` is missing, save() is equivalent to save_all(): saves all pending changes AND extends to those
+           created while saving. Otherwise, only `objects` are saved.
 
            IMPORTANT:
            It is possible and allowed that while saving changes to DB, the transaction is modified by new mutations
@@ -122,12 +121,13 @@ export class Transaction {
            Also, the mutated objects are first removed from _staging, so the DB has no access to them and cannot modify them:
            if the DB performs any mutations, they are recorded separately and don't interfere with what is being currently saved.
          */
+        let {discard = false, ...opts} = _opts
+
         if (!this._staging.size) return
-        // if (!objects) return this.save_all(opts)
+        if (!objects) return this.save_all(_opts)
+        if (objects && !Array.isArray(objects)) objects = [objects]
 
-        if (objects && typeof objects === 'object') objects = [objects]
-
-        if (!objects) objects = [...this._staging]; else
+        // if (!objects) objects = [...this._staging]; else
         for (let obj of objects)        // every object must have been staged already
             if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
 
