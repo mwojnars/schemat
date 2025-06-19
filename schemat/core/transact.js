@@ -222,8 +222,7 @@ export class ServerTransaction extends Transaction {
     }
 
     async _db_delete(ids, opts) {
-        let db = schemat.db
-        return Promise.all(ids.map(id => db.delete(id, opts)))
+        return schemat.db.delete(ids, opts)
     }
 
     async _db_update(id_edits, opts) {
