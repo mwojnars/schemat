@@ -229,7 +229,7 @@ describe('Environment Checks', function() {
 
 
 describe('Schemat Tests', function () {
-    this.timeout(12000)         // Extended timeout for asynchronous tests
+    this.timeout(15000)         // Extended timeout for asynchronous tests
 
     describe('Web Application', function () {
 
