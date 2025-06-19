@@ -129,15 +129,15 @@ export class TCP_Sender {
     }
 
     async send(msg, address) {
-        /* `msg` is a plain object/array whose elements have to be JSONx-encoded already if needed. */
-        return new Promise((resolve, reject) => {
-            let socket = this.sockets.get(address) || this._connect(address, this._response_parser())
-            let id = ++this.message_id
-            if (this.message_id >= 0xFFFFFFFF) this.message_id = 0      // check for 4-byte overflow
-            
-            let message = BinaryParser.create_message(id, msg)
-            this.pending.set(id, {message, retries: 0, address, resolve, reject})
+        /* `msg` is a plain object/array whose elements are JSONx-encoded already if needed. */
+        let socket = this.sockets.get(address) || await this._connect(address, this._response_parser())
+        let id = ++this.message_id
 
+        if (this.message_id >= 0xFFFFFFFF) this.message_id = 0      // check for 4-byte overflow
+        let message = BinaryParser.create_message(id, msg)
+
+        return new Promise((resolve, reject) => {
+            this.pending.set(id, {message, retries: 0, address, resolve, reject})
             socket.write(message)
             // schemat.node._print(`TCP client message  ${id} sent:`, message.slice(9).toString())
         })
