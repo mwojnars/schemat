@@ -258,7 +258,6 @@ export class DataBlock extends Block {
         // every object is instantiated for validation, but is not activated: __init__() & _activate() are NOT executed (performance)
         for (let rec of records) {
             let {id, npid, data} = rec
-            // let provisional = npid ? -npid : ++provid
             id ??= this._assign_id(state, opts)
             let obj = await WebObject.from_data(id, data, {mutable: true, activate: false, provisional: -npid})
             objects.push(obj)
@@ -293,7 +292,7 @@ export class DataBlock extends Block {
             let npid = ref.__neg_provid
             if (!npid) throw new Error(`reference does not contain an ID nor provisional ID`)
             let sub = subs.get(npid)
-            if (!sub) throw new Error(`provisional ID (${npid}) does not point to any newly created object`)
+            if (!sub) throw new Error(`provisional ID (${npid}) is invalid`)
             return typeof sub === 'object' ? sub : WebObject.stub(sub)
         }
         for (let struct of structs) Struct.transform(struct, rectify)

@@ -5,6 +5,7 @@ import {WebObject} from "../core/object.js"
 import {data_schema, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
+import {DataBlock} from "./block.js";
 
 
 /**********************************************************************************************************************
@@ -361,7 +362,7 @@ export class Database extends WebObject {
 
             // scan argument lists of all edits in `updates` and replace provisional IDs in references with final IDs from `inserted`
             let edits = updates?.flatMap(([_, edits]) => edits)
-            this._rectify_refs(edits, inserts, inserted)
+            DataBlock.rectify_refs(edits, inserts, inserted)
         }
         if (updates?.length) await this.update(updates, opts)
         if (deleting) deleted = await deleting
@@ -369,24 +370,6 @@ export class Database extends WebObject {
         // inserted = an array of IDs assigned to the inserted objects, in the same order as in `inserts`
         // deleted  = an integer number of objects actually found in DB and deleted
         return {inserted, deleted}
-    }
-
-    _rectify_refs(structs, inserts, ids) {
-        /* Find all references to web objects inside `structs` and replace provisional IDs with final IDs from `ids`. */
-        if (!structs?.length) return
-
-        let provisionals = inserts.map(([prov_id, _]) => prov_id)
-        let prov_map = new Map(zip(provisionals, ids))
-
-        let rectify = (ref) => {
-            if (!(ref instanceof WebObject) || ref.id) return
-            let npid = ref.__neg_provid
-            assert(npid, `invalid reference: no ID nor provisional ID`)
-            let id = prov_map.get(npid)
-            if (id) return WebObject.stub(id)
-            throw new Error(`provisional ID (${npid}) doesn't point to any newly created object`)
-        }
-        for (let struct of structs) Struct.transform(struct, rectify)
     }
 
 
