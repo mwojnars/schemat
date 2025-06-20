@@ -8,7 +8,9 @@ import {print, assert} from "../common/utils.js"
 import {WebObject} from "../core/object.js"
 import {Directory} from "./containers.js";
 
-const {transform_postcss} = SERVER && await import("./transforms.js")
+const fs = await server_import('node:fs')
+const mod_path = await server_import('node:path')
+const {transform_postcss} = (SERVER && await import("./transforms.js")) || {}
 
 
 /**********************************************************************************************************************/
@@ -95,11 +97,9 @@ export class LocalFile extends File {
 
     local_path
 
-    async __init__()  { if (SERVER) this._mod_fs = await import('node:fs') }
-
     _content(encoding) {
         let path = this.local_path
-        if (path) return this._mod_fs.readFileSync(path, {encoding})
+        if (path) return fs.readFileSync(path, {encoding})
     }
 
     // 'GET.file'({request}) {
@@ -120,22 +120,15 @@ export class LocalDirectory extends Directory {
     words_forbidden
     files_allowed
 
-    async __init__() {
-        if (SERVER) {
-            this._mod_fs = await import('node:fs')
-            this._mod_path = await import('node:path')
-        }
-    }
-
     resolve(path) {
         if (!this.local_path) return null
-        let root = this._mod_path.resolve(this.local_path)          // make `root` an absolute path
+        let root = mod_path.resolve(this.local_path)            // make `root` an absolute path
 
         // check if the local path still falls under the `root` after ".." reduction
-        let file_path = this._mod_path.join(root, path)
+        let file_path = mod_path.join(root, path)
         if (!file_path.startsWith(root)) return null
 
-        let subpath = file_path.slice(root.length + 1)              // truncate 'root' from 'file_path'
+        let subpath = file_path.slice(root.length + 1)          // truncate 'root' from 'file_path'
         if (!this._is_allowed(subpath)) return null
 
         return (request) => this._read_file(file_path, request.res)
@@ -175,13 +168,13 @@ export class LocalDirectory extends Directory {
             this._transform_postcss.bind(this),
         ]
 
-        let buffer = this._mod_fs.readFileSync(path)
+        let buffer = fs.readFileSync(path)
         buffer = await this._apply_transforms(transforms, buffer, path)
 
         // TODO: the code below implements LOCAL requests and should return a buffer instead (no utf-8 decoding) to support all files incl. binary
         if (!res) {
             assert(false, `LocalDirectory._read_file(): LOCAL request received for '${path}', returning file content as a string not binary`)
-            return this._mod_fs.readFileSync(path, {encoding: 'utf8'})
+            return fs.readFileSync(path, {encoding: 'utf8'})
         }
 
         _set_mimetype(res, path)
