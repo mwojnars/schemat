@@ -723,6 +723,11 @@
         in the ring must *not* overlap and, together, they must cover the full
         set of possible IDs. Shard specification should never change after the
         block has been created.
+      default:
+        =:
+          - 0
+          - 1
+        "@": schemat/common/structs.js:Shard
       "@": schemat/types/type.js:SHARD
     "@": schemat:Catalog
   defaults:
