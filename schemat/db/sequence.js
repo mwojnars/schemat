@@ -29,10 +29,7 @@ export class Sequence extends WebObject {
 
     // impute_name() { return this.operator?.name }
 
-    __new__(ring, operator) {
-        ring.assert_active()
-        this.ring = ring
-        this.operator = operator
+    __new__() {
         this.blocks = []
     }
 
