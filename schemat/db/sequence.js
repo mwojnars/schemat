@@ -126,6 +126,7 @@ export class IndexSequence extends Sequence {
         print('IndexSequence.__setup__() creating a block')
         let Block = this.__std.Block
         this.blocks = [Block.new({sequence: this, format: 'index-jl'})]
+        // this._print(`tx._staging:`, schemat.tx._staging)
     }
 
     async put(key, value) {

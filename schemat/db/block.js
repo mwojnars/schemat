@@ -246,6 +246,13 @@ export class DataBlock extends Block {
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
         DataBlock.rectify_refs(objects.map(obj => obj.__data), entries, ids)
 
+        // for (let obj of objects)
+        //     for (let ref of obj.__references)
+        //         if (ref.__index_id < 0) {
+        //             this._print(`provisional reference still present in ${obj}:`, ref.__content)
+        //             throw new Error(`provisional reference still present in ${obj}`)
+        //         }
+
         // call __setup__() in every object
         for (let obj of objects) {
             let setup = obj.__setup__()  //{}, {ring: this.ring, block: this})
