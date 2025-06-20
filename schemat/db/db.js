@@ -414,7 +414,7 @@ export class Database extends WebObject {
 
         // create index specification
         let ObjectIndexOperator = this.__std.ObjectIndexOperator
-        let index = await ObjectIndexOperator.new({}, name, key, payload).save({ring})
+        let index = await ObjectIndexOperator.new({name, key, payload}).save({ring})
         // schemat._transaction.getStore()?.log_modified(index)
 
         // create streams for `index`, in `ring` and all higher rings
