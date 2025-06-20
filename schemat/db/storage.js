@@ -128,9 +128,12 @@ export class YamlDataStorage extends MemoryStorage {
 
     get_max_id() {
         /* Maximum ID across all records. */
-        if (!this._records.size) return 0
-        let ids = [...this._records.keys()].map(key => data_schema.decode_key(key)[0])
-        return Math.max(...ids)
+        let max = 0
+        for (let key of this._records.keys()) {
+            let id = data_schema.decode_key(key)[0]
+            if (max < id) max = id
+        }
+        return max
     }
 
     async flush() {

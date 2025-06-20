@@ -94,12 +94,10 @@ export class Block extends Agent {
     get file_path() { return `${schemat.node.file_path}/${this.file_name}` }
 
     async __start__() {
+        let __exclusive = false         // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
         let storage_class = this._detect_storage_class()
         let storage = new storage_class(this.file_path, this)
         await this._reopen(storage)
-        // let autoincrement = await this._reopen(storage)     // current max ID of records in this block
-        // let reserved = new Set()        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
-        let __exclusive = false         // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
         return {storage, __exclusive}
     }
 
