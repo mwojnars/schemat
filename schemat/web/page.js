@@ -12,9 +12,9 @@ export class Page extends WebObject {
 
     async __init__() {
         if (this.view_endpoint)
-            this['GET.view'] = await this._create_handler(this.view_endpoint)
+            this.__self['GET.view'] = await this._create_handler(this.view_endpoint)
         if (this.admin_endpoint)
-            this['GET.admin'] = await this._create_handler(this.admin_endpoint)
+            this.__self['GET.admin'] = await this._create_handler(this.admin_endpoint)
     }
 
     async _create_handler(path) {
