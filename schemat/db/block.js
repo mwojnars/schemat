@@ -244,7 +244,7 @@ export class DataBlock extends Block {
         let ids = objects.map(obj => obj.id)
 
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
-        DataBlock.rectify_refs(objects.map(obj => obj.__data), entries, ids)
+        DataBlock.rectify_refs(objects.map(obj => obj.__data), entries, objects)
 
         // for (let obj of objects)
         //     for (let ref of obj.__references)
@@ -272,6 +272,8 @@ export class DataBlock extends Block {
         if (!structs?.length) return
         let provs = inserts.map(([prov_id, _]) => prov_id)
         let subs = new Map(zip(provs, substitutes))     // map of provisional IDs -> substitutes
+
+        // if (tx) subs = tx._staging
 
         let rectify = (ref) => {
             if (!(ref instanceof WebObject) || ref.id) return
