@@ -60,14 +60,14 @@ export class Category extends WebObject {
         if (calls.length) return Promise.all(calls)
     }
 
-    assign(data = {}) {
-        /* Create a new object with __category=this and assign `data` to its `__data`. Return the object (no ID yet).
-           A web-object analogue of Object.create() and Object.assign().
-         */
-        data = Struct.clone(data)
-        Struct.set(data, ['__category'], this)
-        return this.__child_class.newborn(data)
-    }
+    // assign(data = {}) {
+    //     /* Create a new object with __category=this and assign `data` to its `__data`. Return the object (no ID yet).
+    //        A web-object analogue of Object.create() and Object.assign().
+    //      */
+    //     data = Struct.clone(data)
+    //     Struct.set(data, ['__category'], this)
+    //     return this.__child_class.newborn(data)
+    // }
 
     new(props = null, ...args) {
         /* Create a new object in this category and execute its __new__(...args). Return the object (no ID yet). */
