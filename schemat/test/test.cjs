@@ -302,7 +302,7 @@ describe('Schemat Tests', function () {
                 let d = await Varia.new().save()
                 let a = Varia.new()
                 let c = Varia.new()
-                let b = a.ref = Varia.new({ref: a})
+                let b = a.ref = Varia.new({}, {ref: a})
                 c.delete_self()
                 d.ref = b
                 await schemat.save()

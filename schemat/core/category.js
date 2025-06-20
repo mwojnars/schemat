@@ -69,7 +69,7 @@ export class Category extends WebObject {
         return this.__child_class.newborn(data)
     }
 
-    new(...args) {
+    new(props = {}, ...args) {
         /* Create a new object in this category and execute its __new__(...args). Return the object (no ID yet). */
         return this.__child_class._new([this], args)
     }

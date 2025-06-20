@@ -132,7 +132,7 @@ export class IndexSequence extends Sequence {
     async __setup__() {
         print('IndexSequence.__setup__() creating a block')
         let Block = this.__std.Block
-        this.blocks = [Block.new(this, {format: 'index-jl'})]
+        this.blocks = [Block.new({}, this, {format: 'index-jl'})]
     }
 
     async put(key, value) {
@@ -166,7 +166,7 @@ export class DataSequence extends Sequence {
 
     async __setup__() {
         let DataBlock = this.__std.DataBlock
-        this.blocks = [DataBlock.new(this, {format: 'data-yaml'})]
+        this.blocks = [DataBlock.new({}, this, {format: 'data-yaml'})]
     }
 
     encode_id(id) {

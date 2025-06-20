@@ -84,13 +84,13 @@ export class Ring extends WebObject {
         this.min_id_sharded ??= this.base_ring.min_id_sharded
 
         let DataSequence = this.__std.DataSequence
-        this.data_sequence = DataSequence.new(this, base?.data_sequence.operator)
+        this.data_sequence = DataSequence.new({}, this, base?.data_sequence.operator)
         this.sequences = []
         if (!base) return
 
         let IndexSequence = this.__std.IndexSequence
         for (let seq of base.sequences)
-            this.sequences.push(IndexSequence.new(this, seq.operator))
+            this.sequences.push(IndexSequence.new({}, this, seq.operator))
     }
 
     async __load__() {
@@ -220,7 +220,7 @@ export class Ring extends WebObject {
         if (this.readonly) throw new Error("the ring is read-only")
         let opts = {ring: this.__ring, broadcast: true}
         let IndexSequence = this.__std.IndexSequence
-        let seq = await IndexSequence.new(this).save(opts)
+        let seq = await IndexSequence.new({}, this).save(opts)
         // this.sequences.push(seq)
         this.sequences = [...this.sequences, seq]
         await this.save(opts)
@@ -414,7 +414,7 @@ export class Database extends WebObject {
 
         // create index specification
         let ObjectIndexOperator = this.__std.ObjectIndexOperator
-        let index = await ObjectIndexOperator.new(name, key, payload).save({ring})
+        let index = await ObjectIndexOperator.new({}, name, key, payload).save({ring})
         // schemat._transaction.getStore()?.log_modified(index)
 
         // create streams for `index`, in `ring` and all higher rings
