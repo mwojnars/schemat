@@ -172,12 +172,15 @@ class Intercept {
 
     static proxy_set(target, path, value, receiver)
     {
-        // special attributes are written directly to __self (outside __data, not sent to DB);
-        // also, when the __data is not loaded yet, *every* write goes to __self
-        if ((!target.is_newborn() && !target.is_loaded())
-            || typeof path !== 'string'                         // `path` can be a symbol like [Symbol.toPrimitive]
-            || Intercept.SPECIAL.has(path)
-        ) return Reflect.set(target, path, value, receiver)
+        // special attributes and symbols like [Symbol.toPrimitive] are written directly to __self
+        if (typeof path !== 'string' || Intercept.SPECIAL.has(path))
+            return Reflect.set(target, path, value, receiver)
+
+        // // when the __data is not loaded yet, *every* write goes to __self
+        // if (!(target.is_newborn() || target.is_loaded()))
+        //     return Reflect.set(target, path, value, receiver)
+
+        // if (!target.__meta.mutable) target._print(`proxy_set(${path}) on/via immutable object ${target}`)
 
         let [base, plural] = Intercept._check_plural(path)      // property name without the $ suffix
         let [prop] = base.split(SUBFIELD)                       // first segment of a deep path
@@ -206,6 +209,7 @@ class Intercept {
         else if (regular) throw new Error(`property not in object schema (${prop})`)
 
         // print('proxy_set() internal:', path, '/', mutable)
+        if (!target.__meta.mutable) throw new Error(`trying to modify an immutable object ${target} (${path})`)
         return Reflect.set(target, path, value, receiver)
     }
 
