@@ -628,6 +628,7 @@
         category:
           "@": 18
         "@": schemat/types/type.js:REF
+      default: []
       "@": schemat/types/type.js:ARRAY
     splits:
       info: Array of (n-1) split points between `blocks`.
