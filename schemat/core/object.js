@@ -1001,6 +1001,8 @@ export class WebObject {
            and already has an ID assigned (this.id is present). Typically, this method creates related sub-objects, in cases
            when doing this on a client would be more costly. __setup__() can be viewed as continuation of __new__(),
            but asynchronous and executed on a server (inside a data block). May return a Promise.
+           All child objects created in __setup__() are inserted to the same data block as parent, which improves
+           the performance of both the insertions and future read access.
            // For now, __setup__() must explicitly save the objects it creates; in the future, these objects will be inserted automatically with the parent object.
          */
 

@@ -440,6 +440,7 @@ export class Database extends WebObject {
         ids = String(ids)
         print(`\nreinserting object(s) [${ids}] ...`)
 
+        ring = this.get_ring(ring)
         let id_list = []
         let obj
 
@@ -466,8 +467,11 @@ export class Database extends WebObject {
                 else throw ex
             }
 
-            let opts = {ring, insert_mode: compact ? 'compact' : null, id: new_id}
-            new_id = (await WebObject.newborn(obj.__json).save(opts)).id
+            let opts = {insert_mode: compact ? 'compact' : null, id: new_id}
+            new_id = (await ring.insert([[-1, obj.__json]], opts))[0]
+
+            // let opts = {ring, insert_mode: compact ? 'compact' : null, id: new_id}
+            // new_id = (await WebObject.newborn(obj.__json).save(opts)).id
             assert(new_id)
 
             await this._update_references(id, new_id)
