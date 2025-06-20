@@ -65,8 +65,13 @@ export class Transaction {
     }
 
     _stage_newborn(obj) {
-        // assert(!obj.__provisional_id)
-        if (obj.__provisional_id) this._provisional = Math.max(this._provisional, obj.__provisional_id)
+        let prov = obj.__provisional_id
+        if (prov) {
+            let existing = this._staging.get(prov)
+            if (existing === obj) return obj
+            assert(!existing, `another newborn object staged at the same provisional ID (${prov})`)
+            this._provisional = Math.max(this._provisional, prov)
+        }
         else obj.__self.__provisional_id = ++this._provisional
         return this._staging.add(obj)
     }
@@ -197,17 +202,28 @@ export class Transaction {
             let obj = newborn[i]
             obj.id = id
             delete obj.__self.__provisional_id
-            assert(obj.__provisional_id === undefined)
             if (discarded) return
 
-            if (this._staging.has(obj))     // this object may have been already staged under its proper ID by a concurrent thread
+            let other = this._staging.get(obj)
+            if (other && other !== obj)     // this object may have been already staged under its proper ID by a concurrent thread
                 obj.__meta.obsolete = true
-            else {                          // re-stage the object under its proper ID, as it can still receive mutations in the future
+            else if (!other) {              // re-stage the object under its proper ID, as it can still receive mutations in the future
                 obj.__meta.edits = []       // `edits` array is uninitialized in newborns
                 this._staging.add(obj)
             }
         })
     }
+
+    // restage_inserted(obj) {
+    //     /* Drop __provional_id in `obj` and re-stage the object under its proper ID.
+    //        Called during/after insertion, right after `obj` received its final .id in a data block.
+    //      */
+    //     assert(obj.id && obj.__provisional_id)
+    //     this._staging.delete(obj.__provisional_id)
+    //     delete obj.__self.__provisional_id
+    //     obj.__meta.edits = []       // `edits` array is uninitialized in newborns
+    //     this._staging.add(obj)
+    // }
 
     revert() { return this._clear() }
 
