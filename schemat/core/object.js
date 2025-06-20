@@ -1010,12 +1010,11 @@ export class WebObject {
     }
 
     __setup__() {}  //config, {ring, block}) {}
-        /* One-time setup of the object, launched on server when the object is being inserted to a data `block`
-           and already has an ID assigned (this.id is present). Typically, this method creates related sub-objects
-           and creates links to/from itself and these objects - creating such objects on client is in many cases
-           either impossible or inefficient. For now, __setup__() must explicitly save the objects it creates;
-           in the future, these objects will be inserted automatically with the parent object. May return a Promise.
-           __setup__() can be viewed as continuation of __new__(), but asynchronous and executed on server (inside a data block).
+        /* One-time setup of the object, launched on a server after the object got inserted to a data block
+           and already has an ID assigned (this.id is present). Typically, this method creates related sub-objects, as
+           doing this on a client can be more costly in some cases. __setup__() can be viewed as continuation of __new__(),
+           but asynchronous and executed on a server (inside a data block). May return a Promise.
+           // For now, __setup__() must explicitly save the objects it creates; in the future, these objects will be inserted automatically with the parent object.
          */
 
     __load__() {}
