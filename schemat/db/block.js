@@ -97,8 +97,9 @@ export class Block extends Agent {
         let storage_class = this._detect_storage_class()
         let storage = new storage_class(this.file_path, this)
         let autoincrement = await this._reopen(storage)     // current max ID of records in this block
+        let reserved = new Set()        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
         let __exclusive = false         // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
-        return {storage, autoincrement, __exclusive}
+        return {storage, autoincrement, reserved, __exclusive}
     }
 
     async _reopen(storage) {
@@ -133,10 +134,13 @@ export class Block extends Agent {
         return arrayFromAsync(storage.scan(opts))       // TODO: return batches with a hard upper limit on their size
     }
 
-    async '$agent.erase'({storage}) {
+    async '$agent.erase'(state) {
         /* Remove all records from this block. */
+        let {storage} = state
         await storage.erase()
         this._flush(storage)
+        state.autoincrement = 0
+        state.reserved = new Set()
     }
 
     async '$agent.flush'({storage}) { return this._flush(storage, false) }
@@ -184,7 +188,7 @@ export class DataBlock extends Block {
 
     async __init__() {
         await super.__init__()
-        this._reserved = new Set()      // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
+        // this._reserved = new Set()      // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
     }
 
     encode_id(id)  { return this.sequence.encode_id(id) }
@@ -324,15 +328,15 @@ export class DataBlock extends Block {
         return id
     }
 
-    _assign_id_compact({storage, autoincrement}) {
+    _assign_id_compact({storage, autoincrement, reserved}) {
         /* Scan `storage` to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
            This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
         // if all empty slots below autoincrement were already allocated, use the incremental algorithm
         // (this may still leave empty slots if a record was removed in the meantime, but such slot is reused after next reload of the block)
-        if (this._reserved.has(autoincrement)) {
+        if (reserved.has(autoincrement)) {
             let id = this._assign_id_incremental({autoincrement})
-            this._reserved.add(id)
+            reserved.add(id)
             return id
         }
 
@@ -346,8 +350,8 @@ export class DataBlock extends Block {
             if (id < C && id >= B) id = C
             if (id >= C) id = this.shard_combined.fix_upwards(id)
             let key = this.encode_id(id)
-            if (!this._reserved.has(id) && !storage.get(key)) {         // found an unallocated slot?
-                this._reserved.add(id)
+            if (!reserved.has(id) && !storage.get(key)) {       // found an unallocated slot?
+                reserved.add(id)
                 return id
             }
         }
@@ -437,10 +441,10 @@ export class DataBlock extends Block {
         return Number(deleted)
     }
 
-    async '$agent.erase'(state) {
-        this._reserved = new Set()
-        return super['$agent.erase'](state)
-    }
+    // async '$agent.erase'(state) {
+    //     this._reserved = new Set()
+    //     return super['$agent.erase'](state)
+    // }
 
     async propagate_change(key, obj_old = null, obj_new = null) {
         /* Push a change from this data block to all derived streams in the ring. */
