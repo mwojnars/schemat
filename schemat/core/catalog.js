@@ -414,8 +414,7 @@ export class Catalog {
         this._entries = entries.filter(e => e[1] !== undefined)     // drop entries with value=undefined
         this._keys = new Map()
 
-        for (const [pos, entry] of this._entries.entries()) {
-            const key = entry[0]
+        for (let [pos, [key]] of this._entries.entries()) {
             if (key == null) continue
             let ids = this._keys.get(key) || []
             if (ids.push(pos) === 1) this._keys.set(key, ids)
