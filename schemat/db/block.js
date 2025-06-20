@@ -186,11 +186,6 @@ export class DataBlock extends Block {
         this.shard = shard || new Shard(0, 1)       // shard 0/1 represents the full set of ID numbers: x===0 (mod 1)
     }
 
-    async __init__() {
-        await super.__init__()
-        // this._reserved = new Set()      // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
-    }
-
     encode_id(id)  { return this.sequence.encode_id(id) }
     decode_id(key) { return this.sequence.decode_id(key) }
 
@@ -440,11 +435,6 @@ export class DataBlock extends Block {
         assert(Number(deleted) === 1)
         return Number(deleted)
     }
-
-    // async '$agent.erase'(state) {
-    //     this._reserved = new Set()
-    //     return super['$agent.erase'](state)
-    // }
 
     async propagate_change(key, obj_old = null, obj_new = null) {
         /* Push a change from this data block to all derived streams in the ring. */
