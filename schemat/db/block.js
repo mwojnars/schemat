@@ -170,10 +170,6 @@ export class DataBlock extends Block {
         return this.shard || this.ring.shard3
     }
 
-    __new__() {
-        this.shard ??= new Shard(0, 1)          // shard 0/1 represents the full set of ID numbers: x===0 (mod 1)
-    }
-
     async __start__() {
         let state = await super.__start__()
         let autoincrement = state.storage.get_max_id()  // current max ID of records in this block
