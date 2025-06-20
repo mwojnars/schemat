@@ -176,10 +176,6 @@ class Intercept {
         if (typeof path !== 'string' || Intercept.SPECIAL.has(path))
             return Reflect.set(target, path, value, receiver)
 
-        // // when the __data is not loaded yet, *every* write goes to __self
-        // if (!(target.is_newborn() || target.is_loaded()))
-        //     return Reflect.set(target, path, value, receiver)
-
         // if (!target.__meta.mutable) target._print(`proxy_set(${path}) on/via immutable object ${target}`)
 
         let [base, plural] = Intercept._check_plural(path)      // property name without the $ suffix
@@ -1013,7 +1009,7 @@ export class WebObject {
         if (T.isPOJO(data) || data instanceof Catalog) this.__data.updateAll(data)
     }
 
-    __setup__(config, {ring, block}) {}
+    __setup__() {}  //config, {ring, block}) {}
         /* One-time setup of the object, launched on server when the object is being inserted to a data `block`
            and already has an ID assigned (this.id is present). Typically, this method creates related sub-objects
            and creates links to/from itself and these objects - creating such objects on client is in many cases

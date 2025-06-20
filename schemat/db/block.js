@@ -260,7 +260,7 @@ export class DataBlock extends Block {
 
         // call __setup__() in every object
         for (let obj of objects) {
-            let setup = obj.__setup__({}, {ring: this.ring, block: this})
+            let setup = obj.__setup__()  //{}, {ring: this.ring, block: this})
             if (setup instanceof Promise) await setup
         }
 
