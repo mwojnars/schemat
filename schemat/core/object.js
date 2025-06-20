@@ -1019,10 +1019,10 @@ export class WebObject {
          */
 
     __init__() {}
-        /* Custom initialization after this.__data was created (in a newborn object), or loaded from DB.
+        /* Custom property initialization after this.__data was loaded from DB or created anew (in a newborn object).
            Typically, this method loads selected related objects, so that other methods can use them directly with synchronous calls.
-           Any other form of initialization that stores temporary data in local attributes (this.x = ...) is FORBIDDEN
-           and incompatible with object cloning as done by get_mutable(). This method can be async in subclasses.
+           Any other form of initialization that modifies the properties or writes to local attributes (this.x = ...) is FORBIDDEN
+           as incompatible with immutability, property caching, and object cloning. This method can be async in subclasses.
          */
 
     __validate__() {}

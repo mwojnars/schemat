@@ -97,7 +97,7 @@ export class Transaction {
 
     async save_all(opts) {
         /* Save all pending changes in _staging, plus any others that might have been created while saving.
-           If opts.discard = true, all objects from _staging (not only the pending ones) get discarded, so they cannot be mutated anymore.
+           If opts.discard = true, all objects from _staging (not only the pending ones) get discarded, so they cannot be mutated later.
          */
         let {discard} = opts
         while (true) {
