@@ -84,7 +84,6 @@ export class Schemat {
     config          // boot configuration (on server) or RequestContext (on client)
     debug           // if true, some elements of Schemat and environment are tuned towards debugging
     app_id          // ID of the active Application object
-    _app            // `app` of the previous generation, remembered here to keep the .app() getter operational during complete cache erasure
     registry        // cache of web objects, records and indexes loaded from DB
     builtin         // a Classpath containing built-in classes and their paths
     booting         // a Promise that resolves when this Schemat is fully booted; false after that
@@ -101,6 +100,8 @@ export class Schemat {
     get node()      {}
     get_frame()     {}
 
+    // internal:
+    _app                            // `app` of the previous generation, remembered here to keep the .app() getter operational during complete cache erasure
     _essential      = [ROOT_ID]     // IDs of web objects that must be always present (fully loaded) in the Registry, so eviction must reload not delete them
     _loading        = new Map()     // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
     _modules_cache  = new Map()     // cache of local .js modules for import_local() to avoid awaits with dynamic import()
