@@ -110,7 +110,6 @@ export class YamlDataStorage extends MemoryStorage {
 
         let content = fs.readFileSync(this.filename, 'utf8')
         let records = yaml.parse(content) || []
-        // let max_id = 0
         this._records.clear()
 
         for (let record of records) {
@@ -120,10 +119,7 @@ export class YamlDataStorage extends MemoryStorage {
             // ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             // await this.block.assert_unique(key, id, `duplicate item ID loaded from ${this.filename}`)
 
-            // max_id = Math.max(max_id, id)
-
             let data = '__data' in record ? record.__data : record
-
             this._records.set(key, JSON.stringify(data))
         }
         // print(`YamlDataStorage loaded ${this._records.size} items from ${this.filename}...`)
@@ -132,7 +128,7 @@ export class YamlDataStorage extends MemoryStorage {
 
     get_max_id() {
         /* Maximum ID across all records. */
-        if (!this._records.size) return
+        if (!this._records.size) return 0
         let ids = [...this._records.keys()].map(key => data_schema.decode_key(key)[0])
         return Math.max(...ids)
     }

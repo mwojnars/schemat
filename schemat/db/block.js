@@ -96,10 +96,11 @@ export class Block extends Agent {
     async __start__() {
         let storage_class = this._detect_storage_class()
         let storage = new storage_class(this.file_path, this)
-        let autoincrement = await this._reopen(storage)     // current max ID of records in this block
-        let reserved = new Set()        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
+        await this._reopen(storage)
+        // let autoincrement = await this._reopen(storage)     // current max ID of records in this block
+        // let reserved = new Set()        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
         let __exclusive = false         // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
-        return {storage, autoincrement, reserved, __exclusive}
+        return {storage, __exclusive}
     }
 
     async _reopen(storage) {
@@ -183,12 +184,12 @@ export class DataBlock extends Block {
         this.shard = shard || new Shard(0, 1)       // shard 0/1 represents the full set of ID numbers: x===0 (mod 1)
     }
 
-    // async __start__() {
-    //     let state = await super.__start__()
-    //     let autoincrement = await this._reopen(storage)     // current max ID of records in this block
-    //     let reserved = new Set()        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
-    //     return state
-    // }
+    async __start__() {
+        let state = await super.__start__()
+        let autoincrement = state.storage.get_max_id()  // current max ID of records in this block
+        let reserved = new Set()                        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
+        return {...state, autoincrement, reserved}
+    }
 
     encode_id(id)  { return this.sequence.encode_id(id) }
     decode_id(key) { return this.sequence.decode_id(key) }
