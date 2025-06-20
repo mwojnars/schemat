@@ -1,8 +1,9 @@
 import {A} from '../web/react-utils.js'
-import {assert, concat, print, T} from '../common/utils.js'
+import {assert, print, T} from '../common/utils.js'
 import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
 import {bytes_uint} from "../common/binary.js";
 import {ObjectsMap, Shard} from "../common/structs.js";
+import {Struct} from "../core/catalog.js";
 import * as widgets from './widgets.js'
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
@@ -178,7 +179,6 @@ export class Type {
            or use obj[prop] if options.getter=true, or return the options.default value.
          */
         let {default: default_, impute, getter} = this.options
-        if (!obj) return default_
 
         if (impute) {
             if (typeof impute === 'function')
@@ -190,13 +190,14 @@ export class Type {
             }
             else throw new Error(`incorrect type of 'impute' option (${typeof impute})`)
         }
-
         if (getter) {
             let value = obj[prop]
             if (value !== undefined) return value
         }
-
         return default_
+
+        // // safety: when multiple instances read the same (composite) default and one of them tries (incorrectly) to modify it, cloning prevents interference
+        // return Struct.clone(default_)
     }
 
     /*** binary encoding for indexing ***/
