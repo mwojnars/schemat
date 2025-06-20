@@ -59,7 +59,7 @@ export class Block extends Agent {
         throw new Error(`unknown storage type '${this.format}' in [${this.id}]`)
     }
 
-    async __init__() {
+    async __load__() {
         if (CLIENT) return              // don't initialize internals when on client
 
         if (!this.sequence.is_loaded())
@@ -248,7 +248,7 @@ export class DataBlock extends Block {
         }
 
         // assign IDs and convert entries to objects; each object is instantiated for validation,
-        // but not activated: __init__() & _activate() are NOT executed (performance)
+        // but not activated: __load__() & _activate() are NOT executed (performance)
         let objects = await Promise.all(entries.map(([npid, data]) => {
             let _id = id || this._assign_id(state, opts)
             return WebObject.from_data(_id, data, {mutable: true, activate: false, provisional: -npid})
@@ -470,8 +470,8 @@ export class BootDataBlock extends DataBlock {
         this._storage = new storage_class(this.file_path, this)
     }
 
-    async __init__() {
-        await super.__init__()
+    async __load__() {
+        await super.__load__()
         await this._reopen(this._storage)
     }
 

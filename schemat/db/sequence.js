@@ -36,8 +36,8 @@ export class Sequence extends WebObject {
         this.blocks = []
     }
 
-    async __init__() {
-        // TODO: drop __init__() and perform lazy loading of blocks
+    async __load__() {
+        // TODO: drop __load__() and perform lazy loading of blocks
         //  (but block.load() must only use lower rings to search for the block! otherwise infinite recursion occurs)
 
         if (CLIENT) return                                  // don't initialize internals when on client
@@ -47,7 +47,7 @@ export class Sequence extends WebObject {
 
         await this.operator?.load()
 
-        // 1) Doing block.load() in __init__ is safe, because this sequence (ring) is not yet part of the database (!);
+        // 1) Doing block.load() in __load__ is safe, because this sequence (ring) is not yet part of the database (!);
         // doing the same later may cause infinite recursion, because the load() request for a block may be directed
         // to the current sequence (which has an unloaded block!), and cause another block.load(), and so on...
         // 2) Setting a custom {ring} is needed to enable distributed storage, so that searching for the block object

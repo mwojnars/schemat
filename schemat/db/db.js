@@ -93,12 +93,12 @@ export class Ring extends WebObject {
             this.sequences.push(IndexSequence.new(this, seq.operator))
     }
 
-    async __init__() {
+    async __load__() {
         /* Initialize the ring after it's been loaded from DB. */
         if (CLIENT) return
         // print(`... ring [${this.id || '---'}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
 
-        await super.__init__()
+        await super.__load__()
         await this.base_ring?.load()
         await this.data_sequence.load()
         for (let seq of this.sequences) await seq.load()
@@ -294,7 +294,7 @@ export class Database extends WebObject {
     get ring_ids()          { return new Map(this.rings.map(r => [r.id, r])) }      // should be unique
 
 
-    async __init__() {
+    async __load__() {
         if (CLIENT) return
         // print(`initializing database [${this.id}] ...`)
         // assert(this.top_ring, 'missing rings in the database')

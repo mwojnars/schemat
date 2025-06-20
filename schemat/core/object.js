@@ -614,7 +614,7 @@ export class WebObject {
     }
 
     async _load(opts = {}) {
-        /* Load this.__data from DB if missing. Set up the class and prototypes, load related objects with __init__() etc. */
+        /* Load this.__data from DB if missing. Set up the class and prototypes, load related objects with __load__() etc. */
 
         let {sealed = true, activate = true, custom_opts_allowed = false, ...db_opts} = opts
 
@@ -642,9 +642,9 @@ export class WebObject {
             }
 
             await this._initialize(sealed)
-            if (!activate) return this                      // activation involves both __init__() and _activate(); none of these is executed when activate=false
+            if (!activate) return this                      // activation involves both __load__() and _activate(); none of these is executed when activate=false
 
-            let init = this.__init__()                      // loading of related objects after the main __data is loaded (optional)
+            let init = this.__load__()                      // loading of related objects after the main __data is loaded (optional)
             if (init instanceof Promise) await init
 
             this._activate()
@@ -1018,7 +1018,7 @@ export class WebObject {
            __setup__() can be viewed as continuation of __new__(), but asynchronous and executed on server (inside a data block).
          */
 
-    __init__() {}
+    __load__() {}
         /* Loading of selected related objects, so that other methods can use them directly in synchronous calls.
            Launched after __data was read from DB or created anew (in a newborn object). Can be async in subclasses.
            // Any other form of initialization that modifies the properties or writes to local attributes (this.x = ...)
@@ -1027,7 +1027,7 @@ export class WebObject {
 
     __validate__() {}
         /* Validate this object's own properties during insert/update. Called *after* validation of individual values through their schema.
-           Called on a NON-activated object: should NOT require that __init__() or _activate() was called beforehand!
+           Called on a NON-activated object: should NOT require that __load__() or _activate() was called beforehand!
          */
 
     __delete__() {}

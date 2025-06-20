@@ -43,7 +43,7 @@ export class Category extends WebObject {
 
     is_category()   { return true }
 
-    async __init__(no_await = false) {
+    async __load__(no_await = false) {
         await this.__child_class            // from now on, __child_class is a regular value not a promise
         if (SERVER && this.std) {
             let promise = Promise.all(Object.values(this.std).map(obj => obj.load()))
@@ -214,8 +214,8 @@ export class RootCategory extends Category {
         return new SCHEMA({fields: fields.object(), strict: custom !== true})
     }
 
-    async __init__(no_await = false) {
-        await super.__init__(true)
+    async __load__(no_await = false) {
+        await super.__load__(true)
     }
 }
 

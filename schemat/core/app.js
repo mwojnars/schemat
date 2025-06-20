@@ -38,7 +38,7 @@ export class Application extends WebObject {
     eval_allowed
     logger
 
-    async __init__() {
+    async __load__() {
         if (SERVER) {
             await this.root?.load()
             await this.logger?.load()
