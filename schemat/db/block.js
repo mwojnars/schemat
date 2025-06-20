@@ -96,7 +96,7 @@ export class Block extends Agent {
     async __start__() {
         let storage_class = this._detect_storage_class()
         let storage = new storage_class(this.file_path, this)
-        let autoincrement = await this._reopen(storage)
+        let autoincrement = await this._reopen(storage)     // current max ID of records in this block
         let __exclusive = false         // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
         return {storage, autoincrement, __exclusive}
     }
@@ -171,9 +171,6 @@ export class DataBlock extends Block {
     // properties
     shard
 
-    _autoincrement = 1      // current maximum ID of records in this block; a new record is assigned id=_autoincrement+1 unless insert_mode='compact';
-                            // transient field: NOT saved in the block's configuration in DB but re-initialized during block instantiation
-
     get shard_combined() {
         if (this.shard && this.ring.shard3) return Shard.intersection(this.shard, this.ring.shard3)
         return this.shard || this.ring.shard3
@@ -186,8 +183,7 @@ export class DataBlock extends Block {
     }
 
     async __init__() {
-        this._autoincrement = await super.__init__() || 1
-        // await super.__init__()
+        await super.__init__()
         this._reserved = new Set()      // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
     }
 
@@ -308,7 +304,6 @@ export class DataBlock extends Block {
             throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid set for the ring ${this.ring}`)
 
         state.autoincrement = Math.max(id, state.autoincrement)
-        // this._autoincrement = Math.max(id, this._autoincrement)
 
         // print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
         return id
@@ -318,7 +313,7 @@ export class DataBlock extends Block {
         let [A, B, C] = this.ring.id_insert_zones       // [min_id_exclusive, min_id_forbidden, min_id_sharded]
 
         // try allocating an ID from the exclusive zone if present
-        let auto = autoincrement + 1  //this._autoincrement + 1
+        let auto = autoincrement + 1
         let id = Math.max(auto, A || 1)
         if (A && id < B) return id
 
@@ -333,9 +328,9 @@ export class DataBlock extends Block {
         /* Scan `storage` to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
            This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
-        // if all empty slots below _autoincrement were already allocated, use the incremental algorithm
+        // if all empty slots below autoincrement were already allocated, use the incremental algorithm
         // (this may still leave empty slots if a record was removed in the meantime, but such slot is reused after next reload of the block)
-        if (this._reserved.has(autoincrement)) { //this._autoincrement
+        if (this._reserved.has(autoincrement)) {
             let id = this._assign_id_incremental({autoincrement})
             this._reserved.add(id)
             return id
@@ -443,7 +438,6 @@ export class DataBlock extends Block {
     }
 
     async '$agent.erase'(state) {
-        this._autoincrement = 1
         this._reserved = new Set()
         return super['$agent.erase'](state)
     }
@@ -476,7 +470,7 @@ export class BootDataBlock extends DataBlock {
 
         let storage_class = this._detect_storage_class()
         this._storage = new storage_class(this.file_path, this)
-        this._autoincrement = await this._reopen(this._storage) || 1
+        await this._reopen(this._storage)
     }
 
     async select(id, req) { return this.$_wrap.select({storage: this._storage}, id, req) }
