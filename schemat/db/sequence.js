@@ -166,7 +166,7 @@ export class DataSequence extends Sequence {
 
     async __setup__() {
         let DataBlock = this.__std.DataBlock
-        this.blocks = [DataBlock.new({}, this, {format: 'data-yaml'})]
+        this.blocks = [DataBlock.new({sequence: this, format: 'data-yaml'})]
     }
 
     encode_id(id) {

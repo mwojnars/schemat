@@ -170,10 +170,8 @@ export class DataBlock extends Block {
         return this.shard || this.ring.shard3
     }
 
-
-    __new__(sequence, {shard, ...opts} = {}) {
-        super.__new__(sequence, opts)
-        this.shard = shard || new Shard(0, 1)       // shard 0/1 represents the full set of ID numbers: x===0 (mod 1)
+    __new__() {
+        this.shard ??= new Shard(0, 1)          // shard 0/1 represents the full set of ID numbers: x===0 (mod 1)
     }
 
     async __start__() {
