@@ -1002,12 +1002,11 @@ export class WebObject {
 
     /***  Hooks  ***/
 
-    __new__() {}
-        /* Initialize own properties (__data) of this newborn object before its insertion to DB or transfer to the server.
-           The JS class and `__category` property are already configured; this.__data is created.
-           The default implementation just updates the entire __data using the first argument.
-           Subclasses may override this method to change this behavior and accept a different list of arguments.
-           Can be asynchronous in subclasses, in such case the call to ._new() or category.new() returns a Promise.
+    __new__(...args) {}
+        /* Custom initialization of the newborn object. Called by category.new(props, ...args), after `props` were already
+           copied into __data, with `args` being the optional arguments passed to .new(), those after `props`.
+           The JS class and `__category` are already configured. This method can be asynchronous in subclasses,
+           but then the call to ._new() or category.new() returns a Promise.
          */
         // if (T.isPOJO(data) || data instanceof Catalog) this.__data.updateAll(data)
 
