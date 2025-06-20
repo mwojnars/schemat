@@ -329,7 +329,7 @@ export class WebObject {
         return assets
     }
 
-    get __std()    { return this.__category.std }
+    get __std()    { return this.__category?.std }
 
     get __object() { return this.__data.object() }
 
@@ -1003,16 +1003,20 @@ export class WebObject {
     /***  Hooks  ***/
 
     __new__(...args) {}
-        /* Custom initialization of the newborn object. Called by category.new(props, ...args), after `props` were already
-           copied into __data, and JS class and `__category` are configured. `args` are the optional arguments (after `props`) passed to .new().
+        /* Custom initialization of the newborn object. Called by category.new(props, ...args) after `props` were already
+           copied into __data. `args` are the optional arguments (after `props`) passed to .new().
            This method can be asynchronous in subclasses, but then the call to ._new() or category.new() returns a Promise.
+           A newborn object is NOT activated and mainly serves as a container for __data. For instance, this.__category
+           is not yet available, even if '__category' field is written into __data. For this reason, more advanced
+           initialization may need to be moved into __setup__(), with is launched on an object with
+           initialized dependencies (but NOT yet fully activated!).
          */
         // if (T.isPOJO(data) || data instanceof Catalog) this.__data.updateAll(data)
 
     __setup__() {}  //config, {ring, block}) {}
-        /* One-time setup of the object, launched on a server after the object got inserted to a data block
-           and already has an ID assigned (this.id is present). Typically, this method creates related sub-objects, as
-           doing this on a client can be more costly in some cases. __setup__() can be viewed as continuation of __new__(),
+        /* Method for one-time setup of the object, launched on a server after the object got inserted to a data block
+           and already has an ID assigned (this.id is present). Typically, this method creates related sub-objects, in cases
+           when doing this on a client would be more costly. __setup__() can be viewed as continuation of __new__(),
            but asynchronous and executed on a server (inside a data block). May return a Promise.
            // For now, __setup__() must explicitly save the objects it creates; in the future, these objects will be inserted automatically with the parent object.
          */
