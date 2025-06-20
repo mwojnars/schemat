@@ -129,10 +129,10 @@ export class IndexSequence extends Sequence {
 
     get file_tag() { return 'index' }
 
-    async __setup__() {
+    __setup__() {
         print('IndexSequence.__setup__() creating a block')
         let Block = this.__std.Block
-        this.blocks = [Block.new({}, this, {format: 'index-jl'})]
+        this.blocks = [Block.new({sequence: this, format: 'index-jl'})]
     }
 
     async put(key, value) {

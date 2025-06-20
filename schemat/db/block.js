@@ -26,12 +26,6 @@ export class Block extends Agent {
 
     get ring()      { return this.sequence.ring }
 
-    __new__(sequence, {format} = {}) {
-        sequence.assert_active()
-        this.sequence = sequence
-        this.format = format
-    }
-
     async __setup__() {
         print('Block.__setup__() ...')
         if (!this.sequence.is_loaded()) await this.sequence.load()
@@ -463,9 +457,9 @@ export class BootDataBlock extends DataBlock {
 
     get file_path() { return this._file_path }
 
-    __new__(sequence, props = {}) {
-        super.__new__(sequence, props)
-        this._file_path = props.file_path
+    __new__(sequence, {file_path} = {}) {
+        this.sequence = sequence
+        this._file_path = file_path
         let storage_class = this._detect_storage_class()
         this._storage = new storage_class(this.file_path, this)
     }
