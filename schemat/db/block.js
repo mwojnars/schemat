@@ -134,13 +134,10 @@ export class Block extends Agent {
         return arrayFromAsync(storage.scan(opts))       // TODO: return batches with a hard upper limit on their size
     }
 
-    async '$agent.erase'(state) {
+    async '$agent.erase'({storage}) {
         /* Remove all records from this block. */
-        let {storage} = state
         await storage.erase()
         this._flush(storage)
-        state.autoincrement = 0
-        state.reserved = new Set()
     }
 
     async '$agent.flush'({storage}) { return this._flush(storage, false) }
@@ -185,6 +182,13 @@ export class DataBlock extends Block {
         super.__new__(sequence, opts)
         this.shard = shard || new Shard(0, 1)       // shard 0/1 represents the full set of ID numbers: x===0 (mod 1)
     }
+
+    // async __start__() {
+    //     let state = await super.__start__()
+    //     let autoincrement = await this._reopen(storage)     // current max ID of records in this block
+    //     let reserved = new Set()        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
+    //     return state
+    // }
 
     encode_id(id)  { return this.sequence.encode_id(id) }
     decode_id(key) { return this.sequence.decode_id(key) }
@@ -434,6 +438,12 @@ export class DataBlock extends Block {
 
         assert(Number(deleted) === 1)
         return Number(deleted)
+    }
+
+    async '$agent.erase'(state) {
+        state.autoincrement = 0
+        state.reserved = new Set()
+        return super['$agent.erase'](state)
     }
 
     async propagate_change(key, obj_old = null, obj_new = null) {
