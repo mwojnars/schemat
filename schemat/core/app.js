@@ -90,37 +90,6 @@ export class Application extends WebObject {
         return `${Application.URL_LOCAL}/${path}::import`          // ::import is sometimes needed to get the proper MIME header, esp. if target is a web object not a local file
     }
 
-    import_local(path) {
-        /* Import from a local `path` of the form ".../file.js" or ".../file.js:ClassName", pointing to a module or symbol
-           inside the project's root folder which should include both Schemat and application's source code.
-           This method can be called both on the server and on the client (!). In the latter case, the import path
-           is converted to a URL of the form "/$/local/.../file.js::import". May return a Promise.
-         */
-        // print(`Application.import():  ${path}`)
-        let [file_path, symbol] = splitLast(path || '', ':')
-        let import_path = CLIENT ? this.get_module_url(file_path) : schemat.PATH_WORKING + '/' + file_path
-
-        // print(`...importing:  ${import_path}`)
-        let module = schemat._modules_cache.get(import_path)        // first, try taking the module from the cache - returns immediately
-        if (module) return symbol ? module[symbol] : module
-
-        return import(import_path).then(mod => {                    // otherwise, import the module and cache it - this returns a Promise
-            schemat._modules_cache.set(import_path, mod)
-            return symbol ? mod[symbol] : mod
-        })
-    }
-
-    import_global(path, referrer = null) {
-        /* Import from an absolute URL path in the SUN namespace, like "/$/sys/Revision" etc.
-           TODO: The path must not contain any endpoint (::xxx), but it may contain an in-module selector (:symbol)
-         */
-        if (path[0] === '.')                // convert a relative URL path to an absolute one
-            path = normalizePath(referrer.__url + '/' + path)
-
-        assert(path[0] === '/')
-        return this.route_local(path)
-    }
-
 
     /***  Request resolution  ***/
 

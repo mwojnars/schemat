@@ -1,5 +1,5 @@
 import {ROOT_ID} from "../common/globals.js";
-import {T, print, assert, normalizePath} from '../common/utils.js'
+import {T, print, assert, normalizePath, splitLast} from '../common/utils.js'
 import {DependenciesStack} from '../common/structs.js'
 import {WebObject} from './object.js'
 import {Category} from './category.js'
@@ -212,14 +212,6 @@ export class Schemat {
     get_builtin(path) {
         /* Retrieve a built-in class by its path of the form: <module-path>:<class-name>. */
         return this.builtin.get_object(path)
-    }
-
-    import(path) {
-        /* May return a Promise. */
-        if (path.startsWith('schemat:') || !this.app?.is_loaded())
-            return this.get_builtin(path)
-        if (path[0] === '/') return this.app.import_global(path)
-        return this.app.import_local(path)
     }
 
 
@@ -457,7 +449,45 @@ export class Schemat {
     }
 
 
-    /***  Dynamic import from SUN  ***/
+    /***  Dynamic imports  ***/
+
+    import(path) {
+        /* May return a Promise. */
+        if (path.startsWith('schemat:') || !this.app?.is_loaded())
+            return this.get_builtin(path)
+        if (path[0] === '/') return this.import_global(path)
+        return this.import_local(path)
+    }
+
+    import_local(path) {
+        /* Import from a local `path` of the form ".../file.js" or ".../file.js:ClassName", pointing to a module or symbol
+           inside the project's root folder which should include both Schemat and application's source code.
+           This method can be called both on the server and on the client (!). In the latter case, the import path
+           is converted to a URL of the form "/$/local/.../file.js::import". May return a Promise.
+         */
+        // print(`Application.import():  ${path}`)
+        let [file_path, symbol] = splitLast(path || '', ':')
+        let import_path = CLIENT ? this.app.get_module_url(file_path) : this.PATH_WORKING + '/' + file_path
+
+        // print(`...importing:  ${import_path}`)
+        let module = this._modules_cache.get(import_path)       // first, try taking the module from the cache - returns immediately
+        if (module) return symbol ? module[symbol] : module
+
+        return import(import_path).then(mod => {                // otherwise, import the module and cache it - this returns a Promise
+            this._modules_cache.set(import_path, mod)
+            return symbol ? mod[symbol] : mod
+        })
+    }
+
+    import_global(path, referrer = null) {
+        /* Import from an absolute URL path in the SUN namespace, like "/$/sys/Revision" etc.
+           TODO: The path must not contain any endpoint (::xxx), but it may contain an in-module selector (:symbol)
+         */
+        if (path[0] === '.') path = normalizePath(referrer.__url + '/' + path)      // convert a relative URL path to an absolute one
+        assert(path[0] === '/')
+        return this.app.route_local(path)
+    }
+
 
     // async import(path, name) {
     //     /* Import a module and (optionally) its element, `name`, from a SUN path, or from a regular JS path.
