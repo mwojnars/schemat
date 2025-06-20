@@ -183,17 +183,6 @@ export class Transaction {
             this._update_newborn(newborn, inserted, discard)
         }
         return result
-
-        // // deleting may run in parallel with saving newborn and edited objects
-        // let deleting = deleted.length ? schemat.db.delete(del_ids, opts) : null
-        //
-        // // newborns must be inserted together and receive their IDs before mutated objects are saved, due to possible cross-references
-        // if (newborn.length) {
-        //     let ids = await schemat.db.insert(ins_datas, opts)
-        //     this._update_newborn(newborn, ids, discard)
-        // }
-        // if (edited.length) await schemat.db.update(upd_edits, opts)
-        // if (deleting) await deleting
     }
 
     _update_newborn(newborn, ids, discarded) {
@@ -215,7 +204,7 @@ export class Transaction {
     }
 
     // restage_inserted(obj) {
-    //     /* Drop __provional_id in `obj` and re-stage the object under its proper ID.
+    //     /* Drop __provional_id in `obj` and restage the object under its proper ID.
     //        Called during/after insertion, right after `obj` received its final .id in a data block.
     //      */
     //     assert(obj.id && obj.__provisional_id)
