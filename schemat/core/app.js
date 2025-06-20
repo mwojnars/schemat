@@ -37,7 +37,6 @@ export class Application extends WebObject {
     logger
 
     async __init__() {
-        this._modules_cache = new Map()
         if (SERVER) {
             await this.root?.load()
             await this.logger?.load()
@@ -102,11 +101,11 @@ export class Application extends WebObject {
         let import_path = CLIENT ? this.get_module_url(file_path) : schemat.PATH_WORKING + '/' + file_path
 
         // print(`...importing:  ${import_path}`)
-        let module = this._modules_cache.get(import_path)           // first, try taking the module from the cache - returns immediately
+        let module = schemat._modules_cache.get(import_path)        // first, try taking the module from the cache - returns immediately
         if (module) return symbol ? module[symbol] : module
 
         return import(import_path).then(mod => {                    // otherwise, import the module and cache it - this returns a Promise
-            this._modules_cache.set(import_path, mod)
+            schemat._modules_cache.set(import_path, mod)
             return symbol ? mod[symbol] : mod
         })
     }

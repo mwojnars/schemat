@@ -90,9 +90,6 @@ export class Schemat {
     booting         // a Promise that resolves when this Schemat is fully booted; false after that
     // tx           // a Transaction that collects object modifications (inserts/updates/deletes) before sending them to DB
 
-    _essential = [ROOT_ID]  // IDs of web objects that must be always present (fully loaded) in the Registry, so eviction must reload not delete them
-    _loading = new Map()    // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
-
     get root_category() { return this.get_object(ROOT_ID) }
     get app()           { return this.get_if_loaded(this.app_id, obj => {this._app = obj}) || this._app }
     get global()        { return this.app?._global }
@@ -103,6 +100,10 @@ export class Schemat {
     get cluster()   {}
     get node()      {}
     get_frame()     {}
+
+    _essential      = [ROOT_ID]     // IDs of web objects that must be always present (fully loaded) in the Registry, so eviction must reload not delete them
+    _loading        = new Map()     // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
+    _modules_cache  = new Map()     // cache of local .js modules for import_local() to avoid awaits with dynamic import()
 
 
     // web objects currently being loaded/initialized with a call to .load()
@@ -218,10 +219,6 @@ export class Schemat {
         if (path.startsWith('schemat:') || !this.app?.is_loaded())
             return this.get_builtin(path)
         if (path[0] === '/') return this.app.import_global(path)
-        // if (!this.app.import_local) {
-        //     print(`Schemat.import(${path}): missing app.import_local(), app_id`)
-        //     process.exit()
-        // }
         return this.app.import_local(path)
     }
 
