@@ -516,14 +516,17 @@ export class WebObject {
         return obj
     }
 
-    static _new(categories = [], args, opts) {
+    static _new(categories = [], props, args, opts) {
         /* Create a newborn object and execute its __new__(...args) to perform caller-side initialization.
            Return the object. If __new__() returns a Promise, this method returns a Promise too.
            `categories` (if any) are category objects/IDs to be written to the object's __category property.
          */
         let obj = this.newborn(null, opts)
         categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat) || []
-        
+
+        if (props) obj.__data.updateAll(props)
+        // if (T.isPOJO(props) || props instanceof Catalog) this.__data.updateAll(props)
+
         let set_categories = () => {
             categories.forEach(cat => obj.__data.append('__category', cat))
             return obj
@@ -542,14 +545,14 @@ export class WebObject {
            which is incorrect in normal circumstances. This method should only be used for internal purposes, typically
            during bootstrap, when category objects cannot be loaded yet and draft instances must be created from classes not categories.
          */
-        return this._new([], args, {draft: true})
+        return this._new([], {}, args, {draft: true})
     }
 
     static new(...args) {
         /* Create an empty newborn object, no ID, and execute its __new__(...args). Return the object.
            If __new__() returns a Promise, this method returns a Promise too. Used instead of the constructor.
          */
-        return this._new([], args)
+        return this._new([], {}, args)
     }
 
     static async from_data(id, data, {mutable, provisional, ...load_opts} = {}) {
