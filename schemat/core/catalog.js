@@ -410,16 +410,24 @@ export class Catalog {
 
     init(entries = [], clean = false) {
         /* (Re)build this._entries and this._keys from an array of `entries`, each entry is a [key, value] pair. */
+        if (clean) entries = entries.map(e => this._clean(e))
+        this._entries = entries.filter(e => e[1] !== undefined)     // drop entries with value=undefined
         this._keys = new Map()
-        this._entries = clean ? entries.map(e => this._clean(...e)) : [...entries]
 
         for (const [pos, entry] of this._entries.entries()) {
             const key = entry[0]
-            if (key === undefined || key === null) continue
+            if (key == null) continue
             let ids = this._keys.get(key) || []
             if (ids.push(pos) === 1) this._keys.set(key, ids)
         }
         return this
+    }
+
+    _clean(entry) {
+        /* Validate and clean up the new entry's properties. */
+        let [key, value] = entry
+        assert(isstring(key))
+        return (key === null) ? [undefined, value] : entry
     }
 
     clone() {
@@ -687,14 +695,6 @@ export class Catalog {
         locs[idx] = undefined
         locs = locs.filter(Number).sort((a, b) => a - b)
         locs.length ? this._keys.set(key, locs) : this._keys.delete(key)
-    }
-
-    _clean(key, value) {
-        /* Validate and clean up the new entry's properties. */
-        assert(isstring(key))
-        assert(value !== undefined)
-        if (key === null) key = undefined
-        return [key, value]
     }
 
     /***  Higher-level edit operations  ***/
