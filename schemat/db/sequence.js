@@ -29,10 +29,6 @@ export class Sequence extends WebObject {
 
     // impute_name() { return this.operator?.name }
 
-    __new__() {
-        this.blocks = []
-    }
-
     async __load__() {
         // TODO: drop __load__() and perform lazy loading of blocks
         //  (but block.load() must only use lower rings to search for the block! otherwise infinite recursion occurs)
