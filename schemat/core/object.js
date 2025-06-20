@@ -526,17 +526,17 @@ export class WebObject {
 
         if (props) obj.__data.updateAll(props)
         // if (T.isPOJO(props) || props instanceof Catalog) this.__data.updateAll(props)
+        for (let cat of categories) obj.__data.append('__category', cat)
 
-        let set_categories = () => {
-            categories.forEach(cat => obj.__data.append('__category', cat))
-            return obj
-        }
-        let ret = obj.__new__(...args)
-        return ret instanceof Promise ? ret.then(set_categories) : set_categories()
+        obj.__new__(...args)
+        return obj
 
-        // obj.__data = new Catalog(categories.map(cat => ['__category', cat]))
+        // let set_categories = () => {
+        //     categories.forEach(cat => obj.__data.append('__category', cat))
+        //     return obj
+        // }
         // let ret = obj.__new__(...args)
-        // return ret instanceof Promise ? ret.then(() => obj) : obj
+        // return ret instanceof Promise ? ret.then(set_categories) : set_categories()
     }
 
     static draft(props, ...args) {
@@ -996,15 +996,12 @@ export class WebObject {
     /***  Hooks  ***/
 
     __new__(...args) {}
-        /* Custom initialization of the newborn object. Called by category.new(props, ...args) after `props` were already
-           copied into __data. `args` are the optional arguments (after `props`) passed to .new().
-           This method can be asynchronous in subclasses, but then the call to ._new() or category.new() returns a Promise.
+        /* Custom initialization of a newborn object. Called by category.new(props, ...args) after `props` were already
+           copied into __data. `args` are the optional arguments (after `props`) that were passed to .new().
            A newborn object is NOT activated and mainly serves as a container for __data. For instance, this.__category
-           is not yet available, even if '__category' field is written into __data. For this reason, more advanced
-           initialization may need to be moved into __setup__(), with is launched on an object with
-           initialized dependencies (but NOT yet fully activated!).
+           is not yet available, despite '__category' field may be written into __data. More advanced initialization
+           may have to be moved to __setup__(), with is called on an object with initialized dependencies (but NOT yet fully activated!).
          */
-        // if (T.isPOJO(data) || data instanceof Catalog) this.__data.updateAll(data)
 
     __setup__() {}  //config, {ring, block}) {}
         /* Method for one-time setup of the object, launched on a server after the object got inserted to a data block
