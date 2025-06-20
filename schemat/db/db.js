@@ -249,7 +249,7 @@ export class BootRing extends Ring {
         super.__new__(_opts)
 
         // the object here is created from a class and lacks __category; this kind of hack is only allowed during boot
-        this.data_sequence = DataSequence.draft(this, undefined, {boot_file: file})
+        this.data_sequence = DataSequence.draft({}, this, undefined, {boot_file: file})
     }
 
     async select(id, req)  {
@@ -516,7 +516,7 @@ export class BootDatabase extends Database {
         print(`creating bootstrap database...`)
         let top
         for (let spec of ring_specs)
-            top = await BootRing.draft({...spec, base_ring: top}).load()
+            top = await BootRing.draft({}, {...spec, base_ring: top}).load()
         this.top_ring = top
     }
 
