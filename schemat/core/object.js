@@ -522,21 +522,14 @@ export class WebObject {
            `categories` (if any) are category objects/IDs to be written to the object's __category property.
          */
         let obj = this.newborn(null, opts)
-        categories = categories.map(cat => typeof cat === 'number' ? schemat.get_object(cat) : cat) || []
-
         if (props) obj.__data.updateAll(props)
         // if (T.isPOJO(props) || props instanceof Catalog) this.__data.updateAll(props)
-        for (let cat of categories) obj.__data.append('__category', cat)
+
+        for (let cat of categories)
+            obj.__data.append('__category', schemat.as_object(cat))
 
         obj.__new__(...args)
         return obj
-
-        // let set_categories = () => {
-        //     categories.forEach(cat => obj.__data.append('__category', cat))
-        //     return obj
-        // }
-        // let ret = obj.__new__(...args)
-        // return ret instanceof Promise ? ret.then(set_categories) : set_categories()
     }
 
     static draft(props, ...args) {
