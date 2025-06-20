@@ -1004,9 +1004,8 @@ export class WebObject {
 
     __new__(...args) {}
         /* Custom initialization of the newborn object. Called by category.new(props, ...args), after `props` were already
-           copied into __data, with `args` being the optional arguments passed to .new(), those after `props`.
-           The JS class and `__category` are already configured. This method can be asynchronous in subclasses,
-           but then the call to ._new() or category.new() returns a Promise.
+           copied into __data, and JS class and `__category` are configured. `args` are the optional arguments (after `props`) passed to .new().
+           This method can be asynchronous in subclasses, but then the call to ._new() or category.new() returns a Promise.
          */
         // if (T.isPOJO(data) || data instanceof Catalog) this.__data.updateAll(data)
 
