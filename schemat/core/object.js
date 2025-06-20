@@ -548,12 +548,12 @@ export class WebObject {
         return this._new([], {}, args, {draft: true})
     }
 
-    static new(...args) {
-        /* Create an empty newborn object, no ID, and execute its __new__(...args). Return the object.
-           If __new__() returns a Promise, this method returns a Promise too. Used instead of the constructor.
-         */
-        return this._new([], {}, args)
-    }
+    // static new(...args) {
+    //     /* Create an empty newborn object, no ID, and execute its __new__(...args). Return the object.
+    //        If __new__() returns a Promise, this method returns a Promise too. Used instead of the constructor.
+    //      */
+    //     return this._new([], {}, args)
+    // }
 
     static async from_data(id, data, {mutable, provisional, ...load_opts} = {}) {
         /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSONx string). */
