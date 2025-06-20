@@ -2,9 +2,8 @@ import {print, assert, T, sleep, splitLast, normalizePath} from '../common/utils
 import {URLNotFound} from "../common/errors.js"
 import {WebRequest} from '../web/request.js'
 import {WebObject} from './object.js'
-import {JsonPOST, TxPOST} from "../web/services.js";
+import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
-import {JSONx} from "../common/jsonx.js";
 
 
 // Currently, vm.Module (Application.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -37,7 +36,7 @@ export class Application extends WebObject {
     eval_allowed
     logger
 
-    async __init__()  {
+    async __init__() {
         this._modules_cache = new Map()
         if (SERVER) {
             await this.root?.load()

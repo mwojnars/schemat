@@ -243,13 +243,6 @@ export class JsonPOST extends HttpService {
     }
 }
 
-export class TxPOST extends JsonPOST {
-    /* Transactional endpoint: JSON-based communication with the execution of the server-side function inside a transaction.
-       Output message has a form of {status, result, error, records}, where `records` is an array of records modified
-       during the transaction - they are automatically put into the caller's Registry after the request is completed.
-     */
-}
-
 /**********************************************************************************************************************/
 
 // export class Network {

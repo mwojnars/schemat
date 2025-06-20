@@ -174,7 +174,7 @@ class Intercept {
     {
         // special attributes are written directly to __self (outside __data, not sent to DB);
         // also, when the __data is not loaded yet, *every* write goes to __self
-        if (!(target.is_newborn() || target.is_loaded())
+        if ((!target.is_newborn() && !target.is_loaded())
             || typeof path !== 'string'                         // `path` can be a symbol like [Symbol.toPrimitive]
             || Intercept.SPECIAL.has(path)
         ) return Reflect.set(target, path, value, receiver)
