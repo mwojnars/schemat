@@ -459,12 +459,12 @@ export class WebObject {
     /***  Instantiation  ***/
 
     constructor(_fail = true, id = null, {mutable = false, provisional, edits} = {}) {
-        /* For internal use! Always call WebObject.new() or category.assign() instead of `new WebObject()`.
+        /* For internal use! Always call WebObject.new() instead of `new WebObject()`.
            By default, the object is created immutable, and on client (where all modifications are local to the single client process)
            this gets toggled automatically on the first attempt to object modification. On the server
            (where any modifications might spoil other web requests), changing `mutable` after creation is disallowed.
          */
-        if (_fail) throw new Error('web objects should be instantiated with category.new() or category.assign() instead of new CLASS()')
+        if (_fail) throw new Error('web objects should be instantiated with category.new() instead of new CLASS()')
         if (id) this.id = id
         if (provisional) this.__provisional_id = Math.abs(provisional)
 
@@ -1226,7 +1226,7 @@ export class WebObject {
         assert(typeof data === 'string')
 
         let Revision = await schemat.import('/$/sys/Revision')
-        let rev = await Revision.assign({data, target: this})
+        let rev = await Revision.new({data, target: this})
         await rev.save()
         this.__data.set('__prev', rev)
     }
