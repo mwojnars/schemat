@@ -159,8 +159,7 @@ export class DataSequence extends Sequence {
 
     get file_tag() { return 'data' }
 
-    __new__(ring, operator, {boot_file} = {}) {
-        super.__new__(ring, operator)
+    __new__(boot_file = null) {
         if (boot_file) this.blocks = [BootDataBlock.draft({}, this, {file_path: boot_file})]
     }
 

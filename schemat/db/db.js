@@ -84,7 +84,7 @@ export class Ring extends WebObject {
         this.min_id_sharded ??= this.base_ring.min_id_sharded
 
         let DataSequence = this.__std.DataSequence
-        this.data_sequence = DataSequence.new({}, this, base?.data_sequence.operator)
+        this.data_sequence = DataSequence.new({ring: this, operator: base?.data_sequence.operator})
         this.sequences = []
         if (!base) return
 
@@ -249,7 +249,7 @@ export class BootRing extends Ring {
         super.__new__(_opts)
 
         // the object here is created from a class and lacks __category; this kind of hack is only allowed during boot
-        this.data_sequence = DataSequence.draft({}, this, undefined, {boot_file: file})
+        this.data_sequence = DataSequence.draft({ring: this}, file)
     }
 
     async select(id, req)  {
