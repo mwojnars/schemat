@@ -24,7 +24,9 @@ export class Application extends WebObject {
     // static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
     // static URL_SCHEMAT = '/$/schemat'       // url-path of the root of Schemat source code
 
-    static URL_LOCAL = '/$/local'           // url-path of the application's local filesystem root folder
+    static URL_LOCAL = '/$/local'   // url-path of the application's local filesystem root folder
+
+    __global                        // plain object {...} holding all references from `global` (TODO: is not .std enough?)
 
     // properties:
     root
@@ -59,9 +61,9 @@ export class Application extends WebObject {
 
     async load_globals() {
         /* Load objects listed in [global] property and make them globally available for application code. */
-        this._global = {}
+        let __global = this.__self.__global = {}
         for (let [name, object] of this.global || [])
-            this._global[name] = await object.load()
+            __global[name] = await object.load()
     }
 
 
