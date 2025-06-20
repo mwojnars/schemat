@@ -451,8 +451,7 @@ export class BootDataBlock extends DataBlock {
 
     get file_path() { return this._file_path }
 
-    __new__(sequence, {file_path} = {}) {
-        this.sequence = sequence
+    __new__(file_path) {
         this._file_path = file_path
         let storage_class = this._detect_storage_class()
         this._storage = new storage_class(this.file_path, this)
