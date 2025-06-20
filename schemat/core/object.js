@@ -1019,7 +1019,7 @@ export class WebObject {
 
     __load__() {}
         /* Loading of selected related objects, so that other methods can use them directly in synchronous calls.
-           Launched after __data was read from DB or created anew (in a newborn object). Can be async in subclasses.
+           Launched after __data was read from DB during load(). Can be async in subclasses.
            // Any other form of initialization that modifies the properties or writes to local attributes (this.x = ...)
            // is disallowed as incompatible with immutability, property caching, and object cloning.
          */
