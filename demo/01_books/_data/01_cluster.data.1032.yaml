@@ -1,3 +1,13 @@
+- id: 1001
+  name: cluster
+  file_tag: demo-01
+  database:
+    "@": 1011
+  nodes:
+    - "@": 1024
+    - "@": 1036
+  __category:
+    "@": 10
 - id: 1002
   name: database
   top_ring:
@@ -80,11 +90,6 @@
     "@": 1012
   file_name: 00_kernel.data.yaml
   format: data-yaml
-  shard:
-    =:
-      - 0
-      - 1
-    "@": schemat/common/structs.js:Shard
   __category:
     "@": 19
 - id: 1016
@@ -167,16 +172,6 @@
     - worker: 2
       agent:
         "@": 1023
-- id: 1001
-  name: cluster
-  file_tag: demo-01
-  database:
-    "@": 1011
-  nodes:
-    - "@": 1024
-    - "@": 1036
-  __category:
-    "@": 10
 - id: 1026
   sequence:
     "@": 1013
@@ -206,11 +201,6 @@
   sequence:
     "@": 1017
   file_name: 02_app.data.1029.yaml
-  shard:
-    =:
-      - 0
-      - 1
-    "@": schemat/common/structs.js:Shard
   __category:
     "@": 19
 - id: 1030
@@ -225,11 +215,6 @@
     "@": 1027
   file_name: 01_cluster.data.1032.yaml
   format: data-yaml
-  shard:
-    =:
-      - 0
-      - 1
-    "@": schemat/common/structs.js:Shard
   __category:
     "@": 19
 - id: 1033
