@@ -1290,7 +1290,7 @@ export class WebObject {
         return this.__meta.mutable ? this : schemat.tx.get_mutable(this)
     }
 
-    _get_mutable({activate = true, ...opts} = {}) {
+    _get_mutable(opts = {}) {
         /* Create synchronously a mutable instance of itself: by cloning this.__data (on server), or by marking itself
            as mutable (on client). The object must be already fully loaded.
            If dependencies of `this` were initialized (this._initialize()), they are still initialized for the clone.
@@ -1300,16 +1300,14 @@ export class WebObject {
 
         if (!this.is_loaded()) throw new Error('only a fully loaded object can be converted to a mutable instance')
         if (CLIENT) return this._make_mutable()
-
-        let obj = this._clone(opts)
-        if (activate) obj._activate()
-        return obj
+        return this._clone(opts)
     }
 
     _clone(opts) {
         let obj = WebObject.stub(this.id, {mutable: true, ...opts})
-        obj._set_data(this.__data.clone(), this.__meta.loaded_at)
         T.setClass(obj, T.getClass(this))
+        if (this.__data) obj._set_data(this.__data.clone(), this.__meta.loaded_at)
+        if (this.__meta.active) obj._activate()
         return obj
     }
 
