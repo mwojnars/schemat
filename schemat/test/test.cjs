@@ -302,7 +302,8 @@ describe('Schemat Tests', function () {
                 let d = await Varia.new().save()
                 let a = Varia.new()
                 let c = Varia.new()
-                let b = a.ref = Varia.new({ref: a})
+                // let e = window.e = Varia.new()
+                let b = a.ref = Varia.new({ref: a}) //, strong_ref: e})
                 c.delete_self()
                 d.ref = b
                 await schemat.save()
@@ -321,6 +322,7 @@ describe('Schemat Tests', function () {
                 b.delete_self()
                 d.delete_self()
                 await schemat.save()
+                // await window.e.reload()     // fails because `e` was cascade-deleted via `b`
                 return true
             })
             expect(deleted).to.be.true
