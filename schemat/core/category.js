@@ -42,7 +42,7 @@ export class Category extends WebObject {
     }
 
     // get has_strong_refs() {
-    //     /* Check if there are any REF objects with strong=true option in __child_schema. */
+    //     /* Check if __child_schema contains any REF objects with ref.options.strong=true. */
     //     let refs = []
     //     let collect = (ref) => {if (ref.is_strong?.()) refs.push(ref)}
     //     Struct.collect(this.__child_schema, collect)

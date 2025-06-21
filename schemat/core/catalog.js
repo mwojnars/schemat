@@ -15,62 +15,62 @@ function isstring(s) {
     return s === null || s === undefined || typeof s === 'string'
 }
 
-export class Path {
-    /* Static methods for manipulating access paths pointing into nested objects.
-       A path can be a /-separated string, "A/B/C...", or an array of steps, each step being a name or an index,
-       like in ["A", 2, "C", 5].
-     */
-
-    static SEPARATOR = '/'
-
-    static split(path) {
-        /* If `path` is a string, split it on the first occurrence of the separator and return as [head, tail] strings.
-           If `path` is an array, return [head, tail], where head=path[0] and tail=path.slice(1).
-         */
-        if (typeof path === 'string') return splitFirst(path, this.SEPARATOR)
-        let [head, ...tail] = path
-        return [head, tail]
-    }
-
-    static splitAll(path) {
-        /* Like .split(), but always returns an array as a `tail`, so no more string splits are required. */
-        let [head, ...tail] = (typeof path === 'string') ? path.split(this.SEPARATOR) : path
-        return [head, tail]
-    }
-
-    // static step(start, path, next = this.next) {
-    //     /* Starting from an object, `start`, move along the `path` of nested objects, and return [obj, tail],
-    //        where `obj` is the first object found after taking one step on the `path`, and `tail` is the remaining path.
-    //      */
-    //     let obj = start
-    //     let [step, tail] = this.split(path)
-    //     return [next(obj, step), tail]
-    // }
-
-    static find(start, path, next = this.next) {
-        /* Return the first element encountered by walk(), or undefined. */
-        let walk = this.walk(start, path, next)
-        let elem = walk.next()
-        if (!elem.done) return elem.value
-    }
-
-    static *walk(start, path, next = this.next) {
-        /* Generate a stream of all the nested objects of `start` whose location matches the `path`. The path can be
-           a string or an array. Multiple objects can be yielded if a Catalog with non-unique keys occurs on the path.
-         */
-        if (!path.length) yield start
-        let [step, tail] = this.splitAll(path)
-        for (let obj of next(start, step))
-            yield* this.walk(obj, tail, next)
-    }
-
-    static *next(obj, key, generic = true) {
-        /* Yield all elements of an object or collection, `obj`, stored at a given key or attribute, `key`. */
-        if (obj instanceof Catalog) yield* obj.getAll(key)
-        else if (obj instanceof Map) yield obj.get(key)
-        else if (generic && (typeof obj === 'object')) yield obj[key]
-    }
-}
+// export class Path {
+//     /* Static methods for manipulating access paths pointing into nested objects.
+//        A path can be a /-separated string, "A/B/C...", or an array of steps, each step being a name or an index,
+//        like in ["A", 2, "C", 5].
+//      */
+//
+//     static SEPARATOR = '/'
+//
+//     static split(path) {
+//         /* If `path` is a string, split it on the first occurrence of the separator and return as [head, tail] strings.
+//            If `path` is an array, return [head, tail], where head=path[0] and tail=path.slice(1).
+//          */
+//         if (typeof path === 'string') return splitFirst(path, this.SEPARATOR)
+//         let [head, ...tail] = path
+//         return [head, tail]
+//     }
+//
+//     static splitAll(path) {
+//         /* Like .split(), but always returns an array as a `tail`, so no more string splits are required. */
+//         let [head, ...tail] = (typeof path === 'string') ? path.split(this.SEPARATOR) : path
+//         return [head, tail]
+//     }
+//
+//     // static step(start, path, next = this.next) {
+//     //     /* Starting from an object, `start`, move along the `path` of nested objects, and return [obj, tail],
+//     //        where `obj` is the first object found after taking one step on the `path`, and `tail` is the remaining path.
+//     //      */
+//     //     let obj = start
+//     //     let [step, tail] = this.split(path)
+//     //     return [next(obj, step), tail]
+//     // }
+//
+//     static find(start, path, next = this.next) {
+//         /* Return the first element encountered by walk(), or undefined. */
+//         let walk = this.walk(start, path, next)
+//         let elem = walk.next()
+//         if (!elem.done) return elem.value
+//     }
+//
+//     static *walk(start, path, next = this.next) {
+//         /* Generate a stream of all the nested objects of `start` whose location matches the `path`. The path can be
+//            a string or an array. Multiple objects can be yielded if a Catalog with non-unique keys occurs on the path.
+//          */
+//         if (!path.length) yield start
+//         let [step, tail] = this.splitAll(path)
+//         for (let obj of next(start, step))
+//             yield* this.walk(obj, tail, next)
+//     }
+//
+//     static *next(obj, key, generic = true) {
+//         /* Yield all elements of an object or collection, `obj`, stored at a given key or attribute, `key`. */
+//         if (obj instanceof Catalog) yield* obj.getAll(key)
+//         else if (obj instanceof Map) yield obj.get(key)
+//         else if (generic && (typeof obj === 'object')) yield obj[key]
+//     }
+// }
 
 /**********************************************************************************************************************/
 

@@ -1,6 +1,6 @@
 import {ValidationError} from "../common/errors.js";
 import {T, assert, trycatch, concat, mapEntries} from "../common/utils.js";
-import {Catalog, Path} from '../core/catalog.js'
+import {Catalog} from '../core/catalog.js'
 import {FIELD, STRING, Type, generic_string, generic_type, is_valid_field_name} from "./type.js";
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../web/react-utils.js";
@@ -65,16 +65,16 @@ export class CATALOG extends Type {
         return T.ofType(key_type, FIELD) ? `${name}(${value_type})` : `${name}(${key_type} > ${value_type})`
     }
 
-    find(path = null) {
-        /* Return a (nested) type at a given `path`, or `this` if `path` is empty.
-           The path is an array of keys on subsequent levels of nesting, some keys can be missing (null/undefined)
-           if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
-         */
-        return Path.find(this, path, (type, key) => {
-            if (!type.is_CATALOG()) throw new Error(`data type path not found: ${path}`)
-            return [type.child(key)]
-        })
-    }
+    // find(path = null) {
+    //     /* Return a (nested) type at a given `path`, or `this` if `path` is empty.
+    //        The path is an array of keys on subsequent levels of nesting, some keys can be missing (null/undefined)
+    //        if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
+    //      */
+    //     return Path.find(this, path, (type, key) => {
+    //         if (!type.is_CATALOG()) throw new Error(`data type path not found: ${path}`)
+    //         return [type.child(key)]
+    //     })
+    // }
 
     merge_inherited(catalogs) {
         let default_ = this.options.default                     // include the default value in the merge, if present
