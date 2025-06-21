@@ -994,13 +994,14 @@ export class WebObject {
          */
 
     __setup__() {}  //config, {ring, block}) {}
-        /* Method for one-time setup of the object, launched on a server after the object got inserted to a data block
-           and already has an ID assigned (this.id is present). Typically, this method creates related sub-objects, in cases
-           when doing this on a client would be more costly. __setup__() can be viewed as continuation of __new__(),
-           but asynchronous and executed on a server (inside a data block). May return a Promise.
-           All child objects created in __setup__() are inserted to the same data block as parent, which improves
-           the performance of both the insertions and future read access.
-           // For now, __setup__() must explicitly save the objects it creates; in the future, these objects will be inserted automatically with the parent object.
+        /* Server-side setup of the object, launched during insert to a data block, right after the object received
+           its final ID. Typically, it creates related sub-objects, esp. when doing this on a client would be too costly.
+           __setup__() can be viewed as continuation of __new__(), but asynchronous, executed on a server (inside a data block)
+           on a partly initialized object (dependencies are loaded), with access to the final ID. May return a Promise.
+           All child objects created in __setup__() are inserted to the same data block as the parent, which improves
+           performance of insertions and future read access. NOTE: the objects created during __setup__() are not staged
+           in the transaction, but inserted immediately to the block, with their own __setup__() being executed right away.
+           For this reason, it is unnecessary and disallowed to save them explicitly with obj.save() or schemat.save(...).
          */
 
     __load__() {}

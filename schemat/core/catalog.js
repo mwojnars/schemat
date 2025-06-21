@@ -288,8 +288,8 @@ export class Struct {
            next sibling; otherwise it steps into children. Typically, `fun` collects some information and saves it in an external structure.
            The `path` is an array of keys or indices leading to the `target` node; inside a Catalog, multiple nodes may share the same path.
            Optionally, a "twin" structure can be provided, which is traversed in parallel with `target` via twin.child(key) or .child(i) links,
-           then fun() is called with (node, path, twin-node) arguments. The twin hierarchy can be smaller: .child() is allowed to return undefined
-           at any place. The twin functionality is mainly provided for traversing types of nested values in a web object.
+           then fun() is called with (node, path, twin-node) arguments; .child() is allowed to return undefined at any point.
+           The twin functionality is mainly provided for traversing type hierarchy of nested values in a web object.
          */
         if (target == null) return
         let step = fun(target, path, twin)
