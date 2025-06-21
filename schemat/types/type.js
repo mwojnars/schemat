@@ -657,18 +657,14 @@ export class ARRAY extends GENERIC {
     }
     static Widget = widgets.ARRAY_Widget
 
-    collect(assets) {
-        this.options.type.collect(assets)
-    }
+    child(key)      { return this.options.type }
+    collect(assets) { this.options.type.collect(assets) }
+    toString()      { return `${this.constructor.name}(${this.options.type})` }
 
     _validate(value) {
         value = super._validate(value)
         if (!Array.isArray(value)) throw new ValueError(`expected an array, got ${typeof value}`)
         return value.map(elem => this.options.type.validate(elem))
-    }
-
-    toString() {
-        return `${this.constructor.name}(${this.options.type})`
     }
 }
 
@@ -689,6 +685,9 @@ export class OBJECT extends GENERIC {
         return Object.assign({}, ...objects.toReversed())
     }
 }
+
+// CATALOG, SCHEMA -- located in a separate file
+
 
 //*********************************************************************************************************************/
 //
