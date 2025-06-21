@@ -283,14 +283,14 @@ export class Struct {
     }
 
     static collect(target, fun, path = []) {
-        /* Walk through all (nested) nodes of the `target` collection and execute fun(node, path) at each node (in pre-order).
-           If the result of fun() is truthy, children of `node` are skipped and the processing moves to the next sibling,
-           otherwise it steps into children. Typically, `fun` collects some information and saves it in an external structure.
+        /* Walk through nested nodes of the `target` collection and execute fun(node, path) at each node (in pre-order).
+           If the result of fun() is strictly false (but not undefined!), children of `node` are skipped, and the processing moves to the
+           next sibling; otherwise it steps into children. Typically, `fun` collects some information and saves it in an external structure.
            The `path` is an array of keys or indices leading to the `target` node; inside a Catalog, multiple nodes may share the same path.
          */
         if (target == null) return
-        let skip = fun(target, path)
-        if (skip) return
+        let step = fun(target, path)
+        if (step === false) return
 
         if (target instanceof Catalog || target instanceof Map)
             for (let [key, obj] of target.entries())
@@ -313,7 +313,7 @@ export class Struct {
     static transform(target, fun, path = []) {
         /* In-place transform of all (nested) objects in the `target` collection through a function, fun(obj, path), in pre-order.
            If fun() returns undefined, the object is left unchanged and transform() proceeds to its child nodes;
-           otherwise, the object is replaced with the returned (modified) object and the processing moves on to sibling nodes.
+           otherwise, the object is replaced with the returned (modified) object, and the processing moves on to sibling nodes.
            Returning an unchanged `obj` from fun() is a way to skip the processing of its children.
          */
         if (target == null) return
