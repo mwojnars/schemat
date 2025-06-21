@@ -254,6 +254,24 @@ export class ServerTransaction extends Transaction {
         // if (lite) return
     }
 
+    enter_insert_mode(on_newborn_created /*callback*/) {
+        /* Make the transaction run in "insert mode", which means a data block takes over responsibility for all newborns.
+           Called by a data block when insertion of new objects starts and their __setup__() is to be called.
+           Whenever the __setup__() creates a new object and stages it in transaction, on_newborn_created() is called
+           instead of staging, so the block can immediately assign a final ID to the object and save it to the DB.
+           In this way, all newborns (even the ones created during insert) fall into the same data block and may link to each other.
+           When the transaction exits insert mode, the objects are staged as mature ones, for they can receive more mutations in the future.
+         */
+        assert(!this._on_newborn_created)
+        this._on_newborn_created = on_newborn_created
+        this._inserted_objects = []
+    }
+    exit_insert_mode() {
+        // only now can we stage newborns created in __setup__() calls, but stage them as mature objects, not newborns
+        delete this._inserted_objects
+        delete this._on_newborn_created
+    }
+
     async flush(opts = {}) {
         /* Save all pending changes to DB and discard all objects, but do not mark this transaction as committed. */
         return this.save_all({...opts, discard: true})
