@@ -648,23 +648,6 @@ export class SHARD extends CUSTOM_OBJECT {
  **
  */
 
-export class CHOICE extends Type {
-    /* List of choices, the value must be one of them. */
-    static options = {
-        values: [],             // eligible choice values
-    }
-}
-
-export class VARIANT extends Type {
-    /* Selection from a number of predefined (sub)types. The value must be a plain object of the form {choice: value},
-       where `choice` is one of the eligible choice names, and `value` matches this choice's corresponding type.
-     */
-    static options = {
-        choices: {},            // plain object interpreted as a dictionary of choices, {choice-name: type-definition}
-    }
-}
-
-
 export class ARRAY extends GENERIC {
     /* Represents arrays of objects of a given `type` (generic_type by default). */
 
@@ -689,7 +672,45 @@ export class ARRAY extends GENERIC {
     }
 }
 
- 
+export class OBJECT extends GENERIC {
+    /* Accept plain JavaScript objects (POJO or null-prototype objects) used as data containers (dictionaries).
+       The objects must *not* belong to any class other than Object.
+       This type can be used as a replacement for MAP or CATALOG when a simpler data structure is needed for holding
+       collections of named attributes. During inheritance of single-valued properties, OBJECT-type objects are merged
+       by default, with younger attributes overriding the same-named older ones.
+     */
+    _validate(obj) {
+        obj = super._validate(obj)
+        if (!T.isPlain(obj)) throw new ValueError(`expected a plain object, got ${obj} instead`)
+        return obj
+    }
+
+    merge_inherited(objects) {
+        return Object.assign({}, ...objects.toReversed())
+    }
+}
+
+//*********************************************************************************************************************/
+//
+// The classes below are NOT USED ...
+//
+
+export class CHOICE extends Type {
+    /* List of choices, the value must be one of them. */
+    static options = {
+        values: [],             // eligible choice values
+    }
+}
+
+export class VARIANT extends Type {
+    /* Selection from a number of predefined (sub)types. The value must be a plain object of the form {choice: value},
+       where `choice` is one of the eligible choice names, and `value` matches this choice's corresponding type.
+     */
+    static options = {
+        choices: {},            // plain object interpreted as a dictionary of choices, {choice-name: type-definition}
+    }
+}
+
 export class MAP extends Type {
     /*
     Accepts plain objects as data values, or objects of a given `type`.
@@ -714,7 +735,6 @@ export class MAP extends Type {
     }
 }
 
-
 export class OBJECTS_MAP extends GENERIC {
     /* Accepts instances of ObjectsMap class. */
     static options = {
@@ -738,26 +758,6 @@ export class OBJECTS_MAP extends GENERIC {
     }
 }
 
-
-export class OBJECT extends GENERIC {
-    /* Accept plain JavaScript objects (POJO or null-prototype objects) used as data containers (dictionaries).
-       The objects must *not* belong to any class other than Object.
-       This type can be used as a replacement for MAP or CATALOG when a simpler data structure is needed for holding
-       collections of named attributes. During inheritance of single-valued properties, OBJECT-type objects are merged
-       by default, with younger attributes overriding the same-named older ones.
-     */
-    _validate(obj) {
-        obj = super._validate(obj)
-        if (!T.isPlain(obj)) throw new ValueError(`expected a plain object, got ${obj} instead`)
-        return obj
-    }
-
-    merge_inherited(objects) {
-        return Object.assign({}, ...objects.toReversed())
-    }
-}
-
-
 export class RECORD extends Type {
     /*
     Value type for data objects containing some predefined fields, each one having ITS OWN type
@@ -778,7 +778,7 @@ export class RECORD extends Type {
 
 /**********************************************************************************************************************
  **
- **  TYPE WRAPPER (data type stored in DB)
+ **  TYPE WRAPPER (data type stored in DB) -- NOT USED
  **
  */
 
