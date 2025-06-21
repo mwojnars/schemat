@@ -570,10 +570,12 @@ export class REF extends Type {
     static options = {
         category:  undefined,       // base category for all the items to be encoded
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
-        strong:    false,           // if true, the referenced object is considered a part of the current one ("strong ownership")
-                                    // and should be removed automatically when the parent or the link itself is removed
+        strong:    false,           // if true, the referenced object is considered an essential part of the current one ("strong ownership")
+                                    // that should be removed automatically when the parent (or the link itself) is removed
     }
     static Widget = widgets.REF_Widget
+
+    is_strong() { return this.options.strong }
 
     _validate(obj) {
         obj = super._validate(obj)

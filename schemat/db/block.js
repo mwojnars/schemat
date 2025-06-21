@@ -460,14 +460,8 @@ export class DataBlock extends Block {
         /* Compare `prev` and `next` objects to see if any *strong* references got removed. Delete the referenced objects, if so. */
         if (!prev) return
 
-        // // traverse prev.__data with prev.__schema as a twin and for every *strong* reference found, emit [path, ref]
-        // let prev_refs = []
-        // let prev_test = (ref, type, path) => {
-        //     if (!type || type === generic_type) return false
-        //     if (ref instanceof WebObject && type.is_strong_ref?.()) prev_refs.push([path, ref])
-        // }
-        // Struct.collect(prev.__data, prev_test, prev.__schema)
-        // // let prev_refs = prev.collect_typed(prev_test)   ... prev.collect_items(test)
+        // traverse prev.__data and collect all strong references as [path, ref, type] triples
+        let prev_refs = prev.collect_typed((ref, type) => ref instanceof WebObject && ref.id && type.is_strong?.())
     }
 }
 

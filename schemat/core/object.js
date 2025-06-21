@@ -572,7 +572,7 @@ export class WebObject {
         console.log(lines.join('\n'))
     }
 
-    collect_items(test = () => true) {
+    collect_items(test = (item) => true) {
         /* Return an array of pairs, [path, item], of items within the __data tree that satisfy test(item). */
         let items = []
         let collect = (item, path) => {if (test(item)) items.push([path, item])}
@@ -580,7 +580,7 @@ export class WebObject {
         return items
     }
 
-    collect_typed(test = () => true, strict = true) {
+    collect_typed(test = (item, type) => true, strict = true) {
         /* Return an array of triples, [path, item, type], of items within the __data tree that satisfy test(item, type). */
         let items = []
         let collect = (item, path, type) => {
