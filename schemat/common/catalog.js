@@ -75,12 +75,16 @@ function isstring(s) {
 /**********************************************************************************************************************/
 
 export class Struct {
-    /* Base class for traversable data structures + static methods for working with other collections: Catalog, Map, Array.
+    /* Base class for traversable data structures + static methods for working with collections: Catalog, Map, Array.
        In methods, the `path` argument is always an array, not a string!
      */
 
-    child(key) {}       // substructure that corresponds to the primary structure's `key` element
-                        // when this Struct is used as a twin in Struct.collect()
+    child(key) {}       // element that corresponds to the primary structure's `key` element when this Struct is used
+                        // as a twin in Struct.collect() .. the "keys" here are different than keys()/entries() below!
+
+    // *keys() {}
+    // *entries() {}
+    // get(own_key) {}
 
 
     /***  Static methods for use with different data structures  ***/
