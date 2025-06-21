@@ -361,11 +361,10 @@ export class WebObject {
         return flat
     }
 
-    get __references() {       // find_references()
-        /* Array of all WebObjects referenced from this one. */
+    get __references() {
+        /* Array of all WebObjects referenced from this one. May contain duplicates. */
         let refs = []
         Struct.collect(this.__data, obj => {if (obj instanceof WebObject) refs.push(obj)})
-        // JSONx.encode(this.__data, val => {if (val instanceof WebObject) { refs.push(val); return null; }})
         return refs
     }
 

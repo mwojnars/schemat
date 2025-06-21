@@ -44,7 +44,7 @@ export class CATALOG extends Type {
     }
 
     subtype(key)  { return this.options.value_type }    // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
-    getValidKeys()  { return undefined }
+    valid_keys()  { return undefined }
 
     constructor(options = {}) {
         super(options)
@@ -137,7 +137,7 @@ export class SCHEMA extends CATALOG {
     }
     _all_subtypes() { return Object.values(this.options.fields) }
 
-    getValidKeys() {
+    valid_keys() {
         let fields = Object.getOwnPropertyNames(this.options.fields)
         fields = fields.filter(f => this.options.fields[f].is_editable())       // only keep user-editable fields
         return fields.sort()
@@ -445,7 +445,7 @@ export class CatalogTable extends Component {
         let [entries, setEntries] = useState(catalog.getRecords().map((ent, pos) => ({...ent, id: pos})))
         let run = this.actions({item, path, setEntries})
 
-        let keyNames = type.getValidKeys()
+        let keyNames = type.valid_keys()
         let N = entries.length
 
         let rows = entries.map((entry, pos) =>
