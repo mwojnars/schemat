@@ -1,4 +1,4 @@
-import {T, print, assert, splitFirst, getstate, setstate} from './utils.js'
+import {T, print, assert, getstate, setstate} from './utils.js'
 import {JSONx} from "./jsonx.js"
 
 
@@ -75,12 +75,18 @@ function isstring(s) {
 /**********************************************************************************************************************/
 
 export class Struct {
-    /* Static methods for working with collections: Catalog, Map, Array.
+    /* Base class for traversable data structures + static methods for working with other collections: Catalog, Map, Array.
        In methods, the `path` argument is always an array, not a string!
      */
 
+    child(key) {}       // substructure that corresponds to the primary structure's `key` element
+                        // when this Struct is used as a twin in Struct.collect()
+
+
+    /***  Static methods for use with different data structures  ***/
+
     static isCollection(obj) {
-        return obj instanceof Catalog || obj instanceof Map || obj instanceof Array
+        return obj instanceof Catalog || obj instanceof Map || obj instanceof Array || obj instanceof Struct
     }
 
     static sizeOf(target) {
@@ -104,10 +110,10 @@ export class Struct {
         if (target instanceof Catalog)
             for (let obj of target._getAll(step))
                 yield* Struct.yieldAll(obj, rest, _objects)
-        
+
         else if (target instanceof Map)
             yield* Struct.yieldAll(target.get(step), rest, _objects)
-        
+
         else if (target instanceof Array) {
             if (typeof step === 'number') yield* Struct.yieldAll(target[step], rest, _objects)
         }
@@ -298,7 +304,7 @@ export class Struct {
         if (target instanceof Catalog || target instanceof Map)
             for (let [key, obj] of target.entries())
                 Struct.collect(obj, fun, twin?.child?.(key), [...path, key])
-        
+
         else if (target instanceof Array)
             for (let i = 0; i < target.length; i++)
                 Struct.collect(target[i], fun, twin?.child?.(i), [...path, i])

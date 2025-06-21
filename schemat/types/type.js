@@ -3,6 +3,7 @@ import {assert, print, T} from '../common/utils.js'
 import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
 import {bytes_uint} from "../common/binary.js";
 import {ObjectsMap, Shard} from "../common/structs.js";
+import {Struct} from "../common/catalog.js";
 import * as widgets from './widgets.js'
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
@@ -21,7 +22,7 @@ export function is_valid_field_name(name) {
  **
  */
 
-export class Type {
+export class Type extends Struct {
 
     is_CATALOG()     { return false }
     // is_compound() { return this.is_CATALOG() }     // "compound" types implement a custom merge_inherited(), which prevents some optimizations
@@ -94,6 +95,7 @@ export class Type {
     /***  Instantiation  ***/
 
     constructor(options = {}) {
+        super()
         this._options = options || {}       // options=null/undefined is also valid
         this._init_options()
     }
