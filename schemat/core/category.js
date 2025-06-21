@@ -14,6 +14,7 @@ import {SCHEMA} from "../types/catalog_type.js";
 import {ReactPage, CategoryInspectView} from "../web/pages.js"
 import {JsonGET} from "../web/services.js"
 import {mWebObjects} from "../web/messages.js"
+import {generic_type} from "../types/type.js";
 
 
 /**********************************************************************************************************************/
@@ -39,6 +40,14 @@ export class Category extends WebObject {
         /* Imported JS class of objects in this category. */
         return schemat.import(this.class)
     }
+
+    // get has_strong_refs() {
+    //     /* Check if there are any REF objects with strong=true option in __child_schema. */
+    //     let refs = []
+    //     let collect = (ref) => {if (ref.is_strong?.()) refs.push(ref)}
+    //     Struct.collect(this.__child_schema, collect)
+    //     return refs.length
+    // }
 
 
     is_category()   { return true }

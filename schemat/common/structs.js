@@ -172,7 +172,7 @@ export class RecentObjects extends Objects {
 /**********************************************************************************************************************/
 
 export class SpotDiff {
-    /* Spot-diff is O(n) algorithm for detecting a (limited) number of localised changes in a larger text.
+    /* Spot-diff is O(n) algorithm for detecting a (limited) number of local changes in a larger text.
        It computes a list of replacements of the form [start, length, new_string] that together
        - when applied one by one in the provided order - will transform `s1` string into `s2`.
        The maximum number of replacements that can be returned is 2^max_depth -- if this is smaller than

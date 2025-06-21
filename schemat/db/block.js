@@ -463,7 +463,8 @@ export class DataBlock extends Block {
            schema changes should NOT be combined with data changes in the same mutation of the object.
          */
         if (!prev) return
-        // TODO: check if prev.__category.__child_schema has any strong REFs at all (via a cached getter), otherwise there's no point in traversing __data
+        // if (!prev.__category.has_strong_refs) return
+        // TODO: check if prev.__category.__child_schema has any strong REFs at all (via a cached getter) to avoid traversing __data if possible
 
         // traverse prev.__data and collect strong references as [path, ref, type] triples
         let prev_refs = prev.collect_typed((ref, type) => ref instanceof WebObject && ref.id && type.is_strong?.())
@@ -476,7 +477,7 @@ export class DataBlock extends Block {
             let _encode = ([path, ref]) => JSON.stringify([ref.id, ...path])
             let paths   = new Set(next_refs.map(_encode))
             let strongs = new Set(next_refs.filter(([path, ref, type]) => type.is_strong?.()).map(([_, ref]) => ref.id))
-    
+
             // find strong refs in `prev` that are no longer present in `next`, or are weak and located on a different path
             for (let [path, ref] of prev_refs) {
                 if (strongs.has(ref.id)) continue               // `ref` still present in `next` as a strong reference

@@ -573,7 +573,7 @@ export class WebObject {
     }
 
     collect_items(test = (item) => true) {
-        /* Return an array of pairs, [path, item], of items within the __data tree that satisfy test(item). */
+        /* Return an array of pairs, [path, item], with all items found in __data tree that satisfy test(item). */
         let items = []
         let collect = (item, path) => {if (test(item)) items.push([path, item])}
         Struct.collect(this.__data, collect)
@@ -581,7 +581,7 @@ export class WebObject {
     }
 
     collect_typed(test = (item, type) => true, strict = true) {
-        /* Return an array of triples, [path, item, type], of items within the __data tree that satisfy test(item, type). */
+        /* Return an array of triples, [path, item, type], with all items found in __data tree that satisfy test(item, type). */
         let items = []
         let collect = (item, path, type) => {
             if (strict && (!type || type === generic_type)) return false    // skip branches without a proper Type
