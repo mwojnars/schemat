@@ -548,16 +548,12 @@ export let generic_type = new GENERIC({repeated: true})
 
 /**********************************************************************************************************************
  **
- **  OTHER atomic data types
+ **  Other ATOMIC data types
  **
  */
 
 export class Atomic extends GENERIC {
-}
-
-export class BINARY extends Atomic {
-    /* Type of Uint8Array objects. */
-    static options = {class: Uint8Array}
+    child(key) {}
 }
 
 export class TYPE extends Atomic {
@@ -565,8 +561,46 @@ export class TYPE extends Atomic {
     static Widget = widgets.TYPE_Widget
 }
 
-export class CUSTOM_OBJECT extends GENERIC {
-    /* Accept objects of a given `class` (Object by default), with optional validation of their attributes. */
+export class REF extends Type {
+    /* Reference to a WebObject, encoded as {"@": id} or {"@": __index_id} during serialization through JSONx.
+       Newly created objects with `__provisional_id` instead of `id` are accepted.
+       REF without parameters is equivalent to GENERIC(WebObject), however, REF can also be parameterized,
+       which is not possible with a GENERIC.
+     */
+    static options = {
+        category:  undefined,       // base category for all the items to be encoded
+        exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
+        strong:    false,           // if true, the referenced object is considered a part of the current one ("strong ownership")
+                                    // and should be removed automatically when the parent or the link itself is removed
+    }
+    static Widget = widgets.REF_Widget
+
+    _validate(obj) {
+        obj = super._validate(obj)
+        if (!(obj instanceof schemat.WebObject)) throw new ValueError(`expected a WebObject, got ${obj} instead`)
+        if (!obj.__index_id) throw new ValueError(`found a reference to a newborn object without a provisional ID: ${obj}`)
+        // if (obj.id < 0) throw new ValueError(`found a reference to an object with provisional ID=${obj.id} (${obj})`)
+        // TODO: check that options.category.id is present in the list of object's ancestors, obj.__ancestor_ids
+        return obj
+    }
+}
+
+export class REF_CATEGORY extends REF {
+    _init_options() {
+        super._init_options()
+        this.options.category ??= schemat.root_category
+    }
+}
+
+export class BINARY extends Atomic {
+    /* Type of Uint8Array objects. */
+    static options = {class: Uint8Array}
+}
+
+/**********************************************************************************************************************/
+
+export class CUSTOM_OBJECT extends Atomic {
+    /* Objects of a given `class` (Object by default) are accepted as atomic values, with optional validation of their attributes. */
     static options = {
         class:  Object,
         strict: true,           // if true, and `attrs` is defined, the object must not have any own attributes beyond those specified in attrs
@@ -607,39 +641,6 @@ export class SHARD extends CUSTOM_OBJECT {
 //     }
 // }
 
-/**********************************************************************************************************************/
-
-export class REF extends Type {
-    /* Reference to a WebObject, encoded as {"@": id} or {"@": __index_id} during serialization through JSONx.
-       Newly created objects with `__provisional_id` instead of `id` are accepted.
-       REF without parameters is equivalent to GENERIC(WebObject), however, REF can also be parameterized,
-       which is not possible with a GENERIC.
-     */
-    static options = {
-        category:  undefined,       // base category for all the items to be encoded
-        exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
-        strong:    false,           // if true, the referenced object is considered a part of the current one ("strong ownership")
-                                    // and should be removed automatically when the parent or the link itself is removed
-    }
-    static Widget = widgets.REF_Widget
-
-    _validate(obj) {
-        obj = super._validate(obj)
-        if (!(obj instanceof schemat.WebObject)) throw new ValueError(`expected a WebObject, got ${obj} instead`)
-        if (!obj.__index_id) throw new ValueError(`found a reference to a newborn object without a provisional ID: ${obj}`)
-        // if (obj.id < 0) throw new ValueError(`found a reference to an object with provisional ID=${obj.id} (${obj})`)
-        // TODO: check that options.category.id is present in the list of object's ancestors, obj.__ancestor_ids
-        return obj
-    }
-}
-
-export class REF_CATEGORY extends REF {
-    _init_options() {
-        super._init_options()
-        this.options.category ??= schemat.root_category
-    }
-}
-
 
 /**********************************************************************************************************************
  **
@@ -653,7 +654,6 @@ export class CHOICE extends Type {
         values: [],             // eligible choice values
     }
 }
-
 
 export class VARIANT extends Type {
     /* Selection from a number of predefined (sub)types. The value must be a plain object of the form {choice: value},
