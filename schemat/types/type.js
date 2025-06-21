@@ -112,7 +112,8 @@ export class Type {
         return this instanceof typeClass
     }
 
-    // child(key) { return this.options.value_type }     // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
+    child(key) {}
+        /* In compound types, return the Type of values stored under `key`, or undefined if `key` is not allowed. */
 
 
     /***  Serialization of Type objects  ***/
