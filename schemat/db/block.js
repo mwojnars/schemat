@@ -253,8 +253,24 @@ export class DataBlock extends Block {
         //             throw new Error(`provisional reference still present in ${obj}`)
         //         }
 
-        // call __setup__() in every object
-        for (let obj of objects) {
+        // // call __setup__() in every object
+        // for (let obj of objects) {
+        //     let setup = obj.__setup__()  //{}, {ring: this.ring, block: this})
+        //     if (setup instanceof Promise) await setup
+        // }
+
+        // tx must switch to a special "insert mode" while __setup__() methods are called
+        let on_newborn_created = (obj) => {
+            obj.id = this._assign_id(state, opts)
+            objects.push(obj)
+        }
+        schemat.tx.enter_insert_mode(on_newborn_created)
+
+        // go through all the objects and call __setup__(), which may create new related objects (!)
+        // that are added to the `objects` queue by on_newborn_created() called via TX
+
+        for (let pos = 0; pos < objects.length; pos++) {
+            let obj = objects[pos]
             let setup = obj.__setup__()  //{}, {ring: this.ring, block: this})
             if (setup instanceof Promise) await setup
         }
@@ -264,6 +280,8 @@ export class DataBlock extends Block {
             this._prepare_for_insert(obj)       // validate obj.__data
             await this._save(state.storage, obj)
         }
+
+        schemat.tx.exit_insert_mode()
         return ids
     }
 
