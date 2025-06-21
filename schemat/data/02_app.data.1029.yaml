@@ -129,3 +129,13 @@
     "@": 2101
 - id: 2104
   title: ąłęÓŁŻŹŚ
+- id: 2105
+  name: a
+  strong_ref:
+    "@": 2106
+  __category:
+    "@": 2101
+- id: 2106
+  name: b
+  __category:
+    "@": 2101
