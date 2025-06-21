@@ -36,7 +36,7 @@ export class Type {
         info     : undefined,       // human-readable description of this type: what values are accepted and how they are interpreted
         blank    : true,            // if true, `null` and `undefined` are treated as a valid value: both are stored and decoded as "null"
         class    : undefined,       // if present, all values (except blank) must be instances of this JS class
-        initial  : undefined,       // initial value assigned to a newly created data element of this type
+        initial  : undefined,       // initial value to be proposed in the UI for a newly created element of this type
         default  : undefined,       // default value to be used for a non-repeated property when no explicit value was provided;
                                     // since repeated properties behave like lists of varying length, and zero is a valid length,
                                     // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
@@ -92,6 +92,8 @@ export class Type {
     options                     // all config options of this type instance: own + defaults  (this._options + constructor.options)
 
 
+    /***  Construction  ***/
+
     constructor(options = {}) {
         this._options = options || {}       // options=null/undefined is also valid
         this._init_options()
@@ -104,24 +106,26 @@ export class Type {
         this.options = {...this.constructor.default_props(), ...this._options}
     }
 
-    __getstate__()      { return this._options }
+    instanceof(typeClass) {
+        /* Check if this type is an instance of a particular `typeClass`, OR is a TypeWrapper
+           around a `typeClass` (implemented in TypeWrapper.instanceof()). */
+        return this instanceof typeClass
+    }
+
+    // child(key) { return this.options.value_type }     // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
+
+
+    /***  Serialization of Type objects  ***/
+
+    __getstate__() { return this._options }
 
     static __setstate__(state) {
         assert(T.isPOJO(state))
         return new this(state)
     }
 
-    get_initial() {
-        /* `options.initial` can be a value or a function; this method provides support for both cases. */
-        let {initial} = this.options //this.constructor.initial
-        return (typeof initial === 'function') ? initial() : initial
-    }
 
-    instanceof(typeClass) {
-        /* Check if this type is an instance of a particular `typeClass`, OR is a TypeWrapper
-           around a `typeClass` (implemented in TypeWrapper.instanceof()). */
-        return this instanceof typeClass
-    }
+    /***  Validation of values  ***/
 
     validate(value) {
         /* Validate an object/value to be encoded, clean it up and convert to a canonical form if needed.
@@ -147,6 +151,9 @@ export class Type {
          */
         return value
     }
+
+
+    /***  Inheritance & Imputation  ***/
 
     combine_inherited(arrays, obj, prop) {
         /* Combine arrays of inherited values that match this type, with the youngest value at the *first* position.
@@ -202,7 +209,7 @@ export class Type {
         // return Struct.clone(default_)
     }
 
-    /*** binary encoding for indexing ***/
+    /***  Binary encoding for indexing  ***/
 
     binary_encode(value, last = false) {
         /* Create a sort key and return as Uint8Array. If last=false and the binary representation has variable length,
@@ -224,7 +231,13 @@ export class Type {
     }
 
 
-    /***  User Interface  ***/
+    /***  UI  ***/
+
+    get_initial() {
+        /* `options.initial` can be a value or a function; this method provides support for both cases. */
+        let {initial} = this.options //this.constructor.initial
+        return (typeof initial === 'function') ? initial() : initial
+    }
 
     collect(assets) {
         /* Walk through all nested Type objects, widgets and components, collect their CSS styles and assets,
