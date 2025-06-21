@@ -409,7 +409,7 @@ export class DataBlock extends Block {
         let key = this.encode_id(id)
 
         await this.put(storage, key, data)
-        await this.propagate_change(key, prev, obj)
+        this.propagate_change(key, prev, obj)
 
         data = this._annotate(data)
         schemat.register_changes({id, data})
@@ -433,7 +433,7 @@ export class DataBlock extends Block {
         if (!deleted) return 0
 
         this._flush(storage)
-        await this.propagate_change(key, obj)
+        this.propagate_change(key, obj)
 
         schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
 
@@ -447,7 +447,7 @@ export class DataBlock extends Block {
         return super['$agent.erase'](state)
     }
 
-    async propagate_change(key, obj_old = null, obj_new = null) {
+    propagate_change(key, obj_old = null, obj_new = null) {
         /* Push a change from this data block to all derived streams in the ring. */
         assert(this.ring?.is_loaded())
         for (let seq of this.ring.sequences)            // of this.sequence.derived
