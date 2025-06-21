@@ -268,21 +268,6 @@ export class Type {
 
 /**********************************************************************************************************************
  **
- **  GENERIC data type
- **
- */
-
-export class GENERIC extends Type {
-    /* Accept all types of values like the base Type, but display them with a generic JSON widget. */
-    static Widget = widgets.GENERIC_Widget
-}
-
-// the most generic type for encoding/decoding of objects of any types
-export let generic_type = new GENERIC({repeated: true})
-
-
-/**********************************************************************************************************************
- **
  **  PRIMITIVE data types
  **
  */
@@ -429,7 +414,6 @@ export class ID extends INTEGER {
     }
 }
 
-
 /**********************************************************************************************************************
  **
  **  STRING and TEXT types
@@ -545,18 +529,38 @@ export class DATETIME extends STRING {
     /* Date+time. May contain a timezone specification. Serialized to a string. */
 }
 
+
+/**********************************************************************************************************************
+ **
+ **  GENERIC data type
+ **
+ */
+
+export class GENERIC extends Type {
+    /* Accept all types of values like the base Type, but display them with a generic JSON widget. */
+    static Widget = widgets.GENERIC_Widget
+    child(key) { return generic_type }
+}
+
+// the most generic type for encoding/decoding of objects of any types
+export let generic_type = new GENERIC({repeated: true})
+
+
 /**********************************************************************************************************************
  **
  **  OTHER atomic data types
  **
  */
 
-export class BINARY extends GENERIC {
+export class Atomic extends GENERIC {
+}
+
+export class BINARY extends Atomic {
     /* Type of Uint8Array objects. */
     static options = {class: Uint8Array}
 }
 
-export class TYPE extends GENERIC {
+export class TYPE extends Atomic {
     static options = {class: Type}
     static Widget = widgets.TYPE_Widget
 }

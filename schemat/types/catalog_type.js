@@ -1,7 +1,7 @@
 import {ValidationError} from "../common/errors.js";
 import {T, assert, trycatch, concat, mapEntries} from "../common/utils.js";
 import {Catalog, Path} from '../core/catalog.js'
-import {FIELD, GENERIC, STRING, Type, generic_string, generic_type, is_valid_field_name} from "./type.js";
+import {FIELD, STRING, Type, generic_string, generic_type, is_valid_field_name} from "./type.js";
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../web/react-utils.js";
 import {MaterialUI} from "../web/resources.js";
