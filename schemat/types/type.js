@@ -30,7 +30,9 @@ export class Type {
     is_repeated()    { return this.options.repeated }
     is_editable()    { return this.options.editable }
 
-    static options = {              // configuration options shared by all types...
+    // configuration options: some of them are used internally by the type itself, some others serve as annotations
+    // that are read and used by other parts of the code; additional options can be defined in Type subclasses
+    static options = {
         info     : undefined,       // human-readable description of this type: what values are accepted and how they are interpreted
         blank    : true,            // if true, `null` and `undefined` are treated as a valid value: both are stored and decoded as "null"
         class    : undefined,       // if present, all values (except blank) must be instances of this JS class
@@ -598,6 +600,8 @@ export class REF extends Type {
     static options = {
         category:  undefined,       // base category for all the items to be encoded
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
+        strong:    false,           // if true, the referenced object is considered a part of the current one ("strong ownership")
+                                    // and should be removed automatically when the parent or the link itself is removed
     }
     static Widget = widgets.REF_Widget
 
