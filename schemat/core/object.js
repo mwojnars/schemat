@@ -381,13 +381,6 @@ export class WebObject {
         return ((this.__meta.expire_at || 0) - Date.now()) / 1000
     }
 
-    // get __infant_references() {
-    //     /* Array of all newborn WebObjects referenced from this one. */
-    //     let refs = []
-    //     Struct.collect(this.__data, obj => {if (obj instanceof WebObject && obj.is_newborn()) refs.push(obj)})
-    //     return refs
-    // }
-
     // static compare(obj1, obj2) {
     //     /* Ordering function that can be passed to array.sort() to sort objects from DB by ascending ID. */
     //     return obj1.id - obj2.id
@@ -432,7 +425,7 @@ export class WebObject {
 
     /***  Object status  ***/
 
-    is_newborn()    { return !this.id }         // object is "newborn" ("virgin") when it hasn't been saved to DB, yet, and has no ID assigned
+    is_newborn()    { return !this.id }         // object is "newborn" ("infant") when it hasn't been saved to DB, yet, and has no ID assigned, but is intended for insertion
     is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
     is_deleted()    { return this.__status === WebObject.Status.DELETED }
     is_category()   { return false }
