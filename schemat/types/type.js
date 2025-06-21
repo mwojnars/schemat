@@ -92,7 +92,7 @@ export class Type {
     options                     // all config options of this type instance: own + defaults  (this._options + constructor.options)
 
 
-    /***  Construction  ***/
+    /***  Instantiation  ***/
 
     constructor(options = {}) {
         this._options = options || {}       // options=null/undefined is also valid
@@ -116,7 +116,7 @@ export class Type {
         /* In compound types, return the Type of values stored under `key`, or undefined if `key` is not allowed. */
 
 
-    /***  Serialization of Type objects  ***/
+    /***  Serialization of self  ***/
 
     __getstate__() { return this._options }
 

@@ -292,7 +292,7 @@ export class Struct {
            The twin functionality is mainly provided for traversing type hierarchy of nested values in a web object.
          */
         if (target == null) return
-        let step = fun(target, path, twin)
+        let step = fun(target, twin, path)
         if (step === false) return
 
         if (target instanceof Catalog || target instanceof Map)

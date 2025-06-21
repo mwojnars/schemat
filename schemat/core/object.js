@@ -11,7 +11,7 @@ import {print, assert, T, copy, escape_html, concat, unique, sleep, randint} fro
 import {NotLoaded, URLNotFound, ValidationError} from '../common/errors.js'
 
 import {Catalog, Struct} from './catalog.js'
-import {REF} from "../types/type.js"
+import {generic_type, REF} from "../types/type.js"
 import {SCHEMA_GENERIC} from "../types/catalog_type.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
@@ -546,6 +546,9 @@ export class WebObject {
         return obj.load(load_opts)
     }
 
+
+    /***  Basic utilities  ***/
+
     toString() { return this.__label }
 
     _print(...args) {
@@ -567,6 +570,17 @@ export class WebObject {
         let title  = SERVER ? `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${label}, context=${schemat.db}:` : label
         console.log(title, ...args)
         console.log(lines.join('\n'))
+    }
+
+    collect_typed(test = () => true, strict = true) {
+        /* Return an array of triples, [path, item, type], of items within __data tree that satisfy test(item, type). */
+        let items = []
+        let collect = (item, type, path) => {
+            if (strict && (!type || type === generic_type)) return false    // skip branches without a proper Type
+            if (test(item, type)) items.push([path, item, type])
+        }
+        Struct.collect(this.__data, collect, this.__schema)
+        return items
     }
 
 
