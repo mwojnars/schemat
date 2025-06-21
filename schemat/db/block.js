@@ -450,8 +450,19 @@ export class DataBlock extends Block {
     propagate_change(key, obj_old = null, obj_new = null) {
         /* Push a change from this data block to all derived streams in the ring. */
         assert(this.ring?.is_loaded())
+        this._cascade_delete(obj_old, obj_new)
         for (let seq of this.ring.sequences)            // of this.sequence.derived
             seq.apply_change(key, obj_old, obj_new)     // no need to await, the result is not used by the caller
+    }
+
+    _cascade_delete(prev, next = null) {
+        /* Compare `prev` and `next` objects to see if any *strong* references got removed. Delete the referenced objects, if so. */
+        if (!prev) return
+
+        // // traverse prev.__data with prev.__schema as a twin; for every strong reference, emit pair [path, ref]
+        // let prev_refs = []
+        // let prev_test = (obj) => {if (obj instanceof WebObject) prev_refs.push(obj)}
+        // Struct.collect(prev.__data, prev_test)
     }
 }
 
