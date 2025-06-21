@@ -282,7 +282,7 @@ export class Struct {
             target.splice(pos2, 0, ...target.splice(pos1, count))
     }
 
-    static collect(target, fun, path = [], twin = undefined) {
+    static collect(target, fun, twin = undefined, path = []) {
         /* Walk through nested nodes of the `target` collection and execute fun(node, path) at each node (in pre-order).
            If the result of fun() is strictly false (but not undefined!), children of `node` are skipped, and the processing moves to the
            next sibling; otherwise it steps into children. Typically, `fun` collects some information and saves it in an external structure.
@@ -297,11 +297,11 @@ export class Struct {
 
         if (target instanceof Catalog || target instanceof Map)
             for (let [key, obj] of target.entries())
-                Struct.collect(obj, fun, [...path, key], twin?.child?.(key))
+                Struct.collect(obj, fun, twin?.child?.(key), [...path, key])
         
         else if (target instanceof Array)
             for (let i = 0; i < target.length; i++)
-                Struct.collect(target[i], fun, [...path, i], twin?.child?.(i))
+                Struct.collect(target[i], fun, twin?.child?.(i), [...path, i])
 
         // walking into an object is only allowed for non-WebObjects, and uses the *state* of the object rather than the object itself
         // (this is compatible with JSONx encoding, except that unknown object classes are still walked into without raising errors)
@@ -309,7 +309,7 @@ export class Struct {
             let state = getstate(target)
             if (typeof state === 'object')
                 for (let key of Object.keys(state))
-                    Struct.collect(state[key], fun, [...path, key], twin?.child?.(key))
+                    Struct.collect(state[key], fun, twin?.child?.(key), [...path, key])
         }
     }
 
