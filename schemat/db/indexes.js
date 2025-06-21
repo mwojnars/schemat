@@ -1,7 +1,7 @@
 import {is_plural, truncate_plural} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
-import {Catalog} from "../core/catalog.js";
 import {BinaryMap} from "../common/binary.js"
+import {Catalog} from "../common/catalog.js";
 import {Record} from "./records.js";
 import {Operator} from "./sequence.js";
 

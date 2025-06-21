@@ -1,6 +1,6 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {JSONx} from "../common/jsonx.js";
-import {Catalog} from "../core/catalog.js";
+import {Catalog} from "../common/catalog.js";
 import {WebObject} from "../core/object.js";
 import {Agent} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";

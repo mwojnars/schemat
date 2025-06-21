@@ -1,6 +1,6 @@
 import {ValidationError} from "../common/errors.js";
 import {T, assert, trycatch, concat, mapEntries} from "../common/utils.js";
-import {Catalog} from '../core/catalog.js'
+import {Catalog} from '../common/catalog.js'
 import {FIELD, STRING, Type, generic_string, generic_type, is_valid_field_name} from "./type.js";
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../web/react-utils.js";

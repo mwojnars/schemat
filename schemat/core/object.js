@@ -9,16 +9,14 @@
 import {ROOT_ID, PLURAL, SUBFIELD} from '../common/globals.js'
 import {print, assert, T, copy, escape_html, concat, unique, sleep, randint} from '../common/utils.js'
 import {NotLoaded, URLNotFound, ValidationError} from '../common/errors.js'
-
-import {Catalog, Struct} from './catalog.js'
+import {Catalog, Struct} from '../common/catalog.js'
 import {generic_type, REF} from "../types/type.js"
 import {SCHEMA_GENERIC} from "../types/catalog_type.js"
 import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {WebRequest} from "../web/request.js"
 import {ReactPage, InspectView} from "../web/pages.js"
-import {JsonPOST, Service} from "../web/services.js";
-import {mWebObjects} from "../web/messages.js";
+import {Service} from "../web/services.js";
 
 let RootCategory
 

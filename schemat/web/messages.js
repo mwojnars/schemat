@@ -1,7 +1,7 @@
 import {assert, print, T} from "../common/utils.js";
 import {RequestFailed} from "../common/errors.js";
 import {JSONx} from "../common/jsonx.js";
-import {Catalog} from "../core/catalog.js";
+import {Catalog} from "../common/catalog.js";
 
 
 function _valid_code(code) {

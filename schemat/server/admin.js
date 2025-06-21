@@ -2,9 +2,6 @@ import fs from 'node:fs'
 import yaml from 'yaml'
 
 import {assert, print, sleep} from "../common/utils.js";
-import {ObjectNotFound} from "../common/errors.js";
-import {WebObject} from "../core/object.js";
-import {Struct} from "../core/catalog.js";
 import {boot_schemat} from "./kernel.js";
 
 

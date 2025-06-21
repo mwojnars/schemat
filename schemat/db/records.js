@@ -6,7 +6,7 @@ import {PLURAL} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {BinaryInput, BinaryOutput, compare_uint8, fnv1aHash} from "../common/binary.js";
-import {Catalog} from "../core/catalog.js";
+import {Catalog} from "../common/catalog.js";
 import {INTEGER} from "../types/type.js";
 
 

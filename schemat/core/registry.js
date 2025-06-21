@@ -1,6 +1,6 @@
 import {T, assert, print} from "../common/utils.js";
-import {Catalog} from "./catalog.js";
 import {CustomMap} from "../common/structs.js";
+import {Catalog} from "../common/catalog.js";
 // import BTree from 'sorted-btree'
 
 /*

@@ -1,6 +1,6 @@
 import {T, assert, print, merge, fileBaseName, sum} from '../common/utils.js'
 import {DataAccessError, DatabaseError, ObjectNotFound} from "../common/errors.js"
-import {Struct} from "../core/catalog.js";
+import {Struct} from "../common/catalog.js";
 import {WebObject} from "../core/object.js"
 import {data_schema, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";

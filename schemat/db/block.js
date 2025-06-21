@@ -2,8 +2,7 @@ import {assert, print, T, zip, amap, sleep, utc, joinPath, arrayFromAsync, isPro
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard} from "../common/structs.js";
 import {WebObject} from '../core/object.js'
-import {Struct} from "../core/catalog.js";
-import {generic_type} from "../types/type.js";
+import {Struct} from "../common/catalog.js";
 import {MemoryStorage, JsonIndexStorage, YamlDataStorage} from "./storage.js";
 import {Agent} from "../server/agent.js";
 

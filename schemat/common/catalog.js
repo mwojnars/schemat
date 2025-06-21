@@ -1,5 +1,5 @@
-import {T, print, assert, splitFirst, getstate, setstate} from '../common/utils.js'
-import {JSONx} from "../common/jsonx.js"
+import {T, print, assert, splitFirst, getstate, setstate} from './utils.js'
+import {JSONx} from "./jsonx.js"
 
 
 /**********************************************************************************************************************

@@ -1,6 +1,6 @@
 import {print, assert, randint} from "../common/utils.js";
 import {Objects} from "../common/structs.js";
-import {Catalog} from "./catalog.js";
+import {Catalog} from "../common/catalog.js";
 import {WebObject} from "./object.js";
 
 const {DELETED} = WebObject.Status
