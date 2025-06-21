@@ -267,6 +267,7 @@ export class ServerTransaction extends Transaction {
         this._on_newborn_created = on_newborn_created
         this._inserted_objects = []
     }
+
     exit_insert_mode() {
         // // only now can we stage newborns created in __setup__() calls, but stage them as mature objects, not newborns
         // // TODO: `discard` of the original save() call is not accessible here, so it's assumed discard=false
@@ -281,6 +282,15 @@ export class ServerTransaction extends Transaction {
 
         delete this._inserted_objects
         delete this._on_newborn_created
+    }
+
+    _stage_newborn(obj) {
+        /* Do not stage the object if in "insert mode". */
+        if (this._on_newborn_created) {
+            this._on_newborn_created(obj)
+            return obj
+        }
+        return super._stage_newborn(obj)
     }
 
     async flush(opts = {}) {
