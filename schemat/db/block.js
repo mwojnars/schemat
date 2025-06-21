@@ -457,11 +457,34 @@ export class DataBlock extends Block {
     }
 
     _cascade_delete(prev, next = null) {
-        /* Compare `prev` and `next` objects to see if any *strong* references got removed. Delete the referenced objects, if so. */
+        /* Compare `prev` and `next` objects to see if any *strong* references got removed, and if so, delete the referenced objects.
+           This method takes into account that the schema may have changed, and a previously strong REF might become weak,
+           which should NOT trigger object removal if the reference itself stays the same! However, for safety,
+           schema changes should NOT be combined with data changes in the same mutation of the object.
+         */
         if (!prev) return
+        // TODO: check if prev.__category.__child_schema has any strong REFs at all (via a cached getter), otherwise there's no point in traversing __data
 
-        // traverse prev.__data and collect all strong references as [path, ref, type] triples
+        // traverse prev.__data and collect strong references as [path, ref, type] triples
         let prev_refs = prev.collect_typed((ref, type) => ref instanceof WebObject && ref.id && type.is_strong?.())
+        if (!prev_refs.length) return
+
+        // traverse next.__data and collect all references (not only strong ones)
+        let next_refs = next?.collect_typed((ref) => ref instanceof WebObject && ref.id) || []
+
+        if (next_refs.length) {
+            let _encode = ([path, ref]) => JSON.stringify([ref.id, ...path])
+            let paths   = new Set(next_refs.map(_encode))
+            let strongs = new Set(next_refs.filter(([path, ref, type]) => type.is_strong?.()).map(([_, ref]) => ref.id))
+    
+            // find strong refs in `prev` that are no longer present in `next`, or are weak and located on a different path
+            for (let [path, ref] of prev_refs) {
+                if (strongs.has(ref.id)) continue               // `ref` still present in `next` as a strong reference
+                if (paths.has(_encode([path, ref]))) continue   // `ref` still present in `next` on the same path (not necessarily strong)
+                ref.delete_self()
+            }
+        }
+        else prev_refs.forEach(([_, ref]) => ref.delete_self())
     }
 }
 
