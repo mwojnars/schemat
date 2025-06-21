@@ -246,20 +246,7 @@ export class DataBlock extends Block {
         // replace provisional IDs with references to proper objects having ultimate IDs assigned
         DataBlock.rectify_refs(objects.map(obj => obj.__data), entries, objects)
 
-        // for (let obj of objects)
-        //     for (let ref of obj.__references)
-        //         if (ref.__index_id < 0) {
-        //             this._print(`provisional reference still present in ${obj}:`, ref.__content)
-        //             throw new Error(`provisional reference still present in ${obj}`)
-        //         }
-
-        // // call __setup__() in every object
-        // for (let obj of objects) {
-        //     let setup = obj.__setup__()  //{}, {ring: this.ring, block: this})
-        //     if (setup instanceof Promise) await setup
-        // }
-
-        // tx must switch to a special "insert mode" while __setup__() methods are called
+        // tx must switch to a special "insert mode" while __setup__() methods are being called
         let on_newborn_created = (obj) => {
             obj.id = this._assign_id(state, opts)
             objects.push(obj)
@@ -267,7 +254,7 @@ export class DataBlock extends Block {
         schemat.tx.enter_insert_mode(on_newborn_created)
 
         // go through all the objects and call __setup__(), which may create new related objects (!)
-        // that are added to the `objects` queue by on_newborn_created() called via TX
+        // that are added to the `objects` queue by on_newborn_created() that's called via TX
 
         for (let pos = 0; pos < objects.length; pos++) {
             let obj = objects[pos]
