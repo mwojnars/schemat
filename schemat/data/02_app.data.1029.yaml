@@ -111,6 +111,9 @@
       "@": schemat/types/type.js:STRING
     ref:
       "@": schemat/types/type.js:REF
+    strong_ref:
+      strong: true
+      "@": schemat/types/type.js:REF
     "@": schemat:Catalog
   __category:
     "@": 1
