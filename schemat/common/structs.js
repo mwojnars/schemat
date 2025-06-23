@@ -30,16 +30,13 @@ export class Mutexes {
     
     _map = new Map()
 
-    _get(key) {
-        let mutex = this._map.get(key)
-        if (!mutex) this._map.set(key, mutex = new Mutex())
-        return mutex
-    }
-
     async acquire(key) {
         /* Return an unlock() function. */
-        let mutex = this._get(key)
+        assert(key != null)
+        let mutex = this._map.get(key)
+        if (!mutex) this._map.set(key, mutex = new Mutex())
         await mutex.acquire() 
+
         return () => {
             mutex.release()
             if (!mutex.locked) {
