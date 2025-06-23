@@ -7,6 +7,31 @@ import {assert, commonPrefix, commonSuffix, lcm} from "./utils.js";
 
 /**********************************************************************************************************************/
 
+export class Mutex {
+    /* A simple mutex implementation. */
+    
+    _locked = false
+    _queue = []
+
+    async acquire() {
+        return new Promise((resolve) => {
+            if (this._locked) this._queue.push(resolve)
+            else {
+                this._locked = true
+                resolve()
+            }
+        })
+    }
+
+    release() {
+        if (!this._locked) throw new Error('mutex is not acquired')
+        if (this._queue.length) this._queue.shift()()   // resolve the next waiting promise
+        else this._locked = false
+    }
+}
+
+/**********************************************************************************************************************/
+
 export class CustomMap extends Map {
     /* A Map that holds custom objects as keys. The keys are converted to a primitive type and then inserted to the map.
        The conversion is done by a subclass-specific `convert()` method (mandatory).
