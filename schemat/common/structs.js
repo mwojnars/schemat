@@ -25,6 +25,13 @@ export class Mutex {
         else this.locked = false
         return true
     }
+
+    async run_exclusive(fn) {
+        /* Acquire the mutex and run the function. */
+        await this.acquire()
+        try { return await fn() }
+        finally { this.release() }
+    }
 }
 
 export class Mutexes {
@@ -49,6 +56,13 @@ export class Mutexes {
             }
             return mutex.release()      // can use expressions of the form:  release() && do-something-next()
         }
+    }
+
+    async run_exclusive(key, fn) {
+        /* Acquire the mutex and run the function. */
+        let release = await this.acquire(key)
+        try { return await fn(release) }    // release() is idempotent, can be called multiple times
+        finally { release() }
     }
 } 
 
