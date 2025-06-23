@@ -366,38 +366,40 @@ export class DataBlock extends Block {
            in this block (if the ring permits), or forward the write request back to a higher ring.
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
-        let unlock = await locks.acquire(id)        // row-level lock for updates/deletes
-        let key = this.encode_id(id)
-        let data = await storage.get(key)
-        if (data === undefined) return unlock() && this._move_down(id, req).update(id, edits, req)
+        return locks.run_exclusive(id, async (unlock) => 
+        {
+            let key = this.encode_id(id)
+            let data = await storage.get(key)
+            if (data === undefined) return unlock() && this._move_down(id, req).update(id, edits, req)
 
-        let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
-        let obj  = prev._clone()                    // dependencies (category, container, prototypes) are loaded, but references are NOT (!)
-        // let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev._clone() to avoid repeated async initialization
+            let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
+            let obj  = prev._clone()                    // dependencies (category, container, prototypes) are loaded, but references are NOT (!)
+            // let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev._clone() to avoid repeated async initialization
 
-        obj._apply_edits(...edits)                  // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
-        await obj._initialize(false)                // reinitialize the dependencies (category, class, ...) WITHOUT sealing! they may have been altered by the edits
+            obj._apply_edits(...edits)                  // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
+            await obj._initialize(false)                // reinitialize the dependencies (category, class, ...) WITHOUT sealing! they may have been altered by the edits
 
-        obj.validate()                              // validate object properties: each one individually and all of them together; may raise exceptions
-        obj._bump_version()                         // increment __ver
-        obj._seal_dependencies()                    // recompute __seal
+            obj.validate()                              // validate object properties: each one individually and all of them together; may raise exceptions
+            obj._bump_version()                         // increment __ver
+            obj._seal_dependencies()                    // recompute __seal
 
-        if (obj.__base?.save_revisions)
-            await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
+            if (obj.__base?.save_revisions)
+                await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
-        if (this.ring.readonly)                     // can't write the update here in this ring? forward to the first higher ring that's writable
-            return unlock() && this._move_up(req).upsave(id, obj.__json, req)
+            if (this.ring.readonly)                     // can't write the update here in this ring? forward to the first higher ring that's writable
+                return unlock() && this._move_up(req).upsave(id, obj.__json, req)
 
-            // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
-            // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
-            // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
+                // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise no matter how this is implemented;
+                // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
+                // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-        await this._save(storage, obj, prev)        // save changes and perform change propagation
-        unlock()
+            await this._save(storage, obj, prev)        // save changes and perform change propagation
+        })
     }
 
-    async '$agent.upsave'({storage}, id, data, req) {
+    async '$agent.upsave'({storage, locks}, id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
+        let unlock = await locks.acquire(id)        // row-level lock for updates/deletes
         let key = this.encode_id(id)
         if (await storage.get(key))
             throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
