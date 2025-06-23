@@ -8,19 +8,14 @@ import {assert, commonPrefix, commonSuffix, lcm} from "./utils.js";
 /**********************************************************************************************************************/
 
 export class Mutex {
-    /* A simple mutex implementation. */
-    
+        /* A simple mutex implementation. */
+
     _locked = false
     _queue = []
 
-    async acquire() {
-        return new Promise((resolve) => {
-            if (this._locked) this._queue.push(resolve)
-            else {
-                this._locked = true
-                resolve()
-            }
-        })
+    acquire() {
+        if (!this._locked) this._locked = true
+        else return new Promise((resolve) => this._queue.push(resolve))
     }
 
     release() {
