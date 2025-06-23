@@ -13,17 +13,10 @@ export class Mutex {
     locked = false
     queue = []
 
-    async acquire() {
-        /* Acquire the mutex and return a release() function. */
+    acquire() {
+        /* Acquire the mutex. */
         if (!this.locked) this.locked = true
-        else await new Promise((resolve) => this.queue.push(resolve))
-
-        let released = false
-        return () => {
-            if (released) return true   // release the mutex only once, even if release() is called multiple times
-            released = true
-            return this.release()
-        }
+        else return new Promise((resolve) => this.queue.push(resolve))
     }
 
     release() {
