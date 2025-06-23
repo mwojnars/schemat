@@ -36,13 +36,17 @@ export class Mutexes {
         let mutex = this._map.get(key)
         if (!mutex) this._map.set(key, mutex = new Mutex())
         await mutex.acquire() 
+        let unlocked = false
 
         return () => {
+            if (unlocked) return true   // release the mutex only once, even if unlock() is called multiple times
             mutex.release()
+            unlocked = true
             if (!mutex.locked) {
                 assert(this._map.get(key) === mutex)
                 this._map.delete(key)
             }
+            return true     // enable expressions of the form:  unlock() && do-something-next()
         }
     }
 } 
