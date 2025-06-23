@@ -8,20 +8,29 @@ import {assert, commonPrefix, commonSuffix, lcm} from "./utils.js";
 /**********************************************************************************************************************/
 
 export class Mutex {
-        /* A simple mutex implementation. */
+    /* A simple mutex implementation. */
 
     locked = false
     queue = []
 
-    acquire() {
+    async acquire() {
+        /* Acquire the mutex and return a release() function. */
         if (!this.locked) this.locked = true
-        else return new Promise((resolve) => this.queue.push(resolve))
+        else await new Promise((resolve) => this.queue.push(resolve))
+
+        let released = false
+        return () => {
+            if (released) return true   // release the mutex only once, even if release() is called multiple times
+            released = true
+            return this.release()
+        }
     }
 
     release() {
         if (!this.locked) throw new Error('mutex is not acquired')
         if (this.queue.length) this.queue.shift()()     // resolve the next waiting promise
         else this.locked = false
+        return true
     }
 }
 
@@ -31,22 +40,21 @@ export class Mutexes {
     _map = new Map()
 
     async acquire(key) {
-        /* Return an unlock() function. */
+        /* Acquire the mutex and return a release() function. */
         assert(key != null)
         let mutex = this._map.get(key)
         if (!mutex) this._map.set(key, mutex = new Mutex())
         await mutex.acquire() 
-        let unlocked = false
 
+        let released = false
         return () => {
-            if (unlocked) return true   // release the mutex only once, even if unlock() is called multiple times
-            mutex.release()
-            unlocked = true
+            if (released) return true   // release the mutex only once, even if release() is called multiple times
+            released = true
             if (!mutex.locked) {
                 assert(this._map.get(key) === mutex)
                 this._map.delete(key)
             }
-            return true     // enable expressions of the form:  unlock() && do-something-next()
+            return mutex.release()      // can use expressions of the form:  release() && do-something-next()
         }
     }
 } 
