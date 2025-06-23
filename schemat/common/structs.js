@@ -25,6 +25,31 @@ export class Mutex {
     }
 }
 
+export class Mutexes {
+    /* A map of Mutex locks, one for each key. */
+    
+    _map = new Map()
+
+    _get(key) {
+        let mutex = this._map.get(key)
+        if (!mutex) this._map.set(key, mutex = new Mutex())
+        return mutex
+    }
+
+    async acquire(key) {
+        /* Return an unlock() function. */
+        let mutex = this._get(key)
+        await mutex.acquire() 
+        return () => {
+            mutex.release()
+            if (!mutex.locked) {
+                assert(this._map.get(key) === mutex)
+                this._map.delete(key)
+            }
+        }
+    }
+} 
+
 /**********************************************************************************************************************/
 
 export class CustomMap extends Map {
