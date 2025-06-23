@@ -225,7 +225,7 @@ export class WebObject {
 
     static SEAL_SEP = '.'
 
-    // these properties cannot be set directly by user when inserting/updating a web object
+    // these properties cannot be present in __data when saving a web object to the database
     static PROPS_FORBIDDEN = ['id', '__meta', '__data', '__self', '__proxy', '__status', '__ring']
 
     /***
@@ -1210,7 +1210,7 @@ export class WebObject {
     delete_self() {
         /* Mark this object as to-be-deleted in its mutable copy (in transaction) and return this copy for easy chaining of a .save() call. */
         let obj = this.get_mutable()
-        obj.__status = WebObject.Status.DELETED
+        obj.__self.__status = WebObject.Status.DELETED
         return obj
     }
 
@@ -1298,7 +1298,7 @@ export class WebObject {
         if (this.__meta.obsolete) throw new Error(`this mutable instance of ${this} is obsolete (was replaced with a newer one) and should not be used`)
         if (this.__meta.mutable) return this
 
-        if (!this.is_loaded()) throw new Error('only a fully loaded object can be converted to a mutable instance')
+        // if (!this.is_loaded()) throw new Error('only a fully loaded object can be converted to a mutable instance')
         if (CLIENT) return this._make_mutable()
         return this._clone(opts)
     }

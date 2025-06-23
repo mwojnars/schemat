@@ -61,6 +61,7 @@ export class Type extends Struct {
                                     // this option only has effect for top-level properties of web objects
 
         alias    : undefined,       // name of a property that this one is an alias for; all reads and writes are redirected to the aliased property; only for top-level properties of web objects
+        // derived
 
         // virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
         //                             // when virtual=true, inheritance is skipped during property calculation like if inherited=false
