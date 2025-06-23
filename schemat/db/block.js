@@ -88,11 +88,11 @@ export class Block extends Agent {
     get file_path() { return `${schemat.node.file_path}/${this.file_name}` }
 
     async __start__() {
-        let __exclusive = false         // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
+        let __exclusive = false             // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
         let storage_class = this._detect_storage_class()
         let storage = new storage_class(this.file_path, this)
         await this._reopen(storage)
-        return {storage, __exclusive}
+        return {__exclusive, storage}
     }
 
     async _reopen(storage) {
@@ -360,19 +360,13 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async _lock({locks}, id = null) {
-        /* Acquire a write lock for a row (if `id` is given), or for the entire block. */
-        return locks.acquire(id)
-    }
-
-    async '$agent.update'(state, id, edits, req) {
+    async '$agent.update'({storage, locks}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
-        let {storage} = state
-        let unlock = await this._lock(state, id)    // row-level lock for updates/deletes
+        let unlock = await locks.acquire(id)        // row-level lock for updates/deletes
         let key = this.encode_id(id)
         let data = await storage.get(key)
         if (data === undefined) return unlock() && this._move_down(id, req).update(id, edits, req)
