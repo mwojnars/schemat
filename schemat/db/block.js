@@ -366,11 +366,11 @@ export class DataBlock extends Block {
            in this block (if the ring permits), or forward the write request back to a higher ring.
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
-        return locks.run_exclusive(id, async (unlock) => 
+        return locks.run_exclusive(id, async () =>
         {
             let key = this.encode_id(id)
             let data = await storage.get(key)
-            if (data === undefined) return unlock() && this._move_down(id, req).update(id, edits, req)
+            if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
             let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
             let obj  = prev._clone()                    // dependencies (category, container, prototypes) are loaded, but references are NOT (!)
@@ -387,7 +387,7 @@ export class DataBlock extends Block {
                 await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
             if (this.ring.readonly)                     // can't write the update here in this ring? forward to the first higher ring that's writable
-                return unlock() && this._move_up(req).upsave(id, obj.__json, req)
+                return this._move_up(req).upsave(id, obj.__json, req)
 
                 // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise no matter how this is implemented;
                 // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
@@ -399,13 +399,15 @@ export class DataBlock extends Block {
 
     async '$agent.upsave'({storage, locks}, id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
-        let unlock = await locks.acquire(id)        // row-level lock for updates/deletes
-        let key = this.encode_id(id)
-        if (await storage.get(key))
-            throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
+        return locks.run_exclusive(id, async () =>
+        {
+            let key = this.encode_id(id)
+            if (await storage.get(key))
+                throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
 
-        let obj = await WebObject.from_data(id, data, {activate: false})
-        return await this._save(storage, obj)
+            let obj = await WebObject.from_data(id, data, {activate: false})
+            await this._save(storage, obj)
+        })
     }
 
     async _save(storage, obj, prev = null) {
@@ -420,30 +422,33 @@ export class DataBlock extends Block {
         schemat.register_changes({id, data})
     }
 
-    async '$agent.delete'({storage}, id, req) {
+    async '$agent.delete'({storage, locks}, id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
-        let key = this.encode_id(id)
-        let data = await storage.get(key)
-        if (data === undefined) return this._move_down(id, req).delete(id, req)
+        return locks.run_exclusive(id, async () =>
+        {
+            let key = this.encode_id(id)
+            let data = await storage.get(key)
+            if (data === undefined) return this._move_down(id, req).delete(id, req)
 
-        if (this.ring.readonly)
-            // TODO: find the first writable ring upwards from this one and write a tombstone for `id` there
-            throw new DataAccessError("cannot remove the item, the ring is read-only", {id})
-            // return req.error_access("cannot remove the item, the ring is read-only")
+            if (this.ring.readonly)
+                // TODO: find the first writable ring upwards from this one and write a tombstone for `id` there
+                throw new DataAccessError("cannot remove the item, the ring is read-only", {id})
+                // return req.error_access("cannot remove the item, the ring is read-only")
 
-        let obj = await WebObject.from_data(id, data, {activate: false})
-        let deleted = storage.del(key)
-        if (!deleted) return 0
+            let obj = await WebObject.from_data(id, data, {activate: false})
+            let deleted = storage.del(key)
+            if (!deleted) return 0
+    
+            this._flush(storage)
+            this.propagate_change(key, obj)
 
-        this._flush(storage)
-        this.propagate_change(key, obj)
+            schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
 
-        schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
-
-        assert(Number(deleted) === 1)
-        return Number(deleted)
+            assert(Number(deleted) === 1)
+            return Number(deleted)
+        })
     }
 
     async '$agent.erase'(state) {
