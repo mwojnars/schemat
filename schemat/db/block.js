@@ -360,16 +360,22 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async '$agent.update'({locks, storage}, id, edits, req) {
+    async _lock({locks}, id = null) {
+        /* Acquire a write lock for a row (if `id` is given), or for the entire block. */
+        return locks.acquire(id)
+    }
+
+    async '$agent.update'(state, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
-        let unlock = await locks.acquire(id)        // row-level lock for updates/deletes
+        let {storage} = state
+        let unlock = await this._lock(state, id)    // row-level lock for updates/deletes
         let key = this.encode_id(id)
         let data = await storage.get(key)
-        if (data === undefined) return this._move_down(id, req).update(id, edits, req)
+        if (data === undefined) return unlock() && this._move_down(id, req).update(id, edits, req)
 
         let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
         let obj  = prev._clone()                    // dependencies (category, container, prototypes) are loaded, but references are NOT (!)
@@ -386,13 +392,14 @@ export class DataBlock extends Block {
             await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
 
         if (this.ring.readonly)                     // can't write the update here in this ring? forward to the first higher ring that's writable
-            return this._move_up(req).upsave(id, obj.__json, req)
+            return unlock() && this._move_up(req).upsave(id, obj.__json, req)
 
             // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise, no matter how this is implemented;
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-        return await this._save(storage, obj, prev, unlock)     // save changes and perform change propagation
+        await this._save(storage, obj, prev)        // save changes and perform change propagation
+        unlock()
     }
 
     async '$agent.upsave'({storage}, id, data, req) {
@@ -405,13 +412,12 @@ export class DataBlock extends Block {
         return await this._save(storage, obj)
     }
 
-    async _save(storage, obj, prev = null, unlock = null) {
+    async _save(storage, obj, prev = null) {
         let id = obj.id
         let data = obj.__json
         let key = this.encode_id(id)
 
         await this.put(storage, key, data)
-        unlock?.()
         this.propagate_change(key, prev, obj)
 
         data = this._annotate(data)
