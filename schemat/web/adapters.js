@@ -31,3 +31,34 @@ export function html_page(path, locals = {}, opts = {}) {
         throw new Error(`Unsupported file type: ${ext}`)
     }
 }
+
+/* SVELTE component compilation:
+
+    import { compile } from 'svelte/compiler'
+
+    let source = fs.readFileSync('MyComponent.svelte', 'utf-8')
+    let {js, css} = compile(source, {
+      filename: 'MyComponent.svelte',
+      generate: 'dom', // 'ssr' is also an option
+      format: 'esm'
+    })
+    console.log(js.code) // The JS code that will run in the browser
+ */
+/* SVELTE injection of a component on client [index.html]:
+
+    <html>
+      <body>
+        <div id="target"></div>
+
+        <script type="module">
+          import MyComponent from './MyComponent.svelte';
+          const target = document.getElementById('target');
+          const component = new MyComponent({
+            target,
+            props: { name: 'World' }
+          });
+        </script>
+      </body>
+    </html>
+
+ */
