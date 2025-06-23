@@ -10,18 +10,18 @@ import {assert, commonPrefix, commonSuffix, lcm} from "./utils.js";
 export class Mutex {
         /* A simple mutex implementation. */
 
-    _locked = false
-    _queue = []
+    locked = false
+    queue = []
 
     acquire() {
-        if (!this._locked) this._locked = true
-        else return new Promise((resolve) => this._queue.push(resolve))
+        if (!this.locked) this.locked = true
+        else return new Promise((resolve) => this.queue.push(resolve))
     }
 
     release() {
-        if (!this._locked) throw new Error('mutex is not acquired')
-        if (this._queue.length) this._queue.shift()()   // resolve the next waiting promise
-        else this._locked = false
+        if (!this.locked) throw new Error('mutex is not acquired')
+        if (this.queue.length) this.queue.shift()()     // resolve the next waiting promise
+        else this.locked = false
     }
 }
 
