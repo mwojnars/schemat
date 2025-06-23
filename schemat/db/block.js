@@ -1,6 +1,6 @@
 import {assert, print, T, zip, amap, sleep, utc, joinPath, arrayFromAsync, isPromise} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
-import {Shard, Mutex} from "../common/structs.js";  //'async-mutex'
+import {Shard, Mutex, Mutexes} from "../common/structs.js";  //'async-mutex'
 import {WebObject} from '../core/object.js'
 import {Struct} from "../common/catalog.js";
 import {MemoryStorage, JsonIndexStorage, YamlDataStorage} from "./storage.js";
@@ -174,7 +174,8 @@ export class DataBlock extends Block {
         let state = await super.__start__()
         let autoincrement = state.storage.get_max_id()  // current max ID of records in this block
         let reserved = new Set()                        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
-        return {...state, autoincrement, reserved}
+        let locks = new Mutexes()                       // row-level locks for updates & deletes
+        return {...state, autoincrement, reserved, locks}
     }
 
     encode_id(id)  { return this.sequence.encode_id(id) }
@@ -359,13 +360,13 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async '$agent.update'({storage}, id, edits, req) {
+    async '$agent.update'({locks, storage}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
-        // let unlock = await this.lock_row(id)     // row-level lock
+        let unlock = await locks.acquire(id)        // row-level lock for updates/deletes
         let key = this.encode_id(id)
         let data = await storage.get(key)
         if (data === undefined) return this._move_down(id, req).update(id, edits, req)
@@ -391,7 +392,7 @@ export class DataBlock extends Block {
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-        return await this._save(storage, obj, prev, /*unlock*/) // save changes and perform change propagation
+        return await this._save(storage, obj, prev, unlock)     // save changes and perform change propagation
     }
 
     async '$agent.upsave'({storage}, id, data, req) {
