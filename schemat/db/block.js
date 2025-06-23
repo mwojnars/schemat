@@ -1,6 +1,6 @@
 import {assert, print, T, zip, amap, sleep, utc, joinPath, arrayFromAsync, isPromise} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
-import {Shard} from "../common/structs.js";
+import {Shard, Mutex} from "../common/structs.js";  //'async-mutex'
 import {WebObject} from '../core/object.js'
 import {Struct} from "../common/catalog.js";
 import {MemoryStorage, JsonIndexStorage, YamlDataStorage} from "./storage.js";
@@ -365,6 +365,7 @@ export class DataBlock extends Block {
            in this block (if the ring permits), or forward the write request back to a higher ring.
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
+        // let unlock = await this.lock_row(id)     // row-level lock
         let key = this.encode_id(id)
         let data = await storage.get(key)
         if (data === undefined) return this._move_down(id, req).update(id, edits, req)
@@ -390,7 +391,7 @@ export class DataBlock extends Block {
             // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
             // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-        return await this._save(storage, obj, prev) // save changes and perform change propagation
+        return await this._save(storage, obj, prev, /*unlock*/) // save changes and perform change propagation
     }
 
     async '$agent.upsave'({storage}, id, data, req) {
@@ -403,12 +404,13 @@ export class DataBlock extends Block {
         return await this._save(storage, obj)
     }
 
-    async _save(storage, obj, prev = null) {
+    async _save(storage, obj, prev = null, unlock = null) {
         let id = obj.id
         let data = obj.__json
         let key = this.encode_id(id)
 
         await this.put(storage, key, data)
+        unlock?.()
         this.propagate_change(key, prev, obj)
 
         data = this._annotate(data)
