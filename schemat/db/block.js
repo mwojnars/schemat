@@ -174,8 +174,9 @@ export class DataBlock extends Block {
         let state = await super.__start__()
         let autoincrement = state.storage.get_max_id()  // current max ID of records in this block
         let reserved = new Set()                        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
-        let locks = new Mutexes()                       // row-level locks for updates & deletes
-        return {...state, autoincrement, reserved, locks}
+        let _locks = new Mutexes()                      // row-level locks for updates & deletes
+        let lock = (id, fn) => _locks.run_exclusive(id, fn)
+        return {...state, autoincrement, reserved, lock}
     }
 
     encode_id(id)  { return this.sequence.encode_id(id) }
@@ -360,13 +361,13 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async '$agent.update'({storage, locks}, id, edits, req) {
+    async '$agent.update'({storage, lock}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
-        return locks.run_exclusive(id, async () =>
+        return lock(id, async () =>
         {
             let key = this.encode_id(id)
             let data = await storage.get(key)
@@ -397,9 +398,9 @@ export class DataBlock extends Block {
         })
     }
 
-    async '$agent.upsave'({storage, locks}, id, data, req) {
+    async '$agent.upsave'({storage, lock}, id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
-        return locks.run_exclusive(id, async () =>
+        return lock(id, async () =>
         {
             let key = this.encode_id(id)
             if (await storage.get(key))
@@ -422,11 +423,11 @@ export class DataBlock extends Block {
         schemat.register_changes({id, data})
     }
 
-    async '$agent.delete'({storage, locks}, id, req) {
+    async '$agent.delete'({storage, lock}, id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
-        return locks.run_exclusive(id, async () =>
+        return lock(id, async () =>
         {
             let key = this.encode_id(id)
             let data = await storage.get(key)
@@ -440,7 +441,7 @@ export class DataBlock extends Block {
             let obj = await WebObject.from_data(id, data, {activate: false})
             let deleted = storage.del(key)
             if (!deleted) return 0
-    
+
             this._flush(storage)
             this.propagate_change(key, obj)
 
