@@ -168,6 +168,10 @@ class Intercept {
         cache.set(prop$, vals.some(v => v instanceof Promise) ? Promise.all(vals).then(vs => cache.set(prop$, vs)) : vals)
     }
 
+    static _is_special(prop) {
+        return typeof prop !== 'string' || prop === 'then' || WebObject.RESERVED.has(prop)
+    }
+
     static proxy_set(target, path, value, receiver)
     {
         // special attributes and symbols like [Symbol.toPrimitive] are written directly to __self
@@ -225,8 +229,8 @@ export class WebObject {
 
     static SEAL_SEP = '.'
 
-    // these properties cannot be present in __data when saving a web object to the database
-    static PROPS_FORBIDDEN = ['id', '__meta', '__data', '__self', '__proxy', '__status', '__ring']
+    // properties that are always taken from regular JS attributes of __self and must not be present in __data when saving a web object
+    static RESERVED = new Set(['id', '__meta', '__data', '__self', '__proxy', '__status', '__ring', '__refresh', '__provisional_id'])
 
     /***
     COMMON properties (stored in __data and persisted to DB):
@@ -939,7 +943,7 @@ export class WebObject {
         let data = this.__data
 
         // make sure that __data does NOT contain special props: id, __meta, __self, __proxy, __status, etc.
-        for (let prop of WebObject.PROPS_FORBIDDEN)
+        for (let prop of WebObject.RESERVED)
             if (data._keys.has(prop)) throw new ValidationError(`forbidden property found: '${prop}'`)
 
         // validate each individual property in __data ... __data._entries may get directly modified (!)
