@@ -168,6 +168,13 @@ export class Block extends Agent {
 
 /**********************************************************************************************************************/
 
+export class BinaryBlock extends Block {
+    /* A block of a derived sequence: index, aggregation. */
+}
+
+
+/**********************************************************************************************************************/
+
 export class DataBlock extends Block {
     /* A Block that stores objects and provides the "insert" operation. */
 
