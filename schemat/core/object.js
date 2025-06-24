@@ -938,8 +938,8 @@ export class WebObject {
         let data = this.__data
 
         // make sure that __data does NOT contain special props: id, __meta, __self, __proxy, __status, etc.
-        for (let prop of WebObject.RESERVED)
-            if (data._keys.has(prop)) throw new ValidationError(`forbidden property found: '${prop}'`)
+        for (let prop of data._keys.keys())
+            if (WebObject.RESERVED.has(prop)) throw new ValidationError(`reserved property name found: '${prop}'`)
 
         // validate each individual property in __data ... __data._entries may get directly modified (!)
 
