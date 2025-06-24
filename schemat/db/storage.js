@@ -158,7 +158,7 @@ export class YamlDataStorage extends MemoryStorage {
  */
 
 export class JsonIndexStorage extends MemoryStorage {
-    /* Index records stored in a .jl file (JSON Lines). The file can be unordered. For use during development only. */
+    /* Binary key-value records stored in a .jl file (JSON Lines) in decoded form. For use in development. */
 
     filename
 

@@ -18,6 +18,15 @@ export class Block extends Agent {
        A unit of data replication, distribution and concurrency. Records are arranged by key using byte order.
      */
 
+    // mapping of storage_type to storage classes
+    static storage_classes_data = {         // for the main data sequence
+        'yaml': YamlDataStorage,
+        // 'rocksdb': ...,
+    }
+    static storage_classes_binary = {       // for derived sequences: indexes, aggregations
+        'json': JsonIndexStorage,
+    }
+
     sequence        // parent sequence
     format          // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
     file_name       // name of the local file/directory of this block, without a path; initialized during block creation, takes the same value on every node
