@@ -90,10 +90,8 @@ class Intercept {
         }
 
         // return if the object is not loaded yet, or the property is special in any way
-        if (!target.__data
-            || typeof prop !== 'string'                 // `prop` can be a symbol like [Symbol.toPrimitive] - should skip
-            || Intercept.SPECIAL.has(prop)
-        ) return undefined
+        if (!target.__data || Intercept._is_special(prop))
+            return undefined
 
         let [base, plural] = Intercept._check_plural(prop)      // property name with $ suffix truncated
 
@@ -169,13 +167,15 @@ class Intercept {
     }
 
     static _is_special(prop) {
+        // `prop` can be a symbol like [Symbol.toPrimitive] instead of a string;
+        // 'then' is frequently
         return typeof prop !== 'string' || prop === 'then' || WebObject.RESERVED.has(prop)
     }
 
     static proxy_set(target, path, value, receiver)
     {
         // special attributes and symbols like [Symbol.toPrimitive] are written directly to __self
-        if (typeof path !== 'string' || Intercept.SPECIAL.has(path))
+        if (Intercept._is_special(path))
             return Reflect.set(target, path, value, receiver)
 
         // if (!target.__meta.mutable) target._print(`proxy_set(${path}) on/via immutable object ${target}`)
