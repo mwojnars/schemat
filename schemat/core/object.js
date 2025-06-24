@@ -43,11 +43,6 @@ class Intercept {
        Since a Proxy class can't be subclassed, all methods and properties of Intercept are static.
      */
 
-    // these special props are always read from regular POJO attributes and NEVER from object's __data;
-    // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
-    // defining a custom `then` prop is unsafe, hence we disallow it
-    static SPECIAL = new Set(['then', 'id', '__meta', '__data', '__self', '__ring', '__refresh', '__provisional_id'])
-
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again
     static UNDEFINED    = Symbol.for('Intercept.UNDEFINED')
@@ -167,9 +162,8 @@ class Intercept {
     }
 
     static _is_special(prop) {
-        // `prop` can be a symbol like [Symbol.toPrimitive] instead of a string;
-        // 'then' is frequently
-        return typeof prop !== 'string' || prop === 'then' || WebObject.RESERVED.has(prop)
+        // `prop` can be a symbol like [Symbol.toPrimitive] instead of a string
+        return typeof prop !== 'string' || WebObject.RESERVED.has(prop)
     }
 
     static proxy_set(target, path, value, receiver)
@@ -229,8 +223,9 @@ export class WebObject {
 
     static SEAL_SEP = '.'
 
-    // properties that are always taken from regular JS attributes of __self and must not be present in __data when saving a web object
-    static RESERVED = new Set(['id', '__meta', '__data', '__self', '__proxy', '__status', '__ring', '__refresh', '__provisional_id'])
+    // properties that are always taken from regular JS attributes of __self and must not be present in __data when saving a web object;
+    // `then` attr is special in JS because when a promise resolves, .then is checked for another chained promise, hence we disallow it as a field
+    static RESERVED = new Set(['then', 'id', '__meta', '__data', '__self', '__proxy', '__status', '__ring', '__refresh', '__provisional_id'])
 
     /***
     COMMON properties (stored in __data and persisted to DB):
