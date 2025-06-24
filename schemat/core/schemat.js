@@ -385,14 +385,14 @@ export class Schemat {
         }
         let json = this.registry.set_record(id, data)       // save `data` in the record registry
 
-        // if a fully loaded instance of this object exists in the cache, keep `json` in obj.__refresh for easy recreation of an updated instance
-        let obj = this.get_if_present(id)
-        if (obj?.__json_source) obj.__self.__refresh = {json, loaded_at: Date.now()}
-
-        // // remove the cached loaded instance of the object, if present, to allow its reload on the next .get_object().load()
+        // // if a fully loaded instance of this object exists in the cache, keep `json` in obj.__refresh for easy recreation of an updated instance
         // let obj = this.get_if_present(id)
-        // if (obj?.__data && (!json || json !== obj.__json_source))
-        //     this._on_evict(obj) || this.registry.delete_object(id)
+        // if (obj?.__json_source) obj.__self.__refresh = {json, loaded_at: Date.now()}
+
+        // remove the cached loaded instance of the object, if present, to allow its reload on the next .get_object().load()
+        let obj = this.get_if_present(id)
+        if (obj?.__data && (!json || json !== obj.__json_source))
+            this._on_evict(obj) || this.registry.delete_object(id)
 
         return record
     }
