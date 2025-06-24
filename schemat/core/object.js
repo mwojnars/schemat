@@ -95,7 +95,7 @@ class Intercept {
             || Intercept.SPECIAL.has(prop)
         ) return undefined
 
-        let [base, plural] = Intercept._check_plural(prop)      // property name without the $ suffix
+        let [base, plural] = Intercept._check_plural(prop)      // property name with $ suffix truncated
 
         // fetch ALL repeated values of `prop` from __data, ancestors, imputation, etc. (even if plural=false)...
         let values = target._compute_property(base)
