@@ -46,7 +46,7 @@ class Intercept {
     // these special props are always read from regular POJO attributes and NEVER from object's __data;
     // many calls ask for `then` because when a promise resolves, .then is checked for another chained promise;
     // defining a custom `then` prop is unsafe, hence we disallow it
-    static SPECIAL = new Set(['then', 'id', '__meta', '__data', '__self', '__ring', '__refresh'])
+    static SPECIAL = new Set(['then', 'id', '__meta', '__data', '__self', '__ring', '__refresh', '__provisional_id'])
 
     // UNDEFINED token marks that the value has already been fully computed, with inheritance and imputation,
     // and still remained undefined, so it should *not* be computed again

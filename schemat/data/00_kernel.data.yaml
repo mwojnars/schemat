@@ -156,12 +156,6 @@
           key, separately from regular properties which are stored in a record
           value.
         "@": schemat/types/type.js:ID
-      __provisional_id:
-        inherited: false
-        info: Temporary ID (1,2,3...) of a newly-created object not yet saved to DB;
-          only used to differentiate the object in a batch of interconnected
-          objects that are being inserted to DB altogether.
-        "@": schemat/types/type.js:INTEGER
       __cid:
         getter: true
         repeated: true
@@ -1059,7 +1053,7 @@
   name: BinaryBlock
   info: "Block of a derived sequence: an index or aggregation."
   class: schemat/db/block.js:BinaryBlock
-  __category:
-    "@": 1
   __prototype:
     "@": 18
+  __category:
+    "@": 1
