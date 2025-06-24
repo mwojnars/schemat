@@ -157,6 +157,7 @@
           value.
         "@": schemat/types/type.js:ID
       __provisional_id:
+        inherited: false
         info: Temporary ID (1,2,3...) of a newly-created object not yet saved to DB;
           only used to differentiate the object in a batch of interconnected
           objects that are being inserted to DB altogether.
@@ -1060,3 +1061,5 @@
   class: schemat/db/block.js:BinaryBlock
   __category:
     "@": 1
+  __prototype:
+    "@": 18
