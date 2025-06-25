@@ -17,7 +17,7 @@ export class Sequence extends WebObject {
        Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks. TODO
        A NoSQL counterpart of a table/index in a relational database.
 
-           Database > Ring > Sequence (data/index) > Block > Storage > Record
+           Database > Ring > Sequence (data/index) > Block > Store > Record
      */
 
     ring                // parent Ring of this sequence

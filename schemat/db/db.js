@@ -25,7 +25,7 @@ export class Ring extends WebObject {
 
     name                    // human-readable name of this ring for get_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
-    insert_mode             // if `compact`, new objects are inserted at the lowest possible ID in data blocks, possibly below autoincrement; requires MemoryStorage for data blocks
+    insert_mode             // if `compact`, new objects are inserted at the lowest possible ID in data blocks, possibly below autoincrement; requires MemoryStore for data blocks
 
     base_ring               // reference to the base Ring (lower ring) of this one
     base_ring_readonly      // if true, requests going down to `base_ring` are not allowed to save their updates there but must come back to an upper ring

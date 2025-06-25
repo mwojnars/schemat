@@ -3,7 +3,7 @@ import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/e
 import {Shard, Mutex, Mutexes} from "../common/structs.js";  //'async-mutex'
 import {WebObject} from '../core/object.js'
 import {Struct} from "../common/catalog.js";
-import {MemoryStorage, JsonIndexStorage, YamlDataStorage} from "./storage.js";
+import {MemoryStore, JsonIndexStore, YamlDataStore} from "./storage.js";
 import {Agent} from "../server/agent.js";
 
 
@@ -151,7 +151,7 @@ export class BinaryBlock extends Block {
     /* A block of a derived sequence: index, aggregation. */
 
     _detect_storage_class(format) {
-        if (format === 'json') return JsonIndexStorage
+        if (format === 'json') return JsonIndexStore
         return super._detect_storage_class(format)
     }
 }
@@ -180,7 +180,7 @@ export class DataBlock extends Block {
     }
 
     _detect_storage_class(format) {
-        if (format === 'yaml') return YamlDataStorage
+        if (format === 'yaml') return YamlDataStore
         return super._detect_storage_class(format)
     }
 
@@ -337,7 +337,7 @@ export class DataBlock extends Block {
 
     _assign_id_compact({store, autoincrement, reserved}) {
         /* Scan `store` to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
-           This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
+           This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStore.
          */
         // if all empty slots below autoincrement were already allocated, use the incremental algorithm
         // (this may still leave empty slots if a record was removed in the meantime, but such slot is reused after next reload of the block)
@@ -347,8 +347,8 @@ export class DataBlock extends Block {
             return id
         }
 
-        if (!(store instanceof MemoryStorage))
-            throw new Error('compact insert mode is only supported with MemoryStorage')
+        if (!(store instanceof MemoryStore))
+            throw new Error('compact insert mode is only supported with MemoryStore')
 
         let [A, B, C] = this.ring.id_insert_zones       // [min_id_exclusive, min_id_forbidden, min_id_sharded]
 
@@ -509,7 +509,7 @@ export class DataBlock extends Block {
 
 export class BootDataBlock extends DataBlock {
 
-    _store      // Storage for this block's records
+    _store      // Store for this block's records
 
     __new__(file_path) {
         let format = this._detect_format(file_path)

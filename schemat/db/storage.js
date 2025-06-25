@@ -21,7 +21,7 @@ function createFileIfNotExists(filename, fs) {
  **
  */
 
-export class Storage {
+export class Store {
 
     block
 
@@ -42,7 +42,7 @@ export class Storage {
     // get size()          { }                                 // number of records in this storage, or undefined if not implemented
 }
 
-export class MemoryStorage extends Storage {
+export class MemoryStore extends Store {
     /* All records stored in a Map in memory. Possibly synchronized with a file on disk (implemented in subclasses). */
 
     _records = new BinaryMap()       // preloaded records, {binary-key: json-data}; unordered, sorting is done during scan()
@@ -79,7 +79,7 @@ export class MemoryStorage extends Storage {
  **
  */
 
-export class YamlDataStorage extends MemoryStorage {
+export class YamlDataStore extends MemoryStore {
     /* Items stored in a YAML file. The file can be unordered. For use during development only. */
 
     filename
@@ -92,7 +92,7 @@ export class YamlDataStorage extends MemoryStorage {
     open() {
         /* Load records from this block's file. */
 
-        // print(`YamlDataStorage opening ${this.filename}...`)
+        // print(`YamlDataStore opening ${this.filename}...`)
         // assert(this.sequence = this.block.sequence)
         // assert(this.block.sequence.ring)
 
@@ -122,7 +122,7 @@ export class YamlDataStorage extends MemoryStorage {
             let data = '__data' in record ? record.__data : record
             this._records.set(key, JSON.stringify(data))
         }
-        // print(`YamlDataStorage loaded ${this._records.size} items from ${this.filename}...`)
+        // print(`YamlDataStore loaded ${this._records.size} items from ${this.filename}...`)
         return this.get_max_id()
     }
 
@@ -138,7 +138,7 @@ export class YamlDataStorage extends MemoryStorage {
 
     async flush() {
         /* Save the entire database (this.records) to a file. */
-        print(`YamlDataStorage flushing ${this._records.size} items to ${this.filename}...`)
+        print(`YamlDataStore flushing ${this._records.size} items to ${this.filename}...`)
         let recs = [...this.scan()].map(([key, data_json]) => {
             let id = data_schema.decode_key(key)[0]
             let data = JSON.parse(data_json)
@@ -157,7 +157,7 @@ export class YamlDataStorage extends MemoryStorage {
  **
  */
 
-export class JsonIndexStorage extends MemoryStorage {
+export class JsonIndexStore extends MemoryStore {
     /* Binary key-value records stored in a .jl file (JSON Lines) in decoded form. For use in development. */
 
     filename
