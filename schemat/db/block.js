@@ -29,18 +29,24 @@ export class Block extends Agent {
 
     sequence        // parent sequence
     format          // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
-    file_name       // name of the local file/directory of this block, without a path; initialized during block creation, takes the same value on every node
+    file_tag        // name of the local file/directory of this block, without a path nor extension; initialized during __setup__(), should not be modified later on
+    // file_name       // name of the local file/directory of this block, without a path; initialized during block creation, takes the same value on every node
 
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
     get ring()      { return this.sequence.ring }
+    get file_name() { return `${this.file_tag}.${this._file_extension()}` }
+
+    // absolute path to this block's local folder/file on the current node; the upper part of the path may vary between nodes
+    get file_path() { return `${schemat.node.file_path}/${this.file_name}` }
 
     async __setup__() {
         print('Block.__setup__() ...')
         if (!this.sequence.is_loaded()) await this.sequence.load()
         if (!this.ring.is_loaded()) await this.ring.load()
 
-        this.file_name ??= this._make_file_name()
+        this.file_tag ??= this._make_file_name()
+        // this.file_name ??= this._make_file_name()
 
         print('Block.__setup__() done, file_name', this.file_name)
     }
@@ -50,7 +56,7 @@ export class Block extends Agent {
             this.ring.file_tag,
             this.sequence.file_tag || this.sequence.operator?.file_tag || this.sequence.operator?.name,
             `${this.id}`,
-            this._file_extension()
+            // this._file_extension()
         ]
         return parts.filter(p => p).join('.')
     }
@@ -92,9 +98,6 @@ export class Block extends Agent {
 
     encode_key(key) { return this.sequence.encode_key(key) }
     decode_key(bin) { return this.sequence.decode_key(bin) }
-
-    // absolute path to this block's local folder/file on the current node; the upper part of the path may vary between nodes
-    get file_path() { return `${schemat.node.file_path}/${this.file_name}` }
 
     async __start__() {
         let __exclusive = false             // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!

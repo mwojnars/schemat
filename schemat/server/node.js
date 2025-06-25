@@ -159,8 +159,6 @@ export class Node extends Agent {
         return `${this.tcp_host}:${this._tcp_port}`
     }
 
-    // TODO: file_name =
-
     get file_path() {
         /* Absolute path to this node's local folder. */
         assert(schemat.cluster)

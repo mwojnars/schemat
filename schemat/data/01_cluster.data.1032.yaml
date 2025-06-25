@@ -58,7 +58,8 @@
 - id: 1010
   sequence:
     "@": 1017
-  file_name: 02_app.data.1010.yaml
+  file_tag: 02_app.data.1010
+  format: data-yaml
   __category:
     "@": 19
 - id: 1011
@@ -88,7 +89,7 @@
 - id: 1015
   sequence:
     "@": 1012
-  file_name: 00_kernel.data.yaml
+  file_tag: 00_kernel.data
   format: data-yaml
   __category:
     "@": 19
@@ -174,7 +175,7 @@
 - id: 1026
   sequence:
     "@": 1013
-  file_name: 00_kernel.idx-category.jl
+  file_tag: 00_kernel.idx-category
   format: index-jl
   __category:
     "@": 34
@@ -199,27 +200,28 @@
 - id: 1029
   sequence:
     "@": 1017
-  file_name: 02_app.data.1029.yaml
+  file_tag: 02_app.data.1029
+  format: data-yaml
   __category:
     "@": 19
 - id: 1030
   sequence:
     "@": 1018
-  file_name: 02_app.idx-category.1030.jl
+  file_tag: 02_app.idx-category.1030
   format: index-jl
   __category:
     "@": 34
 - id: 1032
   sequence:
     "@": 1027
-  file_name: 01_cluster.data.1032.yaml
+  file_tag: 01_cluster.data.1032
   format: data-yaml
   __category:
     "@": 19
 - id: 1033
   sequence:
     "@": 1028
-  file_name: 01_cluster.idx-category.1033.jl
+  file_tag: 01_cluster.idx-category.1033
   format: index-jl
   __category:
     "@": 34
