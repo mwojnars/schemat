@@ -115,15 +115,18 @@ export class Agent extends WebObject {
     }
 
     async '$agent.pause'(state) {
-        /* Pause the execution of this agent: execution of new requests is suspended, scheduled events should be
-           rescheduled for a later date, until __resume__() is called. Particularly useful for debugging.
+        /* Pause the execution of this agent: execution of incoming and pending requests is on hold until $agent.resume()
+           is called. This does NOT affect ongoing calls, which run normally till completion. Mainly for debugging.
          */
-        state.__frame.paused = true
+        let _resolve
+        let paused = state.__frame.paused = new Promise(resolve => {_resolve = resolve})
+        paused.resolve = _resolve
         await this.__pause__(state)
     }
 
     async '$agent.resume'(state) {
         await this.__resume__(state)
+        state.__frame.paused?.resolve?.()
         state.__frame.paused = false
     }
 }
