@@ -125,7 +125,7 @@ export class IndexSequence extends Sequence {
     __setup__() {
         print('IndexSequence.__setup__() creating a block')
         let Block = this.__std.Block
-        this.blocks = [Block.new({sequence: this, format: 'json'})]
+        this.blocks = [Block.new({sequence: this, storage: 'json'})]
         // this._print(`tx._staging:`, schemat.tx._staging)
     }
 
@@ -159,7 +159,7 @@ export class DataSequence extends Sequence {
 
     async __setup__() {
         let DataBlock = this.__std.DataBlock
-        this.blocks = [DataBlock.new({sequence: this, format: 'yaml'})]
+        this.blocks = [DataBlock.new({sequence: this, storage: 'yaml'})]
     }
 
     encode_id(id) {

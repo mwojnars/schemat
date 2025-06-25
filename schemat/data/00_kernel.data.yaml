@@ -699,7 +699,7 @@
     sequence:
       info: parent Sequence this block is a part of
       "@": schemat/types/type.js:REF
-    format:
+    storage:
       info: "storage type: yaml, json, rocksdb (in the future), ..."
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog

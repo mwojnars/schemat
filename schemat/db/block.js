@@ -25,16 +25,16 @@ export class Block extends Agent {
     }
 
     sequence        // parent sequence
-    format          // storage type, e.g. "yaml", "json", "rocksdb", ...
+    storage         // storage type, e.g. "yaml", "json", "rocksdb", ...
     file_tag        // name of the local file/directory of this block, without a path nor extension; initialized during __setup__(), should not be modified later on
 
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
     get ring()      { return this.sequence.ring }
     get file_name() {
-        let ext = Block.STORAGE_TYPES[this.format]
+        let ext = Block.STORAGE_TYPES[this.storage]
         if (ext) return `${this.file_tag}.${ext}`
-        throw new Error(`unknown storage type '${this.format}' in ${this}`)
+        throw new Error(`unknown storage type '${this.storage}' in ${this}`)
     }
 
     // absolute path to this block's local folder/file on the current node; the upper part of the path may vary between nodes
@@ -73,7 +73,7 @@ export class Block extends Agent {
 
     async __start__() {
         let __exclusive = false             // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
-        let storage_class = this._detect_storage_class(this.format)
+        let storage_class = this._detect_storage_class(this.storage)
         let store = new storage_class(this.file_path, this)
         await this._reopen(store)
         return {__exclusive, store}

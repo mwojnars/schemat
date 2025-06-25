@@ -51,7 +51,7 @@
   sequence:
     "@": 1041
   file_name: 03_test.data.1043.yaml
-  format: yaml
+  storage: yaml
   shard:
     =:
       - 0
@@ -72,7 +72,7 @@
   sequence:
     "@": 1044
   file_name: 03_test.idx-category.1045.jl
-  format: json
+  storage: json
   __category:
     "@": 18
 
