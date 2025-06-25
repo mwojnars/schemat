@@ -88,12 +88,10 @@ export class Block extends Agent {
         if (ext === 'jl')   return 'index-jl'
     }
 
-    _detect_storage_class() {
-        let format = this.format
-        if      (format === 'data-yaml') return YamlDataStorage
-        else if (format === 'index-jl')  return JsonIndexStorage
-        else
-            throw new Error(`unsupported storage type '${format}' in [${this.id}] for ${this.file_path}`)
+    _detect_storage_class(format) {
+        if (format === 'data-yaml') return YamlDataStorage
+        if (format === 'index-jl')  return JsonIndexStorage
+        throw new Error(`unsupported storage type '${format}' in [${this.id}] for ${this.file_path}`)
     }
 
     encode_key(key) { return this.sequence.encode_key(key) }
@@ -101,7 +99,7 @@ export class Block extends Agent {
 
     async __start__() {
         let __exclusive = false             // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
-        let storage_class = this._detect_storage_class()
+        let storage_class = this._detect_storage_class(this.format)
         let storage = new storage_class(this.file_path, this)
         await this._reopen(storage)
         return {__exclusive, storage}
@@ -173,6 +171,12 @@ export class Block extends Agent {
 
 export class BinaryBlock extends Block {
     /* A block of a derived sequence: index, aggregation. */
+
+    // _detect_storage_class(format) {
+    //     if (format === 'data-yaml') return YamlDataStorage
+    //     if (format === 'index-jl')  return JsonIndexStorage
+    //     throw new Error(`unsupported storage type '${format}' in [${this.id}] for ${this.file_path}`)
+    // }
 }
 
 
@@ -526,8 +530,8 @@ export class BootDataBlock extends DataBlock {
     _storage        // Storage for this block's records
 
     __new__(file_path) {
-        this.format = this._detect_format(file_path)
-        let storage_class = this._detect_storage_class()
+        let format = this._detect_format(file_path)
+        let storage_class = this._detect_storage_class(format)
         this._storage = new storage_class(file_path, this)
     }
 
