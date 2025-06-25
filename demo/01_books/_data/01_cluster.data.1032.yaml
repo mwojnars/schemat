@@ -59,7 +59,7 @@
   sequence:
     "@": 1017
   file_tag: 02_app.data.1010
-  format: data-yaml
+  format: yaml
   __category:
     "@": 19
 - id: 1011
@@ -90,7 +90,7 @@
   sequence:
     "@": 1012
   file_tag: 00_kernel.data
-  format: data-yaml
+  format: yaml
   __category:
     "@": 19
 - id: 1016
@@ -177,7 +177,7 @@
   sequence:
     "@": 1013
   file_tag: 00_kernel.idx-category
-  format: index-jl
+  format: json
   __category:
     "@": 34
 - id: 1027
@@ -202,28 +202,28 @@
   sequence:
     "@": 1017
   file_tag: 02_app.data.1029
-  format: data-yaml
+  format: yaml
   __category:
     "@": 19
 - id: 1030
   sequence:
     "@": 1018
   file_tag: 02_app.idx-category.1030
-  format: index-jl
+  format: json
   __category:
     "@": 34
 - id: 1032
   sequence:
     "@": 1027
   file_tag: 01_cluster.data.1032
-  format: data-yaml
+  format: yaml
   __category:
     "@": 19
 - id: 1033
   sequence:
     "@": 1028
   file_tag: 01_cluster.idx-category.1033
-  format: index-jl
+  format: json
   __category:
     "@": 34
 - id: 1036
