@@ -119,7 +119,7 @@ class Frame {
     exclusive           // if true in a given moment, any new call to this agent will wait until existing calls terminate; configured by lock() on per-call basis
 
     paused              // if true, the agent should not execute now but can be resumed without restarting by $agent.resume()
-    stopping            // if true, the agent should be stopping now and no more requests/calls are accepted
+    stopping            // if true, the agent is stopping now and no more requests/calls should be accepted
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
@@ -159,7 +159,6 @@ class Frame {
         /* Call agent's `method` in tracked mode, in a proper app context (caller's or own), passing the state as an extra argument. */
         let {agent, state} = this
 
-        if (this.stopping) throw new Error(`agent ${agent} is in the process of stopping`)
         while (this.paused && !method.endsWith('.resume')) await sleep(pause_delay)
 
         let func = agent.__self[method]
@@ -170,6 +169,7 @@ class Frame {
             // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
             await Promise.all(this.calls)
         }
+        if (this.stopping) throw new Error(`agent ${agent} is in the process of stopping`)
 
         let result = func.call(agent, state, ...args)
         if (!(result instanceof Promise)) return result
