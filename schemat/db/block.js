@@ -89,8 +89,6 @@ export class Block extends Agent {
     }
 
     _detect_storage_class(format) {
-        if (format === 'data-yaml') return YamlDataStorage
-        if (format === 'index-jl')  return JsonIndexStorage
         throw new Error(`unsupported storage type '${format}' in [${this.id}] for ${this.file_path}`)
     }
 
@@ -172,11 +170,10 @@ export class Block extends Agent {
 export class BinaryBlock extends Block {
     /* A block of a derived sequence: index, aggregation. */
 
-    // _detect_storage_class(format) {
-    //     if (format === 'data-yaml') return YamlDataStorage
-    //     if (format === 'index-jl')  return JsonIndexStorage
-    //     throw new Error(`unsupported storage type '${format}' in [${this.id}] for ${this.file_path}`)
-    // }
+    _detect_storage_class(format) {
+        if (format === 'index-jl' || format === 'json') return JsonIndexStorage
+        return super._detect_storage_class(format)
+    }
 }
 
 
@@ -200,6 +197,11 @@ export class DataBlock extends Block {
         let _locks = new Mutexes()                      // row-level locks for updates & deletes
         let lock = (id, fn) => _locks.run_exclusive(id, fn)
         return {...state, autoincrement, reserved, lock}
+    }
+
+    _detect_storage_class(format) {
+        if (format === 'data-yaml' || format === 'yaml') return YamlDataStorage
+        return super._detect_storage_class(format)
     }
 
     encode_id(id)  { return this.sequence.encode_id(id) }
