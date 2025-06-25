@@ -700,7 +700,7 @@
       info: parent Sequence this block is a part of
       "@": schemat/types/type.js:REF
     format:
-      info: "storage format: data-yaml, index-jl, rocksdb (in the future), ..."
+      info: "storage format: yaml, json, rocksdb (in the future), ..."
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   class: schemat/db/block.js:BinaryBlock

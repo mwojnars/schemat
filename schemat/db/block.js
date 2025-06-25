@@ -28,7 +28,7 @@ export class Block extends Agent {
     }
 
     sequence        // parent sequence
-    format          // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
+    format          // storage format, e.g. "yaml", "json", "rocksdb", ...
     file_tag        // name of the local file/directory of this block, without a path nor extension; initialized during __setup__(), should not be modified later on
 
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
@@ -49,6 +49,19 @@ export class Block extends Agent {
         print('Block.__setup__() done, file_name', this.file_name)
     }
 
+    async __load__() {
+        if (CLIENT) return              // don't initialize internals when on client
+
+        if (!this.sequence.is_loaded())
+            await this.sequence.load()
+            // {this.sequence.load(); await sleep()}
+            // if (schemat.booting) {this.sequence.load(); await sleep()} else await this.sequence.load()
+
+        // if (!this.sequence.is_loaded() && !this.sequence.__meta.loading)
+        //     this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block (!);
+        //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
+    }
+
     _make_file_name() {
         let parts = [
             this.ring.file_tag,
@@ -66,24 +79,11 @@ export class Block extends Agent {
         throw new Error(`unknown storage type '${format}' in [${this.id}]`)
     }
 
-    async __load__() {
-        if (CLIENT) return              // don't initialize internals when on client
-
-        if (!this.sequence.is_loaded())
-            await this.sequence.load()
-            // {this.sequence.load(); await sleep()}
-            // if (schemat.booting) {this.sequence.load(); await sleep()} else await this.sequence.load()
-
-        // if (!this.sequence.is_loaded() && !this.sequence.__meta.loading)
-        //     this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block (!);
-        //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
-    }
-
     _detect_format(path) {
         // infer the storage type from the file extension
         let ext = path.split('.').pop()
-        if (ext === 'yaml') return 'data-yaml'
-        if (ext === 'jl')   return 'index-jl'
+        if (ext === 'yaml') return 'yaml'
+        if (ext === 'json')   return 'jl'
     }
 
     _detect_storage_class(format) {
