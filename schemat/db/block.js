@@ -69,8 +69,8 @@ export class Block extends Agent {
 
     _file_extension() {
         let format = this.format
-        if (format === 'data-yaml' || format === 'yaml') return 'yaml'
-        if (format === 'index-jl' || format === 'json') return 'jl'
+        if (format === 'yaml') return 'yaml'
+        if (format === 'json') return 'jl'
         if (format === 'rocksdb') return 'rocksdb'
         throw new Error(`unknown storage type '${format}' in [${this.id}]`)
     }
@@ -165,7 +165,7 @@ export class BinaryBlock extends Block {
     /* A block of a derived sequence: index, aggregation. */
 
     _detect_storage_class(format) {
-        if (format === 'index-jl' || format === 'json') return JsonIndexStorage
+        if (format === 'json') return JsonIndexStorage
         return super._detect_storage_class(format)
     }
 }
@@ -194,7 +194,7 @@ export class DataBlock extends Block {
     }
 
     _detect_storage_class(format) {
-        if (format === 'data-yaml' || format === 'yaml') return YamlDataStorage
+        if (format === 'yaml') return YamlDataStorage
         return super._detect_storage_class(format)
     }
 
