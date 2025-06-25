@@ -23,16 +23,20 @@ export class AgentState {   // AgentData, AgentVariables, Registers
     // alternatively, custom fields are copy-pasted into a vanilla AgentState whenever
     // a plain custom object {...} is returned from __start__()
 
+    constructor() {
+        this.lock = this.lock.bind(this)        // lock() can be called directly after destructuring from {lock} = state
+    }
+
     async lock() {
         /* Set per-call exclusive mode and wait until all calls to this agent are completed.
            Can be used inside $agent.*() methods to prevent concurrent calls:
-                await state.lock()
+                let unlock = await state.lock()
                 ...
-                state.unlock()
+                unlock()
 
-           Note that lock() must NOT be preceded by any asynchronous instruction (await);
-           ideally, it should be the first instruction in the function body.
-           lock() must NOT be used in recursive RPC methods, as this will cause a deadlock.
+           Note that lock() must NOT be used in recursive RPC methods, nor be preceded by any
+           asynchronous instruction (await). Both these cases will likely cause a deadlock.
+           Ideally, lock() should be the first instruction in the function body.
          */
         await this.__frame.lock()
     }

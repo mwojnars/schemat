@@ -115,7 +115,7 @@ class Frame {
     agent               // web object that created this frame, replaced with a new reference on every refresh
     state               // AgentState object wrapped around or returned by agent.__start__()
 
-    calls = []          // promises for currently executing concurrent calls on this agent
+    calls = []          // promises for currently executing (concurrent) calls on this agent
     exclusive           // if true in a given moment, any new call to this agent will wait until existing calls terminate; configured by lock() on per-call basis
 
     paused              // if true, the agent should not execute now but can be resumed without restarting by $agent.resume()
