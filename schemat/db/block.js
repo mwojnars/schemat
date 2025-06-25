@@ -52,7 +52,7 @@ export class Block extends Agent {
         ]
         this.file_tag ??= parts.filter(p => p).join('.')
 
-        print('Block.__setup__() done, file_name', this.file_name)
+        this._print('__setup__() done:', this.file_path)
     }
 
     async __load__() {
@@ -80,7 +80,7 @@ export class Block extends Agent {
     }
 
     _detect_storage_class(format) {
-        throw new Error(`unsupported store type '${format}' in [${this.id}] for ${this.file_path}`)
+        throw new Error(`unsupported store type '${format}' in ${this}`)
     }
 
     async '$agent.put'({store}, key, value) { return this.put(store, key, value) }
@@ -502,10 +502,10 @@ export class BootDataBlock extends DataBlock {
 
     _store      // Store for this block's records
 
-    __new__(file_path) {
-        let format = this._detect_format(file_path)
+    __new__(path) {
+        let format = this._detect_format(path)
         let storage_class = this._detect_storage_class(format)
-        this._store = new storage_class(file_path, this)
+        this._store = new storage_class(path, this)
     }
 
     _detect_format(path) {
