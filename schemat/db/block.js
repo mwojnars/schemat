@@ -18,6 +18,12 @@ export class Block extends Agent {
        A unit of data replication, distribution and concurrency. Records are arranged by key using byte order.
      */
 
+    static STORAGE_TYPES = {        // storage types and their file/folder extensions
+        'yaml':     'yaml',
+        'json':     'jl',
+        'rocksdb':  'rocksdb',
+    }
+
     // mapping of storage_type to storage classes
     static storage_classes_data = {         // for the main data sequence
         'yaml': YamlDataStorage,
@@ -34,7 +40,11 @@ export class Block extends Agent {
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
     get ring()      { return this.sequence.ring }
-    get file_name() { return `${this.file_tag}.${this._file_extension()}` }
+    get file_name() {
+        let ext = Block.STORAGE_TYPES[this.format]
+        if (ext) return `${this.file_tag}.${ext}`
+        throw new Error(`unknown storage type '${this.format}' in ${this}`)
+    }
 
     // absolute path to this block's local folder/file on the current node; the upper part of the path may vary between nodes
     get file_path() { return `${schemat.node.file_path}/${this.file_name}` }
@@ -65,14 +75,6 @@ export class Block extends Agent {
         // if (!this.sequence.is_loaded() && !this.sequence.__meta.loading)
         //     this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block (!);
         //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
-    }
-
-    _file_extension() {
-        let format = this.format
-        if (format === 'yaml') return 'yaml'
-        if (format === 'json') return 'jl'
-        if (format === 'rocksdb') return 'rocksdb'
-        throw new Error(`unknown storage type '${format}' in [${this.id}]`)
     }
 
     _detect_format(path) {
