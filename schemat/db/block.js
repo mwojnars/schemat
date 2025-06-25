@@ -83,15 +83,6 @@ export class Block extends Agent {
         throw new Error(`unsupported store type '${format}' in [${this.id}] for ${this.file_path}`)
     }
 
-    // async _reopen(store) {
-    //     /* Temporary solution for reloading block data to pull changes written by another worker. */
-    //     // if (!this.sequence.is_loaded()) await this.sequence.__meta.loading
-    //     if (!store.dirty) return store.open()
-    //     let ref = schemat.registry.get_object(this.id)
-    //     if (!ref || this === ref)
-    //         return sleep(1.0).then(() => this._reopen(store))
-    // }
-
     async '$agent.put'({store}, key, value) { return this.put(store, key, value) }
 
     async put(store, key, value) {
@@ -527,7 +518,6 @@ export class BootDataBlock extends DataBlock {
     async __load__() {
         await super.__load__()
         await this._store.open()
-        // await this._reopen(this._store)
     }
 
     async select(id, req) { return this.$_wrap.select({store: this._store}, id, req) }
