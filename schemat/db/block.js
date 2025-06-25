@@ -44,7 +44,12 @@ export class Block extends Agent {
         if (!this.sequence.is_loaded()) await this.sequence.load()
         if (!this.ring.is_loaded()) await this.ring.load()
 
-        this.file_tag ??= this._make_file_name()
+        let parts = [
+            this.ring.file_tag,
+            this.sequence.file_tag || this.sequence.operator?.file_tag || this.sequence.operator?.name,
+            `${this.id}`,
+        ]
+        this.file_tag ??= parts.filter(p => p).join('.')
 
         print('Block.__setup__() done, file_name', this.file_name)
     }
@@ -60,15 +65,6 @@ export class Block extends Agent {
         // if (!this.sequence.is_loaded() && !this.sequence.__meta.loading)
         //     this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block (!);
         //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
-    }
-
-    _make_file_name() {
-        let parts = [
-            this.ring.file_tag,
-            this.sequence.file_tag || this.sequence.operator?.file_tag || this.sequence.operator?.name,
-            `${this.id}`,
-        ]
-        return parts.filter(p => p).join('.')
     }
 
     _file_extension() {
