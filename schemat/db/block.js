@@ -74,56 +74,56 @@ export class Block extends Agent {
     async __start__() {
         let __exclusive = false             // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
         let storage_class = this._detect_storage_class(this.format)
-        let storage = new storage_class(this.file_path, this)
-        await this._reopen(storage)
-        return {__exclusive, storage}
+        let store = new storage_class(this.file_path, this)
+        await this._reopen(store)
+        return {__exclusive, store}
     }
 
     _detect_storage_class(format) {
-        throw new Error(`unsupported storage type '${format}' in [${this.id}] for ${this.file_path}`)
+        throw new Error(`unsupported store type '${format}' in [${this.id}] for ${this.file_path}`)
     }
 
-    async _reopen(storage) {
+    async _reopen(store) {
         /* Temporary solution for reloading block data to pull changes written by another worker. */
         // if (!this.sequence.is_loaded()) await this.sequence.__meta.loading
-        if (!storage.dirty) return storage.open()
+        if (!store.dirty) return store.open()
         let ref = schemat.registry.get_object(this.id)
         if (!ref || this === ref)
-            return sleep(1.0).then(() => this._reopen(storage))
+            return sleep(1.0).then(() => this._reopen(store))
     }
 
-    async '$agent.put'({storage}, key, value) { return this.put(storage, key, value) }
+    async '$agent.put'({store}, key, value) { return this.put(store, key, value) }
 
-    async put(storage, key, value) {
+    async put(store, key, value) {
         /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
            No forward of the request to another ring.
          */
-        await storage.put(key, value)
-        this._flush(storage)
+        await store.put(key, value)
+        this._flush(store)
     }
 
-    async '$agent.del'({storage}, key, value) {
-        if (value === undefined) value = await storage.get(key)
+    async '$agent.del'({store}, key, value) {
+        if (value === undefined) value = await store.get(key)
         if (value === undefined) return false           // TODO: notify about data inconsistency (there should be no missing records)
 
-        let deleted = storage.del(key)
-        this._flush(storage)
+        let deleted = store.del(key)
+        this._flush(store)
         return deleted
     }
 
-    async '$agent.scan'({storage}, opts = {}) {
-        return arrayFromAsync(storage.scan(opts))       // TODO: return batches with a hard upper limit on their size
+    async '$agent.scan'({store}, opts = {}) {
+        return arrayFromAsync(store.scan(opts))         // TODO: return batches with a hard upper limit on their size
     }
 
-    async '$agent.erase'({storage}) {
+    async '$agent.erase'({store}) {
         /* Remove all records from this block. */
-        await storage.erase()
-        this._flush(storage)
+        await store.erase()
+        this._flush(store)
     }
 
-    async '$agent.flush'({storage}) { return this._flush(storage, false) }
+    async '$agent.flush'({store}) { return this._flush(store, false) }
 
-    _flush(storage, with_delay = true) {
+    _flush(store, with_delay = true) {
         /* Flush all unsaved modifications to disk. If with_delay=true, the operation is delayed by `flush_delay`
            seconds (configured in the parent sequence) to combine multiple consecutive updates in one write
            - in such case you do NOT want to await the result.
@@ -133,10 +133,10 @@ export class Block extends Agent {
         if (with_delay && delay) {
             if (this.__meta.pending_flush) return
             this.__meta.pending_flush = true
-            return setTimeout(() => this._flush(storage, false), delay * 1000)
+            return setTimeout(() => this._flush(store, false), delay * 1000)
         }
         this.__meta.pending_flush = false
-        return storage.flush()
+        return store.flush()
     }
 
     // propagate() {
@@ -172,7 +172,7 @@ export class DataBlock extends Block {
 
     async __start__() {
         let state = await super.__start__()
-        let autoincrement = state.storage.get_max_id()  // current max ID of records in this block
+        let autoincrement = state.store.get_max_id()    // current max ID of records in this block
         let reserved = new Set()                        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
         let _locks = new Mutexes()                      // row-level locks for updates & deletes
         let lock = (id, fn) => _locks.run_exclusive(id, fn)
@@ -217,9 +217,9 @@ export class DataBlock extends Block {
         return ring
     }
 
-    async '$agent.select'({storage}, id, req) {
+    async '$agent.select'({store}, id, req) {
         let key = this.encode_id(id)
-        let data = await storage.get(key)         // JSON string
+        let data = await store.get(key)         // JSON string
         if (data) return this._annotate(data)
         return await this._move_down(id, req).select(id, req)
     }
@@ -239,7 +239,7 @@ export class DataBlock extends Block {
         if (id) {
             assert(entries.length === 1)        // fixed ID provided by the caller? check for uniqueness
             let key = this.encode_id(id)
-            if (await state.storage.get(key)) throw new DataConsistencyError(`record with this ID already exists`, {id})
+            if (await state.store.get(key)) throw new DataConsistencyError(`record with this ID already exists`, {id})
         }
 
         // assign IDs and convert entries to objects; each object is instantiated for validation,
@@ -269,10 +269,10 @@ export class DataBlock extends Block {
             if (setup instanceof Promise) await setup
         }
 
-        // save records to storage
+        // save records to the store
         for (let obj of objects) {
             this._prepare_for_insert(obj)       // validate obj.__data
-            await this._save(state.storage, obj)
+            await this._save(state.store, obj)
         }
 
         schemat.tx.exit_insert_mode()
@@ -335,8 +335,8 @@ export class DataBlock extends Block {
         return id
     }
 
-    _assign_id_compact({storage, autoincrement, reserved}) {
-        /* Scan `storage` to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
+    _assign_id_compact({store, autoincrement, reserved}) {
+        /* Scan `store` to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
            This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStorage.
          */
         // if all empty slots below autoincrement were already allocated, use the incremental algorithm
@@ -347,7 +347,7 @@ export class DataBlock extends Block {
             return id
         }
 
-        if (!(storage instanceof MemoryStorage))
+        if (!(store instanceof MemoryStorage))
             throw new Error('compact insert mode is only supported with MemoryStorage')
 
         let [A, B, C] = this.ring.id_insert_zones       // [min_id_exclusive, min_id_forbidden, min_id_sharded]
@@ -357,7 +357,7 @@ export class DataBlock extends Block {
             if (id < C && id >= B) id = C
             if (id >= C) id = this.shard_combined.fix_upwards(id)
             let key = this.encode_id(id)
-            if (!reserved.has(id) && !storage.get(key)) {       // found an unallocated slot?
+            if (!reserved.has(id) && !store.get(key)) {     // found an unallocated slot?
                 reserved.add(id)
                 return id
             }
@@ -366,7 +366,7 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async '$agent.update'({storage, lock}, id, edits, req) {
+    async '$agent.update'({store, lock}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
@@ -375,7 +375,7 @@ export class DataBlock extends Block {
         return lock(id, async () =>
         {
             let key = this.encode_id(id)
-            let data = await storage.get(key)
+            let data = await store.get(key)
             if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
             let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
@@ -399,43 +399,43 @@ export class DataBlock extends Block {
                 // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
                 // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-            await this._save(storage, obj, prev)        // save changes and perform change propagation
+            await this._save(store, obj, prev)          // save changes and perform change propagation
         })
     }
 
-    async '$agent.upsave'({storage, lock}, id, data, req) {
+    async '$agent.upsave'({store, lock}, id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
         return lock(id, async () =>
         {
             let key = this.encode_id(id)
-            if (await storage.get(key))
+            if (await store.get(key))
                 throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
 
             let obj = await WebObject.from_data(id, data, {activate: false})
-            await this._save(storage, obj)
+            await this._save(store, obj)
         })
     }
 
-    async _save(storage, obj, prev = null) {
+    async _save(store, obj, prev = null) {
         let id = obj.id
         let data = obj.__json
         let key = this.encode_id(id)
 
-        await this.put(storage, key, data)
+        await this.put(store, key, data)
         this.propagate_change(key, prev, obj)
 
         data = this._annotate(data)
         schemat.register_changes({id, data})
     }
 
-    async '$agent.delete'({storage, lock}, id, req) {
+    async '$agent.delete'({store, lock}, id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
         return lock(id, async () =>
         {
             let key = this.encode_id(id)
-            let data = await storage.get(key)
+            let data = await store.get(key)
             if (data === undefined) return this._move_down(id, req).delete(id, req)
 
             if (this.ring.readonly)
@@ -444,10 +444,10 @@ export class DataBlock extends Block {
                 // return req.error_access("cannot remove the item, the ring is read-only")
 
             let obj = await WebObject.from_data(id, data, {activate: false})
-            let deleted = storage.del(key)
+            let deleted = store.del(key)
             if (!deleted) return 0
 
-            this._flush(storage)
+            this._flush(store)
             this.propagate_change(key, obj)
 
             schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
@@ -518,7 +518,7 @@ export class BootDataBlock extends DataBlock {
     }
 
     _detect_format(path) {
-        // infer storage type from file extension
+        // infer store type from file extension
         let ext = path.split('.').pop()
         if (ext === 'yaml') return 'yaml'
         if (ext === 'jl') return 'json'
@@ -529,7 +529,7 @@ export class BootDataBlock extends DataBlock {
         await this._reopen(this._storage)
     }
 
-    async select(id, req) { return this.$_wrap.select({storage: this._storage}, id, req) }
+    async select(id, req) { return this.$_wrap.select({store: this._storage}, id, req) }
 
 }
 
