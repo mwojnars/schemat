@@ -183,15 +183,11 @@ class Frame {
     }
 
     async lock() {
-        /* Set per-call exclusive mode and wait until all calls to this agent are completed. */
+        /* Set per-call exclusive mode and wait until all calls to this agent are completed. Return an `unlock` function. */
         this.exclusive = true
         while (this.calls.length > 0)
             await Promise.all(this.calls)
-    }
-
-    unlock() {
-        /* Exit the per-call exclusive mode. */
-        delete this.exclusive
+        return () => {this.exclusive = false}
     }
 
     /*** Serialization ***/

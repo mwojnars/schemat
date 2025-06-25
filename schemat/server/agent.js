@@ -34,14 +34,11 @@ export class AgentState {   // AgentData, AgentVariables, Registers
                 ...
                 unlock()
 
-           Note that lock() must NOT be used in recursive RPC methods, nor be preceded by any
-           asynchronous instruction (await). Both these cases will likely cause a deadlock.
-           Ideally, lock() should be the first instruction in the function body.
+           Note that lock() must NOT be preceded by any asynchronous instruction (await), nor be used in recursive RPC methods.
+           Both these cases will likely cause a deadlock. Ideally, lock() should be the first instruction in the function body.
          */
-        await this.__frame.lock()
+        return this.__frame.lock()
     }
-
-    unlock() { this.__frame.unlock() }
 
     // switch_context(callback)     -- execute callback() in originator's not agent's context; for use inside agent methods
 }
