@@ -166,8 +166,8 @@ export class DataBlock extends Block {
         let autoincrement = state.store.get_max_id()    // current max ID of records in this block
         let reserved = new Set()                        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
         let _locks = new Mutexes()                      // row-level locks for updates & deletes
-        let lock = (id, fn) => _locks.run_exclusive(id, fn)
-        return {...state, autoincrement, reserved, lock}
+        let lock_row = (id, fn) => _locks.run_exclusive(id, fn)
+        return {...state, autoincrement, reserved, lock_row}
     }
 
     _detect_storage_class(format) {
@@ -357,13 +357,13 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async '$agent.update'({store, lock}, id, edits, req) {
+    async '$agent.update'({store, lock_row}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
-        return lock(id, async () =>
+        return lock_row(id, async () =>
         {
             let key = this.encode_id(id)
             let data = await store.get(key)
@@ -394,9 +394,9 @@ export class DataBlock extends Block {
         })
     }
 
-    async '$agent.upsave'({store, lock}, id, data, req) {
+    async '$agent.upsave'({store, lock_row}, id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
-        return lock(id, async () =>
+        return lock_row(id, async () =>
         {
             let key = this.encode_id(id)
             if (await store.get(key))
@@ -419,11 +419,11 @@ export class DataBlock extends Block {
         schemat.register_changes({id, data})
     }
 
-    async '$agent.delete'({store, lock}, id, req) {
+    async '$agent.delete'({store, lock_row}, id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
-        return lock(id, async () =>
+        return lock_row(id, async () =>
         {
             let key = this.encode_id(id)
             let data = await store.get(key)
