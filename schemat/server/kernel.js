@@ -158,15 +158,13 @@ class Frame {
     async _call_agent(method, args) {
         /* Call agent's `method` in tracked mode, in a proper app context (caller's or own), passing the state as an extra argument. */
         let {agent, state} = this
-
         let func = agent.__self[method]
         if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
         // print(`calling agent ${agent}.${method}()`)
 
-        while ((this.exclusive || state.__exclusive) && this.calls.length > 0) {
+        while ((this.exclusive || state.__exclusive) && this.calls.length > 0)
             // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
             await Promise.all(this.calls)
-        }
 
         // check against paused/stopping states
         if (this.paused && !method.endsWith('.resume')) await this.paused
