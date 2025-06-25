@@ -18,19 +18,10 @@ export class Block extends Agent {
        A unit of data replication, distribution and concurrency. Records are arranged by key using byte order.
      */
 
-    static STORAGE_TYPES = {        // storage types and their file/folder extensions
+    static STORAGE_TYPES = {        // supported storage types and their file/folder extensions
         'yaml':     'yaml',
         'json':     'jl',
         'rocksdb':  'rocksdb',
-    }
-
-    // mapping of storage_type to storage classes
-    static storage_classes_data = {         // for the main data sequence
-        'yaml': YamlDataStorage,
-        // 'rocksdb': ...,
-    }
-    static storage_classes_binary = {       // for derived sequences: indexes, aggregations
-        'json': JsonIndexStorage,
     }
 
     sequence        // parent sequence
@@ -77,17 +68,6 @@ export class Block extends Agent {
         //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
     }
 
-    _detect_format(path) {
-        // infer the storage type from the file extension
-        let ext = path.split('.').pop()
-        if (ext === 'yaml') return 'yaml'
-        if (ext === 'json')   return 'jl'
-    }
-
-    _detect_storage_class(format) {
-        throw new Error(`unsupported storage type '${format}' in [${this.id}] for ${this.file_path}`)
-    }
-
     encode_key(key) { return this.sequence.encode_key(key) }
     decode_key(bin) { return this.sequence.decode_key(bin) }
 
@@ -97,6 +77,10 @@ export class Block extends Agent {
         let storage = new storage_class(this.file_path, this)
         await this._reopen(storage)
         return {__exclusive, storage}
+    }
+
+    _detect_storage_class(format) {
+        throw new Error(`unsupported storage type '${format}' in [${this.id}] for ${this.file_path}`)
     }
 
     async _reopen(storage) {
@@ -531,6 +515,13 @@ export class BootDataBlock extends DataBlock {
         let format = this._detect_format(file_path)
         let storage_class = this._detect_storage_class(format)
         this._storage = new storage_class(file_path, this)
+    }
+
+    _detect_format(path) {
+        // infer storage type from file extension
+        let ext = path.split('.').pop()
+        if (ext === 'yaml') return 'yaml'
+        if (ext === 'jl') return 'json'
     }
 
     async __load__() {
