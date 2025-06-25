@@ -118,7 +118,7 @@ class Frame {
     calls = []          // promises for currently executing (concurrent) calls on this agent
     exclusive           // if true in a given moment, any new call to this agent will wait until existing calls terminate; configured by lock() on per-call basis
 
-    paused              // if true, the agent should not execute now but can be resumed without restarting by $agent.resume()
+    paused              // after the agent was paused with $agent.pause(), contains a Promise that will be resolved by $agent.resume()
     stopping            // if true, the agent is stopping now and no more requests/calls should be accepted
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
@@ -155,11 +155,9 @@ class Frame {
         return schemat.in_tx_context(ctx, caller_tx, call)
     }
 
-    async _call_agent(method, args, pause_delay = 1.0 /*seconds*/) {
+    async _call_agent(method, args) {
         /* Call agent's `method` in tracked mode, in a proper app context (caller's or own), passing the state as an extra argument. */
         let {agent, state} = this
-
-        while (this.paused && !method.endsWith('.resume')) await sleep(pause_delay)
 
         let func = agent.__self[method]
         if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
@@ -169,6 +167,9 @@ class Frame {
             // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
             await Promise.all(this.calls)
         }
+
+        // check against paused/stopping states
+        if (this.paused && !method.endsWith('.resume')) await this.paused
         if (this.stopping) throw new Error(`agent ${agent} is in the process of stopping`)
 
         let result = func.call(agent, state, ...args)
