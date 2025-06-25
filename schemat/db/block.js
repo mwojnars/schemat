@@ -81,7 +81,7 @@ export class Block extends Agent {
         //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
     }
 
-    _format_from_extension(path) {
+    _detect_format(path) {
         // infer the storage type from the file extension
         let ext = path.split('.').pop()
         if (ext === 'yaml') return 'data-yaml'
@@ -524,12 +524,9 @@ export class DataBlock extends Block {
 export class BootDataBlock extends DataBlock {
 
     _storage        // Storage for this block's records
-    // _file_path      // for booting, a complete file_path must be provided by the caller, so it's a variable here + custom getter below
-    // get file_path() { return this._file_path }
 
     __new__(file_path) {
-        // this._file_path = file_path
-        this.format = this._format_from_extension(file_path)
+        this.format = this._detect_format(file_path)
         let storage_class = this._detect_storage_class()
         this._storage = new storage_class(file_path, this)
     }
