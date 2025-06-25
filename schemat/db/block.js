@@ -81,15 +81,15 @@ export class Block extends Agent {
         //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
     }
 
-    _detect_storage_class() {
-        let format = this.format
-        if (!format) {
-            // infer the storage type from the file extension
-            let extension = this.file_path.split('.').pop()
-            if (extension === 'yaml') format = 'data-yaml'
-            if (extension === 'jl')   format = 'index-jl'
-        }
+    _format_from_extension(path) {
+        // infer the storage type from the file extension
+        let ext = path.split('.').pop()
+        if (ext === 'yaml') return 'data-yaml'
+        if (ext === 'jl')   return 'index-jl'
+    }
 
+    _detect_storage_class() {
+        let format = this.format //|| this._format_from_extension(this.file_path)
         if      (format === 'data-yaml') return YamlDataStorage
         else if (format === 'index-jl')  return JsonIndexStorage
         else
@@ -530,8 +530,9 @@ export class BootDataBlock extends DataBlock {
 
     __new__(file_path) {
         this._file_path = file_path
+        this.format = this._format_from_extension(file_path)
         let storage_class = this._detect_storage_class()
-        this._storage = new storage_class(this.file_path, this)
+        this._storage = new storage_class(file_path, this)
     }
 
     async __load__() {
