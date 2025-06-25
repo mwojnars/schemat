@@ -509,16 +509,16 @@ export class DataBlock extends Block {
 
 export class BootDataBlock extends DataBlock {
 
-    _storage        // Storage for this block's records
+    _store      // Storage for this block's records
 
     __new__(file_path) {
         let format = this._detect_format(file_path)
         let storage_class = this._detect_storage_class(format)
-        this._storage = new storage_class(file_path, this)
+        this._store = new storage_class(file_path, this)
     }
 
     _detect_format(path) {
-        // infer store type from file extension
+        // infer storage type from file extension
         let ext = path.split('.').pop()
         if (ext === 'yaml') return 'yaml'
         if (ext === 'jl') return 'json'
@@ -526,10 +526,10 @@ export class BootDataBlock extends DataBlock {
 
     async __load__() {
         await super.__load__()
-        await this._reopen(this._storage)
+        await this._reopen(this._store)
     }
 
-    async select(id, req) { return this.$_wrap.select({store: this._storage}, id, req) }
+    async select(id, req) { return this.$_wrap.select({store: this._store}, id, req) }
 
 }
 
