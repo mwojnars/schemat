@@ -30,7 +30,6 @@ export class Block extends Agent {
     sequence        // parent sequence
     format          // storage format, e.g. "data-yaml", "index-jl", "rocksdb", ...
     file_tag        // name of the local file/directory of this block, without a path nor extension; initialized during __setup__(), should not be modified later on
-    // file_name       // name of the local file/directory of this block, without a path; initialized during block creation, takes the same value on every node
 
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
@@ -46,7 +45,6 @@ export class Block extends Agent {
         if (!this.ring.is_loaded()) await this.ring.load()
 
         this.file_tag ??= this._make_file_name()
-        // this.file_name ??= this._make_file_name()
 
         print('Block.__setup__() done, file_name', this.file_name)
     }
@@ -56,16 +54,16 @@ export class Block extends Agent {
             this.ring.file_tag,
             this.sequence.file_tag || this.sequence.operator?.file_tag || this.sequence.operator?.name,
             `${this.id}`,
-            // this._file_extension()
         ]
         return parts.filter(p => p).join('.')
     }
 
     _file_extension() {
-        if (this.format === 'data-yaml') return 'yaml'
-        if (this.format === 'index-jl') return 'jl'
-        if (this.format === 'rocksdb') return ''
-        throw new Error(`unknown storage type '${this.format}' in [${this.id}]`)
+        let format = this.format
+        if (format === 'data-yaml' || format === 'yaml') return 'yaml'
+        if (format === 'index-jl' || format === 'json') return 'jl'
+        if (format === 'rocksdb') return 'rocksdb'
+        throw new Error(`unknown storage type '${format}' in [${this.id}]`)
     }
 
     async __load__() {
