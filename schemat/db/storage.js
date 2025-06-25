@@ -4,7 +4,7 @@ import {BinaryMap, compare_uint8} from "../common/binary.js"
 import {data_schema} from "./records.js"
 
 const fs = await server_import('node:fs')
-const yaml = (await server_import('yaml'))?.default
+const YAML = (await server_import('yaml'))?.default
 
 
 
@@ -109,7 +109,7 @@ export class YamlDataStorage extends MemoryStorage {
         createFileIfNotExists(this.filename, fs)
 
         let content = fs.readFileSync(this.filename, 'utf8')
-        let records = yaml.parse(content) || []
+        let records = YAML.parse(content) || []
         this._records.clear()
 
         for (let record of records) {
@@ -145,7 +145,7 @@ export class YamlDataStorage extends MemoryStorage {
             assert(data.id === undefined)       // there must be no `id` included as a plain attribute
             return T.isPOJO(data) ? {id, ...data} : {id, __data: data}
         })
-        let out = yaml.stringify(recs)
+        let out = YAML.stringify(recs)
         fs.writeFileSync(this.filename, out, 'utf8')
         this.dirty = false
     }
