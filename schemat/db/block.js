@@ -77,21 +77,18 @@ export class Block extends Agent {
     async __start__() {
         let __exclusive = false             // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
         let store = await this._create_store(this.storage)
-        // let storage_class = this._detect_storage_class(this.storage)
-        // let store = new storage_class(this.file_path, this)
-        // await store.open()
         return {__exclusive, store}
     }
 
     async _create_store(storage) {
         let path  = this._file_path(storage)
-        let clas_ = this._detect_storage_class(storage)
+        let clas_ = this._detect_store_class(storage)
         let store = new clas_(path, this)
         await store.open()
         return store
     }
 
-    _detect_storage_class(format) {
+    _detect_store_class(format) {
         throw new Error(`unsupported store type '${format}' in ${this}`)
     }
 
@@ -153,9 +150,9 @@ export class Block extends Agent {
 export class BinaryBlock extends Block {
     /* A block of a derived sequence: index, aggregation. */
 
-    _detect_storage_class(format) {
+    _detect_store_class(format) {
         if (format === 'json') return JsonIndexStore
-        return super._detect_storage_class(format)
+        return super._detect_store_class(format)
     }
 }
 
@@ -182,9 +179,9 @@ export class DataBlock extends Block {
         return {...state, autoincrement, reserved, lock_row}
     }
 
-    _detect_storage_class(format) {
+    _detect_store_class(format) {
         if (format === 'yaml') return YamlDataStore
-        return super._detect_storage_class(format)
+        return super._detect_store_class(format)
     }
 
     encode_id(id)  { return this.sequence.encode_id(id) }
@@ -516,7 +513,7 @@ export class BootDataBlock extends DataBlock {
 
     __new__(path) {
         let format = this._detect_format(path)
-        let storage_class = this._detect_storage_class(format)
+        let storage_class = this._detect_store_class(format)
         this._store = new storage_class(path, this)
     }
 
