@@ -173,8 +173,14 @@ class Frame {
     }
 
     async _call_tracked(func, args) {
+        /* Call func() in the context of this frame and add the promise to `calls`. */
         let {agent, state} = this
-        let result = func.call(agent, state, ...args)
+        agent.__frame ??= new AsyncLocalStorage()
+
+        let call = () => func.call(agent, state, ...args)
+        let result = (agent.$frame === this) ? call() : agent.__frame.run(this, call)
+
+        // let result = func.call(agent, state, ...args)
         if (!(result instanceof Promise)) return result
 
         // if `result` is a Promise, create a wrapper that removes itself from `calls` when done
