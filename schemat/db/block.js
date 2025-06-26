@@ -31,14 +31,19 @@ export class Block extends Agent {
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
     get ring()      { return this.sequence.ring }
-    get file_name() {
-        let ext = Block.STORAGE_TYPES[this.storage]
-        if (ext) return `${this.file_tag}.${ext}`
-        throw new Error(`unknown storage type '${this.storage}' in ${this}`)
-    }
+
+    // get file_name() {
+    //     let ext = Block.STORAGE_TYPES[this.storage]
+    //     if (ext) return `${this.file_tag}.${ext}`
+    //     throw new Error(`unknown storage type '${this.storage}' in ${this}`)
+    // }
 
     // absolute path to this block's local folder/file on the current node; the upper part of the path may vary between nodes
-    get file_path() { return `${schemat.node.file_path}/${this.file_name}` }
+    get file_path() {
+        let ext = Block.STORAGE_TYPES[this.storage]
+        if (!ext) throw new Error(`unknown storage type '${this.storage}' in ${this}`)
+        return `${schemat.node.file_path}/${this.file_tag}.${ext}`
+    }
 
     async __setup__() {
         print('Block.__setup__() ...')
