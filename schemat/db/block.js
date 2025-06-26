@@ -25,6 +25,9 @@ export class Block extends Agent {
         'rocksdb':  'rocksdb',
     }
 
+    // __concurrent = true      -- $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
+
+
     sequence        // parent sequence
     storage         // storage type, e.g. "yaml", "json", "rocksdb", ... can be repeated
     storage$

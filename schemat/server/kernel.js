@@ -169,7 +169,8 @@ class Frame {
         if (this.starting) await this.starting
 
         // wait for running call(s) to complete if in exclusive mode
-        while ((this.exclusive || this.state.__exclusive) && this.calls.length > 0)
+        while ((this.exclusive || !this.agent.__concurrent) && this.calls.length > 0)
+        // while ((this.exclusive || this.state.__exclusive) && this.calls.length > 0)
             // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
             await Promise.all(this.calls)
 
