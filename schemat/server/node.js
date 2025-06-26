@@ -332,7 +332,6 @@ export class Node extends Agent {
         let {agent_id, role, method, args, ctx, tx} = this._rpc_request_parse(message)
         if (tx?.debug) this._print("rpc_recv():", JSON.stringify(message))
 
-        // role ??= frame.state.__role
         role ??= schemat.GENERIC_ROLE
         assert(role[0] === '$', `incorrect name of agent role (${role})`)
 
