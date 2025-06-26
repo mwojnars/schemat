@@ -236,9 +236,12 @@ class Frame {
         finally { unlock() }
     }
 
+    // switch_context(callback)     -- execute callback() in originator's not agent's context; for use inside agent methods
+
+
     /*** Serialization ***/
 
-    get_status() {
+    get_status() {      // will be needed for persisting the current list of node.$state.agents to DB
         return {
             id:             this.agent.id,
             role:           this.role,
