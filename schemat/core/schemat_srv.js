@@ -346,34 +346,6 @@ export class ServerSchemat extends Schemat {
         return _return_tx ? [result, tx] : result
     }
 
-    // async in_transaction(callback, tx = null, _return_tx = true) {
-    //     /* Run callback() inside a transaction: the current one (if present), or `tx`, or a new one (commit at the end).
-    //        Return a pair: [result-of-callback(), transaction-object]. After the call, the transaction object contains
-    //        info about the execution, esp. a list of records updated.
-    //      */
-    //     if (tx && this.tx) {
-    //         assert(tx.tid === this.tx.tid, `starting a transaction inside another one is not allowed`)
-    //         tx = null                                   // same TID numbers? better use existing `this.tx` rather than `tx`
-    //     }
-    //     if (tx) {
-    //         if (!(tx instanceof ServerTransaction))     // `tx` can be provided as a serialized Transaction (plain object)
-    //             tx = ServerTransaction.load(tx)
-    //         let result = await this._transaction.run(tx, callback)
-    //         return _return_tx ? [result, tx] : result
-    //     }
-    //
-    //     // do NOT create a new transaction if one is already present; only the original creator is allowed to commit the transaction!
-    //     if (this.tx) return _return_tx ? [await callback(), this.tx] : callback()
-    //
-    //     tx = new ServerTransaction()
-    //     let result = await this._transaction.run(tx, async () => {
-    //         let res = await callback()
-    //         await tx.commit()
-    //         return res
-    //     })
-    //     return _return_tx ? [result, tx] : result
-    // }
-
     in_tx_context(ctx, tx, callback) {
         /* Run callback() inside a double async context created by first setting the global `schemat`
            to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
@@ -381,6 +353,10 @@ export class ServerSchemat extends Schemat {
         let call = tx ? () => schemat.in_transaction(callback, tx, false) : callback    // critical to use `schemat` not `this` here, bcs context changes!
         return this.in_context(ctx, call)
     }
+
+    /***  RPC/RMI  ***/
+
+    async rpc(...args) { return this.node.rpc_send(...args) }    // alias for node.rpc_send(), for direct in-app usage when fine-grained targeting of RPC is needed
 
 
     // async _reset_class(ServerSchemat) {
@@ -409,9 +385,4 @@ export class ServerSchemat extends Schemat {
     //     await this.evict_cache()
     //     releaseMutex()
     // }
-
-    /***  RPC/RMI  ***/
-
-    async rpc(...args) { return this.node.rpc_send(...args) }    // alias for node.rpc_send(), for direct in-app usage when fine-grained targeting of RPC is needed
-
 }
