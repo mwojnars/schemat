@@ -143,8 +143,7 @@ class Frame {
     }
 
     async call_agent(method, args, caller_ctx = schemat.current_context, caller_tx = null, callback = null) {
-        /* Call agent's `method` in tracked mode, in a proper app context (caller's or own), 
-           passing the state as an extra argument.
+        /* Call agent's `method` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
         // print(`calling agent ${this.agent}.${method}()`)
         
@@ -179,8 +178,6 @@ class Frame {
 
         let call = () => func.call(agent, state, ...args)
         let result = (agent.$frame === this) ? call() : agent.__frame.run(this, call)
-
-        // let result = func.call(agent, state, ...args)
         if (!(result instanceof Promise)) return result
 
         // if `result` is a Promise, create a wrapper that removes itself from `calls` when done
