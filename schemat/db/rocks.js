@@ -1,12 +1,16 @@
 import {Store} from "./store.js";
 
 
-class RockStore extends Store {
+export class RocksDBStore extends Store {
     /* Local data store based on RocksDB. */
+
+    open() {
+        schemat._print(`RocksDBStore.open(), filename = ${this.filename}`)
+    }
 }
 
 
-/*
+/* DRAFT ...
 
 // Unfortunately, the basic rocksdb Node.js bindings don’t expose snapshot support directly.
 // But if you're not doing high-frequency concurrent writes, a read-only stream is usually sufficient and safe.

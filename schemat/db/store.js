@@ -35,6 +35,8 @@ export class Store {
 
     // all the methods below can be ASYNC in subclasses... (!)
 
+    open() {}
+
     get(key)            { throw new NotImplemented() }      // return JSON string stored under the binary `key`, or undefined
     put(key, value)     { throw new NotImplemented() }      // no return value
     del(key)            { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found

@@ -5,6 +5,7 @@ import {WebObject} from '../core/object.js'
 import {Struct} from "../common/catalog.js"
 import {MemoryStore, JsonIndexStore, YamlDataStore} from "./store.js"
 import {Agent} from "../server/agent.js"
+import {RocksDBStore} from "./rocks.js";
 
 
 /**********************************************************************************************************************
@@ -65,8 +66,8 @@ export class Block extends Agent {
 
     async __start__() {
         let __exclusive = false         // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
-        let store = await this._create_store(this.storage)
-        return {__exclusive, store}
+        let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
+        return {__exclusive, store: stores[0], stores}
     }
 
     async _create_store(storage) {
@@ -176,6 +177,7 @@ export class DataBlock extends Block {
 
     _detect_store_class(format) {
         if (format === 'yaml') return YamlDataStore
+        if (format === 'rocksdb') return RocksDBStore
         return super._detect_store_class(format)
     }
 
