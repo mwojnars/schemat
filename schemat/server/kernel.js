@@ -143,8 +143,11 @@ class Frame {
     }
 
     async call_agent(method, args, caller_ctx = schemat.current_context, caller_tx = null, callback = null) {
-        /* Call agent's `method` in tracked mode, in a proper app context (caller's or own), passing the state as an extra argument.
+        /* Call agent's `method` in tracked mode, in a proper app context (caller's or own), 
+           passing the state as an extra argument.
          */
+        // print(`calling agent ${this.agent}.${method}()`)
+        
         // wait for running call(s) to complete if in exclusive mode
         while ((this.exclusive || this.state.__exclusive) && this.calls.length > 0)
             // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
@@ -154,25 +157,23 @@ class Frame {
         if (this.paused && !method.endsWith('.resume')) await this.paused
         if (this.stopping) throw new Error(`agent ${this.agent} is in the process of stopping`)
 
-        assert(schemat.kernel_context)
         let {agent} = this
+        let func = agent.__self[method]
+        if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
+
+        assert(schemat.kernel_context)
         let agent_ctx = agent.__ctx || schemat.kernel_context       // empty agent.__ctx means kernel context should be used
         let ctx = agent.switch_context ? caller_ctx : agent_ctx
         let call = async () => {
             // agent._print(`call_agent(${method}) context=${schemat.current_context}`)
-            let result = await this._call_agent(method, args)
+            let result = await this._call_tracked(func, args)
             return callback ? callback(result) : result
         }
         return schemat.in_tx_context(ctx, caller_tx, call)
     }
 
-    async _call_agent(method, args) {
-        // print(`calling agent ${this.agent}.${method}()`)
-
+    async _call_tracked(func, args) {
         let {agent, state} = this
-        let func = agent.__self[method]
-        if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
-
         let result = func.call(agent, state, ...args)
         if (!(result instanceof Promise)) return result
 
