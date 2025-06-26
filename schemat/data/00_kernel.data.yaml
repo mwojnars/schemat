@@ -701,6 +701,7 @@
       "@": schemat/types/type.js:REF
     storage:
       info: "storage type: yaml, json, rocksdb (in the future), ..."
+      repeated: true
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
   class: schemat/db/block.js:BinaryBlock
