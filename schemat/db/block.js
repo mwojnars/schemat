@@ -76,10 +76,19 @@ export class Block extends Agent {
 
     async __start__() {
         let __exclusive = false             // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
-        let storage_class = this._detect_storage_class(this.storage)
-        let store = new storage_class(this.file_path, this)
-        await store.open()
+        let store = await this._create_store(this.storage)
+        // let storage_class = this._detect_storage_class(this.storage)
+        // let store = new storage_class(this.file_path, this)
+        // await store.open()
         return {__exclusive, store}
+    }
+
+    async _create_store(storage) {
+        let path  = this._file_path(storage)
+        let clas_ = this._detect_storage_class(storage)
+        let store = new clas_(path, this)
+        await store.open()
+        return store
     }
 
     _detect_storage_class(format) {
