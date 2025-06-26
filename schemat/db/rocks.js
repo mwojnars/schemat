@@ -1,14 +1,48 @@
-import {Store} from "./store.js";
+import {Store} from './store.js'
+
+let {promisify} = await server_import('node:util') || {}
+let rocksdb = (await server_import('rocksdb'))?.default
 
 
 export class RocksDBStore extends Store {
     /* Local data store based on RocksDB. */
 
-    open() {
-        schemat._print(`RocksDBStore.open(), filename = ${this.filename}`)
+    _db = null
+
+    async open() {
+        /* Open or create a RocksDB database at this.filename */
+        this._db = rocksdb(this.filename)
+        await promisify(this._db.open.bind(this._db))({create_if_missing: true})
+    }
+
+    async get(key) {
+        /* Return JSON string stored under the binary key, or undefined if not found */
+        try {
+            const value = await promisify(this._db.get.bind(this._db))(key)
+            return value.toString()
+        } catch (err) {
+            if (err.notFound) return undefined
+            throw err
+        }
+    }
+
+    async put(key, value) {
+        /* Store JSON string value under the binary key */
+        await promisify(this._db.put.bind(this._db))(key, value)
+    }
+
+    async del(key) {
+        /* Delete the key-value pair. Return true if key was found and deleted */
+        try {
+            await promisify(this._db.get.bind(this._db))(key)  // check if exists
+            await promisify(this._db.del.bind(this._db))(key)
+            return true
+        } catch (err) {
+            if (err.notFound) return false
+            throw err
+        }
     }
 }
-
 
 /* DRAFT ...
 
