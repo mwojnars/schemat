@@ -138,7 +138,8 @@ class Frame {
     set_state(state) {
         /* Store the raw state and create a proxied version of it for tracking calls */
         state ??= new AgentState()
-        
+        state.__role = this.role
+
         // wrap state in AgentState if needed
         if (T.isPlain(state)) state = Object.assign(new AgentState(), state)
         else if (!(state instanceof AgentState))
@@ -151,12 +152,16 @@ class Frame {
         this.starting = false
     }
 
-    // async start() {
-    //     let {agent, role} = this
-    //     let state = await schemat.in_context(agent.__ctx, () => agent.__start__(this)) || {}
-    //     state.__role = role
-    //     this.set_state(state)
-    // }
+    async start() {
+        let {agent} = this
+        schemat._print(`starting agent ${agent} ...`)
+
+        let state = await schemat.in_context(agent.__ctx, () => agent.__start__(this)) || {}
+        this.set_state(state)
+
+        schemat._print(`starting agent ${agent} done`)
+        return state
+    }
 
     async exec(method, args, caller_ctx = schemat.current_context, caller_tx = null, callback = null) {
         /* Call agent's `method` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
@@ -221,7 +226,6 @@ class Frame {
         return {
             id:             this.agent.id,
             role:           this.role,
-            options:        this.state.__options,
             stopped:        this.stopped,
             migrating_to:   this.migrating_to,
         }
@@ -372,9 +376,8 @@ export class Kernel {
         this._print(`process closed`)
     }
 
-    async start_agent(obj, role, options) {
+    async start_agent(obj, role) {
         let agent = schemat.as_object(obj)
-        this._print(`starting agent ${agent} ...`)
         role ??= schemat.GENERIC_ROLE           // "$agent" role is the default for running agents
 
         if (this.frames.has([agent.id, role])) throw new Error(`agent ${agent} in role ${role} is already running`)
@@ -386,15 +389,7 @@ export class Kernel {
 
         let frame = new Frame(agent, role)
         this.frames.set([agent.id, role], frame)    // the frame must be assigned to `frames` already before __start__()
-        // await frame.start()
-
-        let state = await schemat.in_context(agent.__ctx, () => agent.__start__(frame)) || {}
-        state.__role = role
-        state.__options = options
-        frame.set_state(state)
-
-        this._print(`starting agent ${agent} done`)
-        return state
+        return frame.start()
     }
 
     async refresh_agent(frame) {
@@ -409,7 +404,6 @@ export class Kernel {
 
         let state = await schemat.in_context(agent.__ctx, restart)
         state.__role = prev.__role
-        state.__options = prev.__options
 
         frame.set_state(state)
         frame.agent = agent
