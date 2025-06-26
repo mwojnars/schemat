@@ -154,13 +154,20 @@ export class Schemat {
 
         await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:WebObject"
         await builtin.fetch("./app.js")
-        await builtin.fetch("../server/logger.js")
-        await builtin.fetch("../server/agent.js")
-        await builtin.fetch("../server/node.js")
-        await builtin.fetch("../server/cluster.js")
         await builtin.fetch("../std/files.js")
         await builtin.fetch("../std/containers.js")
+        await builtin.fetch("../common/structs.js")
+        // await builtin.fetch("../common/errors.js")       // needed if mJsonxError is used for transmitting service errors back to client
+
+        let accept = (name) => name.toUpperCase() === name
+        await builtin.fetch("../types/type.js", {accept})
+        await builtin.fetch("../types/catalog_type.js", {accept})
+
         if (SERVER) {
+            await builtin.fetch("../server/logger.js")
+            await builtin.fetch("../server/agent.js")
+            await builtin.fetch("../server/node.js")
+            await builtin.fetch("../server/cluster.js")
             await builtin.fetch("../db/db.js")
             await builtin.fetch("../db/indexes.js")
             await builtin.fetch("../db/sequence.js")
@@ -168,12 +175,6 @@ export class Schemat {
             await builtin.fetch("../db/records.js")
             await builtin.fetch("../db/data_request.js")
         }
-        await builtin.fetch("../common/structs.js")
-        // await builtin.fetch("../common/errors.js")       // needed if mJsonxError is used for transmitting service errors back to client
-
-        let accept = (name) => name.toUpperCase() === name
-        await builtin.fetch("../types/type.js", {accept})
-        await builtin.fetch("../types/catalog_type.js", {accept})
     }
 
     async _load_app() {
