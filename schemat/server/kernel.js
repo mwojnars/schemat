@@ -151,7 +151,7 @@ class Frame {
         this.starting = false
     }
 
-    async call_agent(method, args, caller_ctx = schemat.current_context, caller_tx = null, callback = null) {
+    async exec(method, args, caller_ctx = schemat.current_context, caller_tx = null, callback = null) {
         /* Call agent's `method` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
         // print(`calling agent ${this.agent}.${method}()`)
@@ -164,7 +164,7 @@ class Frame {
             // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
             await Promise.all(this.calls)
 
-        // check against paused/stopping states
+        // handle paused/stopping state
         if (this.paused && !method.endsWith('.resume')) await this.paused
         if (this.stopping) throw new Error(`agent ${this.agent} is in the process of stopping`)
 
@@ -176,14 +176,14 @@ class Frame {
         let agent_ctx = agent.__ctx || schemat.kernel_context       // empty agent.__ctx means kernel context should be used
         let ctx = agent.switch_context ? caller_ctx : agent_ctx
         let call = async () => {
-            // agent._print(`call_agent(${method}) context=${schemat.current_context}`)
-            let result = await this._call_tracked(func, args)
+            // agent._print(`exec(${method}) context=${schemat.current_context}`)
+            let result = await this._exec_tracked(func, args)
             return callback ? callback(result) : result
         }
         return schemat.in_tx_context(ctx, caller_tx, call)
     }
 
-    async _call_tracked(func, args) {
+    async _exec_tracked(func, args) {
         /* Call func() in the context of this frame and add the promise to `calls`. */
         let {agent, state} = this
         agent.__frame ??= new AsyncLocalStorage()
@@ -378,7 +378,7 @@ export class Kernel {
         assert(agent instanceof Agent)
 
         let frame = new Frame(agent)
-        this.frames.set([agent.id, role], frame)    // the frame must be assigned to `frames` already before __start__() is executed
+        this.frames.set([agent.id, role], frame)    // the frame must be assigned to `frames` already before __start__()
 
         let state = await schemat.in_context(agent.__ctx, () => agent.__start__({node: this.node, role, options})) || {}
         state.__role = role

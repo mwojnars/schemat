@@ -122,7 +122,7 @@ class Intercept {
                 if (name === 'state') return frame?.state
 
                 // if the target object is deployed here on the current process, call this object directly without any remote RPC
-                if (frame) return (...args) => frame.call_agent(`${role}.${name}`, args)
+                if (frame) return (...args) => frame.exec(`${role}.${name}`, args)
 
                 // function wrapper for an RPC call...
                 assert(schemat.node, `the node must be initialized before remote agent [${id}].${role}.${name}() is called`)
