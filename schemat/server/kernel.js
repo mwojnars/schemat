@@ -146,7 +146,7 @@ class Frame {
         /* Call agent's `method` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
         // print(`calling agent ${this.agent}.${method}()`)
-        
+
         // wait for running call(s) to complete if in exclusive mode
         while ((this.exclusive || this.state.__exclusive) && this.calls.length > 0)
             // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
