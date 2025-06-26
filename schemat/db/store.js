@@ -22,6 +22,7 @@ function createFileIfNotExists(filename, fs) {
  */
 
 export class Store {
+    /* Base class for local data storage. Every block has at least one local store to keep its records. */
 
     block
 

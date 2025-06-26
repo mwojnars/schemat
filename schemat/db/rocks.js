@@ -1,3 +1,11 @@
+import {Store} from "./store.js";
+
+
+class RockStore extends Store {
+    /* Local data store based on RocksDB. */
+}
+
+
 /*
 
 // Unfortunately, the basic rocksdb Node.js bindings don’t expose snapshot support directly.
