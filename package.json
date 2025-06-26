@@ -39,6 +39,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "4.0.1",
+    "rocksdb": "^5.2.1",
     "styled-components": "^5.3.3",
     "use-sse": "^2.0.1",
     "web-vitals": "^0.2.4",
