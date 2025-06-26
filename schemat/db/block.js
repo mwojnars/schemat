@@ -263,7 +263,7 @@ export class DataBlock extends Block {
         // save records to the store
         for (let obj of objects) {
             this._prepare_for_insert(obj)       // validate obj.__data
-            await this._save(state.store, obj)
+            await this._save(obj)
         }
 
         schemat.tx.exit_insert_mode()
@@ -390,7 +390,7 @@ export class DataBlock extends Block {
                 // for this reason, the new `data` can be computed already here and there's no need to forward the raw edits
                 // (applying the edits in an upper ring would not improve anything in terms of consistency and mutual exclusion)
 
-            await this._save(store, obj, prev)          // save changes and perform change propagation
+            await this._save(obj, prev)         // save changes and perform change propagation
         })
     }
 
@@ -403,16 +403,17 @@ export class DataBlock extends Block {
                 throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
 
             let obj = await WebObject.from_data(id, data, {activate: false})
-            await this._save(store, obj)
+            await this._save(obj)
         })
     }
 
-    async _save(store, obj, prev = null) {
+    async _save(obj, prev = null) {
         let id = obj.id
         let data = obj.__json
         let key = this.encode_id(id)
 
-        await this.put(store, key, data)
+        // this._print(`_save() this.$state.store:`, this.$state.store)
+        await this.put(this.$state.store, key, data)
         this.propagate_change(key, prev, obj)
 
         data = this._annotate(data)
