@@ -61,11 +61,10 @@ export class Agent extends WebObject {
                     // and a fallback context for $agent.*() methods if no request-specific RPC context was given;
                     // if missing, kernel's context (cluster) is used ("kernel mode")
 
-    __state         // AsyncLocalStorage that holds the current AgentState of this agent while its agent-method(s) are being called
+    __frame         // AsyncLocalStorage that holds the current Frame of this agent while its agent-method(s) is being called
 
-    get $state()    { return this.__state?.getStore() }
-    get $frame()    { return this.$state?.__frame }
-    get $role()     { return this.$state?.__role }
+    get $frame()    { return this.__frame?.getStore() }
+    get $state()    { return this.$frame?.state }
 
     num_workers     // number of concurrent workers per node that should execute this agent's microservice at the same time; -1 = "all available"
     hard_restart
