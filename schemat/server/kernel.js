@@ -119,6 +119,7 @@ class Frame {
     calls = []          // promises for currently executing (concurrent) calls on this agent
     exclusive           // if true in a given moment, any new call to this agent will wait until existing calls terminate; configured by lock() on per-call basis
 
+    starting            // a Promise that gets resolved when .state is assigned after the agent's __start__() is finished; false after that
     paused              // after the agent was paused with $agent.pause(), contains a Promise that will be resolved by $agent.resume()
     stopping            // if true, the agent is stopping now and no more requests/calls should be accepted
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
@@ -127,6 +128,11 @@ class Frame {
     constructor(agent, state = null) {
         this.agent = agent
         if (state !== null) this.set_state(state)
+        else {
+            let _resolve
+            this.starting = new Promise(resolve => {_resolve = resolve})
+            this.starting.resolve = _resolve
+        }
     }
     
     set_state(state) {
@@ -140,12 +146,18 @@ class Frame {
 
         state.__frame = this
         this.state = state
+
+        this.starting?.resolve?.()
+        this.starting = false
     }
 
     async call_agent(method, args, caller_ctx = schemat.current_context, caller_tx = null, callback = null) {
         /* Call agent's `method` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
         // print(`calling agent ${this.agent}.${method}()`)
+
+        // wait for the agent to start
+        if (this.starting) await this.starting
 
         // wait for running call(s) to complete if in exclusive mode
         while ((this.exclusive || this.state.__exclusive) && this.calls.length > 0)
