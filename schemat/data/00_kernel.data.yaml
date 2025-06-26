@@ -940,6 +940,9 @@
       category:
         "@": 11
       "@": schemat/types/type.js:REF
+    __concurrent:
+      info: If true, agent methods of this agent may execute concurrently.
+      "@": schemat/types/type.js:BOOLEAN
     num_workers:
       default: 1
       info: The number of concurrent worker processes on the host node that should
