@@ -27,21 +27,10 @@ export class Block extends Agent {
     sequence        // parent sequence
     storage         // storage type, e.g. "yaml", "json", "rocksdb", ... can be repeated
     storage$
-    file_tag        // name of the local file/directory of this block, without a path nor extension; initialized during __setup__(), should not be modified later on
-
-    // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
+    file_tag        // name of the local file/directory of this block, without a path nor extension; initialized during __setup__(),
+                    // should not be modified later on; the upper part of the path may vary between nodes
 
     get ring()      { return this.sequence.ring }
-
-    // absolute path to this block's local folder/file on the current node; the upper part of the path may vary between nodes
-    get file_path()  { return this._file_path(this.storage) }
-    get file_paths() { return this.storage$.map(s => this._file_path(s)) }
-
-    _file_path(storage) {
-        let ext = Block.STORAGE_TYPES[storage]
-        if (!ext) throw new Error(`unknown storage type '${storage}' in ${this}`)
-        return `${schemat.node.file_path}/${this.file_tag}.${ext}`
-    }
 
     async __setup__() {
         print('Block.__setup__() ...')
@@ -55,7 +44,7 @@ export class Block extends Agent {
         ]
         this.file_tag ??= parts.filter(p => p).join('.')
 
-        this._print('__setup__() done:', this.file_paths)
+        this._print('__setup__() done:', this.file_tag)
     }
 
     async __load__() {
@@ -75,7 +64,7 @@ export class Block extends Agent {
     decode_key(bin) { return this.sequence.decode_key(bin) }
 
     async __start__() {
-        let __exclusive = false             // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
+        let __exclusive = false         // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
         let store = await this._create_store(this.storage)
         return {__exclusive, store}
     }
@@ -86,6 +75,12 @@ export class Block extends Agent {
         let store = new clas_(path, this)
         await store.open()
         return store
+    }
+
+    _file_path(storage) {
+        let ext = Block.STORAGE_TYPES[storage]
+        if (!ext) throw new Error(`unknown storage type '${storage}' in ${this}`)
+        return `${schemat.node.file_path}/${this.file_tag}.${ext}`
     }
 
     _detect_store_class(format) {
