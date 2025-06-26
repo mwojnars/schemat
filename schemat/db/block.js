@@ -208,9 +208,9 @@ export class DataBlock extends Block {
         return ring
     }
 
-    async '$agent.select'({store}, id, req) {
+    async '$agent.select'({}, id, req) {
         let key = this.encode_id(id)
-        let data = await store.get(key)         // JSON string
+        let data = await this.$state.store.get(key)     // JSON string
         if (data) return this._annotate(data)
         return await this._move_down(id, req).select(id, req)
     }
@@ -412,7 +412,6 @@ export class DataBlock extends Block {
         let data = obj.__json
         let key = this.encode_id(id)
 
-        // this._print(`_save() this.$state.store:`, this.$state.store)
         await this.put(this.$state.store, key, data)
         this.propagate_change(key, prev, obj)
 

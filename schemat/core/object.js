@@ -998,7 +998,11 @@ export class WebObject {
         let obj = this
         return new Proxy({}, {
             get(target, name) {
-                if (typeof name === 'string') return (state, ...args) => obj.__self[`$agent.${name}`].call(obj, state, ...args)
+                if (typeof name === 'string') return (state, ...args) => {
+                    Object.defineProperty(obj.__self, '$state', {value: state, writable: true})
+                    let method = obj.__self[`$agent.${name}`]
+                    return method.call(obj, state, ...args)
+                }
             }
         })
     }
