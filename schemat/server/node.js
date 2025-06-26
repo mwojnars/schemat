@@ -209,7 +209,7 @@ export class Node extends Agent {
                 this._print(`_start_agents(): adjusted worker process index of ${agent} from #${worker} to #${new_worker}`)
                 worker = new_worker
             }
-            await this.sys_send(worker, 'START_AGENT', agent.id, {role})
+            await this.sys_send(worker, 'START_AGENT', agent.id, role)
         }
     }
 
@@ -523,11 +523,11 @@ export class Node extends Agent {
 
     /* list of SYS signals */
 
-    async START_AGENT(agent_id, {role}) {
+    async START_AGENT(agent_id, role) {
         await schemat.kernel.start_agent(agent_id, role)
     }
 
-    async STOP_AGENT(agent_id, {role}) {
+    async STOP_AGENT(agent_id, role) {
         await schemat.kernel.stop_agent(agent_id, role)
     }
 
@@ -642,7 +642,7 @@ export class Node extends Agent {
             agents.push({worker, agent, role})
 
             // request the worker process to start the agent:
-            await this.sys_send(worker, 'START_AGENT', agent.id, {role})
+            await this.sys_send(worker, 'START_AGENT', agent.id, role)
             // this.$worker({node: this, worker: i}).start_agent(agent.id, role)
         }
         await this.action.set({agents})
@@ -663,7 +663,7 @@ export class Node extends Agent {
 
         // stop every agent from `stop`, in reverse order
         for (let status of stop.reverse())
-            await this.sys_send(status.worker, 'STOP_AGENT', agent.id, {role})
+            await this.sys_send(status.worker, 'STOP_AGENT', agent.id, role)
 
         await this.action.set({agents})
     }
