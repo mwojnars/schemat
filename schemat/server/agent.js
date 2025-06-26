@@ -12,7 +12,6 @@ export class AgentState {   // AgentData, AgentVariables, Registers
      */
 
     __exclusive = true  // informs the kernel that all calls to agent methods should be executed in a mutually exclusive lock (no concurrency)
-    __frame             // Frame of the current run, assigned by kernel
 
     // subclasses can add custom fields here:
     // ...
@@ -85,18 +84,18 @@ export class Agent extends WebObject {
         return response
     }
 
-    '$agent.pause'(state) {
-        /* Pause the execution of this agent: execution of incoming and pending requests is on hold until $agent.resume()
-           is called. This does NOT affect ongoing calls, they run normally till completion. Mainly for debugging.
+    '$agent.pause'() {
+        /* Pause the execution of this agent: execution of incoming and pending requests is on hold until $agent.resume().
+           This does NOT affect ongoing calls, which run normally until completion. Mainly for debugging.
          */
         let _resolve
-        let paused = state.__frame.paused = new Promise(resolve => {_resolve = resolve})
+        let paused = this.$frame.paused = new Promise(resolve => {_resolve = resolve})
         paused.resolve = _resolve
     }
 
-    '$agent.resume'(state) {
-        state.__frame.paused?.resolve?.()
-        state.__frame.paused = false
+    '$agent.resume'() {
+        this.$frame.paused?.resolve?.()
+        this.$frame.paused = false
     }
 }
 

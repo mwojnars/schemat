@@ -144,9 +144,7 @@ class Frame {
         else if (!(state instanceof AgentState))
             throw new Error(`state of ${this.agent} agent must be an AgentState instance or a plain object (no class), got ${state}`)
 
-        state.__frame = this
         this.state = state
-
         this.starting?.resolve?.()
         this.starting = false
     }
