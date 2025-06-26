@@ -25,10 +25,12 @@ export class Store {
     /* Base class for local data storage. Every block has at least one local store to keep its records. */
 
     block
+    filename
 
-    constructor(block) {
+    constructor(filename, block) {
         assert(block)
         this.block = block
+        this.filename = filename
     }
 
     // all the methods below can be ASYNC in subclasses... (!)
@@ -82,13 +84,6 @@ export class MemoryStore extends Store {
 
 export class YamlDataStore extends MemoryStore {
     /* Items stored in a YAML file. The file can be unordered. For use during development only. */
-
-    filename
-
-    constructor(filename, block) {
-        super(block)
-        this.filename = filename
-    }
 
     open() {
         /* Load records from this block's file. */
@@ -160,13 +155,6 @@ export class YamlDataStore extends MemoryStore {
 
 export class JsonIndexStore extends MemoryStore {
     /* Binary key-value records stored in a .jl file (JSON Lines) in decoded form. For use in development. */
-
-    filename
-
-    constructor(filename, block) {
-        super(block)
-        this.filename = filename
-    }
 
     open() {
         /* Load records from this.filename file into this.records. */
