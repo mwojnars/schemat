@@ -67,7 +67,7 @@ export class Block extends Agent {
     async __start__() {
         let __exclusive = false         // $agent.select() must execute concurrently to support nested selects, otherwise deadlocks occur!
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
-        return {__exclusive, store: stores[0], stores}
+        return {__exclusive, stores, store: stores[0]}
     }
 
     async _create_store(storage) {

@@ -12,45 +12,44 @@ export class RocksDBStore extends Store {
 
 /* DRAFT ...
 
-// Unfortunately, the basic rocksdb Node.js bindings don’t expose snapshot support directly.
-// But if you're not doing high-frequency concurrent writes, a read-only stream is usually sufficient and safe.
-// Even if the database is being written to elsewhere, you can open a read-only instance for snapshotting:
+// Unfortunately, the basic rocksdb Node.js bindings don't expose snapshot support directly,
+// but if you're not doing high-frequency concurrent writes, a read-only stream is usually sufficient and safe,
+// even if the database is being written to elsewhere, you can open a read-only instance for snapshotting:
 
-    const rocksdb = require('rocksdb');
-    const fs = require('fs');
-    const yaml = require('js-yaml'); // For YAML output, if needed
+import rocksdb from 'rocksdb'
+import fs from 'fs'
+import yaml from 'js-yaml' // for YAML output, if needed
 
-    const db = rocksdb('./my-rocksdb-path');
+const db = rocksdb('./my-rocksdb-path')
 
-    async function exportToJsonOrYaml({ output = 'backup.json', format = 'json' }) {
-      return new Promise((resolve, reject) => {
-        const result = {};
+async function export_to_json_or_yaml({ output = 'backup.json', format = 'json' }) {
+    return new Promise((resolve, reject) => {
+        const result = {}
 
-        db.open({ readOnly: true }, (err) => {
-          if (err) return reject(err);
+        db.open({ read_only: true }, (err) => {
+            if (err) return reject(err)
+            const stream = db.create_read_stream()
 
-          const stream = db.createReadStream();
+            stream
+                .on('data', ({ key, value }) => {
+                    result[key.toString()] = value.toString() // adjust encoding if needed
+                })
+                .on('error', reject)
+                .on('end', () => {
+                    const content = format === 'yaml' 
+                        ? yaml.dump(result) 
+                        : JSON.stringify(result, null, 2)
 
-          stream
-            .on('data', ({ key, value }) => {
-              result[key.toString()] = value.toString(); // adjust encoding if needed
-            })
-            .on('error', reject)
-            .on('end', () => {
-              const content =
-                format === 'yaml' ? yaml.dump(result) : JSON.stringify(result, null, 2);
+                    fs.writeFileSync(output, content, 'utf8')
+                    resolve(`Backup saved to ${output}`)
+                })
+        })
+    })
+}
 
-              fs.writeFileSync(output, content, 'utf8');
-              resolve(`Backup saved to ${output}`);
-            });
-        });
-      });
-    }
+// if you want more control:
 
-
-// If you want more control:
-
-    const yamlContent = yaml.dump(result, { indent: 2, lineWidth: 80 });
-    fs.writeFileSync('backup.yaml', yamlContent);
+const yaml_content = yaml.dump(result, { indent: 2, line_width: 80 })
+fs.writeFileSync('backup.yaml', yaml_content)
 
 */
