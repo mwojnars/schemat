@@ -704,6 +704,9 @@
       repeated: true
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
+  defaults:
+    __concurrent: true
+    "@": schemat:Catalog
   class: schemat/db/block.js:BinaryBlock
   __prototype:
     "@": 29
@@ -941,7 +944,8 @@
         "@": 11
       "@": schemat/types/type.js:REF
     __concurrent:
-      info: If true, agent methods of this agent may execute concurrently.
+      info: If true, agent methods of this agent may execute concurrently. Turned off
+        by default (methods run in exclusive lock).
       "@": schemat/types/type.js:BOOLEAN
     num_workers:
       default: 1
