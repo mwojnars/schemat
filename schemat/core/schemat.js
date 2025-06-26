@@ -160,12 +160,14 @@ export class Schemat {
         await builtin.fetch("../server/cluster.js")
         await builtin.fetch("../std/files.js")
         await builtin.fetch("../std/containers.js")
-        await builtin.fetch("../db/data_request.js")
-        await builtin.fetch("../db/records.js")
-        await builtin.fetch("../db/block.js")
-        await builtin.fetch("../db/sequence.js")
-        await builtin.fetch("../db/indexes.js")
-        await builtin.fetch("../db/db.js")
+        if (SERVER) {
+            await builtin.fetch("../db/db.js")
+            await builtin.fetch("../db/indexes.js")
+            await builtin.fetch("../db/sequence.js")
+            await builtin.fetch("../db/block.js")
+            await builtin.fetch("../db/records.js")
+            await builtin.fetch("../db/data_request.js")
+        }
         await builtin.fetch("../common/structs.js")
         // await builtin.fetch("../common/errors.js")       // needed if mJsonxError is used for transmitting service errors back to client
 
