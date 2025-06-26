@@ -51,11 +51,10 @@ export class Agent extends WebObject {
 
     async __start__(frame) {
         /* Start the microservice implemented by this agent. Return an "execution state" which will be accessible
-           to external calls addressed to the running agent (RPC calls or direct function calls)
-           and will be passed to __stop__() upon microservice termination. Typically, the state object contains
-           handlers to all the resources that were opened during __start__() and must be released in __stop__().
-           The execution state, if present, should be a plain JS object or AgentState. All calls (local or RPC) to
-           agent methods (obj.$agent.X()) are monitored to provide (optional) mutual exclusion and graceful termination.
+           to agent methods ($agent.*()) via this.$state and will be passed to __stop__() upon agent termination.
+           Typically, the state object is a plain JS object with handlers to all the resources that were opened
+           during __start__() and should be released in __stop__(). All calls (local or RPC) to agent methods
+           are tracked to provide (optional) mutual exclusion and graceful termination.
          */
     }
     async __stop__(state) {
