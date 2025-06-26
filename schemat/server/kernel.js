@@ -211,12 +211,29 @@ class Frame {
         return tracked
     }
 
-    async lock() {
-        /* Set per-call exclusive mode and wait until all calls to this agent are completed. Return an `unlock` function. */
+    async lock(fn = null) {
+        /* Run `fn` function inside a one-time exclusive lock (no other agent methods are executed concurrently with `fn`);
+           or wait until all calls to this agent are completed, set exclusive mode on to prevent concurrent calls,
+           and return `unlock` function to be used to exit the exclusive mode. Usage inside an agent object:
+
+           1)  let result = this.$frame.lock(() => {...})
+           or
+           2)  let unlock = await this.$frame.lock()
+               ...
+               unlock()
+
+           Note that lock() must NOT be preceded by any asynchronous instruction (await), nor be used in recursive RPC methods,
+           as both these cases will cause a deadlock. Ideally, lock() should be the first instruction in the method body.
+         */
         this.exclusive = true
         while (this.calls.length > 0)
             await Promise.all(this.calls)
-        return () => {this.exclusive = false}
+
+        let unlock = () => {this.exclusive = false}
+        if (!fn) return unlock
+
+        try { return await fn() }
+        finally { unlock() }
     }
 
     /*** Serialization ***/

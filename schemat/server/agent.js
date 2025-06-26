@@ -20,29 +20,30 @@ export class AgentState {   // AgentData, AgentVariables, Registers
     // alternatively, custom fields are copy-pasted into a vanilla AgentState whenever
     // a plain custom object {...} is returned from __start__()
 
-    constructor() {
-        this.lock = this.lock.bind(this)        // lock() can be called directly after destructuring from {lock} = state
-    }
 
-    async lock(fn = null) {
-        /* Run `fn` function inside exclusive lock (no other agent methods are executed concurrently with `fn`);
-           or wait until all calls to this agent are completed, set exclusive mode to prevent concurrent calls,
-           and return `unlock` function to be used when the exclusive mode can be turned off. Usage:
-
-           1)  let result = state.lock(() => {...})
-           or
-           2)  let unlock = await state.lock()
-               ...
-               unlock()
-
-           Note that lock() must NOT be preceded by any asynchronous instruction (await), nor be used in recursive RPC methods.
-           Both these cases will likely cause a deadlock. Ideally, lock() should be the first instruction in the function body.
-         */
-        let unlock = await this.__frame.lock()
-        if (!fn) return unlock
-        try { return await fn() }
-        finally { unlock() }
-    }
+    // constructor() {
+    //     this.lock = this.lock.bind(this)        // lock() can be called directly after destructuring from {lock} = state
+    // }
+    //
+    // async lock(fn = null) {
+    //     /* Run `fn` function inside exclusive lock (no other agent methods are executed concurrently with `fn`);
+    //        or wait until all calls to this agent are completed, set exclusive mode to prevent concurrent calls,
+    //        and return `unlock` function to be used when the exclusive mode can be turned off. Usage:
+    //
+    //        1)  let result = state.lock(() => {...})
+    //        or
+    //        2)  let unlock = await state.lock()
+    //            ...
+    //            unlock()
+    //
+    //        Note that lock() must NOT be preceded by any asynchronous instruction (await), nor be used in recursive RPC methods.
+    //        Both these cases will likely cause a deadlock. Ideally, lock() should be the first instruction in the function body.
+    //      */
+    //     let unlock = await this.__frame.lock()
+    //     if (!fn) return unlock
+    //     try { return await fn() }
+    //     finally { unlock() }
+    // }
 
     // switch_context(callback)     -- execute callback() in originator's not agent's context; for use inside agent methods
 }
