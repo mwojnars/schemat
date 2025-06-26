@@ -136,15 +136,7 @@ class Frame {
     }
 
     set_state(state) {
-        /* Remember the `state` (can be null/undefined) in this.state and mark the agent's starting phase as finished. */
-
-        // state ??= new AgentState()
-        //
-        // // wrap state in AgentState if needed
-        // if (T.isPlain(state)) state = Object.assign(new AgentState(), state)
-        // else if (!(state instanceof AgentState))
-        //     throw new Error(`state of ${this.agent} agent must be an AgentState instance or a plain object (no class), got ${state}`)
-
+        /* Remember the `state` (can be null/undefined) in this.state and mark the agent's starting phase has finished. */
         this.state = state
         this.starting?.resolve?.()
         this.starting = false
