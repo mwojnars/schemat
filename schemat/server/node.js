@@ -135,7 +135,7 @@ export class Node extends Agent {
        The node's own agent is started implicitly on itself.
      */
 
-    agents                  // array of AgentStatus objects of the form {worker, agent, role, options, ...}; AgentStatus class is not yet defined, so these are plain objects
+    agents                  // array of AgentStatus objects of the form {worker, agent, role, ...}; AgentStatus class is not yet defined, so these are plain objects
     agent_refresh_interval
     http_host
     http_port
@@ -202,14 +202,14 @@ export class Node extends Agent {
 
     async _start_agents(agents) {
         /* Send SYS signals down to worker processes to make them start particular `agents`. */
-        for (let {worker, agent, role, options} of agents) {
+        for (let {worker, agent, role} of agents) {
             // adjust the `worker` index if it does not match a valid worker ID (should be in 1,2,...,num_workers)
             if (worker < 1 || worker > this.num_workers) {
                 let new_worker = (worker-1) % this.num_workers + 1
                 this._print(`_start_agents(): adjusted worker process index of ${agent} from #${worker} to #${new_worker}`)
                 worker = new_worker
             }
-            await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
+            await this.sys_send(worker, 'START_AGENT', agent.id, {role})
         }
     }
 
@@ -523,8 +523,8 @@ export class Node extends Agent {
 
     /* list of SYS signals */
 
-    async START_AGENT(agent_id, {role, options}) {
-        await schemat.kernel.start_agent(agent_id, role, options)
+    async START_AGENT(agent_id, {role}) {
+        await schemat.kernel.start_agent(agent_id, role)
     }
 
     async STOP_AGENT(agent_id, {role}) {
@@ -619,7 +619,7 @@ export class Node extends Agent {
     // async '$master.ipc_recv'()
     // async '$worker.ipc_recv'()
 
-    async '$master.start_agent'(state, agent, {role, options, worker, num_workers = 1} = {}) {
+    async '$master.start_agent'(state, agent, {role, worker, num_workers = 1} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$master.start_agent() agent=${agent} role=${role}`)
         // this._print(`$master.start_agent() agents:`, state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
@@ -639,11 +639,11 @@ export class Node extends Agent {
         
         for (let worker of workers) {
             assert(worker >= 1 && worker <= this.num_workers)
-            agents.push({worker, agent, role, options})
+            agents.push({worker, agent, role})
 
             // request the worker process to start the agent:
-            await this.sys_send(worker, 'START_AGENT', agent.id, {role, options})
-            // this.$worker({node: this, worker: i}).start_agent(agent.id, role, options)
+            await this.sys_send(worker, 'START_AGENT', agent.id, {role})
+            // this.$worker({node: this, worker: i}).start_agent(agent.id, role)
         }
         await this.action.set({agents})
     }
