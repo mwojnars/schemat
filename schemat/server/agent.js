@@ -11,13 +11,10 @@ export class AgentState {   // AgentData, AgentVariables, Registers
        to all agent methods: control methods (__stop__() etc.), as well as user methods ($agent.*()).
      */
 
-    __exclusive = true  // informs the kernel that all calls to agent methods should be executed in a mutually exclusive lock (no concurrency)
-
     // subclasses can add custom fields here:
     // ...
     // alternatively, custom fields are copy-pasted into a vanilla AgentState whenever
     // a plain custom object {...} is returned from __start__()
-
 }
 
 
