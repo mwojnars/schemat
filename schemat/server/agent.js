@@ -1,8 +1,8 @@
+import {AsyncLocalStorage} from 'node:async_hooks'
 import {assert, print, timeout, sleep, utc} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {WebRequest} from "../web/request.js";
 import {WebObject} from "../core/object.js"
-// import {thread_local_variable} from "./thread.js";
 
 
 /**********************************************************************************************************************/
@@ -61,6 +61,11 @@ export class Agent extends WebObject {
     __ctx           // Database that provides context of execution for this agent's __start__/__stop__ methods ("user mode"),
                     // and a fallback context for $agent.*() methods if no request-specific RPC context was given;
                     // if missing, kernel's context (cluster) is used ("kernel mode")
+
+    __state         // AsyncLocalStorage that holds the current AgentState of this agent while its agent-method(s) are being called
+
+    get $state()    { return this.__state?.getStore() }
+    get $role()     { return this.$state?.__role }
 
     num_workers     // number of concurrent workers per node that should execute this agent's microservice at the same time; -1 = "all available"
     hard_restart
