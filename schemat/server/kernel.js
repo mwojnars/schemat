@@ -114,7 +114,8 @@ export class FramesMap extends CustomMap {
 class Frame {
     /* State (internal variables) and status of a running agent. */
     agent               // web object that created this frame, replaced with a new reference on every refresh
-    state               // AgentState object wrapped around or returned by agent.__start__()
+    role                // name of the role this agent is running in
+    state               // state object returned by agent.__start__(), wrapped up in AgentState
 
     calls = []          // promises for currently executing (concurrent) calls on this agent
     exclusive           // if true in a given moment, any new call to this agent will wait until existing calls terminate; configured by lock() on per-call basis
@@ -125,16 +126,15 @@ class Frame {
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
-    constructor(agent, state = null) {
+    constructor(agent, role) {
         this.agent = agent
-        if (state !== null) this.set_state(state)
-        else {
-            let _resolve
-            this.starting = new Promise(resolve => {_resolve = resolve})
-            this.starting.resolve = _resolve
-        }
+        this.role = role
+
+        let _resolve
+        this.starting = new Promise(resolve => {_resolve = resolve})
+        this.starting.resolve = _resolve
     }
-    
+
     set_state(state) {
         /* Store the raw state and create a proxied version of it for tracking calls */
         state ??= new AgentState()
@@ -150,6 +150,13 @@ class Frame {
         this.starting?.resolve?.()
         this.starting = false
     }
+
+    // async start() {
+    //     let {agent, role} = this
+    //     let state = await schemat.in_context(agent.__ctx, () => agent.__start__(this)) || {}
+    //     state.__role = role
+    //     this.set_state(state)
+    // }
 
     async exec(method, args, caller_ctx = schemat.current_context, caller_tx = null, callback = null) {
         /* Call agent's `method` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
@@ -213,7 +220,7 @@ class Frame {
     get_status() {
         return {
             id:             this.agent.id,
-            role:           this.state.__role,
+            role:           this.role,
             options:        this.state.__options,
             stopped:        this.stopped,
             migrating_to:   this.migrating_to,
@@ -377,10 +384,11 @@ export class Kernel {
         assert(agent.is_loaded())
         assert(agent instanceof Agent)
 
-        let frame = new Frame(agent)
+        let frame = new Frame(agent, role)
         this.frames.set([agent.id, role], frame)    // the frame must be assigned to `frames` already before __start__()
+        // await frame.start()
 
-        let state = await schemat.in_context(agent.__ctx, () => agent.__start__({node: this.node, role, options})) || {}
+        let state = await schemat.in_context(agent.__ctx, () => agent.__start__(frame)) || {}
         state.__role = role
         state.__options = options
         frame.set_state(state)

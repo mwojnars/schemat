@@ -9,11 +9,10 @@ import {WebObject} from "../core/object.js"
 export class AgentState {   // AgentData, AgentVariables, Registers
     /* Internal variables and memory of a running agent. Created in agent.__start__() and __restart__(), and passed
        to all agent methods: control methods (__stop__() etc.), as well as user methods ($agent.*()).
-       Some of these variables are created by kernel: __role, __options, __frame.
+       Some of these variables are created by kernel: __role, __frame.
      */
 
     __role              // name of the agent's role, e.g. "$leader"; starts with '$', empty/undefined means a generic role ($agent)
-    __options           // startup options provided by the creator of this agent
     __exclusive = true  // informs the kernel that all calls to agent methods should be executed in a mutually exclusive lock (no concurrency)
     __frame             // Frame of the current run, assigned by kernel
 
@@ -77,15 +76,13 @@ export class Agent extends WebObject {
     async __install__(node) {}  // ideally, this method should be idempotent in case of failure and subsequent re-launch
     async __uninstall__(node) {}
 
-    async __start__({role, node, options} = {}) {
+    async __start__(frame) {
         /* Start the microservice implemented by this agent. Return an "execution state" which will be accessible
            to external calls addressed to the running agent (RPC calls or direct function calls)
            and will be passed to __stop__() upon microservice termination. Typically, the state object contains
            handlers to all the resources that were opened during __start__() and must be released in __stop__().
-           The execution state, if present, should be a plain JS object. If the microservice allows local direct
-           function calls to the microservice, these functions should be top-level elements of the returned state
-           (state.fun()) - all calls to these functions will be automatically protected and monitored, so that
-           the microservice termination awaits the graceful completion of such calls; same for RPC (obj.$agent.X()) calls.
+           The execution state, if present, should be a plain JS object or AgentState. All calls (local or RPC) to
+           agent methods (obj.$agent.X()) are monitored to provide (optional) mutual exclusion and graceful termination.
          */
     }
     async __stop__(state) {
