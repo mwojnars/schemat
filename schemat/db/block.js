@@ -25,23 +25,21 @@ export class Block extends Agent {
     }
 
     sequence        // parent sequence
-    storage         // storage type, e.g. "yaml", "json", "rocksdb", ...
+    storage         // storage type, e.g. "yaml", "json", "rocksdb", ... can be repeated
+    storage$
     file_tag        // name of the local file/directory of this block, without a path nor extension; initialized during __setup__(), should not be modified later on
 
     // __meta.pending_flush = false  // true when a flush() is already scheduled to be executed after a delay
 
     get ring()      { return this.sequence.ring }
 
-    // get file_name() {
-    //     let ext = Block.STORAGE_TYPES[this.storage]
-    //     if (ext) return `${this.file_tag}.${ext}`
-    //     throw new Error(`unknown storage type '${this.storage}' in ${this}`)
-    // }
-
     // absolute path to this block's local folder/file on the current node; the upper part of the path may vary between nodes
-    get file_path() {
-        let ext = Block.STORAGE_TYPES[this.storage]
-        if (!ext) throw new Error(`unknown storage type '${this.storage}' in ${this}`)
+    get file_path()  { return this._file_path(this.storage) }
+    get file_paths() { return this.storage$.map(s => this._file_path(s)) }
+
+    _file_path(storage) {
+        let ext = Block.STORAGE_TYPES[storage]
+        if (!ext) throw new Error(`unknown storage type '${storage}' in ${this}`)
         return `${schemat.node.file_path}/${this.file_tag}.${ext}`
     }
 
@@ -57,7 +55,7 @@ export class Block extends Agent {
         ]
         this.file_tag ??= parts.filter(p => p).join('.')
 
-        this._print('__setup__() done:', this.file_path)
+        this._print('__setup__() done:', this.file_paths)
     }
 
     async __load__() {
