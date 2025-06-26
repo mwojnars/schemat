@@ -6,16 +6,16 @@ import {WebObject} from "../core/object.js"
 
 /**********************************************************************************************************************/
 
-export class AgentState {   // AgentData, AgentVariables, Registers
-    /* Internal variables and memory of a running agent. Created in agent.__start__() and __restart__(), and passed
-       to all agent methods: control methods (__stop__() etc.), as well as user methods ($agent.*()).
-     */
-
-    // subclasses can add custom fields here:
-    // ...
-    // alternatively, custom fields are copy-pasted into a vanilla AgentState whenever
-    // a plain custom object {...} is returned from __start__()
-}
+// export class AgentState {   // AgentData, AgentVariables, Registers
+//     /* Internal variables and memory of a running agent. Created in agent.__start__() and __restart__(), and passed
+//        to all agent methods: control methods (__stop__() etc.), as well as user methods ($agent.*()).
+//      */
+//
+//     // subclasses can add custom fields here:
+//     // ...
+//     // alternatively, custom fields are copy-pasted into a vanilla AgentState whenever
+//     // a plain custom object {...} is returned from __start__()
+// }
 
 
 export class Agent extends WebObject {

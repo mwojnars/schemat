@@ -9,7 +9,7 @@ import {print, assert, T, sleep} from "../common/utils.js";
 import {CustomMap} from "../common/structs.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {BootDatabase} from "../db/db.js";
-import {Agent, AgentState} from "./agent.js";
+import {Agent} from "./agent.js";
 import {IPC_Mailbox} from "./node.js";
 
 
@@ -115,7 +115,7 @@ class Frame {
     /* State (internal variables) and status of a running agent. */
     agent               // web object that created this frame, replaced with a new reference on every refresh
     role                // name of the role this agent is running in
-    state               // state object returned by agent.__start__(), wrapped up in AgentState
+    state               // state object returned by agent.__start__()
 
     calls = []          // promises for currently executing (concurrent) calls on this agent
     exclusive           // if true in a given moment, any new call to this agent will wait until existing calls terminate; configured by lock() on per-call basis
@@ -136,13 +136,14 @@ class Frame {
     }
 
     set_state(state) {
-        /* Store the raw state and create a proxied version of it for tracking calls */
-        state ??= new AgentState()
+        /* Remember the `state` (can be null/undefined) in this.state and mark the agent's starting phase as finished. */
 
-        // wrap state in AgentState if needed
-        if (T.isPlain(state)) state = Object.assign(new AgentState(), state)
-        else if (!(state instanceof AgentState))
-            throw new Error(`state of ${this.agent} agent must be an AgentState instance or a plain object (no class), got ${state}`)
+        // state ??= new AgentState()
+        //
+        // // wrap state in AgentState if needed
+        // if (T.isPlain(state)) state = Object.assign(new AgentState(), state)
+        // else if (!(state instanceof AgentState))
+        //     throw new Error(`state of ${this.agent} agent must be an AgentState instance or a plain object (no class), got ${state}`)
 
         this.state = state
         this.starting?.resolve?.()
