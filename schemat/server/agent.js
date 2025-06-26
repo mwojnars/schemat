@@ -1,4 +1,3 @@
-import {AsyncLocalStorage} from 'node:async_hooks'
 import {assert, print, timeout, sleep, utc} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {WebRequest} from "../web/request.js";
