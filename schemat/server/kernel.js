@@ -138,7 +138,6 @@ class Frame {
     set_state(state) {
         /* Store the raw state and create a proxied version of it for tracking calls */
         state ??= new AgentState()
-        state.__role = this.role
 
         // wrap state in AgentState if needed
         if (T.isPlain(state)) state = Object.assign(new AgentState(), state)
@@ -403,7 +402,6 @@ export class Kernel {
         let restart = () => agent.__restart__(prev, frame.agent)
 
         let state = await schemat.in_context(agent.__ctx, restart)
-        state.__role = prev.__role
 
         frame.set_state(state)
         frame.agent = agent

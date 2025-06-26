@@ -12,7 +12,6 @@ export class AgentState {   // AgentData, AgentVariables, Registers
        Some of these variables are created by kernel: __role, __frame.
      */
 
-    __role              // name of the agent's role, e.g. "$leader"; starts with '$', empty/undefined means a generic role ($agent)
     __exclusive = true  // informs the kernel that all calls to agent methods should be executed in a mutually exclusive lock (no concurrency)
     __frame             // Frame of the current run, assigned by kernel
 
