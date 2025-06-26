@@ -233,9 +233,14 @@ export class Schemat {
         // this.session?.countRequested(id)
         // a stub has immediate expiry date (i.e., on next cache purge) unless its data is loaded and TLS updated;
         // this prevents keeping a large number of unused stubs indefinitely
-        let obj = this.registry.get_object(id) || this.registry.set_object(WebObject.stub(id))
-        assert(CLIENT || !obj.__meta.mutable)
-        return obj
+        let obj = this.registry.get_object(id)
+        if (obj && SERVER) {
+            // on server, don't return loaded objects after expiry date, even if still present in the registry
+            assert(!obj.__meta.mutable)
+            if (obj.is_loaded() && obj.is_expired() && !this._essential.includes(id))
+                obj = null
+        }
+        return obj || this.registry.set_object(WebObject.stub(id))
     }
 
     get_provisional(id) {

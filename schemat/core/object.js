@@ -429,7 +429,7 @@ export class WebObject {
     is_deleted()    { return this.__status === WebObject.Status.DELETED }
     is_category()   { return false }
     is_mutable()    { return this.__meta.mutable }
-    //is_expired()    { return this.__meta.expire_at < Date.now() }
+    is_expired()    { return this.__meta.expire_at < Date.now() }
 
     if_loaded()     { return this.is_loaded() && this }     // return self if already loaded, false/undefined otherwise
 
