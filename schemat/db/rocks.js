@@ -33,17 +33,25 @@ export class RocksDBStore extends Store {
     /* Local data store based on RocksDB. */
 
     _db = null
+    _bound = null
 
     async open() {
         /* Open or create a RocksDB database at this.filename */
         this._db = rocksdb(this.filename)
         await promisify(this._db.open.bind(this._db))({create_if_missing: true})
+        
+        // bind and promisify all methods once
+        this._bound = {
+            get: promisify(this._db.get.bind(this._db)),
+            put: promisify(this._db.put.bind(this._db)),
+            del: promisify(this._db.del.bind(this._db))
+        }
     }
 
     async get(key) {
         /* Return JSON string stored under the binary key, or undefined if not found */
         try {
-            const value = await promisify(this._db.get.bind(this._db))(key)
+            const value = await this._bound.get(key)
             return value.toString()
         } catch (err) {
             if (err.notFound) return undefined
@@ -53,14 +61,14 @@ export class RocksDBStore extends Store {
 
     async put(key, value) {
         /* Store JSON string value under the binary key */
-        await promisify(this._db.put.bind(this._db))(key, value)
+        await this._bound.put(key, value)
     }
 
     async del(key, checked = false) {
-        if (!checked) return promisify(this._db.del.bind(this._db))(key)
+        if (!checked) return this._bound.del(key)
         try {
-            await promisify(this._db.get.bind(this._db))(key)   // raises error if not found
-            await promisify(this._db.del.bind(this._db))(key)
+            await this._bound.get(key)   // raises error if not found
+            await this._bound.del(key)
             return true
         } catch (err) {
             if (err.notFound) return false
