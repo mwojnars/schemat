@@ -110,10 +110,12 @@ export class Block extends Agent {
 
     async '$agent.erase'({store}) {
         /* Remove all records from this block. */
-        await store.erase()
+        return this.$state.stores.map(s => s.erase())[0]
     }
 
-    async '$agent.flush'({store}) { return store.flush(false) }
+    async '$agent.flush'() {
+        return this.$state.stores.map(s => s.flush(false))[0]
+    }
 
     // propagate() {
     //     /* For now, there's NO propagation from index blocks, only from data blocks (see below). */

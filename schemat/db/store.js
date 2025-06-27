@@ -59,7 +59,7 @@ export class MemoryStore extends Store {
     get(key)            { return this._records.get(key) }
     put(key, value)     { this._records.set(key, value); this.flush() }
     del(key)            { if (this._records.delete(key)) {this.flush(); return true} return false }
-    erase()             { this._records.clear(); this.flush() }
+    erase()             { this._records.clear(); this.flush(0) }
     // get size()       { return this._records.size }
 
     *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
