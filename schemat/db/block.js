@@ -116,6 +116,18 @@ export class Block extends Agent {
         return this.$state.stores.map(s => s.flush(false))[0]
     }
 
+    async _sync_stores() {
+        /* Copy all data from $state.store to other stores (if present) after erasing them. */
+        let others = this.$state.stores.slice(1)
+        if (!others.length) return
+
+        await Promise.all(others.map(s => s.erase()))
+        let {store} = this.$state
+
+        for (let [k, v] of store.scan())
+            await Promise.all(others.map(s => s.put(k, v)))
+    }
+
     // propagate() {
     //     /* For now, there's NO propagation from index blocks, only from data blocks (see below). */
     // }
