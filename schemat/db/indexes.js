@@ -52,7 +52,7 @@ export class IndexOperator extends DerivedOperator {
 
         // delete old records
         for (let [key, value] of del_records || [])     // TODO: `key` may be duplicated (repeated values), remove duplicates beforehand
-            sequence.del(key, value) //|| print(`deleted [${key}]`)
+            sequence.del(key) //|| print(`deleted [${key}]`)
 
         // (over)write new records
         for (let [key, value] of put_records || [])     // TODO: `key` may be duplicated, keep the *first* one only

@@ -135,10 +135,10 @@ export class IndexSequence extends Sequence {
         return block.$agent.put(key, value)
     }
 
-    async del(key, value) {
+    async del(key) {
         let block = this.find_block(key)
         // if (!block.is_loaded()) block = await block.load()
-        return block.$agent.del(key, value)
+        return block.$agent.del(key)
     }
 
     apply_change(key, prev, next) { return this.operator.apply_change(this, key, prev, next) }

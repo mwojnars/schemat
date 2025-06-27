@@ -97,7 +97,7 @@ export class Block extends Agent {
         this._flush(stores[0])
     }
 
-    async '$agent.del'({store}, key, value) {
+    async '$agent.del'({}, key) {
         // if (value === undefined) value = await store.get(key)
         // if (value === undefined) return false           // TODO: notify about data inconsistency (there should be no missing records)
         return this._del(key)

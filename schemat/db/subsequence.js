@@ -27,9 +27,9 @@ export class Subsequence {
         return this.base_sequence.put(prefixed_key, value)
     }
 
-    async del({key, value}) {
+    async del({key}) {
         let prefixed_key = this._prefix_key(key)
-        return this.base_sequence.del(prefixed_key, value)
+        return this.base_sequence.del(prefixed_key)
     }
 
     async* scan_binary(opts = {}) {
