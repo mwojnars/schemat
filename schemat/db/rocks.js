@@ -8,6 +8,11 @@ CLI tool (ldb)
 - dump a key:       ldb --db=/path/to/db get "some-key"
 - delete a key:     ldb --db=/path/to/db delete "some-key"
 - put/update:       ldb --db=/path/to/db put "some-key" "new-value"
+- other:            ldb ... approxsize [--from] [--to]
+                    ldb ... checkconsistency
+                    ldb ... deleterange <begin key> <end key>
+Admin:
+                    ldb ... dump / idump / load / backup / restore / repair / checkpoint
 Example:
 -                   ldb --db=./cluster/sample/node.1024/02_app.data.1029.rocksdb scan
 
