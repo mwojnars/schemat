@@ -54,7 +54,6 @@ export class MemoryStore extends Store {
     /* All records stored in a Map in memory. Possibly synchronized with a file on disk (implemented in subclasses). */
 
     _records = new BinaryMap()       // preloaded records, {binary-key: json-data}; unordered, sorting is done during scan()
-    dirty = false
 
     get(key)            { return this._records.get(key) }
     put(key, value)     { this._records.set(key, value); this.flush() }
@@ -116,7 +115,6 @@ export class YamlDataStore extends MemoryStore {
         // let block = req.current_block
         // this.sequence = req.current_data
 
-        assert(!this.dirty)
         createFileIfNotExists(this.filename, fs)
 
         let content = fs.readFileSync(this.filename, 'utf8')
@@ -158,7 +156,6 @@ export class YamlDataStore extends MemoryStore {
         })
         let out = YAML.stringify(recs)
         fs.writeFileSync(this.filename, out, 'utf8')
-        this.dirty = false
     }
 }
 
@@ -173,7 +170,6 @@ export class JsonIndexStore extends MemoryStore {
 
     open() {
         /* Load records from this.filename file into this.records. */
-        assert(!this.dirty)
         createFileIfNotExists(this.filename, fs)
 
         let content = fs.readFileSync(this.filename, 'utf8')
@@ -197,7 +193,6 @@ export class JsonIndexStore extends MemoryStore {
             return json_value ? `[${json_key}, ${json_value}]` : `[${json_key}]`
         })
         fs.writeFileSync(this.filename, lines.join('\n') + '\n', 'utf8')
-        this.dirty = false
     }
 }
 
