@@ -136,7 +136,9 @@ export class YamlDataStore extends MemoryStore {
     }
 
     get_max_id() {
-        /* Maximum ID across all records. */
+        /* Maximum ID across all records. The encoding may use reversed binary representation of IDs,
+           and for this reason it may be incorrect to rely on the ordering of binary keys to find the largest one.
+         */
         let max = 0
         for (let key of this._records.keys()) {
             let id = data_schema.decode_key(key)[0]

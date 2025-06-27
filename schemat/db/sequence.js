@@ -82,12 +82,13 @@ export class Sequence extends WebObject {
     encode_key(key) { return this.operator.encode_key(key) }    // app > binary representation
     decode_key(bin) { return this.operator.decode_key(bin) }    // binary > app representation
 
-    async* scan_binary({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
+    async* scan_binary(opts = {}) {
         /* Scan this sequence in the [`start`, `stop`) range and yield [key, value] pairs.
            If `limit` is defined, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is defined, yield items in batches of `batch_size` items.
          */
+        let {start = null, stop = null, reverse = false} = opts
         assert(!reverse)
 
         let block_start = this.find_block(start)
@@ -96,11 +97,11 @@ export class Sequence extends WebObject {
 
         // block_start.assert_active()
         // if (!block.is_loaded()) block = await block.load()
-        yield* await block_start.$agent.scan({start, stop})
+        yield* await block_start.$agent.scan(opts)
     }
 
     async* scan(opts = {}) {
-        /* Scan this sequence in the [`start`, `stop`) range and yield BinaryRecords. */
+        /* Scan this sequence and yield BinaryRecords. The `start`, `stop` options are converted from tuples to binary. */
         let {start, stop} = opts
         let rschema = this.operator.record_schema
 
