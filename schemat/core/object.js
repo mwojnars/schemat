@@ -229,7 +229,8 @@ export class WebObject {
     // properties that are always taken from regular JS attributes of __self and must not be present in __data when saving a web object;
     // `then` attr is special in JS because when a promise resolves, .then is checked for another chained promise, hence we disallow it as a field
     static RESERVED = new Set([
-        'then', 'id', '__meta', '__data', '__self', '__proxy', '__status', '__ring', '__refresh', '__provisional_id', '__frame'
+        'then', 'id', '__meta', '__data', '__self', '__proxy', '__status', '__ring', '__refresh', '__provisional_id',
+        '__frame', '$frame', '$state'
     ])
 
     /***
