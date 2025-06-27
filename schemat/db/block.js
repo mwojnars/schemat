@@ -72,8 +72,8 @@ export class Block extends Agent {
         return {stores, store: stores[0]}
     }
 
-    async _create_store(storage) {
-        let path  = this._file_path(storage)
+    async _create_store(storage, path = null) {
+        path ??= this._file_path(storage)
         let clas_ = this._detect_store_class(storage)
         let store = new clas_(path, this)
         await store.open()
@@ -520,8 +520,9 @@ export class BootDataBlock extends DataBlock {
     async __load__() {
         await super.__load__()
         let format = this._detect_format(this._path)
-        let storage_class = this._detect_store_class(format)
-        this._store = new storage_class(this._path, this)
+        this._store = await this._create_store(format, this._path)
+        // let storage_class = this._detect_store_class(format)
+        // this._store = new storage_class(this._path, this)
         await this._store.open()
     }
 
