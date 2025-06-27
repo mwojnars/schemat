@@ -103,8 +103,8 @@ export class Block extends Agent {
         return this.$state.stores.map(s => s.del(key, checked))[0]  // delete from all stores, but return the first result only
     }
 
-    async '$agent.scan'({store}, opts = {}) {
-        return arrayFromAsync(store.scan(opts))         // TODO: return batches with a hard upper limit on their size
+    async '$agent.scan'({}, opts = {}) {
+        return arrayFromAsync(this.$state.store.scan(opts))         // TODO: return batches with a hard upper limit on their size
     }
 
     async '$agent.erase'() {
