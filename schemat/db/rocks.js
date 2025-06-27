@@ -75,6 +75,14 @@ export class RocksDBStore extends Store {
             throw err
         }
     }
+
+    async erase() {
+        /* Remove all records from this store */
+        // close and reopen the database to clear all data
+        await promisify(this._db.close.bind(this._db))()
+        await promisify(this._db.destroy.bind(this._db))(this.filename)
+        await this.open()
+    }
 }
 
 /* DRAFT ...
