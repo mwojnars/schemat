@@ -97,8 +97,6 @@ export class Block extends Agent {
     }
 
     async '$agent.del'({}, key) {
-        // if (value === undefined) value = await store.get(key)
-        // if (value === undefined) return false           // TODO: notify about data inconsistency (there should be no missing records)
         return this._del(key)
     }
 
@@ -116,8 +114,6 @@ export class Block extends Agent {
     }
 
     async '$agent.flush'({store}) { return store.flush(false) }
-
-    // _flush(store, delay) { store.flush(delay) }
 
     // propagate() {
     //     /* For now, there's NO propagation from index blocks, only from data blocks (see below). */
