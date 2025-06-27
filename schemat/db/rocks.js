@@ -48,10 +48,12 @@ export class RocksDBStore extends Store {
         }
     }
 
-    async get(key) {
-        /* Return JSON string stored under the binary key, or undefined if not found */
+    async get(key, opts) {
+        /* Return JSON string stored under the binary key, or undefined if not found.
+           Available options: asBuffer, fillCache.
+         */
         try {
-            const value = await this._bound.get(key)
+            const value = await this._bound.get(key, opts)
             return value.toString()
         } catch (err) {
             if (err.notFound) return undefined
@@ -59,9 +61,11 @@ export class RocksDBStore extends Store {
         }
     }
 
-    async put(key, value) {
-        /* Store JSON string value under the binary key */
-        await this._bound.put(key, value)
+    async put(key, value, opts) {
+        /* Store JSON string value under the binary key.
+           If opts.sync=true, the write is flushed to disk before returning (slower but safer).
+         */
+        await this._bound.put(key, value, opts)
     }
 
     async del(key, checked = false) {
@@ -82,6 +86,32 @@ export class RocksDBStore extends Store {
         await promisify(this._db.close.bind(this._db))()
         await promisify(this._db.destroy.bind(this._db))(this.filename)
         await this.open()
+    }
+
+    async* scan(db, {limit, keys = true, values = true, ...opts} = {}) {
+        /*
+         Options accepted by RocksDB:
+         - gt, gte, lt, lte:    start/end bound (exclusive / inclusive)
+         - reverse:
+         - keyAsBuffer/valueAsBuffer:   whether keys/values are returned as Buffers or strings (default: true)
+         - snapshot:        whether to iterate over a consistent snapshot (default: true)
+         - fillCache:       whether the read will populate the RocksDB block cache, which speeds up future reads to the same key or nearby keys;
+                            default: true; fillCache=false is useful when doing large scans or bulk exports
+         - highWaterMark:   maximum number of entries (key-value pairs) buffered in memory at a time during iteration; default: 16 or 64
+         */
+        if (!keys && !values) throw new Error(`at least one of the options 'keys', 'values', must be true`)
+        let it = this._db.iterator({keyAsBuffer: true, valueAsBuffer: false, ...opts})
+        try {
+            while (true) {
+                let [key, value] = await new Promise((resolve, reject) =>
+                    it.next((err, k, v) => err ? reject(err) : resolve([k, v]))
+                )
+                if (key === undefined && value === undefined) break
+                yield keys && values ? [key, value] : keys ? key : value
+            }
+        } finally {
+            await new Promise(resolve => it.end(resolve))
+        }
     }
 }
 
