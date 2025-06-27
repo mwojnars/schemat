@@ -120,25 +120,9 @@ export class Block extends Agent {
         this._flush(store)
     }
 
-    async '$agent.flush'({store}) { return this._flush(store, false) }
+    async '$agent.flush'({store}) { return store.flush(false) }
 
     _flush(store, delay) { store.flush(delay) }
-
-    // _flush(store, with_delay = true) {
-    //     /* Flush all unsaved modifications to disk. If with_delay=true, the operation is delayed by `flush_delay`
-    //        seconds (configured in the parent sequence) to combine multiple consecutive updates in one write
-    //        - in such case you do NOT want to await the result.
-    //      */
-    //     let delay = this.sequence.flush_delay
-    //
-    //     if (with_delay && delay) {
-    //         if (this.__meta.pending_flush) return
-    //         this.__meta.pending_flush = true
-    //         return setTimeout(() => this._flush(store, false), delay * 1000)
-    //     }
-    //     this.__meta.pending_flush = false
-    //     return store._flush()
-    // }
 
     // propagate() {
     //     /* For now, there's NO propagation from index blocks, only from data blocks (see below). */
