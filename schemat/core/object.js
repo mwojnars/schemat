@@ -55,6 +55,9 @@ class Intercept {
 
     static proxy_get(target, prop, receiver, deep = true)
     {
+        // use ordinary access if the property is a symbol or reserved
+        if (Intercept._is_special(prop)) return Reflect.get(target, prop, receiver)
+
         // special handling for multi-segment paths (a.b.c...)
         if (deep && prop?.includes?.(SUBFIELD))
             return Intercept._get_deep(target, prop, receiver)
@@ -84,9 +87,8 @@ class Intercept {
             return proxy
         }
 
-        // return if the object is not loaded yet, or the property is special in any way
-        if (!target.__data || Intercept._is_special(prop))
-            return undefined
+        // return if the object is not loaded yet
+        if (!target.__data) return undefined
 
         let [base, plural] = Intercept._check_plural(prop)      // property name with $ suffix truncated
 
@@ -98,6 +100,12 @@ class Intercept {
             Intercept._cache_values(cache, base + PLURAL, values)
         }
         return plural ? values : values[0]
+    }
+
+    static _is_special(prop) {
+        // `prop` can be a symbol like [Symbol.toPrimitive] instead of a string, or be a reserved property
+        // that is always accessed as a regular JS attribute
+        return typeof prop !== 'string' || WebObject.RESERVED.has(prop)
     }
 
     static _create_agent_proxy(target, role) {
@@ -159,11 +167,6 @@ class Intercept {
     static _cache_values(cache, prop$, vals) {
         /* Like _cache_value(), but for caching an array of repeated values, some of them possibly being promises. */
         cache.set(prop$, vals.some(v => v instanceof Promise) ? Promise.all(vals).then(vs => cache.set(prop$, vs)) : vals)
-    }
-
-    static _is_special(prop) {
-        // `prop` can be a symbol like [Symbol.toPrimitive] instead of a string
-        return typeof prop !== 'string' || WebObject.RESERVED.has(prop)
     }
 
     static proxy_set(target, path, value, receiver)
