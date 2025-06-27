@@ -48,6 +48,20 @@ export class Store {
     flush()             { return this._flush() }
     _flush()            {}
     // get size()          { }                                 // number of records in this storage, or undefined if not implemented
+
+    async bulk_write(operations, opts = {}) {
+        /* Execute multiple operations iteratively by calling put()/del() */
+        for (let {type, key, value} of operations) {
+            if (type === 'put')
+                await this.put(key, value)
+            else if (type === 'del')
+                await this.del(key, true)
+            else
+                throw new Error(`unknown operation type: ${type}`)
+        }
+        if (opts.sync)
+            await this.flush(0)
+    }
 }
 
 export class MemoryStore extends Store {
