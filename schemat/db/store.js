@@ -1,11 +1,13 @@
+import fs from 'node:fs'
+import YAML from 'yaml'
+
 import {assert, print, T} from '../common/utils.js'
 import {NotImplemented} from '../common/errors.js'
 import {BinaryMap, compare_uint8} from "../common/binary.js"
 import {data_schema} from "./records.js"
 
-const fs = await server_import('node:fs')
-const YAML = (await server_import('yaml'))?.default
-
+// const fs = await server_import('node:fs')
+// const YAML = (await server_import('yaml'))?.default
 
 
 function createFileIfNotExists(filename, fs) {
