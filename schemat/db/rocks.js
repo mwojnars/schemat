@@ -98,15 +98,23 @@ export class RocksDBStore extends Store {
          - fillCache:       whether the read will populate the RocksDB block cache, which speeds up future reads to the same key or nearby keys;
                             default: true; fillCache=false is useful when doing large scans or bulk exports
          - highWaterMark:   maximum number of entries (key-value pairs) buffered in memory at a time during iteration; default: 16 or 64
+         Other:
+         - limit:           maximum number of entries to return
+         - keys, values:    whether to return keys or values only
          */
         if (!keys && !values) throw new Error(`at least one of the options 'keys', 'values', must be true`)
         let it = this._db.iterator({keyAsBuffer: true, valueAsBuffer: false, ...opts})
+        let count = 0
+        
         try {
             while (true) {
+                if (limit !== undefined && count >= limit) break
                 let [key, value] = await new Promise((resolve, reject) =>
                     it.next((err, k, v) => err ? reject(err) : resolve([k, v]))
                 )
                 if (key === undefined && value === undefined) break
+                
+                count++
                 yield keys && values ? [key, value] : keys ? key : value
             }
         } finally {
