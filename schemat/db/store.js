@@ -45,7 +45,8 @@ export class Store {
 
     *scan(opts)         { throw new NotImplemented() }      // generator of [binary-key, json-value] pairs
     erase()             { throw new NotImplemented() }
-    flush()             { }
+    flush()             { return this._flush() }
+    _flush()            {}
     // get size()          { }                                 // number of records in this storage, or undefined if not implemented
 }
 
@@ -56,6 +57,8 @@ export class MemoryStore extends Store {
     dirty = false
 
     get(key)            { return this._records.get(key) }
+    // put(key, value)     { this._records.set(key, value); this.flush() }
+    // del(key)            { if (this._records.delete(key)) {this.flush(); return true} return false }
     put(key, value)     { this.dirty = true; this._records.set(key, value) }
     del(key)            { this.dirty = true; return this._records.delete(key) }
 
@@ -78,6 +81,22 @@ export class MemoryStore extends Store {
         for (let key of sorted_keys.slice(start_index, stop_index))
             yield [key, this._records.get(key)]
     }
+
+    // flush(with_delay = true) {
+    //     /* Flush all unsaved modifications to disk. If with_delay=true, the operation is delayed by `flush_delay`
+    //        seconds (configured in the parent sequence) to combine multiple consecutive updates in one write
+    //        - in such case you do NOT want to await the result.
+    //      */
+    //     let delay = this.sequence.flush_delay
+    //
+    //     if (with_delay && delay) {
+    //         if (this.__meta.pending_flush) return
+    //         this.__meta.pending_flush = true
+    //         return setTimeout(() => this.flush(false), delay * 1000)
+    //     }
+    //     this.__meta.pending_flush = false
+    //     return this._flush()
+    // }
 }
 
 /**********************************************************************************************************************
@@ -136,7 +155,7 @@ export class YamlDataStore extends MemoryStore {
         return max
     }
 
-    async flush() {
+    async _flush() {
         /* Save the entire database (this.records) to a file. */
         print(`YamlDataStore flushing ${this._records.size} items to ${this.filename}...`)
         let recs = [...this.scan()].map(([key, data_json]) => {
@@ -176,7 +195,7 @@ export class JsonIndexStore extends MemoryStore {
             // this._records.set(Uint8Array.from(key), value ? JSON.stringify(value) : '')
     }
 
-    async flush() {
+    async _flush() {
         /* Save the entire database (this.records) to a file. */
         // print(`YamlIndexStorage flushing ${this._records.size} records to ${this.filename}...`)
 
