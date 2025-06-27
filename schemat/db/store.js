@@ -57,10 +57,10 @@ export class MemoryStore extends Store {
     dirty = false
 
     get(key)            { return this._records.get(key) }
-    // put(key, value)     { this._records.set(key, value); this.flush() }
-    // del(key)            { if (this._records.delete(key)) {this.flush(); return true} return false }
-    put(key, value)     { this.dirty = true; this._records.set(key, value) }
-    del(key)            { this.dirty = true; return this._records.delete(key) }
+    put(key, value)     { this._records.set(key, value); this.flush() }
+    del(key)            { if (this._records.delete(key)) {this.flush(); return true} return false }
+    // put(key, value)     { this.dirty = true; this._records.set(key, value) }
+    // del(key)            { this.dirty = true; return this._records.delete(key) }
 
     erase()             { this.dirty = true; this._records.clear() }
     // get size()       { return this._records.size }

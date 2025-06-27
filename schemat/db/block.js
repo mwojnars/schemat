@@ -94,7 +94,6 @@ export class Block extends Agent {
         /* Write the [key, value] pair here in this block. No forward of the request to another ring. */
         let {stores} = this.$state
         await stores.map(s => s.put(key, value))[0]     // write to all stores, but await the first one only
-        this._flush(stores[0])
     }
 
     async '$agent.del'({}, key) {
@@ -105,7 +104,6 @@ export class Block extends Agent {
 
     async _del(key, checked = false) {
         let deleted = this.$state.stores.map(s => s.del(key, checked))[0]   // delete from all stores, but await the first one only
-        this._flush(this.$state.store)
         return deleted
     }
 
