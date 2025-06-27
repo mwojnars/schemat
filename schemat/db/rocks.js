@@ -11,15 +11,15 @@ CLI tool (ldb)
 Example:
 -                   ldb --db=./cluster/sample/node.1024/02_app.data.1029.rocksdb scan
 
+Advanced analysis:
+- SST files (compaction, bloom filters):    sst_dump --file=/path/to/sst --show_properties
+- track compaction stats, cache hit/miss:   Prometheus/OpenTelemetry
 */
 
 import {promisify} from 'node:util'
 import rocksdb from 'rocksdb'
 
 import {Store} from './store.js'
-
-// let {promisify} = await server_import('node:util') || {}
-// let rocksdb = (await server_import('rocksdb'))?.default
 
 
 /**********************************************************************************************************************/
