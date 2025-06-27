@@ -88,21 +88,28 @@ export class RocksDBStore extends Store {
         await this.open()
     }
 
-    async* scan(db, {limit, keys = true, values = true, ...opts} = {}) {
+    async* scan(db, {start, stop, limit, keys = true, values = true, ...opts} = {}) {
         /*
-         Options accepted by RocksDB:
+         Options:
+         - start:           start bound (inclusive), same as `gte` below
+         - stop:            end bound (exclusive), same as `lt` below
+         - limit:           maximum number of entries to return
+         - keys, values:    whether to return keys or values only
+         - reverse:         whether to scan in reverse order
+
+         Options specific to RocksDB:
          - gt, gte, lt, lte:    start/end bound (exclusive / inclusive)
-         - reverse:
          - keyAsBuffer/valueAsBuffer:   whether keys/values are returned as Buffers or strings (default: true)
          - snapshot:        whether to iterate over a consistent snapshot (default: true)
          - fillCache:       whether the read will populate the RocksDB block cache, which speeds up future reads to the same key or nearby keys;
                             default: true; fillCache=false is useful when doing large scans or bulk exports
          - highWaterMark:   maximum number of entries (key-value pairs) buffered in memory at a time during iteration; default: 16 or 64
-         Other:
-         - limit:           maximum number of entries to return
-         - keys, values:    whether to return keys or values only
          */
+
         if (!keys && !values) throw new Error(`at least one of the options 'keys', 'values', must be true`)
+        opts.gte ??= start
+        opts.lt  ??= stop
+
         let it = this._db.iterator({keyAsBuffer: true, valueAsBuffer: false, ...opts})
         let count = 0
         
