@@ -372,10 +372,11 @@ export class Database extends WebObject {
 
     /***  Indexes  ***/
 
-    async *scan(name, {offset, limit, ...opts} = {}) {
+    async *scan(name, {offset, ...opts} = {}) {
         /* Yield a stream of plain Records from the index, merge-sorted from all the rings. */
         let streams = this.rings.map(r => r.scan(name, opts))
         let merged = merge(Record.compare, ...streams)
+        let {limit} = opts
         
         if (offset)
             for (let i = 0; i < offset; i++) {
