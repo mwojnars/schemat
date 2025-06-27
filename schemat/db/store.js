@@ -82,21 +82,18 @@ export class MemoryStore extends Store {
             yield [key, this._records.get(key)]
     }
 
-    // flush(with_delay = true) {
-    //     /* Flush all unsaved modifications to disk. If with_delay=true, the operation is delayed by `flush_delay`
-    //        seconds (configured in the parent sequence) to combine multiple consecutive updates in one write
-    //        - in such case you do NOT want to await the result.
-    //      */
-    //     let delay = this.sequence.flush_delay
-    //
-    //     if (with_delay && delay) {
-    //         if (this.__meta.pending_flush) return
-    //         this.__meta.pending_flush = true
-    //         return setTimeout(() => this.flush(false), delay * 1000)
-    //     }
-    //     this.__meta.pending_flush = false
-    //     return this._flush()
-    // }
+    flush(delay = 0.5) {
+        /* Flush unsaved modifications to disk. If with_delay=true, the operation is delayed by `delay` seconds,
+           to combine multiple consecutive updates in one write.
+         */
+        if (delay) {
+            if (this._pending_flush) return
+            this._pending_flush = true
+            setTimeout(() => this.flush(0), delay * 1000)
+        }
+        this._pending_flush = false
+        return this._flush()
+    }
 }
 
 /**********************************************************************************************************************
