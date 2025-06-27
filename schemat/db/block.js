@@ -4,8 +4,6 @@ import {Shard, Mutexes} from "../common/structs.js";  //'async-mutex'
 import {WebObject} from '../core/object.js'
 import {Struct} from "../common/catalog.js"
 import {Agent} from "../server/agent.js"
-import {JsonIndexStore, YamlDataStore} from "./store.js"
-import {RocksDBStore} from "./rocks.js";
 
 
 /**********************************************************************************************************************
@@ -74,7 +72,7 @@ export class Block extends Agent {
 
     async _create_store(storage, path = null) {
         path ??= this._file_path(storage)
-        let clas_ = this._detect_store_class(storage)
+        let clas_ = await this._detect_store_class(storage)
         let store = new clas_(path, this)
         await store.open()
         return store
@@ -148,7 +146,8 @@ export class Block extends Agent {
 export class BinaryBlock extends Block {
     /* A block of a derived sequence: index, aggregation. */
 
-    _detect_store_class(format) {
+    async _detect_store_class(format) {
+        let {JsonIndexStore} = await import('./store.js')
         if (format === 'json') return JsonIndexStore
         return super._detect_store_class(format)
     }
@@ -177,7 +176,9 @@ export class DataBlock extends Block {
         return {...state, autoincrement, reserved, lock_row}
     }
 
-    _detect_store_class(format) {
+    async _detect_store_class(format) {
+        let {YamlDataStore} = await import('./store.js')
+        let {RocksDBStore} = await import('./rocks.js')
         if (format === 'yaml') return YamlDataStore
         if (format === 'rocksdb') return RocksDBStore
         return super._detect_store_class(format)
