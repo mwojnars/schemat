@@ -88,12 +88,13 @@ export class Block extends Agent {
         throw new Error(`unsupported store type '${format}' in ${this}`)
     }
 
-    async '$agent.put'({store}, key, value) { return this._put(store, key, value) }
+    async '$agent.put'({store}, key, value) { return this._put(key, value) }
 
-    async _put(store, key, value) {
+    async _put(key, value) {
         /* Write the [key, value] pair here in this block and propagate the change to derived indexes.
            No forward of the request to another ring.
          */
+        let {store} = this.$state
         await store.put(key, value)
         this._flush(store)
     }
@@ -417,7 +418,7 @@ export class DataBlock extends Block {
         let data = obj.__json
         let key = this.encode_id(id)
 
-        await this._put(this.$state.store, key, data)
+        await this._put(key, data)
         this.propagate_change(key, prev, obj)
 
         data = this._annotate(data)
