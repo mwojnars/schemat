@@ -98,16 +98,15 @@ export class Block extends Agent {
     }
 
     async '$agent.del'({store}, key, value) {
-        if (value === undefined) value = await store.get(key)
-        if (value === undefined) return false           // TODO: notify about data inconsistency (there should be no missing records)
-
-        let deleted = this._del(key)
-        this._flush(store)
-        return deleted
+        // if (value === undefined) value = await store.get(key)
+        // if (value === undefined) return false           // TODO: notify about data inconsistency (there should be no missing records)
+        return this._del(key)
     }
 
     async _del(key, checked = false) {
-        return this.$state.stores.map(s => s.del(key, checked))[0]   // delete from all stores, but await the first one only
+        let deleted = this.$state.stores.map(s => s.del(key, checked))[0]   // delete from all stores, but await the first one only
+        this._flush(this.$state.store)
+        return deleted
     }
 
     async '$agent.scan'({store}, opts = {}) {
@@ -432,9 +431,7 @@ export class DataBlock extends Block {
             let deleted = await this._del(key, true)
             if (!deleted) return 0
 
-            this._flush(store)
             this.propagate_change(key, obj)
-
             schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
 
             assert(Number(deleted) === 1)
