@@ -41,7 +41,7 @@ export class Store {
 
     get(key)            { throw new NotImplemented() }      // return JSON string stored under the binary `key`, or undefined
     put(key, value)     { throw new NotImplemented() }      // no return value
-    del(key)            { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
+    del(key, checked)   { throw new NotImplemented() }      // if checked=true, return true/false to indicate if `key` was found and deleted
 
     *scan(opts)         { throw new NotImplemented() }      // generator of [binary-key, json-value] pairs
     erase()             { throw new NotImplemented() }

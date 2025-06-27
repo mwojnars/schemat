@@ -56,10 +56,10 @@ export class RocksDBStore extends Store {
         await promisify(this._db.put.bind(this._db))(key, value)
     }
 
-    async del(key) {
-        /* Delete the key-value pair. Return true if key was found and deleted */
+    async del(key, checked = false) {
+        if (!checked) return promisify(this._db.del.bind(this._db))(key)
         try {
-            await promisify(this._db.get.bind(this._db))(key)  // check if exists
+            await promisify(this._db.get.bind(this._db))(key)   // raises error if not found
             await promisify(this._db.del.bind(this._db))(key)
             return true
         } catch (err) {

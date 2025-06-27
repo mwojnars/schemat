@@ -94,7 +94,6 @@ export class Block extends Agent {
         /* Write the [key, value] pair here in this block. No forward of the request to another ring. */
         let {stores} = this.$state
         await stores.map(s => s.put(key, value))[0]     // write to all stores, but await the first one only
-        // await store.put(key, value)
         this._flush(stores[0])
     }
 
@@ -102,13 +101,13 @@ export class Block extends Agent {
         if (value === undefined) value = await store.get(key)
         if (value === undefined) return false           // TODO: notify about data inconsistency (there should be no missing records)
 
-        let deleted = this._del(key) //store.del(key)
+        let deleted = this._del(key)
         this._flush(store)
         return deleted
     }
 
-    async _del(key) {
-        return this.$state.stores.map(s => s.del(key))[0]   // delete from all stores, but await the first one only
+    async _del(key, checked = false) {
+        return this.$state.stores.map(s => s.del(key, checked))[0]   // delete from all stores, but await the first one only
     }
 
     async '$agent.scan'({store}, opts = {}) {
@@ -444,7 +443,7 @@ export class DataBlock extends Block {
                 // return req.error_access("cannot remove the item, the ring is read-only")
 
             let obj = await WebObject.from_data(id, data, {activate: false})
-            let deleted = await this._del(key) //store.del(key)
+            let deleted = await this._del(key, true)
             if (!deleted) return 0
 
             this._flush(store)
