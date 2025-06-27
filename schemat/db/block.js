@@ -4,7 +4,7 @@ import {Shard, Mutexes} from "../common/structs.js";  //'async-mutex'
 import {WebObject} from '../core/object.js'
 import {Struct} from "../common/catalog.js"
 import {Agent} from "../server/agent.js"
-import {MemoryStore, JsonIndexStore, YamlDataStore} from "./store.js"
+import {JsonIndexStore, YamlDataStore} from "./store.js"
 import {RocksDBStore} from "./rocks.js";
 
 
@@ -336,7 +336,7 @@ export class DataBlock extends Block {
 
     _assign_id_compact({store, autoincrement, reserved}) {
         /* Scan `store` to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
-           This method of ID generation has performance implications (O(n) complexity), so it can only be used with MemoryStore.
+           This method of ID generation has large performance implications (O(n) complexity) and should only be used in small blocks.
          */
         // if all empty slots below autoincrement were already allocated, use the incremental algorithm
         // (this may still leave empty slots if a record was removed in the meantime, but such slot is reused after next reload of the block)
@@ -345,10 +345,6 @@ export class DataBlock extends Block {
             reserved.add(id)
             return id
         }
-
-        if (!(store instanceof MemoryStore))
-            throw new Error('compact insert mode is only supported with MemoryStore')
-
         let [A, B, C] = this.ring.id_insert_zones       // [min_id_exclusive, min_id_forbidden, min_id_sharded]
 
         // find the first unallocated ID slot in the exclusive zone [A,B) or the sharded zone [C,∞)
