@@ -205,7 +205,7 @@ export class DataBlock extends Block {
         return await this._move_down(id, req).select(id, req)
     }
 
-    async '$agent.insert'(state, entries, {id, ...opts} = {}) {
+    async '$agent.insert'({}, entries, {id, ...opts} = {}) {
         /* Insert a number of `entries` as new objects into this block. Each entry is a pair: [provisional-id, data].
            Option `id`: target ID to be assigned to the new object, only if `entries` contains exactly one entry.
         */
@@ -220,13 +220,14 @@ export class DataBlock extends Block {
         if (id) {
             assert(entries.length === 1)        // fixed ID provided by the caller? check for uniqueness
             let key = this.encode_id(id)
-            if (await state.store.get(key)) throw new DataConsistencyError(`record with this ID already exists`, {id})
+            if (await this.$state.store.get(key))
+                throw new DataConsistencyError(`record with this ID already exists`, {id})
         }
 
         // assign IDs and convert entries to objects; each object is instantiated for validation,
         // but not activated: __load__() & _activate() are NOT executed (performance)
         let objects = await Promise.all(entries.map(([npid, data]) => {
-            let _id = id || this._assign_id(state, opts)
+            let _id = id || this._assign_id(opts)
             return WebObject.from_data(_id, data, {mutable: true, activate: false, provisional: -npid})
         }))
         let ids = objects.map(obj => obj.id)
@@ -236,7 +237,7 @@ export class DataBlock extends Block {
 
         // tx must switch to a special "insert mode" while __setup__() methods are being called
         let on_newborn_created = (obj) => {
-            obj.id = this._assign_id(state, opts)
+            obj.id = this._assign_id(opts)
             objects.push(obj)
         }
         schemat.tx.enter_insert_mode(on_newborn_created)
@@ -286,22 +287,24 @@ export class DataBlock extends Block {
         obj._seal_dependencies()            // set __seal
     }
 
-    _assign_id(state, {insert_mode} = {}) {
+    _assign_id({insert_mode} = {}) {
         /* Calculate a new `id` to be assigned to the record being inserted. */
         // TODO: auto-increment `key` not `id`, then decode up in the sequence
         insert_mode ??= this.ring.insert_mode
-        let id = (insert_mode === 'compact') ? this._assign_id_compact(state) : this._assign_id_incremental(state)
+        let id = (insert_mode === 'compact') ? this._assign_id_compact() : this._assign_id_incremental()
 
         if (!this.ring.valid_insert_id(id))
             throw new DataAccessError(`candidate ID=${id} for a new object is outside of the valid set for the ring ${this.ring}`)
 
+        let state = this.$state
         state.autoincrement = Math.max(id, state.autoincrement)
 
         // print(`DataBlock._assign_id(): assigned id=${id} at process pid=${process.pid} block.__hash=${this.__hash}`)
         return id
     }
 
-    _assign_id_incremental({autoincrement}) {
+    _assign_id_incremental() {
+        let {autoincrement} = this.$state
         let [A, B, C] = this.ring.id_insert_zones       // [min_id_exclusive, min_id_forbidden, min_id_sharded]
 
         // try allocating an ID from the exclusive zone if present
@@ -316,14 +319,16 @@ export class DataBlock extends Block {
         return id
     }
 
-    _assign_id_compact({store, autoincrement, reserved}) {
+    _assign_id_compact() {
         /* Scan `store` to find the first available `id` for the record to be inserted, starting at ring.min_id_exclusive.
            This method of ID generation has large performance implications (O(n) complexity) and should only be used in small blocks.
          */
+        let {store, autoincrement, reserved} = this.$state
+
         // if all empty slots below autoincrement were already allocated, use the incremental algorithm
         // (this may still leave empty slots if a record was removed in the meantime, but such slot is reused after next reload of the block)
         if (reserved.has(autoincrement)) {
-            let id = this._assign_id_incremental({autoincrement})
+            let id = this._assign_id_incremental()
             reserved.add(id)
             return id
         }
