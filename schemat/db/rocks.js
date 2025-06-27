@@ -44,7 +44,8 @@ export class RocksDBStore extends Store {
         this._bound = {
             get: promisify(this._db.get.bind(this._db)),
             put: promisify(this._db.put.bind(this._db)),
-            del: promisify(this._db.del.bind(this._db))
+            del: promisify(this._db.del.bind(this._db)),
+            batch: promisify(this._db.batch.bind(this._db))
         }
     }
 
@@ -127,6 +128,16 @@ export class RocksDBStore extends Store {
         } finally {
             await new Promise(resolve => it.end(resolve))
         }
+    }
+
+    async bulk_write(operations, opts = {}) {
+        /* Execute multiple operations atomically in a single batch.
+           @param operations: Array of objects with format:
+             {type: 'put'|'del', key: binary-key, value?: string}
+           @param opts: Options object that can include:
+             - sync: if true, the write is flushed to disk before returning
+         */
+        await this._bound.batch(operations, opts)
     }
 }
 
