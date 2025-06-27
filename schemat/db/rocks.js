@@ -1,3 +1,18 @@
+/*
+Working with a RocksDB database.
+
+CLI tool (ldb)
+- install:   sudo apt install rocksdb-tools
+- dump all keys:    ldb --db=/path/to/db scan
+- dump range:       ldb --db=/path/to/db scan --from="key1" --to="key2"
+- dump a key:       ldb --db=/path/to/db get "some-key"
+- delete a key:     ldb --db=/path/to/db delete "some-key"
+- put/update:       ldb --db=/path/to/db put "some-key" "new-value"
+Example:
+-                   ldb --db=./cluster/sample/node.1024/02_app.data.1029.rocksdb scan
+
+*/
+
 import {promisify} from 'node:util'
 import rocksdb from 'rocksdb'
 
