@@ -507,9 +507,7 @@ export class BootDataBlock extends DataBlock {
     _store      // Store for this block's records
 
     __new__(path) {
-        let format = this._detect_format(path)
-        let storage_class = this._detect_store_class(format)
-        this._store = new storage_class(path, this)
+        this._path = path
     }
 
     _detect_format(path) {
@@ -521,6 +519,9 @@ export class BootDataBlock extends DataBlock {
 
     async __load__() {
         await super.__load__()
+        let format = this._detect_format(this._path)
+        let storage_class = this._detect_store_class(format)
+        this._store = new storage_class(this._path, this)
         await this._store.open()
     }
 
