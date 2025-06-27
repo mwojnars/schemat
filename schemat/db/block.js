@@ -103,8 +103,7 @@ export class Block extends Agent {
     }
 
     async _del(key, checked = false) {
-        let deleted = this.$state.stores.map(s => s.del(key, checked))[0]   // delete from all stores, but await the first one only
-        return deleted
+        return this.$state.stores.map(s => s.del(key, checked))[0]   // delete from all stores, but return the first result only
     }
 
     async '$agent.scan'({store}, opts = {}) {
@@ -114,12 +113,11 @@ export class Block extends Agent {
     async '$agent.erase'({store}) {
         /* Remove all records from this block. */
         await store.erase()
-        this._flush(store)
     }
 
     async '$agent.flush'({store}) { return store.flush(false) }
 
-    _flush(store, delay) { store.flush(delay) }
+    // _flush(store, delay) { store.flush(delay) }
 
     // propagate() {
     //     /* For now, there's NO propagation from index blocks, only from data blocks (see below). */
