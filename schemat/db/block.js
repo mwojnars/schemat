@@ -88,12 +88,11 @@ export class Block extends Agent {
         throw new Error(`unsupported store type '${format}' in ${this}`)
     }
 
-    async '$agent.put'({store}, key, value) { return this._put(key, value) }
+    async '$agent.put'({}, key, value) { return this._put(key, value) }
 
     async _put(key, value) {
         /* Write the [key, value] pair here in this block. No forward of the request to another ring. */
-        let {stores} = this.$state
-        await stores.map(s => s.put(key, value))[0]     // write to all stores, but await the first one only
+        return this.$state.stores.map(s => s.put(key, value))[0]    // write to all stores, but await the first one only
     }
 
     async '$agent.del'({}, key) {
@@ -101,14 +100,14 @@ export class Block extends Agent {
     }
 
     async _del(key, checked = false) {
-        return this.$state.stores.map(s => s.del(key, checked))[0]   // delete from all stores, but return the first result only
+        return this.$state.stores.map(s => s.del(key, checked))[0]  // delete from all stores, but return the first result only
     }
 
     async '$agent.scan'({store}, opts = {}) {
         return arrayFromAsync(store.scan(opts))         // TODO: return batches with a hard upper limit on their size
     }
 
-    async '$agent.erase'({store}) {
+    async '$agent.erase'() {
         /* Remove all records from this block. */
         return this.$state.stores.map(s => s.erase())[0]
     }
