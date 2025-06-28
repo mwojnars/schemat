@@ -159,13 +159,15 @@ class Frame {
         schemat._print(`restarting agent ${agent} ...`)
         assert(agent.id === this.agent.id && agent !== this.agent)
 
-        await this.pause()      // wait for termination of ongoing RPC calls
+        let was_running = !this.paused
+        await this.pause()                      // wait for termination of ongoing RPC calls
+
         let restart = () => agent.__restart__(this.state, this.agent)
         let state = await this._tracked(agent.in_context(restart))
 
         this.set_state(state)
         this.agent = agent
-        await this.resume()     // resume RPC calls
+        if (was_running) await this.resume()    // resume RPC calls, unless the agent was paused initially
 
         schemat._print(`restarting agent ${agent} done`)
         return state
