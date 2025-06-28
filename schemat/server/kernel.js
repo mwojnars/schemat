@@ -155,10 +155,11 @@ class Frame {
     }
 
     async restart(agent) {
-        /* `agent` is a newer copy of the agent that should replace this.agent. */
+        /* Replace this.agent with its newer copy, `agent`, and call its __restart__(). */
         schemat._print(`restarting agent ${agent} ...`)
         assert(agent.id === this.agent.id && agent !== this.agent)
 
+        // TODO: call __restart__() in exclusive lock relative to possible concurrent RPC calls
         let restart = () => agent.__restart__(this.state, this.agent)
         let state = await agent.in_context(restart)
 
@@ -170,6 +171,7 @@ class Frame {
     }
 
     async stop() {
+        /* Let running calls complete, then stop the agent by calling its __stop__(). */
         this.stopping = true                // prevent new calls from being executed on the agent
         let {agent, calls} = this
 
@@ -448,19 +450,6 @@ export class Kernel {
     async stop_agent(id, role) {
         let frame = this.frames.get([id, role])
         await frame.stop()
-        // let {agent, calls} = frame
-        // frame.stopping = true               // prevent new calls from being executed on the agent
-        //
-        // if (calls.length > 0) {             // wait for pending calls to complete before stopping
-        //     this._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
-        //     await Promise.all(calls)
-        // }
-        // this._print(`stopping agent ${agent} ...`)
-        //
-        // let stop = () => agent.__stop__(frame.state)
-        // await agent.in_context(stop)
-        //
-        // this._print(`stopping agent ${agent} done`)
         this.frames.delete([id, role])
     }
 }
