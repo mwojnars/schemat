@@ -161,7 +161,7 @@ class Frame {
 
         await this.pause()      // wait for termination of ongoing RPC calls
         let restart = () => agent.__restart__(this.state, this.agent)
-        let state = await agent.in_context(restart)
+        let state = await this._tracked(agent.in_context(restart))
 
         this.set_state(state)
         this.agent = agent
