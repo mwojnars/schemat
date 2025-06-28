@@ -202,9 +202,11 @@ class Frame {
         if (this.paused && !method.endsWith('.resume')) await this.paused
         if (this.stopping) throw new Error(`agent ${this.agent} is in the process of stopping`)
 
-        let {agent} = this
+        let {agent, state} = this
         let func = agent.__self[method]
         if (typeof func !== 'function') throw new Error(`agent ${agent} has no method "${method}"`)
+
+        let callA = () => func.call(agent, state, ...args)
 
         // assert(schemat.kernel_context)
         // let agent_ctx = agent.__ctx || schemat.kernel_context       // empty agent.__ctx means kernel context should be used
@@ -212,19 +214,19 @@ class Frame {
 
         let call = async () => {
             // agent._print(`exec(${method}) context=${schemat.current_context}`)
-            let result = await this._exec_tracked(func, args)
+            let result = await this._exec_tracked(callA)
             return callback ? callback(result) : result
         }
         return agent.in_context(tx ? () => schemat.in_transaction(call, tx, false) : call, caller_ctx)
         // return schemat.in_tx_context(ctx, tx, call)
     }
 
-    async _exec_tracked(func, args) {
+    async _exec_tracked(call) {
         /* Call func() in the context of this frame and add the promise to `calls`. */
-        let {agent, state} = this
+        let {agent} = this
         agent.__frame ??= new AsyncLocalStorage()
 
-        let call = () => func.call(agent, state, ...args)
+        // let call = () => func.call(agent, state, ...args)
         let result = (agent.$frame === this) ? call() : agent.__frame.run(this, call)
         if (!(result instanceof Promise)) return result
 
