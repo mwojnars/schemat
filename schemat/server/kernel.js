@@ -143,6 +143,7 @@ class Frame {
     }
 
     async start() {
+        /* Start this.agent by calling its __start__(). */
         let {agent} = this
         schemat._print(`starting agent ${agent} ...`)
 
@@ -150,6 +151,21 @@ class Frame {
         this.set_state(state)
 
         schemat._print(`starting agent ${agent} done`)
+        return state
+    }
+
+    async restart(agent) {
+        /* `agent` is a newer copy of the agent that should replace this.agent. */
+        schemat._print(`restarting agent ${agent} ...`)
+        assert(agent.id === this.agent.id && agent !== this.agent)
+
+        let restart = () => agent.__restart__(this.state, this.agent)
+        let state = await schemat.in_context(agent.__ctx, restart)
+
+        this.set_state(state)
+        this.agent = agent
+
+        schemat._print(`restarting agent ${agent} done`)
         return state
     }
 
@@ -410,15 +426,17 @@ export class Kernel {
         if (agent.__ttl_left() < 0) agent = await agent.reload()
         if (agent === frame.agent) return       // no need to restart the agent if it's still the same object after refresh
 
-        this._print(`restarting agent ${agent} ...`)
-        let prev = frame.state
-        let restart = () => agent.__restart__(prev, frame.agent)
+        frame.restart(agent)
 
-        let state = await schemat.in_context(agent.__ctx, restart)
-
-        frame.set_state(state)
-        frame.agent = agent
-        this._print(`restarting agent ${agent} done`)
+        // this._print(`restarting agent ${agent} ...`)
+        // let prev = frame.state
+        // let restart = () => agent.__restart__(prev, frame.agent)
+        //
+        // let state = await schemat.in_context(agent.__ctx, restart)
+        //
+        // frame.set_state(state)
+        // frame.agent = agent
+        // this._print(`restarting agent ${agent} done`)
 
         // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
         //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
