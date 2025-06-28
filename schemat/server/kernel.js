@@ -214,21 +214,26 @@ class Frame {
 
         let callB = async () => {
             // agent._print(`exec(${method}) context=${schemat.current_context}`)
-            let result = await this._exec_tracked(agent, callA)
+            let result = await this._in_context(agent, callA)
             return callback ? callback(result) : result
         }
         return agent.in_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
         // return schemat.in_tx_context(ctx, tx, call)
     }
 
-    async _exec_tracked(agent, call) {
+    async _in_context(agent, call) {
         /* Run call() in the context (agent.$frame) of this frame and add the promise to `calls` for tracking. */
         agent.__frame ??= new AsyncLocalStorage()
         let result = (agent.$frame === this) ? call() : agent.__frame.run(this, call)
-        if (!(result instanceof Promise)) return result
+        return this._tracked(result)
+    }
 
-        // if `result` is a Promise, create a wrapper that removes itself from `calls` when done
-        let tracked = result.finally(() => {
+    async _tracked(promise) {
+        /* Track the running call represented by `promise` by saving it in this.calls and removing upon its completion. */
+        if (!(promise instanceof Promise)) return promise
+
+        // create a wrapper promise that removes itself from `calls` when done
+        let tracked = promise.finally(() => {
             this.calls = this.calls.filter(p => p !== tracked)
         })
         this.calls.push(tracked)
