@@ -1,3 +1,4 @@
+import compression from 'compression'
 import {assert, print, timeout, sleep, utc} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {WebRequest} from "../web/request.js";
@@ -116,6 +117,7 @@ export class WebServer extends Agent {
         let bodyParser = (await import('body-parser')).default
 
         let xapp = express()
+        xapp.use(compression())     // enable Gzip compression; reduces the size of .html and .js files by 3-4x
 
         // for official middleware see: https://expressjs.com/en/resources/middleware.html
         // for receiving files:
