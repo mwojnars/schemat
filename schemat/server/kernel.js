@@ -212,21 +212,18 @@ class Frame {
         // let agent_ctx = agent.__ctx || schemat.kernel_context       // empty agent.__ctx means kernel context should be used
         // let ctx = agent.switch_context ? caller_ctx : agent_ctx
 
-        let call = async () => {
+        let callB = async () => {
             // agent._print(`exec(${method}) context=${schemat.current_context}`)
-            let result = await this._exec_tracked(callA)
+            let result = await this._exec_tracked(agent, callA)
             return callback ? callback(result) : result
         }
-        return agent.in_context(tx ? () => schemat.in_transaction(call, tx, false) : call, caller_ctx)
+        return agent.in_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
         // return schemat.in_tx_context(ctx, tx, call)
     }
 
-    async _exec_tracked(call) {
-        /* Call func() in the context of this frame and add the promise to `calls`. */
-        let {agent} = this
+    async _exec_tracked(agent, call) {
+        /* Run call() in the context (agent.$frame) of this frame and add the promise to `calls` for tracking. */
         agent.__frame ??= new AsyncLocalStorage()
-
-        // let call = () => func.call(agent, state, ...args)
         let result = (agent.$frame === this) ? call() : agent.__frame.run(this, call)
         if (!(result instanceof Promise)) return result
 
