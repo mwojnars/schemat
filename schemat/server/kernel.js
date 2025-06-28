@@ -159,12 +159,13 @@ class Frame {
         schemat._print(`restarting agent ${agent} ...`)
         assert(agent.id === this.agent.id && agent !== this.agent)
 
-        // TODO: call __restart__() in exclusive lock relative to possible concurrent RPC calls
+        await this.pause()      // wait for termination of ongoing RPC calls
         let restart = () => agent.__restart__(this.state, this.agent)
         let state = await agent.in_context(restart)
 
         this.set_state(state)
         this.agent = agent
+        this.resume()           // resume RPC calls
 
         schemat._print(`restarting agent ${agent} done`)
         return state
@@ -183,6 +184,22 @@ class Frame {
 
         await agent.in_context(() => agent.__stop__(this.state))
         schemat._print(`stopping agent ${agent} done`)
+    }
+
+    async pause() {
+        /* Await currently running RPC calls and don't start any new calls until resume(). */
+        if (!this.paused) {
+            let _resolve
+            this.paused = new Promise(resolve => {_resolve = resolve})
+            this.paused.resolve = _resolve
+        }
+        return Promise.all(this.calls)
+    }
+
+    resume() {
+        /* Resume RPC calls after pause(). */
+        this.paused?.resolve?.()
+        this.paused = false
     }
 
     async exec(method, args, caller_ctx = schemat.current_context, tx = null, callback = null) {
@@ -214,15 +231,16 @@ class Frame {
 
         let callB = async () => {
             // agent._print(`exec(${method}) context=${schemat.current_context}`)
-            let result = await this._in_context(agent, callA)
+            let result = await this._in_context(callA)
             return callback ? callback(result) : result
         }
         return agent.in_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
         // return schemat.in_tx_context(ctx, tx, call)
     }
 
-    async _in_context(agent, call) {
+    async _in_context(call) {
         /* Run call() in the context (agent.$frame) of this frame and add the promise to `calls` for tracking. */
+        let {agent} = this
         agent.__frame ??= new AsyncLocalStorage()
         return this._tracked(agent.$frame === this ? call() : agent.__frame.run(this, call))
     }
