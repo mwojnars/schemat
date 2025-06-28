@@ -1,4 +1,3 @@
-import compression from 'compression'
 import {assert, print, timeout, sleep, utc} from '../common/utils.js'
 import {ServerTimeoutError} from "../common/errors.js";
 import {WebRequest} from "../web/request.js";
@@ -115,6 +114,7 @@ export class WebServer extends Agent {
 
         let express = (await import('express')).default
         let bodyParser = (await import('body-parser')).default
+        let compression = (await import('compression')).default
 
         let xapp = express()
         xapp.use(compression())     // enable Gzip compression; reduces the size of .html and .js files by 3-4x
@@ -133,7 +133,7 @@ export class WebServer extends Agent {
 
         // xapp.use(express.json())                                 // for parsing application/json to req.body object
         xapp.use(express.urlencoded({extended: false}))             // for parsing application/x-www-form-urlencoded
-        xapp.use(bodyParser.text({type: '*/*', limit: '10MB'}))     // for setting req.body string from plain-text body (if not json MIME-type)
+        xapp.use(bodyParser.text({type: '*/*', limit: '100MB'}))    // for setting req.body string from plain-text body (if not json MIME-type)
 
         xapp.all('*', schemat.with_context((req, res) => this._handle(req, res)))
 
