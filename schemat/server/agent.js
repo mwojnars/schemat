@@ -71,20 +71,20 @@ export class Agent extends WebObject {
 
     /***  RPC methods  ***/
 
-    '$agent.pause'() {
-        /* Pause the execution of this agent: execution of incoming and pending requests is on hold until $agent.resume().
-           Ongoing calls are NOT affected, they run normally until completion. Mainly for debugging. Do NOT override in subclasses.
-         */
-        let _resolve
-        let paused = this.$frame.paused = new Promise(resolve => {_resolve = resolve})
-        paused.resolve = _resolve
-    }
-
-    '$agent.resume'() {
-        /* Do NOT override in subclasses. */
-        this.$frame.paused?.resolve?.()
-        this.$frame.paused = false
-    }
+    // '$agent.pause'() {
+    //     /* Pause the execution of this agent: execution of incoming and pending requests is on hold until $agent.resume().
+    //        Ongoing calls are NOT affected, they run normally until completion. Mainly for debugging. Do NOT override in subclasses.
+    //      */
+    //     let _resolve
+    //     let paused = this.$frame.paused = new Promise(resolve => {_resolve = resolve})
+    //     paused.resolve = _resolve
+    // }
+    //
+    // '$agent.resume'() {
+    //     /* Do NOT override in subclasses. */
+    //     this.$frame.paused?.resolve?.()
+    //     this.$frame.paused = false
+    // }
 
     async '$agent.ping'(state, msg) {
         /* Default RPC endpoint for testing intra-cluster communication. */

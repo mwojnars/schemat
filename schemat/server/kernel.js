@@ -165,7 +165,7 @@ class Frame {
 
         this.set_state(state)
         this.agent = agent
-        this.resume()           // resume RPC calls
+        await this.resume()     // resume RPC calls
 
         schemat._print(`restarting agent ${agent} done`)
         return state
@@ -196,9 +196,11 @@ class Frame {
         return Promise.all(this.calls)
     }
 
-    resume() {
+    async resume() {
         /* Resume RPC calls after pause(). */
-        this.paused?.resolve?.()
+        if (!this.paused) return
+        if (this.calls.length) await Promise.all(this.calls)    // the initial phase of pausing may not have finished yet?
+        this.paused.resolve()
         this.paused = false
     }
 
