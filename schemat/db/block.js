@@ -70,6 +70,10 @@ export class Block extends Agent {
         return {stores, store: stores[0]}
     }
 
+    async __stop__() {
+        // await this._sync_stores()
+    }
+
     async _create_store(storage, path = null) {
         path ??= this._file_path(storage)
         let clas_ = await this._detect_store_class(storage)
@@ -121,11 +125,14 @@ export class Block extends Agent {
         let others = this.$state.stores.slice(1)
         if (!others.length) return
 
+        this._print(`_sync_stores() ...`)
         await Promise.all(others.map(s => s.erase()))
         let {store} = this.$state
 
         for (let [k, v] of store.scan())
             await Promise.all(others.map(s => s.put(k, v)))
+
+        this._print(`_sync_stores() done`)
     }
 
     // propagate() {
