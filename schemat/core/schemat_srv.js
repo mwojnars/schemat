@@ -346,13 +346,13 @@ export class ServerSchemat extends Schemat {
         return _return_tx ? [result, tx] : result
     }
 
-    in_tx_context(ctx, tx, callback) {
-        /* Run callback() inside a double async context created by first setting the global `schemat`
-           to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
-         */
-        let call = tx ? () => schemat.in_transaction(callback, tx, false) : callback    // critical to use `schemat` not `this` here, bcs context changes!
-        return this.in_context(ctx, call)
-    }
+    // in_tx_context(ctx, tx, callback) {
+    //     /* Run callback() inside a double async context created by first setting the global `schemat`
+    //        to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
+    //      */
+    //     let call = tx ? () => schemat.in_transaction(callback, tx, false) : callback    // critical to use `schemat` not `this` here, bcs context changes!
+    //     return this.in_context(ctx, call)
+    // }
 
     /***  RPC/RMI  ***/
 
