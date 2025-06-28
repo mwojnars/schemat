@@ -204,7 +204,7 @@ class Frame {
 
         let {agent} = this
         let func = agent.__self[method]
-        if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
+        if (typeof func !== 'function') throw new Error(`agent ${agent} has no method "${method}"`)
 
         // assert(schemat.kernel_context)
         // let agent_ctx = agent.__ctx || schemat.kernel_context       // empty agent.__ctx means kernel context should be used
