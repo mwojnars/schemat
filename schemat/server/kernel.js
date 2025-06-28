@@ -224,8 +224,7 @@ class Frame {
     async _in_context(agent, call) {
         /* Run call() in the context (agent.$frame) of this frame and add the promise to `calls` for tracking. */
         agent.__frame ??= new AsyncLocalStorage()
-        let result = (agent.$frame === this) ? call() : agent.__frame.run(this, call)
-        return this._tracked(result)
+        return this._tracked(agent.$frame === this ? call() : agent.__frame.run(this, call))
     }
 
     async _tracked(promise) {
