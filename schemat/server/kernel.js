@@ -147,7 +147,7 @@ class Frame {
         let {agent} = this
         schemat._print(`starting agent ${agent} ...`)
 
-        let state = await schemat.in_context(agent.__ctx, () => agent.__start__(this)) || {}
+        let state = await agent.in_context(() => agent.__start__(this)) || {}
         this.set_state(state)
 
         schemat._print(`starting agent ${agent} done`)
@@ -160,7 +160,7 @@ class Frame {
         assert(agent.id === this.agent.id && agent !== this.agent)
 
         let restart = () => agent.__restart__(this.state, this.agent)
-        let state = await schemat.in_context(agent.__ctx, restart)
+        let state = await agent.in_context(restart)
 
         this.set_state(state)
         this.agent = agent
@@ -443,7 +443,7 @@ export class Kernel {
         this._print(`stopping agent ${agent} ...`)
 
         let stop = () => agent.__stop__(frame.state)
-        await schemat.in_context(agent.__ctx, stop)
+        await agent.in_context(stop)
 
         this.frames.delete([id, role])
         this._print(`stopping agent ${agent} done`)

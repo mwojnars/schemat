@@ -59,6 +59,11 @@ export class Agent extends WebObject {
         return this.__start__()
     }
 
+    async in_context(fn) {
+        /* Run fn() in the app/db context expected by this agent (this.__ctx). */
+        return schemat.in_context(this.__ctx, fn)
+    }
+
 
     /***  Triggers  ***/
 
