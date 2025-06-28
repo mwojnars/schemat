@@ -169,6 +169,20 @@ class Frame {
         return state
     }
 
+    async stop() {
+        this.stopping = true                // prevent new calls from being executed on the agent
+        let {agent, calls} = this
+
+        if (calls.length > 0) {             // wait for pending calls to complete before stopping
+            schemat._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
+            await Promise.all(calls)
+        }
+        schemat._print(`stopping agent ${agent} ...`)
+
+        await agent.in_context(() => agent.__stop__(this.state))
+        schemat._print(`stopping agent ${agent} done`)
+    }
+
     async exec(method, args, caller_ctx = schemat.current_context, caller_tx = null, callback = null) {
         /* Call agent's `method` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
@@ -433,20 +447,21 @@ export class Kernel {
 
     async stop_agent(id, role) {
         let frame = this.frames.get([id, role])
-        let {agent, calls} = frame
-        frame.stopping = true               // prevent new calls from being executed on the agent
-
-        if (calls.length > 0) {             // wait for pending calls to complete before stopping
-            this._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
-            await Promise.all(calls)
-        }
-        this._print(`stopping agent ${agent} ...`)
-
-        let stop = () => agent.__stop__(frame.state)
-        await agent.in_context(stop)
-
+        await frame.stop()
+        // let {agent, calls} = frame
+        // frame.stopping = true               // prevent new calls from being executed on the agent
+        //
+        // if (calls.length > 0) {             // wait for pending calls to complete before stopping
+        //     this._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
+        //     await Promise.all(calls)
+        // }
+        // this._print(`stopping agent ${agent} ...`)
+        //
+        // let stop = () => agent.__stop__(frame.state)
+        // await agent.in_context(stop)
+        //
+        // this._print(`stopping agent ${agent} done`)
         this.frames.delete([id, role])
-        this._print(`stopping agent ${agent} done`)
     }
 }
 
