@@ -422,21 +422,10 @@ export class Kernel {
 
     async refresh_agent(frame) {
         let agent = frame.agent.refresh()
-
         if (agent.__ttl_left() < 0) agent = await agent.reload()
-        if (agent === frame.agent) return       // no need to restart the agent if it's still the same object after refresh
 
-        frame.restart(agent)
-
-        // this._print(`restarting agent ${agent} ...`)
-        // let prev = frame.state
-        // let restart = () => agent.__restart__(prev, frame.agent)
-        //
-        // let state = await schemat.in_context(agent.__ctx, restart)
-        //
-        // frame.set_state(state)
-        // frame.agent = agent
-        // this._print(`restarting agent ${agent} done`)
+        // no need to restart the agent if it's still the same object after refresh
+        if (agent !== frame.agent) return frame.restart(agent)
 
         // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
         //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
