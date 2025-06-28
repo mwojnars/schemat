@@ -214,6 +214,11 @@ class Frame {
             let result = await this._exec_tracked(func, args)
             return callback ? callback(result) : result
         }
+
+        // let tx = caller_tx
+        // let call_2 = tx ? () => schemat.in_transaction(call, tx, false) : call
+        // return agent.in_context(call_2, caller_ctx)
+
         return schemat.in_tx_context(ctx, caller_tx, call)
     }
 
