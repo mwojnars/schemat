@@ -216,6 +216,8 @@ class Frame {
            Note that lock() must NOT be preceded by any asynchronous instruction (await), nor be used in recursive RPC methods,
            as both these cases will cause a deadlock. Ideally, lock() should be the first instruction in the method body.
          */
+        if (this.exclusive) throw new Error(`another call is already executing in exclusive lock`)
+
         this.exclusive = true
         while (this.calls.length > 0)
             await Promise.all(this.calls)
