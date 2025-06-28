@@ -185,7 +185,7 @@ class Frame {
         schemat._print(`stopping agent ${agent} done`)
     }
 
-    async exec(method, args, caller_ctx = schemat.current_context, caller_tx = null, callback = null) {
+    async exec(method, args, caller_ctx = schemat.current_context, tx = null, callback = null) {
         /* Call agent's `method` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
         // print(`calling agent ${this.agent}.${method}()`)
@@ -206,20 +206,17 @@ class Frame {
         let func = agent.__self[method]
         if (!func) throw new Error(`agent ${agent} has no RPC endpoint "${method}"`)
 
-        assert(schemat.kernel_context)
-        let agent_ctx = agent.__ctx || schemat.kernel_context       // empty agent.__ctx means kernel context should be used
-        let ctx = agent.switch_context ? caller_ctx : agent_ctx
+        // assert(schemat.kernel_context)
+        // let agent_ctx = agent.__ctx || schemat.kernel_context       // empty agent.__ctx means kernel context should be used
+        // let ctx = agent.switch_context ? caller_ctx : agent_ctx
+
         let call = async () => {
             // agent._print(`exec(${method}) context=${schemat.current_context}`)
             let result = await this._exec_tracked(func, args)
             return callback ? callback(result) : result
         }
-
-        // let tx = caller_tx
-        // let call_2 = tx ? () => schemat.in_transaction(call, tx, false) : call
-        // return agent.in_context(call_2, caller_ctx)
-
-        return schemat.in_tx_context(ctx, caller_tx, call)
+        return agent.in_context(tx ? () => schemat.in_transaction(call, tx, false) : call, caller_ctx)
+        // return schemat.in_tx_context(ctx, tx, call)
     }
 
     async _exec_tracked(func, args) {
