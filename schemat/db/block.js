@@ -71,7 +71,7 @@ export class Block extends Agent {
     }
 
     async __stop__() {
-        // await this._sync_stores()
+        await this._sync_stores()
     }
 
     async _create_store(storage, path = null) {
