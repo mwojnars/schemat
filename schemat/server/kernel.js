@@ -163,7 +163,7 @@ class Frame {
         await this.pause()                      // wait for termination of ongoing RPC calls
 
         let restart = () => agent.__restart__(this.state, this.agent)
-        let state = await this._tracked(agent.in_context(restart))
+        let state = await this._tracked(agent.in_context(() => this._frame_context(restart)))
 
         this.set_state(state)
         this.agent = agent
@@ -184,7 +184,8 @@ class Frame {
         }
         schemat._print(`stopping agent ${agent} ...`)
 
-        await agent.in_context(() => agent.__stop__(this.state))
+        let stop = () => agent.__stop__(this.state)
+        await agent.in_context(() => this._frame_context(stop))
         schemat._print(`stopping agent ${agent} done`)
     }
 
@@ -235,14 +236,14 @@ class Frame {
 
         let callB = async () => {
             // agent._print(`exec(${method}) context=${schemat.current_context}`)
-            let result = await this._tracked(this._in_context(callA))
+            let result = await this._tracked(this._frame_context(callA))
             return callback ? callback(result) : result
         }
         return agent.in_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
         // return schemat.in_tx_context(ctx, tx, call)
     }
 
-    async _in_context(call) {
+    _frame_context(call) {
         /* Run call() in the context (agent.__frame/$frame/$state) of this frame. */
         let {agent} = this
         agent.__frame ??= new AsyncLocalStorage()
