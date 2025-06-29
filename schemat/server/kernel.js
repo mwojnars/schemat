@@ -235,7 +235,7 @@ class Frame {
 
         let callB = async () => {
             // agent._print(`exec(${method}) context=${schemat.current_context}`)
-            let result = await this._in_context(callA)
+            let result = await this._tracked(this._in_context(callA))
             return callback ? callback(result) : result
         }
         return agent.in_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
@@ -243,10 +243,10 @@ class Frame {
     }
 
     async _in_context(call) {
-        /* Run call() in the context (agent.$frame) of this frame and add the promise to `calls` for tracking. */
+        /* Run call() in the context (agent.__frame/$frame/$state) of this frame. */
         let {agent} = this
         agent.__frame ??= new AsyncLocalStorage()
-        return this._tracked(agent.$frame === this ? call() : agent.__frame.run(this, call))
+        return agent.$frame === this ? call() : agent.__frame.run(this, call)
     }
 
     async _tracked(promise) {
