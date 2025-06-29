@@ -22,6 +22,7 @@ Advanced analysis:
 */
 
 import {promisify} from 'node:util'
+import {rm} from 'fs/promises'
 import rocksdb from 'rocksdb'
 
 import {Store} from './store.js'
@@ -85,7 +86,7 @@ export class RocksDBStore extends Store {
         /* Remove all records from this store */
         // close and reopen the database to clear all data
         await promisify(this._db.close.bind(this._db))()
-        await promisify(this._db.destroy.bind(this._db))(this.filename)
+        await rm(this.filename, {recursive: true, force: true})
         await this.open()
     }
 
