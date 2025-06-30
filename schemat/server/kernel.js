@@ -210,9 +210,7 @@ class Frame {
     async exec(command, args, caller_ctx = schemat.current_context, tx = null, callback = null) {
         /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
-        let [method, func] = this._find_method(command)
-        // let method = `${this.role}.${command}`
-
+        let [method] = this._find_command(command)
         // print(`calling agent ${this.agent}.${method}()`)
 
         // wait for the agent to start
@@ -227,15 +225,9 @@ class Frame {
         if (this.paused && command !== 'resume') await this.paused
         if (this.stopping) throw new Error(`agent ${this.agent} is in the process of stopping`)
 
-        let {agent, state} = this
-        // let func = agent.__self[method]
-        if (typeof func !== 'function') throw new Error(`agent ${agent} has no method "${method}"`)
-
+        let {agent, state} = this;
+        let [_, func] = this._find_command(command)     // `agent` may have been replaced while pausing, the existence of `command` must be verified again
         let callA = () => func.call(agent, state, ...args)
-
-        // assert(schemat.kernel_context)
-        // let agent_ctx = agent.__ctx || schemat.kernel_context       // empty agent.__ctx means kernel context should be used
-        // let ctx = agent.switch_context ? caller_ctx : agent_ctx
 
         let callB = async () => {
             // agent._print(`exec(${method}) context=${schemat.current_context}`)
@@ -243,11 +235,10 @@ class Frame {
             return callback ? callback(result) : result
         }
         return agent.in_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
-        // return schemat.in_tx_context(ctx, tx, call)
     }
 
-    _find_method(command) {
-        /* Find implementation of `command` in the frame's agent and return as a pair [method-name, method-function]. */
+    _find_command(command) {
+        /* Find implementation of `command` in the agent and return as a pair [method-name, method-function]. */
         let method = `${this.role}.${command}`
         let func = this.agent.__self[method]
         if (typeof func !== 'function') {
