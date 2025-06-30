@@ -121,7 +121,7 @@ class Frame {
     exclusive           // if true in a given moment, any new call to this agent will wait until existing calls terminate; configured by lock() on per-call basis
 
     starting            // a Promise that gets resolved when .state is assigned after the agent's __start__() is finished; false after that
-    paused              // after the agent was paused with $agent.pause(), contains a Promise that will be resolved by $agent.resume()
+    paused              // after the agent was paused with $agent.pause(), `paused` contains a Promise that will be resolved by $agent.resume()
     stopping            // if true, the agent is stopping now and no more requests/calls should be accepted
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
@@ -191,19 +191,23 @@ class Frame {
 
     async pause() {
         /* Await currently running RPC calls and don't start any new calls until resume(). */
+        let ongoing = Promise.all(this.calls)
         if (!this.paused) {
             let _resolve
             this.paused = new Promise(resolve => {_resolve = resolve})
-            this.paused.resolve = _resolve
+            this.paused.resolve = async () => { await ongoing; _resolve() }
         }
-        return Promise.all(this.calls)
+        return ongoing
+        // return Promise.all(this.calls)
     }
 
     async resume() {
-        /* Resume RPC calls after pause(). */
+        /* Resume RPC calls after pause(). If called during the initial phase of pausing, it awaits
+           for ongoing calls to return, so it never returns before the preceding pause().
+         */
         if (!this.paused) return
-        if (this.calls.length) await Promise.all(this.calls)    // the initial phase of pausing may not have finished yet?
-        this.paused.resolve()
+        // if (this.calls.length) await Promise.all(this.calls)    // the initial phase of pausing may not have finished yet?
+        await this.paused.resolve()
         this.paused = false
     }
 
