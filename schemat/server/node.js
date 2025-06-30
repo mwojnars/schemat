@@ -397,7 +397,7 @@ export class Node extends Agent {
         if (type === 'SYS') return this.sys_recv(message)
         if (type === 'RPC') {
             let {agent_id, role} = this._rpc_request_parse(message)
-            // print(`ipc_master():`, `agent_id=${agent_id} method=${method} args[0]=${args[0]}`) // JSON.stringify(message))
+            // this._print(`ipc_master():`, `agent_id=${agent_id} method=${method} args=${args}`)
 
             // check if the target object is deployed here on this node, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
