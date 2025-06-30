@@ -206,6 +206,18 @@ export class Category extends WebObject {
     'action.insert'(...args) {
         /* Create a new object of this category inside a transaction and insert it to the database (tx.save() invoked automatically). */
         return this.new(...args)
+
+        // TX+DB operations performed in the background:
+        // - the new object is registered in TX and receives a provisional ID
+        // - a request is sent over HTTP to an edge server
+        // - the edge server sends an RCP request over TCP to a data block agent
+        // - the object is written to DB where its record receives a proper ID
+        // - record + ID are transferred back to edge server & client
+        // - TX writes the final ID into the object, so it can be serialized by JSONx when completing the action
+        // - JsonPOST + JSONx write the ID in HTTP response (serialized representation of the "result" object);
+        //   "records" are appended to the response, where the DB content of the object is included
+        // - client deserializes "records" and saves the object's record in the Registry, then it deserializes the object itself
+        //   from its ID via JSONx, which pulls the record from Registry and recreates the object as a stub with proper ID (no content)
     }
 }
 

@@ -80,20 +80,15 @@ export class Cluster extends Agent {
            this order, the state would contain a newborn object (no ID) for some time, which breaks the state's consistency!
 
            GENERAL RULE:
-           When adding new system objects, always save them to DB first, only later add them to the state.
-           Also, use the state to update the parent's content in DB, not the other way round ([agent] reflects $agent.state, not the opposite!).
-
-           The correct order:
-           1. create child object and save to DB
-           2. add child object to the copy of $state and save to DB
-           3. update local $state
+           When doing mixed DB + $state modifications, first update the DB, only then the local state. In this way,
+           if the DB update fails, $state won't be left with incompatible content. This is important for other agents
+           which may condition their actions on this agent's state, but can only observe this state through the DB.
         */
         // this._print_stack()
         this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}, ${schemat.tx}`)
 
         let args = typeof props === 'string' ? [{}, props] : [props]
         let node = await schemat.std.Node.action.insert(...args)
-        // let node = await this.action._create_node(...args)
         await node.load()
 
         this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
@@ -104,21 +99,5 @@ export class Cluster extends Agent {
 
         // await this.set({nodes}).save({ring: this.__ring})    -- .set() will not work outside action
         // await this.action({ring: this.__ring}).set({nodes})
-    }
-
-    async 'action._create_node'(...args) {
-        return schemat.std.Node.new(...args)
-
-        // TX+DB operations performed in the background:
-        // - the new object is registered in TX and receives a provisional ID
-        // - a request is sent over HTTP to an edge server
-        // - the edge server sends an RCP request over TCP to a data block agent
-        // - the object is written to DB where its record receives a proper ID
-        // - record + ID are transferred back to edge server & client
-        // - TX writes the final ID into the object, so it can be serialized by JSONx when completing the action
-        // - JsonPOST + JSONx write the ID in HTTP response (serialized representation of the "result" object);
-        //   "records" are appended to the response, where the DB content of the object is included
-        // - client deserializes "records" and saves the object's record in the Registry, then it deserializes the object itself
-        //   from its ID via JSONx, which pulls the record from Registry and recreates the object with its full content and proper ID
     }
 }
