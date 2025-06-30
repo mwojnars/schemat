@@ -170,21 +170,12 @@ export class Application extends WebObject {
 
     /***  Actions -- can be called via schemat.action.*()  ***/
 
-    // async 'action.submit_tx'(changes, opts) {
-    //     /* Submit a transaction to the database. `changes` is an array of changes, each change is either of:
-    //        - ['ins', data]  -- insertion of a new object
-    //        - ['del', id]    -- deletion of an existing object
-    //        - ['upd', id, edit, ...args]  -- modification of an existing object, where `edit` is the name of the edit method to be called,
-    //                                         and `args` are 0+ arguments to be passed to the method
-    //      */
-    //     await schemat.save(opts)
-    // }
-
     // the actions below don't explicitly use a transaction, but they do run inside a TX, and updated DB records are captured at the end
-    async 'action.db_insert'(entries, opts)  { return await schemat.db.insert(entries, opts) }
-    async 'action.db_update'(id_edits, opts) { return await schemat.db.update(id_edits, opts) }
-    async 'action.db_delete'(ids, opts)      { return await schemat.db.delete(ids, opts) }
     async 'action.db_submit'(...args)        { return await schemat.db.submit(...args) }
+
+    // async 'action.db_insert'(entries, opts)  { return await schemat.db.insert(entries, opts) }
+    // async 'action.db_update'(id_edits, opts) { return await schemat.db.update(id_edits, opts) }
+    // async 'action.db_delete'(ids, opts)      { return await schemat.db.delete(ids, opts) }
 
 
     /***  Dynamic imports  ***/
