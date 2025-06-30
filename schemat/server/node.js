@@ -168,11 +168,11 @@ export class Node extends Agent {
 
 
     __new__(tcp_addr) {
-        /* If provided as a custom argument, split TCP address of the form "host:port" into parts. */
+        /* If provided as a custom argument, split the TCP address of the form "host:port" into parts. */
         if (!tcp_addr) return
         let [tcp_host, tcp_port] = tcp_addr.split(':')
         if (tcp_host) this.tcp_host = tcp_host
-        if (tcp_port) this.tcp_host = tcp_port
+        if (tcp_port) this.tcp_port = Number(tcp_port)
     }
 
     async __load__() {
