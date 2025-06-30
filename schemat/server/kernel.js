@@ -210,7 +210,7 @@ class Frame {
     async exec(command, args, caller_ctx = schemat.current_context, tx = null, callback = null) {
         /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
-        let [method] = this._find_command(command)
+        let [method] = this._find_command(command)      // check that `command` is recognized by the agent
         // print(`calling agent ${this.agent}.${method}()`)
 
         // wait for the agent to start

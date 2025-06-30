@@ -21,6 +21,7 @@ export class Agent extends WebObject {
 
     get $frame()    { return this.__frame?.getStore() }
     get $state()    { return this.$frame?.state }
+    get $role()     { return this.$frame?.role }
 
     __concurrent    // if true, agent methods of this agent may execute concurrently
     num_workers     // number of concurrent workers per node that should execute this agent's microservice at the same time; -1 = "all available"
@@ -84,7 +85,7 @@ export class Agent extends WebObject {
 
     async '$agent.ping'(state, msg) {
         /* Default RPC endpoint for testing intra-cluster communication. */
-        let response = `[${utc()}]  PING: agent [${this.id}], ${msg}`
+        let response = `[${utc()}] PING to ${this}.${this.$role}: ${msg}`
         print(response)
         return response
     }
