@@ -35,14 +35,12 @@ export class IndexOperator extends DerivedOperator {
     //     // return this.source.record_schema
     // }
 
-    apply_change(sequence /*Sequence or Subsequence*/, key, prev, next) {
-        /* Update this index on the target `sequence` to apply a [prev > next] change that originated
+    apply_change(destination /*Sequence*/, key, prev, next) {
+        /* Update this index on the `destination` sequence to apply a [prev > next] change that originated
            in the source sequence of this index. `prev` and `next` are source-sequence entities: objects or records.
            Missing 'prev' represents insertion; missing `next` represents deletion.
          */
-
         // print(`apply_change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
-        // let sequence = ring.get_sequence('index', this.id)
 
         // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
         let del_records = this._make_records(key, prev)
@@ -52,11 +50,11 @@ export class IndexOperator extends DerivedOperator {
 
         // delete old records
         for (let [key, value] of del_records || [])     // TODO: `key` may be duplicated (repeated values), remove duplicates beforehand
-            sequence.del(key) //|| print(`deleted [${key}]`)
+            destination.del(key) //|| print(`deleted [${key}]`)
 
         // (over)write new records
         for (let [key, value] of put_records || [])     // TODO: `key` may be duplicated, keep the *first* one only
-            sequence.put(key, value) //|| print(`put [${key}]`)
+            destination.put(key, value) //|| print(`put [${key}]`)
     }
 
     _make_records(key, entity) {
