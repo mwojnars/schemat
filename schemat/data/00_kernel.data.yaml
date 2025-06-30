@@ -792,18 +792,13 @@
       default: 443
       info: HTTPS port to be used by HTTPS servers running on this node.
       "@": schemat/types/type.js:INTEGER
-    tcp_addr:
-      default: localhost:5828
-      info: Host name and port number of this node for incoming TCP connections from
-        other nodes in the cluster.
-      "@": schemat/types/type.js:STRING
     tcp_host:
       default: localhost
-      info: Host name to be used node-to-node TCP connections.
+      info: Host name of this node for incoming TCP connections.
       "@": schemat/types/type.js:STRING
     tcp_port:
       default: 5828
-      info: This node's TCP port for incoming messages (TCP_Receiver).
+      info: Port number of this node for incoming TCP connections.
       "@": schemat/types/type.js:INTEGER
     tcp_retry_interval:
       default: 5
