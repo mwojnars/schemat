@@ -152,11 +152,11 @@ export class Node extends Agent {
     get_worker(i)   { return schemat.kernel.get_worker(i) }     // i = 1,2,...,N
 
 
-    get _tcp_port() { return schemat.config['tcp-port'] || this.tcp_port }      // FIXME: workaround
+    // get _tcp_port() { return schemat.config['tcp-port'] || this.tcp_port }      // FIXME: workaround
 
     get tcp_address() {
-        if (!this.tcp_host || !this._tcp_port) throw new Error(`TCP host and port must be configured`)
-        return `${this.tcp_host}:${this._tcp_port}`
+        if (!this.tcp_host || !this.tcp_port) throw new Error(`TCP host and port must be configured`)
+        return `${this.tcp_host}:${this.tcp_port}`
     }
 
     get file_path() {
@@ -186,7 +186,7 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
 
         await sleep(1.0)        // wait for worker processes to start before external RCP requests are received
-        await tcp_receiver.start(this._tcp_port)
+        await tcp_receiver.start(this.tcp_port)
 
         let agents = this.agents
         let starting_agents = this._start_agents(agents)    // a promise

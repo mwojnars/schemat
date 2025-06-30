@@ -413,7 +413,7 @@ export class Kernel {
         // on master, wait for other agents (in child processes) to start; only then the TCP receiver can be started, as the last step of boot up
         if (this.is_master()) {
             await starting_agents
-            // await tcp_receiver.start(this.node._tcp_port)
+            // await tcp_receiver.start(this.node.tcp_port)
             // this._boot_done()
         }
 
