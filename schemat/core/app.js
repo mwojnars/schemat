@@ -132,7 +132,7 @@ export class Application extends WebObject {
 
     /***  Endpoints  ***/
 
-    'POST.eval'() {
+    'POST.server'() {
         /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string. */
         return new JsonPOST({
             server: (code) => this.eval_allowed ? eval(code) : undefined,

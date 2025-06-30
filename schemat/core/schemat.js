@@ -422,20 +422,23 @@ export class Schemat {
         }
     }
 
+    async server(code) {
+        /* Execute `code` on the server via eval(code). */
+        return this.app.POST.server(code)
+    }
 
-    /* Proxy object that handles both direct calls (remote(code)) and property access (remote.XYZ).
-       Direct calls execute code on the server via eval, while property access forwards to app.action.XYZ().
-     */
-    remote = new Proxy(
-        async (code) => this.app.POST.eval(code),       // handle direct calls like remote(code)
-        {
-            get: (target, prop) => {                    // handle property access like remote.XYZ
-                if (prop === 'then') return undefined   // prevent Promise-like behavior
-                return (...args) => this.app.action[prop](...args)
-            }
-        }
-    )
-    async server(code) { return this.app.POST.eval(code) }
+    // /* Proxy object that handles both direct calls (remote(code)) and property access (remote.XYZ).
+    //    Direct calls execute code on the server via eval, while property access forwards to app.action.XYZ().
+    //  */
+    // remote = new Proxy(
+    //     async (code) => this.app.POST.server(code),       // handle direct calls like remote(code)
+    //     {
+    //         get: (target, prop) => {                    // handle property access like remote.XYZ
+    //             if (prop === 'then') return undefined   // prevent Promise-like behavior
+    //             return (...args) => this.app.action[prop](...args)
+    //         }
+    //     }
+    // )
 
     /***  Transactions  ***/
 

@@ -316,8 +316,7 @@
       "@": schemat/types/type.js:NUMBER
     eval_allowed:
       default: false
-      info: If true, schemat.app.POST.eval() and schemat.server() are allowed to be
-        executed.
+      info: If true, schemat.app.POST.server() and schemat.server() calls are allowed.
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   __prototype:
