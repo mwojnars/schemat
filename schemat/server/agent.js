@@ -84,7 +84,7 @@ export class Agent extends WebObject {
     }
 
     async '$agent.ping'(state, msg) {
-        /* Default RPC endpoint for testing intra-cluster communication. */
+        /* For testing RPC messages and intra-cluster communication. */
         let response = `[${utc()}] PING to ${this}.${this.$role}: ${msg}`
         print(response)
         return response
