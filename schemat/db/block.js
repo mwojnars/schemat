@@ -198,7 +198,7 @@ export class DataBlock extends Block {
         /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring. */
         // this._print(`_move_down() id=${id}`)
         let ring = this.ring
-        assert(ring.is_loaded())
+        if (!ring.is_loaded()) throw new Error(`the owner ring ${ring} of the block ${this} is not loaded`)
         let base = ring.base_ring
         if (!base) throw new ObjectNotFound(null, {id})
         req.push_ring(ring)
@@ -211,7 +211,7 @@ export class DataBlock extends Block {
            No need to check for the ID validity here, because ID ranges only apply to inserts, not updates.
          */
         let ring = this.ring
-        assert(ring.is_loaded())
+        if (!ring.is_loaded()) throw new Error(`the owner ring ${ring} of the block ${this} is not loaded`)
         while (ring?.readonly) ring = req.pop_ring()        // go upwards to find the first writable ring
         if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: req.id})
         return ring
