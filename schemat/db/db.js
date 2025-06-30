@@ -221,7 +221,7 @@ export class Ring extends WebObject {
         assert(this.__ring)
         let opts = {ring: this.__ring, broadcast: true}
         let IndexSequence = this.__std.IndexSequence
-        let seq = await IndexSequence.new({ring: this}).save(opts)
+        let seq = await IndexSequence.new({ring: this, operator}).save(opts)
         // this.sequences.push(seq)
         this.sequences = [...this.sequences, seq]
         await this.save(opts)
