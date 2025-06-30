@@ -65,9 +65,11 @@ export class Cluster extends Agent {
         /* Array of all nodes where `agent` is currently deployed. */
     }
 
-    async 'TX.$leader.create_node'({}, props = {}) {
-        let node = await schemat.std.Node.new(props).save()
-        // nodes.push(node)
+    async '$leader.create_node__'({}, props = {}) {
+        // assert(!schemat.tx)  // because $state is modified here, it's disallowed for the caller to rollback DB changes only
+        let args = typeof props === 'string' ? [{}, props] : [props]
+        let node = await schemat.std.Node.new(...args).save()       // node must be saved before it can be used in $state
+        // let node = await schemat.std.Node.action.new(...args)    // action.new() creates a TX and immediately saves the object to DB
         this.$state.nodes.push(node)
         this.nodes = this.$state.nodes
     }
