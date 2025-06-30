@@ -65,10 +65,11 @@ export class Cluster extends Agent {
         /* Array of all nodes where `agent` is currently deployed. */
     }
 
-    async 'TX.$leader.create_node'({nodes}, props = {}) {
+    async 'TX.$leader.create_node'({}, props = {}) {
         let node = await schemat.std.Node.new(props).save()
-        nodes.push(node)
-        this.nodes = nodes
+        // nodes.push(node)
+        this.$state.nodes.push(node)
+        this.nodes = this.$state.nodes
     }
 
     async '$leader.create_node'({nodes}, props = {}) {
@@ -86,7 +87,7 @@ export class Cluster extends Agent {
            3. save parent state to DB 
         */
         // this._print_stack()
-        // this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}`)
+        this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}, ${schemat.tx}`)
 
         let args = typeof props === 'string' ? [{}, props] : [props]
         let node = await this.action._create_node(...args)
