@@ -418,6 +418,7 @@ export class Catalog {
         if (entries == null) return this.init()
         if (entries instanceof Catalog) return this.init(entries._entries)
         if (T.isPOJO(entries)) entries = Object.entries(entries)
+        else if (!Array.isArray(entries)) throw new Error(`argument of incorrect type for Catalog.constructor(): ${entries}`)
         return this.init(entries, true)
     }
 
