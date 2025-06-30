@@ -69,12 +69,12 @@ export class Cluster extends Agent {
         // assert(!schemat.tx)  // because $state is modified here, it's disallowed for the caller to rollback DB changes only
         let args = typeof props === 'string' ? [{}, props] : [props]
         let node = await schemat.std.Node.new(...args).save()       // node must be saved before it can be used in $state
-        // let node = await schemat.std.Node.action.new(...args)    // action.new() creates a TX and immediately saves the object to DB
+        // let node = await schemat.std.Node.insert(...args)        // insert() / action.new() creates a (new?) TX and immediately saves the object to DB
         this.$state.nodes.push(node)
         this.nodes = this.$state.nodes
     }
 
-    async '$leader.create_node'({nodes}, props = {}) {
+    async '$leader.create_node'({}, props = {}) {
         /* Create a new Node object and add it to this cluster.
            The newly created node is *first* saved to the DB and only later added to the local state; if we tried to change
            this order, the state would contain a newborn object (no ID) for some time, which breaks the state's consistency!
@@ -85,18 +85,22 @@ export class Cluster extends Agent {
 
            The correct order:
            1. create child object and save to DB
-           2. add child object to parent state
-           3. save parent state to DB 
+           2. add child object to the copy of $state and save to DB
+           3. update local $state
         */
         // this._print_stack()
         this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}, ${schemat.tx}`)
 
         let args = typeof props === 'string' ? [{}, props] : [props]
         let node = await this.action._create_node(...args)
-        this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
+        // let node = await schemat.std.Node.insert(...args)
+        // let node = await schemat.std.Node.action.new(...args)
+        // let node = await schemat.std.Node.insert_new(...args)
+        // this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
 
-        nodes.push(node)
+        let nodes = [...this.$state.nodes, node]
         await this.action.set({nodes})
+        this.$state.nodes = nodes
 
         // await this.set({nodes}).save({ring: this.__ring})    -- .set() will not work outside action
         // await this.action({ring: this.__ring}).set({nodes})

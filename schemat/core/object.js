@@ -1439,6 +1439,7 @@ export class WebObject {
     //     return func.call(obj, ...args)
     // }
 
+    // async 'action.update'(props = {})  ???
     async 'action.set'(props = {}) {
         /* Copy `props` entries into `this` and save changes automatically to DB. */
         // schemat.tx.config({capture: false, atomic: true})
