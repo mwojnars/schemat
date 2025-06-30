@@ -218,7 +218,7 @@ export class Ring extends WebObject {
     async 'action.create_sequence'(operator) {
         // TODO SEC: check permissions
         if (this.readonly) throw new Error("the ring is read-only")
-        this._print(`__ring:`, this.__ring)
+        assert(this.__ring)
         let opts = {ring: this.__ring, broadcast: true}
         let IndexSequence = this.__std.IndexSequence
         let seq = await IndexSequence.new({ring: this}).save(opts)
