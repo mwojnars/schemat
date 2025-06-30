@@ -263,8 +263,8 @@ export class Node extends Agent {
     /* Agent routing */
 
     _find_node(agent_id, role) {
-        /* Return the node where the `agent` running in a given `role` can be found.
-           If the agent is deployed on one of the local processes, return `this`.
+        /* Return the node where the `agent` is running in a given `role`. The current node has a priority:
+           if the agent is deployed on one of the local processes, `this` is returned.
          */
         if (this._find_process(agent_id, role) != null) return this
         return schemat.cluster.find_node(agent_id, role)
@@ -339,7 +339,7 @@ export class Node extends Agent {
         let frame = await this._find_frame(agent_id, role)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
 
-        return frame.exec(`${role}.${method}`, args, ctx, tx, out => this._rpc_response(out))
+        return frame.exec(method, args, ctx, tx, out => this._rpc_response(out))
     }
 
     _rpc_request(agent_id, method, args = [], opts) {

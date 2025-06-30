@@ -207,9 +207,10 @@ class Frame {
         this.paused = false
     }
 
-    async exec(method, args, caller_ctx = schemat.current_context, tx = null, callback = null) {
-        /* Call agent's `method` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
+    async exec(command, args, caller_ctx = schemat.current_context, tx = null, callback = null) {
+        /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
+        let method = `${this.role}.${command}`
         // print(`calling agent ${this.agent}.${method}()`)
 
         // wait for the agent to start
@@ -221,7 +222,7 @@ class Frame {
             await Promise.all(this.calls)
 
         // handle paused/stopping state
-        if (this.paused && !method.endsWith('.resume')) await this.paused
+        if (this.paused && command !== 'resume') await this.paused
         if (this.stopping) throw new Error(`agent ${this.agent} is in the process of stopping`)
 
         let {agent, state} = this

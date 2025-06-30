@@ -49,7 +49,7 @@ export class Cluster extends Agent {
     find_node(agent, role) {  // host_node() locate_node()
         /* Return the node where the `agent` running in a given `role` can be found. If `agent` is deployed
            on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
-           If `agent` is deployed here, on the current node, this location is always returned.
+           If `agent` is deployed here on the current node, this location is always returned.
          */
         agent = schemat.as_object(agent)
         let agent_role = _agent_role(agent, role)
