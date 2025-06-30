@@ -139,6 +139,10 @@ export class mActionResult extends MessageEncoder {
     }
 }
 
+// export class mInsertResult extends mActionResult {
+//     async consume(obj) { return obj.load() }     // to be executed after output.decode() in Service classes
+// }
+
 /**********************************************************************************************************************/
 
 export class mWebObjects extends MessageEncoder {
