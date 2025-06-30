@@ -200,6 +200,13 @@ export class Category extends WebObject {
             output: mWebObjects,
         })
     }
+
+    /***  Actions  ***/
+
+    'action.insert'(...args) {
+        /* Create a new object of this category inside a transaction and insert it to the database (tx.save() invoked automatically). */
+        return this.new(...args)
+    }
 }
 
 

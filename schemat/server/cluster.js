@@ -93,9 +93,10 @@ export class Cluster extends Agent {
 
         let args = typeof props === 'string' ? [{}, props] : [props]
         let node = await this.action._create_node(...args)
-        // let node = await schemat.std.Node.insert(...args)
+        // let node = await schemat.std.Node.action.insert(...args)
         // let node = await schemat.std.Node.action.new(...args)
         // let node = await schemat.std.Node.insert_new(...args)
+
         // this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
 
         let nodes = [...this.$state.nodes, node]
