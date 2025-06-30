@@ -167,6 +167,13 @@ export class Node extends Agent {
     }
 
 
+    __new__(tcp_addr) {
+        if (!tcp_addr) return
+        let [tcp_host, tcp_port] = tcp_addr.split(':')
+        if (tcp_host) this.tcp_host = tcp_host
+        if (tcp_port) this.tcp_host = tcp_port
+    }
+
     async __load__() {
         let agents = this.agents || []
         if (SERVER) await Promise.all(agents.map(({agent}) => agent.is_not(schemat.cluster_id) && agent.load()))   // do NOT preload a cluster object to avoid cyclic dependency

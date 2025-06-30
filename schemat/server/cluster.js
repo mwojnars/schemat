@@ -88,7 +88,8 @@ export class Cluster extends Agent {
         // this._print_stack()
         // this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}`)
 
-        let node = await this.action._create_node(props)
+        let args = typeof props === 'string' ? [{}, props] : [props]
+        let node = await this.action._create_node(...args)
         this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
 
         nodes.push(node)
@@ -98,11 +99,11 @@ export class Cluster extends Agent {
         // await this.action({ring: this.__ring}).set({nodes})
     }
 
-    async 'action._create_node'(props) {
+    async 'action._create_node'(...args) {
         // this._print_stack()
         // this._print(`action._create_node() context: ${schemat.db}, ${schemat.app}`)
 
-        return schemat.std.Node.new(props)
+        return schemat.std.Node.new(...args)
         // return await schemat.std.Node.new(props).save()   -- with await .save(reload:true) the result is fine (reloaded, not obsolete)
 
         // TX+DB operations performed in the background:
