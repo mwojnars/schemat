@@ -135,8 +135,13 @@ export class Application extends WebObject {
     'POST.server'() {
         /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string. */
         return new JsonPOST({
-            server: (code) => this.eval_allowed ? eval(code) : undefined,
-            input:  mString
+            server: (code) => {
+                if (!this.eval_allowed) throw new Error(`custom server-side code execution is not allowed`)
+                return schemat.in_transaction(() => eval(code))
+                // return eval(code)
+            },
+            input:  mString,
+            output: mActionResult,
         })
     }
 
