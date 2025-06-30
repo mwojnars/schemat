@@ -652,7 +652,7 @@ export class Node extends Agent {
             await this.sys_send(worker, 'START_AGENT', agent.id, role)
             // this.$worker({node: this, worker: i}).start_agent(agent.id, role)
         }
-        await this.action.set({agents})
+        await this.action.update({agents})
     }
 
     async '$master.stop_agent'(state, agent, {role, worker} = {}) {
@@ -672,7 +672,7 @@ export class Node extends Agent {
         for (let status of stop.reverse())
             await this.sys_send(status.worker, 'STOP_AGENT', agent.id, role)
 
-        await this.action.set({agents})
+        await this.action.update({agents})
     }
 
     _rank_workers(agents) {

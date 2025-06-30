@@ -99,7 +99,7 @@ export class Cluster extends Agent {
         // this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
 
         let nodes = [...this.$state.nodes, node]
-        await this.action.set({nodes})
+        await this.action.update({nodes})
         this.$state.nodes = nodes
 
         // await this.set({nodes}).save({ring: this.__ring})    -- .set() will not work outside action
