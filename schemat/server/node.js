@@ -297,10 +297,10 @@ export class Node extends Agent {
 
     /* RPC: remote calls to agents */
 
-    async rpc_send(agent, method, args, opts /*{role, node, worker, wait, wait_delegated, broadcast}*/ = {}) {
+    async rpc_send(agent, cmd, args, opts /*{role, node, worker, wait, wait_delegated, broadcast}*/ = {}) {
         /* Send an RPC message to a remote `agent`. If needed, the message is first sent over internal (IPC) and
            external (TCP) communication channels to arrive at a proper node and worker process where the `agent` is running.
-           There, '$agent.<method>'(...args) of `agent` is invoked and the response is returned via the same path.
+           There, '$agent.<cmd>'(...args) of `agent` is invoked and the response is returned via the same path.
            Arguments and the result of the call are JSONx-encoded/decoded.
            If broadcast=true, all known deployments of the agent are targeted and an array of results is returned (TODO);
            otherwise, only one arbitrary (random?) deployment is targeted in case of multiple deployments.
@@ -309,7 +309,7 @@ export class Node extends Agent {
                  not the direct recipient of the initial request (delegated RPC request, multi-hop RPC, asymmetric routing)
          */
         let agent_id = (typeof agent === 'object') ? agent.id : agent
-        let message = this._rpc_request(agent_id, method, args, opts)
+        let message = this._rpc_request(agent_id, cmd, args, opts)
         // this._print("rpc_send():", JSON.stringify(message))
 
         assert(schemat.kernel.frames.size, `kernel not yet initialized`)
@@ -329,7 +329,7 @@ export class Node extends Agent {
         /* Execute an RPC message addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        let {agent_id, role, method, args, ctx, tx} = this._rpc_request_parse(message)
+        let {agent_id, role, cmd, args, ctx, tx} = this._rpc_request_parse(message)
         if (tx?.debug) this._print("rpc_recv():", JSON.stringify(message))
 
         role ??= schemat.GENERIC_ROLE
@@ -339,22 +339,22 @@ export class Node extends Agent {
         let frame = await this._find_frame(agent_id, role)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
 
-        return frame.exec(method, args, ctx, tx, out => this._rpc_response(out))
+        return frame.exec(cmd, args, ctx, tx, out => this._rpc_response(out))
     }
 
-    _rpc_request(agent_id, method, args = [], opts) {
-        /* RPC message format: [type, agent_id, method, args, opts]. Added here in `opts`: app (application ID), tx (transaction info). */
+    _rpc_request(agent_id, cmd, args = [], opts) {
+        /* RPC message format: [type, agent_id, cmd, args, opts]. Added here in `opts`: app (application ID), tx (transaction info). */
         let tx = schemat.tx?.dump_tx()
         let ctx = schemat.db.id
         if (opts.role === schemat.GENERIC_ROLE) delete opts.role        // default role is passed implicitly
         opts = {...opts, ctx, tx}
-        return ['RPC', agent_id, method, JSONx.encode(args), opts]
+        return ['RPC', agent_id, cmd, JSONx.encode(args), opts]
     }
 
     _rpc_request_parse(request) {
-        let [type, agent_id, method, args, {role, tx, ctx}] = request
+        let [type, agent_id, cmd, args, {role, tx, ctx}] = request
         assert(type === 'RPC', `incorrect message type, expected RPC`)
-        return {type, agent_id, role, method, args: JSONx.decode(args), tx, ctx}
+        return {type, agent_id, role, cmd, args: JSONx.decode(args), tx, ctx}
     }
 
     _rpc_response(result, error) {
