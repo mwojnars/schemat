@@ -210,7 +210,9 @@ class Frame {
     async exec(command, args, caller_ctx = schemat.current_context, tx = null, callback = null) {
         /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
-        let method = `${this.role}.${command}`
+        let [method, func] = this._find_method(command)
+        // let method = `${this.role}.${command}`
+
         // print(`calling agent ${this.agent}.${method}()`)
 
         // wait for the agent to start
@@ -226,7 +228,7 @@ class Frame {
         if (this.stopping) throw new Error(`agent ${this.agent} is in the process of stopping`)
 
         let {agent, state} = this
-        let func = agent.__self[method]
+        // let func = agent.__self[method]
         if (typeof func !== 'function') throw new Error(`agent ${agent} has no method "${method}"`)
 
         let callA = () => func.call(agent, state, ...args)
@@ -242,6 +244,19 @@ class Frame {
         }
         return agent.in_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
         // return schemat.in_tx_context(ctx, tx, call)
+    }
+
+    _find_method(command) {
+        /* Find implementation of `command` in the frame's agent and return as a pair [method-name, method-function]. */
+        let method = `${this.role}.${command}`
+        let func = this.agent.__self[method]
+        if (typeof func !== 'function') {
+            // generic $agent.*() method is used as a fallback when there's no role-specific implementation of the `command`
+            method = `${schemat.GENERIC_ROLE}.${command}`
+            func = this.agent.__self[method]
+        }
+        if (typeof func !== 'function') throw new Error(`command "${command}" not recognized by agent ${this.agent}`)
+        return [method, func]
     }
 
     _frame_context(call) {
