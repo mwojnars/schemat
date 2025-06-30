@@ -65,23 +65,14 @@ export class Cluster extends Agent {
         /* Array of all nodes where `agent` is currently deployed. */
     }
 
-    async '$leader.create_node__'({}, props = {}) {
-        // assert(!schemat.tx)  // because $state is modified here, it's disallowed for the caller to rollback DB changes only
-        let args = typeof props === 'string' ? [{}, props] : [props]
-        let node = await schemat.std.Node.new(...args).save()       // node must be saved before it can be used in $state
-        // let node = await schemat.std.Node.insert(...args)        // insert() / action.new() creates a (new?) TX and immediately saves the object to DB
-        this.$state.nodes.push(node)
-        this.nodes = this.$state.nodes
-    }
-
     async '$leader.create_node'({}, props = {}) {
         /* Create a new Node object and add it to this cluster.
            The newly created node is *first* saved to the DB and only later added to the local state; if we tried to change
            this order, the state would contain a newborn object (no ID) for some time, which breaks the state's consistency!
 
            GENERAL RULE:
-           When doing mixed DB + $state modifications, first update the DB, only then the local state. In this way,
-           if the DB update fails, $state won't be left with incompatible content. This is important for other agents
+           When doing mixed DB + $state modifications, first update the DB, and the local state only later. In this way,
+           if the DB update fails, $state is NOT left with incompatible content. This is important for other agents in the cluster
            which may condition their actions on this agent's state, but can only observe this state through the DB.
         */
         // this._print_stack()
@@ -95,9 +86,7 @@ export class Cluster extends Agent {
 
         let nodes = [...this.$state.nodes, node]
         await this.action.update({nodes})
-        this.$state.nodes = nodes
 
-        // await this.set({nodes}).save({ring: this.__ring})    -- .set() will not work outside action
-        // await this.action({ring: this.__ring}).set({nodes})
+        this.$state.nodes = nodes
     }
 }
