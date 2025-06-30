@@ -530,6 +530,7 @@
       info: DataSequence that keeps all primary objects of this ring
       category:
         "@": 14
+      strong: true
       "@": schemat/types/type.js:REF
     sequences:
       info: "Derived Sequences: indexes, aggregations etc. Their records are
@@ -541,6 +542,7 @@
       type:
         category:
           "@": 13
+        strong: true
         "@": schemat/types/type.js:REF
       "@": schemat/types/type.js:ARRAY
     base_ring:
@@ -622,6 +624,7 @@
       type:
         category:
           "@": 18
+        strong: true
         "@": schemat/types/type.js:REF
       default: []
       "@": schemat/types/type.js:ARRAY
