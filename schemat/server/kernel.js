@@ -198,7 +198,6 @@ class Frame {
             this.paused.resolve = async () => { await ongoing; _resolve() }
         }
         return ongoing
-        // return Promise.all(this.calls)
     }
 
     async resume() {
@@ -206,7 +205,6 @@ class Frame {
            for ongoing calls to return, so it never returns before the preceding pause().
          */
         if (!this.paused) return
-        // if (this.calls.length) await Promise.all(this.calls)    // the initial phase of pausing may not have finished yet?
         await this.paused.resolve()
         this.paused = false
     }
