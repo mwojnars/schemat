@@ -163,12 +163,12 @@ export class TCP_Sender {
     _response_parser() {
         return new BinaryParser((id, resp) => {
             try {
-                // schemat.node._print(`TCP client response ${id} recv:`, _json(resp))
+                // schemat._print(`TCP client response ${id} recv:`, _json(resp))
                 let entry = this.pending.get(id)
                 if (entry) {
                     entry.resolve(resp)
                     this.pending.delete(id)
-                } else schemat.node._print('WARNING TCP response received for unknown request:', id)
+                } else schemat._print('WARNING TCP response received for unknown request:', id)
             }
             catch (e) { console.error('Invalid response:', e) }
         })
