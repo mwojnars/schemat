@@ -413,12 +413,12 @@ export class Kernel {
 
         // start this node's own agent and all agents in workers
         let role = this.is_master() ? '$master' : '$worker'
-        let {starting_agents, tcp_receiver} = await this.start_agent(this.node, role)
+        let {state} = this.root_frame = await this.start_agent(this.node, role)
         assert(this.frames.size === 1)      // the root frame
 
         // on master, wait for other agents (in child processes) to start; only then the TCP receiver can be started, as the last step of boot up
         if (this.is_master()) {
-            await starting_agents
+            await state.starting_agents
             // await tcp_receiver.start(this.node.tcp_port)
             // this._boot_done()
         }
@@ -475,7 +475,8 @@ export class Kernel {
 
         let frame = new Frame(agent, role)
         this.frames.set([agent.id, role], frame)    // the frame must be assigned to `frames` already before __start__()
-        return frame.start()
+        await frame.start()
+        return frame
     }
 
     async refresh_agent(frame) {
