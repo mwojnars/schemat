@@ -116,8 +116,9 @@ export class Registry {
         finally {
             this._purging_now = false
         }
-        this.records.clear()
+        this.erase_records()
     }
 
-    erase() { this.objects.clear() }
+    erase_records() { this.records.clear() }
+    erase_objects() { this.objects.clear() }
 }

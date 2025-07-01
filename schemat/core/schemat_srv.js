@@ -124,6 +124,7 @@ export class ServerSchemat extends Schemat {
 
     async _boot_done() {
         delete this._boot_db        // mark the end of the boot phase; allow garbage collection of _boot_db
+        // await this._erase_registry()
         await super._boot_done()
     }
 
@@ -190,13 +191,13 @@ export class ServerSchemat extends Schemat {
         /* Once in a while, clear the object cache entirely to cut links between subsequent generations of instances
            and allow efficient garbage-collection in the presence of cyclic links between different web objects.
          */
-        this.node._print(`Schemat._erase_registry() app=${this.app}, ${this.registry.objects.size} objects ...`)
+        this.node?._print(`Schemat._erase_registry() app=${this.app}, ${this.registry.objects.size} objects ...`)
 
         this._cluster = this.cluster
         this._app = this.app
         assert((!this._cluster || this._cluster.is_loaded()) && (!this._app || this._app.is_loaded()))
 
-        this.registry.erase()
+        this.registry.erase_objects()
         this._db = await this._db.reload()
     }
 
