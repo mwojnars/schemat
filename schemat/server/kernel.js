@@ -170,7 +170,11 @@ class Frame {
 
         let ttl = this.agent.__ttl
         if (!ttl || ttl <= 0) ttl = fallback_ttl
-        // schemat._print(`_schedule_restart() will restart ${this.agent} after ${ttl} seconds`)
+        
+        // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
+        ttl *= 0.9 + Math.random() * 0.1
+        
+        schemat._print(`_schedule_restart() will restart ${this.agent} after ${ttl.toFixed(2)} seconds`)
 
         this.restart_timeout = setTimeout(async () => {
             try { await this.restart() }
