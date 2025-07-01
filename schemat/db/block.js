@@ -194,11 +194,14 @@ export class DataBlock extends Block {
         return JSON.stringify(plain)
     }
 
-    _move_down(id, req) {
+    async _move_down(id, req) {
         /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring. */
         // this._print(`_move_down() id=${id}`)
+
         let ring = this.ring
-        if (!ring.is_loaded()) throw new Error(`the owner ring ${ring} of the block ${this} is not loaded`)
+        if (!ring.is_loaded()) await ring.load()    //ring = await schemat.get_loaded(ring.id)
+        // if (!ring.is_loaded()) throw new Error(`the owner ring ${ring} of the block ${this} is not loaded`)
+
         let base = ring.base_ring
         if (!base) throw new ObjectNotFound(null, {id})
         req.push_ring(ring)
@@ -221,7 +224,7 @@ export class DataBlock extends Block {
         let key = this.encode_id(id)
         let data = await this.$state.store.get(key)     // JSON string
         if (data) return this._annotate(data)
-        return await this._move_down(id, req).select(id, req)
+        return await (await this._move_down(id, req)).select(id, req)
     }
 
     async '$agent.insert'({}, entries, {id, ...opts} = {}) {
@@ -377,7 +380,7 @@ export class DataBlock extends Block {
         {
             let key = this.encode_id(id)
             let data = await store.get(key)
-            if (data === undefined) return this._move_down(id, req).update(id, edits, req)
+            if (data === undefined) return (await this._move_down(id, req)).update(id, edits, req)
 
             let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
             let obj  = prev._clone()                    // dependencies (category, container, prototypes) are loaded, but references are NOT (!)
@@ -437,7 +440,7 @@ export class DataBlock extends Block {
         {
             let key = this.encode_id(id)
             let data = await store.get(key)
-            if (data === undefined) return this._move_down(id, req).delete(id, req)
+            if (data === undefined) return (await this._move_down(id, req)).delete(id, req)
 
             if (this.ring.readonly)
                 // TODO: find the first writable ring upwards from this one and write a tombstone for `id` there
