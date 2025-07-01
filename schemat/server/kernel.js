@@ -174,7 +174,7 @@ class Frame {
         // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
         ttl *= 1 - Math.random() * randomize_ttl
 
-        schemat._print(`_schedule_restart() will restart ${this.agent} after ${ttl.toFixed(2)} seconds; __ttl=${this.agent.__ttl}`)
+        // schemat._print(`_schedule_restart() will restart ${this.agent} after ${ttl.toFixed(2)} seconds; __ttl=${this.agent.__ttl}`)
 
         this.restart_timeout = setTimeout(async () => {
             try { await this.restart() }
@@ -422,7 +422,10 @@ export class Kernel {
     //     this.booting = false
     // }
 
-    async start(opts) {}    // implemented in subclasses
+    async start() {
+        await schemat._boot_done()
+        await this._start_node_agent()
+    }
 
     async _start_node_agent() {
         // start this node's own agent and all agents in workers
@@ -510,14 +513,11 @@ export class MasterProcess extends Kernel {
         return this.workers[process_id - 1]     // workers 1,2,3... stored under indices 0,1,2...
     }
 
-    async start(opts) {
-        // await this.init(opts)
-
+    async start() {
         print(`starting node:`, this.node_id)
         this._start_workers()
         // await sleep(2.0)            // wait for workers to start their IPC before sending requests
-        await schemat._boot_done()
-        await this._start_node_agent()
+        await super.start()
     }
 
     _start_workers(num_workers = 2) {
@@ -556,14 +556,11 @@ export class WorkerProcess extends Kernel {
 
     mailbox     // IPC_Mailbox for communication with the master process
 
-    async start(opts) {
-        // await this.init(opts)
-
+    async start() {
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC requests from master to this worker
         // await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in MasterProcess.start()
-        await schemat._boot_done()
-        await this._start_node_agent()
+        await super.start()
     }
 }
 
