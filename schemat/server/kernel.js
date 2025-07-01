@@ -436,9 +436,10 @@ export class Kernel {
             })))
 
         // await sleep(11.0)
-        await this._stop_agents()
         // await stop_agents
-        await this._promise
+        await this._stop_agents()
+        // await this._promise
+        schemat._print(`process closed`)
         process.exit(0)
     }
 
@@ -463,49 +464,49 @@ export class Kernel {
         // await schemat._erase_registry()
     }
 
-    async main() {
-        /* Start/stop agents. Refresh agent objects and the `node` object itself. */
-
-        await this._start_node_agent()
-        await sleep(11.0)
-
-        // schemat._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
-        // await sleep(this.node.agent_refresh_interval || 10)         // avoid reloading the agents immediately after creation
-
-        while (true) {
-            // let beginning = Date.now()
-
-            // let new_node = this.node.refresh()
-            // if (new_node.__ttl_left() < 0) new_node = await new_node.reload()
-            // this.node = new_node
-
-            // if (new_node !== this.node) print(`worker ${this.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
-            // else print(`worker ${this.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
-
-            if (this._closing) {
-                await this._stop_agents()
-                if (this.frames.size) continue; else break
-            }
-
-            await sleep(this.node.agent_refresh_interval)
-            if (!this.frames.size) break        // stop the loop when no more running agents
-
-            // for (let frame of this.frames.values())                 // refresh/reload agents if needed
-            //     await this.refresh_agent(frame)
-            //
-            // let passed = (Date.now() - beginning) / 1000
-            // let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
-            //
-            // let remaining = this.node.agent_refresh_interval - offset_sec - passed
-            // if (remaining > 0) await sleep(remaining);
-            //
-            // let agents = Array.from(this.frames.values(), frame => frame.agent);
-            // [this.node, ...agents].map(obj => obj.refresh())        // schedule a reload of relevant objects in the background, for next iteration
-            // await sleep(offset_sec)
-        }
-
-        schemat._print(`process closed`)
-    }
+    // async main() {
+    //     /* Start/stop agents. Refresh agent objects and the `node` object itself. */
+    //
+    //     await this._start_node_agent()
+    //     await sleep(11.0)
+    //
+    //     // schemat._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
+    //     // await sleep(this.node.agent_refresh_interval || 10)         // avoid reloading the agents immediately after creation
+    //
+    //     while (true) {
+    //         // let beginning = Date.now()
+    //
+    //         // let new_node = this.node.refresh()
+    //         // if (new_node.__ttl_left() < 0) new_node = await new_node.reload()
+    //         // this.node = new_node
+    //
+    //         // if (new_node !== this.node) print(`worker ${this.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
+    //         // else print(`worker ${this.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
+    //
+    //         if (this._closing) {
+    //             await this._stop_agents()
+    //             if (this.frames.size) continue; else break
+    //         }
+    //
+    //         await sleep(this.node.agent_refresh_interval)
+    //         if (!this.frames.size) break        // stop the loop when no more running agents
+    //
+    //         // for (let frame of this.frames.values())                 // refresh/reload agents if needed
+    //         //     await this.refresh_agent(frame)
+    //         //
+    //         // let passed = (Date.now() - beginning) / 1000
+    //         // let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
+    //         //
+    //         // let remaining = this.node.agent_refresh_interval - offset_sec - passed
+    //         // if (remaining > 0) await sleep(remaining);
+    //         //
+    //         // let agents = Array.from(this.frames.values(), frame => frame.agent);
+    //         // [this.node, ...agents].map(obj => obj.refresh())        // schedule a reload of relevant objects in the background, for next iteration
+    //         // await sleep(offset_sec)
+    //     }
+    //
+    //     schemat._print(`process closed`)
+    // }
 
     async start_agent(obj, role) {
         let agent = schemat.as_object(obj)
@@ -571,8 +572,8 @@ export class MasterProcess extends Kernel {
         this._start_workers()
         // await sleep(2.0)            // wait for workers to start their IPC before sending requests
         await schemat._boot_done()
-
-        await (this._promise = this.main())
+        await this._start_node_agent()
+        // await (this._promise = this.main())
     }
 
     _start_workers(num_workers = 2) {
@@ -618,8 +619,8 @@ export class WorkerProcess extends Kernel {
         this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC requests from master to this worker
         // await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in MasterProcess.start()
         await schemat._boot_done()
-
-        await (this._promise = this.main())
+        await this._start_node_agent()
+        // await (this._promise = this.main())
     }
 }
 
