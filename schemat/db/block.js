@@ -57,6 +57,9 @@ export class Block extends Agent {
             // {this.sequence.load(); await sleep()}
             // if (schemat.booting) {this.sequence.load(); await sleep()} else await this.sequence.load()
 
+        if (!this.ring.is_loaded())
+            await this.ring.load()
+
         // if (!this.sequence.is_loaded() && !this.sequence.__meta.loading)
         //     this.sequence.load()        // intentionally not awaited to avoid deadlock: sequence loading may try to read from this block (!);
         //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
