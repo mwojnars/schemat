@@ -126,6 +126,7 @@ export class ServerSchemat extends Schemat {
         delete this._boot_db        // mark the end of the boot phase; allow garbage collection of _boot_db
         // await this._erase_registry()
         await super._boot_done()
+        // this.registry.erase_records()
     }
 
     client_block(request, id_context, ...objects) {

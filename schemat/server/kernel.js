@@ -174,7 +174,7 @@ class Frame {
         // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
         ttl *= 1 - Math.random() * randomize_ttl
 
-        // schemat._print(`_schedule_restart() will restart ${this.agent} after ${ttl.toFixed(2)} seconds`)
+        schemat._print(`_schedule_restart() will restart ${this.agent} after ${ttl.toFixed(2)} seconds; __ttl=${this.agent.__ttl_left()}`)
 
         this.restart_timeout = setTimeout(async () => {
             try { await this.restart() }
@@ -368,7 +368,7 @@ export class Kernel {
     _closing                    // true if .stop() was called and the process is shutting down right now
 
     // web object of [Node] category that represents the physical node this process is running on
-    get node() { return this.root_frame.agent }
+    get node() { return this.root_frame.agent }  //|| this._node }
 
     get worker_id() {
         /* Numeric ID (1, 2, 3, ...) of the node's current worker process; 0 for the master process. */
@@ -390,6 +390,7 @@ export class Kernel {
 
         schemat.set_kernel(this)
         this.node_id = Number(opts['node'].split('.').pop())
+        // this._node = await schemat.load(this.node_id)
 
         // let node_file = './schemat/node.id'
         // let node_id = opts.node || Number(opts['node-dir'].split('.').pop()) || this._read_node_id(node_file)
@@ -458,6 +459,8 @@ export class Kernel {
             // await tcp_receiver.start(this.node.tcp_port)
             // this._boot_done()
         }
+
+        // await schemat._erase_registry()
     }
 
     async main() {
@@ -478,8 +481,6 @@ export class Kernel {
 
             // if (new_node !== this.node) print(`worker ${this.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
             // else print(`worker ${this.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
-
-            // if (this._closing) await this._stop_agents()
 
             if (this._closing) {
                 await this._stop_agents()
@@ -511,7 +512,9 @@ export class Kernel {
         role ??= schemat.GENERIC_ROLE           // "$agent" role is the default for running agents
 
         if (this.frames.has([agent.id, role])) throw new Error(`agent ${agent} in role ${role} is already running`)
-        if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
+        if (!agent.is_loaded() || agent.__ttl_left() <= 0) agent = await agent.reload()
+
+        // assert(agent.__ttl_left() > 0, agent.__content)
 
         // schemat._print(`start_agent(): ${agent}`, agent.__content)
         assert(agent.is_loaded())
@@ -539,9 +542,11 @@ export class Kernel {
 
     async _stop_agents() {
         /* Stop all currently running agents, and those that might be started during this operation. */
-        while (this.frames.size)
+        while (this.frames.size) {
             for (let [id, role] of [...this.frames.keys()].reverse())
                 await this.stop_agent(id, role)
+            await sleep(1.0)
+        }
     }
 }
 
