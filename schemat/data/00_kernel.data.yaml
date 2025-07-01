@@ -981,6 +981,7 @@
         not the agent's own context.
       "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
+  ttl: 30
   __category:
     "@": 1
 - id: 30
