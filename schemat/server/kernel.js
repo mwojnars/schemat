@@ -389,10 +389,7 @@ export class Kernel {
         // let {WebServer} = await schemat.import('/$/local/schemat/server/agent.js')
 
         schemat.set_kernel(this)
-
         this.node_id = Number(opts['node'].split('.').pop())
-        // this.node = await schemat.load(this.node_id)
-        // assert(this.node)
 
         // let node_file = './schemat/node.id'
         // let node_id = opts.node || Number(opts['node-dir'].split('.').pop()) || this._read_node_id(node_file)
@@ -421,7 +418,6 @@ export class Kernel {
         if (this._closing) return
         this._closing = true
 
-        // let node = await this.node.reload()
         let delay = this.node.agent_refresh_interval
 
         if (cluster.isPrimary) schemat._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
@@ -446,9 +442,7 @@ export class Kernel {
     //     this.booting = false
     // }
 
-    async main() {
-        /* Start/stop agents. Refresh agent objects and the `node` object itself. */
-
+    async _start_node_agent() {
         // start this node's own agent and all agents in workers
         let role = this.is_master() ? '$master' : '$worker'
         let {state} = this.root_frame = await this.start_agent(this.node_id, role)
@@ -460,9 +454,16 @@ export class Kernel {
             // await tcp_receiver.start(this.node.tcp_port)
             // this._boot_done()
         }
+    }
+
+    async main() {
+        /* Start/stop agents. Refresh agent objects and the `node` object itself. */
+
+        await this._start_node_agent()
+        await sleep(11.0)
 
         // schemat._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
-        await sleep(this.node.agent_refresh_interval || 10)         // avoid reloading the agents immediately after creation
+        // await sleep(this.node.agent_refresh_interval || 10)         // avoid reloading the agents immediately after creation
 
         while (true) {
             // let beginning = Date.now()
