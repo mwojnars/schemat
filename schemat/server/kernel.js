@@ -154,11 +154,13 @@ class Frame {
         return state
     }
 
-    async restart(agent) {
-        /* Replace this.agent with its newer copy, `agent`, and call its __restart__(). */
-        schemat._print(`restarting agent ${agent} ...`)
-        assert(agent.id === this.agent.id && agent !== this.agent)
+    async restart(agent = null) {
+        /* Replace this.agent with its newer copy, `agent` or this.agent reloaded, and call its __restart__(). */
+        agent ??= this.agent.reload()
+        if (agent === this.agent) return
+        assert(agent.id === this.agent.id)
 
+        schemat._print(`restarting agent ${agent} ...`)
         let was_running = !this.paused
         await this.pause()                      // wait for termination of ongoing RPC calls
 
@@ -414,7 +416,7 @@ export class Kernel {
         // start this node's own agent and all agents in workers
         let role = this.is_master() ? '$master' : '$worker'
         let {state} = this.root_frame = await this.start_agent(this.node, role)
-        assert(this.frames.size === 1)      // the root frame
+        assert(this.frames.size === 1)
 
         // on master, wait for other agents (in child processes) to start; only then the TCP receiver can be started, as the last step of boot up
         if (this.is_master()) {
@@ -486,7 +488,7 @@ export class Kernel {
         // no need to restart the agent if it's still the same object after refresh
         if (agent !== frame.agent) return frame.restart(agent)
 
-        // TODO: before __start__(), check for changes in external props and invoke setup.* triggers to update the environment & the installation
+        // TODO: check for changes in external props; if any, invoke setup.* triggers to update the environment & installation
         //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
     }
 
