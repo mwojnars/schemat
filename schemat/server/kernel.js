@@ -362,12 +362,14 @@ export class Kernel {
 
     // booting = new Promise(resolve => this._booting_resolve = resolve)   // resolves when the kernel is fully booted; false after that
 
-    node                        // Node web object that represents the Schemat cluster node this process is running
+    // node                        // Node web object that represents the Schemat cluster node this process is running
     frames = new FramesMap()    // Frames of currently running agents, keyed by agent IDs
     root_frame                  // frame that holds the running `node` agent
     _promise                    // Promise returned by .main(), kept here for graceful termination in .stop()
     _closing                    // true if .stop() was called and the process is shutting down right now
 
+    // web object of Node category that represents the physical node this process is running on
+    get node() { return this.root_frame.agent }
 
     get worker_id() {
         /* Numeric ID (1, 2, 3, ...) of the node's current worker process; 0 for the master process. */
@@ -391,9 +393,9 @@ export class Kernel {
 
         schemat.set_kernel(this)
 
-        let node_id = Number(opts['node'].split('.').pop())
-        this.node = await schemat.load(node_id)
-        assert(this.node)
+        this.node_id = Number(opts['node'].split('.').pop())
+        // this.node = await schemat.load(this.node_id)
+        // assert(this.node)
 
         // let node_file = './schemat/node.id'
         // let node_id = opts.node || Number(opts['node-dir'].split('.').pop()) || this._read_node_id(node_file)
@@ -422,8 +424,8 @@ export class Kernel {
         if (this._closing) return
         this._closing = true
 
-        let node = await this.node.reload()
-        let delay = node.agent_refresh_interval
+        // let node = await this.node.reload()
+        let delay = this.node.agent_refresh_interval
 
         if (cluster.isPrimary) this._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
         // await this._stop_agents()
@@ -452,7 +454,7 @@ export class Kernel {
 
         // start this node's own agent and all agents in workers
         let role = this.is_master() ? '$master' : '$worker'
-        let {state} = this.root_frame = await this.start_agent(this.node, role)
+        let {state} = this.root_frame = await this.start_agent(this.node_id, role)
         assert(this.frames.size === 1)
 
         // on master, wait for other agents (in child processes) to start; only then the TCP receiver can be started, as the last step of boot up
@@ -467,13 +469,13 @@ export class Kernel {
 
         while (true) {
             // let beginning = Date.now()
-            let new_node = this.node.refresh()
-            if (new_node.__ttl_left() < 0) new_node = await new_node.reload()
+
+            // let new_node = this.node.refresh()
+            // if (new_node.__ttl_left() < 0) new_node = await new_node.reload()
+            // this.node = new_node
 
             // if (new_node !== this.node) print(`worker ${this.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
             // else print(`worker ${this.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
-
-            this.node = new_node
 
             if (this._closing) {
                 await this._stop_agents()
@@ -555,7 +557,7 @@ export class MasterProcess extends Kernel {
     async start(opts) {
         await this.init(opts)
 
-        print(`starting node:`, this.node.id)
+        print(`starting node:`, this.node_id)
         this._start_workers()
         // await sleep(2.0)            // wait for workers to start their IPC before sending requests
         await schemat._boot_done()
