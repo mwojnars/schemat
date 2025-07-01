@@ -377,6 +377,11 @@ export class Kernel {
     is_master() { return !this.worker_id}
 
 
+    async run(opts) {
+        await this.init(opts)
+        return this.start()
+    }
+
     async init(opts) {
         print('Kernel WORKER_ID:', process.env.WORKER_ID || 0)
 
@@ -506,7 +511,7 @@ export class MasterProcess extends Kernel {
     }
 
     async start(opts) {
-        await this.init(opts)
+        // await this.init(opts)
 
         print(`starting node:`, this.node_id)
         this._start_workers()
@@ -552,7 +557,7 @@ export class WorkerProcess extends Kernel {
     mailbox     // IPC_Mailbox for communication with the master process
 
     async start(opts) {
-        await this.init(opts)
+        // await this.init(opts)
 
         print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC requests from master to this worker

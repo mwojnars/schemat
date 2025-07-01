@@ -34,6 +34,5 @@ await (async function run() {
     // let {WorkerProcess} = await loader.import('/$/local/schemat/server/kernel.js')
 
     let kernel_process = cluster.isPrimary ? new MasterProcess() : new WorkerProcess()
-    await boot_schemat(opts, () => kernel_process.start(opts))
-    // await kernel_process.start(opts)
+    await boot_schemat(opts, () => kernel_process.run(opts))
 })()
