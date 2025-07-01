@@ -36,7 +36,7 @@ export class Mailbox {
      */
 
     // constructor(callback, timeout = null) {
-    constructor(callback, timeout = schemat.debug ? null : 5000) {
+    constructor(callback, timeout = 10 * 1000) {   //schemat.debug ? null : 5000
         this.callback = callback        // processing function for incoming messages
         this.pending = new Map()        // requests sent awaiting a response
         this.message_id = 0             // last message ID sent
@@ -333,7 +333,7 @@ export class Node extends Agent {
             return this._rpc_response_parse(result)
         }
         catch (ex) {
-            this._print("rpc_send() FAILED to execute this request:", JSON.stringify(message))
+            this._print("rpc_send() FAILED to execute request:", JSON.stringify(message))
             throw ex
         }
     }
