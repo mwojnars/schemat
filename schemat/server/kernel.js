@@ -466,9 +466,7 @@ export class Kernel {
         await sleep(this.node.agent_refresh_interval || 10)         // avoid reloading the agents immediately after creation
 
         while (true) {
-            let beginning = Date.now()
-            // this.node = this.node.refresh()
-
+            // let beginning = Date.now()
             let new_node = this.node.refresh()
             if (new_node.__ttl_left() < 0) new_node = await new_node.reload()
 
