@@ -157,7 +157,7 @@ class Frame {
         return state
     }
 
-    _schedule_restart(fallback_ttl = 10.0) {
+    _schedule_restart(fallback_ttl = 10.0, randomize_ttl = 0.1) {
         /* Schedule this.restart() execution after the agent's TTL expires.
            If a restart is already scheduled, clear it and re-schedule. 
            After restart, schedule a new restart, unless the agent is stopped.
@@ -172,8 +172,8 @@ class Frame {
         if (!ttl || ttl <= 0) ttl = fallback_ttl
         
         // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
-        ttl *= 0.9 + Math.random() * 0.1
-        
+        ttl *= 1 - Math.random() * randomize_ttl
+
         schemat._print(`_schedule_restart() will restart ${this.agent} after ${ttl.toFixed(2)} seconds`)
 
         this.restart_timeout = setTimeout(async () => {
