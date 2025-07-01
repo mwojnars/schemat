@@ -7,11 +7,11 @@
     - ./kafka-console-producer.sh --bootstrap-server localhost:9092 --topic topic-1024      << send test messages to a topic
  */
 
-import {assert, print, sleep} from "../common/utils.js"
-import {mJsonx, mJsonxArray} from "../web/messages.js";
-import {Service} from "../web/services.js";
-import {Request} from "../web/request.js"
-import {Agent} from "./agent.js";
+import {assert, print, sleep} from "../../schemat/common/utils.js"
+import {mJsonx, mJsonxArray} from "../../schemat/web/messages.js";
+import {Service} from "../../schemat/web/services.js";
+import {Request} from "../../schemat/web/request.js"
+import {Agent} from "../../schemat/server/agent.js";
 
 let {Kafka, logLevel} = await server_import('kafkajs') || {}
 let {exec, spawn} = await server_import('node:child_process') || {}
