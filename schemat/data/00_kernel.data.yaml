@@ -115,10 +115,10 @@
       default: false
       info: If true, objects of this category cannot be modified after creation.
       "@": schemat/types/type.js:BOOLEAN
-    cache_timeout:
+    ttl:
       default: 10
-      info: Time To Live (TTL) of objects in this category, in seconds. Only used when
-        an instance-level `__ttl` is missing. Determines for how long a
+      info: Time To Live (TTL) of objects in this category, in seconds. Can be
+        overridden with an instance-level `__ttl`. Determines for how long a
         fully-loaded object is kept in the local cache (Registry) and reused
         after being loaded from DB. If zero, the object is evicted on the
         nearest cache purge. A real number. Recommended values are between 1.0
@@ -236,7 +236,7 @@
   set_version: false
   save_revisions: false
   seal_dependencies: false
-  cache_timeout: 60
+  ttl: 60
   class: schemat:Category
   std:
     Category:
