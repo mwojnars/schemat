@@ -76,6 +76,7 @@ export class Registry {
 
     constructor(on_evict) {
         this.on_evict = on_evict
+        // setInterval(() => this.erase_records(), 1000)
     }
 
     get_record(id) { return this.records.get(id) }
