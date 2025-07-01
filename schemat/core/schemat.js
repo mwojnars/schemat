@@ -106,6 +106,10 @@ export class Schemat {
     _loading        = new Map()     // {id: promise} map of object (re)loading threads, to avoid parallel loading of the same object twice
     _modules_cache  = new Map()     // cache of local .js modules for import_local() to avoid awaits with dynamic import()
 
+    // debug printing
+    get _header()   { return this.kernel ? `${this.kernel.node_id}/#${this.kernel.worker_id}` : '-/-' }
+    _print(...args) { SERVER ? print(this._header, ...args) : print(...args) }
+
 
     // web objects currently being loaded/initialized with a call to .load()
     _loading_stack = new class extends DependenciesStack {

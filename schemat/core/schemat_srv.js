@@ -44,9 +44,6 @@ export class ServerSchemat extends Schemat {
     static get_context(app_id)   { return globalThis._contexts.get(app_id || null) }
     static set_context(_schemat) { globalThis._contexts.set(_schemat.app_id || null, _schemat) }
 
-    get _header()   { return this.kernel ? `${this.kernel.node_id}/#${this.kernel.worker_id}` : '-/-' }
-    _print(...args) { print(this._header, ...args) }
-
 
     /***  Initialization  ***/
 
