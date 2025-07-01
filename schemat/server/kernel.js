@@ -485,8 +485,12 @@ export class Kernel {
 
     async _stop_agents() {
         /* Stop all agents. */
-        for (let [id, role] of [...this.frames.keys()].reverse())
-            await this.stop_agent(id, role)
+        for (let [[id, role], frame] of [...this.frames.entries()].reverse()) {
+            // let frame = this.frames.get([id, role])
+            await frame.stop()
+            this.frames.delete([id, role])
+        }
+            // await this.stop_agent(id, role)
     }
 
     async stop_agent(id, role) {
