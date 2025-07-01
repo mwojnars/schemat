@@ -126,6 +126,8 @@ class Frame {
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
+    restart_timeout     // timeout for agent's scheduled restart
+
     constructor(agent, role) {
         this.agent = agent
         this.role = role
@@ -149,9 +151,33 @@ class Frame {
 
         let state = await agent.in_context(() => agent.__start__(this)) || {}
         this.set_state(state)
+        // this._schedule_restart()
 
         schemat._print(`starting agent ${agent} done`)
         return state
+    }
+
+    _schedule_restart(fallback_ttl = 10.0) {
+        /* Schedule this.restart() execution after the agent's TTL expires.
+           If a restart is already scheduled, clear it and re-schedule. 
+           After restart, schedule a new restart, unless the agent is stopped.
+         */
+        if (this.restart_timeout) {                // clear any existing scheduled restart
+            clearTimeout(this.restart_timeout)
+            this.restart_timeout = null
+        }
+        if (this.stopping) return
+
+        let ttl = this.agent.__ttl ?? fallback_ttl
+        if (ttl <= 0) ttl = 0
+
+        this.restart_timeout = setTimeout(async () => {
+            try { await this.restart() }
+            catch (err) {
+                schemat._print(`error restarting agent ${this.agent}:`, err)
+            }
+            finally { this._schedule_restart() }
+        }, ttl * 1000)
     }
 
     async restart(agent = null) {
@@ -160,10 +186,11 @@ class Frame {
         if (agent === this.agent) return
         assert(agent.id === this.agent.id)
 
-        schemat._print(`restarting agent ${agent} ...`)
         let was_running = !this.paused
         await this.pause()                      // wait for termination of ongoing RPC calls
+        if (this.stopping) return
 
+        schemat._print(`restarting agent ${agent} ...`)
         let restart = () => agent.__restart__(this.state, this.agent)
         let state = await this._tracked(agent.in_context(() => this._frame_context(restart)))
 
