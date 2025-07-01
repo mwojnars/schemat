@@ -174,7 +174,7 @@ class Frame {
         // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
         ttl *= 1 - Math.random() * randomize_ttl
 
-        schemat._print(`_schedule_restart() will restart ${this.agent} after ${ttl.toFixed(2)} seconds`)
+        // schemat._print(`_schedule_restart() will restart ${this.agent} after ${ttl.toFixed(2)} seconds`)
 
         this.restart_timeout = setTimeout(async () => {
             try { await this.restart() }
@@ -187,6 +187,7 @@ class Frame {
 
     async restart(agent = null) {
         /* Replace this.agent with its newer copy, `agent` or this.agent reloaded, and call its __restart__(). */
+        // if (this.stopping) return
         agent ??= await this.agent.reload()
         if (agent === this.agent) return
         assert(agent.id === this.agent.id)
