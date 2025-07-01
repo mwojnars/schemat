@@ -377,8 +377,6 @@ export class Kernel {
 
     is_master() { return !this.worker_id}
 
-    _print(...args) { print(`${this.node?.id}/#${this.worker_id}`, ...args) }
-
 
     async init(opts) {
         print('Kernel WORKER_ID:', process.env.WORKER_ID || 0)
@@ -426,7 +424,7 @@ export class Kernel {
         // let node = await this.node.reload()
         let delay = this.node.agent_refresh_interval
 
-        if (cluster.isPrimary) this._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
+        if (cluster.isPrimary) schemat._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
         // await this._stop_agents()
 
         let timeout = 2 * delay         // exceeding this timeout may indicate a deadlock in one of child processes
@@ -463,7 +461,7 @@ export class Kernel {
             // this._boot_done()
         }
 
-        // this._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
+        // schemat._print(`Kernel.main() frames.keys:`, [...this.frames.keys()])
         await sleep(this.node.agent_refresh_interval || 10)         // avoid reloading the agents immediately after creation
 
         while (true) {
@@ -498,7 +496,7 @@ export class Kernel {
             // await sleep(offset_sec)
         }
 
-        this._print(`process closed`)
+        schemat._print(`process closed`)
     }
 
     async start_agent(obj, role) {
@@ -508,7 +506,7 @@ export class Kernel {
         if (this.frames.has([agent.id, role])) throw new Error(`agent ${agent} in role ${role} is already running`)
         if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
 
-        // this._print(`start_agent(): ${agent}`, agent.__content)
+        // schemat._print(`start_agent(): ${agent}`, agent.__content)
         assert(agent.is_loaded())
         assert(agent instanceof Agent)
 
