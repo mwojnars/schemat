@@ -426,7 +426,7 @@ export class Kernel {
         let delay = node.agent_refresh_interval
 
         if (cluster.isPrimary) this._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
-        await this._stop_agents()
+        // await this._stop_agents()
 
         let timeout = 2 * delay         // exceeding this timeout may indicate a deadlock in one of child processes
         setTimeout(() => {throw new Error(`exceeded timeout of ${timeout} seconds for shutting down`)}, timeout * 1000)
@@ -477,25 +477,26 @@ export class Kernel {
 
             this.node = new_node
 
-            // if (this._closing) {
-            //     await this._stop_agents()
-            //     if (this.frames.size) continue; else break
-            // }
-            //
-            // for (let frame of this.frames.values())                 // refresh/reload agents if needed
-            //     await this.refresh_agent(frame)
+            if (this._closing) {
+                await this._stop_agents()
+                if (this.frames.size) continue; else break
+            }
 
-            let passed = (Date.now() - beginning) / 1000
-            let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
-
-            let remaining = this.node.agent_refresh_interval - offset_sec - passed
-            if (remaining > 0) await sleep(remaining);
-
+            await sleep(this.node.agent_refresh_interval)
             if (!this.frames.size) break        // stop the loop when no more running agents
 
-            let agents = Array.from(this.frames.values(), frame => frame.agent);
-            [this.node, ...agents].map(obj => obj.refresh())        // schedule a reload of relevant objects in the background, for next iteration
-            await sleep(offset_sec)
+            // for (let frame of this.frames.values())                 // refresh/reload agents if needed
+            //     await this.refresh_agent(frame)
+            //
+            // let passed = (Date.now() - beginning) / 1000
+            // let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
+            //
+            // let remaining = this.node.agent_refresh_interval - offset_sec - passed
+            // if (remaining > 0) await sleep(remaining);
+            //
+            // let agents = Array.from(this.frames.values(), frame => frame.agent);
+            // [this.node, ...agents].map(obj => obj.refresh())        // schedule a reload of relevant objects in the background, for next iteration
+            // await sleep(offset_sec)
         }
 
         this._print(`process closed`)
