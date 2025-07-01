@@ -554,11 +554,7 @@ export class WebObject {
 
     toString() { return this.__label }
 
-    _print(...args) {
-        let msg = SERVER ? `${schemat.node?.id}/#${schemat.kernel?.worker_id} ` : ''
-        msg += this.__label
-        console.log(msg, ...args)
-    }
+    _print(...args) { schemat._print(this.__label, ...args) }
 
     _print_stack(...args) {
         /* Print the current stack trace with detailed header information: node ID, worker process, current object. */
