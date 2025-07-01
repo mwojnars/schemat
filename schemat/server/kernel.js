@@ -419,20 +419,24 @@ export class Kernel {
         this._closing = true
 
         let delay = this.node.agent_refresh_interval
-
         if (cluster.isPrimary) schemat._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
-        // await this._stop_agents()
 
         let timeout = 2 * delay         // exceeding this timeout may indicate a deadlock in one of child processes
         setTimeout(() => {throw new Error(`exceeded timeout of ${timeout} seconds for shutting down`)}, timeout * 1000)
+
+        this.workers?.map(worker => worker.kill())
+        // let stop_agents = this._stop_agents()
 
         if (cluster.isPrimary)
             await Promise.all(this.workers.map(worker => new Promise((resolve, reject) => {
                 worker.on('exit', resolve)
                 worker.on('error', reject)
-                worker.kill()
+                // worker.kill()
             })))
 
+        // await sleep(11.0)
+        await this._stop_agents()
+        // await stop_agents
         await this._promise
         process.exit(0)
     }
@@ -474,6 +478,8 @@ export class Kernel {
 
             // if (new_node !== this.node) print(`worker ${this.worker_id}: node replaced, ttl left = ${new_node.__ttl_left()}`)
             // else print(`worker ${this.worker_id}: node kept, ttl left = ${this.node.__ttl_left()}`)
+
+            // if (this._closing) await this._stop_agents()
 
             if (this._closing) {
                 await this._stop_agents()
@@ -532,9 +538,10 @@ export class Kernel {
     }
 
     async _stop_agents() {
-        /* When closing, let the currently running agents gently stop. */
-        for (let [id, role] of [...this.frames.keys()].reverse())
-            await this.stop_agent(id, role)
+        /* Stop all currently running agents, and those that might be started during this operation. */
+        while (this.frames.size)
+            for (let [id, role] of [...this.frames.keys()].reverse())
+                await this.stop_agent(id, role)
     }
 }
 
