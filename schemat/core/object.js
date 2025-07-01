@@ -566,7 +566,7 @@ export class WebObject {
         // let title  = SERVER ? `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${label} context ${schemat.db}` : label
         // console.log(title, '-- debug stack trace:', ...args)
         let label  = `${this.__label} debug stack trace`
-        let title  = SERVER ? `${schemat.node?.id}/#${schemat.kernel?.worker_id} ${label}, context=${schemat.db}:` : label
+        let title  = SERVER ? `${schemat._header} ${label}, context=${schemat.db}:` : label
         console.log(title, ...args)
         console.log(lines.join('\n'))
     }
