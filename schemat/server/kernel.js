@@ -424,10 +424,10 @@ export class Kernel {
 
     async start() {
         await schemat._boot_done()
-        await this._start_node_agent()
+        await this.start_node_agent()
     }
 
-    async _start_node_agent() {
+    async start_node_agent() {
         // start this node's own agent and all agents in workers
         let role = this.is_master() ? '$master' : '$worker'
         let {state} = this.root_frame = await this.start_agent(this.node_id, role)
@@ -478,25 +478,17 @@ export class Kernel {
                 worker.on('error', reject)
             })))
 
-        await this._stop_agents()
+        await this.stop_agents()
         schemat._print(`process closed`)
         process.exit(0)
     }
 
-    async _stop_agents() {
-        /* Stop all agents. */
+    async stop_agents() {
+        /* Stop all agents. Do it in reverse order, because newer agents may depend on the older ones. */
         for (let [[id, role], frame] of [...this.frames.entries()].reverse()) {
-            // let frame = this.frames.get([id, role])
             await frame.stop()
             this.frames.delete([id, role])
         }
-            // await this.stop_agent(id, role)
-    }
-
-    async stop_agent(id, role) {
-        let frame = this.frames.get([id, role])
-        await frame.stop()
-        this.frames.delete([id, role])
     }
 }
 
