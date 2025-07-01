@@ -183,27 +183,36 @@ class Frame {
         }, ttl * 1000)
     }
 
-    async restart(agent = null) {
-        /* Replace this.agent with its newer copy, `agent` or this.agent reloaded, and call its __restart__(). */
+    async restart() {
+        /* Replace the agent with its newest copy after reload and call its __restart__(). */
         if (this.stopping || schemat.terminating) return
-        agent ??= await this.agent.reload()
-        if (agent === this.agent) return
-        assert(agent.id === this.agent.id)
+        let agent
+
+        try { agent = await this.agent.reload() }
+        catch (ex) {
+            schemat._print(`error reloading agent ${this.agent}:`, ex, `- restart skipped`)
+            return
+        }
+        // if (agent === this.agent) return
+        // assert(agent.id === this.agent.id)
 
         let was_running = !this.paused
         await this.pause()                      // wait for termination of ongoing RPC calls
         if (this.stopping) return
 
         schemat._print(`restarting agent ${agent} ...`)
-        let restart = () => agent.__restart__(this.state, this.agent)
-        let state = await this._tracked(agent.in_context(() => this._frame_context(restart)))
+        try {
+            let restart = () => agent.__restart__(this.state, this.agent)
+            let state = await this._tracked(agent.in_context(() => this._frame_context(restart)))
+            this.set_state(state)
+            this.agent = agent
+        }
+        catch (ex) {
+            schemat._print(`error restarting agent ${this.agent}:`, ex, `- using previous instance`)
+        }
 
-        this.set_state(state)
-        this.agent = agent
-        if (was_running) await this.resume()    // resume RPC calls, unless the agent was paused initially
-
+        if (was_running) await this.resume()    // resume RPC calls unless the agent was already paused
         schemat._print(`restarting agent ${agent} done`)
-        return state
 
         // TODO: check for changes in external props; if needed, invoke setup.* triggers to update the environment & installation
         //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
