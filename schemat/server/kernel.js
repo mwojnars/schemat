@@ -362,13 +362,12 @@ export class Kernel {
 
     // booting = new Promise(resolve => this._booting_resolve = resolve)   // resolves when the kernel is fully booted; false after that
 
-    // node                        // Node web object that represents the Schemat cluster node this process is running
     frames = new FramesMap()    // Frames of currently running agents, keyed by agent IDs
     root_frame                  // frame that holds the running `node` agent
     _promise                    // Promise returned by .main(), kept here for graceful termination in .stop()
     _closing                    // true if .stop() was called and the process is shutting down right now
 
-    // web object of Node category that represents the physical node this process is running on
+    // web object of [Node] category that represents the physical node this process is running on
     get node() { return this.root_frame.agent }
 
     get worker_id() {
