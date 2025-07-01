@@ -168,7 +168,7 @@ class Frame {
         }
         if (this.stopping) return
 
-        let ttl = this.agent.__ttl
+        let ttl = this.agent.__ttl_left()
         if (!ttl || ttl <= 0) ttl = fallback_ttl
         
         // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
