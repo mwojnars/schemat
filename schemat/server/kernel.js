@@ -151,7 +151,7 @@ class Frame {
 
         let state = await agent.in_context(() => agent.__start__(this)) || {}
         this.set_state(state)
-        // this._schedule_restart()
+        this._schedule_restart()
 
         schemat._print(`starting agent ${agent} done`)
         return state
@@ -168,8 +168,9 @@ class Frame {
         }
         if (this.stopping) return
 
-        let ttl = this.agent.__ttl ?? fallback_ttl
-        if (ttl <= 0) ttl = 0
+        let ttl = this.agent.__ttl
+        if (!ttl || ttl <= 0) ttl = fallback_ttl
+        // schemat._print(`_schedule_restart() will restart ${this.agent} after ${ttl} seconds`)
 
         this.restart_timeout = setTimeout(async () => {
             try { await this.restart() }
@@ -182,7 +183,7 @@ class Frame {
 
     async restart(agent = null) {
         /* Replace this.agent with its newer copy, `agent` or this.agent reloaded, and call its __restart__(). */
-        agent ??= this.agent.reload()
+        agent ??= await this.agent.reload()
         if (agent === this.agent) return
         assert(agent.id === this.agent.id)
 
@@ -200,11 +201,15 @@ class Frame {
 
         schemat._print(`restarting agent ${agent} done`)
         return state
+
+        // TODO: check for changes in external props; if needed, invoke setup.* triggers to update the environment & installation
+        //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
     }
 
     async stop() {
         /* Let running calls complete, then stop the agent by calling its __stop__(). */
         this.stopping = true                // prevent new calls from being executed on the agent
+        this._schedule_restart()            // clear any scheduled restart of the agent
         let {agent, calls} = this
 
         if (calls.length > 0) {             // wait for pending calls to complete before stopping
@@ -471,9 +476,9 @@ export class Kernel {
             //     await this._stop_agents()
             //     if (this.frames.size) continue; else break
             // }
-
-            for (let frame of this.frames.values())                 // refresh/reload agents if needed
-                await this.refresh_agent(frame)
+            //
+            // for (let frame of this.frames.values())                 // refresh/reload agents if needed
+            //     await this.refresh_agent(frame)
 
             let passed = (Date.now() - beginning) / 1000
             let offset_sec = 1.0                                    // the last 1 sec of each iteration is spent on refreshing/reloading the objects
@@ -508,16 +513,13 @@ export class Kernel {
         return frame
     }
 
-    async refresh_agent(frame) {
-        let agent = frame.agent.refresh()
-        if (agent.__ttl_left() < 0) agent = await agent.reload()
-
-        // no need to restart the agent if it's still the same object after refresh
-        if (agent !== frame.agent) return frame.restart(agent)
-
-        // TODO: check for changes in external props; if any, invoke setup.* triggers to update the environment & installation
-        //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
-    }
+    // async refresh_agent(frame) {
+    //     let agent = frame.agent.refresh()
+    //     if (agent.__ttl_left() < 0) agent = await agent.reload()
+    //
+    //     // no need to restart the agent if it's still the same object after refresh
+    //     if (agent !== frame.agent) return frame.restart(agent)
+    // }
 
     async stop_agent(id, role) {
         let frame = this.frames.get([id, role])
