@@ -187,7 +187,7 @@ class Frame {
 
     async restart(agent = null) {
         /* Replace this.agent with its newer copy, `agent` or this.agent reloaded, and call its __restart__(). */
-        // if (this.stopping) return
+        if (this.stopping || schemat.terminating) return
         agent ??= await this.agent.reload()
         if (agent === this.agent) return
         assert(agent.id === this.agent.id)
