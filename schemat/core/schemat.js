@@ -282,7 +282,7 @@ export class Schemat {
 
     async get_loaded(...ids) {
         /* Load and return the web object identified by a given ID. If multiple `ids` are provided, an array of objects is returned. */
-        if (ids.length >= 2) return Promise.all(ids.map(id => this.get_object(id).load()))
+        if (ids.length >= 2) return Promise.all(ids.map(id => this.get_loaded(id)))
         return this.get_object(ids[0]).load()
     }
 
