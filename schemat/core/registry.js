@@ -76,7 +76,7 @@ export class Registry {
 
     constructor(on_evict) {
         this.on_evict = on_evict
-        // setInterval(() => this.erase_records(), 1000)
+        setInterval(() => this.erase_records(), 1000)
     }
 
     get_record(id) { return this.records.get(id) }
@@ -117,7 +117,7 @@ export class Registry {
         finally {
             this._purging_now = false
         }
-        this.erase_records()
+        // this.erase_records()
     }
 
     erase_records() { this.records.clear() }
