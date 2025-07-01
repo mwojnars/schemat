@@ -435,8 +435,7 @@ export class Kernel {
             this.node = new_node
 
             if (schemat.terminating) {                              // if closing, let the currently running agents gently stop
-                for (let [id, role] of [...this.frames.keys()].reverse())
-                    await this.stop_agent(id, role)
+                await this._stop_agents()
                 if (this.frames.size) continue; else break
             }
 
@@ -448,6 +447,8 @@ export class Kernel {
 
             let remaining = this.node.agent_refresh_interval - offset_sec - passed
             if (remaining > 0) await sleep(remaining);
+
+            if (!this.frames.size) break        // stop the loop when no more running agents
 
             let agents = Array.from(this.frames.values(), frame => frame.agent);
             [this.node, ...agents].map(obj => obj.refresh())        // schedule a reload of relevant objects in the background, for next iteration
@@ -488,6 +489,11 @@ export class Kernel {
         let frame = this.frames.get([id, role])
         await frame.stop()
         this.frames.delete([id, role])
+    }
+
+    async _stop_agents() {
+        for (let [id, role] of [...this.frames.keys()].reverse())
+            await this.stop_agent(id, role)
     }
 }
 
