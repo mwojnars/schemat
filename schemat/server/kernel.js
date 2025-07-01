@@ -325,8 +325,10 @@ export class Kernel {
 
     node                        // Node web object that represents the Schemat cluster node this process is running
     frames = new FramesMap()    // Frames of currently running agents, keyed by agent IDs
+    root_frame                  // frame that holds the running `node` agent
     _promise                    // Promise returned by .main(), kept here for graceful termination in .stop()
     _closing                    // true if .stop() was called and the process is shutting down right now
+
 
     get worker_id() {
         /* Numeric ID (1, 2, 3, ...) of the node's current worker process; 0 for the master process. */
@@ -412,6 +414,7 @@ export class Kernel {
         // start this node's own agent and all agents in workers
         let role = this.is_master() ? '$master' : '$worker'
         let {starting_agents, tcp_receiver} = await this.start_agent(this.node, role)
+        assert(this.frames.size === 1)      // the root frame
 
         // on master, wait for other agents (in child processes) to start; only then the TCP receiver can be started, as the last step of boot up
         if (this.is_master()) {
@@ -466,7 +469,7 @@ export class Kernel {
         if (this.frames.has([agent.id, role])) throw new Error(`agent ${agent} in role ${role} is already running`)
         if (!agent.is_loaded() || agent.__ttl_left() < 0) agent = await agent.reload()
 
-        // print(`_start_agent():`, agent.id, agent.name, agent.constructor.name, agent.__start__, agent.__data)
+        // this._print(`start_agent(): ${agent}`, agent.__content)
         assert(agent.is_loaded())
         assert(agent instanceof Agent)
 
