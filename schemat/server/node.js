@@ -321,16 +321,21 @@ export class Node extends Agent {
         // this._print("rpc_send():", JSON.stringify(message))
 
         assert(schemat.kernel.frames.size, `kernel not yet initialized`)
+        try {
+            // check if the target object is deployed here on the current process, then no need to look any further
+            // -- this rule is important for loading data blocks during and after bootstrap
+            if (!opts.broadcast) {
+                let frame = schemat.get_frame(agent_id, opts.role)
+                if (frame) return this._rpc_response_parse(await this.rpc_recv(message))
+            }
 
-        // check if the target object is deployed here on the current process, then no need to look any further
-        // -- this rule is important for loading data blocks during and after bootstrap
-        if (!opts.broadcast) {
-            let frame = schemat.get_frame(agent_id, opts.role)
-            if (frame) return this._rpc_response_parse(await this.rpc_recv(message))
+            let result = await this.ipc_send(MASTER, message)
+            return this._rpc_response_parse(result)
         }
-
-        let result = await this.ipc_send(MASTER, message)
-        return this._rpc_response_parse(result)
+        catch (ex) {
+            this._print("rpc_send() FAILED to execute this request:", JSON.stringify(message))
+            throw ex
+        }
     }
 
     async rpc_recv(message) {
