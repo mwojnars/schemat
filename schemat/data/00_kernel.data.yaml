@@ -754,7 +754,7 @@
     and in this way they form a distributed compute & storage cluster.
   schema:
     agents:
-      info: Array of agent status objects {worker, agent, role, options, ...}
+      info: Array of agent status objects {worker, id (of agent), role, options, ...}
         describing agents running on different processes of this node. `worker`
         = 0 means the master process and 1..N are indexes of actual worker
         processes.

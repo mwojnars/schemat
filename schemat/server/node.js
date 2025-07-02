@@ -135,7 +135,7 @@ export class Node extends Agent {
        The node's own agent is started implicitly on itself.
      */
 
-    agents                  // array of AgentStatus objects of the form {worker, agent, role, ...}; AgentStatus class is not yet defined, so these are plain objects
+    agents                  // array of AgentStatus objects of the form {worker, id, role, ...}; AgentStatus class is not yet defined, so these are plain objects
     agent_refresh_interval
     http_host
     http_port
@@ -177,7 +177,8 @@ export class Node extends Agent {
 
     async __load__() {
         let agents = this.agents || []
-        if (SERVER) await Promise.all(agents.map(({agent}) => agent.is_not(schemat.cluster_id) && agent.load()))   // do NOT preload a cluster object to avoid cyclic dependency
+        if (SERVER) await Promise.all(agents.map(({id}) => id !== schemat.cluster_id && schemat.load(id)))   // do NOT preload a cluster object to avoid cyclic dependency
+        // if (SERVER) await Promise.all(agents.map(({agent}) => agent.is_not(schemat.cluster_id) && agent.load()))   // do NOT preload a cluster object to avoid cyclic dependency
         // if (SERVER) await Promise.all(this.agents.map(({boot, agent}) => boot && agent.load()))     // preload the agents marked with boot=true, they're needed during node bootstrap and must be loaded from the boot DB when it's still available
     }
 
@@ -210,14 +211,15 @@ export class Node extends Agent {
 
     async _start_agents(agents) {
         /* Send SYS signals down to worker processes to make them start particular `agents`. */
-        for (let {worker, agent, role} of agents) {
+        for (let {worker, id, role} of agents) {
+            assert(id)
             // adjust the `worker` index if it does not match a valid worker ID (should be in 1,2,...,num_workers)
             if (worker < 1 || worker > this.num_workers) {
                 let new_worker = (worker-1) % this.num_workers + 1
-                this._print(`_start_agents(): adjusted worker process index of ${agent} from #${worker} to #${new_worker}`)
+                this._print(`_start_agents(): adjusted worker process index of agent [${id}] from #${worker} to #${new_worker}`)
                 worker = new_worker
             }
-            await this.sys_send(worker, 'START_AGENT', agent.id, role)
+            await this.sys_send(worker, 'START_AGENT', id, role)
         }
     }
 
@@ -288,7 +290,7 @@ export class Node extends Agent {
 
         if (role === schemat.GENERIC_ROLE) role = undefined
 
-        let status = agents.find(status => status.agent.id === agent_id && (!role || status.role === role))
+        let status = agents.find(status => status.id === agent_id && (!role || status.role === role))
         return status?.worker
     }
 
@@ -657,7 +659,7 @@ export class Node extends Agent {
         
         for (let worker of workers) {
             assert(worker >= 1 && worker <= this.num_workers)
-            agents.push({worker, agent, role})
+            agents.push({worker, id: agent.id, role})
 
             // request the worker process to start the agent:
             await this.sys_send(worker, 'START_AGENT', agent.id, role)
@@ -674,10 +676,10 @@ export class Node extends Agent {
         let {agents} = state
         agent = schemat.as_object(agent)
 
-        let stop = agents.filter(status => status.agent.is(agent))
+        let stop = agents.filter(status => status.id === agent.id)
         if (!stop.length) return
 
-        state.agents = agents = agents.filter(status => !status.agent.is(agent))
+        state.agents = agents = agents.filter(status => status.id !== agent.id)
 
         // stop every agent from `stop`, in reverse order
         for (let status of stop.reverse())
