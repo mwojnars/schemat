@@ -144,7 +144,7 @@
   __category:
     "@": 21
   agents:
-    - {worker: 1, agent: {"@": 1030}}
+    - {worker: 1, id: 1030}
     - worker: 1
       id: 1010
     - worker: 2
@@ -222,7 +222,7 @@
   __category:
     "@": 21
   agents:
-    - {worker: 1, agent: {"@": 1030}}
+    - {worker: 1, id: 1030}
     - worker: 1
       id: 1015
     - worker: 2
