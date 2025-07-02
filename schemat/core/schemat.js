@@ -415,7 +415,7 @@ export class Schemat {
 
     _report_memory() {
         let memory = SERVER ? process.memoryUsage().heapUsed : performance.memory?.usedJSHeapSize   // performance.memory only exists on Chrome
-        if (memory) print(`memory used: ${(memory / 1024 / 1024).toFixed(2)} MB`)
+        if (memory) this._print(`memory used: ${(memory / 1024 / 1024).toFixed(2)} MB`)
     }
 
     _on_evict({id}) {

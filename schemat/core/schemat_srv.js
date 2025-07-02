@@ -167,15 +167,15 @@ export class ServerSchemat extends Schemat {
         this._reload_db_timer_id = setTimeout(() => this._reload_db(), timeout)
     }
 
-    async _purge_registry(generation = 0, ERASE_TIMEOUT = 20) {
+    async _purge_registry(generation = 0, ERASE_TIMEOUT = 5) {
         /* Purge the object cache in the registry. Schedule periodical re-run: the interval is configured
            in app.cache_purge_interval and may change over time.
          */
-        // print(`Schemat._purge_registry() generation ${generation}`)
+        this._print(`_purge_registry() app=${this.app} generation=${generation}`)
         if (this.terminating) return
 
         try {
-            // this._report_memory()
+            this._report_memory()
             if (generation >= ERASE_TIMEOUT) {
                 generation = 0
                 return this._erase_registry()
@@ -192,7 +192,7 @@ export class ServerSchemat extends Schemat {
         /* Once in a while, clear the object cache entirely to cut links between subsequent generations of instances
            and allow efficient garbage-collection in the presence of cyclic links between different web objects.
          */
-        this.node?._print(`Schemat._erase_registry() app=${this.app}, ${this.registry.objects.size} objects ...`)
+        this._print(`_erase_registry() app=${this.app}, ${this.registry.objects.size} objects ...`)
 
         this._cluster = this.cluster
         this._app = this.app
