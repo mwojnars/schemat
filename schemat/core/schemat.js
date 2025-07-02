@@ -203,6 +203,10 @@ export class Schemat {
         this.booting = this.booting.then(callback)
     }
 
+    // async tick(clock = {ticks_elapsed: 0, time_elapsed: 0}, delay = 1.0) {
+    //     /* The base life-cycle method that invokes all other periodical tasks. Executed at short regular intervals, typically 1.0 second. */
+    //     // this.tasks
+    // }
 
     /***  Object <> classpath mapping (for de/serialization)  ***/
 
