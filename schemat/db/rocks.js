@@ -1,24 +1,29 @@
 /*
-Working with a RocksDB database.
+    Working with a RocksDB database.
 
-CLI tool (ldb)
-- install:   sudo apt install rocksdb-tools
-- dump all keys:    ldb --db=/path/to/db scan
-- dump range:       ldb --db=/path/to/db scan --from="key1" --to="key2"
-- dump a key:       ldb --db=/path/to/db get "some-key"
-- delete a key:     ldb --db=/path/to/db delete "some-key"
-- put/update:       ldb --db=/path/to/db put "some-key" "new-value"
-- other:            ldb ... approxsize [--from] [--to]
-                    ldb ... checkconsistency
-                    ldb ... deleterange <begin key> <end key>
-Admin:
-                    ldb ... dump / idump / load / backup / restore / repair / checkpoint
-Example:
--                   ldb --db=./cluster/sample/node.1024/02_app.data.1029.rocksdb scan
+    CLI tool (ldb)
+    - install:   sudo apt install rocksdb-tools
+    - dump all keys:    ldb --db=/path/to/db scan
+    - dump range:       ldb --db=/path/to/db scan --from="key1" --to="key2"
+    - dump a key:       ldb --db=/path/to/db get "some-key"
+    - delete a key:     ldb --db=/path/to/db delete "some-key"
+    - put/update:       ldb --db=/path/to/db put "some-key" "new-value"
+    - other:            ldb ... approxsize [--from] [--to]
+                        ldb ... checkconsistency
+                        ldb ... deleterange <begin key> <end key>
+    Admin:
+                        ldb ... dump / idump / load / backup / restore / repair / checkpoint
+    Example:
+    -                   ldb --db=./cluster/sample/node.1024/02_app.data.1029.rocksdb scan
 
-Advanced analysis:
-- SST files (compaction, bloom filters):    sst_dump --file=/path/to/sst --show_properties
-- track compaction stats, cache hit/miss:   Prometheus/OpenTelemetry
+    Advanced analysis:
+    - SST files (compaction, bloom filters):    sst_dump --file=/path/to/sst --show_properties
+    - track compaction stats, cache hit/miss:   Prometheus/OpenTelemetry
+
+    Help with memory leaks:
+    - https://github.com/facebook/rocksdb/wiki/Memory-usage-in-RocksDB
+    - https://medium.com/expedia-group-tech/solving-a-native-memory-leak-71fe4b6f9463
+    - https://lists.apache.org/thread/b02vjqtoonmt6v7dg26dqgpn7fdqj1k9
 */
 
 import {promisify} from 'node:util'
