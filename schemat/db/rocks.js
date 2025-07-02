@@ -127,7 +127,7 @@ export class RocksDBStore extends Store {
                 yield keys && values ? [key, value] : keys ? key : value
             }
         } finally {
-            await new Promise(resolve => it.end(resolve))
+            await new Promise((resolve, reject) => it.end(err => err ? reject(err) : resolve()))
         }
     }
 
