@@ -203,6 +203,13 @@ export class Node extends Agent {
         return {tcp_sender, tcp_receiver, agents, starting_agents}
     }
 
+    async __restart__(state) {
+        state = {...state}
+        // state.agents = this.agents   -- should update agents configuration from DB, or not?
+        delete state.starting_agents
+        return state
+    }
+
     async __stop__({tcp_sender, tcp_receiver}) {
         if (this.is_worker()) return
         await tcp_receiver.stop()
