@@ -615,7 +615,8 @@ export class WebObject {
 
         let id = this.id
         if (id && schemat.registry.get_object(id) === this)
-            schemat._loading.set(id, loading.catch(() => {}).then(() => {schemat._loading.delete(id); return this}))
+            schemat._loading.set(id, loading)
+            // schemat._loading.set(id, loading.catch(() => {}).then(() => {schemat._loading.delete(id); return this}))
 
         return loading
     }
@@ -624,6 +625,7 @@ export class WebObject {
         /* Load this.__data from DB if missing. Set up the class and prototypes, load related objects with __load__() etc. */
 
         let {sealed = true, activate = true, custom_opts_allowed = false, ...db_opts} = opts
+        let id = this.id
 
         // this._print(`_load() ...`)
         schemat.before_data_loading(this)
@@ -636,11 +638,11 @@ export class WebObject {
                 // stored in the Registry and referenced by other objects or even by unrelated requests/threads
                 // (this problem doesn't affect mutable objects, though, as they never get included in the Registry):
                 if (Object.keys(db_opts).length && !this.is_mutable() && !custom_opts_allowed)
-                    return WebObject.stub(this.id).load({...opts, custom_opts_allowed: true})
+                    return WebObject.stub(id).load({...opts, custom_opts_allowed: true})
 
                 if (db_opts.json) this._set_data(db_opts.json)
                 else {
-                    let rec = schemat.load_record(this.id, db_opts)
+                    let rec = schemat.load_record(id, db_opts)
                     if (rec instanceof Promise) rec = await rec
                     let {json, loaded_at} = rec
                     this._set_data(json, loaded_at)
@@ -662,6 +664,8 @@ export class WebObject {
             throw ex
 
         } finally {
+            if (id && schemat._loading.get(id) === this.__meta.loading)
+                schemat._loading.delete(id)
             this.__meta.loading = false                     // cleanup to allow another load attempt, even after an error
             schemat.after_data_loading(this)
         }
