@@ -25,7 +25,6 @@ export class Agent extends WebObject {
 
     __concurrent    // if true, agent methods of this agent may execute concurrently
     num_workers     // number of concurrent workers per node that should execute this agent's microservice at the same time; -1 = "all available"
-    hard_restart
     file_tag        // string to be included in names of files and directories
     switch_context  // if true, commands are executed in the caller's context not the agent's own context
 

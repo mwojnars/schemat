@@ -957,14 +957,6 @@
         (like web servers) may benefit from concurrent execution on multiple
         workers.
       "@": schemat/types/type.js:INTEGER
-    hard_restart:
-      default: false
-      info: If true, and there is no custom __restart__() implementation, the default
-        __restart__() performs full __start__() + __stop__() cycle on the agent
-        after every refresh of the agent instance, which in some cases may be
-        less efficient and cause transient unavailability of the agent, but is
-        more consistent in terms of the agent's internal state.
-      "@": schemat/types/type.js:BOOLEAN
     file_tag:
       info: A string to be included in names of local files/directories related to
         this agent. Should not contain any slashes (it is not a path), nor an
