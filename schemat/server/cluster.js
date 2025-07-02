@@ -22,8 +22,9 @@ export class Cluster extends Agent {
 
     async __start__({role}) {
         assert(role === '$leader')
-        let nodes = this.nodes
-        return {nodes}
+        // let nodes = this.nodes
+        let node_ids = this.nodes.map(n => n.id)
+        return {node_ids}
     }
 
     get agent_placements() {
@@ -66,14 +67,14 @@ export class Cluster extends Agent {
         /* Array of all nodes where `agent` is currently deployed. */
     }
 
-    async '$leader.create_node__'({}, props = {}) {
-        // assert(!schemat.tx)  // because $state is modified here, it's disallowed for the caller to rollback DB changes only
-        let args = typeof props === 'string' ? [{}, props] : [props]
-        let node = await schemat.std.Node.new(...args).save()       // node must be saved before it can be used in $state
-        // let node = await schemat.std.Node.insert(...args)        // insert() / action.new() creates a (new?) TX and immediately saves the object to DB
-        this.$state.nodes.push(node)
-        this.nodes = this.$state.nodes
-    }
+    // async '$leader.create_node__'({}, props = {}) {
+    //     // assert(!schemat.tx)  // because $state is modified here, it's disallowed for the caller to rollback DB changes only
+    //     let args = typeof props === 'string' ? [{}, props] : [props]
+    //     let node = await schemat.std.Node.new(...args).save()       // node must be saved before it can be used in $state
+    //     // let node = await schemat.std.Node.insert(...args)        // insert() / action.new() creates a (new?) TX and immediately saves the object to DB
+    //     this.$state.nodes.push(node)
+    //     this.nodes = this.$state.nodes
+    // }
 
     async '$leader.create_node'({}, props = {}) {
         /* Create a new Node object and add it to this cluster.
