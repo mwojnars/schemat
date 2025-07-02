@@ -175,13 +175,15 @@ export class ServerSchemat extends Schemat {
         if (this.terminating) return
 
         try {
-            this._report_memory()
+            this._report_memory('@1')
+            this._report_memory('@2')
             if (generation >= ERASE_TIMEOUT) {
                 generation = 0
                 return this._erase_registry()
             }
             await this.registry.purge()
             global.gc()
+            this._report_memory('@3')
         }
         finally {
             let interval = (this.app?.cache_purge_interval || 10) * 1000        // [ms]  ... TODO: move cache_purge_interval to cluster/node/config

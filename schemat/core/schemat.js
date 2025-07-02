@@ -415,15 +415,16 @@ export class Schemat {
         /* Cache the specific version (__ver) of a loaded web object for reuse. */
     }
 
-    _report_memory() {
+    _report_memory(tag = '') {
+        if (tag) tag = ' ' + tag
         let format = (bytes) => `${(bytes / 1024 / 1024).toFixed(2)}`
         if (CLIENT) {
             let mem = performance.memory    // only exists on Chrome
-            if (mem) this._print(`memory used: ${format(mem.usedJSHeapSize)} MB`)
+            if (mem) this._print(`memory used${tag}: ${format(mem.usedJSHeapSize)} MB`)
         }
         else {
             let mem = process.memoryUsage()
-            this._print(`memory heap used / heap total / allocated total:  ${format(mem.heapUsed)} / ${format(mem.heapTotal)} / ${format(mem.rss)} MB`)
+            this._print(`memory heap used / heap total / allocated total${tag}:  ${format(mem.heapUsed)} / ${format(mem.heapTotal)} / ${format(mem.rss)} MB`)
         }
     }
 
