@@ -55,10 +55,10 @@ export class Agent extends WebObject {
            (temporary unavailability of the microservice). For this reason, __restart__() is called upon agent refresh - it can be customized
            in subclasses, and the default implementation either does nothing (default), or performs the full stop+start cycle (if hard_restart=true).
          */
-        if (!this.hard_restart) return state
-        this._print(`no custom __restart__(), doing HARD restart instead`)
+        // if (!this.hard_restart) return state
+        this._print(`doing HARD restart`)
         await prev.__stop__(state)
-        return this.__start__()
+        return this.__start__()     // TODO: role
     }
 
     async app_context(fn, caller_ctx = null) {
