@@ -151,7 +151,7 @@ class Frame {
 
         let state = await agent.app_context(() => agent.__start__(this)) || {}
         this.set_state(state)
-        // this._schedule_restart()
+        this._schedule_restart()
 
         schemat._print(`starting agent ${agent} done`)
         return state
@@ -208,8 +208,10 @@ class Frame {
         schemat._print(`restarting agent ${agent} ...`)
         try {
             let restart = () => agent.__restart__(this.state, this.agent)
-            // LEAK: the line below causes memory leaks in a long run (several hours); reason unknown (?)
+            // LEAK: the line below causes memory leaks in a long run (several hours); reason unknown ...
+            //       ... likely caused by the composition: this._tracked(agent.app_context(...))
             let state = await this._tracked(agent.app_context(() => this._frame_context(agent, restart)))
+            // let state = await this._tracked(agent.app_context(restart))
             this.set_state(state)
             this.agent = agent
         }
