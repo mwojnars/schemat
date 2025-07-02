@@ -84,10 +84,31 @@ export class RocksDBStore extends Store {
 
     async erase() {
         /* Remove all records from this store */
-        // close and reopen the database to clear all data
-        await promisify(this._db.close.bind(this._db))()
-        await rm(this.filename, {recursive: true, force: true})
-        await this.open()
+        try {
+            // close and reopen the database to clear all data
+            await promisify(this._db.close.bind(this._db))()
+            await rm(this.filename, {recursive: true, force: true})
+            await this.open()
+        } catch (err) {
+            // if anything fails, try to reopen the database to maintain a valid state
+            try {
+                await this.open()
+            } catch (reopenErr) {
+                throw new Error(`Failed to recover after erase error: ${reopenErr}. Original error: ${err}`)
+            }
+            throw err
+        }
+    }
+
+    async close() {
+        /* Close the database, ensuring all resources are properly released.
+           After calling this method, no other methods should be called on this instance.
+         */
+        if (this._db) {
+            await promisify(this._db.close.bind(this._db))()
+            this._db = null
+            this._bound = null
+        }
     }
 
     async* scan(db, {start, stop, limit, keys = true, values = true, ...opts} = {}) {
