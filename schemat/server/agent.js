@@ -43,6 +43,11 @@ export class Agent extends WebObject {
            Typically, the state object is a plain JS object with handlers to all the resources that were opened
            during __start__() and should be released in __stop__(). All calls (local or RPC) to agent methods
            are tracked to provide (optional) mutual exclusion and graceful termination.
+
+           WARNING: state should never contain web objects, as these have limited lifetime and should be discarded
+                    after their TTL, which is impossible when they are included in a long-living state.
+                    Web objects in state may lead to memory leaks and to reliance on outdated information.
+                    Plain IDs should be included instead, to be converted into fresh objects upon use, if needed.
          */
     }
     async __stop__(state) {
