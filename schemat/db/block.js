@@ -180,10 +180,10 @@ export class DataBlock extends Block {
     }
 
     async _detect_store_class(format) {
-        let {YamlDataStore} = await import('./store.js')
-        let {RocksDBStore} = await import('./rocks.js')
-        if (format === 'yaml') return YamlDataStore
-        if (format === 'rocksdb') return RocksDBStore
+        // let {YamlDataStore} = await import('./store.js')
+        // let {RocksDBStore} = await import('./rocks.js')
+        if (format === 'yaml') return (await import('./store.js')).YamlDataStore
+        if (format === 'rocksdb') return (await import('./rocks.js')).RocksDBStore
         return super._detect_store_class(format)
     }
 
