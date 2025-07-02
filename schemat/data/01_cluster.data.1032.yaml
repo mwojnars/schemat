@@ -193,7 +193,7 @@
     "@": 1017
   file_tag: 02_app.data.1029
   storage: yaml
-#  storage/2: rocksdb
+  storage/2: rocksdb
   __category:
     "@": 19
 - id: 1030
