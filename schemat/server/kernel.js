@@ -284,6 +284,10 @@ class Frame {
             return callback ? callback(result) : result
         }
         return agent.in_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
+            .catch(ex => {
+                agent._print(`exec() of ${method}(${args}) FAILED:`, ex)
+                throw ex
+            })
     }
 
     _find_command(command) {
