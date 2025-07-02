@@ -151,7 +151,7 @@ class Frame {
 
         let state = await agent.app_context(() => agent.__start__(this)) || {}
         this.set_state(state)
-        this._schedule_restart()
+        // this._schedule_restart()
 
         schemat._print(`starting agent ${agent} done`)
         return state
@@ -197,6 +197,9 @@ class Frame {
         }
         // if (agent === this.agent) return
         // assert(agent.id === this.agent.id)
+        // assert(agent !== this.agent)
+        // schemat._print(`schemat _contexts (${globalThis._contexts.size}):`, [...globalThis._contexts.keys()])
+        // schemat._print(`schemat._loading (${schemat._loading.size}):`, [...schemat._loading.keys()])
 
         let was_running = !this.paused
         await this.pause()                      // wait for termination of ongoing RPC calls
@@ -205,8 +208,8 @@ class Frame {
         schemat._print(`restarting agent ${agent} ...`)
         try {
             let restart = () => agent.__restart__(this.state, this.agent)
+            // LEAK: the line below causes memory leaks in a long run (several hours); reason unknown (?)
             let state = await this._tracked(agent.app_context(() => this._frame_context(agent, restart)))
-            // let state = await agent.app_context(() => this._tracked(this._frame_context(agent, restart)))
             this.set_state(state)
             this.agent = agent
         }
