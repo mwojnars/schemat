@@ -122,10 +122,11 @@ export class RocksDBStore extends Store {
         opts.gte ??= start
         opts.lt  ??= stop
 
-        let it = this._db.iterator({keyAsBuffer: true, valueAsBuffer: false, ...opts})
-        let count = 0
-        
+        let it = null
         try {
+            it = this._db.iterator({keyAsBuffer: true, valueAsBuffer: false, ...opts})
+            let count = 0
+            
             while (true) {
                 if (limit !== undefined && count >= limit) break
                 let [key, value] = await new Promise((resolve, reject) =>
@@ -136,8 +137,11 @@ export class RocksDBStore extends Store {
                 count++
                 yield keys && values ? [key, value] : keys ? key : value
             }
+        } catch (err) {
+            if (it) await new Promise((resolve, reject) => it.end(err => err ? reject(err) : resolve()))
+            throw err
         } finally {
-            await new Promise((resolve, reject) => it.end(err => err ? reject(err) : resolve()))
+            if (it) await new Promise((resolve, reject) => it.end(err => err ? reject(err) : resolve()))
         }
     }
 
