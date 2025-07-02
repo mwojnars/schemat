@@ -67,6 +67,9 @@ async function create_demo_01() {
     // add 02_app.index block [1030] to agents of node [1024] to allow single-node execution of the application (node [1036] not used)
     db = db.replaceAll('  agents:', `  agents:\n    - {worker: 1, agent: {"@": 1030}}`)
 
+    // no need to use rocksdb as secondary storage
+    db = db.replaceAll('  storage/2: rocksdb\n', '')
+
     // // insert AuthorCategory and BookCategory references in [app.global]; insert URL routes
     // db = db.replaceAll(`global:`, `global:\n    AuthorCategory:\n      "@": 2102\n    BookCategory:\n      "@": 2101`)
     // db = db.replaceAll(`entries:\n    ""`, `entries:\n    authors:\n      "@": 2102\n    books:\n      "@": 2101\n    book:\n      "@": 2115\n    ""`)
