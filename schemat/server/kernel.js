@@ -162,10 +162,7 @@ class Frame {
            If a restart is already scheduled, clear it and re-schedule. 
            After restart, schedule a new restart, unless the agent is stopped.
          */
-        if (this.restart_timeout) {         // clear any existing scheduled restart
-            clearTimeout(this.restart_timeout)
-            this.restart_timeout = null
-        }
+        if (this.restart_timeout) this._cancel_restart()    // clear any existing scheduled restart
         if (this.stopping) return
 
         let ttl = this.agent.__ttl          // it's assumed that __ttl is never missing, although it can be 0.0 during boot
@@ -181,6 +178,11 @@ class Frame {
             catch (ex) { schemat._print(`error restarting agent ${this.agent}:`, ex) }
             finally { this._schedule_restart() }
         }, ttl * 1000)
+    }
+
+    _cancel_restart() {
+        clearTimeout(this.restart_timeout)
+        this.restart_timeout = null
     }
 
     async restart() {
@@ -221,7 +223,7 @@ class Frame {
     async stop() {
         /* Let running calls complete, then stop the agent by calling its __stop__(). */
         this.stopping = true                // prevent new calls from being executed on the agent
-        this._schedule_restart()            // clear any scheduled restart of the agent
+        this._cancel_restart()              // clear any scheduled restart of the agent
         let {calls} = this
 
         if (calls.length > 0) {             // wait for pending calls to complete before stopping
