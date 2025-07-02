@@ -225,6 +225,9 @@ export class ServerSchemat extends Schemat {
 
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
+        if (typeof db_id === 'object') db_id = db_id?.id
+        // this._print(`app_context() context id=${db_id}`)
+
         if (!db_id && this.in_kernel_context()) return callback()
         if (db_id === this.current_context) return callback()
 
@@ -251,8 +254,7 @@ export class ServerSchemat extends Schemat {
         // else if (context.booting) await context.booting
         // else if (context instanceof Promise) context = await context
 
-        // this._print(`app_context() context.app_id=${context.app_id} .db=${context._db.id}`)
-        // this._print(`globalThis._contexts:\n`, globalThis._contexts)
+        // this._print(`app_context() new nested run() in context: ${context.app_id}`)  // ${context._db.id}
         return _schemat.run(context, callback)
 
         // return schemat === context ? callback() : await _schemat.run(context, callback)
