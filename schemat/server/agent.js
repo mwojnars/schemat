@@ -60,13 +60,13 @@ export class Agent extends WebObject {
         return this.__start__()
     }
 
-    async in_context(fn, caller_ctx = null) {
+    async app_context(fn, caller_ctx = null) {
         /* Run fn() in the app/db context expected by this agent (this.__ctx). */
         assert(this.is_loaded())
         // let ctx = this.__ctx || schemat.kernel_context      // empty __ctx means kernel context should be used
         let ctx = this.switch_context ? caller_ctx : this.__ctx
         ctx ??= schemat.kernel_context              // empty `ctx` means kernel context should be used
-        return schemat.in_context(ctx, fn)
+        return schemat.app_context(ctx, fn)
     }
 
 

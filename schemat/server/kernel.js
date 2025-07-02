@@ -149,7 +149,7 @@ class Frame {
         let {agent} = this
         schemat._print(`starting agent ${agent} ...`)
 
-        let state = await agent.in_context(() => agent.__start__(this)) || {}
+        let state = await agent.app_context(() => agent.__start__(this)) || {}
         this.set_state(state)
         this._schedule_restart()
 
@@ -205,7 +205,8 @@ class Frame {
         schemat._print(`restarting agent ${agent} ...`)
         try {
             let restart = () => agent.__restart__(this.state, this.agent)
-            let state = await this._tracked(agent.in_context(() => this._frame_context(agent, restart)))
+            let state = await this._tracked(agent.app_context(() => this._frame_context(agent, restart)))
+            // let state = await agent.app_context(() => this._tracked(this._frame_context(agent, restart)))
             this.set_state(state)
             this.agent = agent
         }
@@ -234,7 +235,7 @@ class Frame {
         schemat._print(`stopping agent ${agent} ...`)
 
         let stop = () => agent.__stop__(this.state)
-        await agent.in_context(() => this._frame_context(agent, stop))
+        await agent.app_context(() => this._frame_context(agent, stop))
         schemat._print(`stopping agent ${agent} done`)
     }
 
@@ -285,7 +286,7 @@ class Frame {
             let result = await this._tracked(this._frame_context(agent, callA))
             return callback ? callback(result) : result
         }
-        return agent.in_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
+        return agent.app_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
             .catch(ex => {
                 agent._print(`exec() of ${method}(${args}) FAILED:`, ex)
                 throw ex

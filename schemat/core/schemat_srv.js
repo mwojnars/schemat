@@ -216,7 +216,7 @@ export class ServerSchemat extends Schemat {
         return (...args) => _schemat.run(this, () => handler(...args))
     }
 
-    async in_context(db_id, callback) {
+    async app_context(db_id, callback) {
         /* Run callback() in the Schemat async context (`_schemat`) built around a specific database & app.
            If not yet created, this context (ServerSchemat instance) is created now and saved in
            globalThis._contexts for reuse by other requests. If `app_id` is missing, `this` is used as the context.
@@ -228,17 +228,17 @@ export class ServerSchemat extends Schemat {
         if (!db_id && this.in_kernel_context()) return callback()
         if (db_id === this.current_context) return callback()
 
-        // this._print(`in_context() current_context=${this.current_context} db_id=${db_id}`)
+        // this._print(`app_context() current_context=${this.current_context} db_id=${db_id}`)
         let app_id, db
         if (db_id) {
             db = (typeof db_id === 'object') ? db_id : this.get_object(db_id)
             if (!db.is_loaded()) await db.load()
             app_id = db?.application?.id
-            // this._print(`in_context() this.app_id=${this.app_id} app_id=${app_id}`)
+            // this._print(`app_context() this.app_id=${this.app_id} app_id=${app_id}`)
         }
 
         let context = ServerSchemat.get_context(app_id)
-        // this._print(`in_context() found existing context: ${!!context}`)
+        // this._print(`app_context() found existing context: ${!!context}`)
 
         if (!context) {
             context = new ServerSchemat({...this.config, app: app_id}, this, db)
@@ -251,7 +251,7 @@ export class ServerSchemat extends Schemat {
         // else if (context.booting) await context.booting
         // else if (context instanceof Promise) context = await context
 
-        // this._print(`in_context() context.app_id=${context.app_id} .db=${context._db.id}`)
+        // this._print(`app_context() context.app_id=${context.app_id} .db=${context._db.id}`)
         // this._print(`globalThis._contexts:\n`, globalThis._contexts)
         return _schemat.run(context, callback)
 
@@ -355,7 +355,7 @@ export class ServerSchemat extends Schemat {
     //        to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
     //      */
     //     let call = tx ? () => schemat.in_transaction(callback, tx, false) : callback    // critical to use `schemat` not `this` here, bcs context changes!
-    //     return this.in_context(ctx, call)
+    //     return this.app_context(ctx, call)
     // }
 
     /***  RPC/RMI  ***/
