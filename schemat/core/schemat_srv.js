@@ -180,7 +180,8 @@ export class ServerSchemat extends Schemat {
                 generation = 0
                 return this._erase_registry()
             }
-            return this.registry.purge()
+            await this.registry.purge()
+            global.gc()
         }
         finally {
             let interval = (this.app?.cache_purge_interval || 10) * 1000        // [ms]  ... TODO: move cache_purge_interval to cluster/node/config
