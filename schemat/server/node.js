@@ -333,7 +333,7 @@ export class Node extends Agent {
             return this._rpc_response_parse(result)
         }
         catch (ex) {
-            this._print("rpc_send() FAILED to execute request:", JSON.stringify(message))
+            this._print("rpc_send() FAILED request:", JSON.stringify(message))
             throw ex
         }
     }
@@ -438,22 +438,28 @@ export class Node extends Agent {
         if (type === 'RPC') return this.rpc_recv(message)
     }
 
-    ipc_send(process_id = 0, message, opts = {}) {
+    async ipc_send(process_id = 0, message, opts = {}) {
         /* Send an IPC message from master down to a worker process, or the other way round.
            Set opts.wait=false to avoid waiting for the response.
          */
         // this._print(`ipc_send() process_id=${process_id} worker_id=${this.worker_id} message=${message}`)
-        if (process_id === this.worker_id)      // shortcut when sending to itself, on master or worker
-            return process_id ? this.ipc_worker(message) : this.ipc_master(message)
+        try {
+            if (process_id === this.worker_id)      // shortcut when sending to itself, on master or worker
+                return process_id ? await this.ipc_worker(message) : await this.ipc_master(message)
 
-        if (process_id) {
-            assert(this.is_master())
-            let worker = this.get_worker(process_id)
-            return worker.mailbox.send(message, opts)
+            if (process_id) {
+                assert(this.is_master())
+                let worker = this.get_worker(process_id)
+                return await worker.mailbox.send(message, opts)
+            }
+            else {
+                assert(this.is_worker())
+                return await schemat.kernel.mailbox.send(message, opts)
+            }
         }
-        else {
-            assert(this.is_worker())
-            return schemat.kernel.mailbox.send(message, opts)
+        catch (ex) {
+            this._print(`ipc_send() FAILED request to proc #${process_id}:`, JSON.stringify(message))
+            throw ex
         }
     }
 
