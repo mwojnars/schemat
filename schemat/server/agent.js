@@ -56,6 +56,7 @@ export class Agent extends WebObject {
            in subclasses, and the default implementation either does nothing (default), or performs the full stop+start cycle (if hard_restart=true).
          */
         if (!this.hard_restart) return state
+        this._print(`no custom __restart__(), doing HARD restart instead`)
         await prev.__stop__(state)
         return this.__start__()
     }
