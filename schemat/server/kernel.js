@@ -203,7 +203,7 @@ class Frame {
         schemat._print(`restarting agent ${agent} ...`)
         try {
             let restart = () => agent.__restart__(this.state, this.agent)
-            let state = await this._tracked(agent.in_context(() => this._frame_context(restart)))
+            let state = await this._tracked(agent.in_context(() => this._frame_context(agent, restart)))
             this.set_state(state)
             this.agent = agent
         }
@@ -222,16 +222,17 @@ class Frame {
         /* Let running calls complete, then stop the agent by calling its __stop__(). */
         this.stopping = true                // prevent new calls from being executed on the agent
         this._schedule_restart()            // clear any scheduled restart of the agent
-        let {agent, calls} = this
+        let {calls} = this
 
         if (calls.length > 0) {             // wait for pending calls to complete before stopping
-            schemat._print(`waiting for ${calls.length} pending calls to agent ${agent} to complete`)
+            schemat._print(`waiting for ${calls.length} pending calls to agent ${this.agent} to complete`)
             await Promise.all(calls)
         }
+        let {agent} = this
         schemat._print(`stopping agent ${agent} ...`)
 
         let stop = () => agent.__stop__(this.state)
-        await agent.in_context(() => this._frame_context(stop))
+        await agent.in_context(() => this._frame_context(agent, stop))
         schemat._print(`stopping agent ${agent} done`)
     }
 
@@ -279,7 +280,7 @@ class Frame {
 
         let callB = async () => {
             // agent._print(`exec(${method}) context=${schemat.current_context}`)
-            let result = await this._tracked(this._frame_context(callA))
+            let result = await this._tracked(this._frame_context(agent, callA))
             return callback ? callback(result) : result
         }
         return agent.in_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
@@ -298,9 +299,8 @@ class Frame {
         return [method, func]
     }
 
-    _frame_context(call) {
-        /* Run call() in the context (agent.__frame/$frame/$state) of this frame. */
-        let {agent} = this
+    _frame_context(agent, call) {
+        /* Run call() on `agent` in the context of this frame (agent.__frame/$frame/$state is set up). */
         agent.__frame ??= new AsyncLocalStorage()
         return agent.$frame === this ? call() : agent.__frame.run(this, call)
     }
