@@ -112,7 +112,7 @@ export class WebServer extends Agent {
 
     request_timeout
 
-    async __start__() {
+    async _create_server() {
         // let {ServerSchemat} = await import('/$/local/schemat/core/schemat_srv.js')
         // await schemat._reset_class(ServerSchemat)
 
@@ -147,8 +147,18 @@ export class WebServer extends Agent {
         let host = schemat.config.host || this.host || schemat.node.http_host
         let port = schemat.config.port || this.port || schemat.node.http_port
 
-        let server = xapp.listen(port, host, schemat.with_context(() => this._print(`listening at http://${host}:${port}`)))
-        return {server}
+        return xapp.listen(port, host, schemat.with_context(() => this._print(`listening at http://${host}:${port}`)))
+    }
+
+    async __start__() {
+        return {server: await this._create_server()}
+    }
+
+    async __restart__({server}) {
+        // start new server and close old one (existing connections will complete)
+        let new_server = await this._create_server()
+        server.close()
+        return {server: new_server}
     }
 
     async __stop__({server}) {
