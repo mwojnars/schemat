@@ -113,6 +113,7 @@ export class FramesMap extends CustomMap {
 
 class Frame {
     /* State (internal variables) and status of a running agent. */
+    agent_id
     agent               // web object that created this frame, replaced with a new reference on every refresh
     role                // name of the role this agent is running in
     state               // state object returned by agent.__start__()
@@ -129,7 +130,8 @@ class Frame {
     restart_timeout     // timeout for agent's scheduled restart
 
     constructor(agent, role) {
-        this.agent = agent
+        // this.agent = agent
+        this.agent_id = agent.id
         this.role = role
 
         let _resolve
@@ -146,18 +148,22 @@ class Frame {
 
     async start() {
         /* Start this.agent by calling its __start__(). */
-        let {agent} = this
+        let agent = schemat.get_object(this.agent_id)
+        if (!agent.is_loaded()) await agent.load()
         schemat._print(`starting agent ${agent} ...`)
+
+        this.agent = agent
+        // setTimeout(() => {this.agent = null}, 3000)
 
         let state = await agent.app_context(() => agent.__start__(this)) || {}
         this.set_state(state)
-        this._schedule_restart()
+        await this._schedule_restart()
 
         schemat._print(`starting agent ${agent} done`)
         return state
     }
 
-    _schedule_restart(boot_ttl = 1.0, randomize_ttl = 0.1) {
+    async _schedule_restart(boot_ttl = 1.0, randomize_ttl = 0.1) {
         /* Schedule this.restart() execution after the agent's TTL expires.
            If a restart is already scheduled, clear it and re-schedule. 
            After restart, schedule a new restart, unless the agent is stopped.
@@ -165,18 +171,19 @@ class Frame {
         if (this.restart_timeout) this._cancel_restart()    // clear any existing scheduled restart
         if (this.stopping) return
 
-        let ttl = this.agent.__ttl          // it's assumed that __ttl is never missing, although it can be 0.0 during boot
-        if (ttl <= 0) ttl = boot_ttl        // restart faster during boot to quickly arrive at a clean version of the object
-        
+        let agent = this.agent || await schemat.load(this.agent_id)
+        let ttl = agent.__ttl           // it's assumed that __ttl is never missing, although it can be 0.0 during boot
+        if (ttl <= 0) ttl = boot_ttl    // restart faster during boot to quickly arrive at a clean version of the object
+
         // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
         ttl *= 1 - Math.random() * randomize_ttl
 
-        // schemat._print(`_schedule_restart() will restart ${this.agent} after ${ttl.toFixed(2)} seconds; __ttl=${this.agent.__ttl}`)
+        // schemat._print(`_schedule_restart() will restart ${agent} after ${ttl.toFixed(2)} seconds; __ttl=${agent.__ttl}`)
 
         this.restart_timeout = setTimeout(async () => {
             try { await this.restart() }
-            catch (ex) { schemat._print(`error restarting agent ${this.agent}:`, ex) }
-            finally { this._schedule_restart() }
+            catch (ex) { schemat._print(`error restarting agent ${agent}:`, ex) }
+            finally { await this._schedule_restart() }
         }, ttl * 1000)
     }
 
@@ -191,9 +198,9 @@ class Frame {
         let agent
 
         // LEAK: storing and reloading the agent causes memory leaks in a long run (several hours)
-        try { agent = await this.agent.reload() }
+        try { agent = await schemat.reload(this.agent_id) }
         catch (ex) {
-            schemat._print(`error reloading agent ${this.agent}:`, ex, `- restart skipped`)
+            schemat._print(`error loading agent [${this.agent_id}]:`, ex, `- restart skipped`)
             return
         }
         // if (agent === this.agent) return
@@ -206,13 +213,13 @@ class Frame {
 
         schemat._print(`restarting agent ${agent} ...`)
         try {
-            let restart = () => agent.__restart__(this.state, this.agent)
+            let restart = () => agent.__restart__(this.state, agent)
             let state = await this._tracked(agent.app_context(() => this._frame_context(agent, restart)))
             this.set_state(state)
             this.agent = agent
         }
         catch (ex) {
-            schemat._print(`error restarting agent ${this.agent}:`, ex, `- using previous instance`)
+            schemat._print(`error restarting agent ${agent}:`, ex, `- using previous instance`)
         }
 
         if (was_running) await this.resume()    // resume RPC calls unless the agent was already paused
@@ -229,10 +236,10 @@ class Frame {
         let {calls} = this
 
         if (calls.length > 0) {             // wait for pending calls to complete before stopping
-            schemat._print(`waiting for ${calls.length} pending calls to agent ${this.agent} to complete`)
+            schemat._print(`waiting for ${calls.length} pending calls to agent [${this.agent_id}] to complete`)
             await Promise.all(calls)
         }
-        let {agent} = this
+        let agent = this.agent || await schemat.load(this.agent_id)
         schemat._print(`stopping agent ${agent} ...`)
 
         let stop = () => agent.__stop__(this.state)
@@ -263,47 +270,62 @@ class Frame {
     async exec(command, args, caller_ctx = schemat.current_context, tx = null, callback = null) {
         /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
-        let [method] = this._find_command(command)      // check that `command` is recognized by the agent
-        // print(`calling agent ${this.agent}.${method}()`)
+        // schemat._print(`exec() of [${this.agent_id}] agent ${command}(${args}) ...`)
+        // let agent = await schemat.load(this.agent_id)
+        // let agent = schemat.get_object(this.agent_id)
+        // if (!agent.is_loaded()) await agent.load()
+        // let agent = this.agent
+        let agent = this.agent || await schemat.load(this.agent_id)
+
+        let [method] = this._find_command(agent, command)       // check that `command` is recognized by the agent
+        // schemat._print(`exec() of [${this.agent_id}].${method}(${args}) ...`)
 
         // wait for the agent to start
         if (this.starting) await this.starting
 
         // wait for running call(s) to complete if in exclusive mode
-        while ((this.exclusive || !this.agent.__concurrent) && this.calls.length > 0)
+        while ((this.exclusive || !agent.__concurrent) && this.calls.length > 0)
             // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
             await Promise.all(this.calls)
 
         // handle paused/stopping state
         if (this.paused && command !== 'resume') await this.paused
-        if (this.stopping) throw new Error(`agent ${this.agent} is in the process of stopping`)
+        if (this.stopping) throw new Error(`agent ${agent} is in the process of stopping`)
 
-        let {agent, state} = this;
-        let [_, func] = this._find_command(command)     // `agent` may have been replaced while pausing, the existence of `command` must be verified again
-        let callA = () => func.call(agent, state, ...args)
+        let [_, func] = this._find_command(agent, command)      // `agent` may have been replaced while pausing, the existence of `command` must be verified again
+        let callA = () => func.call(agent, this.state, ...args)
 
         let callB = async () => {
-            // agent._print(`exec(${method}) context=${schemat.current_context}`)
+            // agent._print(`exec() of ${method}(${args}) context=${schemat.current_context}`)
             let result = await this._tracked(this._frame_context(agent, callA))
             return callback ? callback(result) : result
         }
+
+        // if (!schemat.booting) this.agent = agent = this.agent.refresh()
+        // assert(this.agent.id === this.agent_id && this.agent.is_loaded())
+
         return agent.app_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
             .catch(ex => {
                 agent._print(`exec() of ${method}(${args}) FAILED:`, ex)
                 throw ex
             })
+            .then((result) => {
+                // schemat._print(`exec() of [${this.agent_id}].${method}(${args}) done`)
+                if (this.agent && !schemat.terminating) this.agent = this.agent.refresh()
+                return result
+            })
     }
 
-    _find_command(command) {
+    _find_command(agent, command) {
         /* Find implementation of `command` in the agent and return as a pair [method-name, method-function]. */
         let method = `${this.role}.${command}`
-        let func = this.agent.__self[method]
+        let func = agent.__self[method]
         if (typeof func !== 'function') {
             // generic $agent.*() method is used as a fallback when there's no role-specific implementation of the `command`
             method = `${schemat.GENERIC_ROLE}.${command}`
-            func = this.agent.__self[method]
+            func = agent.__self[method]
         }
-        if (typeof func !== 'function') throw new Error(`command "${command}" not recognized by agent ${this.agent}`)
+        if (typeof func !== 'function') throw new Error(`command "${command}" not recognized by agent ${agent}`)
         return [method, func]
     }
 
@@ -359,7 +381,7 @@ class Frame {
 
     get_status() {      // will be needed for persisting the current list of node.$state.agents to DB
         return {
-            id:             this.agent.id,
+            id:             this.agent_id,
             role:           this.role,
             stopped:        this.stopped,
             migrating_to:   this.migrating_to,
