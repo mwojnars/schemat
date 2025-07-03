@@ -949,6 +949,11 @@
       info: If true, agent methods of this agent may execute concurrently. Turned off
         by default (methods run in exclusive lock).
       "@": schemat/types/type.js:BOOLEAN
+    frame_agent:
+      info: If true, a reference to agent object is kept in frame, so there is always
+        a loaded instance of this agent present in the system. This is needed
+        for some system agents (data blocks). False by default.
+      "@": schemat/types/type.js:BOOLEAN
     num_workers:
       default: 1
       info: The number of concurrent worker processes on the host node that should
