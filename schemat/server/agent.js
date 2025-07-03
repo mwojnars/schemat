@@ -163,7 +163,7 @@ export class WebServer extends Agent {
     async __restart__({server}) {
         // start new server and close old one (existing connections will complete)
         let new_server = await this._create_server()
-        server.close()
+        server.close()      // TODO: add timeout to make sure the server is closed
         return {server: new_server}
     }
 
