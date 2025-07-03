@@ -74,7 +74,7 @@ export class Block extends Agent {
     }
 
     async __stop__() {
-        await this._sync_stores()
+        // await this._sync_stores()
         await Promise.all(this.$state.stores.toReversed().map(store => store.close()))
     }
 
