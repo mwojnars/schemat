@@ -198,8 +198,6 @@ class Frame {
         // if (agent === this.agent) return
         // assert(agent.id === this.agent.id)
         // assert(agent !== this.agent)
-        // schemat._print(`schemat _contexts (${globalThis._contexts.size}):`, [...globalThis._contexts.keys()])
-        // schemat._print(`schemat._loading (${schemat._loading.size}):`, [...schemat._loading.keys()])
 
         let was_running = !this.paused
         await this.pause()                      // wait for termination of ongoing RPC calls
@@ -207,11 +205,11 @@ class Frame {
 
         schemat._print(`restarting agent ${agent} ...`)
         try {
-            // let restart = () => agent.__restart__(this.state, this.agent)
+            let restart = () => agent.__restart__(this.state, this.agent)
             // LEAK: the line below causes memory leaks in a long run (several hours); reason unknown ...
             //       ... likely caused by the composition: this._tracked(agent.app_context(...))
-            // let state = await this._tracked(agent.app_context(() => this._frame_context(agent, restart)))
-            let state = await agent.app_context(() => this._tracked(agent.__restart__(this.state, this.agent)))
+            let state = await this._tracked(agent.app_context(() => this._frame_context(agent, restart)))
+            // let state = await agent.app_context(() => this._tracked(agent.__restart__(this.state, this.agent)))
             this.set_state(state)
             this.agent = agent
         }
@@ -381,6 +379,7 @@ export class Kernel {
 
     // booting = new Promise(resolve => this._booting_resolve = resolve)   // resolves when the kernel is fully booted; false after that
 
+    node_id                     // ID of web object that represents the node this process is running on
     frames = new FramesMap()    // Frames of currently running agents, keyed by agent IDs
     root_frame                  // frame that holds the running `node` agent
     _closing                    // true if .stop() was called and the process is shutting down right now
