@@ -61,7 +61,8 @@ export class Agent extends WebObject {
          */
         // if (!this.hard_restart) return state
         this._print(`doing HARD restart`)
-        await prev.__stop__(state)
+        await this.$frame._frame_context(prev, () => prev.__stop__(state))
+        // await prev.__stop__(state)
         return this.__start__()     // TODO: role
     }
 

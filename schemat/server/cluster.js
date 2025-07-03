@@ -20,8 +20,8 @@ export class Cluster extends Agent {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
-    async __start__({role}) {
-        assert(role === '$leader')
+    async __start__({role} = {}) {
+        // assert(role === '$leader')
         // let nodes = this.nodes
         let node_ids = this.nodes.map(n => n.id)
         return {node_ids}
