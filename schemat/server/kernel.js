@@ -377,13 +377,13 @@ export class Kernel {
 
     // booting = new Promise(resolve => this._booting_resolve = resolve)   // resolves when the kernel is fully booted; false after that
 
-    node_id                     // ID of web object that represents the node this process is running on
+    node_id                     // ID of `node`
+    node                        // web object of [Node] category that represents the physical node this process is running on
     frames = new FramesMap()    // Frames of currently running agents, keyed by agent IDs
     root_frame                  // frame that holds the running `node` agent
     _closing                    // true if .stop() was called and the process is shutting down right now
 
-    // web object of [Node] category that represents the physical node this process is running on
-    get node() { return this.root_frame.agent }  //|| this._node }
+    // get node() { return this.root_frame.agent }  //|| this._node }
 
     get worker_id() {
         /* Numeric ID (1, 2, 3, ...) of the node's current worker process; 0 for the master process. */
@@ -410,7 +410,7 @@ export class Kernel {
 
         schemat.set_kernel(this)
         this.node_id = Number(opts['node'].split('.').pop())
-        // this._node = await schemat.load(this.node_id)
+        this.node = await schemat.load(this.node_id)
 
         // let node_file = './schemat/node.id'
         // let node_id = opts.node || Number(opts['node-dir'].split('.').pop()) || this._read_node_id(node_file)
