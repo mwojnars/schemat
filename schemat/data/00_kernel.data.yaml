@@ -734,6 +734,7 @@
     "@": schemat:Catalog
   defaults:
     switch_context: true
+    frame_agent: true
     "@": schemat:Catalog
   class: schemat/db/block.js:DataBlock
   __prototype:
