@@ -228,11 +228,11 @@ export class ServerSchemat extends Schemat {
         //     frame.agent = await frame.agent.reload()
     }
 
-    _analyse_object_graph(deep = true, skip_same_gen = false) {
+    _analyse_object_graph(deep = true, skip_same_gen = true) {
         let pad = (x) => `[${x}]`.padStart(6, ' ')
         let accept = (obj) => obj?.__data || obj?.__meta.cache
         let agents = [...this.kernel.frames.values()].map(f => f.agent)
-        let list   = [this._db, this._cluster, this._app, ...this.registry.objects.values(), ...agents]
+        let list   = [this._db, /*this._cluster, this._app,*/ ...this.registry.objects.values(), ...agents]
         let objects = new Set(list.filter(accept))
         let visited = new Set([...objects])
         let queue = [...objects]
@@ -248,7 +248,9 @@ export class ServerSchemat extends Schemat {
             let refs = []
             let test = (item) => item instanceof this.WebObject
             let collect = (item, path) => {if (test(item)) refs.push([path, item])}
-            Struct.collect({__data: obj.__data, __meta: obj.__meta}, collect)
+
+            let props = copy(obj, {class: false, drop: '__proxy __self'})
+            Struct.collect(props, collect)
 
             for (let [path, ref] of refs) {
                 if (!visited.has(ref) && accept(ref)) {
