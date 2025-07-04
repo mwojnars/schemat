@@ -152,7 +152,7 @@ class Frame {
         if (!agent.is_loaded()) await agent.load()
         schemat._print(`starting agent ${agent} ...`)
 
-        this.agent = agent
+        if (agent.frame_agent) this.agent = agent
         // setTimeout(() => {this.agent = null}, 3000)
 
         let state = await agent.app_context(() => agent.__start__(this)) || {}
@@ -216,7 +216,7 @@ class Frame {
             let restart = () => agent.__restart__(this.state, agent)
             let state = await this._tracked(agent.app_context(() => this._frame_context(agent, restart)))
             this.set_state(state)
-            this.agent = agent
+            if (agent.frame_agent) this.agent = agent
         }
         catch (ex) {
             schemat._print(`error restarting agent ${agent}:`, ex, `- using previous instance`)
@@ -309,11 +309,11 @@ class Frame {
                 agent._print(`exec() of ${method}(${args}) FAILED:`, ex)
                 throw ex
             })
-            .then((result) => {
-                // schemat._print(`exec() of [${this.agent_id}].${method}(${args}) done`)
-                if (this.agent && !schemat.terminating) this.agent = this.agent.refresh()
-                return result
-            })
+            // .then((result) => {
+            //     // schemat._print(`exec() of [${this.agent_id}].${method}(${args}) done`)
+            //     if (this.agent && !schemat.terminating) this.agent = this.agent.refresh()
+            //     return result
+            // })
     }
 
     _find_command(agent, command) {
