@@ -254,6 +254,7 @@ export class WebObject {
     __block                 Block instance that represents the physical data block where this object was retrieved from; stub or loaded
     __hash                  random integer in [0, MAX_SAFE_INTEGER) assigned during instantiation to differentiate between multiple local instances of the same web object;
                             NOT strictly unique (!); does NOT depend on the object's content and does NOT change when the instance is edited
+    __generation
 
     __meta, __proxy, __self -- see below in the code for details
 
@@ -453,7 +454,7 @@ export class WebObject {
 
     /***  Instantiation  ***/
 
-    constructor(_fail = true, id = null, {mutable = false, provisional, edits} = {}) {
+    constructor(_fail = true, id = null, {mutable = false, provisional, edits, generation} = {}) {
         /* For internal use! Always call WebObject.new() instead of `new WebObject()`.
            By default, the object is created immutable, and on client (where all modifications are local to the single client process)
            this gets toggled automatically on the first attempt to object modification. On the server
@@ -462,6 +463,7 @@ export class WebObject {
         if (_fail) throw new Error('web objects should be instantiated with category.new() instead of new CLASS()')
         if (id) this.id = id
         if (provisional) this.__provisional_id = Math.abs(provisional)
+        if (generation) this.__generation = generation
 
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
         // only on the client this flag can be changed after object creation
