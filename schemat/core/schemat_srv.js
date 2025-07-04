@@ -227,13 +227,19 @@ export class ServerSchemat extends Schemat {
         //     frame.agent = await frame.agent.reload()
     }
 
-    _analyse_object_graph() {
+    _analyse_object_graph(deep = true) {
+        let pad = (x) => `[${x}]`.padStart(6, ' ')
         let list = [this._db, this._cluster, this._app, ...this.registry.objects.values()]
         let objects = new Set(list.filter(obj => obj?.__data || obj?.__meta.cache))
         for (let obj of objects) {
-            let id = `[${obj.id}]`.toString().padStart(6, ' ')
-            this._print(`objects:  ${id} gen=${obj.__self.__generation}`)
-            // obj.collect_items()
+            this._print(`objects: ${pad(obj.id)} gen=${obj.__self.__generation}`)
+            if (!deep) continue
+
+            let refs = obj.collect_items(item => item instanceof this.WebObject)
+            for (let [path, ref] of refs) {
+                let spath = `.${path}`.replace(',', '.')
+                this._print(`                ref: ${pad(ref.id)} gen=${ref.__self.__generation}  at ${spath}`)
+            }
         }
     }
 
