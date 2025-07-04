@@ -248,7 +248,7 @@ export class Schemat {
             if (obj.is_loaded() && obj.is_expired() && !this._essential.includes(id))
                 obj = null
         }
-        return obj || this.registry.set_object(WebObject.stub(id, {generation: this._generation}))
+        return obj || this.registry.set_object(WebObject.stub(id))
     }
 
     get_provisional(id) {
