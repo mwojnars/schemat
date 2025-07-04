@@ -212,6 +212,7 @@ export class ServerSchemat extends Schemat {
            and allow efficient garbage-collection in the presence of cyclic links between different web objects.
          */
         this._print(`_erase_registry() app=${this.app}, ${this.registry.objects.size} objects ...`)
+        // this._analyse_object_graph()
 
         this._cluster = this.cluster
         this._app = this.app
@@ -224,6 +225,16 @@ export class ServerSchemat extends Schemat {
         // this._print(`_erase_registry() reloading agents:`, frames.map(f => f.agent.id))
         // for (let frame of frames)
         //     frame.agent = await frame.agent.reload()
+    }
+
+    _analyse_object_graph() {
+        let list = [this._db, this._cluster, this._app, ...this.registry.objects.values()]
+        let objects = new Set(list.filter(obj => obj?.__data || obj?.__meta.cache))
+        for (let obj of objects) {
+            let id = `[${obj.id}]`.toString().padStart(6, ' ')
+            this._print(`objects:  ${id} gen=${obj.__self.__generation}`)
+            // obj.collect_items()
+        }
     }
 
 
