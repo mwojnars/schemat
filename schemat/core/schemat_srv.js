@@ -227,18 +227,30 @@ export class ServerSchemat extends Schemat {
         //     frame.agent = await frame.agent.reload()
     }
 
-    _analyse_object_graph(deep = true) {
+    _analyse_object_graph(deep = true, skip_same_gen = true) {
         let pad = (x) => `[${x}]`.padStart(6, ' ')
-        let list = [this._db, this._cluster, this._app, ...this.registry.objects.values()]
+        let agents = [...this.kernel.frames.values()].map(f => f.agent)
+        let list   = [this._db, this._cluster, this._app, ...this.registry.objects.values(), ...agents]
         let objects = new Set(list.filter(obj => obj?.__data || obj?.__meta.cache))
-        for (let obj of objects) {
+        let visited = new Set([...objects])
+        let queue = [...objects]
+
+        // for (let obj of objects) {
+        while (queue.length) {
+            let obj = queue.shift()
             this._print(`objects: ${pad(obj.id)} gen=${obj.__self.__generation}`)
             if (!deep) continue
 
             let refs = obj.collect_items(item => item instanceof this.WebObject)
             for (let [path, ref] of refs) {
-                let spath = `.${path}`.replace(',', '.')
-                this._print(`                ref: ${pad(ref.id)} gen=${ref.__self.__generation}  at ${spath}`)
+                if (!visited.has(ref)) {
+                    queue.push(ref)
+                    visited.add(ref)
+                }
+                let gen = ref.__self.__generation
+                if (skip_same_gen && gen === obj.__self.__generation) continue
+                let spath = `.${path}`.replaceAll(',', '.')
+                this._print(`                ref: ${pad(ref.id)} gen=${gen}  at ${spath}`)
             }
         }
     }
