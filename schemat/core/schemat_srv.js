@@ -5,6 +5,7 @@ import {assert, print, copy, fluctuate} from '../common/utils.js'
 import {Schemat} from './schemat.js'
 import {RequestContext} from "../web/request.js";
 import {ServerTransaction} from "./transact.js";
+import {Struct} from "../common/catalog.js";
 
 
 /**********************************************************************************************************************
@@ -235,13 +236,17 @@ export class ServerSchemat extends Schemat {
         let visited = new Set([...objects])
         let queue = [...objects]
 
-        // for (let obj of objects) {
         while (queue.length) {
             let obj = queue.shift()
             this._print(`objects: ${pad(obj.id)} gen=${obj.__self.__generation}`)
             if (!deep) continue
 
-            let refs = obj.collect_items(item => item instanceof this.WebObject)
+            // let refs = obj.collect_items(item => item instanceof this.WebObject)
+            let refs = []
+            let test = (item) => item instanceof this.WebObject
+            let collect = (item, path) => {if (test(item)) refs.push([path, item])}
+            Struct.collect({__data: obj.__data, __meta: obj.__meta}, collect)
+
             for (let [path, ref] of refs) {
                 if (!visited.has(ref)) {
                     queue.push(ref)
