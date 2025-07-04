@@ -83,6 +83,7 @@ export class Schemat {
 
     config          // boot configuration (on server) or RequestContext (on client)
     debug           // if true, some elements of Schemat and environment are tuned towards debugging
+    debug_mem
     app_id          // ID of the active Application object
     registry        // cache of web objects, records and indexes loaded from DB
     builtin         // a Classpath containing built-in classes and their paths
@@ -420,6 +421,7 @@ export class Schemat {
     }
 
     _report_memory(tag = '') {
+        if (!this.debug_mem) return
         if (tag) tag = ' ' + tag
         let format = (bytes) => `${(bytes / 1024 / 1024).toFixed(2)}`
         if (CLIENT) {

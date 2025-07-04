@@ -130,7 +130,7 @@ class Frame {
     restart_timeout     // timeout for agent's scheduled restart
 
     constructor(agent, role) {
-        // this.agent = agent
+        this.agent = agent
         this.agent_id = agent.id
         this.role = role
 
@@ -148,12 +148,10 @@ class Frame {
 
     async start() {
         /* Start this.agent by calling its __start__(). */
-        let agent = schemat.get_object(this.agent_id)
-        if (!agent.is_loaded()) await agent.load()
+        // let agent = schemat.get_object(this.agent_id)
+        // if (!agent.is_loaded()) await agent.load()
+        let {agent} = this
         schemat._print(`starting agent ${agent} ...`)
-
-        if (agent.frame_agent) this.agent = agent
-        // setTimeout(() => {this.agent = null}, 3000)
 
         let state = await agent.app_context(() => agent.__start__(this)) || {}
         this.set_state(state)
@@ -216,7 +214,7 @@ class Frame {
             let restart = () => agent.__restart__(this.state, agent)
             let state = await this._tracked(agent.app_context(() => this._frame_context(agent, restart)))
             this.set_state(state)
-            if (agent.frame_agent) this.agent = agent
+            this.agent = agent
         }
         catch (ex) {
             schemat._print(`error restarting agent ${agent}:`, ex, `- using previous instance`)

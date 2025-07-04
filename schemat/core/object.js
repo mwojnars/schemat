@@ -463,7 +463,7 @@ export class WebObject {
         if (_fail) throw new Error('web objects should be instantiated with category.new() instead of new CLASS()')
         if (id) this.id = id
         if (provisional) this.__provisional_id = Math.abs(provisional)
-        if (schemat._generation) this.__generation = schemat._generation
+        // if (schemat._generation) this.__generation = schemat._generation
 
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
         // only on the client this flag can be changed after object creation
