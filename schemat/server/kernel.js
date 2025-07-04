@@ -181,7 +181,9 @@ class Frame {
         this.restart_timeout = setTimeout(async () => {
             try { await this.restart() }
             catch (ex) { schemat._print(`error restarting agent ${agent}:`, ex) }
-            finally { await this._schedule_restart() }
+            finally {
+                if (!this.stopping) await this._schedule_restart()
+            }
         }, ttl * 1000)
     }
 
