@@ -486,11 +486,6 @@ export function min(arr, order) {
     return arr[pos]
 }
 
-export function randint(stop = Number.MAX_SAFE_INTEGER) {
-    /* Random integer from 0 to stop-1. */
-  return Math.floor(Math.random() * stop)
-}
-
 export function gcd(a, b) {
     /* Calculate the greatest common divisor using the Euclidean algorithm. */
     a = Math.abs(a)
@@ -505,6 +500,15 @@ export function lcm(a, b) {
     return Math.abs(a * b) / gcd(a, b)
 }
 
+export function randint(stop = Number.MAX_SAFE_INTEGER) {
+    /* Random integer from 0 to stop-1. */
+  return Math.floor(Math.random() * stop)
+}
+
+export function fluctuate(x, scale = 0.1) {
+    /* Multiply `x` by random factor between (1-scale) and 1.0 to introduce some randomness. */
+    return x * (1 - Math.random() * scale)
+}
 
 /**********************************************************************************************************************/
 

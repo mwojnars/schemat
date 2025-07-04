@@ -5,7 +5,7 @@ import yaml from 'yaml'
 
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
-import {print, assert, T, sleep} from "../common/utils.js";
+import {print, assert, T, sleep, fluctuate} from "../common/utils.js";
 import {CustomMap} from "../common/structs.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {BootDatabase} from "../db/db.js";
@@ -174,9 +174,7 @@ class Frame {
         let agent = this.agent || await schemat.load(this.agent_id)
         let ttl = agent.__ttl           // it's assumed that __ttl is never missing, although it can be 0.0 during boot
         if (ttl <= 0) ttl = boot_ttl    // restart faster during boot to quickly arrive at a clean version of the object
-
-        // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
-        ttl *= 1 - Math.random() * randomize_ttl
+        ttl = fluctuate(ttl)            // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
 
         // schemat._print(`_schedule_restart() will restart ${agent} after ${ttl.toFixed(2)} seconds; __ttl=${agent.__ttl}`)
 
