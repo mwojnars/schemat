@@ -28,6 +28,7 @@ export class ServerSchemat extends Schemat {
     _db             // ultimate Database: loaded from _boot_db, then reloaded periodically
 
     _cluster        // Cluster object of the previous generation, remembered here to keep the .cluster() getter operational during complete cache erasure
+    _generation     // current generation number: 1,2,3... increased during complete cache erasure
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
     get db()        { return this._boot_db || this._db }
@@ -77,6 +78,7 @@ export class ServerSchemat extends Schemat {
         // check that PATH_WORKING points to the Schemat root folder
         assert(fs.existsSync(this.PATH_WORKING + '/schemat/core/schemat.js'), 'working directory does not contain the Schemat installation with ./schemat source tree')
 
+        this._generation = 1
         this._transaction = new AsyncLocalStorage()
         // this.loader = new Loader(import.meta.url)
     }
@@ -108,6 +110,17 @@ export class ServerSchemat extends Schemat {
         // their _boot_db is already the final db, so this._db is initialized in constructor()
         this._db ??= await this._cluster.database.load()
         assert(this._db.is_loaded())
+
+        // if (!this._db) {
+        //     assert(this._cluster)
+        //     let id = this._cluster.database.id
+        //     this.registry.delete_object(id)
+        //     this._db ??= await this.load(id)
+        //     assert(this._db.is_loaded())
+        //     this._cluster.__data.delete('database')
+        //     this._cluster.__meta.cache.delete('database')
+        //     assert(!this._cluster.database)
+        // }
 
         if (!this.parent) this.kernel_context = this._db.id
 
@@ -167,27 +180,30 @@ export class ServerSchemat extends Schemat {
         this._reload_db_timer_id = setTimeout(() => this._reload_db(), timeout)
     }
 
-    async _purge_registry(generation = 0, ERASE_TIMEOUT = 5) {
+    async _purge_registry(iteration = 0, ERASE_TIMEOUT = 3) {
         /* Purge the object cache in the registry. Schedule periodical re-run: the interval is configured
            in app.cache_purge_interval and may change over time.
          */
-        this._print(`_purge_registry() app=${this.app} generation=${generation}`)
         if (this.terminating) return
+        this._print(`_purge_registry() app=${this.app} iteration=${iteration}`)
 
         try {
             this._report_memory('@1')
             this._report_memory('@2')
-            if (generation >= ERASE_TIMEOUT) {
-                generation = 0
-                return this._erase_registry()
+            if (iteration < ERASE_TIMEOUT)
+                await this.registry.purge()
+            else {
+                iteration = 0
+                this._generation++
+                await this._erase_registry()
             }
-            await this.registry.purge()
-            global.gc()
             this._report_memory('@3')
+            global.gc()
+            this._report_memory('@4')
         }
         finally {
             let interval = (this.app?.cache_purge_interval || 10) * 1000        // [ms]  ... TODO: move cache_purge_interval to cluster/node/config
-            setTimeout(() => this._purge_registry(generation + 1), interval)
+            setTimeout(() => this._purge_registry(iteration + 1), interval)
         }
     }
 
@@ -203,6 +219,11 @@ export class ServerSchemat extends Schemat {
 
         this.registry.erase_objects()
         this._db = await this._db.reload()
+
+        // let frames = [...this.kernel.frames.values()].filter(f => f.agent)
+        // this._print(`_erase_registry() reloading agents:`, frames.map(f => f.agent.id))
+        // for (let frame of frames)
+        //     frame.agent = await frame.agent.reload()
     }
 
 
