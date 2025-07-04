@@ -1,4 +1,4 @@
-import {T, assert, print} from "../common/utils.js";
+import {T, assert, print, fluctuate} from "../common/utils.js";
 import {CustomMap} from "../common/structs.js";
 import {Catalog} from "../common/catalog.js";
 // import BTree from 'sorted-btree'
@@ -74,9 +74,17 @@ export class Registry {
     _purging_now = false                // if the previous purge is still in progress, a new one is abandoned
 
 
-    constructor(on_evict) {
+    constructor(_schemat, on_evict) {
+        this._schemat = _schemat
         this.on_evict = on_evict
-        setInterval(() => this.erase_records(), 1000)
+        this._purge_records()
+    }
+
+    _purge_records() {
+        /* Erase ALL records at regular intervals of around 1 sec. */
+        if (this._schemat.terminating) return
+        this.erase_records()
+        setTimeout(() => this._purge_records(), fluctuate(1000))
     }
 
     get_record(id) { return this.records.get(id) }

@@ -147,7 +147,7 @@ export class Schemat {
         this.app_id = config.app || undefined
         this.WebObject = WebObject          // schemat.WebObject is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
-        this.registry = new Registry(this._on_evict.bind(this))
+        this.registry = new Registry(this, this._on_evict.bind(this))
         this.debug = config.debug
     }
 
