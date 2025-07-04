@@ -690,8 +690,10 @@ export class WebObject {
         if ((meta = data.get('__meta'))) {
             // print(`[${this.id}] data.__meta:`, data.get('__meta'))
             let {__ring, __block} = meta
-            if (__ring) self.__ring = schemat.get_object(__ring)
-            if (__block) self.__block = schemat.get_object(__block)
+            if (__ring) self.__ring = __ring        //schemat.get_object(__ring)
+            if (__block) self.__block = __block     //schemat.get_object(__block)
+            assert(!__ring || typeof __ring === 'number')
+            assert(!__block || typeof __block === 'number')
             data.delete('__meta')
         }
         self.__data = data
