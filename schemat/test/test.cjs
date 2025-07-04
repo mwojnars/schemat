@@ -197,15 +197,13 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
     after(async function () {
         this.timeout(40000)
         await browser?.close()
+        servers.map(server => server.kill())   // send SIGTERM to all servers
 
         for (let server of servers.toReversed()) {
-            const server_exit = new Promise(resolve => {
+            await new Promise(resolve => {              // wait for server process to actually exit
                 server.on('exit', () => resolve())
             })
-            server.kill()                           // send SIGTERM to the server
-            await server_exit                       // wait for the process to actually exit
             server.removeAllListeners()
-            server = null
         }
     })
 
