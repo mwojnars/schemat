@@ -13,7 +13,7 @@ export class Agent extends WebObject {
        being allocated/deallocated in __install__/__uninstall__(), while some others (e.g., sockets) in __start__/__stop__().
     */
 
-    __ctx           // Database that provides context of execution for this agent's __start__/__stop__ methods ("user mode"),
+    __ctx           // ID of a Database object that provides context of execution for this agent's __start__/__stop__ methods ("user mode"),
                     // and a fallback context for $agent.*() methods if no request-specific RPC context was given;
                     // if missing, kernel's context (cluster) is used ("kernel mode")
 
@@ -27,6 +27,7 @@ export class Agent extends WebObject {
     num_workers     // number of concurrent workers per node that should execute this agent's microservice at the same time; -1 = "all available"
     file_tag        // string to be included in names of files and directories
     switch_context  // if true, commands are executed in the caller's context not the agent's own context
+    frame_agent
 
     get file_path() { throw new Error(`file_path not implemented for agent ${this}`) }
 
@@ -69,7 +70,6 @@ export class Agent extends WebObject {
     async app_context(fn, caller_ctx = null) {
         /* Run fn() in the app/db context expected by this agent (this.__ctx). */
         assert(this.is_loaded())
-        // let ctx = this.__ctx || schemat.kernel_context      // empty __ctx means kernel context should be used
         let ctx = this.switch_context ? caller_ctx : this.__ctx
         ctx ??= schemat.kernel_context              // empty `ctx` means kernel context should be used
         return schemat.app_context(ctx, fn)
