@@ -228,15 +228,18 @@ export class ServerSchemat extends Schemat {
         //     frame.agent = await frame.agent.reload()
     }
 
-    _analyse_object_graph(deep = true, skip_same_gen = true) {
+    _analyse_object_graph(deep = true, skip_same_gen = false) {
         let pad = (x) => `[${x}]`.padStart(6, ' ')
+        let accept = (obj) => obj?.__data || obj?.__meta.cache
         let agents = [...this.kernel.frames.values()].map(f => f.agent)
         let list   = [this._db, this._cluster, this._app, ...this.registry.objects.values(), ...agents]
-        let objects = new Set(list.filter(obj => obj?.__data || obj?.__meta.cache))
+        let objects = new Set(list.filter(accept))
         let visited = new Set([...objects])
         let queue = [...objects]
+        let total = 0
 
         while (queue.length) {
+            total++
             let obj = queue.shift()
             this._print(`objects: ${pad(obj.id)} gen=${obj.__self.__generation}`)
             if (!deep) continue
@@ -248,7 +251,7 @@ export class ServerSchemat extends Schemat {
             Struct.collect({__data: obj.__data, __meta: obj.__meta}, collect)
 
             for (let [path, ref] of refs) {
-                if (!visited.has(ref)) {
+                if (!visited.has(ref) && accept(ref)) {
                     queue.push(ref)
                     visited.add(ref)
                 }
@@ -258,6 +261,7 @@ export class ServerSchemat extends Schemat {
                 this._print(`                ref: ${pad(ref.id)} gen=${gen}  at ${spath}`)
             }
         }
+        this._print(`objects:  TOTAL = ${total}`)
     }
 
 
