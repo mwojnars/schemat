@@ -131,7 +131,6 @@ class Frame {
 
     constructor(agent, role) {
         this.agent = agent
-        this.agent_id = agent.id
         this.role = role
 
         let _resolve
@@ -167,7 +166,7 @@ class Frame {
         if (this.restart_timeout) this._cancel_restart()    // clear any existing scheduled restart
         if (this.stopping) return
 
-        let agent = this.agent || await schemat.load(this.agent_id)
+        let {agent} = this
         let ttl = agent.__ttl           // it's assumed that __ttl is never missing, although it can be 0.0 during boot
         if (ttl <= 0) ttl = boot_ttl    // restart faster during boot to quickly arrive at a clean version of the object
         ttl = fluctuate(ttl)            // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
@@ -194,9 +193,9 @@ class Frame {
         let agent
 
         // LEAK: storing and reloading the agent causes memory leaks in a long run (several hours)
-        try { agent = await schemat.reload(this.agent_id) }
+        try { agent = await this.agent.reload() }
         catch (ex) {
-            schemat._print(`error loading agent [${this.agent_id}]:`, ex, `- restart skipped`)
+            schemat._print(`error reloading agent ${this.agent}:`, ex, `- restart skipped`)
             return
         }
         // if (agent === this.agent) return
@@ -232,10 +231,10 @@ class Frame {
         let {calls} = this
 
         if (calls.length > 0) {             // wait for pending calls to complete before stopping
-            schemat._print(`waiting for ${calls.length} pending calls to agent [${this.agent_id}] to complete`)
+            schemat._print(`waiting for ${calls.length} pending calls to agent ${this.agent} to complete`)
             await Promise.all(calls)
         }
-        let agent = this.agent || await schemat.load(this.agent_id)
+        let {agent} = this
         schemat._print(`stopping agent ${agent} ...`)
 
         let stop = () => agent.__stop__(this.state)
@@ -266,15 +265,9 @@ class Frame {
     async exec(command, args, caller_ctx = schemat.current_context, tx = null, callback = null) {
         /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
-        // schemat._print(`exec() of [${this.agent_id}] agent ${command}(${args}) ...`)
-        // let agent = await schemat.load(this.agent_id)
-        // let agent = schemat.get_object(this.agent_id)
-        // if (!agent.is_loaded()) await agent.load()
-        // let agent = this.agent
-        let agent = this.agent || await schemat.load(this.agent_id)
-
+        let {agent} = this
         let [method] = this._find_command(agent, command)       // check that `command` is recognized by the agent
-        // schemat._print(`exec() of [${this.agent_id}].${method}(${args}) ...`)
+        // schemat._print(`exec() of ${this.agent}.${method}(${args}) ...`)
 
         // wait for the agent to start
         if (this.starting) await this.starting
@@ -288,6 +281,7 @@ class Frame {
         if (this.paused && command !== 'resume') await this.paused
         if (this.stopping) throw new Error(`agent ${agent} is in the process of stopping`)
 
+        agent = this.agent
         let [_, func] = this._find_command(agent, command)      // `agent` may have been replaced while pausing, the existence of `command` must be verified again
         let callA = () => func.call(agent, this.state, ...args)
 
@@ -297,19 +291,11 @@ class Frame {
             return callback ? callback(result) : result
         }
 
-        // if (!schemat.booting) this.agent = agent = this.agent.refresh()
-        // assert(this.agent.id === this.agent_id && this.agent.is_loaded())
-
         return agent.app_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
             .catch(ex => {
                 agent._print(`exec() of ${method}(${args}) FAILED:`, ex)
                 throw ex
             })
-            // .then((result) => {
-            //     // schemat._print(`exec() of [${this.agent_id}].${method}(${args}) done`)
-            //     if (this.agent && !schemat.terminating) this.agent = this.agent.refresh()
-            //     return result
-            // })
     }
 
     _find_command(agent, command) {
