@@ -13,7 +13,7 @@ export class Agent extends WebObject {
        being allocated/deallocated in __install__/__uninstall__(), while some others (e.g., sockets) in __start__/__stop__().
     */
 
-    __ctx           // ID of a Database object that provides context of execution for this agent's __start__/__stop__ methods ("user mode"),
+    __ctx           // Database object that provides context of execution for this agent's __start__/__stop__ methods ("user mode"),
                     // and a fallback context for $agent.*() methods if no request-specific RPC context was given;
                     // if missing, kernel's context (cluster) is used ("kernel mode")
 

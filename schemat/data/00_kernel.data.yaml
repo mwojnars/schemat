@@ -940,12 +940,12 @@
     located in the cluster or outside of it, depending on the type of agent."
   schema:
     __ctx:
-      info: ID of a Database object that represents the context (data, application, URLs etc.)
+      info: Database object that represents the context (data, application, URLs etc.)
         in which this agent should execute ('user mode'). If missing, the agent
         executes in the context of the cluster database ('kernel mode').
       category:
         "@": 11
-      "@": schemat/types/type.js:INTEGER
+      "@": schemat/types/type.js:REF
     __concurrent:
       info: If true, agent methods of this agent may execute concurrently. Turned off
         by default (methods run in exclusive lock).
