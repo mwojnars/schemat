@@ -80,11 +80,12 @@ export class Registry {
         this._purge_records()
     }
 
-    _purge_records() {
+    _purge_records(delay = 1000) {
         /* Erase ALL records at regular intervals of around 1 sec. */
         if (this._schemat.terminating) return
         this.erase_records()
-        setTimeout(() => this._purge_records(), fluctuate(1000))
+        let timeout = setTimeout(() => this._purge_records(), fluctuate(delay))
+        if (SERVER) timeout.unref()
     }
 
     get_record(id) { return this.records.get(id) }

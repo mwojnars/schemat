@@ -192,7 +192,7 @@ export class ServerSchemat extends Schemat {
         }
         finally {
             let interval = (this.app?.cache_purge_interval || 10) * 1000        // [ms]  ... TODO: move cache_purge_interval to cluster/node/config
-            setTimeout(() => this._purge_registry(iteration + 1), fluctuate(interval))
+            setTimeout(() => this._purge_registry(iteration + 1), fluctuate(interval)).unref()
         }
     }
 
