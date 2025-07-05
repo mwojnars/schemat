@@ -125,7 +125,7 @@ async function start_server(node, port, tcp_port, args = '') {
     await wait_for_port_release(port)           // wait for port to be released before starting new server
 
     let opts = `--node ${node} --port ${port} ${args}`
-    let command = `exec node --expose-gc schemat/server/run.js ${opts}`
+    let command = `exec node --expose-gc --trace-uncaught --trace-warnings schemat/server/run.js ${opts}`
 
     // WARNING: The inner "exec" is NEEDED to pass the SIGTERM signal to the child "node" process, otherwise the kill()
     // later on will only stop the parent "/bin/sh" process, leaving the "node" process running in the background
