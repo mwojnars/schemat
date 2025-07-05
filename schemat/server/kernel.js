@@ -238,7 +238,6 @@ class Frame {
         schemat._print(`stopping agent ${agent} ...`)
 
         let stop = () => agent.__stop__(this.state)
-        // await this._frame_context(agent, stop)
         await agent.app_context(() => this._frame_context(agent, stop))
         schemat._print(`stopping agent ${agent} done`)
     }

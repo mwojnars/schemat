@@ -273,16 +273,20 @@ export class ServerSchemat extends Schemat {
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
         if (typeof db_id === 'object') db_id = db_id?.id
-        // this._print(`app_context() context id=${db_id}`)
+        // this._print(`app_context() db-context id=${db_id}`)
 
         if (!db_id && this.in_kernel_context()) return callback()
         if (db_id === this.current_context) return callback()
 
-        // this._print(`app_context() current_context=${this.current_context} db_id=${db_id}`)
+        // this._print(`app_context() switching db-context from ${this.current_context} to ${db_id} ...`)
         let app_id, db
         if (db_id) {
             db = (typeof db_id === 'object') ? db_id : this.get_object(db_id)
-            if (!db.is_loaded()) await db.load()
+            if (!db.is_loaded()) {
+                // this._print(`app_context() loading db object [${db_id}] ...`)
+                await db.load()
+                // this._print(`app_context() loading db object [${db_id}] done`)
+            }
             app_id = db?.application?.id
             // this._print(`app_context() this.app_id=${this.app_id} app_id=${app_id}`)
         }
@@ -291,6 +295,7 @@ export class ServerSchemat extends Schemat {
         // this._print(`app_context() found existing context: ${!!context}`)
 
         if (!context) {
+            // this._print(`app_context() creating new context: ${app_id}`)
             context = new ServerSchemat({...this.config, app: app_id}, this, db)
             await _schemat.run(context, () => context.boot())
 
@@ -301,10 +306,8 @@ export class ServerSchemat extends Schemat {
         // else if (context.booting) await context.booting
         // else if (context instanceof Promise) context = await context
 
-        // this._print(`app_context() new nested run() in context: ${context.app_id}`)  // ${context._db.id}
+        // this._print(`app_context() nested run() in context ${context.app_id}/${context._db.id}`)
         return _schemat.run(context, callback)
-
-        // return schemat === context ? callback() : await _schemat.run(context, callback)
     }
 
     /***  Agents  ***/
