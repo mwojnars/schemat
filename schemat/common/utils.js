@@ -63,8 +63,8 @@ export async function tryimport(path, property = null) {
     } catch(ex) {}
 }
 
-export const sleep = async sec => new Promise(resolve => setTimeout(resolve, sec * 1000))
-export const sleep_ms = async ms => new Promise(resolve => setTimeout(resolve, ms))
+export const sleep = async (sec=0) => new Promise(resolve => setTimeout(resolve, sec * 1000))
+export const sleep_ms = async (ms=0) => new Promise(resolve => setTimeout(resolve, ms))
 
 export async function delay(ms, callback) {
     /* Run callback() after a delay [ms] and return its result. */
