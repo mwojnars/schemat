@@ -143,18 +143,18 @@
   __category:
     "@": 21
   agents:
-    - worker: 1
-      id: 1010
     - worker: 2
       id: 1015
     - worker: 1
       id: 1026
-    - worker: 2
-      id: 1029
     - worker: 1
       id: 1032
     - worker: 2
       id: 1033
+    - worker: 2
+      id: 1029
+    - worker: 1
+      id: 1010
     - worker: 1
       id: 1001
       role: $leader
@@ -225,12 +225,12 @@
       id: 1015
     - worker: 2
       id: 1026
-    - worker: 1
-      id: 1030
     - worker: 2
       id: 1032
     - worker: 1
       id: 1033
+    - worker: 1
+      id: 1030
     - worker: 2
       id: 1037
     - worker: 1
