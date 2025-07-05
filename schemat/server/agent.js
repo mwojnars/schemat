@@ -152,8 +152,11 @@ export class WebServer extends Agent {
 
         let host = schemat.config.host || this.host || schemat.node.http_host
         let port = schemat.config.port || this.port || schemat.node.http_port
+        let addr = `http://${host}:${port}`
 
-        return xapp.listen(port, host, schemat.with_context(() => this._print(`listening at http://${host}:${port}`)))
+        let server = xapp.listen(port, host, schemat.with_context(() => this._print(`listening at ${addr}`)))
+        server.on('error', (err) => {this._print(`failed to listen at ${addr}:`, err.message)})
+        return server
     }
 
     async __start__() {
@@ -174,7 +177,7 @@ export class WebServer extends Agent {
 
     async _handle(req, res) {
         if (!['GET','POST'].includes(req.method)) return res.sendStatus(405)    // 405 Method Not Allowed
-        // print(`handle() worker ${process.pid} started: ${req.path}`)
+        // this._print(`handle() of ${req.method}:${req.path})`)
         // await session.start()
 
         // // redirection of HTTP to HTTPS
