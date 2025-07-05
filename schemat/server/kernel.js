@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import cluster from 'node:cluster'
 import {AsyncLocalStorage} from 'node:async_hooks'
 import yaml from 'yaml'
+import why from 'why-is-node-running'
 
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
@@ -179,7 +180,7 @@ class Frame {
             finally {
                 if (!this.stopping) await this._schedule_restart()
             }
-        }, ttl * 1000)
+        }, ttl * 1000).unref()
     }
 
     _cancel_restart() {
@@ -484,10 +485,16 @@ export class Kernel {
         this._closing = true
 
         let delay = this.node.agent_refresh_interval
-        if (cluster.isPrimary) schemat._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
+        if (cluster.isPrimary) {
+            schemat._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
+            why()
+        }
 
-        let timeout = 2 * delay         // exceeding this timeout may indicate a deadlock in one of child processes
-        setTimeout(() => {throw new Error(`exceeded timeout of ${timeout} seconds for shutting down`)}, timeout * 1000)
+        let timeout = 1 * delay         // exceeding this timeout may indicate a deadlock in one of child processes
+        setTimeout(() => {
+            why()
+            throw new Error(`exceeded timeout of ${timeout} seconds for shutting down`)
+        }, timeout * 1000)
 
         this.workers?.map(worker => worker.kill())
 
