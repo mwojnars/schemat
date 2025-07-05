@@ -1433,6 +1433,17 @@ export class WebObject {
         this.edit.if_version(this.__ver)
     }
 
+    // TODO: implement equivalents of MongoDB's operators:
+    //
+    // 'edit.min'(path, value) {}
+    // 'edit.max'(path, value) {}
+    // 'edit.mul'(path, factor) {}
+    // 'edit.push'(path, elem) {}
+    // 'edit.pop'(path) {}
+    // // 'edit.pull'(path, condition) {}
+    // 'edit.current_date'(path) {}
+
+
 
     /***  Actions  ***/
 
