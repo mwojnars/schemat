@@ -12,6 +12,7 @@ import {ServerSchemat} from "../core/schemat_srv.js";
 import {BootDatabase} from "../db/db.js";
 import {Agent} from "./agent.js";
 import {IPC_Mailbox} from "./node.js";
+import {ExitingNow} from "../common/errors.js";
 
 
 // print NODE_PATH:
@@ -493,7 +494,8 @@ export class Kernel {
         let timeout = 1 * delay         // exceeding this timeout may indicate a deadlock in one of child processes
         setTimeout(() => {
             why()
-            throw new Error(`exceeded timeout of ${timeout} seconds for shutting down`)
+            schemat._print(`exceeded timeout of ${timeout} seconds for shutting down`)
+            process.exit(1)
         }, timeout * 1000)
 
         this.workers?.map(worker => worker.kill())
@@ -504,9 +506,18 @@ export class Kernel {
                 worker.on('error', reject)
             })))
 
+        this.stop_calls()
         await this.stop_agents()
+
         schemat._print(`process closed`)
         process.exit(0)
+    }
+
+    stop_calls() {
+        /* Terminate ongoing IPC/RPC calls. */
+        let ex = new ExitingNow()
+        for (let _schemat of globalThis._contexts.values())
+            [..._schemat.on_exit].reverse().map(fn => fn(ex))
     }
 
     async stop_agents() {

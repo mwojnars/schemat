@@ -53,11 +53,12 @@ export class Mailbox {
             let id = ++this.message_id
             if (this.message_id >= Number.MAX_SAFE_INTEGER) this.message_id = 0
 
-            this.pending.set(id, resolve)
             this._send([id, msg])
+            this.pending.set(id, resolve)
+            if (this.timeout) this.timestamps.set(id, {timestamp: Date.now(), reject, msg})
 
-            if (this.timeout)           // add timeout for safety
-                this.timestamps.set(id, {timestamp: Date.now(), reject, msg})
+            schemat.on_exit.add(reject)
+            assert(schemat.on_exit.size < 1000)
         })
     }
 
@@ -70,8 +71,9 @@ export class Mailbox {
         const now = Date.now()
         for (const [id, {timestamp, reject, msg}] of this.timestamps.entries()) {
             if (now - timestamp > this.timeout) {
-                this.timestamps.delete(id)
+                schemat.on_exit.delete(reject)
                 this.pending.delete(id)
+                this.timestamps.delete(id)
                 reject(new Error(`response timeout for message no. ${id}, msg = ${JSON.stringify(msg)}`))
             }
         }
@@ -90,6 +92,7 @@ export class Mailbox {
         if (this.pending.has(id)) {
             this.pending.get(id)(result)        // resolve the promise with the returned result (can be undefined)
             this.pending.delete(id)
+            schemat.on_exit.delete(this.timestamps.get(id)?.reject)
             this.timestamps.delete(id)
         }
         else console.warn(`unknown response id: ${id}`)
