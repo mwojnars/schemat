@@ -80,7 +80,7 @@ export class ValueError extends ValidationError { static message = "incorrect va
 /**********************************************************************************************************************/
 
 export class InternalError extends BaseError {}
-export class ExitingNow extends BaseError {}
+export class StoppingNow extends BaseError {}
 
 export class NotImplemented extends InternalError {
     static message = "not implemented"

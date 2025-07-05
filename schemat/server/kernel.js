@@ -7,12 +7,12 @@ import why from 'why-is-node-running'
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {print, assert, T, sleep, fluctuate} from "../common/utils.js";
+import {StoppingNow} from "../common/errors.js";
 import {CustomMap} from "../common/structs.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {BootDatabase} from "../db/db.js";
 import {Agent} from "./agent.js";
 import {IPC_Mailbox} from "./node.js";
-import {ExitingNow} from "../common/errors.js";
 
 
 // print NODE_PATH:
@@ -178,9 +178,7 @@ class Frame {
         this.restart_timeout = setTimeout(async () => {
             try { await this.restart() }
             catch (ex) { schemat._print(`error restarting agent ${agent}:`, ex) }
-            finally {
-                if (!this.stopping) await this._schedule_restart()
-            }
+            finally { this._schedule_restart() }
         }, ttl * 1000).unref()
     }
 
@@ -281,7 +279,7 @@ class Frame {
 
         // handle paused/stopping state
         if (this.paused && command !== 'resume') await this.paused
-        if (this.stopping) throw new Error(`agent ${agent} is in the process of stopping`)
+        if (this.stopping) throw new StoppingNow(`agent ${agent} is in the process of stopping`)
 
         agent = this.agent
         let [_, func] = this._find_command(agent, command)      // `agent` may have been replaced while pausing, the existence of `command` must be verified again
@@ -506,8 +504,13 @@ export class Kernel {
                 worker.on('error', reject)
             })))
 
-        this.stop_calls()
-        await this.stop_agents()
+        try {
+            this.stop_calls()
+            await this.stop_agents()
+        }
+        catch (ex) {
+            if (!(ex instanceof StoppingNow)) throw ex
+        }
 
         schemat._print(`process closed`)
         process.exit(0)
@@ -515,13 +518,14 @@ export class Kernel {
 
     stop_calls() {
         /* Terminate ongoing IPC/RPC calls. */
-        let ex = new ExitingNow()
+        let ex = new StoppingNow(`the process is closing`)
         for (let _schemat of globalThis._contexts.values())
             [..._schemat.on_exit].reverse().map(fn => fn(ex))
     }
 
     async stop_agents() {
         /* Stop all agents. Do it in reverse order, because newer agents may depend on the older ones. */
+        // return Promise.all([...this.frames.values()].reverse().map(frame => frame.stop()))
         for (let [[id, role], frame] of [...this.frames.entries()].reverse()) {
             await frame.stop()
             this.frames.delete([id, role])
