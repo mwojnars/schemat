@@ -238,6 +238,7 @@ class Frame {
         schemat._print(`stopping agent ${agent} ...`)
 
         let stop = () => agent.__stop__(this.state)
+        // await this._frame_context(agent, stop)
         await agent.app_context(() => this._frame_context(agent, stop))
         schemat._print(`stopping agent ${agent} done`)
     }
@@ -484,10 +485,7 @@ export class Kernel {
         this._closing = true
 
         let delay = this.node.agent_refresh_interval
-        if (cluster.isPrimary) {
-            schemat._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
-            // why()
-        }
+        if (cluster.isPrimary) schemat._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
 
         let timeout = 1 * delay         // exceeding this timeout may indicate a deadlock in one of child processes
         setTimeout(() => {

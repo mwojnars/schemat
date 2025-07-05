@@ -1398,7 +1398,7 @@ export class WebObject {
     }
 
     'edit.delete'(path) {
-        /* Delete a property or a nested element inside a sub-catalog/map/array. */
+        /* Remove a property or nested element from a sub-catalog/map/array. */
         this.__data.delete(path)
     }
 
