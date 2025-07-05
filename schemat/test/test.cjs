@@ -195,22 +195,38 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
     })
 
     after(async function () {
-        this.timeout(40000)
-        print(`after() tests: closing browser...`)
+        this.timeout(30000)
+        print(`TESTS after(): closing browser...`)
         await browser?.close()
-        servers.map(server => server.kill())   // send SIGTERM to all servers
 
-        for (let server of servers.toReversed()) {
+        let exiting = servers.map(server => {
             let name = server.spawnargs?.[2]?.match(/node\.\d+/)?.[0]
-
-            print(`after() tests: removing listeners for server ${name}...`)
             server.removeAllListeners()
+            let exit = new Promise(resolve => server.on('exit', () => {
+                print(`TESTS after(): server ${name} exited`)
+                resolve()
+            }))
+            server.kill()           // send SIGTERM to server
 
-            print(`after() tests: waiting for server ${name} to exit...`)
-            await new Promise(resolve => {              // wait for server process to actually exit
-                server.on('exit', () => resolve())
-            })
-        }
+            print(`TESTS after(): waiting for server ${name} to exit...`)
+            return exit             // wait for server process to actually exit
+        })
+
+        await Promise.all(exiting)
+
+        // for (let server of servers.toReversed()) {
+        //     let name = server.spawnargs?.[2]?.match(/node\.\d+/)?.[0]
+        //
+        //     // print(`after() tests: removing listeners for server ${name}`)
+        //     server.removeAllListeners()
+        //
+        //     print(`after() tests: waiting for server ${name} to exit...`)
+        //     server.kill()                                   // send SIGTERM to all servers
+        //     exiting.push(new Promise(resolve => {           // wait for server process to actually exit
+        //         server.on('exit', () => resolve())
+        //     }))
+        //     print(`after() tests: server ${name} exited`)
+        // }
     })
 
     return () => ({server, servers, browser, page, messages})
