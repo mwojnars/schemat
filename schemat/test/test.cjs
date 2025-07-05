@@ -134,8 +134,8 @@ async function start_server(node, port, tcp_port, args = '') {
         {maxBuffer: 1024 * 1024 * 10},  // capture full output, 10MB buffer
         (error, stdout, stderr) => {
             if (error) console.error('\nSchemat server error:', error)
-            if (stderr) console.error('\nSchemat server stderr:', '\n' + stderr)
-            if (stdout) console.log('\nSchemat server stdout:', '\n' + stdout)
+            // if (stderr) console.error('\nSchemat server stderr:', '\n' + stderr)
+            // if (stdout) console.log('\nSchemat server stdout:', '\n' + stdout)
         })
 }
 
@@ -196,14 +196,20 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
 
     after(async function () {
         this.timeout(40000)
+        print(`after() tests: closing browser...`)
         await browser?.close()
         servers.map(server => server.kill())   // send SIGTERM to all servers
 
         for (let server of servers.toReversed()) {
+            let name = server.spawnargs?.[2]?.match(/node\.\d+/)?.[0]
+
+            print(`after() tests: removing listeners for server ${name}...`)
+            server.removeAllListeners()
+
+            print(`after() tests: waiting for server ${name} to exit...`)
             await new Promise(resolve => {              // wait for server process to actually exit
                 server.on('exit', () => resolve())
             })
-            server.removeAllListeners()
         }
     })
 
