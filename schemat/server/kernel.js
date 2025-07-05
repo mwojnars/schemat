@@ -489,7 +489,7 @@ export class Kernel {
 
         let timeout = 1 * delay         // exceeding this timeout may indicate a deadlock in one of child processes
         setTimeout(() => {
-            why()
+            // why()
             schemat._print(`exceeded timeout of ${timeout} seconds for shutting down`)
             process.exit(1)
         }, timeout * 1000)

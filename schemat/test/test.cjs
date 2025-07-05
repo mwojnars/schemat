@@ -203,10 +203,10 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
             let name = server.spawnargs?.[2]?.match(/node\.\d+/)?.[0]
             server.removeAllListeners()
             let exit = new Promise(resolve => server.on('exit', () => {
-                print(`TESTS after(): server ${name} exited`)
+                print(`TESTS after(): ${name} exited`)
                 resolve()
             }))
-            print(`TESTS after(): waiting for server ${name} to exit...`)
+            print(`TESTS after(): waiting for ${name} to exit...`)
             server.kill()               // send SIGTERM
             return exit
         })
