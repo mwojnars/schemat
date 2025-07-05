@@ -112,17 +112,6 @@ export class ServerSchemat extends Schemat {
         this._db ??= await this._cluster.database.load()
         assert(this._db.is_loaded())
 
-        // if (!this._db) {
-        //     assert(this._cluster)
-        //     let id = this._cluster.database.id
-        //     this.registry.delete_object(id)
-        //     this._db ??= await this.load(id)
-        //     assert(this._db.is_loaded())
-        //     this._cluster.__data.delete('database')
-        //     this._cluster.__meta.cache.delete('database')
-        //     assert(!this._cluster.database)
-        // }
-
         if (!this.parent) this.kernel_context = this._db.id
 
         await this._purge_registry()        // purge the cache of bootstrap objects and schedule periodical re-run
@@ -220,11 +209,6 @@ export class ServerSchemat extends Schemat {
 
         this.registry.erase_objects()
         this._db = await this._db.reload()
-
-        // let frames = [...this.kernel.frames.values()].filter(f => f.agent)
-        // this._print(`_erase_registry() reloading agents:`, frames.map(f => f.agent.id))
-        // for (let frame of frames)
-        //     frame.agent = await frame.agent.reload()
     }
 
     _analyse_object_graph(deep = true, skip_same_gen = true) {

@@ -148,8 +148,6 @@ class Frame {
 
     async start() {
         /* Start this.agent by calling its __start__(). */
-        // let agent = schemat.get_object(this.agent_id)
-        // if (!agent.is_loaded()) await agent.load()
         let {agent} = this
         schemat._print(`starting agent ${agent} ...`)
 
