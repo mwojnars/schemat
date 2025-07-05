@@ -71,9 +71,12 @@ export async function delay(ms, callback) {
     return new Promise(resolve => setTimeout(() => resolve(callback?.()), ms))
 }
 
-export async function timeout(ms, error = new Error('Timeout')) {
+export async function timeout(ms, error = new Error('Timeout'), unref = true) {
     /* Return a promise that rejects with `error` after `ms` milliseconds. */
-    return new Promise((_, reject) => setTimeout(() => reject(error), ms))
+    return new Promise((_, reject) => {
+        let t = setTimeout(() => reject(error), ms)
+        if (unref && SERVER) t.unref()
+    })
 }
 
 export function utc() {
