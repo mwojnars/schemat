@@ -120,7 +120,7 @@ export class TCP_Sender {
                 assert(socket && !(socket instanceof Promise))
                 socket.write(entry.message)
             }
-        }, retry_interval)
+        }, retry_interval).unref()
     }
 
     async stop() {

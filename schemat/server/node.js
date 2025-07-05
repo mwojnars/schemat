@@ -43,7 +43,7 @@ export class Mailbox {
 
         this.timeout = timeout          // timeout for waiting for a response
         this.timestamps = new Map()     // timestamps for pending requests
-        this.interval = timeout ? setInterval(() => this._check_timeouts(), timeout) : null
+        this.interval = timeout ? setInterval(() => this._check_timeouts(), timeout).unref() : null
     }
 
     send(msg, {wait = true} = {}) {

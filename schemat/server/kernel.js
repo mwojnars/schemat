@@ -487,7 +487,7 @@ export class Kernel {
         let delay = this.node.agent_refresh_interval
         if (cluster.isPrimary) {
             schemat._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
-            why()
+            // why()
         }
 
         let timeout = 1 * delay         // exceeding this timeout may indicate a deadlock in one of child processes
