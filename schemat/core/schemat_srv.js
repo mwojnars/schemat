@@ -263,7 +263,7 @@ export class ServerSchemat extends Schemat {
         return (...args) => _schemat.run(this, () => handler(...args))
     }
 
-    async app_context(db_id, callback) {
+    async app_context(db_or_id, callback) {
         /* Run callback() in the Schemat async context (`_schemat`) built around a specific database & app.
            If not yet created, this context (ServerSchemat instance) is created now and saved in
            globalThis._contexts for reuse by other requests. If `app_id` is missing, `this` is used as the context.
@@ -272,16 +272,24 @@ export class ServerSchemat extends Schemat {
 
            This method is used to set a custom request-specific context for RPC calls to agent methods.
          */
-        if (typeof db_id === 'object') db_id = db_id?.id
+        let app_id, db_id, db
+        if (db_or_id)
+            if (typeof db_or_id === 'object') {
+                db = db_or_id
+                db_id = db.id
+            }
+            else db_id = db_or_id
+
+        // if (typeof db_id === 'object') db_id = db_id?.id
         // this._print(`app_context() db-context id=${db_id}`)
 
         if (!db_id && this.in_kernel_context()) return callback()
         if (db_id === this.current_context) return callback()
 
         // this._print(`app_context() switching db-context from ${this.current_context} to ${db_id} ...`)
-        let app_id, db
         if (db_id) {
-            db = (typeof db_id === 'object') ? db_id : this.get_object(db_id)
+            // db = (typeof db_id === 'object') ? db_id : this.get_object(db_id)
+            db ??= this.get_object(db_id)
             if (!db.is_loaded()) {
                 // this._print(`app_context() loading db object [${db_id}] ...`)
                 await db.load()
