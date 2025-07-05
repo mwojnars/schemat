@@ -1387,19 +1387,19 @@ export class WebObject {
         this.__data.set(path, ...values)
     }
 
-    'edit.setkey'(path, key) {
-        /* Change the key of a property or nested element inside a sub-catalog/map. */
-        this.__data.setkey(path, key)
-    }
-
-    'edit.insert'(path, pos, key, value) {
-        /* Insert a new property or a nested element inside a sub-catalog/map/array. */
+    'edit.set_at'(path, pos, key, value) {
+        /* Insert a new property or a nested element inside a sub-catalog/map/array at a specific position, `pos`. */
         this.__data.insert(path, pos, key, value)
     }
 
-    'edit.delete'(path) {
+    'edit.unset'(path) {
         /* Remove a property or nested element from a sub-catalog/map/array. */
         this.__data.delete(path)
+    }
+
+    'edit.rename'(path, key) {
+        /* Change the key of a property or nested element inside a sub-catalog/map. */
+        this.__data.setkey(path, key)
     }
 
     'edit.move'(path, {pos, delta, count}) {

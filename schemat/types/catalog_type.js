@@ -376,7 +376,7 @@ export class CatalogTable extends Component {
         delete: async (pos) => {
             /* delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete */
             // TODO: lock/freeze/suspense the UI until the server responds to prevent user from making multiple modifications at the same time
-            await item.edit.delete([...path, pos]).save()
+            await item.edit.unset([...path, pos]).save()
             setEntries(prev => [...prev.slice(0,pos), ...prev.slice(pos+1)])
         },
 
@@ -418,15 +418,15 @@ export class CatalogTable extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (type.is_CATALOG()) item.edit.insert(path, pos, key, value).save()
+                if (type.is_CATALOG()) item.edit.set_at(path, pos, key, value).save()
                 else prev[pos].saveNew = (value) =>
-                    item.edit.insert(path, pos, key, value).save().then(() => unnew())
+                    item.edit.set_at(path, pos, key, value).save().then(() => unnew())
 
                 return [...prev]
             })
         },
         updateKey: (pos, newKey) => {
-            return item.edit.setkey([...path, pos], newKey).save()
+            return item.edit.rename([...path, pos], newKey).save()
         },
         updateValue: (pos, newValue, type) => {
             return item.edit.set([...path, pos], newValue).save()
