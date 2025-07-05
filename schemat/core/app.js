@@ -49,7 +49,7 @@ export class Application extends WebObject {
     }
 
     async _check_default_container() {
-        while (!schemat.app) await sleep()
+        while (!schemat.app) await sleep(0.1)
         let default_container = await this.resolve(this.default_path.slice(1))
 
         // check that default_path maps to a container...
