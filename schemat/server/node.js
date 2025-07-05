@@ -57,8 +57,9 @@ export class Mailbox {
             this.pending.set(id, resolve)
             if (this.timeout) this.timestamps.set(id, {timestamp: Date.now(), reject, msg})
 
-            schemat.on_exit.add(reject)
-            assert(schemat.on_exit.size < 1000)
+            // schemat.on_exit.add(reject)
+            // if (schemat.on_exit.size > 1000)
+            //     schemat._print(`WARNING schemat.on_exit.size = ${schemat.on_exit.size}`)
         })
     }
 
@@ -71,7 +72,7 @@ export class Mailbox {
         const now = Date.now()
         for (const [id, {timestamp, reject, msg}] of this.timestamps.entries()) {
             if (now - timestamp > this.timeout) {
-                schemat.on_exit.delete(reject)
+                // schemat.on_exit.delete(reject)   // WARN: here, `schemat` may be a different object than in send(), such deletion is incorrect!!
                 this.pending.delete(id)
                 this.timestamps.delete(id)
                 reject(new Error(`response timeout for message no. ${id}, msg = ${JSON.stringify(msg)}`))
@@ -92,7 +93,7 @@ export class Mailbox {
         if (this.pending.has(id)) {
             this.pending.get(id)(result)        // resolve the promise with the returned result (can be undefined)
             this.pending.delete(id)
-            schemat.on_exit.delete(this.timestamps.get(id)?.reject)
+            // schemat.on_exit.delete(this.timestamps.get(id)?.reject)
             this.timestamps.delete(id)
         }
         else console.warn(`unknown response id: ${id}`)

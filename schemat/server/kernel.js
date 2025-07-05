@@ -502,7 +502,7 @@ export class Kernel {
             })))
 
         try {
-            this.stop_calls()
+            // this.stop_calls()
             await this.stop_agents()
         }
         catch (ex) {
@@ -513,12 +513,12 @@ export class Kernel {
         process.exit(0)
     }
 
-    stop_calls() {
-        /* Terminate ongoing IPC/RPC calls. */
-        let ex = new StoppingNow(`the process is closing`)
-        for (let _schemat of globalThis._contexts.values())
-            [..._schemat.on_exit].reverse().map(fn => fn(ex))
-    }
+    // stop_calls() {
+    //     /* Terminate ongoing IPC/RPC calls. */
+    //     let ex = new StoppingNow(`the process is closing`)
+    //     for (let _schemat of globalThis._contexts.values())
+    //         [..._schemat.on_exit].reverse().map(fn => fn(ex))
+    // }
 
     async stop_agents() {
         /* Stop all agents. Do it in reverse order, because newer agents may depend on the older ones. */

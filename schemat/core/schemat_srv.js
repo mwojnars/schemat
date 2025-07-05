@@ -32,7 +32,7 @@ export class ServerSchemat extends Schemat {
     _generation     // current generation number: 1,2,3... increased during complete cache erasure
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
 
-    on_exit = new Set()     // callbacks to be executed when this process is exiting
+    // on_exit = new Set()     // callbacks to be executed when this process is exiting
 
 
     get db()        { return this._boot_db || this._db }
