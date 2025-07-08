@@ -386,7 +386,7 @@ export class Kernel {
     _closing                    // true if .stop() was called and the process is shutting down right now
 
     // web object of [Node] category that represents the physical node this process is running on
-    get node() { return this.root_frame.agent || this._node }
+    get node() { return this.root_frame.agent }
 
     get worker_id() {
         /* Numeric ID (1, 2, 3, ...) of the node's current worker process; 0 for the master process. */
@@ -413,7 +413,7 @@ export class Kernel {
 
         schemat.set_kernel(this)
         this.node_id = Number(opts['node'].split('.').pop())
-        this._node = await schemat.load(this.node_id)
+        // this._node = await schemat.load(this.node_id)
 
         // let node_file = './schemat/node.id'
         // let node_id = opts.node || Number(opts['node-dir'].split('.').pop()) || this._read_node_id(node_file)
