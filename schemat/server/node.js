@@ -150,29 +150,27 @@ class RPC_Request {
 }
 
 class RPC_Response {
-    static create(result, error) {
+    static create(ret, err) {
         /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response.
            Response format: {result, error, records}
          */
-        if (error) return JSONx.encode({error})
+        if (err) return JSONx.encode({err})
         let response = {}
         let records = schemat.tx?.dump_records()
 
-        if (result !== undefined) response.result = result
+        if (ret !== undefined) response.ret = ret
         if (records?.length) response.records = records
 
         return JSONx.encode(response)
-        // return JSONx.encode_checked(result)
     }
 
     static parse(response) {
         if (response === undefined) throw new Error(`missing RPC response`)
-        let {result, error, records} = JSONx.decode(response)
-        if (error) throw error
+        let {ret, err, records} = JSONx.decode(response)
+        if (err) throw err
         if (records?.length) schemat.register_changes(...records)
         // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
-        return result
-        // return JSONx.decode_checked(response)
+        return ret
     }
 }
 
