@@ -132,8 +132,49 @@ export class IPC_Mailbox extends Mailbox {
 
 /**********************************************************************************************************************/
 
-class RPC_Message {}
-class RPC_Response {}
+class RPC_Request {
+    static create(agent_id, cmd, args = [], opts) {
+        /* RPC message format: [type, agent_id, cmd, args, opts]. Added here in `opts`: app (application ID), tx (transaction info). */
+        let tx = schemat.tx?.dump_tx()
+        let ctx = schemat.db.id
+        if (opts.role === schemat.GENERIC_ROLE) delete opts.role        // default role is passed implicitly
+        opts = {...opts, ctx, tx}
+        return ['RPC', agent_id, cmd, JSONx.encode(args), opts]
+    }
+
+    static parse(request) {
+        let [type, agent_id, cmd, args, {role, tx, ctx}] = request
+        assert(type === 'RPC', `incorrect message type, expected RPC`)
+        return {type, agent_id, role, cmd, args: JSONx.decode(args), tx, ctx}
+    }
+}
+
+class RPC_Response {
+    static create(result, error) {
+        /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response.
+           Response format: {result, error, records}
+         */
+        if (error) return JSONx.encode({error})
+        let response = {}
+        let records = schemat.tx?.dump_records()
+
+        if (result !== undefined) response.result = result
+        if (records?.length) response.records = records
+
+        return JSONx.encode(response)
+        // return JSONx.encode_checked(result)
+    }
+
+    static parse(response) {
+        if (response === undefined) throw new Error(`missing RPC response`)
+        let {result, error, records} = JSONx.decode(response)
+        if (error) throw error
+        if (records?.length) schemat.register_changes(...records)
+        // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
+        return result
+        // return JSONx.decode_checked(response)
+    }
+}
 
 /**********************************************************************************************************************/
 
@@ -338,7 +379,7 @@ export class Node extends Agent {
                  not the direct recipient of the initial request (delegated RPC request, multi-hop RPC, asymmetric routing)
          */
         let agent_id = (typeof agent === 'object') ? agent.id : agent
-        let message = this._rpc_request(agent_id, cmd, args, opts)
+        let message = RPC_Request.create(agent_id, cmd, args, opts)
         // this._print("rpc_send():", JSON.stringify(message))
         if (opts.worker !== undefined) this._print(`rpc_send() opts.worker = ${opts.worker}`)
 
@@ -348,11 +389,11 @@ export class Node extends Agent {
             // -- this rule is important for loading data blocks during and after bootstrap
             if (!opts.broadcast) {
                 let frame = schemat.get_frame(agent_id, opts.role)
-                if (frame) return this._rpc_response_parse(await this.rpc_recv(message))
+                if (frame) return RPC_Response.parse(await this.rpc_recv(message))
             }
 
             let result = await this.ipc_send(MASTER, message)
-            return this._rpc_response_parse(result)
+            return RPC_Response.parse(result)
         }
         catch (ex) {
             this._print("rpc_send() FAILED request:", JSON.stringify(message))
@@ -364,7 +405,7 @@ export class Node extends Agent {
         /* Execute an RPC message addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        let {agent_id, role, cmd, args, ctx, tx} = this._rpc_request_parse(message)
+        let {agent_id, role, cmd, args, ctx, tx} = RPC_Request.parse(message)
         if (tx?.debug) this._print("rpc_recv():", JSON.stringify(message))
 
         role ??= schemat.GENERIC_ROLE
@@ -374,48 +415,48 @@ export class Node extends Agent {
         let frame = await this._find_frame(agent_id, role)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
 
-        return frame.exec(cmd, args, ctx, tx, out => this._rpc_response(out))
+        return frame.exec(cmd, args, ctx, tx, out => RPC_Response.create(out))
     }
 
-    _rpc_request(agent_id, cmd, args = [], opts) {
-        /* RPC message format: [type, agent_id, cmd, args, opts]. Added here in `opts`: app (application ID), tx (transaction info). */
-        let tx = schemat.tx?.dump_tx()
-        let ctx = schemat.db.id
-        if (opts.role === schemat.GENERIC_ROLE) delete opts.role        // default role is passed implicitly
-        opts = {...opts, ctx, tx}
-        return ['RPC', agent_id, cmd, JSONx.encode(args), opts]
-    }
-
-    _rpc_request_parse(request) {
-        let [type, agent_id, cmd, args, {role, tx, ctx}] = request
-        assert(type === 'RPC', `incorrect message type, expected RPC`)
-        return {type, agent_id, role, cmd, args: JSONx.decode(args), tx, ctx}
-    }
-
-    _rpc_response(result, error) {
-        /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response.
-           Response format: {result, error, records}
-         */
-        if (error) return JSONx.encode({error})
-        let response = {}
-        let records = schemat.tx?.dump_records()
-
-        if (result !== undefined) response.result = result
-        if (records?.length) response.records = records
-
-        return JSONx.encode(response)
-        // return JSONx.encode_checked(result)
-    }
-
-    _rpc_response_parse(response) {
-        if (response === undefined) throw new Error(`missing RPC response`)
-        let {result, error, records} = JSONx.decode(response)
-        if (error) throw error
-        if (records?.length) schemat.register_changes(...records)
-        // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
-        return result
-        // return JSONx.decode_checked(response)
-    }
+    // _rpc_request(agent_id, cmd, args = [], opts) {
+    //     /* RPC message format: [type, agent_id, cmd, args, opts]. Added here in `opts`: app (application ID), tx (transaction info). */
+    //     let tx = schemat.tx?.dump_tx()
+    //     let ctx = schemat.db.id
+    //     if (opts.role === schemat.GENERIC_ROLE) delete opts.role        // default role is passed implicitly
+    //     opts = {...opts, ctx, tx}
+    //     return ['RPC', agent_id, cmd, JSONx.encode(args), opts]
+    // }
+    //
+    // _rpc_request_parse(request) {
+    //     let [type, agent_id, cmd, args, {role, tx, ctx}] = request
+    //     assert(type === 'RPC', `incorrect message type, expected RPC`)
+    //     return {type, agent_id, role, cmd, args: JSONx.decode(args), tx, ctx}
+    // }
+    //
+    // _rpc_response(result, error) {
+    //     /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response.
+    //        Response format: {result, error, records}
+    //      */
+    //     if (error) return JSONx.encode({error})
+    //     let response = {}
+    //     let records = schemat.tx?.dump_records()
+    //
+    //     if (result !== undefined) response.result = result
+    //     if (records?.length) response.records = records
+    //
+    //     return JSONx.encode(response)
+    //     // return JSONx.encode_checked(result)
+    // }
+    //
+    // _rpc_response_parse(response) {
+    //     if (response === undefined) throw new Error(`missing RPC response`)
+    //     let {result, error, records} = JSONx.decode(response)
+    //     if (error) throw error
+    //     if (records?.length) schemat.register_changes(...records)
+    //     // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
+    //     return result
+    //     // return JSONx.decode_checked(response)
+    // }
 
 
     /* IPC: vertical communication between master/worker processes */
@@ -431,7 +472,7 @@ export class Node extends Agent {
 
         if (type === 'SYS') return this.sys_recv(message)
         if (type === 'RPC') {
-            let {agent_id, role} = this._rpc_request_parse(message)
+            let {agent_id, role} = RPC_Request.parse(message)
             // this._print(`ipc_master():`, `agent_id=${agent_id} method=${method} args=${args}`)
 
             // check if the target object is deployed here on this node, then no need to look any further
@@ -511,7 +552,7 @@ export class Node extends Agent {
         // this._print(`tcp_recv():`, JSON.stringify(message))
 
         if (type === 'RPC') {
-            let {agent_id, role} = this._rpc_request_parse(message)
+            let {agent_id, role} = RPC_Request.parse(message)
 
             // find out which process (worker >= 1 or master = 0), has the `agent_id` agent deployed
 
