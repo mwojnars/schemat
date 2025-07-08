@@ -132,6 +132,11 @@ export class IPC_Mailbox extends Mailbox {
 
 /**********************************************************************************************************************/
 
+class RPC_Message {}
+class RPC_Response {}
+
+/**********************************************************************************************************************/
+
 export class Node extends Agent {
     /* Node of a Schemat cluster. Technically, each node is a local (master) process launched independently
        on a particular machine, together with its child (worker) processes. Nodes communicate with each other
@@ -231,7 +236,9 @@ export class Node extends Agent {
                 worker = new_worker
             }
             await this.sys_send(worker, 'START_AGENT', id, role)
-            // await this.$worker(worker)._start_agent(id, role)
+            // await this.sys_send(worker, '$worker._start_agent', id, role)
+            // await this.$worker({worker, local: true})._start_agent(id, role)
+            // await this.$local(worker)._start_agent(id, role)
         }
     }
 
