@@ -287,15 +287,14 @@ class Frame {
 
         let callB = async () => {
             // agent._print(`exec() of ${method}(${args}) context=${schemat.current_context}`)
-            let result = await this._tracked(this._frame_context(agent, callA))
-            return callback ? callback(result) : result
-        }
-
-        return agent.app_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
-            .catch(ex => {
-                agent._print(`exec() of ${method}(${args}) FAILED:`, ex)
-                throw ex
+            let error, result = await this._tracked(this._frame_context(agent, callA)).catch(ex => {
+                if (!callback) throw ex
+                agent._print(`exec() of ${method}(${args}) FAILED, propagating to caller:`, ex)
+                error = ex
             })
+            return callback ? callback(result, error) : result
+        }
+        return agent.app_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
     }
 
     _find_command(agent, command) {

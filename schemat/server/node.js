@@ -415,7 +415,7 @@ export class Node extends Agent {
         let frame = await this._find_frame(agent_id, role)
         if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
 
-        return frame.exec(cmd, args, ctx, tx, out => RPC_Response.create(out))
+        return frame.exec(cmd, args, ctx, tx, (out, err) => RPC_Response.create(out, err))
     }
 
 
