@@ -454,12 +454,29 @@ export class Kernel {
 
         // on master, wait for other agents (in child processes) to start; only then the TCP receiver can be started, as the last step of boot up
         if (this.is_master()) {
-            await state.starting_agents
+            await this._start_agents(state.agents)
+            // await state.starting_agents
             // await tcp_receiver.start(this.node.tcp_port)
             // this._boot_done()
         }
+    }
 
-        // await schemat._erase_registry()
+    async _start_agents(agents) {
+        /* Send SYS signals down to worker processes to make them start particular `agents`. */
+        let num_workers = this.workers.length
+        for (let {worker, id, role} of agents) {
+            assert(id)
+            // adjust the `worker` index if it does not match a valid worker ID (should be in 1,2,...,num_workers)
+            if (worker < 1 || worker > num_workers) {
+                let new_worker = (worker-1) % num_workers + 1
+                this._print(`_start_agents(): adjusted worker process index of agent [${id}] from #${worker} to #${new_worker}`)
+                worker = new_worker
+            }
+            await this.node.sys_send(worker, 'START_AGENT', id, role)
+            // await this.sys_send(worker, '$worker._start_agent', id, role)
+            // await this.$worker({worker, local: true})._start_agent(id, role)
+            // await this.$local(worker)._start_agent(id, role)
+        }
     }
 
     async start_agent(id, role) {

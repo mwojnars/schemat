@@ -226,7 +226,7 @@ export class Node extends Agent {
 
     async __load__() {
         let agents = this.agents || []
-        if (SERVER && schemat.booting)      // core agents (ex. data blocks) must be loaded from bootstrap DB; cluster object NOT loaded to avoid cyclic dependency
+        if (SERVER && schemat.booting)      // core agents (ex. data blocks) must be loaded initially from bootstrap DB; NOT a cluster object to avoid cyclic dependency
             await Promise.all(agents.map(({id}) => id !== schemat.cluster_id && schemat.load(id)))
     }
 
@@ -246,15 +246,15 @@ export class Node extends Agent {
         await tcp_receiver.start(this.tcp_port)
 
         let agents = this.agents
-        let starting_agents = this._start_agents(agents)    // a promise
+        // let starting_agents = this._start_agents(agents)    // a promise
 
-        return {tcp_sender, tcp_receiver, agents, starting_agents}
+        return {tcp_sender, tcp_receiver, agents}
     }
 
     async __restart__(state) {
-        state = {...state}
+        // state = {...state}
         // state.agents = this.agents   -- should update agents configuration from DB, or not?
-        delete state.starting_agents
+        // delete state.starting_agents
         return state
     }
 
@@ -264,22 +264,22 @@ export class Node extends Agent {
         await tcp_sender.stop()
     }
 
-    async _start_agents(agents) {
-        /* Send SYS signals down to worker processes to make them start particular `agents`. */
-        for (let {worker, id, role} of agents) {
-            assert(id)
-            // adjust the `worker` index if it does not match a valid worker ID (should be in 1,2,...,num_workers)
-            if (worker < 1 || worker > this.num_workers) {
-                let new_worker = (worker-1) % this.num_workers + 1
-                this._print(`_start_agents(): adjusted worker process index of agent [${id}] from #${worker} to #${new_worker}`)
-                worker = new_worker
-            }
-            await this.sys_send(worker, 'START_AGENT', id, role)
-            // await this.sys_send(worker, '$worker._start_agent', id, role)
-            // await this.$worker({worker, local: true})._start_agent(id, role)
-            // await this.$local(worker)._start_agent(id, role)
-        }
-    }
+    // async _start_agents(agents) {
+    //     /* Send SYS signals down to worker processes to make them start particular `agents`. */
+    //     for (let {worker, id, role} of agents) {
+    //         assert(id)
+    //         // adjust the `worker` index if it does not match a valid worker ID (should be in 1,2,...,num_workers)
+    //         if (worker < 1 || worker > this.num_workers) {
+    //             let new_worker = (worker-1) % this.num_workers + 1
+    //             this._print(`_start_agents(): adjusted worker process index of agent [${id}] from #${worker} to #${new_worker}`)
+    //             worker = new_worker
+    //         }
+    //         await this.sys_send(worker, 'START_AGENT', id, role)
+    //         // await this.sys_send(worker, '$worker._start_agent', id, role)
+    //         // await this.$worker({worker, local: true})._start_agent(id, role)
+    //         // await this.$local(worker)._start_agent(id, role)
+    //     }
+    // }
 
     // _place_agents(agents) {
     //     /* For each process (master = 0, workers = 1,2,3...), create a list of agent IDs that should be running on this process.
