@@ -133,6 +133,8 @@ export class JSONx {
             let state
             if (baseclass === Map)
                 state = this.encode_object(Object.fromEntries(obj.entries()))
+            else if (baseclass === Error)
+                state = this.encode_error(obj)
             else {
                 state = getstate(obj)
                 state = (obj !== state) ? this.encode(state) : this.encode_object(state)
@@ -259,12 +261,11 @@ export class JSONx {
     }
 
     encode_error(err) {
-        return {
-            message: err.message,
-            stack: err.stack,
-            name: err.name,
-            code: err.code,
-        }
+        let state = {}
+        if (err.message) state.message = err.message
+        if (err.stack) state.stack = err.stack
+        if (err.code) state.code = err.code
+        return state
     }
 }
 
