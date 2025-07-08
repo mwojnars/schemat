@@ -231,6 +231,7 @@ export class Node extends Agent {
                 worker = new_worker
             }
             await this.sys_send(worker, 'START_AGENT', id, role)
+            // await this.$worker(worker)._start_agent(id, role)
         }
     }
 
@@ -332,6 +333,7 @@ export class Node extends Agent {
         let agent_id = (typeof agent === 'object') ? agent.id : agent
         let message = this._rpc_request(agent_id, cmd, args, opts)
         // this._print("rpc_send():", JSON.stringify(message))
+        if (opts.worker !== undefined) this._print(`rpc_send() opts.worker = ${opts.worker}`)
 
         assert(schemat.kernel.frames.size, `kernel not yet initialized`)
         try {
@@ -553,6 +555,14 @@ export class Node extends Agent {
 
 
     /* list of SYS signals */
+
+    async '$worker._start_agent'({}, agent_id, role) {
+        await schemat.kernel.start_agent(agent_id, role)
+    }
+
+    async '$worker._stop_agent'({}, agent_id, role) {
+        await schemat.kernel.stop_agent(agent_id, role)
+    }
 
     async START_AGENT(agent_id, role) {
         await schemat.kernel.start_agent(agent_id, role)
