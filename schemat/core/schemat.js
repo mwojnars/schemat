@@ -156,13 +156,14 @@ export class Schemat {
         let builtin = this.builtin = new Classpath()
 
         builtin.set(":Map", Map)                                    // standard JS classes have an empty file part of the path
+        builtin.set(":Error", Error)
 
         await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:WebObject"
         await builtin.fetch("./app.js")
         await builtin.fetch("../std/files.js")
         await builtin.fetch("../std/containers.js")
         await builtin.fetch("../common/structs.js")
-        // await builtin.fetch("../common/errors.js")       // needed if mJsonxError is used for transmitting service errors back to client
+        await builtin.fetch("../common/errors.js")                  // for serialization of errors in responses
 
         let accept = (name) => name.toUpperCase() === name
         await builtin.fetch("../types/type.js", {accept})

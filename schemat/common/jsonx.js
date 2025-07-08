@@ -261,10 +261,12 @@ export class JSONx {
     }
 
     encode_error(err) {
+        /* Attributes of Error are not enumerable and need preprocessing to serialize properly. */
         let state = {}
         if (err.message) state.message = err.message
         if (err.stack) state.stack = err.stack
         if (err.code) state.code = err.code
+        if (err.cause) state.cause = this.encode(err.cause)
         return state
     }
 }

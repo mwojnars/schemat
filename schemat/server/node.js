@@ -164,16 +164,6 @@ class RPC_Response {
         return JSONx.encode(response)
     }
 
-    static _encode_error(err) {
-        // attributes of Error are not enumerable and need preprocessing to serialize properly
-        let encoded = {
-            message: err.message,
-            stack: err.stack,
-            name: err.name,
-            code: err.code,
-        }
-    }
-
     static parse(response) {
         if (response === undefined) throw new Error(`missing RPC response`)
         let {ret, err, records} = JSONx.decode(response)
