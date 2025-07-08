@@ -226,7 +226,8 @@ export class Node extends Agent {
 
     async __load__() {
         let agents = this.agents || []
-        if (SERVER) await Promise.all(agents.map(({id}) => id !== schemat.cluster_id && schemat.load(id)))   // do NOT preload a cluster object to avoid cyclic dependency
+        if (SERVER && schemat.booting)
+            await Promise.all(agents.map(({id}) => id !== schemat.cluster_id && schemat.load(id)))   // do NOT preload a cluster object to avoid cyclic dependency
         // if (SERVER) await Promise.all(agents.map(({agent}) => agent.is_not(schemat.cluster_id) && agent.load()))   // do NOT preload a cluster object to avoid cyclic dependency
         // if (SERVER) await Promise.all(this.agents.map(({boot, agent}) => boot && agent.load()))     // preload the agents marked with boot=true, they're needed during node bootstrap and must be loaded from the boot DB when it's still available
     }
@@ -563,13 +564,13 @@ export class Node extends Agent {
 
     /* list of SYS signals */
 
-    async '$worker._start_agent'({}, agent_id, role) {
-        await schemat.kernel.start_agent(agent_id, role)
-    }
-
-    async '$worker._stop_agent'({}, agent_id, role) {
-        await schemat.kernel.stop_agent(agent_id, role)
-    }
+    // async '$worker._start_agent'({}, agent_id, role) {
+    //     await schemat.kernel.start_agent(agent_id, role)
+    // }
+    //
+    // async '$worker._stop_agent'({}, agent_id, role) {
+    //     await schemat.kernel.stop_agent(agent_id, role)
+    // }
 
     async START_AGENT(agent_id, role) {
         await schemat.kernel.start_agent(agent_id, role)
