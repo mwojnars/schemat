@@ -6,6 +6,13 @@ import {bin_to_hex, hex_to_bin} from "./binary.js"
 
 /*************************************************************************************************/
 
+const FLAG_BIGINT = "%big"     // special value of ATTR_CLASS that informs the value is a BigInt decimal string
+const FLAG_BIN   = "%hex"      // special value of ATTR_CLASS that informs the value is a hex-encoded Uint8Array instance
+const FLAG_TYPE  = "%class"    // special value of ATTR_CLASS that informs the value is a class rather than an instance
+const FLAG_WRAP  = "%wrap"     // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
+const ATTR_CLASS = "@"         // special attribute appended to object state to store a class name (with package) of the object being encoded
+const ATTR_STATE = "="         // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
+
 export class State {
     /* Wrapper for any object that needs to be encoded/decoded and serialized/deserialized, back and forth, via JSONx.
        Internally, it keeps the stringified state of the object only, but gives access to its intermediate forms via getters:
@@ -29,12 +36,6 @@ export class JSONx {
     Dump & load arbitrary objects to/from JSON strings.
     Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
     */
-    static FLAG_BIGINT = "%big"     // special value of ATTR_CLASS that informs the value is a BigInt decimal string
-    static FLAG_BIN   = "%hex"      // special value of ATTR_CLASS that informs the value is a hex-encoded Uint8Array instance
-    static FLAG_TYPE  = "%class"    // special value of ATTR_CLASS that informs the value is a class rather than an instance
-    static FLAG_WRAP  = "%wrap"     // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
-    static ATTR_CLASS = "@"         // special attribute appended to object state to store a class name (with package) of the object being encoded
-    static ATTR_STATE = "="         // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
 
     #references = new Set()          // track object references to detect cycles
 
@@ -106,27 +107,27 @@ export class JSONx {
 
             if (T.isPlain(obj)) {
                 obj = this.encode_object(obj)
-                if (!(JSONx.ATTR_CLASS in obj)) return obj
-                return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
+                if (!(ATTR_CLASS in obj)) return obj
+                return {[ATTR_STATE]: obj, [ATTR_CLASS]: FLAG_WRAP}
             }
 
             if (baseclass === schemat.WebObject) {
-                if (obj.__index_id) return {[JSONx.ATTR_CLASS]: obj.__index_id}     // ref to a newly created object uses __provisional_id
+                if (obj.__index_id) return {[ATTR_CLASS]: obj.__index_id}     // ref to a newly created object uses __provisional_id
                 throw new Error(`can't encode a reference to a newborn object without a provisional ID: ${obj}`)
             }
 
             if (obj instanceof Uint8Array) {
                 let state = bin_to_hex(obj)
-                return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_BIN}
+                return {[ATTR_STATE]: state, [ATTR_CLASS]: FLAG_BIN}
             }
             
             // if (typeof obj === 'bigint')    // handle BigInt values
             if (baseclass === BigInt)
-                return {[JSONx.ATTR_STATE]: obj.toString(), [JSONx.ATTR_CLASS]: JSONx.FLAG_BIGINT}
+                return {[ATTR_STATE]: obj.toString(), [ATTR_CLASS]: FLAG_BIGINT}
 
             if (T.isClass(obj)) {
                 let state = schemat.get_classpath(obj)
-                return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
+                return {[ATTR_STATE]: state, [ATTR_CLASS]: FLAG_TYPE}
             }
 
             let state
@@ -138,11 +139,11 @@ export class JSONx {
             }
 
             // wrap up the state in a dict, if needed, and append class designator
-            if (!state || typeof state !== 'object' || Array.isArray(state) || JSONx.ATTR_CLASS in state)
-                state = {[JSONx.ATTR_STATE]: state}
+            if (!state || typeof state !== 'object' || Array.isArray(state) || ATTR_CLASS in state)
+                state = {[ATTR_STATE]: state}
 
             let t = T.getPrototype(obj)
-            state[JSONx.ATTR_CLASS] = schemat.get_classpath(t)
+            state[ATTR_CLASS] = schemat.get_classpath(t)
 
             return state
         } finally {
@@ -158,24 +159,24 @@ export class JSONx {
                  object after this call may indirectly change the result (!).
         */
         let _state = state
-        let plain = T.isPlain(state)        // plain JS object (no custom class)
-        let type = state?.[JSONx.ATTR_CLASS]
+        let plain = T.isPlain(state)            // plain JS object (no custom class)
+        let type = state?.[ATTR_CLASS]
         let cls
 
         if (plain && type) {
-            if (type === JSONx.FLAG_BIN)            // decoding of a Uint8Array
-                return hex_to_bin(state[JSONx.ATTR_STATE])
+            if (type === FLAG_BIN)              // decoding of a Uint8Array
+                return hex_to_bin(state[ATTR_STATE])
 
-            if (type === JSONx.FLAG_BIGINT)         // handle BigInt decoding
-                return BigInt(state[JSONx.ATTR_STATE])
+            if (type === FLAG_BIGINT)           // handle BigInt decoding
+                return BigInt(state[ATTR_STATE])
 
-            if (type === JSONx.FLAG_TYPE) {         // decoding of a class object
-                let classname = state[JSONx.ATTR_STATE]
+            if (type === FLAG_TYPE) {           // decoding of a class object
+                let classname = state[ATTR_STATE]
                 return schemat.get_builtin(classname)
             }
-            if (type === JSONx.FLAG_WRAP) {         // decoding of a wrapped-up object that contained a pre-existing '@' key
-                if (JSONx.ATTR_STATE in state)
-                    state = state[JSONx.ATTR_STATE]
+            if (type === FLAG_WRAP) {           // decoding of a wrapped-up object that contained a pre-existing '@' key
+                if (ATTR_STATE in state)
+                    state = state[ATTR_STATE]
                 return this.decode_object(state)
             }
         }
@@ -186,11 +187,11 @@ export class JSONx {
 
         else if (type) {
             state = {...state}                      // avoid mutating the original `state` object when doing T.pop() below
-            let classname = T.pop(state, JSONx.ATTR_CLASS)
-            if (JSONx.ATTR_STATE in state) {
-                let state_attr = T.pop(state, JSONx.ATTR_STATE)
+            let classname = T.pop(state, ATTR_CLASS)
+            if (ATTR_STATE in state) {
+                let state_attr = T.pop(state, ATTR_STATE)
                 if (T.notEmpty(state))
-                    throw new Error(`invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`)
+                    throw new Error(`invalid serialized state, expected only ${ATTR_CLASS} and ${ATTR_STATE} special keys but got others: ${state}`)
                 state = state_attr
             }
             if (T.isNumber(classname)) {                // `classname` can be a web object ID, not a class name
