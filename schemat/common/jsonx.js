@@ -93,7 +93,7 @@ export class JSONx {
             throw new Error(`cyclic reference detected while encoding object: ${obj}`)
         this.#references.add(obj)
 
-        // find the top-most base class of the object
+        // find the top-most base class of the object to avoid repeated instanceof checks against different base types
         let baseclass
         let proto = obj && (typeof obj === 'object') && Object.getPrototypeOf(obj)
         while (proto && proto !== Object.prototype) {
@@ -103,7 +103,6 @@ export class JSONx {
 
         try {
             if (baseclass === Array) return this.encode_array(obj)
-            // if (Array.isArray(obj)) return this.encode_array(obj)
 
             if (T.isPlain(obj)) {
                 obj = this.encode_object(obj)
@@ -235,6 +234,7 @@ export class JSONx {
         /* Recursively decode all non-primitive objects inside an array. */
         return state.map(v => this.decode(v))
     }
+
     encode_object(obj) {
         /* Recursively encode all properties of a plain object and return as a new object (`obj` stays untouched).
            Skip properties with `undefined` value.
@@ -255,6 +255,15 @@ export class JSONx {
     decode_object(state) {
         /* Recursively decode all non-primitive objects inside `state` dictionary. */
         return mapEntries(state, (k, v) => [k, this.decode(v)])
+    }
+
+    encode_error(err) {
+        return {
+            message: err.message,
+            stack: err.stack,
+            name: err.name,
+            code: err.code,
+        }
     }
 }
 
