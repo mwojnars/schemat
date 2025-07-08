@@ -528,6 +528,14 @@ export class Kernel {
             this.frames.delete([id, role])
         }
     }
+
+    async stop_agent(id, role) {
+        /* Stop all agents. Do it in reverse order, because newer agents may depend on the older ones. */
+        // return Promise.all([...this.frames.values()].reverse().map(frame => frame.stop()))
+        let frame = this.frames.get([id, role])
+        await frame.stop()
+        this.frames.delete([id, role])
+    }
 }
 
 /**********************************************************************************************************************/
