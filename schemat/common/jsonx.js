@@ -111,7 +111,7 @@ export class JSONx {
                 return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_WRAP}
             }
 
-            if (obj instanceof schemat.WebObject) {
+            if (baseclass === schemat.WebObject) {
                 if (obj.__index_id) return {[JSONx.ATTR_CLASS]: obj.__index_id}     // ref to a newly created object uses __provisional_id
                 throw new Error(`can't encode a reference to a newborn object without a provisional ID: ${obj}`)
             }
@@ -121,7 +121,8 @@ export class JSONx {
                 return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_BIN}
             }
             
-            if (typeof obj === 'bigint')    // handle BigInt values
+            // if (typeof obj === 'bigint')    // handle BigInt values
+            if (baseclass === BigInt)
                 return {[JSONx.ATTR_STATE]: obj.toString(), [JSONx.ATTR_CLASS]: JSONx.FLAG_BIGINT}
 
             if (T.isClass(obj)) {
@@ -130,7 +131,7 @@ export class JSONx {
             }
 
             let state
-            if (obj instanceof Map)
+            if (baseclass === Map)
                 state = this.encode_object(Object.fromEntries(obj.entries()))
             else {
                 state = getstate(obj)
