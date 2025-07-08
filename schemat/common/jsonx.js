@@ -94,7 +94,7 @@ export class JSONx {
         this.#references.add(obj)
 
         try {
-            if (T.isArray(obj)) return this.encode_array(obj)
+            if (Array.isArray(obj)) return this.encode_array(obj)
 
             if (T.isPlain(obj)) {
                 obj = this.encode_object(obj)
