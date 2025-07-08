@@ -1,4 +1,5 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
+import {RPC_Error} from "../common/errors.js";
 import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../common/catalog.js";
 import {WebObject} from "../core/object.js";
@@ -167,10 +168,7 @@ class RPC_Response {
     static parse(response) {
         if (response === undefined) throw new Error(`missing RPC response`)
         let {ret, err, records} = JSONx.decode(response)
-        if (err) {
-            Error.captureStackTrace?.(err)
-            throw err
-        }
+        if (err) throw new RPC_Error("peer error during RPC call", {cause: err})
         if (records?.length) schemat.register_changes(...records)
         // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
         return ret

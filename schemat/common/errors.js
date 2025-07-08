@@ -79,8 +79,13 @@ export class ValueError extends ValidationError { static message = "incorrect va
 
 /**********************************************************************************************************************/
 
+export class ClusterError extends BaseError {}
+export class RPC_Error extends ClusterError {}
+export class StoppingNow extends ClusterError {}
+
+/**********************************************************************************************************************/
+
 export class InternalError extends BaseError {}
-export class StoppingNow extends BaseError {}
 
 export class NotImplemented extends InternalError {
     static message = "not implemented"
