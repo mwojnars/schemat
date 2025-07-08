@@ -93,8 +93,17 @@ export class JSONx {
             throw new Error(`cyclic reference detected while encoding object: ${obj}`)
         this.#references.add(obj)
 
+        // find the top-most base class of the object
+        let baseclass
+        let proto = obj && (typeof obj === 'object') && Object.getPrototypeOf(obj)
+        while (proto && proto !== Object.prototype) {
+            baseclass = proto.constructor
+            proto = Object.getPrototypeOf(proto)
+        }
+
         try {
-            if (Array.isArray(obj)) return this.encode_array(obj)
+            if (baseclass === Array) return this.encode_array(obj)
+            // if (Array.isArray(obj)) return this.encode_array(obj)
 
             if (T.isPlain(obj)) {
                 obj = this.encode_object(obj)
