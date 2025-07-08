@@ -418,46 +418,6 @@ export class Node extends Agent {
         return frame.exec(cmd, args, ctx, tx, out => RPC_Response.create(out))
     }
 
-    // _rpc_request(agent_id, cmd, args = [], opts) {
-    //     /* RPC message format: [type, agent_id, cmd, args, opts]. Added here in `opts`: app (application ID), tx (transaction info). */
-    //     let tx = schemat.tx?.dump_tx()
-    //     let ctx = schemat.db.id
-    //     if (opts.role === schemat.GENERIC_ROLE) delete opts.role        // default role is passed implicitly
-    //     opts = {...opts, ctx, tx}
-    //     return ['RPC', agent_id, cmd, JSONx.encode(args), opts]
-    // }
-    //
-    // _rpc_request_parse(request) {
-    //     let [type, agent_id, cmd, args, {role, tx, ctx}] = request
-    //     assert(type === 'RPC', `incorrect message type, expected RPC`)
-    //     return {type, agent_id, role, cmd, args: JSONx.decode(args), tx, ctx}
-    // }
-    //
-    // _rpc_response(result, error) {
-    //     /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response.
-    //        Response format: {result, error, records}
-    //      */
-    //     if (error) return JSONx.encode({error})
-    //     let response = {}
-    //     let records = schemat.tx?.dump_records()
-    //
-    //     if (result !== undefined) response.result = result
-    //     if (records?.length) response.records = records
-    //
-    //     return JSONx.encode(response)
-    //     // return JSONx.encode_checked(result)
-    // }
-    //
-    // _rpc_response_parse(response) {
-    //     if (response === undefined) throw new Error(`missing RPC response`)
-    //     let {result, error, records} = JSONx.decode(response)
-    //     if (error) throw error
-    //     if (records?.length) schemat.register_changes(...records)
-    //     // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
-    //     return result
-    //     // return JSONx.decode_checked(response)
-    // }
-
 
     /* IPC: vertical communication between master/worker processes */
 
