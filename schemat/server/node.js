@@ -248,9 +248,7 @@ export class Node extends Agent {
         return {tcp_sender, tcp_receiver, agents: this.agents}
     }
 
-    async __restart__(state) {
-        return state
-    }
+    async __restart__(state) { return state }
 
     async __stop__({tcp_sender, tcp_receiver}) {
         if (this.is_worker()) return

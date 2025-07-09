@@ -607,6 +607,7 @@ export class WebObject {
 
         // data is loaded or being loaded right now? wait for the previous call to complete instead of starting a new one
         if (active || loading) return loading || this
+        if (this.__meta.obsolete) throw new Error(`trying to load content to an obsolete instance of ${this}`)
 
         // keep and return a Promise that will eventually load the data; this is needed to avoid race conditions
         this.__meta.loading = loading = this._load(opts)

@@ -79,7 +79,7 @@ export class Cluster extends Agent {
     async '$leader.create_node'({}, props = {}) {
         /* Create a new Node object and add it to this cluster.
            The newly created node is *first* saved to the DB and only later added to the local state; if we tried to change
-           this order, the state would contain a newborn object (no ID) for some time, which breaks the state's consistency!
+           this order, the state would contain a newborn object (no ID) for a while breaking the state's consistency!
 
            GENERAL RULES:
            1) When doing mixed DB + $state modifications, first update the DB, and the local state only later. In this way,
@@ -96,10 +96,11 @@ export class Cluster extends Agent {
 
         let args = typeof props === 'string' ? [{}, props] : [props]
         let node = await schemat.std.Node.action.insert(...args)
-        await node.load()
+        await node.reload()
 
         this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
 
+        // FIXME: update .node_ids not .nodes
         let nodes = [...this.$state.nodes, node]
         await this.action.update({nodes})
 
