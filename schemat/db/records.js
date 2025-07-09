@@ -29,12 +29,12 @@ export class Record {
 
     _hash               // hash computed from _key_binary and _val_json combined
 
-    get key()               { return this._key || (this._key = this.schema.decode_key(this._key_binary)) }
-    get value()             { let val = (this._val !== undefined ? this._val : this._decode_value()); return val === EMPTY ? undefined : val }
-    get key_binary()        { return this._key_binary || (this._key_binary = this.schema.encode_key(this._key)) }
-    get key_object()        { return this._key_dict || this._key_to_object() }
-    get val_json()          { return this._val_json || this._encode_value() }
-    get hash()              { return this._hash || this._compute_hash() }
+    get key()           { return this._key || (this._key = this.schema.decode_key(this._key_binary)) }
+    get val()           { let val = (this._val !== undefined ? this._val : this._decode_value()); return val === EMPTY ? undefined : val }
+    get key_binary()    { return this._key_binary || (this._key_binary = this.schema.encode_key(this._key)) }
+    get key_object()    { return this._key_dict || this._key_to_object() }
+    get val_json()      { return this._val_json || this._encode_value() }
+    get hash()          { return this._hash || this._compute_hash() }
 
     _key_to_object() {
         let fields = this.schema.key_fields
@@ -60,7 +60,7 @@ export class Record {
 
     _compute_hash() {
         let key = this.key_binary                                   // Uint8Array
-        let val = new TextEncoder().encode(this.val_json)       // value string converted to Uint8Array
+        let val = new TextEncoder().encode(this.val_json)           // value string converted to Uint8Array
 
         // write [length of key] + `key` + `val` into a single Uint8Array
         let offset = 4                                              // 4 bytes for the length of key
@@ -91,19 +91,19 @@ export class Record {
 
         if (plain) {
             this._key = plain.key
-            this._val = (plain.value === undefined ? EMPTY : plain.value)
+            this._val = (plain.val === undefined ? EMPTY : plain.val)
             assert(T.isArray(this._key), `invalid key: ${this._key}`)
         }
         if (binary) {
             this._key_binary = binary.key
-            this._val_json = binary.value
+            this._val_json = binary.val
             assert(this._key_binary instanceof Uint8Array, `expected a binary key in record, got ${this._key_binary}`)
             assert(typeof this._val_json === 'string', `expected a string value in record, got: ${this._val_json}`)
         }
     }
 
-    static binary(schema, key, value)   { return new Record(schema, null, {key, value}) }
-    static plain(schema, key, value)    { return new Record(schema, {key, value}, null) }
+    static binary(schema, key, val) { return new Record(schema, null, {key, val}) }
+    static plain(schema, key, val)  { return new Record(schema, {key, val}, null) }
 
     decode_object() {
         /* Create an {id, data} object from this binary record, where [id]=key and `data` is decoded from the record's value.
