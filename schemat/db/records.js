@@ -23,17 +23,17 @@ export class Record {
     _key                // array of fields decoded from the binary key
     _val                // object or plain JS value parsed from JSON string, or EMPTY (empty value)
 
-    _binary_key         // `key` encoded as Uint8Array through `schema`
-    _object_key         // object representation of the key, as {field: value}
-    _string_val         // JSON-stringified _val, or empty string (when empty value)
+    _key_binary         // _key encoded as Uint8Array through `schema`
+    _key_dict           // _key unwrapped into a plain object (dictionary) with {field: value} pairs
+    _val_json           // JSON-stringified _val, or empty string (when empty value)
 
-    _hash               // hash computed from _binary_key and _string_val combined
+    _hash               // hash computed from _key_binary and _val_json combined
 
-    get key()               { return this._key || (this._key = this.schema.decode_key(this._binary_key)) }
+    get key()               { return this._key || (this._key = this.schema.decode_key(this._key_binary)) }
     get value()             { let val = (this._val !== undefined ? this._val : this._decode_value()); return val === EMPTY ? undefined : val }
-    get key_binary()        { return this._binary_key || (this._binary_key = this.schema.encode_key(this._key)) }
-    get key_object()        { return this._object_key || this._key_to_object() }
-    get val_json()          { return this._string_val || this._encode_value() }
+    get key_binary()        { return this._key_binary || (this._key_binary = this.schema.encode_key(this._key)) }
+    get key_object()        { return this._key_dict || this._key_to_object() }
+    get val_json()          { return this._val_json || this._encode_value() }
     get hash()              { return this._hash || this._compute_hash() }
 
     _key_to_object() {
@@ -47,15 +47,15 @@ export class Record {
             obj[field] = key[i]
         }
 
-        return this._object_key = obj
+        return this._key_dict = obj
     }
 
     _encode_value() {
-        return this._string_val = (this._val === EMPTY ? '' : JSON.stringify(this._val))
+        return this._val_json = (this._val === EMPTY ? '' : JSON.stringify(this._val))
     }
 
     _decode_value() {
-        return this._val = (this._string_val === '' ? EMPTY : JSON.parse(this._string_val))
+        return this._val = (this._val_json === '' ? EMPTY : JSON.parse(this._val_json))
     }
 
     _compute_hash() {
@@ -95,10 +95,10 @@ export class Record {
             assert(T.isArray(this._key), `invalid key: ${this._key}`)
         }
         if (binary) {
-            this._binary_key = binary.key
-            this._string_val = binary.value
-            assert(this._binary_key instanceof Uint8Array, `expected a binary key in record, got ${this._binary_key}`)
-            assert(typeof this._string_val === 'string', `expected a string value in record, got: ${this._string_val}`)
+            this._key_binary = binary.key
+            this._val_json = binary.value
+            assert(this._key_binary instanceof Uint8Array, `expected a binary key in record, got ${this._key_binary}`)
+            assert(typeof this._val_json === 'string', `expected a string value in record, got: ${this._val_json}`)
         }
     }
 
