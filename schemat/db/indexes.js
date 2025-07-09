@@ -2,7 +2,6 @@ import {is_plural, truncate_plural} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../common/binary.js"
 import {Catalog} from "../common/catalog.js";
-import {Record} from "./records.js";
 import {Operator} from "./sequence.js";
 
 
@@ -11,13 +10,7 @@ import {Operator} from "./sequence.js";
 
 /**********************************************************************************************************************/
 
-export class DerivedOperator extends Operator {
-    /* Base class for specifications of derived data streams: indexes, aggregations, joins.
-       DerivedOperator can be applied to multiple different physical source sequences residing in different rings.
-     */
-}
-
-export class IndexOperator extends DerivedOperator {
+export class IndexOperator extends Operator {
     /* Sequence of records consisting of a binary `key` and a json `value`. The sequence is sorted by the key and
        allows to retrieve the value for a given key or range of keys.
      */
@@ -62,7 +55,6 @@ export class IndexOperator extends DerivedOperator {
         if (!entity) return
         let records = [...this.map_record(key, entity)]
         return new BinaryMap(records)
-        // return new BinaryMap(records.map(rec => [rec.key_binary, rec.val_json]))
     }
 
     *map_record(key, entity) {
@@ -135,7 +127,6 @@ export class ObjectIndexOperator extends IndexOperator {
         for (let key of this.generate_keys(obj)) {
             let key_binary = schema.encode_key(key)
             yield [key_binary, val_json]
-            // yield Record.plain(schema, key, value)
         }
     }
 
@@ -183,7 +174,7 @@ export class ObjectIndexOperator extends IndexOperator {
 
 /**********************************************************************************************************************/
 
-export class AggregationOperator extends DerivedOperator {
+export class AggregationOperator extends Operator {
     /* Maps continuous ranges of source keys onto single records in output sequence, doing aggregation of the original
        group along the way. The group is always defined in the same way: as a group of records that share the same key
        on all fields *except* the last one. In other words, merging and aggregation is done over the last field of the key,
