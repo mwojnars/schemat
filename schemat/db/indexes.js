@@ -42,7 +42,7 @@ export class IndexOperator extends DerivedOperator {
          */
         // print(`apply_change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
 
-        // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
+        // del_records and put_records are BinaryMaps, {binary_key: val_json}, or null/undefined
         let del_records = this._make_records(key, prev)
         let put_records = this._make_records(key, next)
 
@@ -61,7 +61,7 @@ export class IndexOperator extends DerivedOperator {
         /* Map a source-sequence entity (typically, a web object) to a list of destination-sequence (index) records. */
         if (!entity) return
         let records = [...this.map_record(key, entity)]
-        return new BinaryMap(records.map(rec => [rec.binary_key, rec.string_value]))
+        return new BinaryMap(records.map(rec => [rec.key_binary, rec.val_json]))
     }
 
     *map_record(key, entity) {

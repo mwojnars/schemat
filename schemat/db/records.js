@@ -31,9 +31,9 @@ export class Record {
 
     get key()               { return this._key || (this._key = this.schema.decode_key(this._binary_key)) }
     get value()             { let val = (this._val !== undefined ? this._val : this._decode_value()); return val === EMPTY ? undefined : val }
-    get binary_key()        { return this._binary_key || (this._binary_key = this.schema.encode_key(this._key)) }
-    get object_key()        { return this._object_key || this._key_to_object() }
-    get string_value()      { return this._string_val || this._encode_value() }
+    get key_binary()        { return this._binary_key || (this._binary_key = this.schema.encode_key(this._key)) }
+    get key_object()        { return this._object_key || this._key_to_object() }
+    get val_json()          { return this._string_val || this._encode_value() }
     get hash()              { return this._hash || this._compute_hash() }
 
     _key_to_object() {
@@ -59,8 +59,8 @@ export class Record {
     }
 
     _compute_hash() {
-        let key = this.binary_key                                   // Uint8Array
-        let val = new TextEncoder().encode(this.string_value)       // value string converted to Uint8Array
+        let key = this.key_binary                                   // Uint8Array
+        let val = new TextEncoder().encode(this.val_json)       // value string converted to Uint8Array
 
         // write [length of key] + `key` + `val` into a single Uint8Array
         let offset = 4                                              // 4 bytes for the length of key
@@ -82,7 +82,7 @@ export class Record {
 
     static compare(rec1, rec2) {
         /* Compare two records by their binary keys (byte order). */
-        return compare_uint8(rec1.binary_key, rec2.binary_key)
+        return compare_uint8(rec1.key_binary, rec2.key_binary)
     }
 
     constructor(schema, plain = null, binary = null) {
@@ -113,7 +113,7 @@ export class Record {
         assert(key.length === 1)                // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
         let id = key[0]
 
-        let json = this.string_value            // JSONx-serialized content of an object
+        let json = this.val_json            // JSONx-serialized content of an object
         let data = JSONx.parse(json)
         if (T.isPOJO(data)) data = Catalog.__setstate__(data)
 
