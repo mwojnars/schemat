@@ -403,18 +403,18 @@ export class Database extends WebObject {
     //     yield* merge(WebObject.compare, ...streams)
     // }
 
-    async 'action.create_index'(name, key, val_fields = undefined, {ring} = {}) {
+    async 'action.create_index'(name, key_names, val_fields = undefined, {ring} = {}) {
         /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (ring-kernel).
-           Schema of the new index is defined by `key` and `val_fields` (arrays of property names).
+           Schema of the new index is defined by `key_names` and `val_fields` (arrays of property names).
          */
-        if (!Array.isArray(key) || key.length === 0) throw new Error(`index key must be an array with at least one element, got ${key}`)
+        if (!Array.isArray(key_names) || key_names.length === 0) throw new Error(`index key must be an array with at least one element, got ${key_names}`)
         if (val_fields && !Array.isArray(val_fields)) throw new Error(`record payload specification must be an array, got ${val_fields}`)
 
         ring = ring ? this.get_ring(ring) : this.bottom_ring
 
         // create index specification
         let ObjectIndexOperator = this.__std.ObjectIndexOperator
-        let index = await ObjectIndexOperator.new({name, key, val_fields}).save({ring})
+        let index = await ObjectIndexOperator.new({name, key_names, val_fields}).save({ring})
         // schemat._transaction.getStore()?.log_modified(index)
 
         // create streams for `index`, in `ring` and all higher rings

@@ -94,7 +94,7 @@ export class ObjectIndexOperator extends IndexOperator {
      */
 
     category        // category of objects allowed in this index; obligatory if `key` is present instead of `key_fields`, for imputation of key's field types
-    key             // array of names of object properties to be included in the (compound) key of this index; plural names (xyz$) and deep paths (x.y.z) allowed
+    key_names       // array of names of object properties to be included in the (compound) key of this index; plural names (xyz$) and deep paths (x.y.z) allowed
 
     impute_key_fields() {
         /* A catalog of {field: type} pairs generated from `key` array of field names. */
@@ -102,7 +102,7 @@ export class ObjectIndexOperator extends IndexOperator {
         // print('schema:', schema)
 
         let entries = []
-        for (let field of this.key) {       // find out the `type` of every `field`, then build the result catalog
+        for (let field of this.key_names) {     // find out the type of every field to build a catalog of {field: type} pairs
             field = truncate_plural(field)
             let type = schema.get(field)
             if (!type) throw new Error(`unknown field in 'key': ${field}`)
