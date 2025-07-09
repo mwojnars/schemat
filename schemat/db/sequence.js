@@ -1,7 +1,9 @@
 import {Record, data_schema, RecordSchema} from "./records.js";
-import {assert, print} from "../common/utils.js";
+import {assert, print, T} from "../common/utils.js";
 import {BootDataBlock} from "./block.js";
 import {WebObject} from "../core/object.js";
+import {JSONx} from "../common/jsonx.js";
+import {Catalog} from "../common/catalog.js";
 
 
 /**********************************************************************************************************************
@@ -83,10 +85,8 @@ export class Sequence extends WebObject {
     decode_key(bin) { return this.operator.decode_key(bin) }    // binary > app representation
 
     async* scan_binary(opts = {}) {
-        /* Scan this sequence in the [`start`, `stop`) range and yield [key, value] pairs.
-           If `limit` is defined, yield at most `limit` items.
-           If `reverse` is true, scan in the reverse order.
-           If `batch_size` is defined, yield items in batches of `batch_size` items.
+        /* Scan this sequence in [`start`, `stop`) range and yield [key, value] pairs,
+           where `key` is an Uint8Array and `value` is a JSON string.
          */
         let {start = null, stop = null, reverse = false} = opts
         assert(!reverse)
@@ -182,8 +182,17 @@ export class DataSequence extends Sequence {
            not segmented (by high bits/bytes), hence the result stream is not monotonic, OR it will require a merge-sort
            to become monotonic. Plus, the function outputs {id, data} pairs (decoded) instead of binary records.
          */
-        for await (let record of this.scan())
-            yield record.decode_object()
+        for await (let record of this.scan()) {
+            let key = record.key            // array of key fields, decoded
+            assert(key.length === 1)        // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
+            let [id] = key
+
+            let json = record.val_json      // JSONx-serialized content of an object
+            let data = JSONx.parse(json)
+            if (T.isPOJO(data)) data = Catalog.__setstate__(data)
+
+            yield {id, data}
+        }
     }
 }
 
