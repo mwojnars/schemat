@@ -109,8 +109,8 @@ export class Record {
         /* Create an {id, data} object from this binary record, where [id]=key and `data` is decoded from the record's value.
            It is assumed that this record actually represents a web object, with key=[id] and value=json_data.
          */
-        let key = this.key                      // array of key fields, decoded
-        assert(key.length === 1)                // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
+        let key = this.key                  // array of key fields, decoded
+        assert(key.length === 1)            // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
         let id = key[0]
 
         let json = this.val_json            // JSONx-serialized content of an object
@@ -127,18 +127,18 @@ export class Record {
 export class RecordSchema {
     /* Schema of records in a Sequence. Defines the key and value to be stored in records. */
 
-    key                 // {name: type}, a Map of names and Types of fields to be included in the sequence's key
+    key_fields          // {name: type}, a Map of names and Types of fields to be included in the sequence's key
     val_fields          // array of property names to be included in the "value" (payload) part of the record
 
-    _key_fields         // array of names of consecutive fields in the key
+    _key_names          // array of names of consecutive fields in the key
     _key_types          // array of Types of consecutive fields in the key
 
-    get key_names()     { return this._key_fields || (this._key_fields = [...this.key.keys()]) }
-    get key_types()     { return this._key_types || (this._key_types = [...this.key.values()]) }
+    get key_names()     { return this._key_names || (this._key_names = [...this.key_fields.keys()]) }
+    get key_types()     { return this._key_types || (this._key_types = [...this.key_fields.values()]) }
 
-    constructor(key, val_fields = []) {
-        assert(key?.size > 0, `key is empty`)
-        this.key = key
+    constructor(key_fields, val_fields = []) {
+        assert(key_fields?.size > 0, `key is empty`)
+        this.key_fields = key_fields
         this.val_fields = val_fields || []
     }
 
