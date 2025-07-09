@@ -85,11 +85,11 @@ export class HtmlPage extends HttpService {
         //     this._page_ = page
         // }
 
-        async prepare(side) {
+        async prepare(realm) {
             /* Prepare/collect extra information before the page generation (view rendering) starts. These are typically
                asynchronous operations to load data from the DB or await for URLs, so that actual generation/rendering
                may consist of synchronous operations alone. This method may return a dictionary of properties,
-               however this is not required. `side` is either 'server' or 'client'.
+               however this is not required. `realm` is either 'server' or 'client'.
              */
         }
 
@@ -192,7 +192,7 @@ export class ReactPage extends RenderedPage {
 
     static View = class extends RenderedPage.View {
 
-        async prepare(side) {
+        async prepare(realm) {
             // print(`prepare() called for [${this.id}], ${this.__category}`)
             await this.load()
             await this.__category?.load()
@@ -242,9 +242,9 @@ export class InspectView extends ReactPage.View {
         return assets .filter(a => a?.trim()) .join('\n')
     }
 
-    async prepare(side) {
+    async prepare(realm) {
         // TODO: on client, refs could be pulled from response data to avoid re-scanning on 1st render?
-        await super.prepare(side)
+        await super.prepare(realm)
         for (let ref of this.__references)
             if (!ref.is_loaded()) await ref.load()      // preload all references to allow proper URL generation
     }
@@ -298,9 +298,9 @@ export class InspectView extends ReactPage.View {
 export class CategoryInspectView extends InspectView {
     /* System-level view that displays raw properties of a Category object and a list of its children (members of the category). */
 
-    async prepare(side) {
+    async prepare(realm) {
         // TODO: on client, items could be pulled from response data to avoid re-scanning on 1st render?
-        await super.prepare(side)
+        await super.prepare(realm)
         let items = await this.list_objects()       // preload objects that belong to this category
         return {items}
     }
