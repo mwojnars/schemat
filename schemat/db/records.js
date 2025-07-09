@@ -30,9 +30,10 @@ export class Record {
     _hash               // hash computed from _key_binary and _val_json combined
 
     get key()           { return this._key || (this._key = this.schema.decode_key(this._key_binary)) }
-    // get val()           { let val = (this._val !== undefined ? this._val : this._decode_value()); return val === EMPTY ? undefined : val }
     get key_binary()    { return this._key_binary || (this._key_binary = this.schema.encode_key(this._key)) }
     get key_object()    { return this._key_dict || this._key_to_object() }
+
+    // get val()           { let val = (this._val !== undefined ? this._val : this._decode_value()); return val === EMPTY ? undefined : val }
     get val_json()      { return this._val_json || this._encode_value() }
     get hash()          { return this._hash || this._compute_hash() }
 

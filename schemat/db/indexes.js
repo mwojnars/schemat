@@ -180,18 +180,23 @@ export class AggregationOperator extends DerivedOperator {
     /* Maps continuous ranges of source keys onto single records in output sequence, doing aggregation of the original
        group along the way. The group is always defined in the same way: as a group of records that share the same key
        on all fields *except* the last one. In other words, merging and aggregation is done over the last field of the key,
-       which means the output key is the same as the source key, but with the last field removed.
+       and the output key is made from the source key by removing the last field.
 
-       Aggregation function must be additive: it must allow adding/removing individual source records from the group
-       and incrementally updating the output *without* evaluating the entire group. For this reason, only two predefined
-       functions are available: COUNT and SUM, which satisfy this requirement. Note that MIN/MAX operation over records
-       is *not* additive (not an aggregation) and should be calculated from an original sorted index.
+       Aggregation function must be additive: it must allow adding/removing individual source records from the group,
+       and incrementally updating the output, *without* evaluating the entire group. In general, only two functions
+       satisfy this requirement: COUNT and SUM; and AVG which calculates SUM & COUNT combined to divide them afterward.
+       Note that MIN/MAX over records are *not* additive (not aggregations) and should be calculated from original sorted index.
      */
 
     function = 'COUNT'      // COUNT, SUM, AVG
-    result_type             // Type of the output value: INTEGER(), NUMBER(), BIGINT(), ...
+    sum_type                // Type of the sum's output value: INTEGER(), NUMBER(), BIGINT(), ...
     sum_precision           // no. of decimal digits to shift the input value to the left before SUM
 }
+
+export class COUNT_Operator extends AggregationOperator {}
+export class SUM_Operator extends AggregationOperator {}
+export class AVG_Operator extends AggregationOperator {}
+
 
 /**********************************************************************************************************************/
 
