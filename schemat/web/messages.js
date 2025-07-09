@@ -15,6 +15,13 @@ function _error_code(ex) {
     return _valid_code(ex.code)
 }
 
+function _unwrap(ex) {
+    /* Walk back the chain of causes to find the first exception with a message. */
+    while (ex.cause && !ex.message)
+        ex = ex.cause
+    return ex
+}
+
 /**********************************************************************************************************************/
 
 export class MessageEncoder {
@@ -61,12 +68,12 @@ export class mJsonBase extends MessageEncoder {
 }
 
 export class mJsonError extends mJsonBase {
-    encode_error(ex)    { let {name, message} = ex; return [_error_code(ex), JSON.stringify({error: {name, message}})] }
+    encode_error(ex)    { ex = _unwrap(ex); let {name, message} = ex; return [_error_code(ex), JSON.stringify({error: {name, message}})] }
     decode_error(msg, code) { throw msg ? new RequestFailed({...JSON.parse(msg).error, code}) : new Error(`Unexpected error`) }
 }
 
 export class mJsonxError extends mJsonBase {
-    encode_error(ex)    { return [_error_code(ex), JSONx.stringify({error: ex})] }
+    encode_error(ex)    { ex = _unwrap(ex); return [_error_code(ex), JSONx.stringify({error: ex})] }
     decode_error(msg, code) { throw msg ? JSONx.parse(msg).error : new Error(`Unexpected error`) }
 }
 
