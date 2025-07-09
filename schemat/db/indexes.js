@@ -61,7 +61,8 @@ export class IndexOperator extends DerivedOperator {
         /* Map a source-sequence entity (typically, a web object) to a list of destination-sequence (index) records. */
         if (!entity) return
         let records = [...this.map_record(key, entity)]
-        return new BinaryMap(records.map(rec => [rec.key_binary, rec.val_json]))
+        return new BinaryMap(records)
+        // return new BinaryMap(records.map(rec => [rec.key_binary, rec.val_json]))
     }
 
     *map_record(key, entity) {
@@ -131,10 +132,11 @@ export class ObjectIndexOperator extends IndexOperator {
         let value = this.generate_value(obj)
         let val_json = schema.encode_value(value)
 
-        for (let key of this.generate_keys(obj))
-            // let key_binary = schema.encode_key(key)
-            // yield [key_binary, val_json]
-            yield Record.plain(schema, key, value)
+        for (let key of this.generate_keys(obj)) {
+            let key_binary = schema.encode_key(key)
+            yield [key_binary, val_json]
+            // yield Record.plain(schema, key, value)
+        }
     }
 
     accept(obj) {
