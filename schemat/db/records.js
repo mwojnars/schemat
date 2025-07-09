@@ -27,7 +27,6 @@ export class Record {
     _key_dict           // _key unwrapped into a plain object (dictionary) with {field: value} pairs
     _val_json           // JSON-stringified _val, or empty string (when empty value)
 
-    _hash               // hash computed from _key_binary and _val_json combined
 
     get key()           { return this._key || (this._key = this.schema.decode_key(this._key_binary)) }
     get key_binary()    { return this._key_binary || (this._key_binary = this.schema.encode_key(this._key)) }
@@ -35,7 +34,9 @@ export class Record {
 
     // get val()           { let val = (this._val !== undefined ? this._val : this._decode_value()); return val === EMPTY ? undefined : val }
     get val_json()      { return this._val_json || this._encode_value() }
-    get hash()          { return this._hash || this._compute_hash() }
+
+    // _hash               // hash computed from _key_binary and _val_json combined; to be used for eviction/update of record cache in Registry ???
+    // get hash()          { return this._hash || this._compute_hash() }
 
     _key_to_object() {
         let fields = this.schema.key_names
@@ -59,27 +60,27 @@ export class Record {
         return this._val = (this._val_json === '' ? EMPTY : JSON.parse(this._val_json))
     }
 
-    _compute_hash() {
-        let key = this.key_binary                                   // Uint8Array
-        let val = new TextEncoder().encode(this.val_json)           // value string converted to Uint8Array
-
-        // write [length of key] + `key` + `val` into a single Uint8Array
-        let offset = 4                                              // 4 bytes for the length of key
-        let length = offset + key.length + val.length               // total length of the result
-        let result = new Uint8Array(length)
-
-        // write key.length into the first 4 bytes of result
-        result[0] = (key.length >> 24) & 0xFF
-        result[1] = (key.length >> 16) & 0xFF
-        result[2] = (key.length >>  8) & 0xFF
-        result[3] =  key.length        & 0xFF
-
-        // append key and val to result
-        result.set(key, offset)
-        result.set(val, offset + key.length)
-
-        return this._hash = fnv1aHash(result)
-    }
+    // _compute_hash() {
+    //     let key = this.key_binary                                   // Uint8Array
+    //     let val = new TextEncoder().encode(this.val_json)           // value string converted to Uint8Array
+    //
+    //     // write [length of key] + `key` + `val` into a single Uint8Array
+    //     let offset = 4                                              // 4 bytes for the length of key
+    //     let length = offset + key.length + val.length               // total length of the result
+    //     let result = new Uint8Array(length)
+    //
+    //     // write key.length into the first 4 bytes of result
+    //     result[0] = (key.length >> 24) & 0xFF
+    //     result[1] = (key.length >> 16) & 0xFF
+    //     result[2] = (key.length >>  8) & 0xFF
+    //     result[3] =  key.length        & 0xFF
+    //
+    //     // append key and val to result
+    //     result.set(key, offset)
+    //     result.set(val, offset + key.length)
+    //
+    //     return this._hash = fnv1aHash(result)
+    // }
 
     static compare(rec1, rec2) {
         /* Compare two records by their binary keys (byte order). */
