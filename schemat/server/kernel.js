@@ -266,7 +266,7 @@ class Frame {
         /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
         let {agent} = this
-        let [method] = this._find_command(agent, command)       // check that `command` is recognized by the agent
+        let [method] = this._find_command(command)      // check that `command` is recognized by the agent
         // schemat._print(`exec() of ${this.agent}.${method}(${args}) ...`)
 
         // wait for the agent to start
@@ -282,7 +282,7 @@ class Frame {
         if (this.stopping) throw new StoppingNow(`agent ${agent} is in the process of stopping`)
 
         agent = this.agent
-        let [_, func] = this._find_command(agent, command)      // `agent` may have been replaced while pausing, the existence of `command` must be verified again
+        let [_, func] = this._find_command(command)     // agent may have been replaced while pausing, the existence of `command` must be verified again
         let callA = () => func.call(agent, this.state, ...args)
 
         let callB = async () => {
@@ -297,8 +297,9 @@ class Frame {
         return agent.app_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
     }
 
-    _find_command(agent, command) {
+    _find_command(command) {
         /* Find implementation of `command` in the agent and return as a pair [method-name, method-function]. */
+        let {agent} = this
         let method = `${this.role}.${command}`
         let func = agent.__self[method]
         if (typeof func !== 'function') {
