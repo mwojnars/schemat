@@ -96,6 +96,14 @@ export class ObjectIndexOperator extends IndexOperator {
     category        // category of objects allowed in this index; obligatory if `key` is present instead of `key_fields`, for imputation of key's field types
     key_names       // array of names of object properties to be included in the (compound) key of this index; plural names (xyz$) and deep paths (x.y.z) allowed
 
+    __new__() {
+        if (Array.isArray(this.key_fields)) {
+            if (!this.category) throw new Error(`category must be provided when key is specified by field names only (no types)`)
+            this.key_names = this.key_fields
+            delete this.key_fields
+        }
+    }
+
     impute_key_fields() {
         /* A catalog of {field: type} pairs generated from `key` array of field names. */
         let schema = this.category?.schema || schemat.root_category['defaults.schema']
