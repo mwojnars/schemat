@@ -37,7 +37,7 @@ export class Record {
     get hash()          { return this._hash || this._compute_hash() }
 
     _key_to_object() {
-        let fields = this.schema.key_fields
+        let fields = this.schema.key_names
         let key = this.key
         let obj = {}
 
@@ -133,7 +133,7 @@ export class RecordSchema {
     _key_fields         // array of names of consecutive fields in the key
     _key_types          // array of Types of consecutive fields in the key
 
-    get key_fields()    { return this._key_fields || (this._key_fields = [...this.key.keys()]) }
+    get key_names()     { return this._key_fields || (this._key_fields = [...this.key.keys()]) }
     get key_types()     { return this._key_types || (this._key_types = [...this.key.values()]) }
 
     constructor(key, val_fields = []) {

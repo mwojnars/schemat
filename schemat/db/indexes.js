@@ -145,7 +145,7 @@ export class ObjectIndexOperator extends IndexOperator {
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
 
-        for (let field of this.record_schema.key_fields) {
+        for (let field of this.record_schema.key_names) {
             let plural = is_plural(field)
             let values = obj[field]
 
