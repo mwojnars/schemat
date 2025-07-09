@@ -24,13 +24,13 @@ export class Record {
     _val                // object or plain JS value parsed from JSON string, or EMPTY (empty value)
 
     _key_binary         // _key encoded as Uint8Array through `schema`
-    _key_dict           // _key unwrapped into a plain object (dictionary) with {field: value} pairs
+    _key_object         // _key unwrapped into a plain object (dictionary) with {field: value} pairs
     _val_json           // JSON-stringified _val, or empty string (when empty value)
 
 
     get key()           { return this._key || (this._key = this.schema.decode_key(this._key_binary)) }
     get key_binary()    { return this._key_binary || (this._key_binary = this.schema.encode_key(this._key)) }
-    get key_object()    { return this._key_dict || this._key_to_object() }
+    get key_object()    { return this._key_object || this._key_to_object() }
 
     // get val()           { let val = (this._val !== undefined ? this._val : this._decode_value()); return val === EMPTY ? undefined : val }
     get val_json()      { return this._val_json || this._encode_value() }
@@ -49,7 +49,7 @@ export class Record {
             obj[field] = key[i]
         }
 
-        return this._key_dict = obj
+        return this._key_object = obj
     }
 
     _encode_value() {
