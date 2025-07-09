@@ -169,6 +169,25 @@ export class ObjectIndexOperator extends IndexOperator {
 
 /**********************************************************************************************************************/
 
+export class AggregationOperator extends DerivedOperator {
+    /* Maps continuous ranges of source keys onto single records in output sequence, doing aggregation of the original
+       group along the way. The group is always defined in the same way: as a group of records that share the same key
+       on all fields *except* the last one. In other words, merging and aggregation is done over the last field of the key,
+       which means the output key is the same as the source key, but with the last field removed.
+
+       Aggregation function must be additive: it must allow adding/removing individual source records from the group
+       and incrementally updating the output *without* evaluating the entire group. For this reason, only two predefined
+       functions are available: COUNT and SUM, which satisfy this requirement. Note that MIN/MAX operation over records
+       is *not* additive (not an aggregation) and should be calculated from an original sorted index.
+     */
+
+    function = 'COUNT'      // COUNT, SUM, AVG
+    result_type             // Type of the output value: INTEGER(), NUMBER(), BIGINT(), ...
+    sum_precision           // no. of decimal digits to shift the input value to the left before SUM
+}
+
+/**********************************************************************************************************************/
+
 // class AggregateSequence extends Sequence {}     // or Cube like in OLAP databases e.g. Apache Druid ?
 //     /* Aggregates can only implement *reversible* operations, like counting or integer sum.
 //        Min/max must be handled through a full index over the min/max-ed field.
