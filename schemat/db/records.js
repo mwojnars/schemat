@@ -106,21 +106,6 @@ export class Record {
 
     static binary(schema, key, val) { return new Record(schema, null, {key, val}) }
     static plain(schema, key, val)  { return new Record(schema, {key, val}, null) }
-
-    // decode_object() {
-    //     /* Create an {id, data} object from this binary record, where [id]=key and `data` is decoded from the record's value.
-    //        It is assumed that this record actually represents a web object, with key=[id] and value=json_data.
-    //      */
-    //     let key = this.key                  // array of key fields, decoded
-    //     assert(key.length === 1)            // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
-    //     let id = key[0]
-    //
-    //     let json = this.val_json            // JSONx-serialized content of an object
-    //     let data = JSONx.parse(json)
-    //     if (T.isPOJO(data)) data = Catalog.__setstate__(data)
-    //
-    //     return {id, data}
-    // }
 }
 
 
