@@ -18,22 +18,22 @@ const EMPTY = Symbol.for('empty')
 
 export class Record {
 
-    schema                  // RecordSchema of the parent Sequence of this record
+    schema              // RecordSchema of the parent Sequence of this record
 
-    _key                    // array of fields decoded from the binary key
-    _value                  // object or plain JS value parsed from JSON string, or EMPTY (empty value)
+    _key                // array of fields decoded from the binary key
+    _val                // object or plain JS value parsed from JSON string, or EMPTY (empty value)
 
-    _binary_key             // `key` encoded as Uint8Array through `schema`
-    _object_key             // object representation of the key, as {field: value}
-    _string_value           // JSON-stringified `value`, or empty string (when empty value)
+    _binary_key         // `key` encoded as Uint8Array through `schema`
+    _object_key         // object representation of the key, as {field: value}
+    _string_val         // JSON-stringified _val, or empty string (when empty value)
 
-    _hash                   // hash computed from _binary_key and _string_value combined
+    _hash               // hash computed from _binary_key and _string_val combined
 
     get key()               { return this._key || (this._key = this.schema.decode_key(this._binary_key)) }
-    get value()             { let val = (this._value !== undefined ? this._value : this._decode_value()); return val === EMPTY ? undefined : val }
+    get value()             { let val = (this._val !== undefined ? this._val : this._decode_value()); return val === EMPTY ? undefined : val }
     get binary_key()        { return this._binary_key || (this._binary_key = this.schema.encode_key(this._key)) }
     get object_key()        { return this._object_key || this._key_to_object() }
-    get string_value()      { return this._string_value || this._encode_value() }
+    get string_value()      { return this._string_val || this._encode_value() }
     get hash()              { return this._hash || this._compute_hash() }
 
     _key_to_object() {
@@ -51,11 +51,11 @@ export class Record {
     }
 
     _encode_value() {
-        return this._string_value = (this._value === EMPTY ? '' : JSON.stringify(this._value))
+        return this._string_val = (this._val === EMPTY ? '' : JSON.stringify(this._val))
     }
 
     _decode_value() {
-        return this._value = (this._string_value === '' ? EMPTY : JSON.parse(this._string_value))
+        return this._val = (this._string_val === '' ? EMPTY : JSON.parse(this._string_val))
     }
 
     _compute_hash() {
@@ -91,14 +91,14 @@ export class Record {
 
         if (plain) {
             this._key = plain.key
-            this._value = (plain.value === undefined ? EMPTY : plain.value)
+            this._val = (plain.value === undefined ? EMPTY : plain.value)
             assert(T.isArray(this._key), `invalid key: ${this._key}`)
         }
         if (binary) {
             this._binary_key = binary.key
-            this._string_value = binary.value
+            this._string_val = binary.value
             assert(this._binary_key instanceof Uint8Array, `expected a binary key in record, got ${this._binary_key}`)
-            assert(typeof this._string_value === 'string', `expected a string value in record, got: ${this._string_value}`)
+            assert(typeof this._string_val === 'string', `expected a string value in record, got: ${this._string_val}`)
         }
     }
 
