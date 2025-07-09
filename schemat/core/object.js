@@ -214,6 +214,7 @@ class Intercept {
 
         let [base, plural] = Intercept._check_plural(path)      // property name without the $ suffix
         target._make_edit('unset', base)
+        return true
     }
 }
 
