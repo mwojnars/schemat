@@ -100,10 +100,9 @@ export class Cluster extends Agent {
 
         this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
 
-        // FIXME: update .node_ids not .nodes
-        let nodes = [...this.$state.nodes, node]
+        let nodes = [...this.$state.node_ids, node.id].map(id => schemat.get_object(id))
         await this.action.update({nodes})
 
-        this.$state.nodes = nodes
+        this.$state.node_ids = nodes.map(n => n.id)
     }
 }
