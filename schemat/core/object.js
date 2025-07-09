@@ -208,9 +208,12 @@ class Intercept {
         return Reflect.set(target, path, value, receiver)
     }
 
-    static proxy_delete(target, prop) {
-        throw new Error('not implemented')
-        // return Reflect.deleteProperty(target, prop)
+    static proxy_delete(target, path) {
+        if (Intercept._is_special(path)) return Reflect.deleteProperty(target, path)
+        if (!target.__meta.mutable) throw new Error(`trying to modify an immutable object ${target} (${path})`)
+
+        let [base, plural] = Intercept._check_plural(path)      // property name without the $ suffix
+        target._make_edit('unset', [base])
     }
 }
 
