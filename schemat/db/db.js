@@ -407,8 +407,8 @@ export class Database extends WebObject {
         /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (ring-kernel).
            Schema of the new index is defined by `key` and `val_fields` (arrays of property names).
          */
-        if (!Array.isArray(key) || key.length === 0) throw new Error(`index key must be an array with at least one element: ${key}`)
-        if (val_fields && !Array.isArray(val_fields)) throw new Error(`record payload specification must be an array of field names: ${val_fields}`)
+        if (!Array.isArray(key) || key.length === 0) throw new Error(`index key must be an array with at least one element, got ${key}`)
+        if (val_fields && !Array.isArray(val_fields)) throw new Error(`record payload specification must be an array, got ${val_fields}`)
 
         ring = ring ? this.get_ring(ring) : this.bottom_ring
 

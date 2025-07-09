@@ -848,11 +848,11 @@
     source:
       info: source Sequence that feeds data to this index
       "@": schemat/types/type.js:REF
-    key_spec:
+    key_fields:
       info: Names and data types of fields comprising the (composite) key of this
         operator's output records. If missing, this property is computed
-        dynamically with impute_key_spec() method of the Operator subclass.
-      impute: impute_key_spec
+        dynamically with impute_key_fields() method of the Operator subclass.
+      impute: impute_key_fields
       key_type:
         "@": schemat/types/type.js:STRING
       value_type:

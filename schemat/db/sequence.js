@@ -194,14 +194,13 @@ export class Operator extends WebObject {
     /* Specification of a data sequence operator: source operator(s) + schema of output records + access methods (scan/min/max).
        The same operator can be applied to multiple rings, producing a different sequence in each ring.
      */
-
-    key_spec
+    key_fields
     val_fields
     file_tag
 
     get record_schema() {
         /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
-        return new RecordSchema(this.key_spec, this.val_fields)
+        return new RecordSchema(this.key_fields, this.val_fields)
     }
 
     encode_key(key) {
