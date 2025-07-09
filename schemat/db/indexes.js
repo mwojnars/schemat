@@ -127,9 +127,14 @@ export class ObjectIndexOperator extends IndexOperator {
          */
         if (!this.accept(obj)) return undefined
 
+        let schema = this.record_schema
         let value = this.generate_value(obj)
+        let val_json = schema.encode_value(value)
+
         for (let key of this.generate_keys(obj))
-            yield Record.plain(this.record_schema, key, value)
+            // let key_binary = schema.encode_key(key)
+            // yield [key_binary, val_json]
+            yield Record.plain(schema, key, value)
     }
 
     accept(obj) {

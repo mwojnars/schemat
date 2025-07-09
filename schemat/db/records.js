@@ -167,6 +167,13 @@ export class RecordSchema {
 
         return key
     }
+
+    encode_value(obj) {
+        if (obj === undefined) return ''
+        let vector = this.val_fields.map(field => obj[field])
+        return JSONx.stringify(vector)
+        // return obj === undefined ? '' : JSON.stringify(obj)
+    }
 }
 
 
