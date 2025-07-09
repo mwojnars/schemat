@@ -142,7 +142,7 @@ export class RecordSchema {
         this.val_fields = val_fields || []
     }
 
-    has_payload() { return !!this.val_fields?.length }     // true if payload part is present in records
+    // has_payload() { return !!this.val_fields?.length }     // true if payload part is present in records
 
     encode_key(key) {
         /* `key` is an array of field values. The array can be shorter than this.key_types ("partial key")

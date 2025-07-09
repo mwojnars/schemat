@@ -134,7 +134,7 @@ export class ObjectIndexOperator extends IndexOperator {
            If undefined is returned, the record will consist of a key only.
          */
         let schema = this.record_schema
-        if (!schema.has_payload()) return undefined
+        if (!schema.val_fields?.length) return undefined
         let entries = schema.val_fields.map(prop => [prop, obj[prop]])
         return Object.fromEntries(entries)
     }
