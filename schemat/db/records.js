@@ -87,15 +87,15 @@ export class Record {
         return compare_uint8(rec1.key_binary, rec2.key_binary)
     }
 
-    constructor(schema, plain = null, binary = null) {
+    constructor(schema, binary = null, /*plain = null*/) {
         assert(schema instanceof RecordSchema)
         this.schema = schema
 
-        if (plain) {
-            this._key = plain.key
-            this._val = (plain.val === undefined ? EMPTY : plain.val)
-            assert(T.isArray(this._key), `invalid key: ${this._key}`)
-        }
+        // if (plain) {
+        //     this._key = plain.key
+        //     this._val = (plain.val === undefined ? EMPTY : plain.val)
+        //     assert(T.isArray(this._key), `invalid key: ${this._key}`)
+        // }
         if (binary) {
             this._key_binary = binary.key
             this._val_json = binary.val
@@ -104,8 +104,8 @@ export class Record {
         }
     }
 
-    static binary(schema, key, val) { return new Record(schema, null, {key, val}) }
-    static plain(schema, key, val)  { return new Record(schema, {key, val}, null) }
+    // static binary(schema, key, val) { return new Record(schema, {key, val}) }
+    // static plain(schema, key, val)  { return new Record(schema, null, {key, val}) }
 }
 
 

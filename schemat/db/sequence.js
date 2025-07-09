@@ -108,8 +108,8 @@ export class Sequence extends WebObject {
         start = start && rschema.encode_key(start)          // convert `start` and `stop` to binary keys (Uint8Array)
         stop = stop && rschema.encode_key(stop)
 
-        for await (let [key, value] of this.scan_binary({...opts, start, stop}))
-            yield Record.binary(rschema, key, value)
+        for await (let [key, val] of this.scan_binary({...opts, start, stop}))
+            yield new Record(rschema, {key, val})
     }
 
     async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }

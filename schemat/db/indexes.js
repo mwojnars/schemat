@@ -5,9 +5,6 @@ import {Catalog} from "../common/catalog.js";
 import {Operator} from "./sequence.js";
 
 
-// Section, Block, Partition ... Aggregate
-
-
 /**********************************************************************************************************************/
 
 export class IndexOperator extends Operator {
