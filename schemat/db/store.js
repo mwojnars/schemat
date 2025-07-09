@@ -204,10 +204,10 @@ export class JsonIndexStore extends MemoryStore {
         /* Save the entire database (this.records) to a file. */
         // print(`YamlIndexStorage flushing ${this._records.size} records to ${this.filename}...`)
 
-        let lines = [...this.scan()].map(([binary_key, json_value]) => {
-            let key = this.block.decode_key(binary_key)
-            let json_key = JSON.stringify(key)  //Array.from(binary_key))
-            return json_value ? `[${json_key}, ${json_value}]` : `[${json_key}]`
+        let lines = [...this.scan()].map(([key_binary, val_json]) => {
+            let key = this.block.decode_key(key_binary)
+            let key_json = JSON.stringify(key)  //Array.from(key_binary))
+            return val_json ? `[${key_json}, ${val_json}]` : `[${key_json}]`
         })
         fs.writeFileSync(this.filename, lines.join('\n') + '\n', 'utf8')
     }

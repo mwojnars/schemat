@@ -42,7 +42,7 @@ export class IndexOperator extends DerivedOperator {
          */
         // print(`apply_change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
 
-        // del_records and put_records are BinaryMaps, {binary_key: val_json}, or null/undefined
+        // del_records and put_records are BinaryMaps, {key_binary: val_json}, or null/undefined
         let del_records = this._make_records(key, prev)
         let put_records = this._make_records(key, next)
 

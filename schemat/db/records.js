@@ -163,10 +163,10 @@ export class RecordSchema {
         return output.result()
     }
 
-    decode_key(binary_key) {
-        /* Decode a `binary_key` (Uint8Array) back into an array of field values. Partial keys are NOT supported here. */
+    decode_key(key_binary) {
+        /* Decode a `key_binary` (Uint8Array) back into an array of field values. Partial keys are NOT supported here. */
         let types  = this.key_types
-        let input  = new BinaryInput(binary_key)
+        let input  = new BinaryInput(key_binary)
         let length = types.length
         let key = []
 
@@ -176,7 +176,7 @@ export class RecordSchema {
             const val  = type.binary_decode(input, last)
             key.push(val)
         }
-        assert(input.pos === binary_key.length)
+        assert(input.pos === key_binary.length)
 
         return key
     }
