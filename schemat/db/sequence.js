@@ -196,12 +196,12 @@ export class Operator extends WebObject {
      */
 
     key_spec
-    payload
+    val_fields
     file_tag
 
     get record_schema() {
         /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
-        return new RecordSchema(this.key_spec, this.payload)
+        return new RecordSchema(this.key_spec, this.val_fields)
     }
 
     encode_key(key) {

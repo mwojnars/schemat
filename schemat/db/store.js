@@ -78,7 +78,7 @@ export class MemoryStore extends Store {
 
     *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
-           are binary keys (Uint8Array).
+           are binary keys (Uint8Array). Yield [key, value] pairs.
          */
         let sorted_keys = [...this._records.keys()].sort(compare_uint8)
         let total = sorted_keys.length

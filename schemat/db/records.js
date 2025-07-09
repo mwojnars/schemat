@@ -30,7 +30,7 @@ export class Record {
     _hash               // hash computed from _key_binary and _val_json combined
 
     get key()           { return this._key || (this._key = this.schema.decode_key(this._key_binary)) }
-    get val()           { let val = (this._val !== undefined ? this._val : this._decode_value()); return val === EMPTY ? undefined : val }
+    // get val()           { let val = (this._val !== undefined ? this._val : this._decode_value()); return val === EMPTY ? undefined : val }
     get key_binary()    { return this._key_binary || (this._key_binary = this.schema.encode_key(this._key)) }
     get key_object()    { return this._key_dict || this._key_to_object() }
     get val_json()      { return this._val_json || this._encode_value() }
@@ -128,7 +128,7 @@ export class RecordSchema {
     /* Schema of records in a Sequence. Defines the key and value to be stored in records. */
 
     key                 // {name: type}, a Map of names and Types of fields to be included in the sequence's key
-    payload             // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
+    val_fields          // array of property names to be included in the "value" (payload) part of the record
 
     _key_fields         // array of names of consecutive fields in the key
     _key_types          // array of Types of consecutive fields in the key
@@ -136,13 +136,13 @@ export class RecordSchema {
     get key_fields()    { return this._key_fields || (this._key_fields = [...this.key.keys()]) }
     get key_types()     { return this._key_types || (this._key_types = [...this.key.values()]) }
 
-    constructor(key, payload = []) {
+    constructor(key, val_fields = []) {
         assert(key?.size > 0, `key is empty`)
         this.key = key
-        this.payload = payload || []
+        this.val_fields = val_fields || []
     }
 
-    has_payload() { return !!this.payload?.length }     // true if payload part is present in records
+    has_payload() { return !!this.val_fields?.length }     // true if payload part is present in records
 
     encode_key(key) {
         /* `key` is an array of field values. The array can be shorter than this.key_types ("partial key")

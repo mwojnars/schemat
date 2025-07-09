@@ -135,7 +135,7 @@ export class ObjectIndexOperator extends IndexOperator {
          */
         let schema = this.record_schema
         if (!schema.has_payload()) return undefined
-        let entries = schema.payload.map(prop => [prop, obj[prop]])
+        let entries = schema.val_fields.map(prop => [prop, obj[prop]])
         return Object.fromEntries(entries)
     }
 
