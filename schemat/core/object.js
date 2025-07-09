@@ -196,9 +196,9 @@ class Intercept {
 
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${path})`)
-                receiver._make_edit('set', [base, ...value])
+                receiver._make_edit('set', base, ...value)
             }
-            else receiver._make_edit('set', [path, value])
+            else receiver._make_edit('set', path, value)
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${prop})`)
@@ -213,7 +213,7 @@ class Intercept {
         if (!target.__meta.mutable) throw new Error(`trying to modify an immutable object ${target} (${path})`)
 
         let [base, plural] = Intercept._check_plural(path)      // property name without the $ suffix
-        target._make_edit('unset', [base])
+        target._make_edit('unset', base)
     }
 }
 
@@ -1277,13 +1277,13 @@ export class WebObject {
     /***  Object editing  ***/
 
     get edit() {
-        /* Triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', args).
+        /* Triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', ...args).
            Can be called on client and server alike.
          */
         let obj = this
         return new Proxy({}, {
             get(target, name) {
-                if (typeof name === 'string') return (...args) => obj._make_edit(name, args)
+                if (typeof name === 'string') return (...args) => obj._make_edit(name, ...args)
             }
         })
     }
@@ -1336,7 +1336,7 @@ export class WebObject {
         return this
     }
 
-    _make_edit(op, args) {
+    _make_edit(op, ...args) {
         /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save().
            Return `this`, or whatever the mutable version of this object is registered in the current transaction (if `this` is immutable).
          */
