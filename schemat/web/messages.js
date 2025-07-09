@@ -1,5 +1,5 @@
 import {assert, print, T} from "../common/utils.js";
-import {RequestFailed} from "../common/errors.js";
+import {RPC_Error, RequestFailed} from "../common/errors.js";
 import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../common/catalog.js";
 
@@ -16,8 +16,8 @@ function _error_code(ex) {
 }
 
 function _unwrap(ex) {
-    /* Walk back the chain of causes to find the first exception with a message. */
-    while (ex.cause && !ex.message)
+    /* Walk back the chain of causes to find the first exception that's not an RPC_Error. */
+    while (ex.cause && !(ex instanceof RPC_Error))
         ex = ex.cause
     return ex
 }
