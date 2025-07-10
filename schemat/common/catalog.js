@@ -684,7 +684,7 @@ export class Catalog {
             }
 
         // convert to an array of entries with unique keys, and `values` merged into one
-        entries = [...entries].map(([key, values]) => [key, merge_values(values)])
+        entries = [...entries].map(([key, values]) => [key, values.length === 1 ? values[0] : merge_values(values)])
 
         return new Catalog(entries)
     }
