@@ -845,6 +845,12 @@
 - id: 24
   name: Operator
   schema:
+    name:
+      info: Operator name identifies the derived sequence, without it the sequence 
+        could not be accessed. For this reason, name is a required property.
+      required: true
+      blank: ""
+      "@": schemat/types/type.js:STRING
     source:
       info: source Sequence that feeds data to this index
       "@": schemat/types/type.js:REF
