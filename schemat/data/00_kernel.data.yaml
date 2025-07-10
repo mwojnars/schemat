@@ -22,7 +22,7 @@
         listing them here removes the need for async schemat.import() from a web
         path later on. The loading is only invoked when on server, not on
         clients.
-      "@": schemat/types/type.js:OBJECT
+      "@": schemat/types/type.js:DICT
     defaults:
       value_type:
         "@": schemat/types/type.js:GENERIC

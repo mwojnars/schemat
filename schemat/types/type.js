@@ -679,16 +679,16 @@ export class ARRAY extends COMPOUND {
     }
 }
 
-export class OBJECT extends COMPOUND {
+export class DICT extends COMPOUND {
     /* Accept plain JavaScript objects (POJO or null-prototype objects) used as data containers (dictionaries).
        The objects must *not* belong to any class other than Object.
        This type can be used as a replacement for MAP or CATALOG when a simpler data structure is needed for holding
-       collections of named attributes. During inheritance of single-valued properties, OBJECT-type objects are merged
-       by default, with younger attributes overriding the same-named older ones.
+       collections of named attributes. During inheritance, DICT-type objects are merged by default,
+       with younger attributes overriding the same-named older ones.
      */
     _validate(obj) {
         obj = super._validate(obj)
-        if (!T.isPlain(obj)) throw new ValueError(`expected a plain object, got ${obj} instead`)
+        if (!T.isPlain(obj)) throw new ValueError(`expected a plain object (no custom class), got ${obj}`)
         return obj
     }
 
