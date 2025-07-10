@@ -663,6 +663,11 @@ export class TYPE extends COMPOUND {
      */
     static options = {class: Type}
     static Widget = widgets.TYPE_Widget
+
+    merge_inherited(types) {
+        schemat._print(`TYPE.merge_inherited() called`)
+        return types[0]
+    }
 }
 
 export class ARRAY extends COMPOUND {
@@ -698,8 +703,8 @@ export class DICT extends COMPOUND {
         return obj
     }
 
-    merge_inherited(objects) {
-        return Object.assign({}, ...objects.toReversed())
+    merge_inherited(dicts) {
+        return Object.assign({}, ...dicts.toReversed())
     }
 }
 
