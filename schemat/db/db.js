@@ -220,7 +220,7 @@ export class Ring extends WebObject {
     async *scan(operator, opts) {
         /* Scan a sequence in the binary range [`start`, `stop`) and yield records. The sequence is identified by its operator.  */
         let seq = this.sequence_by_operator.get(operator.id)
-        yield* seq.scan(opts)
+        yield* seq.scan_binary(opts)
     }
 
     async 'action.create_sequence'(operator) {
@@ -404,7 +404,7 @@ export class Database extends WebObject {
         let compare = ([key1], [key2]) => compare_uint8(key1, key2)
 
         let streams = this.rings.map(r => r.scan(operator, opts))
-        let merged = merge(Record.compare, ...streams)
+        let merged = merge(compare, ...streams)
         let {limit} = opts
         
         if (offset)
@@ -413,13 +413,18 @@ export class Database extends WebObject {
                 if (next.done) return
             }
 
-        if (limit !== undefined && limit !== null) {
-            let count = 0
-            for await (let record of merged)
-                if (++count > limit) break
-                else yield record
-        }
-        else yield* merged
+        let count = 0
+        for await (let [key, val] of merged)
+            if (limit != null && ++count > limit) break
+            else yield new Record(schema, {key, val})
+
+        // if (limit !== undefined && limit !== null) {
+        //     let count = 0
+        //     for await (let record of merged)
+        //         if (++count > limit) break
+        //         else yield record
+        // }
+        // else yield* merged
 
         // TODO: apply `batch_size` to the merged stream and yield in batches
     }
