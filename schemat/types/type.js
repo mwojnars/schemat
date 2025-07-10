@@ -3,7 +3,7 @@ import {assert, print, T} from '../common/utils.js'
 import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
 import {bytes_uint} from "../common/binary.js";
 import {ObjectsMap, Shard} from "../common/structs.js";
-import {Struct} from "../common/catalog.js";
+import {Catalog, Struct} from "../common/catalog.js";
 import * as widgets from './widgets.js'
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
@@ -672,8 +672,28 @@ export class TYPE extends COMPOUND {
     static Widget = widgets.TYPE_Widget
 
     merge_inherited(types) {
-        // schemat._print(`TYPE.merge_inherited() called:`, types)
-        return types[0]
+        /* If the youngest Type instance (types[0]) has compatible class (same or subclass) with older instances,
+           merge their options. Otherwise, return types[0].
+         */
+        let type  = types[0]
+        let merge = [type]
+        let child = type
+
+        // reduce the `types` list to the instances that have a compatible class with their respective child in the chain
+        for (let parent of types.slice(1))
+            if (child instanceof parent.constructor) merge.push(child = parent)
+            else break
+
+        if (merge.length > 1) {
+            let options = Object.assign({}, ...merge.map(t => t._options).reverse())
+            type = new type.constructor(options)
+        }
+
+        // schemat._print(`TYPE.merge_inherited() merged:`, type)
+        // schemat._print(`TYPE.merge_inherited() ...from:`, types)
+
+        return type
+        // return types[0]
     }
 }
 
