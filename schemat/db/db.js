@@ -51,16 +51,20 @@ export class Ring extends WebObject {
         let own_operators = this.sequences.map(seq => {
             let op = seq.operator
             assert(op.is_loaded())
-            if (!op.name) this._print(`WARNING unnamed operator found: ${op}`)
             return [op.name, op]
         })
         return new Map([...base_operators, ...own_operators])
     }
 
-    get sequence_names() {
-        /* Map of sequences by their operator's name. */
-        return new Map(this.sequences.map(seq => [seq.operator.name, seq]))
+    get sequence_by_operator() {
+        /* Map of sequences keyed by their operator's ID. */
+        return new Map(this.sequences.map(seq => [seq.operator.id, seq]))
     }
+
+    // get sequence_names() {
+    //     /* Map of sequences by their operator's name. */
+    //     return new Map(this.sequences.map(seq => [seq.operator.name, seq]))
+    // }
 
     get id_insert_zones() {
         /* [min_id_exclusive, min_id_forbidden, min_id_sharded] grouped into an array, with the 2nd one imputed if missing.
@@ -217,9 +221,15 @@ export class Ring extends WebObject {
 
     /***  Indexes and Transforms  ***/
 
-    async *scan(name, opts) {
-        /* Scan a given sequence, `name`, in the binary range [`start`, `stop`) and yield the records. */
-        let seq = this.sequence_names.get(name)
+    // async *scan(name, opts) {
+    //     /* Scan a given sequence, `name`, in the binary range [`start`, `stop`) and yield the records. */
+    //     let seq = this.sequence_names.get(name)
+    //     yield* seq.scan(opts)
+    // }
+
+    async *scan(operator, opts) {
+        /* Scan sequence in the binary range [`start`, `stop`) and yield records. The sequence is identified by its operator.  */
+        let seq = this.sequence_by_operator.get(operator.id)
         yield* seq.scan(opts)
     }
 
@@ -390,12 +400,11 @@ export class Database extends WebObject {
         // (1) scan & merge *binary* records
         // (2) decode binary record to pseudo-object via operator.record_schema
         // ??? `operator` to be found by `name` in ... database? top ring? ... then mapped to a sequence in each ring?
-        //     ring.operators (in this ring) .. top_ring.all_operators (in all rings)
 
         let operator = this.top_ring.operators.get(name)
         if (!operator) throw new Error(`unknown derived sequence '${name}'`)
 
-        let streams = this.rings.map(r => r.scan(name, opts))
+        let streams = this.rings.map(r => r.scan(operator, opts))
         let merged = merge(Record.compare, ...streams)
         let {limit} = opts
         
