@@ -376,16 +376,16 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async '$agent.update'({store, lock_row}, id, edits, req) {
+    async '$agent.update'({}, id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
-        return lock_row(id, async () =>
+        return this.$state.lock_row(id, async () =>
         {
             let key = this.encode_id(id)
-            let data = await store.get(key)
+            let data = await this.$state.store.get(key)
             if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
             let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
@@ -413,12 +413,12 @@ export class DataBlock extends Block {
         })
     }
 
-    async '$agent.upsave'({store, lock_row}, id, data, req) {
+    async '$agent.upsave'({}, id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
-        return lock_row(id, async () =>
+        return this.$state.lock_row(id, async () =>
         {
             let key = this.encode_id(id)
-            if (await store.get(key))
+            if (await this.$state.store.get(key))
                 throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
 
             let obj = await WebObject.from_data(id, data, {activate: false})
@@ -438,14 +438,14 @@ export class DataBlock extends Block {
         schemat.register_changes({id, data})
     }
 
-    async '$agent.delete'({store, lock_row}, id, req) {
+    async '$agent.delete'({}, id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
-        return lock_row(id, async () =>
+        return this.$state.lock_row(id, async () =>
         {
             let key = this.encode_id(id)
-            let data = await store.get(key)
+            let data = await this.$state.store.get(key)
             if (data === undefined) return this._move_down(id, req).delete(id, req)
 
             if (this.ring.readonly)
