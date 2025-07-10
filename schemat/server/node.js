@@ -641,12 +641,12 @@ export class Node extends Agent {
     // async '$master.ipc_recv'()
     // async '$worker.ipc_recv'()
 
-    async '$master.start_agent'(state, agent, {role, worker, num_workers = 1} = {}) {
+    async '$master.start_agent'({}, agent, {role, worker, num_workers = 1} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$master.start_agent() agent=${agent} role=${role}`)
-        // this._print(`$master.start_agent() agents:`, state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
+        // this._print(`$master.start_agent() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
 
-        let {agents} = state
+        let {agents} = this.$state
         agent = schemat.as_object(agent)
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
@@ -670,18 +670,18 @@ export class Node extends Agent {
         await this.action.update({agents})
     }
 
-    async '$master.stop_agent'(state, agent, {role, worker} = {}) {
+    async '$master.stop_agent'({}, agent, {role, worker} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$master.stop_agent() agent=${agent} role=${role}`)
-        // this._print(`$master.stop_agent() agents:`, state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
+        // this._print(`$master.stop_agent() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
 
-        let {agents} = state
+        let {agents} = this.$state
         agent = schemat.as_object(agent)
 
         let stop = agents.filter(status => status.id === agent.id)
         if (!stop.length) return
 
-        state.agents = agents = agents.filter(status => status.id !== agent.id)
+        this.$state.agents = agents = agents.filter(status => status.id !== agent.id)
 
         // stop every agent from `stop`, in reverse order
         for (let status of stop.reverse())
