@@ -45,6 +45,18 @@ export class Ring extends WebObject {
         return [...stack, this]
     }
 
+    get operators() {
+        /* Map of operators that define derived sequences in this ring stack, keyed by operator's name. */
+        let base_operators = this.base_ring?.operators || []
+        let own_operators = this.sequences.map(seq => {
+            let op = seq.operator
+            assert(op.is_loaded())
+            if (!op.name) this._print(`WARNING unnamed operator found: ${op}`)
+            return [op.name, op]
+        })
+        return new Map([...base_operators, ...own_operators])
+    }
+
     get sequence_names() {
         /* Map of sequences by their operator's name. */
         return new Map(this.sequences.map(seq => [seq.operator.name, seq]))
@@ -375,6 +387,14 @@ export class Database extends WebObject {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield records in batches of `batch_size` items.
          */
+        // (1) scan & merge *binary* records
+        // (2) decode binary record to pseudo-object via operator.record_schema
+        // ??? `operator` to be found by `name` in ... database? top ring? ... then mapped to a sequence in each ring?
+        //     ring.operators (in this ring) .. top_ring.all_operators (in all rings)
+
+        let operator = this.top_ring.operators.get(name)
+        if (!operator) throw new Error(`unknown derived sequence '${name}'`)
+
         let streams = this.rings.map(r => r.scan(name, opts))
         let merged = merge(Record.compare, ...streams)
         let {limit} = opts

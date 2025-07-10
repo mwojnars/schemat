@@ -12,7 +12,7 @@ export class IndexOperator extends Operator {
        allows to retrieve the value for a given key or range of keys.
      */
 
-    // source                      // Sequence that this index is derived from
+    // source                      // Operator that this index is derived from
     //
     // __new__(source) {
     //     this.source = source
@@ -182,7 +182,7 @@ export class AggregationOperator extends Operator {
        satisfy this requirement: COUNT and SUM; and AVG which calculates SUM & COUNT combined to divide them afterward.
        Note that MIN/MAX over records are *not* additive (not aggregations) and should be calculated from original sorted index.
      */
-
+    source
     function = 'COUNT'      // COUNT, SUM, AVG
     sum_type                // Type of the sum's output value: INTEGER(), NUMBER(), BIGINT(), ...
     sum_precision           // no. of decimal digits to shift the input value to the left before SUM
