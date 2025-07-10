@@ -674,7 +674,7 @@ export class Catalog {
         }
 
         // collect all values per key across the input collections
-        let entries = new Map()     // {key: array-of-values}
+        let entries = new Map()     // {key: [...values]}
 
         for (let cat of catalogs)
             for (let [key, value] of cat._entries || []) {
@@ -688,15 +688,7 @@ export class Catalog {
                 for (let value of combine(values))
                     yield [key, value]
         }
-
         return new Catalog([...combined()])
-
-        // let catalog = new Catalog()
-        // for (let cat of catalogs)
-        //     for (let [key, value] of cat._entries || [])
-        //         if (key !== undefined && !catalog.has(key))
-        //             catalog._append(key, value)
-        // return catalog
     }
 
     /***  Write access  ***/

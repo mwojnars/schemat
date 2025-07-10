@@ -80,8 +80,8 @@ export class CATALOG extends COMPOUND {
 
         if (default_) catalogs.push(default_)       // include the default value in the merge, if present
 
-        // three variants of combining repeated key values:
-        // 1) "repeat":  accept repeated keys if key_type allows this
+        // three variants of combining repeated values per key:
+        // 1) "repeat":  accept repeated keys, if key_type allows this
         // 2) "merge":   combine repeated values into one through value_type's custom merging method
         // 3) "replace": take the youngest value per key and ignore all remaining ones
         let combine =
@@ -89,7 +89,7 @@ export class CATALOG extends COMPOUND {
             value_type.merged      ? (values) => value_type.merge_inherited(values) :
                                      (values) => [values[0]]
 
-        return Catalog.merge(catalogs, combine)     // merge all input catalogs into a single catalog
+        return Catalog.merge(catalogs, combine)
     }
 
     _validate(obj) {
