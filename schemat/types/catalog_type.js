@@ -1,7 +1,7 @@
 import {ValidationError} from "../common/errors.js";
 import {T, assert, trycatch, concat, mapEntries} from "../common/utils.js";
 import {Catalog} from '../common/catalog.js'
-import {FIELD, STRING, Type, generic_string, generic_type, is_valid_field_name} from "./type.js";
+import {FIELD, STRING, COMPOUND, Type, generic_string, generic_type, is_valid_field_name} from "./type.js";
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../web/react-utils.js";
 import {MaterialUI} from "../web/resources.js";
@@ -15,7 +15,7 @@ import {TextualWidget} from "./widgets.js";
  **
  */
 
-export class CATALOG extends Type {
+export class CATALOG extends COMPOUND {
     /*
     Data type of objects of the Catalog class or its subclass.
     Validates each `value` of a catalog's entry through a particular "child" type, which may depend
@@ -40,7 +40,7 @@ export class CATALOG extends Type {
         key_type:       new FIELD(),                // type of keys in the catalog; must be an instance of STRING or its subclass
         value_type:     generic_type,               // type of values in the catalog
         initial:        () => new Catalog(),
-        repeated:       false,                      // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)
+        repeated:       false,                      // typically, CATALOG fields are not repeated, so their content gets merged during inheritance (which requires repeated=false)
     }
 
     child(key)   { return this.options.value_type }     // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed

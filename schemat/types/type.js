@@ -656,7 +656,10 @@ export class SHARD extends CUSTOM_OBJECT {
  **
  */
 
-export class ARRAY extends GENERIC {
+export class COMPOUND extends Type {
+}
+
+export class ARRAY extends COMPOUND {
     /* Represents arrays of objects of a given `type` (generic_type by default). */
 
     static options = {
@@ -676,7 +679,7 @@ export class ARRAY extends GENERIC {
     }
 }
 
-export class OBJECT extends GENERIC {
+export class OBJECT extends COMPOUND {
     /* Accept plain JavaScript objects (POJO or null-prototype objects) used as data containers (dictionaries).
        The objects must *not* belong to any class other than Object.
        This type can be used as a replacement for MAP or CATALOG when a simpler data structure is needed for holding
@@ -702,7 +705,7 @@ export class OBJECT extends GENERIC {
 // The classes below are NOT USED ...
 //
 
-export class CHOICE extends Type {
+export class CHOICE extends Type {      // ENUM ?
     /* List of choices, the value must be one of them. */
     static options = {
         values: [],             // eligible choice values
