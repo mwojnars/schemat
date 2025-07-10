@@ -14,7 +14,7 @@ export class Subsequence {
     base_sequence               // the underlying Sequence
     id                          // ID of the Operator that produced this subsequence
 
-    static iid_type = new INTEGER({blank: false})       // for encoding/decoding the ID using variable-length encoding
+    static iid_type = new INTEGER({required: true, min: 1})     // for encoding/decoding the ID using variable-length encoding
 
     constructor(id, base_sequence) {
         this.base_sequence = base_sequence

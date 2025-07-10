@@ -41,6 +41,7 @@ export class Type extends Struct {
                                     // since repeated properties behave like lists of varying length, and zero is a valid length,
                                     // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
+        required : undefined,       // if true, the field described by this type must be present and contain a not-null and non-blank value
         repeated : undefined,       // if true, the field described by this type can have multiple occurrences, typically inside a CATALOG/RECORD/SCHEMA
                                     // - all the values (incl. inherited ones) can be retrieved via .field$ then; note that setting repeated=true has performance impact,
                                     // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object
@@ -67,7 +68,6 @@ export class Type extends Struct {
         //                             // when virtual=true, inheritance is skipped during property calculation like if inherited=false
 
         // save_imputed / impute_on_write / explicit / persistent: false  // if true, the imputed value of the field (virtual or regular) is saved to DB to avoid future recalculation or to facilitate indexing
-        // required : undefined,   // if true, the field described by this type must be present in the record or object's data during insert/update
 
         // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
         // hidden   : undefined,   // if true, the field described by this type is not displayed in the UI;
