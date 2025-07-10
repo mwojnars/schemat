@@ -416,8 +416,8 @@ export class Database extends WebObject {
         let count = 0
         for await (let [key, val] of merged)
             if (limit != null && ++count > limit) break
-            else yield new Record(schema, {key, val})
-            // schema.decode_object(key, val)
+            else yield schema.decode_object(key, val)
+            // else yield new Record(schema, {key, val})
 
         // TODO: apply `batch_size` to the merged stream and yield in batches
     }
