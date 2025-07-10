@@ -385,12 +385,13 @@ export class Database extends WebObject {
         /* Yield a stream of pseudo-objects loaded from a derived sequence, merge-sorted from all rings, and decoded.
            A pseudo-object resembles the original web object where field values for the record were sourced from,
            with a few important differences:
-           - it lacks a class or category, it is just a plain JS object
+           - it lacks a class or category (plain JS object)
            - it lacks those attributes that were not included in the record
            - it has `null` in place of attributes that were originally missing
            - it has explicit attributes for all original props, even those that were imputed, taken from defaults, or calculated via getters
            - it lacks repeated values for `obj.prop` if `prop` was stored in the key part of the record
            - it has an explicit `obj.prop$` attribute if `prop$` was stored in the value part of the record
+           - in more complex cases, like aggregations etc., a pseudo-object may not map to any kind of web object at all
 
            If `limit` is not null, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.

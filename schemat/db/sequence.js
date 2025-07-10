@@ -100,15 +100,6 @@ export class Sequence extends WebObject {
         yield* await block_start.$agent.scan(opts)
     }
 
-    async* scan(opts = {}) {
-        /* Scan this sequence and yield Records. The `start`, `stop` options are tuples (decoded), not binary. */
-        // let {start, stop} = opts
-        let rschema = this.operator.record_schema
-
-        for await (let [key, val] of this.scan_binary(opts)) //{...opts, start, stop}))
-            yield new Record(rschema, {key, val})
-    }
-
     async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
     async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 }
@@ -173,21 +164,28 @@ export class DataSequence extends Sequence {
         return this.find_block(key)
     }
 
+    // async* scan(opts = {}) {
+    //     /* Scan this sequence and yield Records. The `start`, `stop` options are tuples (decoded), not binary. */
+    //     // let {start, stop} = opts
+    //     let rschema = this.operator.record_schema
+    //
+    //     for await (let [key, val] of this.scan_binary(opts)) //{...opts, start, stop}))
+    //         yield new Record(rschema, {key, val})
+    // }
+
     async* scan_objects() {
         /* Yield all objects in this sequence as {id, data} pairs.
            Scanning a data sequence differs from an index scan because the key space is sharded (by low bits),
            not segmented (by high bits/bytes), hence the result stream is not monotonic, OR it will require a merge-sort
            to become monotonic. Plus, the function outputs {id, data} pairs (decoded) instead of binary records.
          */
-        for await (let record of this.scan()) {
-            let key = record.key            // array of key fields, decoded
+        let rschema = this.operator.record_schema
+        for await (let [key_binary, json] of this.scan_binary()) {
+            let key = rschema.decode_key(key_binary)
             assert(key.length === 1)        // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
             let [id] = key
-
-            let json = record.val_json      // JSONx-serialized content of an object
             let data = JSONx.parse(json)
             if (T.isPOJO(data)) data = Catalog.__setstate__(data)
-
             yield {id, data}
         }
     }
